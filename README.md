@@ -10,7 +10,7 @@ ASCIIBIRD DEVELOPMENT - BORING VUEJS DEV STUFF FOR ASCII CREATION
 
 # Roadmap
 
- * Decide the front end library
+ * Integrate front end library 
  * Tie the ascii Meta Data into tabs / interface
  * Take a quick look at ASCIIBLASTER, compare code
  * Render the individual blocks
