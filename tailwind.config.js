@@ -2,8 +2,8 @@ const tailwindcss = require('tailwindcss');
 
 module.exports = {
   purge: [
-  './public/**/*.html',
-  './src/**/*.vue',
+    './MySettings.js',
+    'node_modules/vue-tailwind/dist/*.js',
   ],
   darkMode: false, // or 'media' or 'class'
   theme: {
@@ -15,4 +15,4 @@ module.exports = {
   plugins: [
     tailwindcss,
   ],
-}
+};

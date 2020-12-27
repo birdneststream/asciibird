@@ -7,7 +7,7 @@ Vue.use(VueRouter);
 const routes = [
   {
     path: '/:ascii',
-    name: 'Editor',
+    name: 'editor',
     component: Editor,
   },
   {

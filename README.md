@@ -1,12 +1,11 @@
 # ASCIIBIRD
 
-.asb
-
 ASCIIBIRD DEVELOPMENT - BORING VUEJS DEV STUFF FOR ASCII CREATION
 
 # Doneish
 
-* Review vuejs3 stuff and get our initial data structure which will hold our ASCII informations.
+* Initial data structure which will hold our ASCII informations.
+* Added vue-tailwind.com
 
 # Roadmap
 

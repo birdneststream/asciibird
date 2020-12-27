@@ -22,11 +22,11 @@ import {
   TToggle,
   TDialog,
 } from 'vue-tailwind/dist/components';
-import App from './App.vue';
+import Dashboard from './Dashboard.vue';
 import router from './router';
 import store from './store';
 
-import "tailwind.min.css"
+import './assets/styles/index.css';
 
 Vue.config.productionTip = false;
 
@@ -109,5 +109,5 @@ Vue.use(VueTailwind, settings);
 new Vue({
   router,
   store,
-  render: (h) => h(App),
+  render: (h) => h(Dashboard),
 }).$mount('#app');
