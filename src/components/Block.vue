@@ -1,5 +1,5 @@
 <template>
-      <div :id=blockId :class=blockClass>
+      <div :id=blockId :style=blockClass>
           {{ this.data.char }}
       </div>
 </template>

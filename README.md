@@ -2,14 +2,30 @@
 
 ASCIIBIRD DEVELOPMENT - BORING VUEJS DEV STUFF FOR ASCII CREATION
 
+# TODAY
+
+DRAWING blocks bro.
+
+## HOW TO DRAW BLOCKS
+
+* What we are doing now, the slowest worst way that uses > 4gb of ram for a blank 80x80 ascii lol
+
+* Canvas
+
+* Webgl renderding direct to canvas, three.js webgl
+
 # Doneish
 
 * Initial data structure which will hold our ASCII informations.
 * Added vue-tailwind.com
 
+# Things To Do
+
+* Properly get CSS into the JS stuff ya lazy bird
+
 # Roadmap
 
- * Integrate front end library 
+ * Integrate front end library - DONE
  * Tie the ascii Meta Data into tabs / interface
  * Take a quick look at ASCIIBLASTER, compare code
  * Render the individual blocks
@@ -59,6 +75,9 @@ If we can import an ASCII -> two dimensional array -> Export
 * https://jp.itch.io/playscii / http://vectorpoem.com/playscii/
 * https://mircart.org/
 * https://asdf.us/asciiblaster/
+* https://acid.vegas/asciimaker
+* https://stackoverflow.com/questions/60263401/draw-on-canvas-with-vue
+* https://www.digitalocean.com/community/tutorials/vuejs-vue-html5-canvas
 
 ## Project setup
 ```
