@@ -94,11 +94,11 @@ export default {
         this.$route.params.ascii.split('/').join('')
       ];
 
-      console.log({ generateCanvasId: this.generateCanvasId, refs: this.$refs, refs_2: this.$refs[`canvas${this.currentAsciibirdMeta.key-1}`] })
+      console.log({ generateCanvasId: this.generateCanvasId, all_refs: this.$refs, current_canvas_ref: this.$refs[`canvas${this.currentAsciibirdMeta.key+1}`] })
 
-      if (this.$refs[`canvas${this.currentAsciibirdMeta.key-1}`]) {
-        console.log('got', this.$refs[`canvas${this.currentAsciibirdMeta.key-1}`]);
-        this.ctx = this.$refs[`canvas${this.currentAsciibirdMeta.key-1}`]
+      if (this.$refs[`canvas${this.currentAsciibirdMeta.key+1}`]) {
+        console.log('got', this.$refs[`canvas${this.currentAsciibirdMeta.key+1}`]);
+        this.ctx = this.$refs[`canvas${this.currentAsciibirdMeta.key+1}`].getContext("2d")
         console.log('current ctx', this.ctx)
       }
     },
