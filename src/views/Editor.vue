@@ -10,9 +10,9 @@
       <canvas
         :ref="generateCanvasId"
         :id="generateCanvasId"
-        @mousedown="startSelect"
-        @mousemove="drawRect"
-        @mouseup="stopSelect"
+        @mousedown="processMouseDown"
+        @mousemove="processMouseMove"
+        @mouseup="processMouseUp"
         v-bind:class="dataFieldClass"
         class="border-gray-500"
       ></canvas>
@@ -94,15 +94,20 @@ export default {
         this.$route.params.ascii.split('/').join('')
       ];
 
-      console.log({ generateCanvasId: this.generateCanvasId, all_refs: this.$refs, current_canvas_ref: this.$refs[`canvas${this.currentAsciibirdMeta.key+1}`] })
+      console.log({ generateCanvasId: this.generateCanvasId, all_refs: this.$refs, current_canvas_ref: this.$refs[`canvas${this.currentAsciibirdMeta.key-1}`] })
 
-      if (this.$refs[`canvas${this.currentAsciibirdMeta.key+1}`]) {
-        console.log('got', this.$refs[`canvas${this.currentAsciibirdMeta.key+1}`]);
-        this.ctx = this.$refs[`canvas${this.currentAsciibirdMeta.key+1}`].getContext("2d")
+      if (this.$refs[`canvas${this.currentAsciibirdMeta.key-1}`]) {
+        console.log('got', this.$refs[`canvas${this.currentAsciibirdMeta.key-1}`]);
+        this.ctx = this.$refs[`canvas${this.currentAsciibirdMeta.key-1}`].getContext("2d")
         console.log('current ctx', this.ctx)
+      } else {
+        console.log("Warning: could not find asciibird meta key " + `canvas${this.currentAsciibirdMeta.key-1}`)
       }
     },
-    startSelect(e) {
+    
+    processMouseDown(e) {
+      console.log("Mouse down")
+      this.canvasClass(e)
       this.selectionMode = true;
       this.startPosition.x = e.clientX;
       this.startPosition.y = e.clientY;
@@ -119,7 +124,8 @@ export default {
     //     console.log(this.$refs[this.generateCanvasId]);
     //   }
     // },
-    drawRect(e) {
+    processMouseMove(e) {
+      console.log("Mouse move")
       if (this.selectionMode) {
         // console.log(this.startPosition);
         
@@ -138,7 +144,8 @@ export default {
       }
     },
     canvasClass(e) {
-      this.ctx = e.target;
+      console.log("Mouse canvasClass")
+      // this.ctx = e.target;
 
       this.ctx.strokeStyle = 'red';
       this.ctx.beginPath();
@@ -148,7 +155,8 @@ export default {
       this.ctx.closePath();
       this.ctx.stroke();
     },
-    stopSelect(e) {
+    processMouseUp(e) {
+      console.log("Mouse up")
       this.ctx.fillStyle = '#fff';
 
       this.selectionMode = false;
