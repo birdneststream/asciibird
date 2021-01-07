@@ -14,6 +14,7 @@
         @mousemove="drawRect"
         @mouseup="stopSelect"
         v-bind:class="dataFieldClass"
+        class="border-gray-500"
       ></canvas>
 
       <!-- <span v-for="(yValue, y) in currentAsciibirdMeta.blocks" :key="y">
@@ -47,7 +48,9 @@ export default {
   components: { Block },
   mounted() {
     this.currentAsciibirdMeta = this.$store.state.asciibirdMeta[0];
-    console.log(this.$refs);
+    
+
+    
   },
   created() {
 
@@ -71,7 +74,7 @@ export default {
       return this.$route.path;
     },
     generateCanvasId() {
-      return `canvas-${this.currentAsciibirdMeta.key}`;
+      return `canvas${this.currentAsciibirdMeta.key}`;
     },
   },
   watch: {
@@ -90,6 +93,14 @@ export default {
       this.currentAsciibirdMeta = this.$store.state.asciibirdMeta[
         this.$route.params.ascii.split('/').join('')
       ];
+
+      console.log({ generateCanvasId: this.generateCanvasId, refs: this.$refs, refs_2: this.$refs[`canvas${this.currentAsciibirdMeta.key-1}`] })
+
+      if (this.$refs[`canvas${this.currentAsciibirdMeta.key-1}`]) {
+        console.log('got', this.$refs[`canvas${this.currentAsciibirdMeta.key-1}`]);
+        this.ctx = this.$refs[`canvas${this.currentAsciibirdMeta.key-1}`]
+        console.log('current ctx', this.ctx)
+      }
     },
     startSelect(e) {
       this.selectionMode = true;
@@ -111,6 +122,7 @@ export default {
     drawRect(e) {
       if (this.selectionMode) {
         // console.log(this.startPosition);
+        
         this.ctx.beginPath();
         this.ctx.rect(
           this.startPosition.x,
