@@ -1,12 +1,16 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
+import VuexPersistence from 'vuex-persist'
 
 Vue.use(Vuex);
+const vuexLocal = new VuexPersistence({
+  storage: window.localStorage
+})
 
 export default new Vuex.Store({
   state: {
     // Current tab user is viewing
-    tab: 1,
+    tab: 0,
     // Object that is a single ASCII block, used to clone and store data for each individual block
     defaultBlock: {
       x: 0,
@@ -20,7 +24,7 @@ export default new Vuex.Store({
     // asciibirdMeta holds all of the ASCII information for all the tabs
     asciibirdMeta: [{
       title: 'New ASCII',
-      key: 1,
+      key: 0,
       width: 5,
       height: 5,
       blockWidth: 8,
@@ -38,4 +42,5 @@ export default new Vuex.Store({
   },
   actions: {},
   modules: {},
+  plugins: [vuexLocal.plugin]
 });

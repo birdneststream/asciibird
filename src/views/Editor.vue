@@ -94,14 +94,17 @@ export default {
         this.$route.params.ascii.split('/').join('')
       ];
 
-      console.log({ generateCanvasId: this.generateCanvasId, all_refs: this.$refs, current_canvas_ref: this.$refs[`canvas${this.currentAsciibirdMeta.key-1}`] })
+      // I dono some routs bs or some bs needs -1 to make it all work
+      let currentRefCanvas =`canvas${this.currentAsciibirdMeta.key-1}`;
 
-      if (this.$refs[`canvas${this.currentAsciibirdMeta.key-1}`]) {
-        console.log('got', this.$refs[`canvas${this.currentAsciibirdMeta.key-1}`]);
-        this.ctx = this.$refs[`canvas${this.currentAsciibirdMeta.key-1}`].getContext("2d")
+      console.log({ generateCanvasId: this.generateCanvasId, all_refs: this.$refs, current_canvas_ref: this.$refs[currentRefCanvas] })
+
+      if (this.$refs[currentRefCanvas]) {
+        console.log('got', this.$refs[currentRefCanvas]);
+        this.ctx = this.$refs[currentRefCanvas].getContext("2d")
         console.log('current ctx', this.ctx)
       } else {
-        console.log("Warning: could not find asciibird meta key " + `canvas${this.currentAsciibirdMeta.key-1}`)
+        console.log("Warning: could not find asciibird meta key " + currentRefCanvas)
       }
     },
     
@@ -112,18 +115,6 @@ export default {
       this.startPosition.x = e.clientX;
       this.startPosition.y = e.clientY;
     },
-    // dataFieldClass() {
-    //   console.log({'NIGGA': this.$refs[this.generateCanvasId]});
-
-    //   if (!this.$refs[this.generateCanvasId]) {
-    //     // First render, the element is not there yet
-    //     return null;
-    //   } else {
-    //     // Here is the element
-    //     this.ctx = this.$refs[this.generateCanvasId]
-    //     console.log(this.$refs[this.generateCanvasId]);
-    //   }
-    // },
     processMouseMove(e) {
       console.log("Mouse move")
       if (this.selectionMode) {

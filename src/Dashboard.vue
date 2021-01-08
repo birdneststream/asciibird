@@ -83,7 +83,7 @@ export default {
     createNewASCII() {
       const payload = {
         title: this.forms.createAscii.title,
-        key: this.asciibirdMeta.length + 1,
+        key: this.asciibirdMeta.length,
         width: this.forms.createAscii.width,
         height: this.forms.createAscii.height,
         blockWidth: 8,
