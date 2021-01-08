@@ -68,7 +68,7 @@ export default {
   // },
   methods: {
     createClick() {
-      this.forms.createAscii.title = 'New ASCII';
+      this.forms.createAscii.title = `New ASCII ${this.asciibirdMeta.length}`;
       this.$modal.show('create-ascii-modal');
     },
     changeTab(key, value) {
