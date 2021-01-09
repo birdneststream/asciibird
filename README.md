@@ -2,33 +2,32 @@
 
 ASCIIBIRD DEVELOPMENT - BORING VUEJS DEV STUFF FOR ASCII CREATION
 
-# TODAY
+# FOCUS
 
-DRAWING blocks bro.
+* Have multiple canvas elements, they can different z-index for the layers.
+
+* Fix up the store, put in code and more shit in there
+  * Store colours, tools and any other shit in here
 
 ## HOW TO DRAW BLOCKS
 
 * What we are doing now, the slowest worst way that uses > 4gb of ram for a blank 80x80 ascii lol
+* **Plain vanilla Canvas**
+* Webgl rendering direct to canvas, three.js webgl
+* Render as SVG
 
-* Canvas
-
-* Webgl renderding direct to canvas, three.js webgl
-
-# Doneish
-
-* Initial data structure which will hold our ASCII informations.
-* Added vue-tailwind.com
-
-# Things To Do
+# Things To Do Later
 
 * Properly get CSS into the JS stuff ya lazy bird
 
 # Roadmap
 
  * Integrate front end library - DONE
- * Tie the ascii Meta Data into tabs / interface
+ * Tie the ascii Meta Data into tabs / interface - DONE
+
  * Take a quick look at ASCIIBLASTER, compare code
  * Render the individual blocks
+ 
  * To import ASCIIs we are going to have to write an ASCII/ANSI -> JSON
  * Then we can reverse it JSON -> ANSI to export
  * Technically we could have our own file format and share the ASCII data in JSON, but also extra information in the JSON.
@@ -78,6 +77,7 @@ If we can import an ASCII -> two dimensional array -> Export
 * https://acid.vegas/asciimaker
 * https://stackoverflow.com/questions/60263401/draw-on-canvas-with-vue
 * https://www.digitalocean.com/community/tutorials/vuejs-vue-html5-canvas
+* https://codereview.stackexchange.com/questions/114702/drawing-a-grid-on-canvas
 
 ## Project setup
 ```

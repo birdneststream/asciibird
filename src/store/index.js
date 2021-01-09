@@ -22,15 +22,7 @@ export default new Vuex.Store({
       blinking: false,
     },
     // asciibirdMeta holds all of the ASCII information for all the tabs
-    asciibirdMeta: [{
-      title: 'New ASCII',
-      key: 0,
-      width: 5,
-      height: 5,
-      blockWidth: 8,
-      blockHeight: 13,
-      blocks: {},
-    }],
+    asciibirdMeta: [],
   },
   mutations: {
     changeTab(state, payload) {
