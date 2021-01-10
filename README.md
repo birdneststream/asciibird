@@ -9,6 +9,8 @@ ASCIIBIRD DEVELOPMENT - BORING VUEJS DEV STUFF FOR ASCII CREATION
 * Fix up the store, put in code and more shit in there
   * Store colours, tools and any other shit in here
 
+* I added some grid but it is FUCKED
+
 ## HOW TO DRAW BLOCKS
 
 * What we are doing now, the slowest worst way that uses > 4gb of ram for a blank 80x80 ascii lol
@@ -78,6 +80,8 @@ If we can import an ASCII -> two dimensional array -> Export
 * https://stackoverflow.com/questions/60263401/draw-on-canvas-with-vue
 * https://www.digitalocean.com/community/tutorials/vuejs-vue-html5-canvas
 * https://codereview.stackexchange.com/questions/114702/drawing-a-grid-on-canvas
+* https://github.com/ircart/resources
+* https://gist.github.com/xon52/fb895e33d64a8d322da165d158fa11b2 / https://xon5.medium.com/flexible-canvas-grid-without-blurred-lines-907fcadf5bfc - Grid canvas draw stuff
 
 ## Project setup
 ```

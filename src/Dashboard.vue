@@ -88,7 +88,7 @@ export default {
     changeTab(key, value) {
       // Update the router title
       // if (this.$router.params.ascii !== key) {
-      this.$router.replace({ name: 'editor', params: { ascii: `/${key}` } });
+      this.$router.push({ name: 'editor', params: { ascii: `/${key}` } });
       // }
 
       // Update the tab index in vuex store
@@ -101,8 +101,8 @@ export default {
         key: this.asciibirdMeta.length,
         width: this.forms.createAscii.width,
         height: this.forms.createAscii.height,
-        blockWidth: 8,
-        blockHeight: 13,
+        blockWidth: 8 + 0.5,
+        blockHeight: 13 + 0.5,
         blocks: this.create2DArray(this.forms.createAscii.height),
       };
 
