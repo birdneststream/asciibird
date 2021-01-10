@@ -35,6 +35,27 @@
       </t-button>
 
       <div class="border-gray-600">
+
+              <vue-draggable-resizable @dragging="onDrag" style="left:70%;top:10%;" :resizable="false" v-if="asciibirdMeta.length">
+              <t-card
+                header="Tools and Stuff"
+                style="height:500px">             
+
+                  <t-button type="button" v-for="(value,key) in mircColors" :key="key" :style="makeButtonClass(value)" class="border-gray-300 m-1"></t-button>
+
+
+                  <hr>
+                  <h5>Brushes and Shit</h5>
+                  <hr>
+
+
+              </t-card>
+              </vue-draggable-resizable>        
+
+
+
+
+
         <router-view/>
       </div>
 
@@ -44,6 +65,8 @@
 </template>
 
 <script>
+
+
 export default {
   created() {
     this.asciibirdMeta = this.$store.state.asciibirdMeta;
@@ -72,15 +95,29 @@ export default {
       ],
     charCodes: [
       '*','-','=','+','^','#'
-    ]
+    ],
+    floating: {
+      width: 0,
+      height: 0,
+      x: 100,
+      y: 100
+    }
 
   }),
-  // computed: {
-  //   returnAsciiMetaIndex() {
-  //     return this.$store.state.asciibirdMeta[this.currentTab];
-  //   },
-  // },
   methods: {
+    makeButtonClass(color) {
+      return `background-color: ${color} !important;width:25px;height:25px;`
+    },
+    onResize: function (x, y, width, height) {
+      this.floating.x = x
+      this.floating.y = y
+      this.floating.width = width
+      this.floating.height = height
+    },
+    onDrag: function (x, y) {
+      this.floating.x = x
+      this.floating.y = y
+    }, 
     createClick() {
       this.forms.createAscii.title = `New ASCII ${this.asciibirdMeta.length}`;
       this.$modal.show('create-ascii-modal');
@@ -88,7 +125,7 @@ export default {
     changeTab(key, value) {
       // Update the router title
       // if (this.$router.params.ascii !== key) {
-      this.$router.push({ name: 'editor', params: { ascii: `/${key}` } });
+        this.$router.push({ name: 'editor', params: { ascii: key } });
       // }
 
       // Update the tab index in vuex store

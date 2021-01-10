@@ -10,6 +10,9 @@
         @mousemove="processMouseMove"
         @mouseup="processMouseUp" -->
 
+
+
+
     <div id="canvas-area" style="position: relative">
       <canvas
         ref="grid"
@@ -27,6 +30,12 @@
         class="canvas"
       ></canvas>
     </div>
+
+
+          
+
+          
+
   </div>
 </template>
 
@@ -59,6 +68,7 @@ body {
 
 <script>
 import Block from "../components/Block.vue";
+import VueDraggableResizable from 'vue-draggable-resizable'
 
 export default {
   name: "Editor",
@@ -85,6 +95,7 @@ export default {
       height: 2048,
     },
     gridCtx: null,
+
   }),
   computed: {
     getFullPath() {
@@ -96,7 +107,7 @@ export default {
   },
   watch: {
     getFullPath(val, old) {
-      this.onChangeTab(val.split("/%2F").join(""));
+      this.onChangeTab(val.split('/').join(''));
     },
   },
   methods: {
@@ -104,11 +115,12 @@ export default {
     //   this.ctx = event.currentTarget.id;
     //   console.log(this.ctx);
     // },
+   
     onChangeTab(val) {
       // Get the asciimeta index from the route URL
       this.currentAsciibirdMeta = this.$store.state.asciibirdMeta[val];
 
-      console.log(this.currentAsciibirdMeta);
+      console.log("val",val);
 
       // I dono some routs bs or some bs needs -1 to make it all work
       // Some lame canvas reference bug when changing routes
