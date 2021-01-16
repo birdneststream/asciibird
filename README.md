@@ -4,6 +4,10 @@ ASCIIBIRD DEVELOPMENT - BORING VUEJS DEV STUFF FOR ASCII CREATION
 
 # FOCUS
 
+* Import / Export code
+ * ASCII -> JSON
+ * JSON -> ASCII
+
 * Have multiple canvas elements, they can different z-index for the layers.
 
 * Fix up the store, put in code and more shit in there
@@ -13,16 +17,14 @@ ASCIIBIRD DEVELOPMENT - BORING VUEJS DEV STUFF FOR ASCII CREATION
 
 ## HOW TO DRAW BLOCKS
 
-* What we are doing now, the slowest worst way that uses > 4gb of ram for a blank 80x80 ascii lol
 * **Plain vanilla Canvas**
 * Webgl rendering direct to canvas, three.js webgl
 * Render as SVG
 
 # Things To Do Later
 
-* Properly get CSS into the JS stuff ya lazy bird
-
-# Roadmap
+ * Sort out the vuex store shit, make it lighter, integrate the methods from Dashboard to there.
+ * Keyboard shortcuts
 
  * Integrate front end library - DONE
  * Tie the ascii Meta Data into tabs / interface - DONE
@@ -36,6 +38,8 @@ ASCIIBIRD DEVELOPMENT - BORING VUEJS DEV STUFF FOR ASCII CREATION
   * .ASB, all this is gzipped JSON of the internal data structure.
   * While exporting the ascii wont obviously support 'extra fields', we can have a name and description for the ASCIIs.
   * To share the ASCII to another person you can export the JSON and they can load it, along with any extra info outside the original ASCII data.
+
+* Properly get CSS into the JS stuff ya lazy bird
 
 # Ideas and stuff
 
@@ -82,6 +86,7 @@ If we can import an ASCII -> two dimensional array -> Export
 * https://codereview.stackexchange.com/questions/114702/drawing-a-grid-on-canvas
 * https://github.com/ircart/resources
 * https://gist.github.com/xon52/fb895e33d64a8d322da165d158fa11b2 / https://xon5.medium.com/flexible-canvas-grid-without-blurred-lines-907fcadf5bfc - Grid canvas draw stuff
+* http://wepump.in/ascii/
 
 ## Project setup
 ```
