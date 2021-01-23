@@ -10,9 +10,6 @@
         @mousemove="processMouseMove"
         @mouseup="processMouseUp" -->
 
-
-
-
     <div id="canvas-area" style="position: relative">
       <canvas
         ref="grid"
@@ -30,12 +27,6 @@
         class="canvas"
       ></canvas>
     </div>
-
-
-          
-
-          
-
   </div>
 </template>
 
@@ -67,8 +58,8 @@ body {
 </style>
 
 <script>
+import VueDraggableResizable from "vue-draggable-resizable";
 import Block from "../components/Block.vue";
-import VueDraggableResizable from 'vue-draggable-resizable'
 
 export default {
   name: "Editor",
@@ -79,7 +70,11 @@ export default {
   created() {},
   data: () => ({
     text: "ASCII",
-    currentAsciibirdMeta: null,
+    currentAsciibirdMeta: {
+      title: "Loading...",
+      width: 0,
+      height: 0,
+    },
     data: {
       message: "Hello Vue!",
       vueCanvas: null,
@@ -95,7 +90,6 @@ export default {
       height: 2048,
     },
     gridCtx: null,
-
   }),
   computed: {
     getFullPath() {
@@ -104,42 +98,70 @@ export default {
     generateCanvasId() {
       return `canvas`;
     },
+    watchBlocksChange() {
+      return this.currentAsciibirdMeta
+    },
+    generateTitle() {
+      return this.currentAsciibirdMeta.title ?? ''
+    }
   },
   watch: {
     getFullPath(val, old) {
-      this.onChangeTab(val.split('/').join(''));
+      this.onChangeTab(val.split("/").join(""));
     },
+    watchBlocksChange(val, old) {
+
+      if (this.$refs[this.generateCanvasId]) {
+        this.ctx = this.$refs["canvas"].getContext("2d");
+        this.gridCtx = this.$refs.grid.getContext("2d");
+        // console.log("current ctx", this.ctx);
+
+        this.drawGrid();
+        this.redrawCanvas();
+
+        this.canvas.width =
+          val.width *
+          val.blockWidth;
+        this.canvas.height =
+          val.height *
+          val.blockHeight;
+      }
+    }
   },
   methods: {
     // dataFieldClass(event) {
     //   this.ctx = event.currentTarget.id;
-    //   console.log(this.ctx);
+    // console.log(this.ctx);
     // },
-   
+
     onChangeTab(val) {
       // Get the asciimeta index from the route URL
       this.currentAsciibirdMeta = this.$store.state.asciibirdMeta[val];
 
-      console.log("val",val);
+      // console.log("val", val);
 
       // I dono some routs bs or some bs needs -1 to make it all work
       // Some lame canvas reference bug when changing routes
       // The newest canvas is not yet available for some reason at this stage, however we can still reference the previous one
-      let currentRefCanvas = `canvas`;
+      const currentRefCanvas = "canvas";
 
-      this.canvas.width = this.currentAsciibirdMeta.blocks.length * this.currentAsciibirdMeta.blockWidth
-      this.canvas.height = this.currentAsciibirdMeta.blocks.length * this.currentAsciibirdMeta.blockHeight
+      this.canvas.width =
+        this.currentAsciibirdMeta.blocks.length *
+        this.currentAsciibirdMeta.blockWidth;
+      this.canvas.height =
+        this.currentAsciibirdMeta.blocks.length *
+        this.currentAsciibirdMeta.blockHeight;
 
-      console.log({
-        generateCanvasId: this.generateCanvasId,
-        all_refs: this.$refs,
-        current_canvas_ref: this.$refs[currentRefCanvas],
-      });
+      // console.log({
+      //   generateCanvasId: this.generateCanvasId,
+      //   all_refs: this.$refs,
+      //   current_canvas_ref: this.$refs[currentRefCanvas],
+      // });
 
       if (this.$refs[currentRefCanvas]) {
         this.ctx = this.$refs[currentRefCanvas].getContext("2d");
-        this.gridCtx = this.$refs["grid"].getContext("2d");
-        console.log("current ctx", this.ctx);
+        this.gridCtx = this.$refs.grid.getContext("2d");
+        // console.log("current ctx", this.ctx);
 
         this.drawGrid();
         this.redrawCanvas();
@@ -151,63 +173,111 @@ export default {
           this.currentAsciibirdMeta.height *
           this.currentAsciibirdMeta.blockHeight;
       } else {
-        console.log(
-          "Warning: could not find asciibird meta key " + currentRefCanvas
-        );
+        // console.log(
+        // `Warning: could not find asciibird meta key ${currentRefCanvas}`
+        // );
       }
     },
     redrawCanvas() {
       console.log("Canvas redraw");
 
+      // Clears the whole canvas
+      if (this.ctx) {
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
       if (this.currentAsciibirdMeta.blocks.length) {
-        let blockWidth = this.currentAsciibirdMeta.blockWidth;
-        let blockHeight = this.currentAsciibirdMeta.blockHeight;
+        var blockWidth = this.currentAsciibirdMeta.blockWidth;
+        var blockHeight = this.currentAsciibirdMeta.blockHeight;
 
-        let h = 0;
-        let w = 0;
-        let x = 0;
-        let y = 0;
-        let blockX = 0;
-        let blockY = 0;
-        let curBlock = undefined;
+        // var h = 0;
+        // var w = 0;
+
+        var finalWidth = 0;
+
+        // Position of the meta array
+        var x = 0;
+        var y = 0;
+
+        // Try get better loop
+        var theX = 0;
+
+        // Draws the actual rectangle
+        var blockX = 0;
+        var blockY = 0;
+        var curBlock = {};
 
         this.ctx.font = "8px Mono";
 
         for (y = 0; y < this.currentAsciibirdMeta.blocks.length; y++) {
           blockY = y * blockHeight;
-          w = blockWidth;
 
           for (x = 0; x < this.currentAsciibirdMeta.blocks[y].length; x++) {
-            // console.log({ x, y, meta: JSON.stringify(this.currentAsciibirdMeta.blocks[y][x]) });
+            if (!this.currentAsciibirdMeta.blocks[y][x]) {
+              continue;
+            }
 
-            curBlock = this.currentAsciibirdMeta.blocks[y][x];
+            if (this.currentAsciibirdMeta.blocks[y][x] !== undefined) {
+              // console.log({
+              //   block: this.currentAsciibirdMeta.blocks[y][x],
+              //   x: x,
+              //   y: y,
+              //   theX,
+              //   blockY,
+              //   blockX,
+              //   blockWidth,
+              //   blockHeight,
+              // });
 
-            blockX = x * blockWidth;
-            h = blockHeight;
+              curBlock = this.currentAsciibirdMeta.blocks[y][x];
+              blockX = theX * blockWidth;
 
-            this.ctx.fillStyle = curBlock.bg;
-            this.ctx.fillRect(blockX, blockY, blockWidth, blockHeight);
-            this.ctx.fillStyle = curBlock.fg;
-            this.ctx.fillText(curBlock.char, blockX + 2, blockY - 3);
+              // this.currentAsciibirdMeta.blocks[y][x].x = theX;
+              // this.currentAsciibirdMeta.blocks[y][x].y = y;
+
+              this.ctx.fillStyle = curBlock.bg;
+              this.ctx.fillRect(blockX, blockY, blockWidth, blockHeight);
+              this.ctx.fillStyle = curBlock.fg;
+
+              let tempChar = '';
+              
+              if (this.currentAsciibirdMeta.blocks[y][x].char) {
+                tempChar = this.currentAsciibirdMeta.blocks[y][x].char
+              }
+
+              // this.ctx.fillText(tempChar, blockX + 2, blockY - 3);
+            }
+
+            theX++;
+            // break;
           }
+
+          if (theX !== 0) {
+            finalWidth = theX;
+          }
+
+          theX = 0;
+
+          // break;
         }
       } else {
-        console.log(JSON.stringify(this.currentAsciibirdMeta));
+        // console.log(JSON.stringify(this.currentAsciibirdMeta));
       }
 
+      this.currentAsciibirdMeta.width = finalWidth;
+
       this.ctx.stroke();
+      }
+
     },
     processMouseDown(e) {
-      console.log("Mouse down");
+      // console.log("Mouse down");
       // this.canvasClass(e)
       this.selectionMode = true;
       this.startPosition.x = e.clientX;
       this.startPosition.y = e.clientY;
     },
     processMouseMove(e) {
-      console.log("Mouse move");
+      // console.log("Mouse move");
       if (this.selectionMode) {
         // console.log(this.startPosition);
 
@@ -226,7 +296,7 @@ export default {
       }
     },
     triangleTest(e) {
-      console.log("Mouse triangleTest");
+      // console.log("Mouse triangleTest");
       // this.ctx = e.target;
 
       this.ctx.strokeStyle = "red";
@@ -238,7 +308,7 @@ export default {
       this.ctx.stroke();
     },
     processMouseUp(e) {
-      console.log("Mouse up");
+      // console.log("Mouse up");
       this.ctx.fillStyle = "#fff";
 
       this.selectionMode = false;
@@ -246,26 +316,26 @@ export default {
       this.startPosition.y = null;
     },
     drawGrid() {
-      let width = 5000;
-      let height = 5000;
+      const width = 5000;
+      const height = 5000;
 
-      let s = 13;
-      let sW = 8;
-      let pL = s;
-      let pT = s;
-      let pR = s;
-      let pB = s;
+      const s = 13;
+      const sW = 8;
+      const pL = s;
+      const pT = s;
+      const pR = s;
+      const pB = s;
 
       this.gridCtx.clearRect(0, 0, width, height);
 
       this.gridCtx.strokeStyle = "lightgrey";
       this.gridCtx.lineWidth = 0.333;
       this.gridCtx.beginPath();
-      for (var x = pL; x <= width - pR; x += sW) {
+      for (let x = pL; x <= width - pR; x += sW) {
         this.gridCtx.moveTo(x, pT);
         this.gridCtx.lineTo(x, height - pB);
       }
-      for (var y = pT; y <= height - pB; y += s) {
+      for (let y = pT; y <= height - pB; y += s) {
         this.gridCtx.moveTo(pL, y);
         this.gridCtx.lineTo(width - pR, y);
       }

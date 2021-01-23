@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import VueTailwind from 'vue-tailwind';
-import VueDraggableResizable from 'vue-draggable-resizable'
+import VueDraggableResizable from 'vue-draggable-resizable';
 import {
   TInput,
   TTextarea,
@@ -27,7 +27,7 @@ import Dashboard from './Dashboard.vue';
 import router from './router';
 import store from './store';
 // optionally import default styles
-import 'vue-draggable-resizable/dist/VueDraggableResizable.css'
+import 'vue-draggable-resizable/dist/VueDraggableResizable.css';
 
 Vue.config.productionTip = false;
 
@@ -47,22 +47,22 @@ const settings = {
         wrapper: 'border rounded shadow-sm ',
         body: 'p-3',
         header: 'border-b p-3 rounded-t',
-        footer: 'border-t p-3 rounded-b'
+        footer: 'border-t p-3 rounded-b',
       },
       classes: {
         wrapper: 'bg-white border-gray-100',
         body: '',
         header: 'border-gray-100',
-        footer: 'border-gray-100'
+        footer: 'border-gray-100',
       },
       variants: {
         danger: {
           wrapper: 'bg-red-50 text-red-700 border-red-200',
           header: 'border-red-200 text-red-700',
-          footer: 'border-red-200 text-red-700'
-        }
-      }
-    }
+          footer: 'border-red-200 text-red-700',
+        },
+      },
+    },
   },
   't-input': {
     component: TInput,
@@ -130,7 +130,7 @@ const settings = {
 };
 
 Vue.use(VueTailwind, settings);
-Vue.component('vue-draggable-resizable', VueDraggableResizable)
+Vue.component('vue-draggable-resizable', VueDraggableResizable);
 
 new Vue({
   router,

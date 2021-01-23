@@ -4,6 +4,11 @@ ASCIIBIRD DEVELOPMENT - BORING VUEJS DEV STUFF FOR ASCII CREATION
 
 # FOCUS
 
+* Single or double digit color codes in mIRC imports
+ * maybe we can use some regex
+
+
+
 * Import / Export code
  * ASCII -> JSON
  * JSON -> ASCII
@@ -85,8 +90,14 @@ If we can import an ASCII -> two dimensional array -> Export
 * https://www.digitalocean.com/community/tutorials/vuejs-vue-html5-canvas
 * https://codereview.stackexchange.com/questions/114702/drawing-a-grid-on-canvas
 * https://github.com/ircart/resources
+
+
 * https://gist.github.com/xon52/fb895e33d64a8d322da165d158fa11b2 / https://xon5.medium.com/flexible-canvas-grid-without-blurred-lines-907fcadf5bfc - Grid canvas draw stuff
 * http://wepump.in/ascii/
+
+
+* https://modern.ircdocs.horse/formatting.html#color
+* https://www.mirc.com/colors.html
 
 ## Project setup
 ```
