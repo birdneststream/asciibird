@@ -7,8 +7,6 @@ ASCIIBIRD DEVELOPMENT - BORING VUEJS DEV STUFF FOR ASCII CREATION
 * Single or double digit color codes in mIRC imports
  * maybe we can use some regex
 
-
-
 * Import / Export code
  * ASCII -> JSON
  * JSON -> ASCII

@@ -8,18 +8,23 @@
       @before-closed="closeNewASCII"
     >
       <!-- Main Menu -->
+      Width
       <t-input
         type="number"
         name="width"
         v-model="forms.createAscii.width"
         max="3"
       />
+
+      Height
       <t-input
         type="number"
         name="height"
         v-model="forms.createAscii.height"
         max="4"
       />
+
+      Title
       <t-input
         type="text"
         name="title"
@@ -41,6 +46,8 @@
     <div>
       <t-button @click="createClick()" class="ml-1">Add new ASCII</t-button>
 
+      <t-button @click="clearCache()" class="ml-1">Clear and Refresh</t-button>
+
       <t-button @click="$refs.asciiInput.click()" class="ml-1"
         >Import ASCII</t-button
       >
@@ -58,7 +65,7 @@
         v-bind:key="key"
         class="ml-1"
         @click="changeTab(key, value)"
-        :disabled=false
+        :disabled="false"
       >
         {{ value.title }} ({{ value.width }} / {{ value.height }})
       </t-button>
@@ -159,55 +166,60 @@ export default {
         this.asciiImport = fileReader.result;
         this.asciiImport = this.asciiImport.split('\n');
 
-
         this.finalAscii = {
           width: this.asciiImport[0].split('').length,
           height: this.asciiImport.length,
           title: filename,
-          blockWidth: 8,
-          blockHeight: 13,
+          blockWidth: 16,
+          blockHeight: 26,
           blocks: this.create2DArray(this.asciiImport.length),
         };
 
         for (let y = 0; y < this.asciiImport.length; y++) {
-          const rowText = this.asciiImport[y].split('');
+          const rowX = this.asciiImport[y].split('');
 
-          for (let x = 0; x < rowText.length; x++) {
-            switch (rowText[x]) {
-              case '\u0003':
-                this.parseColor = true;
-                break;
+          console.log(rowX.length);
+          if (rowX.length !== 0) {
+            for (let x = 0; x < rowX.length; x++) {
+              switch (rowX[x]) {
+                case '\u0003':
+                  this.parseColor = true;
+                  break;
 
-              default:
-                this.parseColor = false;
-                break;
+                default:
+                  this.parseColor = false;
+                  break;
+              }
+
+              if (this.parseColor) {
+                this.colorCode = (
+                  rowX[x + 1]
+                  + rowX[x + 2]
+                  + rowX[x + 3]
+                ).split(',');
+
+                x++;
+                x++;
+                x++;
+                continue;
+              } else if (!this.parseColor) {
+                this.finalAscii.blocks[y][x] = {
+                  // x,
+                  // y,
+                  bg: this.mircColors[this.colorCode[0]],
+                  fg: this.mircColors[this.colorCode[1]],
+                  char: rowX[x],
+                };
+              }
             }
 
-            if (this.parseColor) {
-              this.colorCode = (
-                rowText[x + 1]
-                + rowText[x + 2]
-                + rowText[x + 3]
-              ).split(',');
-
-              x++;
-              x++;
-              x++;
-              continue;
-
-            } else if (!this.parseColor) {
-              this.finalAscii.blocks[y][x] = {
-                // x,
-                // y,
-                bg: this.mircColors[this.colorCode[0]],
-                fg: this.mircColors[this.colorCode[1]],
-                char: rowText[x], 
-              };
-            }
+            this.colorCode = null;
+          } else {
+            this.finalAscii.height--;
           }
-
-          this.colorCode = null;
         }
+
+        console.log('this.finalAscii', this.finalAscii);
 
         this.$store.commit('newAsciibirdMeta', this.finalAscii);
       }); // End function
@@ -240,23 +252,25 @@ export default {
       // Update the tab index in vuex store
       this.$store.commit('changeTab', key);
     },
+    clearCache() {
+      localStorage.clear();
+      window.location.href = '/';
+    },
     createNewASCII() {
       const payload = {
         title: this.forms.createAscii.title,
         key: this.asciibirdMeta.length,
         width: this.forms.createAscii.width,
         height: this.forms.createAscii.height,
-        blockWidth: 8,
-        blockHeight: 13,
+        blockWidth: 16,
+        blockHeight: 26,
         blocks: this.create2DArray(this.forms.createAscii.height),
       };
 
       // Push all the default ASCII blocks
-      for (let i = 0; i < payload.width; i++) {
-        for (let j = 0; j < payload.height; j++) {
-          payload.blocks[i].push({
-            // x: j,
-            // y: i,
+      for (let x = 0; x < payload.width; x++) {
+        for (let y = 0; y < payload.height; y++) {
+          payload.blocks[y].push({
             bg: this.mircColors[
               Math.floor(Math.random() * this.mircColors.length)
             ],
@@ -269,6 +283,8 @@ export default {
           });
         }
       }
+
+      console.log('payload', payload);
 
       this.$store.commit('newAsciibirdMeta', payload);
       this.$modal.hide('create-ascii-modal');

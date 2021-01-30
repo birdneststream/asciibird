@@ -99,34 +99,29 @@ export default {
       return `canvas`;
     },
     watchBlocksChange() {
-      return this.currentAsciibirdMeta
+      return this.currentAsciibirdMeta;
     },
     generateTitle() {
-      return this.currentAsciibirdMeta.title ?? ''
-    }
+      return this.currentAsciibirdMeta.title ?? "";
+    },
   },
   watch: {
     getFullPath(val, old) {
       this.onChangeTab(val.split("/").join(""));
     },
-    watchBlocksChange(val, old) {
+    // watchBlocksChange(val, old) {
+    //   if (this.$refs[this.generateCanvasId]) {
+    //     this.ctx = this.$refs.canvas.getContext("2d");
+    //     this.gridCtx = this.$refs.grid.getContext("2d");
+    //     // console.log("current ctx", this.ctx);
 
-      if (this.$refs[this.generateCanvasId]) {
-        this.ctx = this.$refs["canvas"].getContext("2d");
-        this.gridCtx = this.$refs.grid.getContext("2d");
-        // console.log("current ctx", this.ctx);
+    //     this.drawGrid();
+    //     this.redrawCanvas();
 
-        this.drawGrid();
-        this.redrawCanvas();
-
-        this.canvas.width =
-          val.width *
-          val.blockWidth;
-        this.canvas.height =
-          val.height *
-          val.blockHeight;
-      }
-    }
+    //     this.canvas.width = val.width * val.blockWidth;
+    //     this.canvas.height = val.height * val.blockHeight;
+    //   }
+    // },
   },
   methods: {
     // dataFieldClass(event) {
@@ -145,26 +140,10 @@ export default {
       // The newest canvas is not yet available for some reason at this stage, however we can still reference the previous one
       const currentRefCanvas = "canvas";
 
-      this.canvas.width =
-        this.currentAsciibirdMeta.blocks.length *
-        this.currentAsciibirdMeta.blockWidth;
-      this.canvas.height =
-        this.currentAsciibirdMeta.blocks.length *
-        this.currentAsciibirdMeta.blockHeight;
-
-      // console.log({
-      //   generateCanvasId: this.generateCanvasId,
-      //   all_refs: this.$refs,
-      //   current_canvas_ref: this.$refs[currentRefCanvas],
-      // });
-
       if (this.$refs[currentRefCanvas]) {
         this.ctx = this.$refs[currentRefCanvas].getContext("2d");
         this.gridCtx = this.$refs.grid.getContext("2d");
         // console.log("current ctx", this.ctx);
-
-        this.drawGrid();
-        this.redrawCanvas();
 
         this.canvas.width =
           this.currentAsciibirdMeta.width *
@@ -172,6 +151,10 @@ export default {
         this.canvas.height =
           this.currentAsciibirdMeta.height *
           this.currentAsciibirdMeta.blockHeight;
+
+        this.drawGrid();
+        this.redrawCanvas();
+
       } else {
         // console.log(
         // `Warning: could not find asciibird meta key ${currentRefCanvas}`
@@ -183,91 +166,85 @@ export default {
 
       // Clears the whole canvas
       if (this.ctx) {
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-      if (this.currentAsciibirdMeta.blocks.length) {
-        var blockWidth = this.currentAsciibirdMeta.blockWidth;
-        var blockHeight = this.currentAsciibirdMeta.blockHeight;
+        if (this.currentAsciibirdMeta.blocks.length) {
+          const blockWidth = this.currentAsciibirdMeta.blockWidth;
+          const blockHeight = this.currentAsciibirdMeta.blockHeight;
+          var finalWidth = 0;
 
-        // var h = 0;
-        // var w = 0;
+          // Position of the meta array
+          let x = 0;
+          let y = 0;
 
-        var finalWidth = 0;
+          // Try get better loop
+          let theX = 0;
 
-        // Position of the meta array
-        var x = 0;
-        var y = 0;
+          // Draws the actual rectangle
+          let blockX = 0;
+          let blockY = 0;
+          let curBlock = {};
 
-        // Try get better loop
-        var theX = 0;
+          this.ctx.font = "16px Mono";
 
-        // Draws the actual rectangle
-        var blockX = 0;
-        var blockY = 0;
-        var curBlock = {};
+          for (y = 0; y < this.currentAsciibirdMeta.blocks.length; y++) {
+            blockY = this.currentAsciibirdMeta.blockHeight * y;
 
-        this.ctx.font = "8px Mono";
-
-        for (y = 0; y < this.currentAsciibirdMeta.blocks.length; y++) {
-          blockY = y * blockHeight;
-
-          for (x = 0; x < this.currentAsciibirdMeta.blocks[y].length; x++) {
-            if (!this.currentAsciibirdMeta.blocks[y][x]) {
-              continue;
-            }
-
-            if (this.currentAsciibirdMeta.blocks[y][x] !== undefined) {
-              // console.log({
-              //   block: this.currentAsciibirdMeta.blocks[y][x],
-              //   x: x,
-              //   y: y,
-              //   theX,
-              //   blockY,
-              //   blockX,
-              //   blockWidth,
-              //   blockHeight,
-              // });
-
-              curBlock = this.currentAsciibirdMeta.blocks[y][x];
-              blockX = theX * blockWidth;
-
-              // this.currentAsciibirdMeta.blocks[y][x].x = theX;
-              // this.currentAsciibirdMeta.blocks[y][x].y = y;
-
-              this.ctx.fillStyle = curBlock.bg;
-              this.ctx.fillRect(blockX, blockY, blockWidth, blockHeight);
-              this.ctx.fillStyle = curBlock.fg;
-
-              let tempChar = '';
-              
-              if (this.currentAsciibirdMeta.blocks[y][x].char) {
-                tempChar = this.currentAsciibirdMeta.blocks[y][x].char
+            for (x = 0; x < this.currentAsciibirdMeta.blocks[y].length; x++) {
+              if (!this.currentAsciibirdMeta.blocks[y][x]) {
+                continue;
               }
 
-              // this.ctx.fillText(tempChar, blockX + 2, blockY - 3);
+              // if (this.currentAsciibirdMeta.blocks[y][x] !== undefined) {
+              console.log({
+                block: this.currentAsciibirdMeta.blocks[y][x],
+                x: x,
+                y: y,
+                theX,
+                blockY,
+                blockX,
+                blockWidth,
+                blockHeight,
+              });
+
+              curBlock = this.currentAsciibirdMeta.blocks[y][x];
+              blockX = blockWidth * theX;
+
+              // Background block
+              this.ctx.fillStyle = curBlock.bg;
+              this.ctx.fillRect(blockX, blockY, this.currentAsciibirdMeta.blockWidth, this.currentAsciibirdMeta.blockHeight);
+              
+              let tempChar = "";
+
+              if (curBlock.char) {
+                tempChar = curBlock.char;
+                this.ctx.fillStyle = curBlock.fg;
+                this.ctx.fillText(tempChar, blockX + 3, blockY -3);
+              } else {
+                console.log("Yo char doesn't exist, bro.");
+              }
+              // }
+
+              theX++;
+              // break;
             }
 
-            theX++;
+            if (theX !== 0) {
+              finalWidth = theX;
+            }
+
+            theX = 0;
+
             // break;
           }
-
-          if (theX !== 0) {
-            finalWidth = theX;
-          }
-
-          theX = 0;
-
-          // break;
+        } else {
+          // console.log(JSON.stringify(this.currentAsciibirdMeta));
         }
-      } else {
-        // console.log(JSON.stringify(this.currentAsciibirdMeta));
+
+        this.currentAsciibirdMeta.width = finalWidth;
+
+        this.ctx.stroke();
       }
-
-      this.currentAsciibirdMeta.width = finalWidth;
-
-      this.ctx.stroke();
-      }
-
     },
     processMouseDown(e) {
       // console.log("Mouse down");
