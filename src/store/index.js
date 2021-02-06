@@ -59,16 +59,24 @@ export default new Vuex.Store({
   },
   mutations: {
     changeTab(state, payload) {
-      this.state.asciibirdMeta.tab = payload;
+      state.asciibirdMeta.tab = payload;
     },
     changeColor(state, payload) {
-      this.state.asciibirdMeta.toolbarState = payload;
+      state.asciibirdMeta.toolbarState.currentColor = payload;
     },
     changeTool(state, payload) {
-      this.state.asciibirdMeta.toolbarState = payload;
+      state.asciibirdMeta.toolbarState.currentTool = payload;
     },
     newAsciibirdMeta(state, payload) {
-      this.state.asciibirdMeta.push(payload);
+      state.asciibirdMeta.push(payload);
+    },
+  },
+  getters: {
+    getColor() {
+      return this.state.toolbarState.currentColor ?? null
+    },
+    getTool() {
+      return this.state.toolbarState.currentTool ?? null
     },
   },
   actions: {},

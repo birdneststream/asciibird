@@ -74,7 +74,7 @@ export default {
       this.floating.y = y;
     },
     onToolbarChange(item) {
-        this.$store.commit('changeTool', item);
+        this.$store.commit('changeTool', item.name);
     },
     onColorChange(item) {
         this.$store.commit('changeColor', item);

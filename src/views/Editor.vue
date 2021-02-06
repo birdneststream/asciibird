@@ -104,13 +104,25 @@ export default {
     generateTitle() {
       return this.currentAsciibirdMeta.title ?? "";
     },
+    watchColorChange() {
+      return this.$store.getters.getColor()
+    },
+    watchToolChange() {
+      return this.$store.getters.getTool()
+    },
   },
   watch: {
-    getFullPath(val, old) {
+    getFullPath(val) {
       this.onChangeTab(val.split("/").join(""));
     },
+    watchColorChange(val) {
+      console.log(JSON.stringify(val))        
+    },
+    watchToolChange(val) {
+      console.log(JSON.stringify(val))          
+    }
     // watchBlocksChange(val, old) {
-    //   if (this.$refs[this.generateCanvasId]) {
+    //   if (this.$refs[this.generate CanvasId]) {
     //     this.ctx = this.$refs.canvas.getContext("2d");
     //     this.gridCtx = this.$refs.grid.getContext("2d");
 
