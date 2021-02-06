@@ -70,10 +70,9 @@
         {{ value.title }} ({{ value.width }} / {{ value.height }})
       </t-button>
 
-      <div class="border-gray-600">
-        <vue-draggable-resizable
+        <!-- <vue-draggable-resizable
           @dragging="onDrag"
-          style="left: 70%; top: 10%"
+          style="left: 70%; top: 10%;z-index: 100;"
           :resizable="false"
           v-if="asciibirdMeta.length"
         >
@@ -90,8 +89,11 @@
             <h5>Brushes and Shit</h5>
             <hr />
           </t-card>
-        </vue-draggable-resizable>
+        </vue-draggable-resizable> -->
 
+      <Toolbar v-if="asciibirdMeta.length" />
+
+      <div class="border-gray-600">
         <router-view />
       </div>
     </div>
@@ -99,10 +101,14 @@
 </template>
 
 <script>
+import Toolbar from "./components/Toolbar.vue";
 export default {
   created() {
-    this.asciibirdMeta = this.$store.state.asciibirdMeta;
+    this.mircColors = this.$store.state.mircColors
+    this.charCodes = this.$store.state.charCodes
+    this.asciibirdMeta = this.$store.state.asciibirdMeta
   },
+  components: { Toolbar },
   name: 'Dashboard',
   data: () => ({
     forms: {
@@ -119,31 +125,9 @@ export default {
     text: 'ASCII',
     currentTab: 1,
     asciibirdMeta: [],
-    mircColors: [
-      'rgb(255,255,255)',
-      'rgb(0,0,0)',
-      'rgb(0,0,127)',
-      'rgb(0,147,0)',
-      'rgb(255,0,0)',
-      'rgb(127,0,0)',
-      'rgb(156,0,156)',
-      'rgb(252,127,0)',
-      'rgb(255,255,0)',
-      'rgb(0,252,0)',
-      'rgb(0,147,147)',
-      'rgb(0,255,255)',
-      'rgb(0,0,252)',
-      'rgb(255,0,255)',
-      'rgb(127,127,127)',
-      'rgb(210,210,210)',
-    ],
-    charCodes: ['*', '-', '=', '+', '^', '#'],
-    floating: {
-      width: 0,
-      height: 0,
-      x: 100,
-      y: 100,
-    },
+    mircColors: null,
+    charCodes: null,
+
     asciiImport: '',
     finalAscii: null,
     asciiArray: [],
@@ -178,7 +162,7 @@ export default {
         for (let y = 0; y < this.asciiImport.length; y++) {
           const rowX = this.asciiImport[y].split('');
 
-          console.log(rowX.length);
+          // console.log(rowX.length);
           if (rowX.length !== 0) {
             for (let x = 0; x < rowX.length; x++) {
               switch (rowX[x]) {
@@ -219,26 +203,15 @@ export default {
           }
         }
 
-        console.log('this.finalAscii', this.finalAscii);
+        // console.log('this.finalAscii', this.finalAscii);
 
         this.$store.commit('newAsciibirdMeta', this.finalAscii);
       }); // End function
 
       this.asciiImportFile = files[0];
     },
-    makeButtonClass(color) {
-      return `background-color: ${color} !important;width:25px;height:25px;`;
-    },
-    onResize(x, y, width, height) {
-      this.floating.x = x;
-      this.floating.y = y;
-      this.floating.width = width;
-      this.floating.height = height;
-    },
-    onDrag(x, y) {
-      this.floating.x = x;
-      this.floating.y = y;
-    },
+
+
     createClick() {
       this.forms.createAscii.title = `New ASCII ${this.asciibirdMeta.length}`;
       this.$modal.show('create-ascii-modal');
@@ -284,7 +257,7 @@ export default {
         }
       }
 
-      console.log('payload', payload);
+      // console.log('payload', payload);
 
       this.$store.commit('newAsciibirdMeta', payload);
       this.$modal.hide('create-ascii-modal');

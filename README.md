@@ -4,8 +4,12 @@ ASCIIBIRD DEVELOPMENT - BORING VUEJS DEV STUFF FOR ASCII CREATION
 
 # FOCUS
 
+* REFACTOR STUFF !!!
+* Maybe some patlette tool stuff
+
 * Single or double digit color codes in mIRC imports
  * maybe we can use some regex
+ * ASCIIBLASTER has a parser for mIRC codes
 
 * Import / Export code
  * ASCII -> JSON

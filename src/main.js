@@ -24,6 +24,7 @@ import {
   TDialog,
 } from 'vue-tailwind/dist/components';
 import Dashboard from './Dashboard.vue';
+// import Toolbar from './components/Toolbar.vue';
 import router from './router';
 import store from './store';
 // optionally import default styles

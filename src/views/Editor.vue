@@ -113,7 +113,6 @@ export default {
     //   if (this.$refs[this.generateCanvasId]) {
     //     this.ctx = this.$refs.canvas.getContext("2d");
     //     this.gridCtx = this.$refs.grid.getContext("2d");
-    //     // console.log("current ctx", this.ctx);
 
     //     this.drawGrid();
     //     this.redrawCanvas();
@@ -124,16 +123,10 @@ export default {
     // },
   },
   methods: {
-    // dataFieldClass(event) {
-    //   this.ctx = event.currentTarget.id;
-    // console.log(this.ctx);
-    // },
-
     onChangeTab(val) {
       // Get the asciimeta index from the route URL
       this.currentAsciibirdMeta = this.$store.state.asciibirdMeta[val];
 
-      // console.log("val", val);
 
       // I dono some routs bs or some bs needs -1 to make it all work
       // Some lame canvas reference bug when changing routes
@@ -143,7 +136,6 @@ export default {
       if (this.$refs[currentRefCanvas]) {
         this.ctx = this.$refs[currentRefCanvas].getContext("2d");
         this.gridCtx = this.$refs.grid.getContext("2d");
-        // console.log("current ctx", this.ctx);
 
         this.canvas.width =
           this.currentAsciibirdMeta.width *
@@ -156,13 +148,11 @@ export default {
         this.redrawCanvas();
 
       } else {
-        // console.log(
-        // `Warning: could not find asciibird meta key ${currentRefCanvas}`
-        // );
+
       }
     },
     redrawCanvas() {
-      console.log("Canvas redraw");
+      // console.log("Canvas redraw");
 
       // Clears the whole canvas
       if (this.ctx) {
@@ -196,22 +186,22 @@ export default {
               }
 
               // if (this.currentAsciibirdMeta.blocks[y][x] !== undefined) {
-              console.log({
-                block: this.currentAsciibirdMeta.blocks[y][x],
-                x: x,
-                y: y,
-                theX,
-                blockY,
-                blockX,
-                blockWidth,
-                blockHeight,
-              });
+              // console.log({
+              //   block: this.currentAsciibirdMeta.blocks[y][x],
+              //   x: x,
+              //   y: y,
+              //   theX,
+              //   blockY,
+              //   blockX,
+              //   blockWidth,
+              //   blockHeight,
+              // });
 
               curBlock = this.currentAsciibirdMeta.blocks[y][x];
               blockX = blockWidth * theX;
 
               // Background block
-              this.ctx.fillStyle = curBlock.bg;
+              this.ctx.fillStyle = curBlock.fg;
               this.ctx.fillRect(blockX, blockY, this.currentAsciibirdMeta.blockWidth, this.currentAsciibirdMeta.blockHeight);
               
               let tempChar = "";
@@ -221,7 +211,7 @@ export default {
                 this.ctx.fillStyle = curBlock.fg;
                 this.ctx.fillText(tempChar, blockX + 3, blockY -3);
               } else {
-                console.log("Yo char doesn't exist, bro.");
+                // console.log("Yo char doesn't exist, bro.");
               }
               // }
 
@@ -238,7 +228,6 @@ export default {
             // break;
           }
         } else {
-          // console.log(JSON.stringify(this.currentAsciibirdMeta));
         }
 
         this.currentAsciibirdMeta.width = finalWidth;
@@ -247,47 +236,17 @@ export default {
       }
     },
     processMouseDown(e) {
-      // console.log("Mouse down");
       // this.canvasClass(e)
       this.selectionMode = true;
       this.startPosition.x = e.clientX;
       this.startPosition.y = e.clientY;
     },
     processMouseMove(e) {
-      // console.log("Mouse move");
       if (this.selectionMode) {
-        // console.log(this.startPosition);
 
-        this.ctx.beginPath();
-        this.ctx.rect(
-          this.startPosition.x,
-          this.startPosition.y,
-          e.clientX - this.startPosition.x,
-          e.clientY - this.startPosition.y
-        );
-        this.ctx.closePath();
-        this.ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-        this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-        this.ctx.strokeStyle = "#f00";
-        this.ctx.stroke();
       }
     },
-    triangleTest(e) {
-      // console.log("Mouse triangleTest");
-      // this.ctx = e.target;
-
-      this.ctx.strokeStyle = "red";
-      this.ctx.beginPath();
-      this.ctx.moveTo(100, 100);
-      this.ctx.lineTo(200, 100);
-      this.ctx.lineTo(200, 150);
-      this.ctx.closePath();
-      this.ctx.stroke();
-    },
     processMouseUp(e) {
-      // console.log("Mouse up");
-      this.ctx.fillStyle = "#fff";
-
       this.selectionMode = false;
       this.startPosition.x = null;
       this.startPosition.y = null;
@@ -296,8 +255,8 @@ export default {
       const width = 5000;
       const height = 5000;
 
-      const s = 13;
-      const sW = 8;
+      const s = 26;
+      const sW = 16;
       const pL = s;
       const pT = s;
       const pR = s;
