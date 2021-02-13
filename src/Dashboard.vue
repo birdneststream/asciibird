@@ -70,7 +70,7 @@
         {{ value.title }} ({{ value.width }} / {{ value.height }})
       </t-button>
 
-        <!-- <vue-draggable-resizable
+      <!-- <vue-draggable-resizable
           @dragging="onDrag"
           style="left: 70%; top: 10%;z-index: 100;"
           :resizable="false"
@@ -104,31 +104,31 @@
 import Toolbar from "./components/Toolbar.vue";
 export default {
   created() {
-    this.mircColors = this.$store.state.mircColors
-    this.charCodes = this.$store.state.charCodes
-    this.asciibirdMeta = this.$store.state.asciibirdMeta
+    this.mircColors = this.$store.state.mircColors;
+    this.charCodes = this.$store.state.charCodes;
+    this.asciibirdMeta = this.$store.state.asciibirdMeta;
   },
   components: { Toolbar },
-  name: 'Dashboard',
+  name: "Dashboard",
   data: () => ({
     forms: {
       createAscii: {
         width: 5,
         height: 5,
-        title: 'ascii',
+        title: "ascii",
       },
     },
     formsDefault: null,
     status: {
       createNew: false,
     },
-    text: 'ASCII',
+    text: "ASCII",
     currentTab: 1,
     asciibirdMeta: [],
     mircColors: null,
     charCodes: null,
 
-    asciiImport: '',
+    asciiImport: "",
     finalAscii: null,
     asciiArray: [],
     imageUrl: null,
@@ -145,13 +145,17 @@ export default {
 
       this.asciiArray = [];
       const tempBlocks = [];
+      var k = 0;
+      var fgColor = "";
+      var bgColor = "";
+      var colourIndex = null;
 
-      fileReader.addEventListener('load', () => {
+      fileReader.addEventListener("load", () => {
         this.asciiImport = fileReader.result;
-        this.asciiImport = this.asciiImport.split('\n');
+        this.asciiImport = this.asciiImport.split("\n");
 
         this.finalAscii = {
-          width: this.asciiImport[0].split('').length,
+          width: this.asciiImport[0].split("").length,
           height: this.asciiImport.length,
           title: filename,
           blockWidth: 16,
@@ -160,74 +164,88 @@ export default {
         };
 
         for (let y = 0; y < this.asciiImport.length; y++) {
-          const rowX = this.asciiImport[y].split('');
+          const rowX = this.asciiImport[y].split("");
 
           // console.log(rowX.length);
           if (rowX.length !== 0) {
+
             for (let x = 0; x < rowX.length; x++) {
-              switch (rowX[x]) {
-                case '\u0003':
-                  this.parseColor = true;
-                  break;
+              // Defining a small finite state machine
 
-                default:
+              // console.log("fgColor", fgColor);
+              // console.log("bgColor", bgColor);
+
+              // Detect the colour code
+              if (!this.parseColor) {
+                switch (rowX[x]) {
+                  case "\u0003":
+                    this.parseColor = true;
+                    continue;
+                    break;
+
+                  // default:
+                  //   this.parseColor = false;
+                  //   break;
+                }
+              } else {
+                // Parsing a colour
+                
+                // Try get the first double or single digit
+                for (k = x; k <= k + 2; k++) {
+                  // Get the first color
+                  if (rowX[k + 2] !== "," && fgColor.length < 2) {
+                    fgColor = fgColor + "" + rowX[k];
+                    console.log('first color', rowX[k]);
+                  } else {
+                    colourIndex = k;
+                    break;
+                  }
+                }
+
+                // Try get the second double or single digit
+                for (k = colourIndex; k <= colourIndex + 3; k++) {
+                  console.log('second color', rowX[k]);
+
+                  if (bgColor.length > 1) {
+                    bgColor = bgColor + "" + rowX[k];
+                  } else {
+                    break;
+                  }
+
+                  // colourIndex = k+1;
+                  console.log("fgColor", fgColor);
+                  console.log("bgColor", bgColor);
                   this.parseColor = false;
-                  break;
-              }
+                }
 
-              if (this.parseColor) {
-                this.colorCode = (
-                  rowX[x + 1]
-                  + rowX[x + 2]
-                  + rowX[x + 3]
-                ).split(',');
+                // Check colour codes < 0 and > 12
+                this.parseColor = false;
+                break;
+              } // End else parse color
+            } // end loop X
+          } // End if length
 
-                x++;
-                x++;
-                x++;
-                continue;
-              } else if (!this.parseColor) {
-                this.finalAscii.blocks[y][x] = {
-                  // x,
-                  // y,
-                  bg: this.mircColors[this.colorCode[0]],
-                  fg: this.mircColors[this.colorCode[1]],
-                  char: rowX[x],
-                };
-              }
-            }
 
-            this.colorCode = null;
-          } else {
-            this.finalAscii.height--;
-          }
-        }
-
-        // console.log('this.finalAscii', this.finalAscii);
-
-        this.$store.commit('newAsciibirdMeta', this.finalAscii);
-      }); // End function
-
-      this.asciiImportFile = files[0];
+          break;
+        } // End loop Y
+      });
     },
-
-
     createClick() {
       this.forms.createAscii.title = `New ASCII ${this.asciibirdMeta.length}`;
-      this.$modal.show('create-ascii-modal');
+      this.$modal.show("create-ascii-modal");
     },
     changeTab(key, value) {
       // Update the router title
       // if (this.$router.params[0] !== key) {
-      this.$router.push({ name: 'editor', params: { ascii: key } });
+      this.$router.push({ name: "editor", params: { ascii: key } });
       // }/
 
       // Update the tab index in vuex store
-      this.$store.commit('changeTab', key);
+      this.$store.commit("changeTab", key);
     },
     clearCache() {
       localStorage.clear();
-      window.location.href = '/';
+      window.location.href = "/";
     },
     createNewASCII() {
       const payload = {
@@ -259,13 +277,13 @@ export default {
 
       // console.log('payload', payload);
 
-      this.$store.commit('newAsciibirdMeta', payload);
-      this.$modal.hide('create-ascii-modal');
+      this.$store.commit("newAsciibirdMeta", payload);
+      this.$modal.hide("create-ascii-modal");
     },
     closeNewASCII({ params, cancel }) {
       this.forms.createAscii.width = 5;
       this.forms.createAscii.height = 5;
-      this.forms.createAscii.title = 'New ASCII';
+      this.forms.createAscii.title = "New ASCII";
     },
     create2DArray(rows) {
       const arr = [];
