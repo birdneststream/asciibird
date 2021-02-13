@@ -106,10 +106,10 @@ export default {
       return this.currentAsciibirdMeta.title ?? "";
     },
     watchColorChange() {
-      return this.$store.getters.getColor()
+      return this.$store.getColor
     },
     watchToolChange() {
-      return this.$store.getters.getTool()
+      return this.$store.getTool
     },
   },
   watch: {

@@ -25,7 +25,7 @@
         <t-button
           type="button"
           v-for="(value, keyToolbar) in toolbar"
-          :key="keyToolbar"
+          :key="keyToolbar+50"
           :style="makeToolbarButtonClass(value)"
           class="border-gray-300 m-1"
           v-html="value.icon"

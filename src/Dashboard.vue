@@ -93,6 +93,8 @@
 
       <Toolbar v-if="asciibirdMeta.length" />
 
+      <DebugPanel />
+
       <div class="border-gray-600">
         <router-view />
       </div>
@@ -102,13 +104,14 @@
 
 <script>
 import Toolbar from "./components/Toolbar.vue";
+import DebugPanel from "./components/DebugPanel.vue";
 export default {
   created() {
     this.mircColors = this.$store.state.mircColors;
     this.charCodes = this.$store.state.charCodes;
     this.asciibirdMeta = this.$store.state.asciibirdMeta;
   },
-  components: { Toolbar },
+  components: { Toolbar, DebugPanel },
   name: "Dashboard",
   data: () => ({
     forms: {
