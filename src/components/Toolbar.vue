@@ -2,13 +2,13 @@
   <div>
     <vue-draggable-resizable 
     @dragging="onDrag" 
-    style="z-index:100;"
+    style="z-index:100;min-height:500px;"
     :min-width=200
     :max-width=500
-    :min-height=300
-    :max-height=500
+    :min-height=500
+    :max-height=700
     >
-    <div style="height:100%;">
+    <div style="height:100%;min-height:500px;max-height:700px;">
       <t-card header="Tools and Stuff" style="height:100%;">
          
         <t-button

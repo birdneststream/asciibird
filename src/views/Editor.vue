@@ -26,6 +26,7 @@
         :height="canvas.height"
         class="canvas"
       ></canvas>
+
     </div>
   </div>
 </template>
