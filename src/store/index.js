@@ -73,9 +73,15 @@ export default new Vuex.Store({
   },
   getters: {
     getColor: state => state.toolbarState.currentColor,
-    getTool: state => state.toolbarState.currentTool
+    getTool: state => state.toolbarState.currentTool,
+    currentTab: state => state.tab,
+    charCodes: state => state.charCodes,
+    mircColors: state => state.mircColors,
+    currentAscii: state => state.asciibirdMeta[state.tab] ?? false,
+    asciibirdMeta: state => state.asciibirdMeta,
   },
   actions: {},
   modules: {},
   plugins: [vuexLocal.plugin],
 });
+

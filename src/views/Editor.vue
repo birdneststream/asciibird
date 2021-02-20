@@ -66,7 +66,7 @@ export default {
   name: "Editor",
   components: { Block },
   mounted() {
-    this.currentAsciibirdMeta = this.$store.state.asciibirdMeta[0];
+    this.currentAsciibirdMeta = this.$store.getters.currentAscii;
   },
   created() {},
   data: () => ({
@@ -93,8 +93,8 @@ export default {
     gridCtx: null,
   }),
   computed: {
-    getFullPath() {
-      return this.$route.path;
+    getCurrentTab() {
+      return this.$store.getters.currentTab;
     },
     generateCanvasId() {
       return `canvas`;
@@ -113,8 +113,8 @@ export default {
     },
   },
   watch: {
-    getFullPath(val) {
-      this.onChangeTab(val.split("/").join(""));
+    getCurrentTab(val, old) {
+      this.onChangeTab( val );
     },
     watchColorChange(val) {
       console.log(JSON.stringify(val))        
@@ -136,9 +136,9 @@ export default {
     // },
   },
   methods: {
-    onChangeTab(val) {
+    onChangeTab() {
       // Get the asciimeta index from the route URL
-      this.currentAsciibirdMeta = this.$store.state.asciibirdMeta[val];
+      this.currentAsciibirdMeta = this.$store.getters.currentAscii;
 
 
       // I dono some routs bs or some bs needs -1 to make it all work

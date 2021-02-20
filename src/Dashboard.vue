@@ -45,12 +45,11 @@
 
     <div>
       <t-button @click="createClick()" class="ml-1">Add new ASCII</t-button>
-
       <t-button @click="clearCache()" class="ml-1">Clear and Refresh</t-button>
-
       <t-button @click="$refs.asciiInput.click()" class="ml-1"
         >Import ASCII</t-button
       >
+
       <input
         type="file"
         style="display: none"
@@ -70,33 +69,12 @@
         {{ value.title }} ({{ value.width }} / {{ value.height }})
       </t-button>
 
-      <!-- <vue-draggable-resizable
-          @dragging="onDrag"
-          style="left: 70%; top: 10%;z-index: 100;"
-          :resizable="false"
-          v-if="asciibirdMeta.length"
-        >
-          <t-card header="Tools and Stuff" style="height: 500px">
-            <t-button
-              type="button"
-              v-for="(value, key) in mircColors"
-              :key="key"
-              :style="makeButtonClass(value)"
-              class="border-gray-300 m-1"
-            ></t-button>
-
-            <hr />
-            <h5>Brushes and Shit</h5>
-            <hr />
-          </t-card>
-        </vue-draggable-resizable> -->
-
       <Toolbar v-if="asciibirdMeta.length" />
-
       <DebugPanel v-if="asciibirdMeta.length" />
 
       <div class="border-gray-600">
-        <router-view />
+        <!-- <router-view /> -->
+        <Editor v-if="asciibirdMeta.length" />
       </div>
     </div>
   </div>
@@ -105,13 +83,14 @@
 <script>
 import Toolbar from "./components/Toolbar.vue";
 import DebugPanel from "./components/DebugPanel.vue";
+import Editor from "./views/Editor.vue";
 export default {
   created() {
-    this.mircColors = this.$store.state.mircColors;
-    this.charCodes = this.$store.state.charCodes;
-    this.asciibirdMeta = this.$store.state.asciibirdMeta;
+    this.mircColors = this.$store.getters.mircColors;
+    this.charCodes = this.$store.getters.charCodes;
+    this.asciibirdMeta = this.$store.getters.asciibirdMeta;
   },
-  components: { Toolbar, DebugPanel },
+  components: { Toolbar, DebugPanel, Editor },
   name: "Dashboard",
   data: () => ({
     forms: {
@@ -147,8 +126,7 @@ export default {
       this.asciiImport = fileReader.readAsText(files[0]);
 
       fileReader.addEventListener("load", () => {
-        let k = 0;
-        let colourIndex = null;
+        const MIRC_MAX_COLORS = this.$store.getters.mircColors.length;
 
         let curBlock = {
           fg: null,
@@ -163,11 +141,10 @@ export default {
         };
 
         this.asciiImport = fileReader.result;
-        // this.asciiImport = this.asciiImport.split("\n");
 
         this.finalAscii = {
           width: 0, // defined later
-          height: this.asciiImport.length,
+          height: this.asciiImport.split("\n").length + 1,
           title: filename,
           blockWidth: 16,
           blockHeight: 26,
@@ -179,8 +156,11 @@ export default {
         let asciiX = 0;
         let asciiY = 0;
 
-        for (let charPos = 0; charPos < this.asciiImport.length-1; charPos++)
-        {
+        for (
+          let charPos = 0;
+          charPos < this.asciiImport.length - 1;
+          charPos++
+        ) {
           let curChar = asciiStringArray[charPos];
           // Defining a small finite state machine
           // Detect the colour code
@@ -200,45 +180,52 @@ export default {
               charPos++;
 
               for (let k = charPos; k <= k + 3; k++) {
-
-                if (firstColor && asciiStringArray[k] === ",") {
-                  firstColor = false;
-                } else if (firstColor) {
-                  if (curBlock.fg === null) {
-                    curBlock.fg = asciiStringArray[k];
-                  } else {
-                    curBlock.fg =
-                      "" + curBlock.fg + asciiStringArray[k];
-                  }
+                if (
+                  !isNaN(`${asciiStringArray[k]}${asciiStringArray[k + 1]}`) &&
+                  `${asciiStringArray[k]}${asciiStringArray[k + 1]}` <=
+                    MIRC_MAX_COLORS
+                ) {
+                  // Is valid number
+                  curBlock.fg = `${asciiStringArray[k]}${
+                    asciiStringArray[k + 1]
+                  }`;
+                  firstColor = false
+                } else {
+                  //
+                  curBlock.fg = `${asciiStringArray[k]}`;
+                  firstColor = false
                 }
 
                 if (!firstColor && asciiStringArray[k] !== ",") {
-                  
-                  if (!isNaN(`${asciiStringArray[k]}${asciiStringArray[k+1]}`) && (`${asciiStringArray[k]}${asciiStringArray[k+1]}`) <= 15) {
+                  if (
+                    !isNaN(
+                      `${asciiStringArray[k]}${asciiStringArray[k + 1]}`
+                    ) &&
+                    `${asciiStringArray[k]}${asciiStringArray[k + 1]}` <=
+                      MIRC_MAX_COLORS
+                  ) {
                     // Is valid number
-                    curBlock.bg = `${asciiStringArray[k]}${asciiStringArray[k+1]}`;
+                    curBlock.bg = `${asciiStringArray[k]}${
+                      asciiStringArray[k + 1]
+                    }`;
                   } else {
                     //
                     curBlock.bg = `${asciiStringArray[k]}`;
                   }
 
-                  curBlock.char = `${asciiStringArray[k+1]}`;
+                  curBlock.char = `${asciiStringArray[k + 1]}`;
                   break;
                 }
-
               }
 
               // Check colours
               if (
-                (
-                  !isNaN(curBlock.fg) &&
-                  curBlock.fg >= 0 &&
-                  curBlock.fg <= 15
-                ) && (
-                  !isNaN(curBlock.bg) &&
-                    curBlock.bg >= 0 &&
-                    curBlock.bg <= 15
-                )
+                !isNaN(curBlock.fg) &&
+                curBlock.fg >= 0 &&
+                curBlock.fg <= MIRC_MAX_COLORS &&
+                !isNaN(curBlock.bg) &&
+                curBlock.bg >= 0 &&
+                curBlock.bg <= MIRC_MAX_COLORS
               ) {
                 // Block is good
                 // console.log(`curBlock GOOD`, curBlock);
@@ -247,38 +234,23 @@ export default {
               }
 
               charPos++;
-              // console.log('incriment', ("," +  curBlock.fg + curBlock.bg).length)
-              // charPos = charPos + ("," +  curBlock.fg + curBlock.bg).length-1;
-          break;
+              break;
 
-          default:
-            // console.log('curChar', curChar)
-            // curBlock.char = curChar;
-            asciiX++;
-          break;
-
+            default:
+              asciiX++;
+              break;
           } // End Switch
 
-          // console.log({
-          //   x: asciiX,
-          //   y: asciiY,
-          //   curBlock,
-          //   charPos
-          // });
-          // console.log(this.mircColors[curBlock.fg])
-
-          curBlock.fg = this.mircColors[curBlock.fg-1];
-          curBlock.bg = this.mircColors[curBlock.bg-1];
+          curBlock.fg = this.mircColors[curBlock.fg - 1];
+          curBlock.bg = this.mircColors[curBlock.bg - 1];
 
           this.finalAscii.blocks[asciiY][asciiX] = curBlock;
-
-
         } // End loop charPos
 
-          // Presume if we get this far we have a colour state set
-          this.$store.commit('newAsciibirdMeta', this.finalAscii);
+        // Presume if we get this far we have a colour state set
+        this.$store.commit("newAsciibirdMeta", this.finalAscii);
 
-          // End file upload
+        // End file upload
       });
 
       this.asciiImportFile = files[0];
@@ -290,7 +262,7 @@ export default {
     changeTab(key, value) {
       // Update the router title
       // if (this.$router.params[0] !== key) {
-      this.$router.push({ name: "editor", params: { ascii: key } });
+      // this.$router.push({ name: "editor", params: { ascii: key } });
       // }/
 
       // Update the tab index in vuex store
