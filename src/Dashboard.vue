@@ -127,7 +127,7 @@ export default {
 
       fileReader.addEventListener("load", () => {
         // Max available colors
-        const MIRC_MAX_COLORS = this.$store.getters.mircColors.length;
+        const MIRC_MAX_COLORS = this.mircColors.length;
 
         // The current state of the colors
         let curBlock = {
@@ -195,20 +195,16 @@ export default {
               charPos++;
 
               for (let k = charPos; k <= k + 3; k++) {
-                if (
-                  !isNaN(`${asciiStringArray[k]}${asciiStringArray[k + 1]}`) &&
-                  `${asciiStringArray[k]}${asciiStringArray[k + 1]}` <=
-                    MIRC_MAX_COLORS
-                ) {
-                  // Is valid number
-                  curBlock.fg = `${asciiStringArray[k]}${
-                    asciiStringArray[k + 1]
-                  }`;
+                
+                if (firstColor && asciiStringArray[k] === ",") {
                   firstColor = false;
-                } else {
-                  //
-                  curBlock.fg = `${asciiStringArray[k]}`;
-                  firstColor = false;
+                } else if (firstColor) {
+                  if (curBlock.fg === null) {
+                    curBlock.fg = asciiStringArray[k];
+                  } else {
+                    curBlock.fg =
+                      "" + curBlock.fg + asciiStringArray[k];
+                  }
                 }
 
                 if (!firstColor && asciiStringArray[k] !== ",") {
@@ -233,10 +229,6 @@ export default {
                 }
               }
 
-              // This gets the final color code width
-              // This should add the , to the width and we already have the colors
-              // asciiX--;
-
               // Check colours
               // Given how we have the code above we may not need this
               if (
@@ -249,6 +241,8 @@ export default {
               ) {
                 // Block is good
                 // console.log(`curBlock GOOD`, curBlock);
+
+                // Minus X value if all good
                 asciiX--;
               } else {
                 console.log(`curBlock BAD`, curBlock);
@@ -262,8 +256,8 @@ export default {
               break;
           } // End Switch
 
-          curBlock.fg = this.mircColors[curBlock.fg - 1];
-          curBlock.bg = this.mircColors[curBlock.bg - 1];
+          // curBlock.fg = this.mircColors[curBlock.fg - 1];
+          // curBlock.bg = this.mircColors[curBlock.bg - 1];
 
           this.finalAscii.blocks[asciiY][asciiX] = curBlock;
         } // End loop charPos
