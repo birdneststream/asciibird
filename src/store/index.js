@@ -55,7 +55,8 @@ export default new Vuex.Store({
     toolbarState: {
       currentColor: 0,
       currentTool : null,
-    }
+    },
+    blockSizeMultiplier: 1,
   },
   mutations: {
     changeTab(state, payload) {
@@ -79,6 +80,8 @@ export default new Vuex.Store({
     mircColors: state => state.mircColors,
     currentAscii: state => state.asciibirdMeta[state.tab] ?? false,
     asciibirdMeta: state => state.asciibirdMeta,
+    nextTabValue: state => state.asciibirdMeta.length,
+    blockSizeMultiplier: state => state.blockSizeMultiplier,
   },
   actions: {},
   modules: {},

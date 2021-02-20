@@ -59,7 +59,6 @@ body {
 </style>
 
 <script>
-import VueDraggableResizable from "vue-draggable-resizable";
 import Block from "../components/Block.vue";
 
 export default {
@@ -163,6 +162,9 @@ export default {
       } else {
 
       }
+
+      //  this.drawGrid();
+        this.redrawCanvas();
     },
     redrawCanvas() {
       // console.log("Canvas redraw");
@@ -174,7 +176,6 @@ export default {
         if (this.currentAsciibirdMeta.blocks.length) {
           const blockWidth = this.currentAsciibirdMeta.blockWidth;
           const blockHeight = this.currentAsciibirdMeta.blockHeight;
-          var finalWidth = 0;
 
           // Position of the meta array
           let x = 0;
@@ -190,7 +191,7 @@ export default {
 
           this.ctx.font = "16px Mono";
 
-          for (y = 0; y < this.currentAsciibirdMeta.blocks.length; y++) {
+          for (y = 0; y < this.currentAsciibirdMeta.width; y++) {
             blockY = this.currentAsciibirdMeta.blockHeight * y;
 
             for (x = 0; x < this.currentAsciibirdMeta.blocks[y].length; x++) {
@@ -222,28 +223,16 @@ export default {
               if (curBlock.char) {
                 tempChar = curBlock.char;
                 this.ctx.fillStyle = curBlock.fg;
-                this.ctx.fillText(tempChar, blockX + 3, blockY -3);
-              } else {
-                // console.log("Yo char doesn't exist, bro.");
-              }
-              // }
+
+                this.ctx.fillText(tempChar, blockX, blockY - 3);
+              } 
 
               theX++;
               // break;
             }
-
-            if (theX !== 0) {
-              finalWidth = theX;
-            }
-
-            theX = 0;
-
-            // break;
           }
         } else {
         }
-
-        this.currentAsciibirdMeta.width = finalWidth;
 
         this.ctx.stroke();
       }

@@ -126,35 +126,46 @@ export default {
       this.asciiImport = fileReader.readAsText(files[0]);
 
       fileReader.addEventListener("load", () => {
+        // Max available colors
         const MIRC_MAX_COLORS = this.$store.getters.mircColors.length;
 
+        // The current state of the colors
         let curBlock = {
           fg: null,
           bg: null,
           char: null,
         };
 
+        // Object clone this to reset the block state
         let emptyCurBlock = {
           fg: null,
           bg: null,
           char: null,
         };
 
+        // set asciiImport as the entire file contents as a string
         this.asciiImport = fileReader.result;
 
+        // This will end up in the asciibirdMeta
         this.finalAscii = {
-          width: 0, // defined later
-          height: this.asciiImport.split("\n").length + 1,
+          width: false, // defined in: switch (curChar) case "\n":
+          height: this.asciiImport.split("\n").length,
           title: filename,
-          blockWidth: 16,
-          blockHeight: 26,
-          blocks: this.create2DArray(this.asciiImport.length),
+          key: this.$store.getters.nextTabValue,
+          blockWidth: 8 * this.$store.getters.blockSizeMultiplier,
+          blockHeight: 13 * this.$store.getters.blockSizeMultiplier,
+          blocks: this.create2DArray(this.asciiImport.split("\n").length),
         };
 
+        // Turn the entire ascii string into an array
         let asciiStringArray = this.asciiImport.split("");
 
+        // The proper X and Y value of the block inside the ASCII
         let asciiX = 0;
         let asciiY = 0;
+
+        // used the calculate the width
+        let colorCharWidth = 0;
 
         for (
           let charPos = 0;
@@ -162,20 +173,28 @@ export default {
           charPos++
         ) {
           let curChar = asciiStringArray[charPos];
+         
           // Defining a small finite state machine
-          // Detect the colour code
-
+          // to detect the colour code
           switch (curChar) {
             case "\n":
               // Reset the colours here on a new line
               curBlock = Object.assign(curBlock, emptyCurBlock);
               asciiY++;
+
+              // We can determine the width at the end of the first line
+              if (!this.finalAscii.width) {
+                this.finalAscii.width = asciiX - 1; // minus \n for the proper width
+              }
+
+              colorCharWidth = 0;
               asciiX = 0;
               break;
 
             case "\u0003":
               curBlock = Object.assign(curBlock, emptyCurBlock);
               let firstColor = true;
+
               // Pick up the colour here, then set it
               charPos++;
 
@@ -189,11 +208,13 @@ export default {
                   curBlock.fg = `${asciiStringArray[k]}${
                     asciiStringArray[k + 1]
                   }`;
-                  firstColor = false
+                  colorCharWidth += 2;
+                  firstColor = false;
                 } else {
                   //
                   curBlock.fg = `${asciiStringArray[k]}`;
-                  firstColor = false
+                  colorCharWidth++;
+                  firstColor = false;
                 }
 
                 if (!firstColor && asciiStringArray[k] !== ",") {
@@ -208,9 +229,11 @@ export default {
                     curBlock.bg = `${asciiStringArray[k]}${
                       asciiStringArray[k + 1]
                     }`;
+                    colorCharWidth += 2;
                   } else {
                     //
                     curBlock.bg = `${asciiStringArray[k]}`;
+                    colorCharWidth++;
                   }
 
                   curBlock.char = `${asciiStringArray[k + 1]}`;
@@ -218,7 +241,13 @@ export default {
                 }
               }
 
+              // This gets the final color code width
+              // This should add the , to the width and we already have the colors
+              colorCharWidth++;
+              // asciiX--;
+
               // Check colours
+              // Given how we have the code above we may not need this
               if (
                 !isNaN(curBlock.fg) &&
                 curBlock.fg >= 0 &&
@@ -229,6 +258,7 @@ export default {
               ) {
                 // Block is good
                 // console.log(`curBlock GOOD`, curBlock);
+                asciiX--;
               } else {
                 console.log(`curBlock BAD`, curBlock);
               }
@@ -260,11 +290,6 @@ export default {
       this.$modal.show("create-ascii-modal");
     },
     changeTab(key, value) {
-      // Update the router title
-      // if (this.$router.params[0] !== key) {
-      // this.$router.push({ name: "editor", params: { ascii: key } });
-      // }/
-
       // Update the tab index in vuex store
       this.$store.commit("changeTab", key);
     },
