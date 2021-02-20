@@ -63,6 +63,7 @@ import Block from "../components/Block.vue";
 
 export default {
   name: "Editor",
+  props: ['tab','refresh'],
   components: { Block },
   mounted() {
     this.currentAsciibirdMeta = this.$store.getters.currentAscii;
@@ -95,7 +96,10 @@ export default {
   }),
   computed: {
     getCurrentTab() {
-      return this.$store.getters.currentTab;
+      return this.tab;
+    },
+    shouldRefresh() {
+      return this.refresh;
     },
     generateCanvasId() {
       return `canvas`;
@@ -116,6 +120,9 @@ export default {
   watch: {
     getCurrentTab(val, old) {
       this.onChangeTab( val );
+    },
+    shouldRefresh(val,old) {
+      
     },
     watchColorChange(val) {
       console.log(JSON.stringify(val))        
@@ -177,6 +184,7 @@ export default {
       // Clears the whole canvas
       if (this.ctx) {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.ctx.stroke();
 
         if (this.currentAsciibirdMeta.blocks.length) {
           const BLOCK_WIDTH = this.currentAsciibirdMeta.blockWidth;
@@ -194,11 +202,11 @@ export default {
           this.ctx.font = "16px Mono";
 
           for (y = 0; y < this.currentAsciibirdMeta.height; y++) {
-            canvasY = BLOCK_HEIGHT * y;
+            canvasY = BLOCK_HEIGHT * y+1;
 
             for (x = 0; x < this.currentAsciibirdMeta.width; x++) {
               curBlock = JSON.parse(JSON.stringify(this.currentAsciibirdMeta.blocks[y][x]));
-              canvasX = BLOCK_WIDTH * x;
+              canvasX = BLOCK_WIDTH * x+1;
 
               if (curBlock.char) {
                 this.ctx.fillStyle = this.mircColors[curBlock.fg];

@@ -74,7 +74,7 @@
 
       <div class="border-gray-600">
         <!-- <router-view /> -->
-        <Editor v-if="asciibirdMeta.length" />
+        <Editor :tab="currentTab" :refresh="refresh" v-if="asciibirdMeta.length" />
       </div>
     </div>
   </div>
@@ -109,7 +109,7 @@ export default {
     asciibirdMeta: [],
     mircColors: null,
     charCodes: null,
-
+    refresh: false,
     asciiImport: "",
     finalAscii: null,
     asciiArray: [],
@@ -209,13 +209,15 @@ export default {
               for (let k = charPos; k <= k + 3; k++) {
                 
                 if (firstColor && asciiStringArray[k] === ",") {
+                  // No fg set
+                  
                   firstColor = false;
                 } else if (firstColor) {
                   if (curBlock.fg === null) {
-                    curBlock.fg = asciiStringArray[k];
+                    curBlock.fg = parseInt(asciiStringArray[k]);
                   } else {
                     curBlock.fg =
-                      "" + curBlock.fg + asciiStringArray[k];
+                      parseInt("" + curBlock.fg + asciiStringArray[k]);
                   }
                 }
 
@@ -228,12 +230,12 @@ export default {
                       MIRC_MAX_COLORS
                   ) {
                     // Is valid number
-                    curBlock.bg = `${asciiStringArray[k]}${
+                    curBlock.bg = parseInt(`${asciiStringArray[k]}${
                       asciiStringArray[k + 1]
-                    }`;
+                    }`);
                   } else {
                     //
-                    curBlock.bg = `${asciiStringArray[k]}`;
+                    curBlock.bg = parseInt(`${asciiStringArray[k]}`);
                   }
 
                   // curBlock.char = `${asciiStringArray[k + 1]}`;
@@ -297,6 +299,8 @@ export default {
     },
     changeTab(key, value) {
       // Update the tab index in vuex store
+      this.currentTab = key
+      this.refresh = !this.refresh
       this.$store.commit("changeTab", key);
     },
     clearCache() {
@@ -331,6 +335,7 @@ export default {
 
       this.$store.commit("newAsciibirdMeta", payload);
       this.$modal.hide("create-ascii-modal");
+      this.refresh = !this.refresh
     },
     closeNewASCII({ params, cancel }) {
       this.forms.createAscii.width = 5;

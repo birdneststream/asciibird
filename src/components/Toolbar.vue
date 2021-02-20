@@ -2,11 +2,12 @@
   <div>
     <vue-draggable-resizable 
     @dragging="onDrag" 
-    style="z-index:100;min-height:500px;"
+    style="z-index:5;min-height:500px;"
     :min-width=200
     :max-width=500
     :min-height=500
     :max-height=700
+    :x=800
     >
     <div style="height:100%;min-height:500px;max-height:700px;">
       <t-card header="Tools and Stuff" style="height:100%;">
@@ -47,6 +48,7 @@ export default {
     this.toolbarState = this.$store.state.toolbarState;
   },
   name: "Toolbar",
+  
   data: () => ({
     mircColors: null,
     charCodes: null,
