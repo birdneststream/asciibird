@@ -165,6 +165,10 @@ export default {
         let asciiY = 0;
         let firstColor = true;
 
+        let colorChar1 = null
+        let colorChar2 = null
+        var parsedColor = null
+
         for (
           let charPos = 0;
           charPos <= this.asciiImport.length - 1;
@@ -189,8 +193,6 @@ export default {
                 this.finalAscii.width = asciiX - 1; // minus \n for the proper width
               }
 
-
-
               asciiX = 0;
               break;
 
@@ -201,52 +203,56 @@ export default {
                           char: null,
                         };
               firstColor = true;
-              curBlock.fg = ""
-              curBlock.bg = ""
-              // Pick up the colour here, then set it
               charPos++;
 
               for (let k = charPos; k <= k + 3; k++) {
                 
-                if (firstColor && asciiStringArray[k] === ",") {
-                  // No fg set
+                // Try to get the first color code, could be
+                // C,2XXXX - blank bg
+                // C6,XXXX - blank fg
+                // Can also exist
+
+                // if (firstColor && asciiStringArray[k] === ",") {
+                //   // No fg set
                   
-                  firstColor = false;
-                } else if (firstColor) {
-                  if (curBlock.fg === null) {
-                    curBlock.fg = parseInt(asciiStringArray[k]);
+                //   firstColor = false;
+                // } else  
+                if (firstColor && asciiStringArray[k] !== ",") {
+                  colorChar1 = asciiStringArray[k]
+                  colorChar2 = asciiStringArray[k + 1]
+                  parsedColor = `${colorChar1}${colorChar2}`
+
+                  if (!isNaN(`${parsedColor}`) && parseInt(`${parsedColor}`) <= MIRC_MAX_COLORS && parseInt(`${parsedColor}`) >= 0) {
+                    curBlock.fg = parseInt(`${parsedColor}`);
+                    firstColor = false;
                   } else {
-                    curBlock.fg =
-                      parseInt("" + curBlock.fg + asciiStringArray[k]);
+                    curBlock.fg = parseInt(`${colorChar1}`); 
+                    firstColor = false; 
                   }
+
+                  charPos++;
                 }
 
                 if (!firstColor && asciiStringArray[k] !== ",") {
-                  if (
-                    !isNaN(
-                      `${asciiStringArray[k]}${asciiStringArray[k + 1]}`
-                    ) &&
-                    `${asciiStringArray[k]}${asciiStringArray[k + 1]}` <=
-                      MIRC_MAX_COLORS
-                  ) {
-                    // Is valid number
-                    curBlock.bg = parseInt(`${asciiStringArray[k]}${
-                      asciiStringArray[k + 1]
-                    }`);
+                  colorChar1 = asciiStringArray[k]
+                  colorChar2 = asciiStringArray[k + 1]
+                  parsedColor = `${colorChar1}${colorChar2}`
+
+                  if (!isNaN(`${parsedColor}`) && parseInt(`${parsedColor}`) <= MIRC_MAX_COLORS && parseInt(`${parsedColor}`) >= 0) {
+                    curBlock.bg = parseInt(`${parsedColor}`);
                   } else {
-                    //
-                    curBlock.bg = parseInt(`${asciiStringArray[k]}`);
+                    curBlock.bg = parseInt(`${colorChar1}`);
                   }
 
-                  // curBlock.char = `${asciiStringArray[k + 1]}`;
-                  break;
+                  charPos++;
+                   break;
                 }
+
+               
               }
 
               // Check colours
               // Given how we have the code above we may not need this
-              //asciiX--;
-
               if (
                 !isNaN(curBlock.fg) &&
                 curBlock.fg >= 0 &&
@@ -260,22 +266,16 @@ export default {
 
                 // Minus X value if all good
                 asciiX--;
-                
-                // this.finalAscii.blocks[asciiY][asciiX] = curBlock;
               } else {
                 console.log(`curBlock BAD`, JSON.stringify(curBlock));
               }
 
-              charPos++;
+              // charPos++;
               break;
 
             default:
                 curBlock.char = curChar
                 asciiX++;
-
-                // The console log shows the correct curBlock
-                console.log(JSON.stringify({asciiY, asciiX, curBlock}))
-
                 // Fk this js shit, serialising the curBlock works much better. Lost hours on this bs, fk.
                 this.finalAscii.blocks[asciiY][asciiX] = JSON.parse(JSON.stringify(curBlock));
 
