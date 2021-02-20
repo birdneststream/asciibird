@@ -163,10 +163,11 @@ export default {
         // The proper X and Y value of the block inside the ASCII
         let asciiX = 0;
         let asciiY = 0;
+        let firstColor = true;
 
         for (
           let charPos = 0;
-          charPos < this.asciiImport.length - 1;
+          charPos <= this.asciiImport.length - 1;
           charPos++
         ) {
           let curChar = asciiStringArray[charPos];
@@ -176,7 +177,11 @@ export default {
           switch (curChar) {
             case "\n":
               // Reset the colours here on a new line
-              curBlock = Object.assign(curBlock, emptyCurBlock);
+              curBlock = {
+                          fg: null,
+                          bg: null,
+                          char: null,
+                        };
               asciiY++;
 
               // We can determine the width at the end of the first line
@@ -184,13 +189,20 @@ export default {
                 this.finalAscii.width = asciiX - 1; // minus \n for the proper width
               }
 
+
+
               asciiX = 0;
               break;
 
             case "\u0003":
-              curBlock = Object.assign(curBlock, emptyCurBlock);
-              let firstColor = true;
-
+              curBlock = {
+                          fg: null,
+                          bg: null,
+                          char: null,
+                        };
+              firstColor = true;
+              curBlock.fg = ""
+              curBlock.bg = ""
               // Pick up the colour here, then set it
               charPos++;
 
@@ -224,13 +236,15 @@ export default {
                     curBlock.bg = `${asciiStringArray[k]}`;
                   }
 
-                  curBlock.char = `${asciiStringArray[k + 1]}`;
+                  // curBlock.char = `${asciiStringArray[k + 1]}`;
                   break;
                 }
               }
 
               // Check colours
               // Given how we have the code above we may not need this
+              //asciiX--;
+
               if (
                 !isNaN(curBlock.fg) &&
                 curBlock.fg >= 0 &&
@@ -244,25 +258,32 @@ export default {
 
                 // Minus X value if all good
                 asciiX--;
+                
+                // this.finalAscii.blocks[asciiY][asciiX] = curBlock;
               } else {
-                console.log(`curBlock BAD`, curBlock);
+                console.log(`curBlock BAD`, JSON.stringify(curBlock));
               }
 
               charPos++;
               break;
 
             default:
-              asciiX++;
+                curBlock.char = curChar
+                asciiX++;
+
+                // The console log shows the correct curBlock
+                console.log(JSON.stringify({asciiY, asciiX, curBlock}))
+
+                // Fk this js shit, serialising the curBlock works much better. Lost hours on this bs, fk.
+                this.finalAscii.blocks[asciiY][asciiX] = JSON.parse(JSON.stringify(curBlock));
+
               break;
           } // End Switch
 
-          // curBlock.fg = this.mircColors[curBlock.fg - 1];
-          // curBlock.bg = this.mircColors[curBlock.bg - 1];
-
-          this.finalAscii.blocks[asciiY][asciiX] = curBlock;
+          // break;
         } // End loop charPos
 
-        // Presume if we get this far we have a colour state set
+        console.log(JSON.stringify(this.finalAscii.blocks))
         this.$store.commit("newAsciibirdMeta", this.finalAscii);
 
         // End file upload
@@ -297,12 +318,8 @@ export default {
       for (let x = 0; x < payload.width; x++) {
         for (let y = 0; y < payload.height; y++) {
           payload.blocks[y].push({
-            bg: this.mircColors[
-              Math.floor(Math.random() * this.mircColors.length)
-            ],
-            fg: this.mircColors[
-              Math.floor(Math.random() * this.mircColors.length)
-            ],
+            bg: Math.floor(Math.random() * this.mircColors.length),
+            fg: Math.floor(Math.random() * this.mircColors.length),
             char: this.charCodes[
               Math.floor(Math.random() * this.charCodes.length)
             ],

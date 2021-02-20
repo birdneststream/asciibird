@@ -66,6 +66,7 @@ export default {
   components: { Block },
   mounted() {
     this.currentAsciibirdMeta = this.$store.getters.currentAscii;
+    this.mircColors = this.$store.getters.mircColors;
   },
   created() {},
   data: () => ({
@@ -79,6 +80,7 @@ export default {
       message: "Hello Vue!",
       vueCanvas: null,
     },
+    mircColors: null,
     ctx: null,
     selectionMode: false,
     startPosition: {
@@ -135,6 +137,9 @@ export default {
     // },
   },
   methods: {
+    getMircColor(index) {
+      return this.$store.getters.mircColors[index]
+    },
     onChangeTab() {
       // Get the asciimeta index from the route URL
       this.currentAsciibirdMeta = this.$store.getters.currentAscii;
@@ -174,64 +179,39 @@ export default {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         if (this.currentAsciibirdMeta.blocks.length) {
-          const blockWidth = this.currentAsciibirdMeta.blockWidth;
-          const blockHeight = this.currentAsciibirdMeta.blockHeight;
+          const BLOCK_WIDTH = this.currentAsciibirdMeta.blockWidth;
+          const BLOCK_HEIGHT = this.currentAsciibirdMeta.blockHeight;
 
           // Position of the meta array
           let x = 0;
           let y = 0;
 
-          // Try get better loop
-          let theX = 0;
-
           // Draws the actual rectangle
-          let blockX = 0;
-          let blockY = 0;
+          let canvasX = 0;
+          let canvasY = 0;
           let curBlock = {};
 
           this.ctx.font = "16px Mono";
 
-          for (y = 0; y < this.currentAsciibirdMeta.width; y++) {
-            blockY = this.currentAsciibirdMeta.blockHeight * y;
+          for (y = 0; y < this.currentAsciibirdMeta.height; y++) {
+            canvasY = BLOCK_HEIGHT * y;
 
-            for (x = 0; x < this.currentAsciibirdMeta.blocks[y].length; x++) {
-              if (!this.currentAsciibirdMeta.blocks[y][x]) {
-                continue;
-              }
-
-              // if (this.currentAsciibirdMeta.blocks[y][x] !== undefined) {
-              // console.log({
-              //   block: this.currentAsciibirdMeta.blocks[y][x],
-              //   x: x,
-              //   y: y,
-              //   theX,
-              //   blockY,
-              //   blockX,
-              //   blockWidth,
-              //   blockHeight,
-              // });
-
-              curBlock = this.currentAsciibirdMeta.blocks[y][x];
-              blockX = blockWidth * theX;
-
-              // Background block
-              this.ctx.fillStyle = curBlock.fg;
-              this.ctx.fillRect(blockX, blockY, this.currentAsciibirdMeta.blockWidth, this.currentAsciibirdMeta.blockHeight);
-              
-              let tempChar = "";
+            for (x = 0; x < this.currentAsciibirdMeta.width; x++) {
+              curBlock = JSON.parse(JSON.stringify(this.currentAsciibirdMeta.blocks[y][x]));
+              canvasX = BLOCK_WIDTH * x;
 
               if (curBlock.char) {
-                tempChar = curBlock.char;
-                this.ctx.fillStyle = curBlock.fg;
-
-                this.ctx.fillText(tempChar, blockX, blockY - 3);
+                this.ctx.fillStyle = this.mircColors[curBlock.fg];
+                this.ctx.fillText(curBlock.char, canvasX + 3, canvasY - 3);
               } 
 
-              theX++;
+              // Background block
+              this.ctx.fillStyle = this.mircColors[curBlock.bg];
+              this.ctx.fillRect(canvasX, canvasY, BLOCK_WIDTH, BLOCK_HEIGHT);
+
               // break;
             }
           }
-        } else {
         }
 
         this.ctx.stroke();
