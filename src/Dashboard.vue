@@ -93,7 +93,7 @@
 
       <Toolbar v-if="asciibirdMeta.length" />
 
-      <DebugPanel />
+      <DebugPanel v-if="asciibirdMeta.length" />
 
       <div class="border-gray-600">
         <router-view />
@@ -146,19 +146,27 @@ export default {
       const fileReader = new FileReader();
       this.asciiImport = fileReader.readAsText(files[0]);
 
-      this.asciiArray = [];
-      const tempBlocks = [];
-      var k = 0;
-      var fgColor = "";
-      var bgColor = "";
-      var colourIndex = null;
-
       fileReader.addEventListener("load", () => {
+        let k = 0;
+        let colourIndex = null;
+
+        let curBlock = {
+          fg: null,
+          bg: null,
+          char: null,
+        };
+
+        let emptyCurBlock = {
+          fg: null,
+          bg: null,
+          char: null,
+        };
+
         this.asciiImport = fileReader.result;
-        this.asciiImport = this.asciiImport.split("\n");
+        // this.asciiImport = this.asciiImport.split("\n");
 
         this.finalAscii = {
-          width: this.asciiImport[0].split("").length,
+          width: 0, // defined later
           height: this.asciiImport.length,
           title: filename,
           blockWidth: 16,
@@ -166,72 +174,114 @@ export default {
           blocks: this.create2DArray(this.asciiImport.length),
         };
 
-        for (let y = 0; y < this.asciiImport.length; y++) {
-          const rowX = this.asciiImport[y].split("");
+        let asciiStringArray = this.asciiImport.split("");
 
-          // console.log(rowX.length);
-          if (rowX.length !== 0) {
+        let asciiX = 0;
+        let asciiY = 0;
 
-            for (let x = 0; x < rowX.length; x++) {
-              // Defining a small finite state machine
+        for (let charPos = 0; charPos < this.asciiImport.length-1; charPos++)
+        {
+          let curChar = asciiStringArray[charPos];
+          // Defining a small finite state machine
+          // Detect the colour code
 
-              // console.log("fgColor", fgColor);
-              // console.log("bgColor", bgColor);
+          switch (curChar) {
+            case "\n":
+              // Reset the colours here on a new line
+              curBlock = Object.assign(curBlock, emptyCurBlock);
+              asciiY++;
+              asciiX = 0;
+              break;
 
-              // Detect the colour code
-              if (!this.parseColor) {
-                switch (rowX[x]) {
-                  case "\u0003":
-                    this.parseColor = true;
-                    continue;
-                    break;
+            case "\u0003":
+              curBlock = Object.assign(curBlock, emptyCurBlock);
+              let firstColor = true;
+              // Pick up the colour here, then set it
+              charPos++;
 
-                  // default:
-                  //   this.parseColor = false;
-                  //   break;
+              for (let k = charPos; k <= k + 3; k++) {
+
+                if (firstColor && asciiStringArray[k] === ",") {
+                  firstColor = false;
+                } else if (firstColor) {
+                  if (curBlock.fg === null) {
+                    curBlock.fg = asciiStringArray[k];
+                  } else {
+                    curBlock.fg =
+                      "" + curBlock.fg + asciiStringArray[k];
+                  }
                 }
+
+                if (!firstColor && asciiStringArray[k] !== ",") {
+                  
+                  if (!isNaN(`${asciiStringArray[k]}${asciiStringArray[k+1]}`) && (`${asciiStringArray[k]}${asciiStringArray[k+1]}`) <= 15) {
+                    // Is valid number
+                    curBlock.bg = `${asciiStringArray[k]}${asciiStringArray[k+1]}`;
+                  } else {
+                    //
+                    curBlock.bg = `${asciiStringArray[k]}`;
+                  }
+
+                  curBlock.char = `${asciiStringArray[k+1]}`;
+                  break;
+                }
+
+              }
+
+              // Check colours
+              if (
+                (
+                  !isNaN(curBlock.fg) &&
+                  curBlock.fg >= 0 &&
+                  curBlock.fg <= 15
+                ) && (
+                  !isNaN(curBlock.bg) &&
+                    curBlock.bg >= 0 &&
+                    curBlock.bg <= 15
+                )
+              ) {
+                // Block is good
+                // console.log(`curBlock GOOD`, curBlock);
               } else {
-                // Parsing a colour
-                
-                // Try get the first double or single digit
-                for (k = x; k <= k + 2; k++) {
-                  // Get the first color
-                  if (rowX[k + 2] !== "," && fgColor.length < 2) {
-                    fgColor = fgColor + "" + rowX[k];
-                    console.log('first color', rowX[k]);
-                  } else {
-                    colourIndex = k;
-                    break;
-                  }
-                }
+                console.log(`curBlock BAD`, curBlock);
+              }
 
-                // Try get the second double or single digit
-                for (k = colourIndex; k <= colourIndex + 3; k++) {
-                  console.log('second color', rowX[k]);
-
-                  if (bgColor.length > 1) {
-                    bgColor = bgColor + "" + rowX[k];
-                  } else {
-                    break;
-                  }
-
-                  // colourIndex = k+1;
-                  console.log("fgColor", fgColor);
-                  console.log("bgColor", bgColor);
-                  this.parseColor = false;
-                }
-
-                // Check colour codes < 0 and > 12
-                this.parseColor = false;
-                break;
-              } // End else parse color
-            } // end loop X
-          } // End if length
-
-
+              charPos++;
+              // console.log('incriment', ("," +  curBlock.fg + curBlock.bg).length)
+              // charPos = charPos + ("," +  curBlock.fg + curBlock.bg).length-1;
           break;
-        } // End loop Y
+
+          default:
+            // console.log('curChar', curChar)
+            // curBlock.char = curChar;
+            asciiX++;
+          break;
+
+          } // End Switch
+
+          // console.log({
+          //   x: asciiX,
+          //   y: asciiY,
+          //   curBlock,
+          //   charPos
+          // });
+          // console.log(this.mircColors[curBlock.fg])
+
+          curBlock.fg = this.mircColors[curBlock.fg-1];
+          curBlock.bg = this.mircColors[curBlock.bg-1];
+
+          this.finalAscii.blocks[asciiY][asciiX] = curBlock;
+
+
+        } // End loop charPos
+
+          // Presume if we get this far we have a colour state set
+          this.$store.commit('newAsciibirdMeta', this.finalAscii);
+
+          // End file upload
       });
+
+      this.asciiImportFile = files[0];
     },
     createClick() {
       this.forms.createAscii.title = `New ASCII ${this.asciibirdMeta.length}`;
