@@ -164,9 +164,6 @@ export default {
         let asciiX = 0;
         let asciiY = 0;
 
-        // used the calculate the width
-        let colorCharWidth = 0;
-
         for (
           let charPos = 0;
           charPos < this.asciiImport.length - 1;
@@ -187,7 +184,6 @@ export default {
                 this.finalAscii.width = asciiX - 1; // minus \n for the proper width
               }
 
-              colorCharWidth = 0;
               asciiX = 0;
               break;
 
@@ -208,12 +204,10 @@ export default {
                   curBlock.fg = `${asciiStringArray[k]}${
                     asciiStringArray[k + 1]
                   }`;
-                  colorCharWidth += 2;
                   firstColor = false;
                 } else {
                   //
                   curBlock.fg = `${asciiStringArray[k]}`;
-                  colorCharWidth++;
                   firstColor = false;
                 }
 
@@ -229,11 +223,9 @@ export default {
                     curBlock.bg = `${asciiStringArray[k]}${
                       asciiStringArray[k + 1]
                     }`;
-                    colorCharWidth += 2;
                   } else {
                     //
                     curBlock.bg = `${asciiStringArray[k]}`;
-                    colorCharWidth++;
                   }
 
                   curBlock.char = `${asciiStringArray[k + 1]}`;
@@ -243,7 +235,6 @@ export default {
 
               // This gets the final color code width
               // This should add the , to the width and we already have the colors
-              colorCharWidth++;
               // asciiX--;
 
               // Check colours
