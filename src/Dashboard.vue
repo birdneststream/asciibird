@@ -163,11 +163,14 @@ export default {
         // The proper X and Y value of the block inside the ASCII
         let asciiX = 0;
         let asciiY = 0;
-        let firstColor = true;
+        let firstColor = false;
+        let secondColor = false;
 
         let colorChar1 = null
         let colorChar2 = null
         var parsedColor = null
+
+        var theWidth = 0;
 
         for (
           let charPos = 0;
@@ -190,7 +193,7 @@ export default {
 
               // We can determine the width at the end of the first line
               if (!this.finalAscii.width) {
-                this.finalAscii.width = asciiX - 1; // minus \n for the proper width
+                this.finalAscii.width = charPos - theWidth; // minus \n for the proper width
               }
 
               asciiX = 0;
@@ -202,7 +205,10 @@ export default {
                           bg: null,
                           char: null,
                         };
-              firstColor = true;
+              firstColor = false;
+              secondColor = false;
+
+              // Skip the color code "\u0003"
               charPos++;
 
               for (let k = charPos; k <= k + 3; k++) {
@@ -212,72 +218,62 @@ export default {
                 // C6,XXXX - blank fg
                 // Can also exist
 
-                // if (firstColor && asciiStringArray[k] === ",") {
-                //   // No fg set
-                  
-                //   firstColor = false;
-                // } else  
-                if (firstColor && asciiStringArray[k] !== ",") {
-                  colorChar1 = asciiStringArray[k]
-                  colorChar2 = asciiStringArray[k + 1]
-                  parsedColor = `${colorChar1}${colorChar2}`
-
-                  if (!isNaN(`${parsedColor}`) && parseInt(`${parsedColor}`) <= MIRC_MAX_COLORS && parseInt(`${parsedColor}`) >= 0) {
-                    curBlock.fg = parseInt(`${parsedColor}`);
-                    firstColor = false;
-                  } else {
-                    curBlock.fg = parseInt(`${colorChar1}`); 
-                    firstColor = false; 
-                  }
-
-                  charPos++;
-                }
-
+                // These can be refactored into a function
                 if (!firstColor && asciiStringArray[k] !== ",") {
-                  colorChar1 = asciiStringArray[k]
-                  colorChar2 = asciiStringArray[k + 1]
+                  colorChar1 = `${asciiStringArray[k]}`
+                  colorChar2 = `${asciiStringArray[k + 1]}`
                   parsedColor = `${colorChar1}${colorChar2}`
 
-                  if (!isNaN(`${parsedColor}`) && parseInt(`${parsedColor}`) <= MIRC_MAX_COLORS && parseInt(`${parsedColor}`) >= 0) {
-                    curBlock.bg = parseInt(`${parsedColor}`);
-                  } else {
-                    curBlock.bg = parseInt(`${colorChar1}`);
-                  }
+                  if (!isNaN(parsedColor) && parseInt(parsedColor) <= MIRC_MAX_COLORS && parseInt(parsedColor) >= 0 ) {
+                    curBlock.fg = parseInt(parsedColor);
+                    k++;k++;charPos++;charPos++;
+                    firstColor = true;
+                    theWidth+=1;
 
-                  charPos++;
-                   break;
+                  } else if (!isNaN(colorChar1) && parseInt(colorChar1) <= MIRC_MAX_COLORS && parseInt(colorChar1) >= 0) {
+                    curBlock.fg = parseInt(colorChar1); 
+                    k++;charPos++;
+                    firstColor = true; 
+                    theWidth+=2;
+                  } 
                 }
 
+                colorChar1 = null
+                colorChar2 = null
+                parsedColor = null
+
+                if (!secondColor && asciiStringArray[k] !== ",") {
+                  colorChar1 = `${asciiStringArray[k]}`
+                  colorChar2 = `${asciiStringArray[k + 1]}`
+                  parsedColor = `${colorChar1}${colorChar2}`
+
+                  if (!isNaN(parsedColor) && parseInt(parsedColor) <= MIRC_MAX_COLORS && parseInt(parsedColor) >= 0 ) {
+                    curBlock.bg = parseInt(parsedColor);
+                    charPos++;charPos++;
+                    theWidth+=1;
+                    break;
+                    
+                  } else if (!isNaN(colorChar1) && parseInt(colorChar1) <= MIRC_MAX_COLORS && parseInt(colorChar1) >= 0) {
+                    curBlock.bg = parseInt(colorChar1);
+                    charPos++;
+                    theWidth+=2;
+                    break;
+                    
+                  }
                
-              }
+                   
+                }
 
-              // Check colours
-              // Given how we have the code above we may not need this
-              if (
-                !isNaN(curBlock.fg) &&
-                curBlock.fg >= 0 &&
-                curBlock.fg <= MIRC_MAX_COLORS &&
-                !isNaN(curBlock.bg) &&
-                curBlock.bg >= 0 &&
-                curBlock.bg <= MIRC_MAX_COLORS
-              ) {
-                // Block is good
-                // console.log(`curBlock GOOD`, curBlock);
+              } 
 
-                // Minus X value if all good
-                asciiX--;
-              } else {
-                console.log(`curBlock BAD`, JSON.stringify(curBlock));
-              }
 
-              // charPos++;
               break;
 
             default:
                 curBlock.char = curChar
                 asciiX++;
                 // Fk this js shit, serialising the curBlock works much better. Lost hours on this bs, fk.
-                this.finalAscii.blocks[asciiY][asciiX] = JSON.parse(JSON.stringify(curBlock));
+                this.finalAscii.blocks[asciiY][asciiX-1] = JSON.parse(JSON.stringify(curBlock));
 
               break;
           } // End Switch

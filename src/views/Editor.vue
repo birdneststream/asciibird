@@ -96,7 +96,7 @@ export default {
   }),
   computed: {
     getCurrentTab() {
-      return this.tab;
+      return this.tab ?? 0;
     },
     shouldRefresh() {
       return this.refresh;
@@ -122,7 +122,7 @@ export default {
       this.onChangeTab( val );
     },
     shouldRefresh(val,old) {
-      
+
     },
     watchColorChange(val) {
       console.log(JSON.stringify(val))        
@@ -176,7 +176,7 @@ export default {
       }
 
       //  this.drawGrid();
-        this.redrawCanvas();
+        // this.redrawCanvas();
     },
     redrawCanvas() {
       // console.log("Canvas redraw");
@@ -197,27 +197,45 @@ export default {
           // Draws the actual rectangle
           let canvasX = 0;
           let canvasY = 0;
+
+          let blockCanvasX = 0;
+          let blockCanvasY = 0;
+
           let curBlock = {};
 
-          this.ctx.font = "16px Mono";
+          this.ctx.font = "8px Mono";
 
-          for (y = 0; y < this.currentAsciibirdMeta.height; y++) {
-            canvasY = BLOCK_HEIGHT * y+1;
+          for (y = 0; y < this.currentAsciibirdMeta.height+1; y++) {
+            canvasY = BLOCK_HEIGHT * y;
 
-            for (x = 0; x < this.currentAsciibirdMeta.width; x++) {
-              curBlock = JSON.parse(JSON.stringify(this.currentAsciibirdMeta.blocks[y][x]));
-              canvasX = BLOCK_WIDTH * x+1;
+            for (x = 0; x < this.currentAsciibirdMeta.width+1; x++) {
 
-              if (curBlock.char) {
-                this.ctx.fillStyle = this.mircColors[curBlock.fg];
-                this.ctx.fillText(curBlock.char, canvasX + 3, canvasY - 3);
-              } 
+              if (this.currentAsciibirdMeta.blocks[y][x]) {
 
-              // Background block
-              this.ctx.fillStyle = this.mircColors[curBlock.bg];
-              this.ctx.fillRect(canvasX, canvasY, BLOCK_WIDTH, BLOCK_HEIGHT);
+                curBlock = JSON.parse(JSON.stringify(this.currentAsciibirdMeta.blocks[y][x]));
+                canvasX = BLOCK_WIDTH * x;
 
-              // break;
+                // Background block
+                if (curBlock.bg !== null) {
+                  this.ctx.fillStyle = this.mircColors[curBlock.bg];
+                  this.ctx.fillRect(canvasX, canvasY, BLOCK_WIDTH, BLOCK_HEIGHT);
+                } else {
+                  this.ctx.fillStyle = "rgba(0, 0, 200, 0)";;
+                }
+
+                if (curBlock.char) {
+
+                    if (curBlock.fg !== null) {
+                      this.ctx.fillStyle = this.mircColors[curBlock.fg];
+                    } else {
+                      this.ctx.fillStyle = "#000000";
+                    }
+
+                  this.ctx.fillText(curBlock.char, canvasX, canvasY + BLOCK_HEIGHT - 3);
+                  this.ctx.stroke();
+                } 
+              }
+
             }
           }
         }
