@@ -75,8 +75,7 @@
       <div class="border-gray-600">
         <!-- <router-view /> -->
         <Editor
-          :tab="currentTab"
-          :refresh="refresh"
+
           v-if="asciibirdMeta.length"
         />
       </div>

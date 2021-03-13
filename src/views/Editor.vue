@@ -6,7 +6,7 @@
     </h1>
 
     <div id="canvas-area" style="position: relative">
-      <span>{{x}}, {{y}}</span>
+      <span>{{ x }}, {{ y }}</span>
       <canvas
         ref="grid"
         id="grid"
@@ -16,16 +16,16 @@
       ></canvas>
 
       <canvas
-        :ref="generateCanvasId"
-        :id="generateCanvasId"
-        :width="canvas.width"
-        :height="canvas.height"
+        ref="canvas"
+        id="canvas"
+        width="1000"
+        height="1000"
+        :key="refreshCanvas"
         class="canvas"
         @mousemove="showCoordinates"
         @mousedown="cavnasMouseDown"
         @mouseup="cavnasMouseUp"
       ></canvas>
-
     </div>
   </div>
 </template>
@@ -62,12 +62,18 @@ import Block from "../components/Block.vue";
 
 export default {
   name: "Editor",
-  props: ['tab','refresh'],
+  props: ["tab", "refresh"],
   components: { Block },
   mounted() {
     this.currentAsciibirdMeta = this.$store.getters.currentAscii;
     this.mircColors = this.$store.getters.mircColors;
 
+    if (this.currentAsciibirdMeta.blocks) {
+      this.ctx = this.$refs.canvas.getContext("2d");
+      this.gridCtx = this.$refs.grid.getContext("2d");
+
+      this.redrawCanvas()
+    }
   },
   created() {},
   data: () => ({
@@ -94,79 +100,55 @@ export default {
     },
     gridCtx: null,
     x: 0,
-    y: 0
+    y: 0,
+    refreshCanvas: 0,
   }),
   computed: {
-    getCurrentTab() {
-      return this.tab ?? 0;
-    },
-    shouldRefresh() {
-      return this.refresh;
-    },
-    generateCanvasId() {
-      return `canvas`;
-    },
-    watchBlocksChange() {
-      return this.currentAsciibirdMeta;
+    canvasStyle() {
+      return `width:${this.canvas.width};height:${this.canvas.height};`
     },
     generateTitle() {
       return this.currentAsciibirdMeta.title ?? "";
     },
     watchColorChange() {
-      return this.$store.getColor
+      return this.$store.getters.getColor;
     },
     watchToolChange() {
-      return this.$store.getTool
+      return this.$store.getters.getTool;
+    },
+    watchAsciiChange() {
+      return this.$store.getters.currentAscii;
     },
   },
   watch: {
-    getCurrentTab(val, old) {
-      this.onChangeTab();
-    },
-    shouldRefresh(val,old) {
+    watchAsciiChange(val, old) {
+        this.currentAsciibirdMeta = val;
 
+        // this.ctx.width =
+        //   val.width *
+        //   val.blockWidth;
+        // this.ctx.height =
+        //   val.height *
+        //   val.blockHeight;
+
+        this.drawGrid();  
+        this.redrawCanvas();
     },
     watchColorChange(val) {
-      console.log(JSON.stringify(val))        
+      console.log(JSON.stringify(val));
     },
     watchToolChange(val) {
-      console.log(JSON.stringify(val))          
-    }
+      console.log(JSON.stringify(val));
+    },
   },
   methods: {
     getMircColor(index) {
-      return this.$store.getters.mircColors[index]
-    },
-    onChangeTab() {
-      // Get the asciimeta index from the route URL
-      this.currentAsciibirdMeta = this.$store.getters.currentAscii;
-
-
-      // I dono some routs bs or some bs needs -1 to make it all work
-      // Some lame canvas reference bug when changing routes
-      // The newest canvas is not yet available for some reason at this stage, however we can still reference the previous one
-      const currentRefCanvas = "canvas";
-
-      if (this.$refs[currentRefCanvas]) {
-        this.ctx = this.$refs[currentRefCanvas].getContext("2d");
-        this.gridCtx = this.$refs.grid.getContext("2d");
-
-        this.canvas.width =
-          this.currentAsciibirdMeta.width *
-          this.currentAsciibirdMeta.blockWidth;
-        this.canvas.height =
-          this.currentAsciibirdMeta.height *
-          this.currentAsciibirdMeta.blockHeight;
-
-        this.drawGrid();
-        this.redrawCanvas();
-
-      } 
+      return this.$store.getters.mircColors[index];
     },
     redrawCanvas() {
       // Clears the whole canvas
-      if (this.ctx) {
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+      // if (this.ctx) {
+        this.ctx.clearRect(0, 0, 1000, 1000);
         this.ctx.stroke();
 
         if (this.currentAsciibirdMeta.blocks.length) {
@@ -184,43 +166,50 @@ export default {
 
           this.ctx.font = "12px Deja Vu Sans Mono";
 
-          for (y = 0; y < this.currentAsciibirdMeta.height+1; y++) {
+          for (y = 0; y < this.currentAsciibirdMeta.height + 1; y++) {
             canvasY = BLOCK_HEIGHT * y;
 
-            for (x = 0; x < this.currentAsciibirdMeta.width+1; x++) {
-
+            for (x = 0; x < this.currentAsciibirdMeta.width + 1; x++) {
               if (this.currentAsciibirdMeta.blocks[y][x]) {
-
-                curBlock = JSON.parse(JSON.stringify(this.currentAsciibirdMeta.blocks[y][x]));
+                curBlock = JSON.parse(
+                  JSON.stringify(this.currentAsciibirdMeta.blocks[y][x])
+                );
                 canvasX = BLOCK_WIDTH * x;
 
                 // Background block
                 if (curBlock.bg !== null) {
                   this.ctx.fillStyle = this.mircColors[curBlock.bg];
-                  this.ctx.fillRect(canvasX, canvasY, BLOCK_WIDTH, BLOCK_HEIGHT);
+                  this.ctx.fillRect(
+                    canvasX,
+                    canvasY,
+                    BLOCK_WIDTH,
+                    BLOCK_HEIGHT
+                  );
                 } else {
-                  this.ctx.fillStyle = "rgba(0, 0, 200, 0)";;
+                  this.ctx.fillStyle = "rgba(0, 0, 200, 0)";
                 }
 
                 if (curBlock.char) {
+                  if (curBlock.fg !== null) {
+                    this.ctx.fillStyle = this.mircColors[curBlock.fg];
+                  } else {
+                    this.ctx.fillStyle = "#000000";
+                  }
 
-                    if (curBlock.fg !== null) {
-                      this.ctx.fillStyle = this.mircColors[curBlock.fg];
-                    } else {
-                      this.ctx.fillStyle = "#000000";
-                    }
-
-                  this.ctx.fillText(curBlock.char, canvasX , canvasY + BLOCK_HEIGHT - 2);
+                  this.ctx.fillText(
+                    curBlock.char,
+                    canvasX,
+                    canvasY + BLOCK_HEIGHT - 2
+                  );
                   this.ctx.stroke();
-                } 
+                }
               }
-
             }
           }
         }
 
         this.ctx.stroke();
-      }
+      // }
     },
     processMouseDown(e) {
       // this.canvasClass(e)
@@ -230,7 +219,6 @@ export default {
     },
     processMouseMove(e) {
       // if (this.selectionMode) {
-
       // }
     },
     processMouseUp(e) {
@@ -242,16 +230,18 @@ export default {
       if (e.offsetX >= 0) {
         this.x = e.offsetX;
       }
-      
+
       if (e.offsetY >= 0) {
         this.y = e.offsetY;
       }
 
-      this.x = Math.floor(this.x / this.currentAsciibirdMeta.blockWidth)
-      this.y = Math.floor(this.y / this.currentAsciibirdMeta.blockHeight)
+      this.x = Math.floor(this.x / this.currentAsciibirdMeta.blockWidth);
+      this.y = Math.floor(this.y / this.currentAsciibirdMeta.blockHeight);
     },
     cavnasMouseDown() {
-      this.currentAsciibirdMeta.blocks[this.y][this.x].bg = this.$store.getters.getBgColor
+      this.currentAsciibirdMeta.blocks[this.y][
+        this.x
+      ].bg = this.$store.getters.getBgColor;
     },
     cavnasMouseUp() {
       // this.currentAsciibirdMeta.blocks[this.y][this.x].
@@ -269,20 +259,22 @@ export default {
       const pR = s;
       const pB = s;
 
-      this.gridCtx.clearRect(0, 0, width, height);
+      if (this.gridCtx) {
+        this.gridCtx.clearRect(0, 0, width, height);
 
-      this.gridCtx.strokeStyle = "lightgrey";
-      this.gridCtx.lineWidth = 0.333;
-      this.gridCtx.beginPath();
-      for (let x = pL; x <= width - pR; x += sW) {
-        this.gridCtx.moveTo(x, pT);
-        this.gridCtx.lineTo(x, height - pB);
+        this.gridCtx.strokeStyle = "lightgrey";
+        this.gridCtx.lineWidth = 0.333;
+        this.gridCtx.beginPath();
+        for (let x = pL; x <= width - pR; x += sW) {
+          this.gridCtx.moveTo(x, pT);
+          this.gridCtx.lineTo(x, height - pB);
+        }
+        for (let y = pT; y <= height - pB; y += s) {
+          this.gridCtx.moveTo(pL, y);
+          this.gridCtx.lineTo(width - pR, y);
+        }
+        this.gridCtx.stroke();
       }
-      for (let y = pT; y <= height - pB; y += s) {
-        this.gridCtx.moveTo(pL, y);
-        this.gridCtx.lineTo(width - pR, y);
-      }
-      this.gridCtx.stroke();
     },
   },
 };
