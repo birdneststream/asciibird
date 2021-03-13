@@ -4,13 +4,9 @@
       {{ currentAsciibirdMeta.title }} ({{ currentAsciibirdMeta.width }} /
       {{ currentAsciibirdMeta.height }})
     </h1>
-    <!-- <pre><small>{{ JSON.stringify(currentAsciibirdMeta) }}</small></pre> -->
-
-    <!-- @mousedown="processMouseDown"
-        @mousemove="processMouseMove"
-        @mouseup="processMouseUp" -->
 
     <div id="canvas-area" style="position: relative">
+      <span>{{x}}, {{y}}</span>
       <canvas
         ref="grid"
         id="grid"
@@ -25,6 +21,9 @@
         :width="canvas.width"
         :height="canvas.height"
         class="canvas"
+        @mousemove="showCoordinates"
+        @mousedown="cavnasMouseDown"
+        @mouseup="cavnasMouseUp"
       ></canvas>
 
     </div>
@@ -68,6 +67,7 @@ export default {
   mounted() {
     this.currentAsciibirdMeta = this.$store.getters.currentAscii;
     this.mircColors = this.$store.getters.mircColors;
+
   },
   created() {},
   data: () => ({
@@ -93,6 +93,8 @@ export default {
       height: 2048,
     },
     gridCtx: null,
+    x: 0,
+    y: 0
   }),
   computed: {
     getCurrentTab() {
@@ -119,7 +121,7 @@ export default {
   },
   watch: {
     getCurrentTab(val, old) {
-      this.onChangeTab( val );
+      this.onChangeTab();
     },
     shouldRefresh(val,old) {
 
@@ -130,18 +132,6 @@ export default {
     watchToolChange(val) {
       console.log(JSON.stringify(val))          
     }
-    // watchBlocksChange(val, old) {
-    //   if (this.$refs[this.generate CanvasId]) {
-    //     this.ctx = this.$refs.canvas.getContext("2d");
-    //     this.gridCtx = this.$refs.grid.getContext("2d");
-
-    //     this.drawGrid();
-    //     this.redrawCanvas();
-
-    //     this.canvas.width = val.width * val.blockWidth;
-    //     this.canvas.height = val.height * val.blockHeight;
-    //   }
-    // },
   },
   methods: {
     getMircColor(index) {
@@ -171,16 +161,9 @@ export default {
         this.drawGrid();
         this.redrawCanvas();
 
-      } else {
-
-      }
-
-      //  this.drawGrid();
-        // this.redrawCanvas();
+      } 
     },
     redrawCanvas() {
-      // console.log("Canvas redraw");
-
       // Clears the whole canvas
       if (this.ctx) {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -197,13 +180,9 @@ export default {
           // Draws the actual rectangle
           let canvasX = 0;
           let canvasY = 0;
-
-          let blockCanvasX = 0;
-          let blockCanvasY = 0;
-
           let curBlock = {};
 
-          this.ctx.font = "8px Mono";
+          this.ctx.font = "12px Deja Vu Sans Mono";
 
           for (y = 0; y < this.currentAsciibirdMeta.height+1; y++) {
             canvasY = BLOCK_HEIGHT * y;
@@ -231,7 +210,7 @@ export default {
                       this.ctx.fillStyle = "#000000";
                     }
 
-                  this.ctx.fillText(curBlock.char, canvasX, canvasY + BLOCK_HEIGHT - 3);
+                  this.ctx.fillText(curBlock.char, canvasX , canvasY + BLOCK_HEIGHT - 2);
                   this.ctx.stroke();
                 } 
               }
@@ -250,14 +229,34 @@ export default {
       this.startPosition.y = e.clientY;
     },
     processMouseMove(e) {
-      if (this.selectionMode) {
+      // if (this.selectionMode) {
 
-      }
+      // }
     },
     processMouseUp(e) {
       this.selectionMode = false;
       this.startPosition.x = null;
       this.startPosition.y = null;
+    },
+    showCoordinates(e) {
+      if (e.offsetX >= 0) {
+        this.x = e.offsetX;
+      }
+      
+      if (e.offsetY >= 0) {
+        this.y = e.offsetY;
+      }
+
+      this.x = Math.floor(this.x / this.currentAsciibirdMeta.blockWidth)
+      this.y = Math.floor(this.y / this.currentAsciibirdMeta.blockHeight)
+    },
+    cavnasMouseDown() {
+      this.currentAsciibirdMeta.blocks[this.y][this.x].bg = this.$store.getters.getBgColor
+    },
+    cavnasMouseUp() {
+      // this.currentAsciibirdMeta.blocks[this.y][this.x].
+
+      this.redrawCanvas();
     },
     drawGrid() {
       const width = 5000;

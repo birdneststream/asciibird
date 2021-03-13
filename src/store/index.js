@@ -53,7 +53,10 @@ export default new Vuex.Store({
       },
     ],
     toolbarState: {
+      currentColorFg: 0,
+      currentColorBg: 0,
       currentColor: 0,
+      isUpdating: false,
       currentTool : null,
     },
     blockSizeMultiplier: 1,
@@ -62,8 +65,13 @@ export default new Vuex.Store({
     changeTab(state, payload) {
       state.tab = payload;
     },
-    changeColor(state, payload) {
-      state.toolbarState.currentColor = payload;
+    changeColorFg(state, payload) {
+      state.toolbarState.currentColorFg = payload;
+      state.toolbarState.isUpdating = false
+    },
+    changeColorBg(state, payload) {
+      state.toolbarState.currentColorBg = payload;
+      state.toolbarState.isUpdating = false
     },
     changeTool(state, payload) {
       state.toolbarState.currentTool = payload;
@@ -73,8 +81,9 @@ export default new Vuex.Store({
     },
   },
   getters: {
-    getColor: state => state.toolbarState.currentColor,
-    getTool: state => state.toolbarState.currentTool,
+    getToolbarState: state => state.toolbarState,
+    getFgColor: state => state.toolbarState.currentColorFg,
+    getBgColor: state => state.toolbarState.currentColorBg,
     currentTab: state => state.tab,
     charCodes: state => state.charCodes,
     mircColors: state => state.mircColors,

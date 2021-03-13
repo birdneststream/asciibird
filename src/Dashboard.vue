@@ -74,7 +74,11 @@
 
       <div class="border-gray-600">
         <!-- <router-view /> -->
-        <Editor :tab="currentTab" :refresh="refresh" v-if="asciibirdMeta.length" />
+        <Editor
+          :tab="currentTab"
+          :refresh="refresh"
+          v-if="asciibirdMeta.length"
+        />
       </div>
     </div>
   </div>
@@ -166,9 +170,9 @@ export default {
         let firstColor = false;
         let secondColor = false;
 
-        let colorChar1 = null
-        let colorChar2 = null
-        var parsedColor = null
+        let colorChar1 = null;
+        let colorChar2 = null;
+        var parsedColor = null;
 
         var theWidth = 0;
 
@@ -177,103 +181,115 @@ export default {
           charPos <= this.asciiImport.length - 1;
           charPos++
         ) {
-          let curChar = asciiStringArray[charPos];
-         
+          let curChar = asciiStringArray[0];
+
           // Defining a small finite state machine
           // to detect the colour code
           switch (curChar) {
             case "\n":
               // Reset the colours here on a new line
               curBlock = {
-                          fg: null,
-                          bg: null,
-                          char: null,
-                        };
+                fg: null,
+                bg: null,
+                char: null,
+              };
+
+              //
               asciiY++;
 
               // We can determine the width at the end of the first line
               if (!this.finalAscii.width) {
-                this.finalAscii.width = charPos - theWidth; // minus \n for the proper width
+                this.finalAscii.width =
+                  this.asciiImport.split("\n")[0].length - 1 - theWidth; // minus \n for the proper width
               }
 
+              // Resets the X value
               asciiX = 0;
+
+              asciiStringArray.shift();
               break;
 
             case "\u0003":
-              curBlock = {
-                          fg: null,
-                          bg: null,
-                          char: null,
-                        };
               firstColor = false;
               secondColor = false;
 
-              // Skip the color code "\u0003"
-              charPos++;
+              // CC
+              if (
+                asciiStringArray[0] === "\u0003" &&
+                asciiStringArray[1] === "\u0003"
+              ) {
+                curBlock = {
+                  fg: null,
+                  bg: null,
+                  char: null,
+                };
 
-              for (let k = charPos; k <= k + 3; k++) {
-                
-                // Try to get the first color code, could be
-                // C,2XXXX - blank bg
-                // C6,XXXX - blank fg
-                // Can also exist
+                console.log("Got CC");
+                continue;
+              }
 
-                // These can be refactored into a function
-                if (!firstColor && asciiStringArray[k] !== ",") {
-                  colorChar1 = `${asciiStringArray[k]}`
-                  colorChar2 = `${asciiStringArray[k + 1]}`
-                  parsedColor = `${colorChar1}${colorChar2}`
+              asciiStringArray.shift();
+              theWidth++;
 
-                  if (!isNaN(parsedColor) && parseInt(parsedColor) <= MIRC_MAX_COLORS && parseInt(parsedColor) >= 0 ) {
-                    curBlock.fg = parseInt(parsedColor);
-                    k++;k++;charPos++;charPos++;
-                    firstColor = true;
-                    theWidth+=1;
+              if (!firstColor) {
+                colorChar1 = `${asciiStringArray[0]}`;
+                colorChar2 = `${asciiStringArray[1]}`;
+                parsedColor = parseInt(`${colorChar1}${colorChar2}`);
 
-                  } else if (!isNaN(colorChar1) && parseInt(colorChar1) <= MIRC_MAX_COLORS && parseInt(colorChar1) >= 0) {
-                    curBlock.fg = parseInt(colorChar1); 
-                    k++;charPos++;
-                    firstColor = true; 
-                    theWidth+=2;
-                  } 
+                if (parsedColor <= MIRC_MAX_COLORS && parsedColor >= 0) {
+                  curBlock.fg = parseInt(parsedColor);
+                  firstColor = true;
+                  theWidth += parsedColor.toString().length;
+
+                  asciiStringArray = asciiStringArray.slice(
+                    parsedColor.toString().length,
+                    asciiStringArray.length
+                  );
                 }
+              }
 
-                colorChar1 = null
-                colorChar2 = null
-                parsedColor = null
+              colorChar1 = null;
+              colorChar2 = null;
+              parsedColor = null;
 
-                if (!secondColor && asciiStringArray[k] !== ",") {
-                  colorChar1 = `${asciiStringArray[k]}`
-                  colorChar2 = `${asciiStringArray[k + 1]}`
-                  parsedColor = `${colorChar1}${colorChar2}`
+              // No background colour
+              if (asciiStringArray[0] !== ",") {
+                secondColor = true;
+                break;
+              } else {
+                asciiStringArray.shift();
+              }
 
-                  if (!isNaN(parsedColor) && parseInt(parsedColor) <= MIRC_MAX_COLORS && parseInt(parsedColor) >= 0 ) {
-                    curBlock.bg = parseInt(parsedColor);
-                    charPos++;charPos++;
-                    theWidth+=1;
-                    break;
-                    
-                  } else if (!isNaN(colorChar1) && parseInt(colorChar1) <= MIRC_MAX_COLORS && parseInt(colorChar1) >= 0) {
-                    curBlock.bg = parseInt(colorChar1);
-                    charPos++;
-                    theWidth+=2;
-                    break;
-                    
-                  }
-               
-                   
+              if (!secondColor) {
+                colorChar1 = `${asciiStringArray[0]}`;
+                colorChar2 = `${asciiStringArray[1]}`;
+                parsedColor = parseInt(`${colorChar1}${colorChar2}`);
+
+                if (parsedColor <= MIRC_MAX_COLORS && parsedColor >= 0) {
+                  curBlock.bg = parseInt(parsedColor);
+                  theWidth += parsedColor.toString().length;
+
+                  asciiStringArray = asciiStringArray.slice(
+                    parsedColor.toString().length,
+                    asciiStringArray.length
+                  );
+
+                  break;
                 }
-
-              } 
-
+              }
 
               break;
 
             default:
-                curBlock.char = curChar
-                asciiX++;
-                // Fk this js shit, serialising the curBlock works much better. Lost hours on this bs, fk.
-                this.finalAscii.blocks[asciiY][asciiX-1] = JSON.parse(JSON.stringify(curBlock));
+              curBlock.char = curChar;
+              asciiStringArray.shift();
+              asciiX++;
+              // Fk this js shit, serialising the curBlock works much better. Lost hours on this bs, fk.
+
+              this.finalAscii.blocks[asciiY][asciiX - 1] = JSON.parse(
+                JSON.stringify(curBlock)
+              );
+
 
               break;
           } // End Switch
@@ -281,7 +297,7 @@ export default {
           // break;
         } // End loop charPos
 
-        console.log(JSON.stringify(this.finalAscii.blocks))
+        console.log(JSON.stringify(this.finalAscii.blocks));
         this.$store.commit("newAsciibirdMeta", this.finalAscii);
 
         // End file upload
@@ -295,8 +311,8 @@ export default {
     },
     changeTab(key, value) {
       // Update the tab index in vuex store
-      this.currentTab = key
-      this.refresh = !this.refresh
+      this.currentTab = key;
+      this.refresh = !this.refresh;
       this.$store.commit("changeTab", key);
     },
     clearCache() {
@@ -331,7 +347,7 @@ export default {
 
       this.$store.commit("newAsciibirdMeta", payload);
       this.$modal.hide("create-ascii-modal");
-      this.refresh = !this.refresh
+      this.refresh = !this.refresh;
     },
     closeNewASCII({ params, cancel }) {
       this.forms.createAscii.width = 5;
