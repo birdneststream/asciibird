@@ -15,6 +15,13 @@
         class="gridCanvas"
       ></canvas>
 
+    <vue-draggable-resizable
+      style="z-index: 5;left:220px;"
+      :min-width="1000"
+      :max-width="1000"
+      :min-height="1000"
+      :max-height="1000"
+    >
       <canvas
         ref="canvas"
         id="canvas"
@@ -26,6 +33,8 @@
         @mousedown="cavnasMouseDown"
         @mouseup="cavnasMouseUp"
       ></canvas>
+</vue-draggable-resizable>
+
     </div>
   </div>
 </template>

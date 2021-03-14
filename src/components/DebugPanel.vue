@@ -5,10 +5,10 @@
     style="z-index:5;min-height:300px;"
     :min-width=200
     :max-width=500
-    :min-height=300
-    :max-height=700
-    :x=800
-    :y=300
+    :min-height=100
+    :max-height=200
+    :x=0
+    :y=350
     >
     <div style="height:100%;min-height:300px;max-height:400px;">
       <t-card header="Debug Info" style="height:100%;">

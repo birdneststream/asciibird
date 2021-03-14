@@ -7,7 +7,8 @@
       :max-width="500"
       :min-height="500"
       :max-height="700"
-      :x="800"
+      :x="0"
+      :y="50"
     >
       <div style="height: 100%; min-height: 500px; max-height: 700px">
         <t-card header="Tools and Stuff" style="height: 100%">
