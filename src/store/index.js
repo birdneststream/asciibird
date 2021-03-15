@@ -9,6 +9,24 @@ const vuexLocal = new VuexPersistence({
 
 export default new Vuex.Store({
   state: {
+
+    // 0  => 'white',
+    // 1  => 'black',
+    // 2  => 'navy',
+    // 3  => 'green',
+    // 4  => 'red',
+    // 5  => 'brown',
+    // 6  => 'purple',
+    // 7  => 'olive',
+    // 8  => 'yellow',                  # dark yellow
+    // 9  => 'lime',                  # ltgreen
+    // 10 => 'teal',
+    // 11 => 'cyan',
+    // 12 => 'blue',                  # ltblue,
+    // 13 => 'fuchsia',                  # pink
+    // 14 => 'grey',
+    // 15 => 'lightgrey',
+
     mircColors: [
       'rgb(255,255,255)',
       'rgb(0,0,0)',

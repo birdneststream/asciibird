@@ -175,23 +175,51 @@ export default {
 
         ansiWidth = 0;
 
-        for (let j = 0; j <= ansiArray[i].length-1; j++) {
+        for (let j = 0; j <= ansiArray[i].length - 1; j++) {
           let ansiParse = Anser.ansiToJson(ansiArray[i]);
 
-          for (let l = 0; l <= ansiParse.length-1; l++) {
+          for (let l = 0; l <= ansiParse.length - 1; l++) {
             var contentArray = ansiParse[l].content.split("");
 
             var curBlock = {
-              fg: ansiParse[l].fg,
-              bg: ansiParse[l].bg,
+              fg: this.mircColors.indexOf(`rgb(${ansiParse[l].fg})`),
+              bg: this.mircColors.indexOf(`rgb(${ansiParse[l].bg})`),
               char: null,
             };
 
-            for (let k = 0; k <= contentArray.length-1; k++) {
+            // If we had no matches in our mIRC RGB lookup, then we have to try match
+            // the ASNI colours to the best mIRC colour
 
-              if (contentArray[k] === "\r") {
-                continue
+            if (curBlock.fg === -1) {
+              switch (ansiParse[l].fg) {
+                case "187, 187, 0": // orangeish yellow
+                  curBlock.fg = 8;
+                  break;
+
+                case "187, 0, 0": // red
+                  curBlock.fg = 4;
+                  break;
               }
+            }
+
+            if (curBlock.bg === -1) {
+              switch (ansiParse[l].bg) {
+                case "187, 187, 0": // orangeish yellow
+                  curBlock.bg = 8;
+                  break;
+
+                case "187, 0, 0": // red
+                  curBlock.bg = 4;
+                  break;
+              }
+            }
+
+            for (let k = 0; k <= contentArray.length - 1; k++) {
+              if (contentArray[k] === "\r") {
+                continue;
+              }
+
+              this.mircColors.indexOf(`rgb(${ansiParse[l].fg})`);
 
               curBlock.char = contentArray[k];
 
