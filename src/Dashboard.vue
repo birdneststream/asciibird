@@ -258,7 +258,7 @@ export default {
       };
 
       // set asciiImport as the entire file contents as a string
-      this.asciiImport = contents;
+      this.asciiImport = contents.split("\u0003\u0003").join("\u0003");
 
       // This will end up in the asciibirdMeta
       this.finalAscii = {
