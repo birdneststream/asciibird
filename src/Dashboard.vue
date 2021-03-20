@@ -363,6 +363,7 @@ export default {
               secondColor = true;
               break;
             } else {
+              // Remove , from array
               asciiStringArray.shift();
             }
 
@@ -370,6 +371,12 @@ export default {
               colorChar1 = `${asciiStringArray[0]}`;
               colorChar2 = `${asciiStringArray[1]}`;
               parsedColor = parseInt(`${colorChar1}${colorChar2}`);
+
+              // Work out the 01, 02
+              if ( (!isNaN(colorChar1)) && (!isNaN(colorChar2)) && parseInt(colorChar2) > parseInt(colorChar1)) {
+                parsedColor = parseInt(colorChar2)
+                asciiStringArray.shift();
+              }
 
               if (isNaN(parsedColor)) {
                 curBlock.bg = parseInt(colorChar1);
