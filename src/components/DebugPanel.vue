@@ -12,8 +12,9 @@
     >
     <div style="height:100%;min-height:300px;max-height:400px;">
       <t-card header="Debug Info" style="height:100%;">
-          <p v-html="watchColorChange"></p>
           <p v-html="debugStringTool"></p>
+          <p v-html="debugStringFg"></p>
+          <p v-html="debugStringBg"></p>
       </t-card>
     </div>
     </vue-draggable-resizable>
@@ -35,25 +36,30 @@ export default {
     },
     debugString: '',
     debugStringTool: '',
+    debugStringFg: '',
+    debugStringBg: '',
   }),
   computed: {
-    watchColorChange() {
-      return this.$store.getters.getColor
-    },
     watchToolChange() {
-      return this.$store.getters.getTool
+      return this.$store.getters.getCurrentTool
     },
-    makeColorButtonClass(color) {
-      return `background-color: ${color} !important;width:25px;height:25px;`;
+    watchBgColor() {
+      return this.$store.getters.getBgColor
+    },
+    watchFgColor() {
+      return this.$store.getters.getFgColor
     },
   },
   watch: {
-    watchColorChange(val,old) {
-       this.debugString = val
+    watchToolChange(val) {
+      this.debugStringTool = val
     },
-    watchToolChange(val,old) {
-       this.debugStringTool = val
-    }
+    watchBgColor(val) {
+      this.debugStringBg = val
+    },
+    watchFgColor(val) {
+      this.debugStringFg = val
+    },
   },
   methods: {
     onResize(x, y, width, height) {
@@ -66,6 +72,7 @@ export default {
       this.floating.x = x;
       this.floating.y = y;
     },
+
   },
 };
 </script>

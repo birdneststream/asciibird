@@ -11,7 +11,12 @@
       :y="50"
     >
       <div style="height: 100%; min-height: 500px; max-height: 700px">
+
         <t-card header="Tools and Stuff" style="height: 100%">
+          <t-card
+            v-if="toolbarState.isChoosingFg || toolbarState.isChoosingBg"
+          >
+
           <t-button
             type="button"
             v-for="(value, keyColors) in mircColors"
@@ -21,11 +26,13 @@
             @click="onColorChange(keyColors)"
           ></t-button>
 
+          </t-card>
+
           <hr />
 
           <t-button
             type="button"
-            :style="makeColorButtonClass(toolbarState.currentColorFg)"
+            :style="makeColorButtonClass(mircColors[toolbarState.currentColorFg])"
             class="border-gray-300 m-1"
             id="currentColorFg"
             @click="startColorChange(0)"
@@ -33,7 +40,7 @@
 
           <t-button
             type="button"
-            :style="makeColorButtonClass(toolbarState.currentColorBg)"
+            :style="makeColorButtonClass(mircColors[toolbarState.currentColorBg])"
             class="border-gray-300 m-1"
             id="currentColorBg"
             @click="startColorChange(1)"
@@ -47,14 +54,21 @@
             :key="keyToolbar + 50"
             :style="makeToolbarButtonClass(value)"
             class="border-gray-300 m-1"
-            v-html="value.icon"
             @click="onToolbarChange(value)"
-          ></t-button>
+          >
+            <font-awesome-icon :icon="[value.fa, value.icon]" />
+
+            
+          </t-button>
+
         </t-card>
       </div>
     </vue-draggable-resizable>
   </div>
 </template>
+
+
+
 <script>
 export default {
   created() {
@@ -78,11 +92,11 @@ export default {
     toolbarState: {
       currentColorFg: 0,
       currentColorBg: 1,
-      currentColor: 0,
+      isChoosingFg: false,
+      isChoosingBg: false,
       isUpdating: false,
-      currentTool: null,
+      currentTool: 'default',
     },
-    isUpdatingFg: 0,
   }),
   methods: {
     onResize(x, y, width, height) {
@@ -101,35 +115,52 @@ export default {
     makeColorButtonClass(color) {
       return `background-color: ${ color } !important;width:25px;height:25px;`;
     },
-    makeToolbarButtonClass() {
-      return `background-color: grey !important;width:25px;height:25px;`;
+    makeToolbarButtonClass(tool) {
+      return "background-color: grey !important;width:25px;height:25px;";
     },
     startColorChange(type){
-      this.toolbarState.isUpdating = true
-      this.isUpdatingFg = type
+      
+      // this.toolbarState.isChoosingColor = true
+      if (type === 0) {
+      //   // Fg
+        this.toolbarState.isChoosingFg = true
+      } else {
+      //   // Bg
+        this.toolbarState.isChoosingBg = true
+      }
+
     },
     onColorChange(color) {
-      if (this.toolbarState.isUpdating) {
-        this.updateColor(this.isUpdatingFg, color)
+      if (this.toolbarState.isChoosingFg) {
+        this.updateColor(0, color)
+      }
+
+      if (this.toolbarState.isChoosingBg) {
+        this.updateColor(1, color)
       }
     },
     updateColor(type, color) {
-      if (this.toolbarState.isUpdating) {
+      if (this.toolbarState.isChoosingBg || this.toolbarState.isChoosingFg) {
         switch (type) {
           // FG
           case 0:
             this.$store.commit("changeColorFg", color);
-
+            this.currentColorFg = color
             break;
 
           // BG
           case 1:
             this.$store.commit("changeColorBg", color);
-
+            this.currentColorBg = color
             break;
         }
+      
 
-        this.toolbarState.isUpdating = false;
+        this.toolbarState.isChoosingBg = false;
+        this.toolbarState.isChoosingFg = false;
+
+        this.$store.commit("updateToolBarState", this.toolbarState);
+
       }
     },
   },

@@ -1,5 +1,8 @@
 <template>
   <div id="app">
+    
+
+
     <t-modal
       name="create-ascii-modal"
       header="Create new ASCII"
@@ -73,6 +76,8 @@
         <Editor v-if="asciibirdMeta.length" />
       </div>
     </div>
+
+    
   </div>
 </template>
 
@@ -399,6 +404,9 @@ export default {
       } // End loop charPos
 
       this.$store.commit("newAsciibirdMeta", this.finalAscii);
+
+
+
     },
     createClick() {
       this.forms.createAscii.title = `New ASCII ${this.asciibirdMeta.length}`;

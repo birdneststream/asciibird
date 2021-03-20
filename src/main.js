@@ -25,11 +25,16 @@ import {
   TDialog,
 } from 'vue-tailwind/dist/components';
 import Dashboard from './Dashboard.vue';
-// import Toolbar from './components/Toolbar.vue';
 import router from './router';
 import store from './store';
 // optionally import default styles
 import 'vue-draggable-resizable/dist/VueDraggableResizable.css';
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { faMousePointer, faFont, faFillDrip, faPaintBrush } from '@fortawesome/free-solid-svg-icons'
+import { faSquare } from '@fortawesome/free-regular-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+
+library.add(faMousePointer, faSquare, faFont, faFillDrip, faPaintBrush)
 
 Vue.config.productionTip = false;
 
@@ -132,6 +137,7 @@ const settings = {
 };
 
 Vue.use(VueTailwind, settings);
+Vue.component('font-awesome-icon', FontAwesomeIcon)
 Vue.component('vue-draggable-resizable', VueDraggableResizable);
 
 new Vue({

@@ -54,28 +54,40 @@ export default new Vuex.Store({
     asciibirdMeta: [],
     toolbar: [
       {
+        name: 'default',
+        icon: 'mouse-pointer',
+        fa: 'fas',
+      },
+      {
         name: 'select',
-        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" /></svg>'
+        icon: 'square',
+        fa: 'far',
       },
       {
         name: 'text',
-        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>'
+        icon: 'font',
+        fa: 'fas',
       },
       {
         name: 'fill',
-        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>'
+        icon: 'fill-drip',
+        fa: 'fas',
       },
       {
         name: 'brush',
-        icon: '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>'
+        icon: 'paint-brush',
+        fa: 'fas',
       },
     ],
     toolbarState: {
       currentColorFg: 0,
-      currentColorBg: 0,
-      currentColor: 0,
+      currentColorBg: 1,
+      isChoosingFg: false,
+      isChoosingBg: false,
+      selectedFg: 0,
+      selectedBg: 1,
       isUpdating: false,
-      currentTool : null,
+      currentTool: 'default',
     },
     blockSizeMultiplier: 1,
   },
@@ -97,9 +109,13 @@ export default new Vuex.Store({
     newAsciibirdMeta(state, payload) {
       state.asciibirdMeta.push(payload);
     },
+    updateToolBarState(state, payload) {
+      state.toolbarState = payload
+    }
   },
   getters: {
     getToolbarState: state => state.toolbarState,
+    getCurrentTool: state => state.toolbarState.currentTool,
     getFgColor: state => state.toolbarState.currentColorFg,
     getBgColor: state => state.toolbarState.currentColorBg,
     currentTab: state => state.tab,
