@@ -1,8 +1,5 @@
 <template>
   <div id="app">
-    
-
-
     <t-modal
       name="create-ascii-modal"
       header="Create new ASCII"
@@ -76,8 +73,6 @@
         <Editor v-if="asciibirdMeta.length" />
       </div>
     </div>
-
-    
   </div>
 </template>
 
@@ -321,19 +316,19 @@ export default {
             secondColor = false;
 
             // CC
-            if (
-              asciiStringArray[0] === "\u0003" &&
-              asciiStringArray[1] === "\u0003"
-            ) {
-              curBlock = {
-                fg: null,
-                bg: null,
-                char: null,
-              };
+            // if (
+            //   asciiStringArray[0] === "\u0003" &&
+            //   asciiStringArray[1] === "\u0003"
+            // ) {
+            //   curBlock = {
+            //     fg: null,
+            //     bg: null,
+            //     char: null,
+            //   };
 
-              console.log("Got CC");
-              continue;
-            }
+            //   console.log("Got CC");
+            //   continue;
+            // }
 
             asciiStringArray.shift();
             theWidth++;
@@ -343,7 +338,11 @@ export default {
               colorChar2 = `${asciiStringArray[1]}`;
               parsedColor = parseInt(`${colorChar1}${colorChar2}`);
 
-              if (parsedColor <= MIRC_MAX_COLORS && parsedColor >= 0) {
+              if (isNaN(parsedColor)) {
+                curBlock.bg = parseInt(colorChar1);
+                theWidth += 1;
+                asciiStringArray.shift();
+              } else if (parsedColor <= MIRC_MAX_COLORS && parsedColor >= 0) {
                 curBlock.fg = parseInt(parsedColor);
                 firstColor = true;
                 theWidth += parsedColor.toString().length;
@@ -372,7 +371,11 @@ export default {
               colorChar2 = `${asciiStringArray[1]}`;
               parsedColor = parseInt(`${colorChar1}${colorChar2}`);
 
-              if (parsedColor <= MIRC_MAX_COLORS && parsedColor >= 0) {
+              if (isNaN(parsedColor)) {
+                curBlock.bg = parseInt(colorChar1);
+                theWidth += 1;
+                asciiStringArray.shift();
+              } else if (parsedColor <= MIRC_MAX_COLORS && parsedColor >= 0) {
                 curBlock.bg = parseInt(parsedColor);
                 theWidth += parsedColor.toString().length;
 
@@ -404,9 +407,6 @@ export default {
       } // End loop charPos
 
       this.$store.commit("newAsciibirdMeta", this.finalAscii);
-
-
-
     },
     createClick() {
       this.forms.createAscii.title = `New ASCII ${this.asciibirdMeta.length}`;

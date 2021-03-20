@@ -166,7 +166,7 @@ export default {
         let canvasY = 0;
         let curBlock = {};
 
-        this.ctx.font = "14px Hack";
+        this.ctx.font = "12.5px Hack";
 
         for (y = 0; y < this.currentAsciibirdMeta.height + 1; y++) {
           canvasY = BLOCK_HEIGHT * y;
@@ -198,8 +198,8 @@ export default {
 
                 this.ctx.fillText(
                   curBlock.char,
-                  canvasX,
-                  canvasY + BLOCK_HEIGHT 
+                  canvasX - 1,
+                  canvasY + BLOCK_HEIGHT - 3
                 );
                 this.ctx.stroke();
               }
