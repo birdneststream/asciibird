@@ -132,14 +132,6 @@ export default {
   watch: {
     watchAsciiChange(val, old) {
         this.currentAsciibirdMeta = val;
-
-        // this.ctx.width =
-        //   val.width *
-        //   val.blockWidth;
-        // this.ctx.height =
-        //   val.height *
-        //   val.blockHeight;
-
         this.drawGrid();  
         this.redrawCanvas();
     },
@@ -156,7 +148,6 @@ export default {
     },
     redrawCanvas() {
       // Clears the whole canvas
-      // if (this.ctx) {
         this.ctx.clearRect(0, 0, 1000, 1000);
         this.ctx.stroke();
 
@@ -218,7 +209,6 @@ export default {
         }
 
         this.ctx.stroke();
-      // }
     },
     processMouseDown(e) {
       // this.canvasClass(e)
@@ -253,8 +243,6 @@ export default {
       ].bg = this.$store.getters.getBgColor;
     },
     cavnasMouseUp() {
-      // this.currentAsciibirdMeta.blocks[this.y][this.x].
-
       this.redrawCanvas();
     },
     drawGrid() {

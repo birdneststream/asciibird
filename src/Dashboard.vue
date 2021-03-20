@@ -281,7 +281,8 @@ export default {
 
       var theWidth = 0;
 
-      for (let charPos = 0; charPos <= this.asciiImport.length - 1; charPos++) {
+      // for (let charPos = 0; charPos <= this.asciiImport.length - 1; charPos++) {
+      while (asciiStringArray.length) {
         let curChar = asciiStringArray[0];
 
         // Defining a small finite state machine
