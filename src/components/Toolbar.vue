@@ -76,6 +76,7 @@ export default {
     this.charCodes = this.$store.state.charCodes;
     this.toolbar = this.$store.state.toolbar;
     this.toolbarState = this.$store.getters.getToolbarState;
+    this.onToolbarChange('default')
   },
   name: "Toolbar",
 

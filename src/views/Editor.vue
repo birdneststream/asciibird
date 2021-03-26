@@ -7,28 +7,23 @@
 
     <div id="canvas-area" style="position: relative">
       <span>{{ x }}, {{ y }}</span>
-      <canvas
-        ref="grid"
-        id="grid"
-        width="5024"
-        height="5024"
-        class="gridCanvas"
-      ></canvas>
 
       <vue-draggable-resizable
         style="z-index: 5; left: 220px"
-        :max-width="1000"
-        :max-height="1000"
+        :grid=[13,8]
+        :w="canvas.width"
+        :h="canvas.height"
         :draggable="currentTool === 'default'"
+        @resizing="onCanvasResize"
+        @dragging="onCanvasDrag"
       >
         
         <canvas
           ref="canvas"
           id="canvas"
-          width="1000"
-          height="1000"
-          :key="refreshCanvas"
           class="canvas"
+          :width="canvas.width"
+          :height="canvas.height"
           @mousemove="showCoordinates"
           @mousedown="cavnasMouseDown"
           @mouseup="cavnasMouseUp"
@@ -51,18 +46,6 @@ body {
   z-index: 0;
 }
 
-.gridCanvas {
-  position: absolute;
-  border: lightgrey 1px solid;
-  border-radius: 5px;
-  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
-  z-index: -1;
-  margin-left: -2502px;
-  margin-top: -2493px;
-  width: 5000px;
-  height: 5000px;
-  display: block;
-}
 </style>
 
 <script>
@@ -78,8 +61,10 @@ export default {
 
     if (this.currentAsciibirdMeta.blocks) {
       this.ctx = this.$refs.canvas.getContext("2d");
-      this.gridCtx = this.$refs.grid.getContext("2d");
 
+      this.redrawCanvas();
+      this.canvas.width = this.currentAsciibirdMeta.width * this.currentAsciibirdMeta.blockWidth;
+      this.canvas.height = this.currentAsciibirdMeta.height * this.currentAsciibirdMeta.blockHeight;
       this.redrawCanvas();
     }
   },
@@ -103,14 +88,15 @@ export default {
       y: null,
     },
     canvas: {
-      width: 2048,
-      height: 2048,
+      width: 512,
+      height: 512,
     },
     gridCtx: null,
     x: 0,
     y: 0,
     refreshCanvas: 0,
     currentTool: null,
+    redraw: true,
   }),
   computed: {
     canvasStyle() {
@@ -119,9 +105,6 @@ export default {
     generateTitle() {
       return this.currentAsciibirdMeta.title ?? "";
     },
-    // watchColorChange() {
-    //   return this.$store.getters.getColor;
-    // },
     watchToolChange() {
       return this.$store.getters.getCurrentTool;
     },
@@ -132,12 +115,11 @@ export default {
   watch: {
     watchAsciiChange(val, old) {
       this.currentAsciibirdMeta = val;
-      this.drawGrid();
+      this.redrawCanvas();
+      this.canvas.width = this.currentAsciibirdMeta.width * this.currentAsciibirdMeta.blockWidth;
+      this.canvas.height = this.currentAsciibirdMeta.height * this.currentAsciibirdMeta.blockHeight;
       this.redrawCanvas();
     },
-    // watchColorChange(val) {
-    //   console.log(JSON.stringify(val));
-    // },
     watchToolChange(val) {
       this.currentTool = val;
     },
@@ -148,10 +130,7 @@ export default {
     },
     redrawCanvas() {
       // Clears the whole canvas
-      this.ctx.clearRect(0, 0, 1000, 1000);
-      this.ctx.stroke();
-
-      this.drawGrid();
+      this.ctx.clearRect(0, 0, 10000, 10000);
 
       if (this.currentAsciibirdMeta.blocks.length) {
         const BLOCK_WIDTH = this.currentAsciibirdMeta.blockWidth;
@@ -167,6 +146,7 @@ export default {
         let curBlock = {};
 
         this.ctx.font = "12.5px Hack";
+
 
         for (y = 0; y < this.currentAsciibirdMeta.height + 1; y++) {
           canvasY = BLOCK_HEIGHT * y;
@@ -201,7 +181,7 @@ export default {
                   canvasX - 1,
                   canvasY + BLOCK_HEIGHT - 3
                 );
-                this.ctx.stroke();
+                // this.ctx.stroke();
               }
             }
           }
@@ -210,22 +190,12 @@ export default {
 
       this.ctx.stroke();
     },
-    processMouseDown(e) {
-      // this.canvasClass(e)
-      this.selectionMode = true;
-      this.startPosition.x = e.clientX;
-      this.startPosition.y = e.clientY;
-    },
     processMouseMove(e) {
       // if (this.selectionMode) {
       // }
     },
-    processMouseUp(e) {
-      this.selectionMode = false;
-      this.startPosition.x = null;
-      this.startPosition.y = null;
-    },
     showCoordinates(e) {
+      this.redrawCanvas();
       if (e.offsetX >= 0) {
         this.x = e.offsetX;
       }
@@ -236,6 +206,13 @@ export default {
 
       this.x = Math.floor(this.x / this.currentAsciibirdMeta.blockWidth);
       this.y = Math.floor(this.y / this.currentAsciibirdMeta.blockHeight);
+    },
+    onDelayRedrawCanvas() {
+      
+      setTimeout(() => {
+        console.log("delay")
+        this.redraw = true
+      }, 500);
     },
     cavnasMouseDown() {
       switch (this.currentTool) {
@@ -252,37 +229,24 @@ export default {
             ].bg = this.$store.getters.getBgColor;
           break;
       }
-    },
-    cavnasMouseUp() {
+      
       this.redrawCanvas();
     },
-    drawGrid() {
-      const width = 5000;
-      const height = 5000;
+    onCanvasResize(left, top, width, height) {
+      this.canvas.width = width
+      this.canvas.height = height
 
-      const s = 26;
-      const sW = 16;
-      const pL = s;
-      const pT = s;
-      const pR = s;
-      const pB = s;
-
-      if (this.gridCtx) {
-        this.gridCtx.clearRect(0, 0, width, height);
-
-        this.gridCtx.strokeStyle = "lightgrey";
-        this.gridCtx.lineWidth = 0.333;
-        this.gridCtx.beginPath();
-        for (let x = pL; x <= width - pR; x += sW) {
-          this.gridCtx.moveTo(x, pT);
-          this.gridCtx.lineTo(x, height - pB);
-        }
-        for (let y = pT; y <= height - pB; y += s) {
-          this.gridCtx.moveTo(pL, y);
-          this.gridCtx.lineTo(width - pR, y);
-        }
-        this.gridCtx.stroke();
+      if (this.redraw) {
+        this.redraw = false
+        this.redrawCanvas()
+        this.onDelayRedrawCanvas()
       }
+    },
+    onCanvasDrag(left, top) {
+      // console.log(left, top)
+    },
+    cavnasMouseUp() {
+      // this.redrawCanvas();
     },
   },
 };

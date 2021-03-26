@@ -373,8 +373,12 @@ export default {
               parsedColor = parseInt(`${colorChar1}${colorChar2}`);
 
               // Work out the 01, 02
-              if ( (!isNaN(colorChar1)) && (!isNaN(colorChar2)) && parseInt(colorChar2) > parseInt(colorChar1)) {
-                parsedColor = parseInt(colorChar2)
+              if (
+                !isNaN(colorChar1) &&
+                !isNaN(colorChar2) &&
+                parseInt(colorChar2) > parseInt(colorChar1)
+              ) {
+                parsedColor = parseInt(colorChar2);
                 asciiStringArray.shift();
               }
 
