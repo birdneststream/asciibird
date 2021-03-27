@@ -170,10 +170,6 @@ export default {
               this.currentAsciibirdMeta.blocks[y] &&
               this.currentAsciibirdMeta.blocks[y][x]
             ) {
-              // curBlock = JSON.parse(
-              //   JSON.stringify(this.currentAsciibirdMeta.blocks[y][x])
-              // );
-
               curBlock = Object.assign(curBlock,this.currentAsciibirdMeta.blocks[y][x])
 
               canvasX = BLOCK_WIDTH * x;
@@ -368,6 +364,9 @@ export default {
         }, 8);
       }
     },
+
+
+    // TOOLS
     fillTool() {
       let fillStartBlock = this.currentAsciibirdMeta.blocks[this.y][this.x];
   

@@ -245,13 +245,6 @@ export default {
         char: null,
       };
 
-      // Object clone this to reset the block state
-      let emptyCurBlock = {
-        fg: null,
-        bg: null,
-        char: null,
-      };
-
       // set asciiImport as the entire file contents as a string
       this.asciiImport = contents.split("\u0003\u0003").join("\u0003");
 
@@ -376,7 +369,9 @@ export default {
               if (
                 !isNaN(colorChar1) &&
                 !isNaN(colorChar2) &&
-                parseInt(colorChar2) > parseInt(colorChar1)
+                parseInt(colorChar2) > parseInt(colorChar1) &&
+                parseInt(parsedColor) <= 10
+
               ) {
                 parsedColor = parseInt(colorChar2);
                 asciiStringArray.shift();
