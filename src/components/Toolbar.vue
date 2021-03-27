@@ -11,28 +11,38 @@
       :y="50"
     >
       <div style="height: 100%; min-height: 500px; max-height: 700px">
-
         <t-card header="Tools and Stuff" style="height: 100%">
-          <t-card
-            v-if="toolbarState.isChoosingFg || toolbarState.isChoosingBg"
-          >
+          <label class="flex ml-1">
+            <t-checkbox name="targetingFg"  v-model="toolbarState.targetingFg" />
+            <span class="text-sm">FG</span>
+          </label>
+          <label class="flex ml-1">
+            <t-checkbox name="targetingBg"  v-model="toolbarState.targetingBg" checked />
+            <span class="text-sm">BG</span>
+          </label>
+          <label class="flex ml-1">
+            <t-checkbox name="targetingText" v-model="toolbarState.targetingText"  />
+            <span class="text-sm">Text</span>
+          </label>
 
-          <t-button
-            type="button"
-            v-for="(value, keyColors) in mircColors"
-            :key="keyColors"
-            :style="makeColorButtonClass(value)"
-            class="border-gray-300 m-1"
-            @click="onColorChange(keyColors)"
-          ></t-button>
-
+          <t-card v-if="toolbarState.isChoosingFg || toolbarState.isChoosingBg">
+            <t-button
+              type="button"
+              v-for="(value, keyColors) in mircColors"
+              :key="keyColors"
+              :style="makeColorButtonClass(value)"
+              class="border-gray-300 m-1"
+              @click="onColorChange(keyColors)"
+            ></t-button>
           </t-card>
 
           <hr />
 
           <t-button
             type="button"
-            :style="makeColorButtonClass(mircColors[toolbarState.currentColorFg])"
+            :style="
+              makeColorButtonClass(mircColors[toolbarState.currentColorFg])
+            "
             class="border-gray-300 m-1"
             id="currentColorFg"
             @click="startColorChange(0)"
@@ -40,7 +50,9 @@
 
           <t-button
             type="button"
-            :style="makeColorButtonClass(mircColors[toolbarState.currentColorBg])"
+            :style="
+              makeColorButtonClass(mircColors[toolbarState.currentColorBg])
+            "
             class="border-gray-300 m-1"
             id="currentColorBg"
             @click="startColorChange(1)"
@@ -57,10 +69,7 @@
             @click="onToolbarChange(value)"
           >
             <font-awesome-icon :icon="[value.fa, value.icon]" />
-
-            
           </t-button>
-
         </t-card>
       </div>
     </vue-draggable-resizable>
@@ -75,8 +84,8 @@ export default {
     this.mircColors = this.$store.state.mircColors;
     this.charCodes = this.$store.state.charCodes;
     this.toolbar = this.$store.state.toolbar;
-    this.toolbarState = this.$store.getters.getToolbarState;
-    this.onToolbarChange('default')
+    // this.toolbarState = this.$store.getters.getToolbarState;
+    this.onToolbarChange("default");
   },
   name: "Toolbar",
 
@@ -96,9 +105,49 @@ export default {
       isChoosingFg: false,
       isChoosingBg: false,
       isUpdating: false,
-      currentTool: 'default',
+      currentTool: "default",
+      targetingFg: false,
+      targetingBg: false,
+      targetingText: false,
     },
   }),
+  computed: {
+    watchFgChange() {
+      return this.$store.getters.getFgColor;
+    },
+    watchBgChange() {
+      return this.$store.getters.getBgColor;
+    },
+    watchTargetingFg() {
+      return this.toolbarState.targetingFg
+    },
+    watchTargetingBg() {
+      return this.toolbarState.targetingBg
+    },
+    watchTargetingText() {
+      return this.toolbarState.targetingText
+    }, 
+  },
+  watch: {
+    watchFgChange(val, old) {
+      this.toolbarState.currentColorFg = val;
+    },
+    watchBgChange(val, old) {
+      this.toolbarState.currentColorBg = val;
+    },
+    watchTargetingFg(val, old) {
+      this.$store.commit("changeTargetingFg", val);
+      this.toolbarState.targetingFg = val
+    },
+    watchTargetingBg(val, old) {
+      this.$store.commit("changeTargetingBg", val);
+      this.toolbarState.targetingBg = val
+    },
+    watchTargetingText(val, old) {
+      this.$store.commit("changeTargetingText", val);
+      this.toolbarState.targetingText = val
+    },    
+  },
   methods: {
     onResize(x, y, width, height) {
       this.floating.x = x;
@@ -114,30 +163,28 @@ export default {
       this.$store.commit("changeTool", item.name);
     },
     makeColorButtonClass(color) {
-      return `background-color: ${ color } !important;width:25px;height:25px;`;
+      return `background-color: ${color} !important;width:25px;height:25px;`;
     },
     makeToolbarButtonClass(tool) {
       return "background-color: grey !important;width:25px;height:25px;";
     },
-    startColorChange(type){
-      
+    startColorChange(type) {
       // this.toolbarState.isChoosingColor = true
       if (type === 0) {
-      //   // Fg
-        this.toolbarState.isChoosingFg = true
+        //   // Fg
+        this.toolbarState.isChoosingFg = true;
       } else {
-      //   // Bg
-        this.toolbarState.isChoosingBg = true
+        //   // Bg
+        this.toolbarState.isChoosingBg = true;
       }
-
     },
     onColorChange(color) {
       if (this.toolbarState.isChoosingFg) {
-        this.updateColor(0, color)
+        this.updateColor(0, color);
       }
 
       if (this.toolbarState.isChoosingBg) {
-        this.updateColor(1, color)
+        this.updateColor(1, color);
       }
     },
     updateColor(type, color) {
@@ -146,22 +193,20 @@ export default {
           // FG
           case 0:
             this.$store.commit("changeColorFg", color);
-            this.currentColorFg = color
+            this.currentColorFg = color;
             break;
 
           // BG
           case 1:
             this.$store.commit("changeColorBg", color);
-            this.currentColorBg = color
+            this.currentColorBg = color;
             break;
         }
-      
 
         this.toolbarState.isChoosingBg = false;
         this.toolbarState.isChoosingFg = false;
 
         this.$store.commit("updateToolBarState", this.toolbarState);
-
       }
     },
   },

@@ -69,7 +69,6 @@
       <DebugPanel v-if="asciibirdMeta.length" />
 
       <div class="border-gray-600">
-        <!-- <router-view /> -->
         <Editor v-if="asciibirdMeta.length" />
       </div>
     </div>
@@ -417,7 +416,14 @@ export default {
         // break;
       } // End loop charPos
 
+
       this.$store.commit("newAsciibirdMeta", this.finalAscii);
+      this.asciibirdMeta = this.$store.getters.asciibirdMeta;
+
+      let keys = this.asciibirdMeta.map((v,k) => k).filter(i=>i!==undefined)
+
+      this.currentTab = keys.pop();
+      this.$store.commit("changeTab", this.currentTab);
     },
     createClick() {
       this.forms.createAscii.title = `New ASCII ${this.asciibirdMeta.length}`;
@@ -439,8 +445,8 @@ export default {
         key: this.asciibirdMeta.length,
         width: this.forms.createAscii.width,
         height: this.forms.createAscii.height,
-        blockWidth: 16,
-        blockHeight: 26,
+        blockWidth: 8,
+        blockHeight: 13,
         blocks: this.create2DArray(this.forms.createAscii.height),
       };
 
@@ -448,11 +454,9 @@ export default {
       for (let x = 0; x < payload.width; x++) {
         for (let y = 0; y < payload.height; y++) {
           payload.blocks[y].push({
-            bg: Math.floor(Math.random() * this.mircColors.length),
-            fg: Math.floor(Math.random() * this.mircColors.length),
-            char: this.charCodes[
-              Math.floor(Math.random() * this.charCodes.length)
-            ],
+            bg: null,
+            fg: null,
+            char: null,
           });
         }
       }

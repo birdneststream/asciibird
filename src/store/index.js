@@ -52,8 +52,7 @@ export default new Vuex.Store({
     tab: 0,
     // asciibirdMeta holds all of the ASCII information for all the tabs
     asciibirdMeta: [],
-    toolbar: [
-      {
+    toolbar: [{
         name: 'default',
         icon: 'mouse-pointer',
         fa: 'fas',
@@ -78,6 +77,16 @@ export default new Vuex.Store({
         icon: 'paint-brush',
         fa: 'fas',
       },
+      {
+        name: 'dropper',
+        icon: 'eye-dropper',
+        fa: 'fas',
+      },
+      {
+        name: 'eraser',
+        icon: 'eraser',
+        fa: 'fas',
+      },
     ],
     toolbarState: {
       currentColorFg: 0,
@@ -88,6 +97,9 @@ export default new Vuex.Store({
       selectedBg: 1,
       isUpdating: false,
       currentTool: 'default',
+      targetingFg: false,
+      targetingBg: false,
+      targetingText: false,
     },
     blockSizeMultiplier: 1,
   },
@@ -106,6 +118,15 @@ export default new Vuex.Store({
     changeTool(state, payload) {
       state.toolbarState.currentTool = payload;
     },
+    changeTargetingFg(state, payload) {
+      state.toolbarState.targetingFg = payload;
+    },
+    changeTargetingBg(state, payload) {
+      state.toolbarState.targetingBg = payload;
+    },
+    changeTargetingText(state, payload) {
+      state.toolbarState.targetingText = payload;
+    },
     newAsciibirdMeta(state, payload) {
       state.asciibirdMeta.push(payload);
     },
@@ -116,6 +137,9 @@ export default new Vuex.Store({
   getters: {
     getToolbarState: state => state.toolbarState,
     getCurrentTool: state => state.toolbarState.currentTool,
+    getTargetingBg: state => state.toolbarState.targetingBg,
+    getTargetingFg: state => state.toolbarState.targetingFg,
+    getTargetingText: state => state.toolbarState.targetingText,
     getFgColor: state => state.toolbarState.currentColorFg,
     getBgColor: state => state.toolbarState.currentColorBg,
     currentTab: state => state.tab,
@@ -130,4 +154,3 @@ export default new Vuex.Store({
   modules: {},
   plugins: [vuexLocal.plugin],
 });
-

@@ -10,23 +10,22 @@
 
       <vue-draggable-resizable
         style="z-index: 5; left: 220px"
-        :grid=[13,8]
+        :grid="[13, 8]"
         :w="canvas.width"
         :h="canvas.height"
         :draggable="currentTool === 'default'"
         @resizing="onCanvasResize"
         @dragging="onCanvasDrag"
       >
-        
         <canvas
           ref="canvas"
           id="canvas"
           class="canvas"
           :width="canvas.width"
           :height="canvas.height"
-          @mousemove="showCoordinates"
-          @mousedown="cavnasMouseDown"
-          @mouseup="cavnasMouseUp"
+          @mousemove="canvasMouseMove"
+          @mousedown="canvasMouseDown"
+          @mouseup="canvasMouseUp"
         ></canvas>
       </vue-draggable-resizable>
     </div>
@@ -45,7 +44,6 @@ body {
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
   z-index: 0;
 }
-
 </style>
 
 <script>
@@ -58,14 +56,16 @@ export default {
   mounted() {
     this.currentAsciibirdMeta = this.$store.getters.currentAscii;
     this.mircColors = this.$store.getters.mircColors;
+    this.toolbarState = this.$store.getters.getToolbarState;
 
     if (this.currentAsciibirdMeta.blocks) {
       this.ctx = this.$refs.canvas.getContext("2d");
-
-      this.redrawCanvas();
-      this.canvas.width = this.currentAsciibirdMeta.width * this.currentAsciibirdMeta.blockWidth;
-      this.canvas.height = this.currentAsciibirdMeta.height * this.currentAsciibirdMeta.blockHeight;
-      this.redrawCanvas();
+      this.canvas.width =
+        this.currentAsciibirdMeta.width * this.currentAsciibirdMeta.blockWidth;
+      this.canvas.height =
+        this.currentAsciibirdMeta.height *
+        this.currentAsciibirdMeta.blockHeight;
+      this.delayRedrawCanvas();
     }
   },
   created() {},
@@ -97,6 +97,14 @@ export default {
     refreshCanvas: 0,
     currentTool: null,
     redraw: true,
+
+    toolbarState: {
+      targetingFg: false,
+      targetingBg: false,
+      targetingText: false,
+    },
+
+    canDrawOnMouseDown: false,
   }),
   computed: {
     canvasStyle() {
@@ -111,17 +119,37 @@ export default {
     watchAsciiChange() {
       return this.$store.getters.currentAscii;
     },
+    watchTargetingFg() {
+      return this.$store.getters.getTargetingFg;
+    },
+    watchTargetingBg() {
+      return this.$store.getters.getTargetingBg;
+    },
+    watchTargetingText() {
+      return this.$store.getters.getTargetingText;
+    },
   },
   watch: {
     watchAsciiChange(val, old) {
       this.currentAsciibirdMeta = val;
-      this.redrawCanvas();
-      this.canvas.width = this.currentAsciibirdMeta.width * this.currentAsciibirdMeta.blockWidth;
-      this.canvas.height = this.currentAsciibirdMeta.height * this.currentAsciibirdMeta.blockHeight;
-      this.redrawCanvas();
+      this.canvas.width =
+        this.currentAsciibirdMeta.width * this.currentAsciibirdMeta.blockWidth;
+      this.canvas.height =
+        this.currentAsciibirdMeta.height *
+        this.currentAsciibirdMeta.blockHeight;
+      this.delayRedrawCanvas();
     },
     watchToolChange(val) {
       this.currentTool = val;
+    },
+    watchTargetingFg(val) {
+      this.toolbarState.targetingFg = val;
+    },
+    watchTargetingBg(val) {
+      this.toolbarState.targetingBg = val;
+    },
+    watchTargetingText(val) {
+      this.toolbarState.targetingText = val;
     },
   },
   methods: {
@@ -147,7 +175,6 @@ export default {
 
         this.ctx.font = "12.5px Hack";
 
-
         for (y = 0; y < this.currentAsciibirdMeta.height + 1; y++) {
           canvasY = BLOCK_HEIGHT * y;
 
@@ -156,9 +183,12 @@ export default {
               this.currentAsciibirdMeta.blocks[y] &&
               this.currentAsciibirdMeta.blocks[y][x]
             ) {
-              curBlock = JSON.parse(
-                JSON.stringify(this.currentAsciibirdMeta.blocks[y][x])
-              );
+              // curBlock = JSON.parse(
+              //   JSON.stringify(this.currentAsciibirdMeta.blocks[y][x])
+              // );
+
+              curBlock = Object.assign(curBlock,this.currentAsciibirdMeta.blocks[y][x])
+
               canvasX = BLOCK_WIDTH * x;
 
               // Background block
@@ -181,7 +211,6 @@ export default {
                   canvasX - 1,
                   canvasY + BLOCK_HEIGHT - 3
                 );
-                // this.ctx.stroke();
               }
             }
           }
@@ -190,12 +219,8 @@ export default {
 
       this.ctx.stroke();
     },
-    processMouseMove(e) {
-      // if (this.selectionMode) {
-      // }
-    },
-    showCoordinates(e) {
-      this.redrawCanvas();
+    canvasMouseMove(e) {
+
       if (e.offsetX >= 0) {
         this.x = e.offsetX;
       }
@@ -206,47 +231,161 @@ export default {
 
       this.x = Math.floor(this.x / this.currentAsciibirdMeta.blockWidth);
       this.y = Math.floor(this.y / this.currentAsciibirdMeta.blockHeight);
-    },
-    onDelayRedrawCanvas() {
-      
-      setTimeout(() => {
-        console.log("delay")
-        this.redraw = true
-      }, 500);
-    },
-    cavnasMouseDown() {
+
       switch (this.currentTool) {
-        case "mouse":
+        case "brush":
+          if (this.canDrawOnMouseDown) {
+            if (
+              this.currentAsciibirdMeta.blocks[this.y] &&
+              this.currentAsciibirdMeta.blocks[this.y][this.x]
+            ) {
+
+
+              if (this.toolbarState.targetingFg) {
+                this.currentAsciibirdMeta.blocks[this.y][
+                  this.x
+                ].fg = this.$store.getters.getFgColor;
+              }
+
+              if (this.toolbarState.targetingBg) {
+                this.currentAsciibirdMeta.blocks[this.y][
+                  this.x
+                ].bg = this.$store.getters.getBgColor;
+              }
+
+              // if (this.toolbarState.targetingText) {
+              //   this.currentAsciibirdMeta.blocks[this.y][this.x].char = null;
+              // }
+            }
+
+           
+          }
+          break;
+
+        case "eraser":
+          if (this.canDrawOnMouseDown) {
+            if (
+              this.currentAsciibirdMeta.blocks[this.y] &&
+              this.currentAsciibirdMeta.blocks[this.y][this.x]
+            ) {
+
+              if (this.toolbarState.targetingFg) {
+                this.currentAsciibirdMeta.blocks[this.y][this.x].fg = null;
+              }
+
+              if (this.toolbarState.targetingBg) {
+                this.currentAsciibirdMeta.blocks[this.y][this.x].bg = null;
+              }
+
+              if (this.toolbarState.targetingText) {
+                this.currentAsciibirdMeta.blocks[this.y][this.x].char = null;
+              }
+
+            }
+              
+          }
+          break;
+      }
+
+      this.delayRedrawCanvas()
+    },
+    delayRedrawCanvas() {
+      if (this.redraw) {
+        this.redraw = false;
+        
+        setTimeout(() => {
+          this.redraw = true
+          this.redrawCanvas();
+        }, 25);
+      }
+    },
+    // fillTool(block) {
+
+    //   this.fillTool(block);
+    // },
+    canvasMouseDown() {
+      switch (this.currentTool) {
+        case "default":
+          break;
+
+        case "fill":
+          // this.canDrawOnMouseDown = true;
+          if (
+            this.currentAsciibirdMeta.blocks[this.y] && 
+            this.currentAsciibirdMeta.blocks[this.y][this.x]
+          ) {
+             
+            // First set of colours
+
+
+
+
+
+          }
           break;
 
         case "brush":
+          this.canDrawOnMouseDown = true;
+          break;
+
+        case "eraser":
+          this.canDrawOnMouseDown = true;
+          break;
+
+        case "dropper":
           if (
-            this.currentAsciibirdMeta.blocks[this.y] &&
+            this.currentAsciibirdMeta.blocks[this.y] && 
             this.currentAsciibirdMeta.blocks[this.y][this.x]
-          )
-            this.currentAsciibirdMeta.blocks[this.y][
-              this.x
-            ].bg = this.$store.getters.getBgColor;
+          ) {
+              let curBlock = this.currentAsciibirdMeta.blocks[this.y][this.x];
+
+              if (this.toolbarState.targetingFg) {
+                this.$store.commit("changeColorFg", curBlock.fg);
+              }
+
+              if (this.toolbarState.targetingBg) {
+                this.$store.commit("changeColorBg", curBlock.bg);
+              }
+
+              // if (this.toolbarState.targetingText) {
+
+              // }
+          }
+
+          this.currentTool = "default";
+          this.$store.commit("changeTool", this.currentTool);
           break;
       }
-      
-      this.redrawCanvas();
+
+
+
     },
     onCanvasResize(left, top, width, height) {
-      this.canvas.width = width
-      this.canvas.height = height
-
-      if (this.redraw) {
-        this.redraw = false
-        this.redrawCanvas()
-        this.onDelayRedrawCanvas()
-      }
+      this.canvas.width = width;
+      this.canvas.height = height;
+      this.delayRedrawCanvas();
     },
     onCanvasDrag(left, top) {
       // console.log(left, top)
     },
-    cavnasMouseUp() {
-      // this.redrawCanvas();
+    canvasMouseUp() {
+      this.delayRedrawCanvas();
+
+      switch (this.currentTool) {
+        case "brush":
+          this.canDrawOnMouseDown = false;
+          break;
+
+        case "eraser":
+          this.canDrawOnMouseDown = false;
+          break;
+
+        case "fill":
+          // this.canDrawOnMouseDown = true;
+
+          break;
+
+      }
     },
   },
 };
