@@ -95,7 +95,6 @@ export default {
       this.mircAsciiImport(asciiData, asciiUrl);
       window.location.href = "/";
     }
-    
   },
   components: { Toolbar, DebugPanel, Editor },
   name: "Dashboard",
@@ -305,7 +304,6 @@ export default {
             break;
 
           case "\u0003":
-            firstColor = false;
             secondColor = false;
 
             // CC
@@ -326,25 +324,23 @@ export default {
             asciiStringArray.shift();
             theWidth++;
 
-            if (!firstColor) {
-              colorChar1 = `${asciiStringArray[0]}`;
-              colorChar2 = `${asciiStringArray[1]}`;
-              parsedColor = parseInt(`${colorChar1}${colorChar2}`);
+            colorChar1 = `${asciiStringArray[0]}`;
+            colorChar2 = `${asciiStringArray[1]}`;
+            parsedColor = parseInt(`${colorChar1}${colorChar2}`);
 
-              if (isNaN(parsedColor)) {
-                curBlock.bg = parseInt(colorChar1);
-                theWidth += 1;
-                asciiStringArray.shift();
-              } else if (parsedColor <= MIRC_MAX_COLORS && parsedColor >= 0) {
-                curBlock.fg = parseInt(parsedColor);
-                firstColor = true;
-                theWidth += parsedColor.toString().length;
+            if (isNaN(parsedColor)) {
+              curBlock.bg = parseInt(colorChar1);
+              theWidth += 1;
+              asciiStringArray.shift();
+            } else if (parsedColor <= MIRC_MAX_COLORS && parsedColor >= 0) {
+              curBlock.fg = parseInt(parsedColor);
+              // firstColor = true;
+              theWidth += parsedColor.toString().length;
 
-                asciiStringArray = asciiStringArray.slice(
-                  parsedColor.toString().length,
-                  asciiStringArray.length
-                );
-              }
+              asciiStringArray = asciiStringArray.slice(
+                parsedColor.toString().length,
+                asciiStringArray.length
+              );
             }
 
             colorChar1 = null;
@@ -371,7 +367,6 @@ export default {
                 !isNaN(colorChar2) &&
                 parseInt(colorChar2) > parseInt(colorChar1) &&
                 parseInt(parsedColor) <= 10
-
               ) {
                 parsedColor = parseInt(colorChar2);
                 asciiStringArray.shift();
@@ -412,11 +407,12 @@ export default {
         // break;
       } // End loop charPos
 
-
       this.$store.commit("newAsciibirdMeta", this.finalAscii);
       this.asciibirdMeta = this.$store.getters.asciibirdMeta;
 
-      let keys = this.asciibirdMeta.map((v,k) => k).filter(i=>i!==undefined)
+      let keys = this.asciibirdMeta
+        .map((v, k) => k)
+        .filter((i) => i !== undefined);
 
       this.currentTab = keys.pop();
       this.$store.commit("changeTab", this.currentTab);
