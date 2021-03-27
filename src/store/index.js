@@ -98,7 +98,7 @@ export default new Vuex.Store({
       isUpdating: false,
       currentTool: 'default',
       targetingFg: false,
-      targetingBg: false,
+      targetingBg: true,
       targetingText: false,
     },
     blockSizeMultiplier: 1,

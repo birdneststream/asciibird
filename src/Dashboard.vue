@@ -95,6 +95,7 @@ export default {
       this.mircAsciiImport(asciiData, asciiUrl);
       window.location.href = "/";
     }
+    
   },
   components: { Toolbar, DebugPanel, Editor },
   name: "Dashboard",

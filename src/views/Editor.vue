@@ -1,18 +1,11 @@
 <template>
   <div>
-    <h1>
-      {{ currentAsciibirdMeta.title }} ({{ currentAsciibirdMeta.width }} /
-      {{ currentAsciibirdMeta.height }})
-    </h1>
-
-    <div id="canvas-area" style="position: relative">
-      <span>{{ x }}, {{ y }}</span>
-
+    <div id="canvas-area">
       <vue-draggable-resizable
         style="z-index: 5; left: 220px"
-        :grid="[13, 8]"
-        :w="canvas.width"
-        :h="canvas.height"
+        :grid="[currentAsciibirdMeta.blockHeight, currentAsciibirdMeta.blockWidth]"
+        :w="canvas.width + (currentAsciibirdMeta.blockWidth/2)"
+        :h="canvas.height + (currentAsciibirdMeta.blockHeight/2)"
         :draggable="currentTool === 'default'"
         @resizing="onCanvasResize"
         @dragging="onCanvasDrag"
@@ -66,6 +59,8 @@ export default {
         this.currentAsciibirdMeta.height *
         this.currentAsciibirdMeta.blockHeight;
       this.delayRedrawCanvas();
+      this.$store.commit("changeTool", "default");
+      this.currentTool = "default";
     }
   },
   created() {},
@@ -76,22 +71,12 @@ export default {
       width: 0,
       height: 0,
     },
-    data: {
-      message: "Hello Vue!",
-      vueCanvas: null,
-    },
     mircColors: null,
     ctx: null,
-    selectionMode: false,
-    startPosition: {
-      x: null,
-      y: null,
-    },
     canvas: {
       width: 512,
       height: 512,
     },
-    gridCtx: null,
     x: 0,
     y: 0,
     refreshCanvas: 0,
@@ -104,7 +89,7 @@ export default {
       targetingText: false,
     },
 
-    canDrawOnMouseDown: false,
+    canTool: false,
   }),
   computed: {
     canvasStyle() {
@@ -138,6 +123,8 @@ export default {
         this.currentAsciibirdMeta.height *
         this.currentAsciibirdMeta.blockHeight;
       this.delayRedrawCanvas();
+
+      window.title = this.currentAsciibirdMeta.name
     },
     watchToolChange(val) {
       this.currentTool = val;
@@ -219,6 +206,88 @@ export default {
 
       this.ctx.stroke();
     },
+    onCanvasResize(left, top, width, height) {
+      this.canvas.width = width;
+      this.canvas.height = height;
+      this.delayRedrawCanvas();
+    },
+    onCanvasDrag(left, top) {
+      // Update left and top in panel
+      
+    },
+
+    // Mouse Up, Down and Move
+    canvasMouseUp() {
+      this.delayRedrawCanvas();
+
+      switch (this.currentTool) {
+        case "brush":
+          this.canTool = false;
+          break;
+
+        case "eraser":
+          this.canTool = false;
+          break;
+
+        case "fill":
+          this.canTool = false;
+
+          break;
+
+      }
+
+    },
+    canvasMouseDown() {
+      switch (this.currentTool) {
+        case "default":
+          break;
+
+        case "fill":
+          // this.canTool = true;
+          if (
+            this.currentAsciibirdMeta.blocks[this.y] && 
+            this.currentAsciibirdMeta.blocks[this.y][this.x]
+          ) {
+            this.fillTool()
+          }
+          break;
+
+        case "brush":
+          this.canTool = true;
+          break;
+
+        case "eraser":
+          this.canTool = true;
+          break;
+
+        case "dropper":
+          if (
+            this.currentAsciibirdMeta.blocks[this.y] && 
+            this.currentAsciibirdMeta.blocks[this.y][this.x]
+          ) {
+              let curBlock = this.currentAsciibirdMeta.blocks[this.y][this.x];
+
+              if (this.toolbarState.targetingFg) {
+                this.$store.commit("changeColorFg", curBlock.fg);
+              }
+
+              if (this.toolbarState.targetingBg) {
+                this.$store.commit("changeColorBg", curBlock.bg);
+              }
+
+              // if (this.toolbarState.targetingText) {
+
+              // }
+          }
+
+          this.currentTool = "default";
+          this.$store.commit("changeTool", this.currentTool);
+          break;
+      }
+
+
+
+    },
     canvasMouseMove(e) {
 
       if (e.offsetX >= 0) {
@@ -234,7 +303,7 @@ export default {
 
       switch (this.currentTool) {
         case "brush":
-          if (this.canDrawOnMouseDown) {
+          if (this.canTool) {
             if (
               this.currentAsciibirdMeta.blocks[this.y] &&
               this.currentAsciibirdMeta.blocks[this.y][this.x]
@@ -263,7 +332,7 @@ export default {
           break;
 
         case "eraser":
-          if (this.canDrawOnMouseDown) {
+          if (this.canTool) {
             if (
               this.currentAsciibirdMeta.blocks[this.y] &&
               this.currentAsciibirdMeta.blocks[this.y][this.x]
@@ -296,97 +365,22 @@ export default {
         setTimeout(() => {
           this.redraw = true
           this.redrawCanvas();
-        }, 25);
+        }, 8);
       }
     },
-    // fillTool(block) {
-
-    //   this.fillTool(block);
-    // },
-    canvasMouseDown() {
-      switch (this.currentTool) {
-        case "default":
-          break;
-
-        case "fill":
-          // this.canDrawOnMouseDown = true;
-          if (
-            this.currentAsciibirdMeta.blocks[this.y] && 
-            this.currentAsciibirdMeta.blocks[this.y][this.x]
-          ) {
-             
-            // First set of colours
-
-
-
-
-
-          }
-          break;
-
-        case "brush":
-          this.canDrawOnMouseDown = true;
-          break;
-
-        case "eraser":
-          this.canDrawOnMouseDown = true;
-          break;
-
-        case "dropper":
-          if (
-            this.currentAsciibirdMeta.blocks[this.y] && 
-            this.currentAsciibirdMeta.blocks[this.y][this.x]
-          ) {
-              let curBlock = this.currentAsciibirdMeta.blocks[this.y][this.x];
-
-              if (this.toolbarState.targetingFg) {
-                this.$store.commit("changeColorFg", curBlock.fg);
-              }
-
-              if (this.toolbarState.targetingBg) {
-                this.$store.commit("changeColorBg", curBlock.bg);
-              }
-
-              // if (this.toolbarState.targetingText) {
-
-              // }
-          }
-
-          this.currentTool = "default";
-          this.$store.commit("changeTool", this.currentTool);
-          break;
+    fillTool() {
+      let fillStartBlock = this.currentAsciibirdMeta.blocks[this.y][this.x];
+  
+      if (this.toolbarState.targetingBg) {
+        let fillSameBg = fillStartBlock.bg
       }
 
-
-
+      console.log(fillStartBlock)
     },
-    onCanvasResize(left, top, width, height) {
-      this.canvas.width = width;
-      this.canvas.height = height;
-      this.delayRedrawCanvas();
-    },
-    onCanvasDrag(left, top) {
-      // console.log(left, top)
-    },
-    canvasMouseUp() {
-      this.delayRedrawCanvas();
 
-      switch (this.currentTool) {
-        case "brush":
-          this.canDrawOnMouseDown = false;
-          break;
 
-        case "eraser":
-          this.canDrawOnMouseDown = false;
-          break;
 
-        case "fill":
-          // this.canDrawOnMouseDown = true;
 
-          break;
-
-      }
-    },
   },
 };
 </script>

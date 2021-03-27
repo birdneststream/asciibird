@@ -2,6 +2,7 @@
   <div>
     <vue-draggable-resizable
       @dragging="onDrag"
+      :grid="[$store.getters.currentAscii.blockHeight, $store.getters.currentAscii.blockWidth]"
       style="z-index: 5; min-height: 500px"
       :min-width="200"
       :max-width="500"
@@ -13,25 +14,25 @@
       <div style="height: 100%; min-height: 500px; max-height: 700px">
         <t-card header="Tools and Stuff" style="height: 100%">
           <label class="flex ml-1">
-            <t-checkbox name="targetingFg"  v-model="toolbarState.targetingFg" />
+            <t-checkbox name="targetingFg"  v-model="toolbarState.targetingFg" :disabled="!watchTargetingBg && !watchTargetingText"   />
             <span class="text-sm">FG</span>
           </label>
           <label class="flex ml-1">
-            <t-checkbox name="targetingBg"  v-model="toolbarState.targetingBg" checked />
+            <t-checkbox name="targetingBg"  v-model="toolbarState.targetingBg" :disabled="!watchTargetingFg && !watchTargetingText" checked />
             <span class="text-sm">BG</span>
           </label>
           <label class="flex ml-1">
-            <t-checkbox name="targetingText" v-model="toolbarState.targetingText"  />
+            <t-checkbox name="targetingText" v-model="toolbarState.targetingText" :disabled="!watchTargetingFg && !watchTargetingBg"    />
             <span class="text-sm">Text</span>
           </label>
 
-          <t-card v-if="toolbarState.isChoosingFg || toolbarState.isChoosingBg">
+          <t-card v-if="toolbarState.isChoosingFg || toolbarState.isChoosingBg" >
             <t-button
               type="button"
               v-for="(value, keyColors) in mircColors"
               :key="keyColors"
               :style="makeColorButtonClass(value)"
-              class="border-gray-300 m-1"
+              class="border-gray-200 p-2"
               @click="onColorChange(keyColors)"
             ></t-button>
           </t-card>
@@ -43,20 +44,29 @@
             :style="
               makeColorButtonClass(mircColors[toolbarState.currentColorFg])
             "
-            class="border-gray-300 m-1"
+            class="border-gray-200 p-1"
             id="currentColorFg"
             @click="startColorChange(0)"
-          ></t-button>
+          >FG</t-button>
 
           <t-button
             type="button"
             :style="
               makeColorButtonClass(mircColors[toolbarState.currentColorBg])
             "
-            class="border-gray-300 m-1"
+            class="border-gray-200 p-1"
             id="currentColorBg"
             @click="startColorChange(1)"
-          ></t-button>
+          >BG</t-button>
+
+          <t-button
+            type="button"
+            class="p-1 bg-white"
+            id="swapColor"
+            @click="swapColors()"
+          >
+            <font-awesome-icon :icon="['fas', 'sync']" />
+          </t-button>
 
           <h5>Brushes and Shit</h5>
 
@@ -64,8 +74,7 @@
             type="button"
             v-for="(value, keyToolbar) in toolbar"
             :key="keyToolbar + 50"
-            :style="makeToolbarButtonClass(value)"
-            class="border-gray-300 m-1"
+            class="border-gray-200 max-h-7 max-w-5 w-7"
             @click="onToolbarChange(value)"
           >
             <font-awesome-icon :icon="[value.fa, value.icon]" />
@@ -84,7 +93,7 @@ export default {
     this.mircColors = this.$store.state.mircColors;
     this.charCodes = this.$store.state.charCodes;
     this.toolbar = this.$store.state.toolbar;
-    // this.toolbarState = this.$store.getters.getToolbarState;
+    this.toolbarState = this.$store.getters.getToolbarState;
     this.onToolbarChange("default");
   },
   name: "Toolbar",
@@ -107,7 +116,7 @@ export default {
       isUpdating: false,
       currentTool: "default",
       targetingFg: false,
-      targetingBg: false,
+      targetingBg: true,
       targetingText: false,
     },
   }),
@@ -127,6 +136,9 @@ export default {
     watchTargetingText() {
       return this.toolbarState.targetingText
     }, 
+    // watchToolbarState() {
+    //   return this.$store.getters.getToolbarState
+    // }, 
   },
   watch: {
     watchFgChange(val, old) {
@@ -135,6 +147,9 @@ export default {
     watchBgChange(val, old) {
       this.toolbarState.currentColorBg = val;
     },
+    // watchToolbarState(val, old) {
+    //   this.toolbarState = val;
+    // },
     watchTargetingFg(val, old) {
       this.$store.commit("changeTargetingFg", val);
       this.toolbarState.targetingFg = val
@@ -163,10 +178,20 @@ export default {
       this.$store.commit("changeTool", item.name);
     },
     makeColorButtonClass(color) {
-      return `background-color: ${color} !important;width:25px;height:25px;`;
+      return `background-color: ${color} !important;`;
     },
     makeToolbarButtonClass(tool) {
-      return "background-color: grey !important;width:25px;height:25px;";
+      return "background-color: grey !important;";
+    },
+    swapColors() {
+      let bg = this.toolbarState.currentColorBg
+      let fg = this.toolbarState.currentColorFg
+
+      this.$store.commit("changeColorFg", bg);
+      this.$store.commit("changeColorBg", fg);
+
+      this.toolbarState.currentColorFg = bg
+      this.toolbarState.currentColorBg = fg
     },
     startColorChange(type) {
       // this.toolbarState.isChoosingColor = true

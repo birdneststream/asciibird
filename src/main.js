@@ -30,11 +30,11 @@ import store from './store';
 // optionally import default styles
 import 'vue-draggable-resizable/dist/VueDraggableResizable.css';
 import { library } from '@fortawesome/fontawesome-svg-core'
-import { faMousePointer, faFont, faFillDrip, faPaintBrush, faEyeDropper, faEraser } from '@fortawesome/free-solid-svg-icons'
+import { faMousePointer, faFont, faFillDrip, faPaintBrush, faEyeDropper, faEraser, faSync } from '@fortawesome/free-solid-svg-icons'
 import { faSquare } from '@fortawesome/free-regular-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 
-library.add(faMousePointer, faSquare, faFont, faFillDrip, faPaintBrush, faEyeDropper, faEraser)
+library.add(faMousePointer, faSquare, faFont, faFillDrip, faPaintBrush, faEyeDropper, faEraser, faSync)
 
 Vue.config.productionTip = false;
 
