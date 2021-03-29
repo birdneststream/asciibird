@@ -12,9 +12,12 @@
     >
       <div style="height: 100%; min-height: 300px; max-height: 400px">
         <t-card header="Debug Info" style="height: 100%">
-          <p v-html="$store.getters.getCurrentTool"></p>
-          <p v-html="$store.getters.getFgColor"></p>
-          <p v-html="$store.getters.getBgColor"></p>
+          <p v-html="`Tool: ${$store.getters.getCurrentTool}`"></p>
+          <p v-html="`FgColour: ${$store.getters.getFgColour}`"></p>
+          <p v-html="`BgColor: ${$store.getters.getBgColour}`"></p>
+
+          <p v-html="`canvasX: ${canvasX}`"></p>
+          <p v-html="`canvasY: ${canvasY}`"></p>
         </t-card>
       </div>
     </vue-draggable-resizable>
@@ -24,6 +27,7 @@
 export default {
   created() {},
   name: "DebugPanel",
+  props: ["canvasX", "canvasY"],
   data: () => ({
     floating: {
       width: 0,

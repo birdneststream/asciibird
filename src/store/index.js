@@ -27,7 +27,7 @@ export default new Vuex.Store({
     // 14 => 'grey',
     // 15 => 'lightgrey',
 
-    mircColors: [
+    mircColours: [
       'rgb(255,255,255)',
       'rgb(0,0,0)',
       'rgb(0,0,127)',
@@ -47,7 +47,7 @@ export default new Vuex.Store({
     ],
     // White list of chars we want to accept, not at the moment
     // though, we just use this for random chars on new ascii
-    charCodes: ['*', '-', '=', '+', '^', '#'],
+    charCodes: [' ', '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?', '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '[', '\\', ']', '^', '_', '`', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '{', '|', '}', '~', 'Ç', 'ü', 'é', 'â', 'ä', 'à', 'å', 'ç', 'ê', 'ë', 'è', 'ï', 'î', 'ì', 'Ä', 'Å', 'É', 'æ', 'Æ', 'ô', 'ö', 'ò', 'û', 'ù', 'ÿ', 'Ö', 'Ü', 'ø', '£', 'Ø', '×', 'ƒ', 'á', 'í', 'ó', 'ú', 'ñ', 'Ñ', 'ª', 'º', '¿', '®', '¬', '½', '¼', '¡', '«', '»', '░', '▒', '▓', '│', '┤', 'Á', 'Â', 'À', '©', '╣', '║', '╗', '╝', '¢', '¥', '┐', '└', '┴', '┬', '├', '─', '┼', 'ã', 'Ã', '╚', '╔', '╩', '╦', '╠', '═', '╬', '¤', 'ð', 'Ð', 'Ê', 'Ë', 'È', 'ı', 'Í', 'Î', 'Ï', '┘', '┌', '█', '▄', '¦', 'Ì', '▀', 'Ó', 'ß', 'Ô', 'Ò', 'õ', 'Õ', 'µ', 'þ', 'Þ', 'Ú', 'Û', 'Ù', 'ý', 'Ý', '¯', '´', '≡', '±', '‗', '¾', '¶', '§', '÷', '¸', '°', '¨', '·', '¹', '³', '²'],
     // Current tab user is viewing
     tab: 0,
     // asciibirdMeta holds all of the ASCII information for all the tabs
@@ -89,8 +89,8 @@ export default new Vuex.Store({
       },
     ],
     toolbarState: {
-      currentColorFg: 0,
-      currentColorBg: 1,
+      currentColourFg: 0,
+      currentColourBg: 1,
       isChoosingFg: false,
       isChoosingBg: false,
       selectedFg: 0,
@@ -107,13 +107,13 @@ export default new Vuex.Store({
     changeTab(state, payload) {
       state.tab = payload;
     },
-    changeColorFg(state, payload) {
-      state.toolbarState.currentColorFg = payload;
+    changeColourFg(state, payload) {
+      state.toolbarState.currentColourFg = payload;
       state.toolbarState.isUpdating = false
       state.toolbarState.isChoosingFg = false
     },
-    changeColorBg(state, payload) {
-      state.toolbarState.currentColorBg = payload;
+    changeColourBg(state, payload) {
+      state.toolbarState.currentColourBg = payload;
       state.toolbarState.isUpdating = false
       state.toolbarState.isChoosingBg = false
     },
@@ -149,11 +149,11 @@ export default new Vuex.Store({
     getTargetingBg: state => state.toolbarState.targetingBg,
     getTargetingFg: state => state.toolbarState.targetingFg,
     getTargetingText: state => state.toolbarState.targetingText,
-    getFgColor: state => state.toolbarState.currentColorFg,
-    getBgColor: state => state.toolbarState.currentColorBg,
+    getFgColour: state => state.toolbarState.currentColourFg,
+    getBgColour: state => state.toolbarState.currentColourBg,
     currentTab: state => state.tab,
     charCodes: state => state.charCodes,
-    mircColors: state => state.mircColors,
+    mircColours: state => state.mircColours,
     currentAscii: state => state.asciibirdMeta[state.tab] ?? false,
     asciibirdMeta: state => state.asciibirdMeta,
     nextTabValue: state => state.asciibirdMeta.length,

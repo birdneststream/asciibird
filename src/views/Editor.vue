@@ -46,7 +46,6 @@ import Block from "../components/Block.vue";
 
 export default {
   name: "Editor",
-  props: ["tab", "refresh"],
   components: { Block },
   mounted() {
     if (this.$store.getters.currentAscii.blocks) {
@@ -137,7 +136,7 @@ export default {
 
               // Background block
               if (curBlock.bg !== null) {
-                this.ctx.fillStyle = this.$store.getters.mircColors[
+                this.ctx.fillStyle = this.$store.getters.mircColours[
                   curBlock.bg
                 ];
                 this.ctx.fillRect(canvasX, canvasY, BLOCK_WIDTH, BLOCK_HEIGHT);
@@ -147,7 +146,7 @@ export default {
 
               if (curBlock.char) {
                 if (curBlock.fg !== null) {
-                  this.ctx.fillStyle = this.$store.getters.mircColors[
+                  this.ctx.fillStyle = this.$store.getters.mircColours[
                     curBlock.fg
                   ];
                 } else {
@@ -222,11 +221,11 @@ export default {
             ];
 
             if (this.$store.getters.getTargetingFg) {
-              this.$store.commit("changeColorFg", curBlock.fg);
+              this.$store.commit("changeColourFg", curBlock.fg);
             }
 
             if (this.$store.getters.getTargetingBg) {
-              this.$store.commit("changeColorBg", curBlock.bg);
+              this.$store.commit("changeColourBg", curBlock.bg);
             }
 
             this.$store.commit(
@@ -251,6 +250,8 @@ export default {
         this.y / this.$store.getters.currentAscii.blockHeight
       );
 
+      this.$emit('coordsupdate', {x: this.x, y: this.y})
+
       if (
         this.$store.getters.currentAscii.blocks[this.y] &&
         this.$store.getters.currentAscii.blocks[this.y][this.x]
@@ -261,13 +262,13 @@ export default {
               if (this.$store.getters.getTargetingFg) {
                 this.$store.getters.currentAscii.blocks[this.y][
                   this.x
-                ].fg = this.$store.getters.getFgColor;
+                ].fg = this.$store.getters.getFgColour;
               }
 
               if (this.$store.getters.getTargetingBg) {
                 this.$store.getters.currentAscii.blocks[this.y][
                   this.x
-                ].bg = this.$store.getters.getBgColor;
+                ].bg = this.$store.getters.getBgColour;
               }
             }
             break;

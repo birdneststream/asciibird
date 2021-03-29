@@ -22,7 +22,7 @@ export default {
       return `block-${this.data.x}-${this.data.y}`;
     },
     blockClass() {
-      return `max-width: ${this.blockWidth}px; min-width: ${this.blockWidth}px; max-height: ${this.blockHeight}px; min-height: ${this.blockHeight}px; color: '${this.data.fg}'; background-color: '${this.data.bg}';`;
+      return `max-width: ${this.blockWidth}px; min-width: ${this.blockWidth}px; max-height: ${this.blockHeight}px; min-height: ${this.blockHeight}px; Colour: '${this.data.fg}'; background-Colour: '${this.data.bg}';`;
     },
   },
 };

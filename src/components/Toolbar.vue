@@ -14,122 +14,66 @@
       :x="0"
       :y="50"
     >
-      <div style="height: 100%; min-height: 500px; max-height: 700px">
-        <t-card header="Tools and Stuff" style="height: 100%">
-          <label class="flex ml-1">
-            <t-checkbox
-              name="targetingFg"
-              v-model="$store.getters.getToolbarState.targetingFg"
-              :disabled="
-                !$store.getters.getTargetingBg &&
-                !$store.getters.getTargetingText
-              "
-            />
-            <span class="text-sm">FG</span>
-          </label>
-          <label class="flex ml-1">
-            <t-checkbox
-              name="targetingBg"
-              v-model="$store.getters.getToolbarState.targetingBg"
-              :disabled="
-                !$store.getters.getTargetingFg &&
-                !$store.getters.getTargetingText
-              "
-              checked
-            />
-            <span class="text-sm">BG</span>
-          </label>
-          <label class="flex ml-1">
-            <t-checkbox
-              name="targetingText"
-              v-model="$store.getters.getToolbarState.targetingText"
-              :disabled="
-                !$store.getters.getTargetingFg && !$store.getters.getTargetingBg
-              "
-            />
-            <span class="text-sm">Text</span>
-          </label>
-
-          <t-card
-            v-if="
-              $store.getters.getToolbarState.isChoosingFg ||
-              $store.getters.getToolbarState.isChoosingBg
+      <t-card header="Tools and Stuff" style="height: 100%">
+        <label class="flex ml-1">
+          <t-checkbox
+            name="targetingFg"
+            v-model="$store.getters.getToolbarState.targetingFg"
+            :disabled="
+              !$store.getters.getTargetingBg && !$store.getters.getTargetingText
             "
-          >
-            <t-button
-              type="button"
-              v-for="(value, keyColors) in $store.getters.mircColors"
-              :key="keyColors"
-              :style="makeColorButtonClass(value)"
-              class="border-gray-200 p-2"
-              @click="onColorChange(keyColors)"
-            ></t-button>
-          </t-card>
-
-          <hr />
-
-          <t-button
-            type="button"
-            :style="
-              makeColorButtonClass(
-                $store.getters.mircColors[
-                  $store.getters.getToolbarState.currentColorFg
-                ]
-              )
+          />
+          <span class="text-sm">FG</span>
+        </label>
+        <label class="flex ml-1">
+          <t-checkbox
+            name="targetingBg"
+            v-model="$store.getters.getToolbarState.targetingBg"
+            :disabled="
+              !$store.getters.getTargetingFg && !$store.getters.getTargetingText
             "
-            class="border-gray-200 p-1"
-            id="currentColorFg"
-            @click="startColorChange(0)"
-            >FG</t-button
-          >
-
-          <t-button
-            type="button"
-            :style="
-              makeColorButtonClass(
-                $store.getters.mircColors[
-                  $store.getters.getToolbarState.currentColorBg
-                ]
-              )
+            checked
+          />
+          <span class="text-sm">BG</span>
+        </label>
+        <label class="flex ml-1">
+          <t-checkbox
+            name="targetingText"
+            v-model="$store.getters.getToolbarState.targetingText"
+            :disabled="
+              !$store.getters.getTargetingFg && !$store.getters.getTargetingBg
             "
-            class="border-gray-200 p-1"
-            id="currentColorBg"
-            @click="startColorChange(1)"
-            >BG</t-button
-          >
+          />
+          <span class="text-sm">Text</span>
+        </label>
 
-          <t-button
-            type="button"
-            class="p-1 bg-white"
-            id="swapColor"
-            @click="swapColors()"
-          >
-            <font-awesome-icon :icon="['fas', 'sync']" />
-          </t-button>
+        <hr />
 
-          <h5>Brushes and Shit</h5>
+        <Colours />
 
-          <t-button
-            type="button"
-            v-for="(value, keyToolbar) in $store.getters.getToolbarIcons"
-            :key="keyToolbar + 50"
-            class="border-gray-200 max-h-7 max-w-5 w-7"
-            @click="$store.commit('changeTool', value.name)"
-          >
-            <font-awesome-icon :icon="[value.fa, value.icon]" />
-          </t-button>
-        </t-card>
-      </div>
+        <h5>Brushes and Shit</h5>
+
+        <t-button
+          type="button"
+          v-for="(value, keyToolbar) in $store.getters.getToolbarIcons"
+          :key="keyToolbar + 50"
+          class="border-gray-200 max-h-7 max-w-5 w-7"
+          @click="$store.commit('changeTool', value.name)"
+        >
+          <font-awesome-icon :icon="[value.fa, value.icon]" />
+        </t-button>
+      </t-card>
     </vue-draggable-resizable>
   </div>
 </template>
 
-
-
 <script>
+import Colours from "./Colours.vue";
+
 export default {
   created() {},
   name: "Toolbar",
+  components: { Colours },
 
   data: () => ({
     floating: {
@@ -148,38 +92,15 @@ export default {
       this.floating.width = width;
       this.floating.height = height;
     },
+    makeColourButtonClass(colour) {
+      return `background-colour: ${colour} !important;`;
+    },
     onDrag(x, y) {
       this.floating.x = x;
       this.floating.y = y;
     },
-    makeColorButtonClass(color) {
-      return `background-color: ${color} !important;`;
-    },
     makeToolbarButtonClass(tool) {
-      return "background-color: grey !important;";
-    },
-    swapColors() {
-      let bg = this.$store.getters.getToolbarState.currentColorBg;
-      let fg = this.$store.getters.getToolbarState.currentColorFg;
-
-      this.$store.commit("changeColorFg", bg);
-      this.$store.commit("changeColorBg", fg);
-    },
-    startColorChange(type) {
-      if (type === 0) {
-        this.$store.commit("changeIsUpdatingFg", true);
-      } else {
-        this.$store.commit("changeIsUpdatingBg", true);
-      }
-    },
-    onColorChange(color) {
-      if (this.$store.getters.getToolbarState.isChoosingFg) {
-        this.$store.commit("changeColorFg", color);
-      }
-
-      if (this.$store.getters.getToolbarState.isChoosingBg) {
-        this.$store.commit("changeColorBg", color);
-      }
+      return "background-colour: grey !important;";
     },
   },
 };

@@ -65,12 +65,9 @@
         {{ value.title }}
       </t-button>
 
-      <Toolbar v-if="asciibirdMeta.length" />
-      <DebugPanel v-if="asciibirdMeta.length" />
-
-      <div class="border-gray-600">
-        <Editor v-if="asciibirdMeta.length" />
-      </div>
+      <Toolbar :canvas-x="canvasX" :canvas-y="canvasY" v-if="asciibirdMeta.length" />
+      <DebugPanel :canvas-x="canvasX" :canvas-y="canvasY" v-if="asciibirdMeta.length" />
+      <Editor @coordsupdate="updateCoords" v-if="asciibirdMeta.length" />
     </div>
   </div>
 </template>
@@ -83,7 +80,7 @@ import Editor from "./views/Editor.vue";
 
 export default {
   async created() {
-    this.mircColors = this.$store.getters.mircColors;
+    this.mircColours = this.$store.getters.mircColours;
     this.charCodes = this.$store.getters.charCodes;
     this.asciibirdMeta = this.$store.getters.asciibirdMeta;
 
@@ -113,19 +110,25 @@ export default {
     text: "ASCII",
     currentTab: 1,
     asciibirdMeta: [],
-    mircColors: null,
+    mircColours: null,
     charCodes: null,
     refresh: false,
     asciiImport: "",
     finalAscii: null,
     asciiArray: [],
     imageUrl: null,
-    parseColor: false,
-    colorCode: false,
+    parseColour: false,
+    ColourCode: false,
     importBlocks: null,
     importFormat: null,
+    canvasX: null,
+    canvasY: null,
   }),
   methods: {
+    updateCoords(value) {
+      this.canvasX = value.x
+      this.canvasY = value.y
+    },
     onImport() {
       const { files } = this.$refs.asciiInput;
       const filename = files[0].name;
@@ -182,8 +185,8 @@ export default {
     //         var contentArray = ansiParse[l].content.split("");
 
     //         var curBlock = {
-    //           fg: this.mircColors.indexOf(`rgb(${ansiParse[l].fg})`),
-    //           bg: this.mircColors.indexOf(`rgb(${ansiParse[l].bg})`),
+    //           fg: this.mircColours.indexOf(`rgb(${ansiParse[l].fg})`),
+    //           bg: this.mircColours.indexOf(`rgb(${ansiParse[l].bg})`),
     //           char: null,
     //         };
 
@@ -219,7 +222,7 @@ export default {
     //             continue;
     //           }
 
-    //           this.mircColors.indexOf(`rgb(${ansiParse[l].fg})`);
+    //           this.mircColours.indexOf(`rgb(${ansiParse[l].fg})`);
 
     //           curBlock.char = contentArray[k];
 
@@ -236,9 +239,9 @@ export default {
     //   this.$store.commit("newAsciibirdMeta", this.finalAscii);
     // },
     mircAsciiImport(contents, filename) {
-      const MIRC_MAX_COLORS = this.mircColors.length;
+      const MIRC_MAX_ColourS = this.mircColours.length;
 
-      // The current state of the colors
+      // The current state of the Colours
       let curBlock = {
         fg: null,
         bg: null,
@@ -266,9 +269,9 @@ export default {
       let asciiX = 0;
       let asciiY = 0;
 
-      let colorChar1 = null;
-      let colorChar2 = null;
-      var parsedColor = null;
+      let ColourChar1 = null;
+      let ColourChar2 = null;
+      var parsedColour = null;
 
       var theWidth = 0;
 
@@ -306,27 +309,27 @@ export default {
             asciiStringArray.shift();
             theWidth++;
 
-            colorChar1 = `${asciiStringArray[0]}`;
-            colorChar2 = `${asciiStringArray[1]}`;
-            parsedColor = parseInt(`${colorChar1}${colorChar2}`);
+            ColourChar1 = `${asciiStringArray[0]}`;
+            ColourChar2 = `${asciiStringArray[1]}`;
+            parsedColour = parseInt(`${ColourChar1}${ColourChar2}`);
 
-            if (isNaN(parsedColor)) {
-              curBlock.bg = parseInt(colorChar1);
+            if (isNaN(parsedColour)) {
+              curBlock.bg = parseInt(ColourChar1);
               theWidth += 1;
               asciiStringArray.shift();
-            } else if (parsedColor <= MIRC_MAX_COLORS && parsedColor >= 0) {
-              curBlock.fg = parseInt(parsedColor);
-              theWidth += parsedColor.toString().length;
+            } else if (parsedColour <= MIRC_MAX_ColourS && parsedColour >= 0) {
+              curBlock.fg = parseInt(parsedColour);
+              theWidth += parsedColour.toString().length;
 
               asciiStringArray = asciiStringArray.slice(
-                parsedColor.toString().length,
+                parsedColour.toString().length,
                 asciiStringArray.length
               );
             }
 
-            colorChar1 = null;
-            colorChar2 = null;
-            parsedColor = null;
+            ColourChar1 = null;
+            ColourChar2 = null;
+            parsedColour = null;
 
             // No background colour
             if (asciiStringArray[0] !== ",") {
@@ -336,32 +339,32 @@ export default {
               asciiStringArray.shift();
             }
 
-            colorChar1 = `${asciiStringArray[0]}`;
-            colorChar2 = `${asciiStringArray[1]}`;
-            parsedColor = parseInt(`${colorChar1}${colorChar2}`);
+            ColourChar1 = `${asciiStringArray[0]}`;
+            ColourChar2 = `${asciiStringArray[1]}`;
+            parsedColour = parseInt(`${ColourChar1}${ColourChar2}`);
 
             // Work out the 01, 02
             if (
-              !isNaN(colorChar1) &&
-              !isNaN(colorChar2) &&
-              parseInt(colorChar2) > parseInt(colorChar1) &&
-              !isNaN(parsedColor) &&
-              parseInt(parsedColor) <= 10
+              !isNaN(ColourChar1) &&
+              !isNaN(ColourChar2) &&
+              parseInt(ColourChar2) > parseInt(ColourChar1) &&
+              !isNaN(parsedColour) &&
+              parseInt(parsedColour) <= 10
             ) {
-              parsedColor = parseInt(colorChar2);
+              parsedColour = parseInt(ColourChar2);
               asciiStringArray.shift();
             }
 
-            if (isNaN(parsedColor)) {
-              curBlock.bg = parseInt(colorChar1);
+            if (isNaN(parsedColour)) {
+              curBlock.bg = parseInt(ColourChar1);
               theWidth += 1;
               asciiStringArray.shift();
-            } else if (parsedColor <= MIRC_MAX_COLORS && parsedColor >= 0) {
-              curBlock.bg = parseInt(parsedColor);
-              theWidth += parsedColor.toString().length;
+            } else if (parsedColour <= MIRC_MAX_ColourS && parsedColour >= 0) {
+              curBlock.bg = parseInt(parsedColour);
+              theWidth += parsedColour.toString().length;
 
               asciiStringArray = asciiStringArray.slice(
-                parsedColor.toString().length,
+                parsedColour.toString().length,
                 asciiStringArray.length
               );
 
@@ -432,8 +435,6 @@ export default {
           });
         }
       }
-
-      // console.log('payload', payload);
 
       this.$store.commit("newAsciibirdMeta", payload);
       this.$modal.hide("create-ascii-modal");
