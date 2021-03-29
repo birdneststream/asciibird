@@ -20,7 +20,10 @@
             <t-checkbox
               name="targetingFg"
               v-model="$store.getters.getToolbarState.targetingFg"
-              :disabled="!$store.getters.getTargetingBg && !$store.getters.getTargetingText"
+              :disabled="
+                !$store.getters.getTargetingBg &&
+                !$store.getters.getTargetingText
+              "
             />
             <span class="text-sm">FG</span>
           </label>
@@ -28,7 +31,10 @@
             <t-checkbox
               name="targetingBg"
               v-model="$store.getters.getToolbarState.targetingBg"
-              :disabled="!$store.getters.getTargetingFg && !$store.getters.getTargetingText"
+              :disabled="
+                !$store.getters.getTargetingFg &&
+                !$store.getters.getTargetingText
+              "
               checked
             />
             <span class="text-sm">BG</span>
@@ -37,7 +43,9 @@
             <t-checkbox
               name="targetingText"
               v-model="$store.getters.getToolbarState.targetingText"
-              :disabled="!$store.getters.getTargetingFg && !$store.getters.getTargetingBg"
+              :disabled="
+                !$store.getters.getTargetingFg && !$store.getters.getTargetingBg
+              "
             />
             <span class="text-sm">Text</span>
           </label>
@@ -159,9 +167,9 @@ export default {
     },
     startColorChange(type) {
       if (type === 0) {
-        this.$store.commit("changeIsUpdatingFg", true)
+        this.$store.commit("changeIsUpdatingFg", true);
       } else {
-        this.$store.commit("changeIsUpdatingBg", true)
+        this.$store.commit("changeIsUpdatingBg", true);
       }
     },
     onColorChange(color) {

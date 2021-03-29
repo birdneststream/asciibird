@@ -25,16 +25,30 @@ import {
   TDialog,
 } from 'vue-tailwind/dist/components';
 import Dashboard from './Dashboard.vue';
-import router from './router';
 import store from './store';
 // optionally import default styles
 import 'vue-draggable-resizable/dist/VueDraggableResizable.css';
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { faMousePointer, faFont, faFillDrip, faPaintBrush, faEyeDropper, faEraser, faSync } from '@fortawesome/free-solid-svg-icons'
-import { faSquare } from '@fortawesome/free-regular-svg-icons'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import {
+  library
+} from '@fortawesome/fontawesome-svg-core'
+import {
+  faMousePointer,
+  faFont,
+  faFillDrip,
+  faPaintBrush,
+  faEyeDropper,
+  faEraser,
+  faSync
+} from '@fortawesome/free-solid-svg-icons'
+import {
+  faSquare
+} from '@fortawesome/free-regular-svg-icons'
+import {
+  FontAwesomeIcon
+} from '@fortawesome/vue-fontawesome'
 
-library.add(faMousePointer, faSquare, faFont, faFillDrip, faPaintBrush, faEyeDropper, faEraser, faSync)
+library.add(faMousePointer, faSquare, faFont, faFillDrip, faPaintBrush, faEyeDropper, faEraser,
+  faSync)
 
 Vue.config.productionTip = false;
 
@@ -157,7 +171,6 @@ Vue.component('font-awesome-icon', FontAwesomeIcon)
 Vue.component('vue-draggable-resizable', VueDraggableResizable);
 
 new Vue({
-  router,
   store,
   render: (h) => h(Dashboard),
 }).$mount('#app');

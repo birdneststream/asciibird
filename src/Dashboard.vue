@@ -79,7 +79,7 @@
 import Toolbar from "./components/Toolbar.vue";
 import DebugPanel from "./components/DebugPanel.vue";
 import Editor from "./views/Editor.vue";
-import * as Anser from "anser";
+// import * as Anser from "anser";
 
 export default {
   async created() {
@@ -134,9 +134,9 @@ export default {
 
       fileReader.addEventListener("load", () => {
         switch (this.importFormat) {
-          case "ansi":
-            this.asniImport(fileReader.result, filename);
-            break;
+          // case "ansi":
+          //   this.asniImport(fileReader.result, filename);
+          //   break;
 
           case "mirc":
             this.mircAsciiImport(fileReader.result, filename);
@@ -152,88 +152,89 @@ export default {
       this.importFormat = type;
       this.$refs.asciiInput.click();
     },
-    asniImport(contents, filename) {
-      let ansiArray = contents.split("\n");
+    // We can maybe try something different to import ANSI
+    // asniImport(contents, filename) {
+    //   let ansiArray = contents.split("\n");
 
-      let ansiWidth = 0;
+    //   let ansiWidth = 0;
 
-      this.finalAscii = {
-        width: false, // defined in: switch (curChar) case "\n":
-        height: contents.split("\r\n").length,
-        title: filename,
-        key: this.$store.getters.nextTabValue,
-        blockWidth: 8 * this.$store.getters.blockSizeMultiplier,
-        blockHeight: 13 * this.$store.getters.blockSizeMultiplier,
-        blocks: this.create2DArray(contents.split("\r\n").length),
-      };
+    //   this.finalAscii = {
+    //     width: false, // defined in: switch (curChar) case "\n":
+    //     height: contents.split("\r\n").length,
+    //     title: filename,
+    //     key: this.$store.getters.nextTabValue,
+    //     blockWidth: 8 * this.$store.getters.blockSizeMultiplier,
+    //     blockHeight: 13 * this.$store.getters.blockSizeMultiplier,
+    //     blocks: this.create2DArray(contents.split("\r\n").length),
+    //   };
 
-      for (let i = 0; i <= ansiArray.length - 1; i++) {
-        if (ansiWidth > 0 && this.finalAscii.width === false) {
-          this.finalAscii.width = ansiWidth;
-        }
+    //   for (let i = 0; i <= ansiArray.length - 1; i++) {
+    //     if (ansiWidth > 0 && this.finalAscii.width === false) {
+    //       this.finalAscii.width = ansiWidth;
+    //     }
 
-        ansiWidth = 0;
+    //     ansiWidth = 0;
 
-        for (let j = 0; j <= ansiArray[i].length - 1; j++) {
-          let ansiParse = Anser.ansiToJson(ansiArray[i]);
+    //     for (let j = 0; j <= ansiArray[i].length - 1; j++) {
+    //       let ansiParse = Anser.ansiToJson(ansiArray[i]);
 
-          for (let l = 0; l <= ansiParse.length - 1; l++) {
-            var contentArray = ansiParse[l].content.split("");
+    //       for (let l = 0; l <= ansiParse.length - 1; l++) {
+    //         var contentArray = ansiParse[l].content.split("");
 
-            var curBlock = {
-              fg: this.mircColors.indexOf(`rgb(${ansiParse[l].fg})`),
-              bg: this.mircColors.indexOf(`rgb(${ansiParse[l].bg})`),
-              char: null,
-            };
+    //         var curBlock = {
+    //           fg: this.mircColors.indexOf(`rgb(${ansiParse[l].fg})`),
+    //           bg: this.mircColors.indexOf(`rgb(${ansiParse[l].bg})`),
+    //           char: null,
+    //         };
 
-            // If we had no matches in our mIRC RGB lookup, then we have to try match
-            // the ASNI colours to the best mIRC colour
+    //         // If we had no matches in our mIRC RGB lookup, then we have to try match
+    //         // the ASNI colours to the best mIRC colour
 
-            if (curBlock.fg === -1) {
-              switch (ansiParse[l].fg) {
-                case "187, 187, 0": // orangeish yellow
-                  curBlock.fg = 8;
-                  break;
+    //         if (curBlock.fg === -1) {
+    //           switch (ansiParse[l].fg) {
+    //             case "187, 187, 0": // orangeish yellow
+    //               curBlock.fg = 8;
+    //               break;
 
-                case "187, 0, 0": // red
-                  curBlock.fg = 4;
-                  break;
-              }
-            }
+    //             case "187, 0, 0": // red
+    //               curBlock.fg = 4;
+    //               break;
+    //           }
+    //         }
 
-            if (curBlock.bg === -1) {
-              switch (ansiParse[l].bg) {
-                case "187, 187, 0": // orangeish yellow
-                  curBlock.bg = 8;
-                  break;
+    //         if (curBlock.bg === -1) {
+    //           switch (ansiParse[l].bg) {
+    //             case "187, 187, 0": // orangeish yellow
+    //               curBlock.bg = 8;
+    //               break;
 
-                case "187, 0, 0": // red
-                  curBlock.bg = 4;
-                  break;
-              }
-            }
+    //             case "187, 0, 0": // red
+    //               curBlock.bg = 4;
+    //               break;
+    //           }
+    //         }
 
-            for (let k = 0; k <= contentArray.length - 1; k++) {
-              if (contentArray[k] === "\r") {
-                continue;
-              }
+    //         for (let k = 0; k <= contentArray.length - 1; k++) {
+    //           if (contentArray[k] === "\r") {
+    //             continue;
+    //           }
 
-              this.mircColors.indexOf(`rgb(${ansiParse[l].fg})`);
+    //           this.mircColors.indexOf(`rgb(${ansiParse[l].fg})`);
 
-              curBlock.char = contentArray[k];
+    //           curBlock.char = contentArray[k];
 
-              this.finalAscii.blocks[i][ansiWidth] = JSON.parse(
-                JSON.stringify(curBlock)
-              );
+    //           this.finalAscii.blocks[i][ansiWidth] = JSON.parse(
+    //             JSON.stringify(curBlock)
+    //           );
 
-              ansiWidth++;
-            }
-          }
-        }
-      }
+    //           ansiWidth++;
+    //         }
+    //       }
+    //     }
+    //   }
 
-      this.$store.commit("newAsciibirdMeta", this.finalAscii);
-    },
+    //   this.$store.commit("newAsciibirdMeta", this.finalAscii);
+    // },
     mircAsciiImport(contents, filename) {
       const MIRC_MAX_COLORS = this.mircColors.length;
 
