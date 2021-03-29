@@ -228,6 +228,10 @@ export default {
               this.$store.commit("changeColourBg", curBlock.bg);
             }
 
+            if (this.$store.getters.getTargetingChar) {
+              this.$store.commit("changeChar", curBlock.char);
+            }
+
             this.$store.commit(
               "changeTool",
               this.$store.getters.getCurrentTool
@@ -260,15 +264,15 @@ export default {
           case "brush":
             if (this.canTool) {
               if (this.$store.getters.getTargetingFg) {
-                this.$store.getters.currentAscii.blocks[this.y][
-                  this.x
-                ].fg = this.$store.getters.getFgColour;
+                this.$store.getters.currentAscii.blocks[this.y][this.x].fg = this.$store.getters.getFgColour;
               }
 
               if (this.$store.getters.getTargetingBg) {
-                this.$store.getters.currentAscii.blocks[this.y][
-                  this.x
-                ].bg = this.$store.getters.getBgColour;
+                this.$store.getters.currentAscii.blocks[this.y][this.x].bg = this.$store.getters.getBgColour;
+              }
+
+              if (this.$store.getters.getTargetingChar) {
+                this.$store.getters.currentAscii.blocks[this.y][this.x].char = this.$store.getters.getSelectedChar;
               }
             }
             break;
@@ -287,7 +291,7 @@ export default {
                 ].bg = null;
               }
 
-              if (this.$store.getters.getTargetingText) {
+              if (this.$store.getters.getTargetingChar) {
                 this.$store.getters.currentAscii.blocks[this.y][
                   this.x
                 ].char = null;

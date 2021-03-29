@@ -20,7 +20,7 @@
             name="targetingFg"
             v-model="$store.getters.getToolbarState.targetingFg"
             :disabled="
-              !$store.getters.getTargetingBg && !$store.getters.getTargetingText
+              !$store.getters.getTargetingBg && !$store.getters.getTargetingChar
             "
           />
           <span class="text-sm">FG</span>
@@ -30,7 +30,7 @@
             name="targetingBg"
             v-model="$store.getters.getToolbarState.targetingBg"
             :disabled="
-              !$store.getters.getTargetingFg && !$store.getters.getTargetingText
+              !$store.getters.getTargetingFg && !$store.getters.getTargetingChar
             "
             checked
           />
@@ -38,8 +38,8 @@
         </label>
         <label class="flex ml-1">
           <t-checkbox
-            name="targetingText"
-            v-model="$store.getters.getToolbarState.targetingText"
+            name="targetingChar"
+            v-model="$store.getters.getToolbarState.targetingChar"
             :disabled="
               !$store.getters.getTargetingFg && !$store.getters.getTargetingBg
             "
@@ -57,7 +57,7 @@
           type="button"
           v-for="(value, keyToolbar) in $store.getters.getToolbarIcons"
           :key="keyToolbar + 50"
-          class="border-gray-200 max-h-7 max-w-5 w-7"
+          :class="`border-gray-200 max-h-7 max-w-5 w-7  ${($store.getters.getCurrentTool == value ? 'border-gray-900' : 'border-gray-200')}`"
           @click="$store.commit('changeTool', value.name)"
         >
           <font-awesome-icon :icon="[value.fa, value.icon]" />
@@ -92,15 +92,9 @@ export default {
       this.floating.width = width;
       this.floating.height = height;
     },
-    makeColourButtonClass(colour) {
-      return `background-colour: ${colour} !important;`;
-    },
     onDrag(x, y) {
       this.floating.x = x;
       this.floating.y = y;
-    },
-    makeToolbarButtonClass(tool) {
-      return "background-colour: grey !important;";
     },
   },
 };

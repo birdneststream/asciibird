@@ -93,13 +93,15 @@ export default new Vuex.Store({
       currentColourBg: 1,
       isChoosingFg: false,
       isChoosingBg: false,
+      isChoosingChar: false,
       selectedFg: 0,
       selectedBg: 1,
+      selectedChar: null,
       isUpdating: false,
       currentTool: 'default',
       targetingFg: false,
       targetingBg: true,
-      targetingText: false,
+      targetingChar: false,
     },
     blockSizeMultiplier: 1,
   },
@@ -117,6 +119,11 @@ export default new Vuex.Store({
       state.toolbarState.isUpdating = false
       state.toolbarState.isChoosingBg = false
     },
+    changeChar(state, payload) {
+      state.toolbarState.selectedChar = payload;
+      state.toolbarState.isUpdating = false
+      state.toolbarState.isChoosingChar = false
+    },
     changeTool(state, payload) {
       state.toolbarState.currentTool = payload;
     },
@@ -126,14 +133,17 @@ export default new Vuex.Store({
     changeIsUpdatingBg(state, payload) {
       state.toolbarState.isChoosingBg = payload
     },
+    changeIsUpdatingChar(state, payload) {
+      state.toolbarState.isChoosingChar = payload
+    },
     changeTargetingFg(state, payload) {
       state.toolbarState.targetingFg = payload
     },
     changeTargetingBg(state, payload) {
       state.toolbarState.targetingBg = payload
     },
-    changeTargetingText(state, payload) {
-      state.toolbarState.targetingText = payload;
+    changeTargetingChar(state, payload) {
+      state.toolbarState.targetingChar = payload;
     },
     newAsciibirdMeta(state, payload) {
       state.asciibirdMeta.push(payload);
@@ -148,9 +158,10 @@ export default new Vuex.Store({
     getCurrentTool: state => state.toolbarState.currentTool,
     getTargetingBg: state => state.toolbarState.targetingBg,
     getTargetingFg: state => state.toolbarState.targetingFg,
-    getTargetingText: state => state.toolbarState.targetingText,
+    getTargetingChar: state => state.toolbarState.targetingChar,
     getFgColour: state => state.toolbarState.currentColourFg,
     getBgColour: state => state.toolbarState.currentColourBg,
+    getSelectedChar: state => state.toolbarState.selectedChar,
     currentTab: state => state.tab,
     charCodes: state => state.charCodes,
     mircColours: state => state.mircColours,
