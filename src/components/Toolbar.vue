@@ -159,48 +159,18 @@ export default {
     },
     startColorChange(type) {
       if (type === 0) {
-        //   // Fg
-        this.$store.getters.getToolbarState.isChoosingFg = true;
+        this.$store.commit("changeIsUpdatingFg", true)
       } else {
-        //   // Bg
-        this.$store.getters.getToolbarState.isChoosingBg = true;
+        this.$store.commit("changeIsUpdatingBg", true)
       }
     },
     onColorChange(color) {
       if (this.$store.getters.getToolbarState.isChoosingFg) {
-        this.updateColor(0, color);
+        this.$store.commit("changeColorFg", color);
       }
 
       if (this.$store.getters.getToolbarState.isChoosingBg) {
-        this.updateColor(1, color);
-      }
-    },
-    updateColor(type, color) {
-      if (
-        this.$store.getters.getToolbarState.isChoosingBg ||
-        this.$store.getters.getToolbarState.isChoosingFg
-      ) {
-        switch (type) {
-          // FG
-          case 0:
-            this.$store.commit("changeColorFg", color);
-            this.currentColorFg = color;
-            break;
-
-          // BG
-          case 1:
-            this.$store.commit("changeColorBg", color);
-            this.currentColorBg = color;
-            break;
-        }
-
-        this.$store.getters.getToolbarState.isChoosingBg = false;
-        this.$store.getters.getToolbarState.isChoosingFg = false;
-
-        this.$store.commit(
-          "updateToolBarState",
-          $store.getters.getToolbarState
-        );
+        this.$store.commit("changeColorBg", color);
       }
     },
   },

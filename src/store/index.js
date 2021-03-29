@@ -110,19 +110,27 @@ export default new Vuex.Store({
     changeColorFg(state, payload) {
       state.toolbarState.currentColorFg = payload;
       state.toolbarState.isUpdating = false
+      state.toolbarState.isChoosingFg = false
     },
     changeColorBg(state, payload) {
       state.toolbarState.currentColorBg = payload;
       state.toolbarState.isUpdating = false
+      state.toolbarState.isChoosingBg = false
     },
     changeTool(state, payload) {
       state.toolbarState.currentTool = payload;
     },
+    changeIsUpdatingFg(state, payload) {
+      state.toolbarState.isChoosingFg = payload
+    },
+    changeIsUpdatingBg(state, payload) {
+      state.toolbarState.isChoosingBg = payload
+    },
     changeTargetingFg(state, payload) {
-      state.toolbarState.targetingFg = payload;
+      state.toolbarState.targetingFg = payload
     },
     changeTargetingBg(state, payload) {
-      state.toolbarState.targetingBg = payload;
+      state.toolbarState.targetingBg = payload
     },
     changeTargetingText(state, payload) {
       state.toolbarState.targetingText = payload;
