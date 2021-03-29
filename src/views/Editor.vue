@@ -3,10 +3,13 @@
     <div id="canvas-area">
       <vue-draggable-resizable
         style="z-index: 5; left: 220px"
-        :grid="[currentAsciibirdMeta.blockHeight, currentAsciibirdMeta.blockWidth]"
-        :w="canvas.width + (currentAsciibirdMeta.blockWidth/2)"
-        :h="canvas.height + (currentAsciibirdMeta.blockHeight/2)"
-        :draggable="currentTool === 'default'"
+        :grid="[
+          $store.getters.currentAscii.blockHeight,
+          $store.getters.currentAscii.blockWidth,
+        ]"
+        :w="canvas.width + $store.getters.currentAscii.blockWidth"
+        :h="canvas.height + $store.getters.currentAscii.blockHeight"
+        :draggable="$store.getters.getCurrentTool === 'default'"
         @resizing="onCanvasResize"
         @dragging="onCanvasDrag"
       >
@@ -32,9 +35,8 @@ body {
 
 .canvas {
   position: absolute;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(0, 0, 0, 0.8);
   border: lightgrey 1px solid;
-  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.2);
   z-index: 0;
 }
 </style>
@@ -47,48 +49,28 @@ export default {
   props: ["tab", "refresh"],
   components: { Block },
   mounted() {
-    this.currentAsciibirdMeta = this.$store.getters.currentAscii;
-    this.mircColors = this.$store.getters.mircColors;
-    this.toolbarState = this.$store.getters.getToolbarState;
-
-    if (this.currentAsciibirdMeta.blocks) {
+    if (this.$store.getters.currentAscii.blocks) {
       this.ctx = this.$refs.canvas.getContext("2d");
       this.canvas.width =
-        this.currentAsciibirdMeta.width * this.currentAsciibirdMeta.blockWidth;
+        this.$store.getters.currentAscii.width *
+        this.$store.getters.currentAscii.blockWidth;
       this.canvas.height =
-        this.currentAsciibirdMeta.height *
-        this.currentAsciibirdMeta.blockHeight;
+        this.$store.getters.currentAscii.height *
+        this.$store.getters.currentAscii.blockHeight;
       this.delayRedrawCanvas();
       this.$store.commit("changeTool", "default");
-      this.currentTool = "default";
     }
   },
   created() {},
   data: () => ({
-    text: "ASCII",
-    currentAsciibirdMeta: {
-      title: "Loading...",
-      width: 0,
-      height: 0,
-    },
-    mircColors: null,
     ctx: null,
     canvas: {
       width: 512,
       height: 512,
     },
-    x: 0,
-    y: 0,
-    refreshCanvas: 0,
-    currentTool: null,
-    redraw: true,
-
-    toolbarState: {
-      targetingFg: false,
-      targetingBg: false,
-      targetingText: false,
-    },
-
+    x: 0, // Ascii X and Y
+    y: 0, // Ascii X and Y
+    redraw: true, // Used to limit canvas redraw
     canTool: false,
   }),
   computed: {
@@ -96,60 +78,35 @@ export default {
       return `width:${this.canvas.width};height:${this.canvas.height};`;
     },
     generateTitle() {
-      return this.currentAsciibirdMeta.title ?? "";
-    },
-    watchToolChange() {
-      return this.$store.getters.getCurrentTool;
+      return this.$store.getters.currentAscii.title ?? "";
     },
     watchAsciiChange() {
       return this.$store.getters.currentAscii;
     },
-    watchTargetingFg() {
-      return this.$store.getters.getTargetingFg;
-    },
-    watchTargetingBg() {
-      return this.$store.getters.getTargetingBg;
-    },
-    watchTargetingText() {
-      return this.$store.getters.getTargetingText;
-    },
   },
   watch: {
     watchAsciiChange(val, old) {
-      this.currentAsciibirdMeta = val;
       this.canvas.width =
-        this.currentAsciibirdMeta.width * this.currentAsciibirdMeta.blockWidth;
+        this.$store.getters.currentAscii.width *
+        this.$store.getters.currentAscii.blockWidth;
       this.canvas.height =
-        this.currentAsciibirdMeta.height *
-        this.currentAsciibirdMeta.blockHeight;
+        this.$store.getters.currentAscii.height *
+        this.$store.getters.currentAscii.blockHeight;
+
       this.delayRedrawCanvas();
 
-      window.title = this.currentAsciibirdMeta.name
-    },
-    watchToolChange(val) {
-      this.currentTool = val;
-    },
-    watchTargetingFg(val) {
-      this.toolbarState.targetingFg = val;
-    },
-    watchTargetingBg(val) {
-      this.toolbarState.targetingBg = val;
-    },
-    watchTargetingText(val) {
-      this.toolbarState.targetingText = val;
+      document.title = `asciibird - ${this.$store.getters.currentAscii.title}`;
     },
   },
   methods: {
-    getMircColor(index) {
-      return this.$store.getters.mircColors[index];
-    },
     redrawCanvas() {
-      // Clears the whole canvas
+      // Clears the whole canvas, we can maybe get a better way to check how far
+      // we need to clear the canvas
       this.ctx.clearRect(0, 0, 10000, 10000);
 
-      if (this.currentAsciibirdMeta.blocks.length) {
-        const BLOCK_WIDTH = this.currentAsciibirdMeta.blockWidth;
-        const BLOCK_HEIGHT = this.currentAsciibirdMeta.blockHeight;
+      if (this.$store.getters.currentAscii.blocks.length) {
+        const BLOCK_WIDTH = this.$store.getters.currentAscii.blockWidth;
+        const BLOCK_HEIGHT = this.$store.getters.currentAscii.blockHeight;
 
         // Position of the meta array
         let x = 0;
@@ -160,23 +117,29 @@ export default {
         let canvasY = 0;
         let curBlock = {};
 
+        // hack font for ascii shout outs 2 beenz
         this.ctx.font = "12.5px Hack";
 
-        for (y = 0; y < this.currentAsciibirdMeta.height + 1; y++) {
+        for (y = 0; y < this.$store.getters.currentAscii.height + 1; y++) {
           canvasY = BLOCK_HEIGHT * y;
 
-          for (x = 0; x < this.currentAsciibirdMeta.width + 1; x++) {
+          for (x = 0; x < this.$store.getters.currentAscii.width + 1; x++) {
             if (
-              this.currentAsciibirdMeta.blocks[y] &&
-              this.currentAsciibirdMeta.blocks[y][x]
+              this.$store.getters.currentAscii.blocks[y] &&
+              this.$store.getters.currentAscii.blocks[y][x]
             ) {
-              curBlock = Object.assign(curBlock,this.currentAsciibirdMeta.blocks[y][x])
+              curBlock = Object.assign(
+                curBlock,
+                this.$store.getters.currentAscii.blocks[y][x]
+              );
 
               canvasX = BLOCK_WIDTH * x;
 
               // Background block
               if (curBlock.bg !== null) {
-                this.ctx.fillStyle = this.mircColors[curBlock.bg];
+                this.ctx.fillStyle = this.$store.getters.mircColors[
+                  curBlock.bg
+                ];
                 this.ctx.fillRect(canvasX, canvasY, BLOCK_WIDTH, BLOCK_HEIGHT);
               } else {
                 this.ctx.fillStyle = "rgba(0, 0, 200, 0)";
@@ -184,7 +147,9 @@ export default {
 
               if (curBlock.char) {
                 if (curBlock.fg !== null) {
-                  this.ctx.fillStyle = this.mircColors[curBlock.fg];
+                  this.ctx.fillStyle = this.$store.getters.mircColors[
+                    curBlock.fg
+                  ];
                 } else {
                   this.ctx.fillStyle = "#000000";
                 }
@@ -209,14 +174,13 @@ export default {
     },
     onCanvasDrag(left, top) {
       // Update left and top in panel
-      
     },
 
     // Mouse Up, Down and Move
     canvasMouseUp() {
       this.delayRedrawCanvas();
 
-      switch (this.currentTool) {
+      switch (this.$store.getters.getCurrentTool) {
         case "brush":
           this.canTool = false;
           break;
@@ -229,63 +193,51 @@ export default {
           this.canTool = false;
 
           break;
-
       }
-
     },
     canvasMouseDown() {
-      switch (this.currentTool) {
-        case "default":
-          break;
+      if (
+        this.$store.getters.currentAscii.blocks[this.y] &&
+        this.$store.getters.currentAscii.blocks[this.y][this.x]
+      ) {
+        switch (this.$store.getters.getCurrentTool) {
+          case "default":
+            break;
 
-        case "fill":
-          // this.canTool = true;
-          if (
-            this.currentAsciibirdMeta.blocks[this.y] && 
-            this.currentAsciibirdMeta.blocks[this.y][this.x]
-          ) {
-            this.fillTool()
-          }
-          break;
+          case "fill":
+            this.fillTool();
+            break;
 
-        case "brush":
-          this.canTool = true;
-          break;
+          case "brush":
+            this.canTool = true;
+            break;
 
-        case "eraser":
-          this.canTool = true;
-          break;
+          case "eraser":
+            this.canTool = true;
+            break;
 
-        case "dropper":
-          if (
-            this.currentAsciibirdMeta.blocks[this.y] && 
-            this.currentAsciibirdMeta.blocks[this.y][this.x]
-          ) {
-              let curBlock = this.currentAsciibirdMeta.blocks[this.y][this.x];
+          case "dropper":
+            let curBlock = this.$store.getters.currentAscii.blocks[this.y][
+              this.x
+            ];
 
-              if (this.toolbarState.targetingFg) {
-                this.$store.commit("changeColorFg", curBlock.fg);
-              }
+            if (this.$store.getters.getTargetingFg) {
+              this.$store.commit("changeColorFg", curBlock.fg);
+            }
 
-              if (this.toolbarState.targetingBg) {
-                this.$store.commit("changeColorBg", curBlock.bg);
-              }
+            if (this.$store.getters.getTargetingBg) {
+              this.$store.commit("changeColorBg", curBlock.bg);
+            }
 
-              // if (this.toolbarState.targetingText) {
-
-              // }
-          }
-
-          this.currentTool = "default";
-          this.$store.commit("changeTool", this.currentTool);
-          break;
+            this.$store.commit(
+              "changeTool",
+              this.$store.getters.getCurrentTool
+            );
+            break;
+        }
       }
-
-
-
     },
     canvasMouseMove(e) {
-
       if (e.offsetX >= 0) {
         this.x = e.offsetX;
       }
@@ -294,92 +246,81 @@ export default {
         this.y = e.offsetY;
       }
 
-      this.x = Math.floor(this.x / this.currentAsciibirdMeta.blockWidth);
-      this.y = Math.floor(this.y / this.currentAsciibirdMeta.blockHeight);
+      this.x = Math.floor(this.x / this.$store.getters.currentAscii.blockWidth);
+      this.y = Math.floor(
+        this.y / this.$store.getters.currentAscii.blockHeight
+      );
 
-      switch (this.currentTool) {
-        case "brush":
-          if (this.canTool) {
-            if (
-              this.currentAsciibirdMeta.blocks[this.y] &&
-              this.currentAsciibirdMeta.blocks[this.y][this.x]
-            ) {
-
-
-              if (this.toolbarState.targetingFg) {
-                this.currentAsciibirdMeta.blocks[this.y][
+      if (
+        this.$store.getters.currentAscii.blocks[this.y] &&
+        this.$store.getters.currentAscii.blocks[this.y][this.x]
+      ) {
+        switch (this.$store.getters.getCurrentTool) {
+          case "brush":
+            if (this.canTool) {
+              if (this.$store.getters.getTargetingFg) {
+                this.$store.getters.currentAscii.blocks[this.y][
                   this.x
                 ].fg = this.$store.getters.getFgColor;
               }
 
-              if (this.toolbarState.targetingBg) {
-                this.currentAsciibirdMeta.blocks[this.y][
+              if (this.$store.getters.getTargetingBg) {
+                this.$store.getters.currentAscii.blocks[this.y][
                   this.x
                 ].bg = this.$store.getters.getBgColor;
               }
-
-              // if (this.toolbarState.targetingText) {
-              //   this.currentAsciibirdMeta.blocks[this.y][this.x].char = null;
-              // }
             }
+            break;
 
-           
-          }
-          break;
-
-        case "eraser":
-          if (this.canTool) {
-            if (
-              this.currentAsciibirdMeta.blocks[this.y] &&
-              this.currentAsciibirdMeta.blocks[this.y][this.x]
-            ) {
-
-              if (this.toolbarState.targetingFg) {
-                this.currentAsciibirdMeta.blocks[this.y][this.x].fg = null;
+          case "eraser":
+            if (this.canTool) {
+              if (this.$store.getters.getTargetingFg) {
+                this.$store.getters.currentAscii.blocks[this.y][
+                  this.x
+                ].fg = null;
               }
 
-              if (this.toolbarState.targetingBg) {
-                this.currentAsciibirdMeta.blocks[this.y][this.x].bg = null;
+              if (this.$store.getters.getTargetingBg) {
+                this.$store.getters.currentAscii.blocks[this.y][
+                  this.x
+                ].bg = null;
               }
 
-              if (this.toolbarState.targetingText) {
-                this.currentAsciibirdMeta.blocks[this.y][this.x].char = null;
+              if (this.$store.getters.getTargetingText) {
+                this.$store.getters.currentAscii.blocks[this.y][
+                  this.x
+                ].char = null;
               }
-
             }
-              
-          }
-          break;
+            break;
+        }
       }
 
-      this.delayRedrawCanvas()
+      this.delayRedrawCanvas();
     },
     delayRedrawCanvas() {
       if (this.redraw) {
         this.redraw = false;
-        
+
         setTimeout(() => {
-          this.redraw = true
+          this.redraw = true;
           this.redrawCanvas();
         }, 8);
       }
     },
 
-
     // TOOLS
     fillTool() {
-      let fillStartBlock = this.currentAsciibirdMeta.blocks[this.y][this.x];
-  
-      if (this.toolbarState.targetingBg) {
-        let fillSameBg = fillStartBlock.bg
+      let fillStartBlock = this.$store.getters.currentAscii.blocks[this.y][
+        this.x
+      ];
+
+      if (this.$store.getters.getTargetingBg) {
+        let fillSameBg = fillStartBlock.bg;
       }
 
-      console.log(fillStartBlock)
+      console.log(fillStartBlock);
     },
-
-
-
-
   },
 };
 </script>

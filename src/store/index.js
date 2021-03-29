@@ -52,7 +52,7 @@ export default new Vuex.Store({
     tab: 0,
     // asciibirdMeta holds all of the ASCII information for all the tabs
     asciibirdMeta: [],
-    toolbar: [{
+    toolbarIcons: [{
         name: 'default',
         icon: 'mouse-pointer',
         fa: 'fas',
@@ -135,6 +135,7 @@ export default new Vuex.Store({
     }
   },
   getters: {
+    getToolbarIcons: state => state.toolbarIcons,
     getToolbarState: state => state.toolbarState,
     getCurrentTool: state => state.toolbarState.currentTool,
     getTargetingBg: state => state.toolbarState.targetingBg,

@@ -47,7 +47,7 @@
       <t-button @click="createClick()" class="ml-1">New ASCII</t-button>
       <t-button @click="clearCache()" class="ml-1">Clear and Refresh</t-button>
       <t-button @click="startImport('mirc')" class="ml-1">Import mIRC</t-button>
-      <t-button @click="startImport('ansi')" class="ml-1">Import ANSI</t-button>
+      <!-- <t-button @click="startImport('ansi')" class="ml-1">Import ANSI</t-button> -->
       <input
         type="file"
         style="display: none"
@@ -62,7 +62,7 @@
         @click="changeTab(key, value)"
         :disabled="false"
       >
-        {{ value.title }} ({{ value.width }} / {{ value.height }})
+        {{ value.title }}
       </t-button>
 
       <Toolbar v-if="asciibirdMeta.length" />
@@ -264,8 +264,6 @@ export default {
       // The proper X and Y value of the block inside the ASCII
       let asciiX = 0;
       let asciiY = 0;
-      let firstColor = false;
-      let secondColor = false;
 
       let colorChar1 = null;
       let colorChar2 = null;
@@ -304,23 +302,6 @@ export default {
             break;
 
           case "\u0003":
-            secondColor = false;
-
-            // CC
-            // if (
-            //   asciiStringArray[0] === "\u0003" &&
-            //   asciiStringArray[1] === "\u0003"
-            // ) {
-            //   curBlock = {
-            //     fg: null,
-            //     bg: null,
-            //     char: null,
-            //   };
-
-            //   console.log("Got CC");
-            //   continue;
-            // }
-
             asciiStringArray.shift();
             theWidth++;
 
@@ -334,7 +315,6 @@ export default {
               asciiStringArray.shift();
             } else if (parsedColor <= MIRC_MAX_COLORS && parsedColor >= 0) {
               curBlock.fg = parseInt(parsedColor);
-              // firstColor = true;
               theWidth += parsedColor.toString().length;
 
               asciiStringArray = asciiStringArray.slice(
@@ -349,44 +329,42 @@ export default {
 
             // No background colour
             if (asciiStringArray[0] !== ",") {
-              secondColor = true;
               break;
             } else {
               // Remove , from array
               asciiStringArray.shift();
             }
 
-            if (!secondColor) {
-              colorChar1 = `${asciiStringArray[0]}`;
-              colorChar2 = `${asciiStringArray[1]}`;
-              parsedColor = parseInt(`${colorChar1}${colorChar2}`);
+            colorChar1 = `${asciiStringArray[0]}`;
+            colorChar2 = `${asciiStringArray[1]}`;
+            parsedColor = parseInt(`${colorChar1}${colorChar2}`);
 
-              // Work out the 01, 02
-              if (
-                !isNaN(colorChar1) &&
-                !isNaN(colorChar2) &&
-                parseInt(colorChar2) > parseInt(colorChar1) &&
-                parseInt(parsedColor) <= 10
-              ) {
-                parsedColor = parseInt(colorChar2);
-                asciiStringArray.shift();
-              }
+            // Work out the 01, 02
+            if (
+              !isNaN(colorChar1) &&
+              !isNaN(colorChar2) &&
+              parseInt(colorChar2) > parseInt(colorChar1) &&
+              !isNaN(parsedColor) &&
+              parseInt(parsedColor) <= 10
+            ) {
+              parsedColor = parseInt(colorChar2);
+              asciiStringArray.shift();
+            }
 
-              if (isNaN(parsedColor)) {
-                curBlock.bg = parseInt(colorChar1);
-                theWidth += 1;
-                asciiStringArray.shift();
-              } else if (parsedColor <= MIRC_MAX_COLORS && parsedColor >= 0) {
-                curBlock.bg = parseInt(parsedColor);
-                theWidth += parsedColor.toString().length;
+            if (isNaN(parsedColor)) {
+              curBlock.bg = parseInt(colorChar1);
+              theWidth += 1;
+              asciiStringArray.shift();
+            } else if (parsedColor <= MIRC_MAX_COLORS && parsedColor >= 0) {
+              curBlock.bg = parseInt(parsedColor);
+              theWidth += parsedColor.toString().length;
 
-                asciiStringArray = asciiStringArray.slice(
-                  parsedColor.toString().length,
-                  asciiStringArray.length
-                );
+              asciiStringArray = asciiStringArray.slice(
+                parsedColor.toString().length,
+                asciiStringArray.length
+              );
 
-                break;
-              }
+              break;
             }
 
             break;
@@ -416,6 +394,7 @@ export default {
 
       this.currentTab = keys.pop();
       this.$store.commit("changeTab", this.currentTab);
+      document.title = `asciibird - ${this.$store.getters.currentAscii.title}`;
     },
     createClick() {
       this.forms.createAscii.title = `New ASCII ${this.asciibirdMeta.length}`;

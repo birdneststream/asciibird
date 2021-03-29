@@ -2,7 +2,10 @@
   <div>
     <vue-draggable-resizable
       @dragging="onDrag"
-      :grid="[$store.getters.currentAscii.blockHeight, $store.getters.currentAscii.blockWidth]"
+      :grid="[
+        $store.getters.currentAscii.blockHeight,
+        $store.getters.currentAscii.blockWidth,
+      ]"
       style="z-index: 5; min-height: 500px"
       :min-width="200"
       :max-width="500"
@@ -14,22 +17,40 @@
       <div style="height: 100%; min-height: 500px; max-height: 700px">
         <t-card header="Tools and Stuff" style="height: 100%">
           <label class="flex ml-1">
-            <t-checkbox name="targetingFg"  v-model="toolbarState.targetingFg" :disabled="!watchTargetingBg && !watchTargetingText"   />
+            <t-checkbox
+              name="targetingFg"
+              v-model="$store.getters.getToolbarState.targetingFg"
+              :disabled="!$store.getters.getTargetingBg && !$store.getters.getTargetingText"
+            />
             <span class="text-sm">FG</span>
           </label>
           <label class="flex ml-1">
-            <t-checkbox name="targetingBg"  v-model="toolbarState.targetingBg" :disabled="!watchTargetingFg && !watchTargetingText" checked />
+            <t-checkbox
+              name="targetingBg"
+              v-model="$store.getters.getToolbarState.targetingBg"
+              :disabled="!$store.getters.getTargetingFg && !$store.getters.getTargetingText"
+              checked
+            />
             <span class="text-sm">BG</span>
           </label>
           <label class="flex ml-1">
-            <t-checkbox name="targetingText" v-model="toolbarState.targetingText" :disabled="!watchTargetingFg && !watchTargetingBg"    />
+            <t-checkbox
+              name="targetingText"
+              v-model="$store.getters.getToolbarState.targetingText"
+              :disabled="!$store.getters.getTargetingFg && !$store.getters.getTargetingBg"
+            />
             <span class="text-sm">Text</span>
           </label>
 
-          <t-card v-if="toolbarState.isChoosingFg || toolbarState.isChoosingBg" >
+          <t-card
+            v-if="
+              $store.getters.getToolbarState.isChoosingFg ||
+              $store.getters.getToolbarState.isChoosingBg
+            "
+          >
             <t-button
               type="button"
-              v-for="(value, keyColors) in mircColors"
+              v-for="(value, keyColors) in $store.getters.mircColors"
               :key="keyColors"
               :style="makeColorButtonClass(value)"
               class="border-gray-200 p-2"
@@ -42,22 +63,32 @@
           <t-button
             type="button"
             :style="
-              makeColorButtonClass(mircColors[toolbarState.currentColorFg])
+              makeColorButtonClass(
+                $store.getters.mircColors[
+                  $store.getters.getToolbarState.currentColorFg
+                ]
+              )
             "
             class="border-gray-200 p-1"
             id="currentColorFg"
             @click="startColorChange(0)"
-          >FG</t-button>
+            >FG</t-button
+          >
 
           <t-button
             type="button"
             :style="
-              makeColorButtonClass(mircColors[toolbarState.currentColorBg])
+              makeColorButtonClass(
+                $store.getters.mircColors[
+                  $store.getters.getToolbarState.currentColorBg
+                ]
+              )
             "
             class="border-gray-200 p-1"
             id="currentColorBg"
             @click="startColorChange(1)"
-          >BG</t-button>
+            >BG</t-button
+          >
 
           <t-button
             type="button"
@@ -72,10 +103,10 @@
 
           <t-button
             type="button"
-            v-for="(value, keyToolbar) in toolbar"
+            v-for="(value, keyToolbar) in $store.getters.getToolbarIcons"
             :key="keyToolbar + 50"
             class="border-gray-200 max-h-7 max-w-5 w-7"
-            @click="onToolbarChange(value)"
+            @click="$store.commit('changeTool', value.name)"
           >
             <font-awesome-icon :icon="[value.fa, value.icon]" />
           </t-button>
@@ -89,80 +120,19 @@
 
 <script>
 export default {
-  created() {
-    this.mircColors = this.$store.state.mircColors;
-    this.charCodes = this.$store.state.charCodes;
-    this.toolbar = this.$store.state.toolbar;
-    this.toolbarState = this.$store.getters.getToolbarState;
-    this.onToolbarChange("default");
-  },
+  created() {},
   name: "Toolbar",
 
   data: () => ({
-    mircColors: null,
-    charCodes: null,
-    toolbar: null,
     floating: {
       width: 0,
       height: 0,
       x: 100,
       y: 100,
     },
-    toolbarState: {
-      currentColorFg: 0,
-      currentColorBg: 1,
-      isChoosingFg: false,
-      isChoosingBg: false,
-      isUpdating: false,
-      currentTool: "default",
-      targetingFg: false,
-      targetingBg: true,
-      targetingText: false,
-    },
   }),
-  computed: {
-    watchFgChange() {
-      return this.$store.getters.getFgColor;
-    },
-    watchBgChange() {
-      return this.$store.getters.getBgColor;
-    },
-    watchTargetingFg() {
-      return this.toolbarState.targetingFg
-    },
-    watchTargetingBg() {
-      return this.toolbarState.targetingBg
-    },
-    watchTargetingText() {
-      return this.toolbarState.targetingText
-    }, 
-    // watchToolbarState() {
-    //   return this.$store.getters.getToolbarState
-    // }, 
-  },
-  watch: {
-    watchFgChange(val, old) {
-      this.toolbarState.currentColorFg = val;
-    },
-    watchBgChange(val, old) {
-      this.toolbarState.currentColorBg = val;
-    },
-    // watchToolbarState(val, old) {
-    //   this.toolbarState = val;
-    // },
-    watchTargetingFg(val, old) {
-      this.$store.commit("changeTargetingFg", val);
-      this.toolbarState.targetingFg = val
-    },
-    watchTargetingBg(val, old) {
-      this.$store.commit("changeTargetingBg", val);
-      this.toolbarState.targetingBg = val
-    },
-    watchTargetingText(val, old) {
-      this.$store.commit("changeTargetingText", val);
-      this.toolbarState.targetingText = val
-    },    
-  },
+  computed: {},
+  watch: {},
   methods: {
     onResize(x, y, width, height) {
       this.floating.x = x;
@@ -174,9 +144,6 @@ export default {
       this.floating.x = x;
       this.floating.y = y;
     },
-    onToolbarChange(item) {
-      this.$store.commit("changeTool", item.name);
-    },
     makeColorButtonClass(color) {
       return `background-color: ${color} !important;`;
     },
@@ -184,36 +151,35 @@ export default {
       return "background-color: grey !important;";
     },
     swapColors() {
-      let bg = this.toolbarState.currentColorBg
-      let fg = this.toolbarState.currentColorFg
+      let bg = this.$store.getters.getToolbarState.currentColorBg;
+      let fg = this.$store.getters.getToolbarState.currentColorFg;
 
       this.$store.commit("changeColorFg", bg);
       this.$store.commit("changeColorBg", fg);
-
-      this.toolbarState.currentColorFg = bg
-      this.toolbarState.currentColorBg = fg
     },
     startColorChange(type) {
-      // this.toolbarState.isChoosingColor = true
       if (type === 0) {
         //   // Fg
-        this.toolbarState.isChoosingFg = true;
+        this.$store.getters.getToolbarState.isChoosingFg = true;
       } else {
         //   // Bg
-        this.toolbarState.isChoosingBg = true;
+        this.$store.getters.getToolbarState.isChoosingBg = true;
       }
     },
     onColorChange(color) {
-      if (this.toolbarState.isChoosingFg) {
+      if (this.$store.getters.getToolbarState.isChoosingFg) {
         this.updateColor(0, color);
       }
 
-      if (this.toolbarState.isChoosingBg) {
+      if (this.$store.getters.getToolbarState.isChoosingBg) {
         this.updateColor(1, color);
       }
     },
     updateColor(type, color) {
-      if (this.toolbarState.isChoosingBg || this.toolbarState.isChoosingFg) {
+      if (
+        this.$store.getters.getToolbarState.isChoosingBg ||
+        this.$store.getters.getToolbarState.isChoosingFg
+      ) {
         switch (type) {
           // FG
           case 0:
@@ -228,10 +194,13 @@ export default {
             break;
         }
 
-        this.toolbarState.isChoosingBg = false;
-        this.toolbarState.isChoosingFg = false;
+        this.$store.getters.getToolbarState.isChoosingBg = false;
+        this.$store.getters.getToolbarState.isChoosingFg = false;
 
-        this.$store.commit("updateToolBarState", this.toolbarState);
+        this.$store.commit(
+          "updateToolBarState",
+          $store.getters.getToolbarState
+        );
       }
     },
   },
