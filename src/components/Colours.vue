@@ -1,11 +1,6 @@
 <template>
   <t-card>
-    <ColourPicker
-      v-if="
-        $store.getters.getToolbarState.isChoosingFg ||
-        $store.getters.getToolbarState.isChoosingBg
-      "
-    />
+
 
     <t-button
       type="button"
@@ -44,22 +39,13 @@
       >{{ `${$store.getters.getToolbarState.selectedChar}` }}</t-button
     >
 
-    <CharPicker
-      v-if="
-        $store.getters.getToolbarState.isChoosingChar
-      "
-    />
 
   </t-card>
 </template>
 
 <script>
-import ColourPicker from "./parts/ColourPicker.vue";
-import CharPicker from "./parts/CharPicker.vue";
-
 export default {
   name: "Colours",
-  components: { ColourPicker, CharPicker },
   data: () => ({}),
   methods: {
     swapColours() {

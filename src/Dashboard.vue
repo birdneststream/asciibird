@@ -68,6 +68,11 @@
       <Toolbar :canvas-x="canvasX" :canvas-y="canvasY" v-if="asciibirdMeta.length" />
       <DebugPanel :canvas-x="canvasX" :canvas-y="canvasY" v-if="asciibirdMeta.length" />
       <Editor @coordsupdate="updateCoords" v-if="asciibirdMeta.length" />
+      
+      <CharPicker v-if="$store.getters.getToolbarState.isChoosingChar" />
+      <ColourPicker v-if="$store.getters.getToolbarState.isChoosingFg || $store.getters.getToolbarState.isChoosingBg" />
+
+
     </div>
   </div>
 </template>
@@ -77,6 +82,8 @@ import Toolbar from "./components/Toolbar.vue";
 import DebugPanel from "./components/DebugPanel.vue";
 import Editor from "./views/Editor.vue";
 // import * as Anser from "anser";
+import CharPicker from "./components/parts/CharPicker.vue";
+import ColourPicker from "./components/parts/ColourPicker.vue";
 
 export default {
   async created() {
@@ -93,7 +100,7 @@ export default {
       window.location.href = "/";
     }
   },
-  components: { Toolbar, DebugPanel, Editor },
+  components: { Toolbar, DebugPanel, Editor, CharPicker, ColourPicker },
   name: "Dashboard",
   data: () => ({
     forms: {
@@ -123,6 +130,8 @@ export default {
     importFormat: null,
     canvasX: null,
     canvasY: null,
+    dashboardX: null,
+    dashboardY: null,
   }),
   methods: {
     updateCoords(value) {
