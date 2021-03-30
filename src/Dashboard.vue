@@ -45,9 +45,11 @@
 
     <div>
       <t-button @click="createClick()" class="ml-1">New ASCII</t-button>
-      <t-button @click="clearCache()" class="ml-1">Clear and Refresh</t-button>
+      <t-button @click="clearCache()" v-if="asciibirdMeta.length" class="ml-1"
+        >Clear and Refresh</t-button
+      >
       <t-button @click="startImport('mirc')" class="ml-1">Import mIRC</t-button>
-      <t-button @click="exportMirc()" class="ml-1"
+      <t-button @click="exportMirc()" class="ml-1" v-if="asciibirdMeta.length"
         >Export ASCII to mIRC</t-button
       >
       <!-- <t-button @click="startImport('ansi')" class="ml-1">Import ANSI</t-button> -->
@@ -439,19 +441,19 @@ export default {
           curBlock = currentAscii.blocks[y][x];
 
           if (prevBlock) {
-            if (
-              curBlock.bg !== prevBlock.bg ||
-              curBlock.fg !== prevBlock.fg
-            ) {
+            if (curBlock.bg !== prevBlock.bg || curBlock.fg !== prevBlock.fg) {
               Object.assign(curBlock, currentAscii.blocks[y][x]);
-              output.push(`\u0003${curBlock.fg ?? 0},${curBlock.bg ?? 1}`);
+              const zeroPad = (num, places) =>
+                String(num).padStart(places, "0");
+              output.push(`\u0003${zeroPad(curBlock.fg ?? 0, 2)},${zeroPad(curBlock.bg ?? 1,2)}`);
+
               output.push(curBlock.char ?? " ");
             } else {
               output.push(curBlock.char ?? " ");
             }
           } else {
-              Object.assign(curBlock, currentAscii.blocks[y][x]);
-              output.push(`\u0003${curBlock.fg ?? 0},${curBlock.bg ?? 1}`);      
+            Object.assign(curBlock, currentAscii.blocks[y][x]);
+            output.push(`\u0003${curBlock.fg ?? 0},${curBlock.bg ?? 1}`);
           }
 
           // Set prev block X
@@ -464,7 +466,7 @@ export default {
         // New line except for last line
         if (y < currentAscii.blocks.length - 1) {
           output.push("\n");
-        } 
+        }
       }
 
       // Download to a txt file
@@ -480,10 +482,10 @@ export default {
       };
 
       // Check if txt already exists and append it
-      if (currentAscii.title.slice(currentAscii.title.length - 3) === 'txt') {
-        var filename = currentAscii.title
+      if (currentAscii.title.slice(currentAscii.title.length - 3) === "txt") {
+        var filename = currentAscii.title;
       } else {
-        var filename = `${currentAscii.title}.txt`
+        var filename = `${currentAscii.title}.txt`;
       }
 
       downloadToFile(output.join(""), filename, "text/plain");
