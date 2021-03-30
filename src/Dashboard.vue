@@ -47,6 +47,9 @@
       <t-button @click="createClick()" class="ml-1">New ASCII</t-button>
       <t-button @click="clearCache()" class="ml-1">Clear and Refresh</t-button>
       <t-button @click="startImport('mirc')" class="ml-1">Import mIRC</t-button>
+      <t-button @click="exportMirc()" class="ml-1"
+        >Export ASCII to mIRC</t-button
+      >
       <!-- <t-button @click="startImport('ansi')" class="ml-1">Import ANSI</t-button> -->
       <input
         type="file"
@@ -65,14 +68,25 @@
         {{ value.title }}
       </t-button>
 
-      <Toolbar :canvas-x="canvasX" :canvas-y="canvasY" v-if="asciibirdMeta.length" />
-      <DebugPanel :canvas-x="canvasX" :canvas-y="canvasY" v-if="asciibirdMeta.length" />
+      <Toolbar
+        :canvas-x="canvasX"
+        :canvas-y="canvasY"
+        v-if="asciibirdMeta.length"
+      />
+      <DebugPanel
+        :canvas-x="canvasX"
+        :canvas-y="canvasY"
+        v-if="asciibirdMeta.length"
+      />
       <Editor @coordsupdate="updateCoords" v-if="asciibirdMeta.length" />
-      
+
       <CharPicker v-if="$store.getters.getToolbarState.isChoosingChar" />
-      <ColourPicker v-if="$store.getters.getToolbarState.isChoosingFg || $store.getters.getToolbarState.isChoosingBg" />
-
-
+      <ColourPicker
+        v-if="
+          $store.getters.getToolbarState.isChoosingFg ||
+          $store.getters.getToolbarState.isChoosingBg
+        "
+      />
     </div>
   </div>
 </template>
@@ -94,7 +108,6 @@ export default {
     let asciiUrl = new URL(location.href).searchParams.get("ircwatch");
     if (asciiUrl) {
       let res = await fetch(`https://irc.watch/ascii/txt/${asciiUrl}`);
-      console.log({ asciiData, asciiUrl });
       let asciiData = await res.text();
       this.mircAsciiImport(asciiData, asciiUrl);
       window.location.href = "/";
@@ -135,8 +148,8 @@ export default {
   }),
   methods: {
     updateCoords(value) {
-      this.canvasX = value.x
-      this.canvasY = value.y
+      this.canvasX = value.x;
+      this.canvasY = value.y;
     },
     onImport() {
       const { files } = this.$refs.asciiInput;
@@ -278,10 +291,13 @@ export default {
       let asciiX = 0;
       let asciiY = 0;
 
-      let ColourChar1 = null;
-      let ColourChar2 = null;
+      // used to determine colours
+      let colourChar1 = null;
+      let colourChar2 = null;
       var parsedColour = null;
 
+      // This variable just counts the amount of colour and char codes to minus
+      // to get the real width
       var theWidth = 0;
 
       // for (let charPos = 0; charPos <= this.asciiImport.length - 1; charPos++) {
@@ -318,12 +334,12 @@ export default {
             asciiStringArray.shift();
             theWidth++;
 
-            ColourChar1 = `${asciiStringArray[0]}`;
-            ColourChar2 = `${asciiStringArray[1]}`;
-            parsedColour = parseInt(`${ColourChar1}${ColourChar2}`);
+            colourChar1 = `${asciiStringArray[0]}`;
+            colourChar2 = `${asciiStringArray[1]}`;
+            parsedColour = parseInt(`${colourChar1}${colourChar2}`);
 
             if (isNaN(parsedColour)) {
-              curBlock.bg = parseInt(ColourChar1);
+              curBlock.bg = parseInt(colourChar1);
               theWidth += 1;
               asciiStringArray.shift();
             } else if (parsedColour <= MIRC_MAX_ColourS && parsedColour >= 0) {
@@ -336,8 +352,8 @@ export default {
               );
             }
 
-            ColourChar1 = null;
-            ColourChar2 = null;
+            colourChar1 = null;
+            colourChar2 = null;
             parsedColour = null;
 
             // No background colour
@@ -348,24 +364,24 @@ export default {
               asciiStringArray.shift();
             }
 
-            ColourChar1 = `${asciiStringArray[0]}`;
-            ColourChar2 = `${asciiStringArray[1]}`;
-            parsedColour = parseInt(`${ColourChar1}${ColourChar2}`);
+            colourChar1 = `${asciiStringArray[0]}`;
+            colourChar2 = `${asciiStringArray[1]}`;
+            parsedColour = parseInt(`${colourChar1}${colourChar2}`);
 
             // Work out the 01, 02
             if (
-              !isNaN(ColourChar1) &&
-              !isNaN(ColourChar2) &&
-              parseInt(ColourChar2) > parseInt(ColourChar1) &&
+              !isNaN(colourChar1) &&
+              !isNaN(colourChar2) &&
+              parseInt(colourChar2) > parseInt(colourChar1) &&
               !isNaN(parsedColour) &&
-              parseInt(parsedColour) <= 10
+              parseInt(parsedColour) < 10
             ) {
-              parsedColour = parseInt(ColourChar2);
+              parsedColour = parseInt(colourChar2);
               asciiStringArray.shift();
             }
 
             if (isNaN(parsedColour)) {
-              curBlock.bg = parseInt(ColourChar1);
+              curBlock.bg = parseInt(colourChar1);
               theWidth += 1;
               asciiStringArray.shift();
             } else if (parsedColour <= MIRC_MAX_ColourS && parsedColour >= 0) {
@@ -408,6 +424,69 @@ export default {
       this.currentTab = keys.pop();
       this.$store.commit("changeTab", this.currentTab);
       document.title = `asciibird - ${this.$store.getters.currentAscii.title}`;
+    },
+    exportMirc() {
+      let currentAscii = this.$store.getters.currentAscii;
+      let output = [];
+
+      var curBlock = null;
+      var prevBlock = null;
+      // "\n"
+      // "\u0003"
+
+      for (let y = 0; y <= currentAscii.blocks.length - 1; y++) {
+        for (let x = 0; x <= currentAscii.blocks[y].length - 1; x++) {
+          curBlock = currentAscii.blocks[y][x];
+
+          if (prevBlock) {
+            if (
+              curBlock.bg !== prevBlock.bg ||
+              curBlock.fg !== prevBlock.fg
+            ) {
+              Object.assign(curBlock, currentAscii.blocks[y][x]);
+              output.push(`\u0003${curBlock.fg ?? 0},${curBlock.bg ?? 1}`);
+              output.push(curBlock.char ?? " ");
+            } else {
+              output.push(curBlock.char ?? " ");
+            }
+          } else {
+              Object.assign(curBlock, currentAscii.blocks[y][x]);
+              output.push(`\u0003${curBlock.fg ?? 0},${curBlock.bg ?? 1}`);      
+          }
+
+          // Set prev block X
+          prevBlock = currentAscii.blocks[y][x];
+        }
+
+        // Set prev block Y
+        prevBlock = null;
+
+        // New line except for last line
+        if (y < currentAscii.blocks.length - 1) {
+          output.push("\n");
+        } 
+      }
+
+      // Download to a txt file
+      const downloadToFile = (content, filename, contentType) => {
+        const a = document.createElement("a");
+        const file = new Blob([content], { type: contentType });
+
+        a.href = URL.createObjectURL(file);
+        a.download = filename;
+        a.click();
+
+        URL.revokeObjectURL(a.href);
+      };
+
+      // Check if txt already exists and append it
+      if (currentAscii.title.slice(currentAscii.title.length - 3) === 'txt') {
+        var filename = currentAscii.title
+      } else {
+        var filename = `${currentAscii.title}.txt`
+      }
+
+      downloadToFile(output.join(""), filename, "text/plain");
     },
     createClick() {
       this.forms.createAscii.title = `New ASCII ${this.asciibirdMeta.length}`;
