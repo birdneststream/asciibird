@@ -439,12 +439,12 @@ export default {
       for (let y = 0; y <= currentAscii.blocks.length - 1; y++) {
         for (let x = 0; x <= currentAscii.blocks[y].length - 1; x++) {
           curBlock = currentAscii.blocks[y][x];
+          const zeroPad = (num, places) => String(num).padStart(places, "0");
 
           if (prevBlock) {
             if (curBlock.bg !== prevBlock.bg || curBlock.fg !== prevBlock.fg) {
               Object.assign(curBlock, currentAscii.blocks[y][x]);
-              const zeroPad = (num, places) =>
-                String(num).padStart(places, "0");
+
               output.push(`\u0003${zeroPad(curBlock.fg ?? 0, 2)},${zeroPad(curBlock.bg ?? 1,2)}`);
 
               output.push(curBlock.char ?? " ");
@@ -453,7 +453,7 @@ export default {
             }
           } else {
             Object.assign(curBlock, currentAscii.blocks[y][x]);
-            output.push(`\u0003${curBlock.fg ?? 0},${curBlock.bg ?? 1}`);
+            output.push(`\u0003${zeroPad(curBlock.fg ?? 0,2)},${zeroPad(curBlock.bg ?? 1,2)}`);
           }
 
           // Set prev block X
