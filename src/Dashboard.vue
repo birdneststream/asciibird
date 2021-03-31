@@ -430,39 +430,24 @@ export default {
     exportMirc() {
       let currentAscii = this.$store.getters.currentAscii;
       let output = [];
-
       var curBlock = null;
-      var prevBlock = null;
-      // "\n"
-      // "\u0003"
+      var prevBlock = { bg: -1, fg: -1 };
 
       for (let y = 0; y <= currentAscii.blocks.length - 1; y++) {
         for (let x = 0; x <= currentAscii.blocks[y].length - 1; x++) {
           curBlock = currentAscii.blocks[y][x];
-          const zeroPad = (num, places) => String(num).padStart(places, "0");
 
-          if (prevBlock) {
-            if (curBlock.bg !== prevBlock.bg || curBlock.fg !== prevBlock.fg) {
-              Object.assign(curBlock, currentAscii.blocks[y][x]);
-
-              output.push(`\u0003${zeroPad(curBlock.fg ?? 0, 2)},${zeroPad(curBlock.bg ?? 1,2)}`);
-
-              output.push(curBlock.char ?? " ");
-            } else {
-              output.push(curBlock.char ?? " ");
-            }
-          } else {
+          if (curBlock.bg !== prevBlock.bg || curBlock.fg !== prevBlock.fg) {
             Object.assign(curBlock, currentAscii.blocks[y][x]);
-            output.push(`\u0003${zeroPad(curBlock.fg ?? 0,2)},${zeroPad(curBlock.bg ?? 1,2)}`);
+            const zeroPad = (num, places) => String(num).padStart(places, "0");
+            output.push(`\u0003${zeroPad(curBlock.fg ?? 0, 2)},${zeroPad(curBlock.bg ?? 1,2)}`);
           }
 
-          // Set prev block X
+          output.push(curBlock.char ?? " ");
           prevBlock = currentAscii.blocks[y][x];
         }
 
-        // Set prev block Y
-        prevBlock = null;
-
+        prevBlock = { bg: -1, fg: -1 };
         // New line except for last line
         if (y < currentAscii.blocks.length - 1) {
           output.push("\n");
@@ -482,11 +467,7 @@ export default {
       };
 
       // Check if txt already exists and append it
-      if (currentAscii.title.slice(currentAscii.title.length - 3) === "txt") {
-        var filename = currentAscii.title;
-      } else {
-        var filename = `${currentAscii.title}.txt`;
-      }
+      var filename = (currentAscii.title.slice(currentAscii.title.length - 3) === "txt") ? currentAscii.title : `${currentAscii.title}.txt`;
 
       downloadToFile(output.join(""), filename, "text/plain");
     },
