@@ -340,6 +340,11 @@ export default {
             colourChar2 = `${asciiStringArray[1]}`;
             parsedColour = parseInt(`${colourChar1}${colourChar2}`);
 
+            if (parseInt(colourChar1) === 0 && parseInt(colourChar2) >= 0) {
+              asciiStringArray.shift();
+              theWidth += 1;
+            }
+
             if (isNaN(parsedColour)) {
               curBlock.bg = parseInt(colourChar1);
               theWidth += 1;
@@ -440,7 +445,12 @@ export default {
           if (curBlock.bg !== prevBlock.bg || curBlock.fg !== prevBlock.fg) {
             Object.assign(curBlock, currentAscii.blocks[y][x]);
             const zeroPad = (num, places) => String(num).padStart(places, "0");
-            output.push(`\u0003${zeroPad(curBlock.fg ?? 0, 2)},${zeroPad(curBlock.bg ?? 1,2)}`);
+            output.push(
+              `\u0003${zeroPad(curBlock.fg ?? 0, 2)},${zeroPad(
+                curBlock.bg ?? 1,
+                2
+              )}`
+            );
           }
 
           output.push(curBlock.char ?? " ");
@@ -467,8 +477,10 @@ export default {
       };
 
       // Check if txt already exists and append it
-      var filename = (currentAscii.title.slice(currentAscii.title.length - 3) === "txt") ? currentAscii.title : `${currentAscii.title}.txt`;
-
+      var filename =
+        currentAscii.title.slice(currentAscii.title.length - 3) === "txt"
+          ? currentAscii.title
+          : `${currentAscii.title}.txt`;
       downloadToFile(output.join(""), filename, "text/plain");
     },
     createClick() {

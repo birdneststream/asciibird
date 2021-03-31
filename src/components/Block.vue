@@ -11,9 +11,7 @@ export default {
     'blockWidth',
     'blockHeight'],
 
-  created() {
-    console.log(this.data);
-  },
+  created() {},
   data: () => ({
 
   }),

@@ -324,7 +324,7 @@ export default {
         let fillSameBg = fillStartBlock.bg;
       }
 
-      console.log(fillStartBlock);
+      // console.log(fillStartBlock);
     },
   },
 };
