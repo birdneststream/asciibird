@@ -14,6 +14,17 @@
         @dragging="onCanvasDrag"
       >
         <canvas
+          ref="canvastools"
+          id="canvastools"
+          class="canvas"
+          :width="canvas.width"
+          :height="canvas.height"
+          @mousemove="canvasMouseMove"
+          @mousedown="canvasMouseDown"
+          @mouseup="canvasMouseUp"
+        ></canvas>
+
+        <canvas
           ref="canvas"
           id="canvas"
           class="canvas"
@@ -42,22 +53,20 @@ body {
 </style>
 
 <script>
-import Block from "../components/Block.vue";
+import Block from '../components/Block.vue';
 
 export default {
-  name: "Editor",
+  name: 'Editor',
   components: { Block },
   mounted() {
     if (this.$store.getters.currentAscii.blocks) {
-      this.ctx = this.$refs.canvas.getContext("2d");
-      this.canvas.width =
-        this.$store.getters.currentAscii.width *
-        this.$store.getters.currentAscii.blockWidth;
-      this.canvas.height =
-        this.$store.getters.currentAscii.height *
-        this.$store.getters.currentAscii.blockHeight;
+      this.ctx = this.$refs.canvas.getContext('2d');
+      this.canvas.width = this.$store.getters.currentAscii.width
+        * this.$store.getters.currentAscii.blockWidth;
+      this.canvas.height = this.$store.getters.currentAscii.height
+        * this.$store.getters.currentAscii.blockHeight;
       this.delayRedrawCanvas();
-      this.$store.commit("changeTool", "default");
+      this.$store.commit('changeTool', 'default');
     }
   },
   created() {},
@@ -77,7 +86,7 @@ export default {
       return `width:${this.canvas.width};height:${this.canvas.height};`;
     },
     generateTitle() {
-      return this.$store.getters.currentAscii.title ?? "";
+      return this.$store.getters.currentAscii.title ?? '';
     },
     watchAsciiChange() {
       return this.$store.getters.currentAscii;
@@ -85,12 +94,10 @@ export default {
   },
   watch: {
     watchAsciiChange(val, old) {
-      this.canvas.width =
-        this.$store.getters.currentAscii.width *
-        this.$store.getters.currentAscii.blockWidth;
-      this.canvas.height =
-        this.$store.getters.currentAscii.height *
-        this.$store.getters.currentAscii.blockHeight;
+      this.canvas.width = this.$store.getters.currentAscii.width
+        * this.$store.getters.currentAscii.blockWidth;
+      this.canvas.height = this.$store.getters.currentAscii.height
+        * this.$store.getters.currentAscii.blockHeight;
 
       this.delayRedrawCanvas();
 
@@ -117,19 +124,19 @@ export default {
         let curBlock = {};
 
         // hack font for ascii shout outs 2 beenz
-        this.ctx.font = "12.5px Hack";
+        this.ctx.font = '12.5px Hack';
 
         for (y = 0; y < this.$store.getters.currentAscii.height + 1; y++) {
           canvasY = BLOCK_HEIGHT * y;
 
           for (x = 0; x < this.$store.getters.currentAscii.width + 1; x++) {
             if (
-              this.$store.getters.currentAscii.blocks[y] &&
-              this.$store.getters.currentAscii.blocks[y][x]
+              this.$store.getters.currentAscii.blocks[y]
+              && this.$store.getters.currentAscii.blocks[y][x]
             ) {
               curBlock = Object.assign(
                 curBlock,
-                this.$store.getters.currentAscii.blocks[y][x]
+                this.$store.getters.currentAscii.blocks[y][x],
               );
 
               canvasX = BLOCK_WIDTH * x;
@@ -141,7 +148,7 @@ export default {
                 ];
                 this.ctx.fillRect(canvasX, canvasY, BLOCK_WIDTH, BLOCK_HEIGHT);
               } else {
-                this.ctx.fillStyle = "rgba(0, 0, 200, 0)";
+                this.ctx.fillStyle = 'rgba(0, 0, 200, 0)';
               }
 
               if (curBlock.char) {
@@ -150,13 +157,13 @@ export default {
                     curBlock.fg
                   ];
                 } else {
-                  this.ctx.fillStyle = "#000000";
+                  this.ctx.fillStyle = '#000000';
                 }
 
                 this.ctx.fillText(
                   curBlock.char,
                   canvasX - 1,
-                  canvasY + BLOCK_HEIGHT - 3
+                  canvasY + BLOCK_HEIGHT - 3,
                 );
               }
             }
@@ -177,65 +184,59 @@ export default {
 
     // Mouse Up, Down and Move
     canvasMouseUp() {
-      this.delayRedrawCanvas();
-
       switch (this.$store.getters.getCurrentTool) {
-        case "brush":
+        case 'brush':
           this.canTool = false;
           break;
 
-        case "eraser":
+        case 'eraser':
           this.canTool = false;
           break;
 
-        case "fill":
+        case 'fill':
           this.canTool = false;
 
           break;
       }
+
+      this.delayRedrawCanvas();
     },
     canvasMouseDown() {
-      if (
-        this.$store.getters.currentAscii.blocks[this.y] &&
-        this.$store.getters.currentAscii.blocks[this.y][this.x]
-      ) {
+      if (this.$store.getters.currentAscii.blocks[this.y] && this.$store.getters.currentAscii.blocks[this.y][this.x]) {
+        const targetBlock = this.$store.getters.currentAscii.blocks[this.y][this.x];
+
         switch (this.$store.getters.getCurrentTool) {
-          case "default":
+          case 'default':
             break;
 
-          case "fill":
-            this.fillTool();
+          case 'fill':
+            this.fillTool(targetBlock);
             break;
 
-          case "brush":
+          case 'brush':
             this.canTool = true;
             break;
 
-          case "eraser":
+          case 'eraser':
             this.canTool = true;
             break;
 
-          case "dropper":
-            let curBlock = this.$store.getters.currentAscii.blocks[this.y][
-              this.x
-            ];
+          case 'dropper':
+            const curBlock = this.$store.getters.currentAscii.blocks[this.y][this.x];
 
             if (this.$store.getters.getTargetingFg) {
-              this.$store.commit("changeColourFg", curBlock.fg);
+              this.$store.commit('changeColourFg', curBlock.fg);
             }
 
             if (this.$store.getters.getTargetingBg) {
-              this.$store.commit("changeColourBg", curBlock.bg);
+              this.$store.commit('changeColourBg', curBlock.bg);
             }
 
             if (this.$store.getters.getTargetingChar) {
-              this.$store.commit("changeChar", curBlock.char);
+              this.$store.commit('changeChar', curBlock.char);
             }
 
-            this.$store.commit(
-              "changeTool",
-              this.$store.getters.getCurrentTool
-            );
+            this.$store.commit('changeTool', this.$store.getters.getCurrentTool);
             break;
         }
       }
@@ -251,17 +252,17 @@ export default {
 
       this.x = Math.floor(this.x / this.$store.getters.currentAscii.blockWidth);
       this.y = Math.floor(
-        this.y / this.$store.getters.currentAscii.blockHeight
+        this.y / this.$store.getters.currentAscii.blockHeight,
       );
 
-      this.$emit('coordsupdate', {x: this.x, y: this.y})
+      this.$emit('coordsupdate', { x: this.x, y: this.y });
 
       if (
-        this.$store.getters.currentAscii.blocks[this.y] &&
-        this.$store.getters.currentAscii.blocks[this.y][this.x]
+        this.$store.getters.currentAscii.blocks[this.y]
+        && this.$store.getters.currentAscii.blocks[this.y][this.x]
       ) {
         switch (this.$store.getters.getCurrentTool) {
-          case "brush":
+          case 'brush':
             if (this.canTool) {
               if (this.$store.getters.getTargetingFg) {
                 this.$store.getters.currentAscii.blocks[this.y][this.x].fg = this.$store.getters.getFgColour;
@@ -277,7 +278,7 @@ export default {
             }
             break;
 
-          case "eraser":
+          case 'eraser':
             if (this.canTool) {
               if (this.$store.getters.getTargetingFg) {
                 this.$store.getters.currentAscii.blocks[this.y][
@@ -310,21 +311,17 @@ export default {
         setTimeout(() => {
           this.redraw = true;
           this.redrawCanvas();
-        }, 8);
+        }, this.$store.state.options.canvasRedrawSpeed);
       }
     },
 
     // TOOLS
-    fillTool() {
-      let fillStartBlock = this.$store.getters.currentAscii.blocks[this.y][
-        this.x
-      ];
-
+    fillTool(block) {
       if (this.$store.getters.getTargetingBg) {
-        let fillSameBg = fillStartBlock.bg;
+        const fillSameBg = block.bg;
       }
 
-      // console.log(fillStartBlock);
+      console.log(block);
     },
   },
 };

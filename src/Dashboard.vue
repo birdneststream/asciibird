@@ -7,7 +7,7 @@
       :escToClose="false"
       @before-closed="closeNewASCII"
     >
-      <!-- Main Menu -->
+
       Width
       <t-input
         type="number"
@@ -45,11 +45,11 @@
 
     <div>
       <t-button @click="createClick()" class="ml-1">New ASCII</t-button>
-      <t-button @click="clearCache()" v-if="asciibirdMeta.length" class="ml-1"
+      <t-button @click="clearCache()" v-if="this.$store.getters.asciibirdMeta.length" class="ml-1"
         >Clear and Refresh</t-button
       >
       <t-button @click="startImport('mirc')" class="ml-1">Import mIRC</t-button>
-      <t-button @click="exportMirc()" class="ml-1" v-if="asciibirdMeta.length"
+      <t-button @click="exportMirc()" class="ml-1" v-if="this.$store.getters.asciibirdMeta.length"
         >Export ASCII to mIRC</t-button
       >
       <!-- <t-button @click="startImport('ansi')" class="ml-1">Import ANSI</t-button> -->
@@ -61,7 +61,7 @@
       />
 
       <t-button
-        v-for="(value, key) in asciibirdMeta"
+        v-for="(value, key) in this.$store.getters.asciibirdMeta"
         v-bind:key="key"
         class="ml-1"
         @click="changeTab(key, value)"
@@ -73,14 +73,14 @@
       <Toolbar
         :canvas-x="canvasX"
         :canvas-y="canvasY"
-        v-if="asciibirdMeta.length"
+        v-if="this.$store.getters.asciibirdMeta.length"
       />
       <DebugPanel
         :canvas-x="canvasX"
         :canvas-y="canvasY"
-        v-if="asciibirdMeta.length"
+        v-if="this.$store.getters.asciibirdMeta.length"
       />
-      <Editor @coordsupdate="updateCoords" v-if="asciibirdMeta.length" />
+      <Editor @coordsupdate="updateCoords" v-if="this.$store.getters.asciibirdMeta.length" />
 
       <CharPicker v-if="$store.getters.getToolbarState.isChoosingChar" />
       <ColourPicker
@@ -94,55 +94,37 @@
 </template>
 
 <script>
-import Toolbar from "./components/Toolbar.vue";
-import DebugPanel from "./components/DebugPanel.vue";
-import Editor from "./views/Editor.vue";
+import Toolbar from './components/Toolbar.vue';
+import DebugPanel from './components/DebugPanel.vue';
+import Editor from './views/Editor.vue';
 // import * as Anser from "anser";
-import CharPicker from "./components/parts/CharPicker.vue";
-import ColourPicker from "./components/parts/ColourPicker.vue";
+import CharPicker from './components/parts/CharPicker.vue';
+import ColourPicker from './components/parts/ColourPicker.vue';
 
 export default {
   async created() {
-    this.mircColours = this.$store.getters.mircColours;
-    this.charCodes = this.$store.getters.charCodes;
-    this.asciibirdMeta = this.$store.getters.asciibirdMeta;
-
-    let asciiUrl = new URL(location.href).searchParams.get("ircwatch");
+    // Load from irc watch if present in the URL bar
+    const asciiUrl = new URL(location.href).searchParams.get('ircwatch');
     if (asciiUrl) {
-      let res = await fetch(`https://irc.watch/ascii/txt/${asciiUrl}`);
-      let asciiData = await res.text();
+      const res = await fetch(`https://irc.watch/ascii/txt/${asciiUrl}`);
+      const asciiData = await res.text();
       this.mircAsciiImport(asciiData, asciiUrl);
-      window.location.href = "/";
+      window.location.href = '/';
     }
   },
-  components: { Toolbar, DebugPanel, Editor, CharPicker, ColourPicker },
-  name: "Dashboard",
+  components: {
+    Toolbar, DebugPanel, Editor, CharPicker, ColourPicker,
+  },
+  name: 'Dashboard',
   data: () => ({
     forms: {
       createAscii: {
         width: 5,
         height: 5,
-        title: "ascii",
+        title: 'ascii',
       },
     },
-    formsDefault: null,
-    status: {
-      createNew: false,
-    },
-    text: "ASCII",
     currentTab: 1,
-    asciibirdMeta: [],
-    mircColours: null,
-    charCodes: null,
-    refresh: false,
-    asciiImport: "",
-    finalAscii: null,
-    asciiArray: [],
-    imageUrl: null,
-    parseColour: false,
-    ColourCode: false,
-    importBlocks: null,
-    importFormat: null,
     canvasX: null,
     canvasY: null,
     dashboardX: null,
@@ -157,26 +139,19 @@ export default {
       const { files } = this.$refs.asciiInput;
       const filename = files[0].name;
       const fileReader = new FileReader();
-      this.asciiImport = fileReader.readAsText(files[0]);
 
-      fileReader.addEventListener("load", () => {
-        switch (this.importFormat) {
-          // case "ansi":
-          //   this.asniImport(fileReader.result, filename);
-          //   break;
+      // This will fire the file reader 'load' event
+      const asciiImport = fileReader.readAsText(files[0]);
 
-          case "mirc":
-            this.mircAsciiImport(fileReader.result, filename);
-            break;
-        }
-
-        this.importFormat = null;
+      fileReader.addEventListener('load', () => {
+        // We'll have to add a switch statement
+        // here to handle different file types
+        this.mircAsciiImport(fileReader.result, filename);
       });
-
-      this.asciiImportFile = files[0];
     },
-    startImport(type) {
-      this.importFormat = type;
+    startImport() {
+      // For ANSI we'll need to add back in the
+      // type cariable here
       this.$refs.asciiInput.click();
     },
     // We can maybe try something different to import ANSI
@@ -263,7 +238,7 @@ export default {
     //   this.$store.commit("newAsciibirdMeta", this.finalAscii);
     // },
     mircAsciiImport(contents, filename) {
-      const MIRC_MAX_ColourS = this.mircColours.length;
+      const MIRC_MAX_COLOURS = this.$store.getters.mircColours.length;
 
       // The current state of the Colours
       let curBlock = {
@@ -273,21 +248,21 @@ export default {
       };
 
       // set asciiImport as the entire file contents as a string
-      this.asciiImport = contents.split("\u0003\u0003").join("\u0003");
+      const asciiImport = contents.split('\u0003\u0003').join('\u0003');
 
       // This will end up in the asciibirdMeta
-      this.finalAscii = {
+      const finalAscii = {
         width: false, // defined in: switch (curChar) case "\n":
-        height: this.asciiImport.split("\n").length,
+        height: asciiImport.split('\n').length,
         title: filename,
         key: this.$store.getters.nextTabValue,
         blockWidth: 8 * this.$store.getters.blockSizeMultiplier,
         blockHeight: 13 * this.$store.getters.blockSizeMultiplier,
-        blocks: this.create2DArray(this.asciiImport.split("\n").length),
+        blocks: this.create2DArray(asciiImport.split('\n').length),
       };
 
       // Turn the entire ascii string into an array
-      let asciiStringArray = this.asciiImport.split("");
+      let asciiStringArray = asciiImport.split('');
 
       // The proper X and Y value of the block inside the ASCII
       let asciiX = 0;
@@ -296,20 +271,19 @@ export default {
       // used to determine colours
       let colourChar1 = null;
       let colourChar2 = null;
-      var parsedColour = null;
+      let parsedColour = null;
 
       // This variable just counts the amount of colour and char codes to minus
       // to get the real width
-      var theWidth = 0;
+      let widthOfColCodes = 0;
 
-      // for (let charPos = 0; charPos <= this.asciiImport.length - 1; charPos++) {
       while (asciiStringArray.length) {
-        let curChar = asciiStringArray[0];
+        const curChar = asciiStringArray[0];
 
         // Defining a small finite state machine
         // to detect the colour code
         switch (curChar) {
-          case "\n":
+          case '\n':
             // Reset the colours here on a new line
             curBlock = {
               fg: null,
@@ -317,13 +291,14 @@ export default {
               char: null,
             };
 
-            //
+            // the Y value of the ascii
             asciiY++;
 
             // We can determine the width at the end of the first line
-            if (!this.finalAscii.width) {
-              this.finalAscii.width =
-                this.asciiImport.split("\n")[0].length - 1 - theWidth; // minus \n for the proper width
+            // If for some reason like in aphex.txt the first line is
+            // trimmed it will trim the entire ascii!
+            if (!finalAscii.width) {
+              finalAscii.width = asciiImport.split('\n')[0].length - 1 - widthOfColCodes; // minus \n for the proper width
             }
 
             // Resets the X value
@@ -332,56 +307,55 @@ export default {
             asciiStringArray.shift();
             break;
 
-          case "\u0003":
+          case '\u0003':
+            // Remove the colour char
             asciiStringArray.shift();
-            theWidth++;
+            widthOfColCodes++;
 
+            // Attempt to work out bg
             colourChar1 = `${asciiStringArray[0]}`;
             colourChar2 = `${asciiStringArray[1]}`;
             parsedColour = parseInt(`${colourChar1}${colourChar2}`);
 
+            // Work out the 01, 02 double digit codes
             if (parseInt(colourChar1) === 0 && parseInt(colourChar2) >= 0) {
               asciiStringArray.shift();
-              theWidth += 1;
+              widthOfColCodes += 1;
             }
 
             if (isNaN(parsedColour)) {
               curBlock.bg = parseInt(colourChar1);
-              theWidth += 1;
+              widthOfColCodes += 1;
               asciiStringArray.shift();
-            } else if (parsedColour <= MIRC_MAX_ColourS && parsedColour >= 0) {
+            } else if (parsedColour <= MIRC_MAX_COLOURS && parsedColour >= 0) {
               curBlock.fg = parseInt(parsedColour);
-              theWidth += parsedColour.toString().length;
+              widthOfColCodes += parsedColour.toString().length;
 
               asciiStringArray = asciiStringArray.slice(
                 parsedColour.toString().length,
-                asciiStringArray.length
+                asciiStringArray.length,
               );
             }
 
-            colourChar1 = null;
-            colourChar2 = null;
-            parsedColour = null;
-
             // No background colour
-            if (asciiStringArray[0] !== ",") {
+            if (asciiStringArray[0] !== ',') {
               break;
             } else {
               // Remove , from array
               asciiStringArray.shift();
             }
 
+            // Attempt to work out bg
             colourChar1 = `${asciiStringArray[0]}`;
             colourChar2 = `${asciiStringArray[1]}`;
             parsedColour = parseInt(`${colourChar1}${colourChar2}`);
 
-            // Work out the 01, 02
             if (
-              !isNaN(colourChar1) &&
-              !isNaN(colourChar2) &&
-              parseInt(colourChar2) > parseInt(colourChar1) &&
-              !isNaN(parsedColour) &&
-              parseInt(parsedColour) < 10
+              !isNaN(colourChar1)
+              && !isNaN(colourChar2)
+              && parseInt(colourChar2) > parseInt(colourChar1)
+              && !isNaN(parsedColour)
+              && parseInt(parsedColour) < 10
             ) {
               parsedColour = parseInt(colourChar2);
               asciiStringArray.shift();
@@ -389,15 +363,15 @@ export default {
 
             if (isNaN(parsedColour)) {
               curBlock.bg = parseInt(colourChar1);
-              theWidth += 1;
+              widthOfColCodes += 1;
               asciiStringArray.shift();
-            } else if (parsedColour <= MIRC_MAX_ColourS && parsedColour >= 0) {
+            } else if (parsedColour <= MIRC_MAX_COLOURS && parsedColour >= 0) {
               curBlock.bg = parseInt(parsedColour);
-              theWidth += parsedColour.toString().length;
+              widthOfColCodes += parsedColour.toString().length;
 
               asciiStringArray = asciiStringArray.slice(
                 parsedColour.toString().length,
-                asciiStringArray.length
+                asciiStringArray.length,
               );
 
               break;
@@ -409,64 +383,64 @@ export default {
             curBlock.char = curChar;
             asciiStringArray.shift();
             asciiX++;
-            // Fk this js shit, serialising the curBlock works much better. Lost hours on this bs, fk.
 
-            this.finalAscii.blocks[asciiY][asciiX - 1] = JSON.parse(
-              JSON.stringify(curBlock)
-            );
-
+            finalAscii.blocks[asciiY][asciiX - 1] = { ...curBlock };
             break;
         } // End Switch
-
-        // break;
       } // End loop charPos
 
-      this.$store.commit("newAsciibirdMeta", this.finalAscii);
-      this.asciibirdMeta = this.$store.getters.asciibirdMeta;
+      // Store the ASCII
+      this.$store.commit('newAsciibirdMeta', finalAscii);
 
-      let keys = this.asciibirdMeta
+      // To show the ASCII after importing we get the last key
+      // from the asciiBirdMeta array
+      const keys = this.$store.getters.asciibirdMeta
         .map((v, k) => k)
         .filter((i) => i !== undefined);
 
+      // Set the current tab and pop the array for the last value
       this.currentTab = keys.pop();
-      this.$store.commit("changeTab", this.currentTab);
+      this.$store.commit('changeTab', this.currentTab);
+
+      // Update the browsers title to the ASCII filename
       document.title = `asciibird - ${this.$store.getters.currentAscii.title}`;
     },
     exportMirc() {
-      let currentAscii = this.$store.getters.currentAscii;
-      let output = [];
-      var curBlock = null;
-      var prevBlock = { bg: -1, fg: -1 };
+      const { currentAscii } = this.$store.getters;
+      const output = [];
+      let curBlock = null;
+      let prevBlock = { bg: -1, fg: -1 };
 
       for (let y = 0; y <= currentAscii.blocks.length - 1; y++) {
         for (let x = 0; x <= currentAscii.blocks[y].length - 1; x++) {
           curBlock = currentAscii.blocks[y][x];
 
+          // If we have a difference between our previous block
+          // we'll put a colour codes and continue as normal
           if (curBlock.bg !== prevBlock.bg || curBlock.fg !== prevBlock.fg) {
             Object.assign(curBlock, currentAscii.blocks[y][x]);
-            const zeroPad = (num, places) => String(num).padStart(places, "0");
-            output.push(
-              `\u0003${zeroPad(curBlock.fg ?? 0, 2)},${zeroPad(
-                curBlock.bg ?? 1,
-                2
-              )}`
-            );
+            const zeroPad = (num, places) => String(num).padStart(places, '0');
+            output.push(`\u0003${zeroPad(curBlock.fg ?? 0, 2)},${zeroPad(curBlock.bg ?? 1, 2)}`);
           }
 
-          output.push(curBlock.char ?? " ");
+          // null .chars will end up as space
+          output.push(curBlock.char ?? ' ');
           prevBlock = currentAscii.blocks[y][x];
         }
 
+        // We can never have a -1 colour code so we'll always
+        // write one at the start of each line
         prevBlock = { bg: -1, fg: -1 };
-        // New line except for last line
+
+        // New line except for the very last line
         if (y < currentAscii.blocks.length - 1) {
-          output.push("\n");
+          output.push('\n');
         }
       }
 
       // Download to a txt file
       const downloadToFile = (content, filename, contentType) => {
-        const a = document.createElement("a");
+        const a = document.createElement('a');
         const file = new Blob([content], { type: contentType });
 
         a.href = URL.createObjectURL(file);
@@ -477,30 +451,26 @@ export default {
       };
 
       // Check if txt already exists and append it
-      var filename =
-        currentAscii.title.slice(currentAscii.title.length - 3) === "txt"
-          ? currentAscii.title
-          : `${currentAscii.title}.txt`;
-      downloadToFile(output.join(""), filename, "text/plain");
+      const filename = currentAscii.title.slice(currentAscii.title.length - 3) === 'txt' ? currentAscii.title : `${currentAscii.title}.txt`;
+      downloadToFile(output.join(''), filename, 'text/plain');
     },
     createClick() {
-      this.forms.createAscii.title = `New ASCII ${this.asciibirdMeta.length}`;
-      this.$modal.show("create-ascii-modal");
+      this.forms.createAscii.title = `New ASCII ${this.$store.getters.asciibirdMeta.length}`;
+      this.$modal.show('create-ascii-modal');
     },
     changeTab(key, value) {
       // Update the tab index in vuex store
       this.currentTab = key;
-      this.refresh = !this.refresh;
-      this.$store.commit("changeTab", key);
+      this.$store.commit('changeTab', key);
     },
     clearCache() {
       localStorage.clear();
-      window.location.href = "/";
+      window.location.href = '/';
     },
     createNewASCII() {
       const payload = {
         title: this.forms.createAscii.title,
-        key: this.asciibirdMeta.length,
+        key: this.$store.getters.asciibirdMeta.length,
         width: this.forms.createAscii.width,
         height: this.forms.createAscii.height,
         blockWidth: 8,
@@ -519,14 +489,13 @@ export default {
         }
       }
 
-      this.$store.commit("newAsciibirdMeta", payload);
-      this.$modal.hide("create-ascii-modal");
-      this.refresh = !this.refresh;
+      this.$store.commit('newAsciibirdMeta', payload);
+      this.$modal.hide('create-ascii-modal');
     },
     closeNewASCII({ params, cancel }) {
       this.forms.createAscii.width = 5;
       this.forms.createAscii.height = 5;
-      this.forms.createAscii.title = "New ASCII";
+      this.forms.createAscii.title = 'New ASCII';
     },
     create2DArray(rows) {
       const arr = [];

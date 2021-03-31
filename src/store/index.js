@@ -8,7 +8,13 @@ const vuexLocal = new VuexPersistence({
 });
 
 export default new Vuex.Store({
+
   state: {
+    // The various options of ASCIIBIRD will eventually
+    // end up in its own modal I guess
+    options: {
+      canvasRedrawSpeed: 2,
+    },
 
     // 0  => 'white',
     // 1  => 'black',
@@ -53,40 +59,40 @@ export default new Vuex.Store({
     // asciibirdMeta holds all of the ASCII information for all the tabs
     asciibirdMeta: [],
     toolbarIcons: [{
-        name: 'default',
-        icon: 'mouse-pointer',
-        fa: 'fas',
-      },
-      {
-        name: 'select',
-        icon: 'square',
-        fa: 'far',
-      },
-      {
-        name: 'text',
-        icon: 'font',
-        fa: 'fas',
-      },
-      {
-        name: 'fill',
-        icon: 'fill-drip',
-        fa: 'fas',
-      },
-      {
-        name: 'brush',
-        icon: 'paint-brush',
-        fa: 'fas',
-      },
-      {
-        name: 'dropper',
-        icon: 'eye-dropper',
-        fa: 'fas',
-      },
-      {
-        name: 'eraser',
-        icon: 'eraser',
-        fa: 'fas',
-      },
+      name: 'default',
+      icon: 'mouse-pointer',
+      fa: 'fas',
+    },
+    {
+      name: 'select',
+      icon: 'square',
+      fa: 'far',
+    },
+    {
+      name: 'text',
+      icon: 'font',
+      fa: 'fas',
+    },
+    {
+      name: 'fill',
+      icon: 'fill-drip',
+      fa: 'fas',
+    },
+    {
+      name: 'brush',
+      icon: 'paint-brush',
+      fa: 'fas',
+    },
+    {
+      name: 'dropper',
+      icon: 'eye-dropper',
+      fa: 'fas',
+    },
+    {
+      name: 'eraser',
+      icon: 'eraser',
+      fa: 'fas',
+    },
     ],
     toolbarState: {
       currentColourFg: 0,
@@ -111,36 +117,36 @@ export default new Vuex.Store({
     },
     changeColourFg(state, payload) {
       state.toolbarState.currentColourFg = payload;
-      state.toolbarState.isUpdating = false
-      state.toolbarState.isChoosingFg = false
+      state.toolbarState.isUpdating = false;
+      state.toolbarState.isChoosingFg = false;
     },
     changeColourBg(state, payload) {
       state.toolbarState.currentColourBg = payload;
-      state.toolbarState.isUpdating = false
-      state.toolbarState.isChoosingBg = false
+      state.toolbarState.isUpdating = false;
+      state.toolbarState.isChoosingBg = false;
     },
     changeChar(state, payload) {
       state.toolbarState.selectedChar = payload;
-      state.toolbarState.isUpdating = false
-      state.toolbarState.isChoosingChar = false
+      state.toolbarState.isUpdating = false;
+      state.toolbarState.isChoosingChar = false;
     },
     changeTool(state, payload) {
       state.toolbarState.currentTool = payload;
     },
     changeIsUpdatingFg(state, payload) {
-      state.toolbarState.isChoosingFg = payload
+      state.toolbarState.isChoosingFg = payload;
     },
     changeIsUpdatingBg(state, payload) {
-      state.toolbarState.isChoosingBg = payload
+      state.toolbarState.isChoosingBg = payload;
     },
     changeIsUpdatingChar(state, payload) {
-      state.toolbarState.isChoosingChar = payload
+      state.toolbarState.isChoosingChar = payload;
     },
     changeTargetingFg(state, payload) {
-      state.toolbarState.targetingFg = payload
+      state.toolbarState.targetingFg = payload;
     },
     changeTargetingBg(state, payload) {
-      state.toolbarState.targetingBg = payload
+      state.toolbarState.targetingBg = payload;
     },
     changeTargetingChar(state, payload) {
       state.toolbarState.targetingChar = payload;
@@ -149,26 +155,26 @@ export default new Vuex.Store({
       state.asciibirdMeta.push(payload);
     },
     updateToolBarState(state, payload) {
-      state.toolbarState = payload
-    }
+      state.toolbarState = payload;
+    },
   },
   getters: {
-    getToolbarIcons: state => state.toolbarIcons,
-    getToolbarState: state => state.toolbarState,
-    getCurrentTool: state => state.toolbarState.currentTool,
-    getTargetingBg: state => state.toolbarState.targetingBg,
-    getTargetingFg: state => state.toolbarState.targetingFg,
-    getTargetingChar: state => state.toolbarState.targetingChar,
-    getFgColour: state => state.toolbarState.currentColourFg,
-    getBgColour: state => state.toolbarState.currentColourBg,
-    getSelectedChar: state => state.toolbarState.selectedChar,
-    currentTab: state => state.tab,
-    charCodes: state => state.charCodes,
-    mircColours: state => state.mircColours,
-    currentAscii: state => state.asciibirdMeta[state.tab] ?? false,
-    asciibirdMeta: state => state.asciibirdMeta,
-    nextTabValue: state => state.asciibirdMeta.length,
-    blockSizeMultiplier: state => state.blockSizeMultiplier,
+    getToolbarIcons: (state) => state.toolbarIcons,
+    getToolbarState: (state) => state.toolbarState,
+    getCurrentTool: (state) => state.toolbarState.currentTool,
+    getTargetingBg: (state) => state.toolbarState.targetingBg,
+    getTargetingFg: (state) => state.toolbarState.targetingFg,
+    getTargetingChar: (state) => state.toolbarState.targetingChar,
+    getFgColour: (state) => state.toolbarState.currentColourFg,
+    getBgColour: (state) => state.toolbarState.currentColourBg,
+    getSelectedChar: (state) => state.toolbarState.selectedChar,
+    currentTab: (state) => state.tab,
+    charCodes: (state) => state.charCodes,
+    mircColours: (state) => state.mircColours,
+    currentAscii: (state) => state.asciibirdMeta[state.tab] ?? false,
+    asciibirdMeta: (state) => state.asciibirdMeta,
+    nextTabValue: (state) => state.asciibirdMeta.length,
+    blockSizeMultiplier: (state) => state.blockSizeMultiplier,
   },
   actions: {},
   modules: {},
