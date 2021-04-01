@@ -1,17 +1,17 @@
 <template>
   <div>
     <vue-draggable-resizable
-      @dragging="onDrag"
-      style="z-index: 5; min-height: 300px"
+      @dragstop="onDragStop"
+      style="z-index: 5;"
       :min-width="200"
       :max-width="500"
-      :min-height="100"
-      :max-height="200"
-      :x="0"
-      :y="350"
+      :min-height="200"
+      :max-height="500"
+      :x="$store.getters.getDebugPanelState.x"
+      :y="$store.getters.getDebugPanelState.y"
     >
-      <div style="height: 100%; min-height: 300px; max-height: 400px">
-        <t-card header="Debug Info" style="height: 100%;">
+      
+        <t-card style="height: 100%;">
           <p v-html="`Tool: ${$store.getters.getCurrentTool}`"></p>
           <p v-html="`FgColour: ${$store.getters.getFgColour}`"></p>
           <p v-html="`BgColor: ${$store.getters.getBgColour}`"></p>
@@ -20,7 +20,7 @@
           <p v-html="`canvasX: ${canvasX}`"></p>
           <p v-html="`canvasY: ${canvasY}`"></p>
         </t-card>
-      </div>
+      
     </vue-draggable-resizable>
   </div>
 </template>
@@ -36,6 +36,7 @@ export default {
       x: 100,
       y: 100,
     },
+    throttle: true,
   }),
   computed: {},
   watch: {},
@@ -46,9 +47,11 @@ export default {
       this.floating.width = width;
       this.floating.height = height;
     },
-    onDrag(x, y) {
+    onDragStop(x, y) {
       this.floating.x = x;
       this.floating.y = y;
+
+      this.$store.commit("changeDebugPanelState", {x: x, y: y})
     },
   },
 };

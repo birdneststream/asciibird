@@ -2,7 +2,7 @@
   <div>
     <div id="canvas-area">
       <vue-draggable-resizable
-        style="z-index: 5; left: 220px"
+        style="z-index: 5;"
         :grid="[
           $store.getters.currentAscii.blockHeight,
           $store.getters.currentAscii.blockWidth,
@@ -11,7 +11,9 @@
         :h="canvas.height + $store.getters.currentAscii.blockHeight"
         :draggable="$store.getters.getCurrentTool === 'default'"
         @resizing="onCanvasResize"
-        @dragging="onCanvasDrag"
+        @dragstop="onCavasDragStop"
+        :x="$store.getters.currentAscii.x"
+        :y="$store.getters.currentAscii.y"
       >
         <canvas
           ref="canvastools"
@@ -80,6 +82,7 @@ export default {
     y: 0, // Ascii X and Y
     redraw: true, // Used to limit canvas redraw
     canTool: false,
+    throttle: true,
   }),
   computed: {
     canvasStyle() {
@@ -176,10 +179,14 @@ export default {
     onCanvasResize(left, top, width, height) {
       this.canvas.width = width;
       this.canvas.height = height;
+
+      // Restructure blocks code here
+
       this.delayRedrawCanvas();
     },
-    onCanvasDrag(left, top) {
+    onCavasDragStop(x, y) {
       // Update left and top in panel
+      this.$store.commit("changeAsciiCanvasState", {x: x, y: y})
     },
 
     // Mouse Up, Down and Move

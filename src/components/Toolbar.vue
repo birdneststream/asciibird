@@ -1,7 +1,7 @@
 <template>
   <div>
     <vue-draggable-resizable
-      @dragging="onDrag"
+      @dragstop="onDragStop"
       :grid="[
         $store.getters.currentAscii.blockHeight,
         $store.getters.currentAscii.blockWidth,
@@ -11,8 +11,8 @@
       :max-width="500"
       :min-height="500"
       :max-height="700"
-      :x="0"
-      :y="50"
+      :x="$store.getters.getToolbarState.x"
+      :y="$store.getters.getToolbarState.y"
     >
       <t-card header="Tools and Stuff" style="height: 100%">
         <label class="flex ml-1">
@@ -92,9 +92,11 @@ export default {
       this.floating.width = width;
       this.floating.height = height;
     },
-    onDrag(x, y) {
+    onDragStop(x, y) {
       this.floating.x = x;
       this.floating.y = y;
+
+      this.$store.commit("changeToolBarState", {x: x, y: y})
     },
   },
 };

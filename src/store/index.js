@@ -14,6 +14,9 @@ export default new Vuex.Store({
     // end up in its own modal I guess
     options: {
       canvasRedrawSpeed: 2,
+      draggableUpdateSpeed: 200, // How long between updating the vuex store when dragging any of the panels
+      defaultBg: 1,
+      defaultFg: 0,
     },
 
     // 0  => 'white',
@@ -108,6 +111,12 @@ export default new Vuex.Store({
       targetingFg: true,
       targetingBg: true,
       targetingChar: true,
+      x: 50, 
+      y: 100,
+    },
+    debugPanelState: {
+      x: 50, 
+      y: 100,
     },
     blockSizeMultiplier: 1,
   },
@@ -117,6 +126,17 @@ export default new Vuex.Store({
     },
     changeTab(state, payload) {
       state.tab = payload;
+    },
+    changeDebugPanelState(state, payload) {
+      state.debugPanelState = payload
+    },
+    changeToolBarState(state, payload) {
+      state.toolbarState.x = payload.x
+      state.toolbarState.y = payload.y
+    },
+    changeAsciiCanvasState(state, payload) {
+      state.asciibirdMeta[state.tab].x = payload.x
+      state.asciibirdMeta[state.tab].y = payload.y
     },
     changeColourFg(state, payload) {
       state.toolbarState.currentColourFg = payload;
@@ -163,8 +183,10 @@ export default new Vuex.Store({
   },
   getters: {
     getState: (state) => state,
+    getOptions: (state) => state.options,
     getToolbarIcons: (state) => state.toolbarIcons,
     getToolbarState: (state) => state.toolbarState,
+    getDebugPanelState: (state) => state.debugPanelState,
     getCurrentTool: (state) => state.toolbarState.currentTool,
     getTargetingBg: (state) => state.toolbarState.targetingBg,
     getTargetingFg: (state) => state.toolbarState.targetingFg,

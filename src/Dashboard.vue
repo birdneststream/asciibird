@@ -45,7 +45,7 @@
 
     <div>
       <t-button @click="createClick()" class="ml-1">New ASCII</t-button>
-      <t-button @click="clearCache()" v-if="this.$store.getters.asciibirdMeta.length" class="ml-1"
+      <t-button @click="clearCache()" class="ml-1"
         >Clear and Refresh</t-button
       >
       <t-button @click="startImport('mirc')" class="ml-1">Import mIRC</t-button>
@@ -106,7 +106,7 @@ import Editor from './views/Editor.vue';
 // import * as Anser from "anser";
 import CharPicker from './components/parts/CharPicker.vue';
 import ColourPicker from './components/parts/ColourPicker.vue';
-import pako from 'pako';
+// import pako from 'pako';
 
 export default {
   async created() {
@@ -160,11 +160,6 @@ export default {
           case 'mirc':
               this.mircAsciiImport(fileReader.result, filename);
             break;
-
-          // default:
-          //   this.importAsciibirdState(fileReader.result, filename)
-          //   console.log("Nah")
-          //   break;
         }
 
       });
@@ -284,6 +279,8 @@ export default {
         blockWidth: 8 * this.$store.getters.blockSizeMultiplier,
         blockHeight: 13 * this.$store.getters.blockSizeMultiplier,
         blocks: this.create2DArray(asciiImport.split('\n').length),
+        x: 50, // the dragable ascii canvas x
+        y: 100, // the dragable ascii canvas y
       };
 
       // Turn the entire ascii string into an array
@@ -435,16 +432,23 @@ export default {
       // let input;
 
       // try {
-      //   // Make a gzipped JSON of the asciibird app state
-      //   // const charData = strData.split('').map(function(x){return x.charCodeAt(0); });
+      //   // convert the incoming base64 -> binary
+      //   const strData = fileContents;
 
-      //   input = pako.inflate(fileContents, {level:"9"});
+      //   // split it into an array rather than a "string"
+      //   const charData = strData.split('').map(function(x){return x.charCodeAt(0); });
+
+      //   // var strData = String.fromCharCode.apply(null, pako.inflate(String.fromCharCode.apply(null, input).split("").map(function(x){return x.charCodeAt(0);})));
+      //   input = pako.inflate(charData, { to: 'string' });  
+        
       //   console.log(input);
       // } catch (err) {
       //   console.log(err);
       // }
 
-      console.log(JSON.parse(fileContents))
+      // console.log(fileContents)
+
+      // No gz for now unless can get the above working
       this.$store.commit("changeState", Object.assign({},JSON.parse(fileContents)));
     },
     exportAsciibirdState() {
@@ -453,10 +457,20 @@ export default {
 
       try {
         // Make a gzipped JSON of the asciibird app state
-        // NOT working
+        // While making a gzip bellow works, had some trouble gunzipping in importAsciibirdState(fileContents, fileName)
         // output = pako.gzip(JSON.stringify(this.$store.getters.getState), {level:"9"});
         output = JSON.stringify(this.$store.getters.getState);
-        this.downloadToFile(output, 'asciibird.asb', 'application/gzip');
+
+        // Default timestamp for filename
+        let today = new Date();
+        let y = today.getFullYear();
+        let m = today.getMonth() + 1; // JavaScript months are 0-based.
+        let d = today.getDate();
+        let h = today.getHours();
+        let mi = today.getMinutes();
+        let s = today.getSeconds();
+
+        this.downloadToFile(output, `asciibird-${y}-${m}-${d}-${h}-${mi}-${s}.asb`, 'application/json');
       } catch (err) {
         console.log(err);
       }
@@ -476,7 +490,7 @@ export default {
           if (curBlock.bg !== prevBlock.bg || curBlock.fg !== prevBlock.fg) {
             Object.assign(curBlock, currentAscii.blocks[y][x]);
             const zeroPad = (num, places) => String(num).padStart(places, '0');
-            output.push(`\u0003${zeroPad(curBlock.fg ?? 0, 2)},${zeroPad(curBlock.bg ?? 1, 2)}`);
+            output.push(`\u0003${zeroPad(curBlock.fg ?? this.$store.getstate.options.defaultFg, 2)},${zeroPad(curBlock.bg ?? this.$store.getstate.options.defaultBg, 2)}`);
           }
 
           // null .chars will end up as space
@@ -534,6 +548,8 @@ export default {
         height: this.forms.createAscii.height,
         blockWidth: 8,
         blockHeight: 13,
+        x: 50, // the dragable ascii canvas x
+        y: 100, // the dragable ascii canvas y
         blocks: this.create2DArray(this.forms.createAscii.height),
       };
 
