@@ -155,7 +155,6 @@ export default {
 
           case 'asb':
             this.importAsciibirdState(fileReader.result, filename)
-            console.log("_importType", _importType)
             break;
 
           case 'mirc':
@@ -433,19 +432,20 @@ export default {
     },
     importAsciibirdState(fileContents, fileName) {
       // Import from a gzipped json file
-      let input;
+      // let input;
 
-      try {
-        // Make a gzipped JSON of the asciibird app state
-        // const charData = strData.split('').map(function(x){return x.charCodeAt(0); });
+      // try {
+      //   // Make a gzipped JSON of the asciibird app state
+      //   // const charData = strData.split('').map(function(x){return x.charCodeAt(0); });
 
-        input = pako.inflate(fileContents, {level:"9"});
-        console.log(input);
-      } catch (err) {
-        console.log(err);
-      }
+      //   input = pako.inflate(fileContents, {level:"9"});
+      //   console.log(input);
+      // } catch (err) {
+      //   console.log(err);
+      // }
 
-      // this.$store.commit("changeState", input)
+      console.log(JSON.parse(fileContents))
+      this.$store.commit("changeState", Object.assign({},JSON.parse(fileContents)));
     },
     exportAsciibirdState() {
       // Download to a gzipped json file
@@ -454,13 +454,12 @@ export default {
       try {
         // Make a gzipped JSON of the asciibird app state
         // NOT working
-        output = pako.gzip(JSON.stringify(this.$store.getters.getState), {level:"9"});
-        console.log(output);
+        // output = pako.gzip(JSON.stringify(this.$store.getters.getState), {level:"9"});
+        output = JSON.stringify(this.$store.getters.getState);
+        this.downloadToFile(output, 'asciibird.asb', 'application/gzip');
       } catch (err) {
         console.log(err);
       }
-
-      this.downloadToFile(output, 'asciibird.asb', 'application/gzip');
     },
     exportMirc() {
       const { currentAscii } = this.$store.getters;

@@ -113,7 +113,7 @@ export default new Vuex.Store({
   },
   mutations: {
     changeState(state, payload) {
-      state = payload;
+      Object.assign(state,payload)
     },
     changeTab(state, payload) {
       state.tab = payload;
