@@ -52,6 +52,12 @@
       <t-button @click="exportMirc()" class="ml-1" v-if="this.$store.getters.asciibirdMeta.length"
         >Export ASCII to mIRC</t-button
       >
+      <t-button @click="exportAsciibirdState()" class="ml-1" v-if="this.$store.getters.asciibirdMeta.length"
+        >Save Asciibird State</t-button
+      >
+      <t-button @click="startImport('asb')" class="ml-1"
+        >Load Asciibird State</t-button
+      >
       <!-- <t-button @click="startImport('ansi')" class="ml-1">Import ANSI</t-button> -->
       <input
         type="file"
@@ -100,6 +106,7 @@ import Editor from './views/Editor.vue';
 // import * as Anser from "anser";
 import CharPicker from './components/parts/CharPicker.vue';
 import ColourPicker from './components/parts/ColourPicker.vue';
+import pako from 'pako';
 
 export default {
   async created() {
@@ -129,6 +136,7 @@ export default {
     canvasY: null,
     dashboardX: null,
     dashboardY: null,
+    importType: null,
   }),
   methods: {
     updateCoords(value) {
@@ -140,18 +148,36 @@ export default {
       const filename = files[0].name;
       const fileReader = new FileReader();
 
+      var _importType = this.importType
+      fileReader.addEventListener('load', () => {
+        
+        switch(_importType) {
+
+          case 'asb':
+            this.importAsciibirdState(fileReader.result, filename)
+            console.log("_importType", _importType)
+            break;
+
+          case 'mirc':
+              this.mircAsciiImport(fileReader.result, filename);
+            break;
+
+          // default:
+          //   this.importAsciibirdState(fileReader.result, filename)
+          //   console.log("Nah")
+          //   break;
+        }
+
+      });
+
       // This will fire the file reader 'load' event
       const asciiImport = fileReader.readAsText(files[0]);
-
-      fileReader.addEventListener('load', () => {
-        // We'll have to add a switch statement
-        // here to handle different file types
-        this.mircAsciiImport(fileReader.result, filename);
-      });
     },
-    startImport() {
+    startImport(type) {
       // For ANSI we'll need to add back in the
       // type cariable here
+      this.importType = type
+      console.log(this.importType)
       this.$refs.asciiInput.click();
     },
     // We can maybe try something different to import ANSI
@@ -405,6 +431,37 @@ export default {
       // Update the browsers title to the ASCII filename
       document.title = `asciibird - ${this.$store.getters.currentAscii.title}`;
     },
+    importAsciibirdState(fileContents, fileName) {
+      // Import from a gzipped json file
+      let input;
+
+      try {
+        // Make a gzipped JSON of the asciibird app state
+        // const charData = strData.split('').map(function(x){return x.charCodeAt(0); });
+
+        input = pako.inflate(fileContents, {level:"9"});
+        console.log(input);
+      } catch (err) {
+        console.log(err);
+      }
+
+      // this.$store.commit("changeState", input)
+    },
+    exportAsciibirdState() {
+      // Download to a gzipped json file
+      let output;
+
+      try {
+        // Make a gzipped JSON of the asciibird app state
+        // NOT working
+        output = pako.gzip(JSON.stringify(this.$store.getters.getState), {level:"9"});
+        console.log(output);
+      } catch (err) {
+        console.log(err);
+      }
+
+      this.downloadToFile(output, 'asciibird.asb', 'application/gzip');
+    },
     exportMirc() {
       const { currentAscii } = this.$store.getters;
       const output = [];
@@ -439,6 +496,11 @@ export default {
       }
 
       // Download to a txt file
+      // Check if txt already exists and append it
+      const filename = currentAscii.title.slice(currentAscii.title.length - 3) === 'txt' ? currentAscii.title : `${currentAscii.title}.txt`;
+      this.downloadToFile(output.join(''), filename, 'text/plain');
+    },
+    downloadToFile(content, filename, contentType) {
       const downloadToFile = (content, filename, contentType) => {
         const a = document.createElement('a');
         const file = new Blob([content], { type: contentType });
@@ -449,10 +511,8 @@ export default {
 
         URL.revokeObjectURL(a.href);
       };
-
-      // Check if txt already exists and append it
-      const filename = currentAscii.title.slice(currentAscii.title.length - 3) === 'txt' ? currentAscii.title : `${currentAscii.title}.txt`;
-      downloadToFile(output.join(''), filename, 'text/plain');
+      
+      return downloadToFile(content, filename, contentType)
     },
     createClick() {
       this.forms.createAscii.title = `New ASCII ${this.$store.getters.asciibirdMeta.length}`;

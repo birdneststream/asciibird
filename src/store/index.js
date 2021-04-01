@@ -112,6 +112,9 @@ export default new Vuex.Store({
     blockSizeMultiplier: 1,
   },
   mutations: {
+    changeState(state, payload) {
+      state = payload;
+    },
     changeTab(state, payload) {
       state.tab = payload;
     },
@@ -159,6 +162,7 @@ export default new Vuex.Store({
     },
   },
   getters: {
+    getState: (state) => state,
     getToolbarIcons: (state) => state.toolbarIcons,
     getToolbarState: (state) => state.toolbarState,
     getCurrentTool: (state) => state.toolbarState.currentTool,

@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import VueTailwind from 'vue-tailwind';
 import VueDraggableResizable from 'vue-draggable-resizable';
+import Pako from 'pako';
 
 import {
   TInput,
@@ -172,5 +173,6 @@ Vue.component('vue-draggable-resizable', VueDraggableResizable);
 
 new Vue({
   store,
+  Pako,
   render: (h) => h(Dashboard),
 }).$mount('#app');
