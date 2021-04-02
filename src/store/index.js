@@ -187,6 +187,9 @@ export default new Vuex.Store({
     updateToolBarState(state, payload) {
       state.toolbarState = payload;
     },
+    updateAsciiBlocks(state, payload) {
+      Object.assign(state.asciibirdMeta[state.tab].blocks, payload);
+    },
   },
   getters: {
     getState: (state) => state,
@@ -205,6 +208,7 @@ export default new Vuex.Store({
     charCodes: (state) => state.charCodes,
     mircColours: (state) => state.mircColours,
     currentAscii: (state) => state.asciibirdMeta[state.tab] ?? false,
+    currentAsciiBlocks: (state) => state.asciibirdMeta[state.tab].blocks ?? false,
     asciibirdMeta: (state) => state.asciibirdMeta,
     nextTabValue: (state) => state.asciibirdMeta.length,
     blockSizeMultiplier: (state) => state.blockSizeMultiplier,
