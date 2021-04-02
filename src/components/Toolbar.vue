@@ -57,11 +57,15 @@
           type="button"
           v-for="(value, keyToolbar) in $store.getters.getToolbarIcons"
           :key="keyToolbar + 50"
-          :class="`border-gray-200 max-h-7 max-w-5 w-7  ${($store.getters.getCurrentTool == value ? 'border-gray-900' : 'border-gray-200')}`"
-          @click="$store.commit('changeTool', value.name)"
+          :class="`max-h-7 max-w-5 w-7  ${($store.getters.getCurrentTool == keyToolbar ? 'border-gray-900' : 'border-gray-200')}`"
+          @click="$store.commit('changeTool', keyToolbar)"
         >
           <font-awesome-icon :icon="[value.fa, value.icon]" />
         </t-button>
+
+
+
+
       </t-card>
     </vue-draggable-resizable>
   </div>

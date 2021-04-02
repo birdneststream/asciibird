@@ -107,7 +107,7 @@ export default new Vuex.Store({
       selectedBg: 1,
       selectedChar: 'A',
       isUpdating: false,
-      currentTool: 'default',
+      currentTool: 0,
       targetingFg: true,
       targetingBg: true,
       targetingChar: true,

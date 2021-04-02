@@ -12,7 +12,7 @@
     >
       
         <t-card style="height: 100%;">
-          <p v-html="`Tool: ${$store.getters.getCurrentTool}`"></p>
+          <p v-html="`Tool: ${getToolName}`"></p>
           <p v-html="`FgColour: ${$store.getters.getFgColour}`"></p>
           <p v-html="`BgColor: ${$store.getters.getBgColour}`"></p>
           <p v-html="`Char: ${$store.getters.getToolbarState.selectedChar}`"></p>
@@ -38,7 +38,11 @@ export default {
     },
     throttle: true,
   }),
-  computed: {},
+  computed: {
+    getToolName() {
+      return this.$store.getters.getToolbarIcons[this.$store.getters.getCurrentTool] ? this.$store.getters.getToolbarIcons[this.$store.getters.getCurrentTool].name : 'none'
+    }
+  },
   watch: {},
   methods: {
     onResize(x, y, width, height) {

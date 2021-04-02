@@ -9,13 +9,13 @@
         ]"
         :w="canvas.width + $store.getters.currentAscii.blockWidth"
         :h="canvas.height + $store.getters.currentAscii.blockHeight"
-        :draggable="$store.getters.getCurrentTool === 'default'"
+        :draggable="$store.getters.getCurrentTool === 0"
         @resizing="onCanvasResize"
         @dragstop="onCavasDragStop"
         :x="$store.getters.currentAscii.x"
         :y="$store.getters.currentAscii.y"
       >
-        <canvas
+        <!-- <canvas
           ref="canvastools"
           id="canvastools"
           class="canvas"
@@ -24,7 +24,7 @@
           @mousemove="canvasMouseMove"
           @mousedown="canvasMouseDown"
           @mouseup="canvasMouseUp"
-        ></canvas>
+        ></canvas> -->
 
         <canvas
           ref="canvas"
@@ -68,7 +68,7 @@ export default {
       this.canvas.height = this.$store.getters.currentAscii.height
         * this.$store.getters.currentAscii.blockHeight;
       this.delayRedrawCanvas();
-      this.$store.commit('changeTool', 'default');
+      this.$store.commit('changeTool', 0);
     }
   },
   created() {},
@@ -191,7 +191,7 @@ export default {
 
     // Mouse Up, Down and Move
     canvasMouseUp() {
-      switch (this.$store.getters.getCurrentTool) {
+      switch (this.$store.getters.getToolbarIcons[this.$store.getters.getCurrentTool].name) {
         case 'brush':
           this.canTool = false;
           break;
@@ -209,15 +209,15 @@ export default {
       this.delayRedrawCanvas();
     },
     canvasMouseDown() {
-      if (this.$store.getters.currentAscii.blocks[this.y] && this.$store.getters.currentAscii.blocks[this.y][this.x]) {
+      if (this.$store.getters.currentAscii.blocks[this.y] && this.$store.getters.currentAscii.blocks[this.y][this.x] && this.$store.getters.getToolbarIcons[this.$store.getters.getCurrentTool]) {
         const targetBlock = this.$store.getters.currentAscii.blocks[this.y][this.x];
 
-        switch (this.$store.getters.getCurrentTool) {
+        switch (this.$store.getters.getToolbarIcons[this.$store.getters.getCurrentTool].name) {
           case 'default':
             break;
 
           case 'fill':
-            this.fillTool(targetBlock);
+            // this.fillTool(targetBlock);
             break;
 
           case 'brush':
@@ -229,21 +229,19 @@ export default {
             break;
 
           case 'dropper':
-            const curBlock = this.$store.getters.currentAscii.blocks[this.y][this.x];
-
             if (this.$store.getters.getTargetingFg) {
-              this.$store.commit('changeColourFg', curBlock.fg);
+              this.$store.commit('changeColourFg', targetBlock.fg);
             }
 
             if (this.$store.getters.getTargetingBg) {
-              this.$store.commit('changeColourBg', curBlock.bg);
+              this.$store.commit('changeColourBg', targetBlock.bg);
             }
 
             if (this.$store.getters.getTargetingChar) {
-              this.$store.commit('changeChar', curBlock.char);
+              this.$store.commit('changeChar', targetBlock.char);
             }
 
-            this.$store.commit('changeTool', this.$store.getters.getCurrentTool);
+            this.$store.commit('changeTool', 0);
             break;
         }
       }
@@ -268,7 +266,7 @@ export default {
         this.$store.getters.currentAscii.blocks[this.y]
         && this.$store.getters.currentAscii.blocks[this.y][this.x]
       ) {
-        switch (this.$store.getters.getCurrentTool) {
+        switch (this.$store.getters.getToolbarIcons[this.$store.getters.getCurrentTool].name) {
           case 'brush':
             if (this.canTool) {
               if (this.$store.getters.getTargetingFg) {
@@ -323,7 +321,7 @@ export default {
     },
 
     // TOOLS
-    fillTool( x = null, y = null, originalBg = null) {
+    fillTool( x = this.x, y = this.y, originalBg = blocks[this.y][this.x].bg, blockArray = []) {
         // Cycle through possible blocks top, left, bellow and right
         let blocks = this.$store.getters.currentAscii.blocks
         
@@ -341,16 +339,12 @@ export default {
 
         let curBlock = this.$store.getters.currentAscii.blocks[y][x]
         
-
-
-
         // Top
         if (blocks[y-1] &&
             blocks[y-1][x] &&
             blocks[y-1][x].bg === originalBg) {
 
-            // let topBlock = Object.assign({},blocks[y-1][x])
-            console.log("topBlock", topBlock);
+            // console.log("topBlock", topBlock);
 
             curBlock.bg = this.$store.getters.getBgColour;
 
@@ -363,8 +357,7 @@ export default {
             blocks[y][x+1] &&
             blocks[y][x+1].bg === originalBg) {
 
-            // let leftBlock = Object.assign({},blocks[y][x+1])
-            console.log("leftBlock", leftBlock);
+            // console.log("leftBlock", leftBlock);
 
             curBlock.bg = this.$store.getters.getBgColour;
 
@@ -377,8 +370,7 @@ export default {
             blocks[y+1][x] &&
             blocks[y+1][x].bg === originalBg) {
 
-            // let bellowBlock = Object.assign({},blocks[y+1][x])
-            console.log("bellowBlock", bellowBlock);
+            // console.log("bellowBlock", bellowBlock);
 
             curBlock.bg = this.$store.getters.getBgColour;
 
@@ -390,11 +382,7 @@ export default {
         if (blocks[y] &&
             blocks[y][x-1] &&
             blocks[y][x-1].bg === originalBg) {
-
-            // let rightBlock = Object.assign({},blocks[y][x-1])
-            console.log("rightBlock", rightBlock);
-
-            curBlock.bg = this.$store.getters.getBgColour;
+            
 
             this.fillTool( x-1, y, originalBg)
             

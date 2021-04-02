@@ -95,6 +95,8 @@
           $store.getters.getToolbarState.isChoosingBg
         "
       />
+
+      <!-- <AsciiCursor :mousex="dashboardX" :mousey="dashboardY" :z="500" /> -->
     </div>
   </div>
 </template>
@@ -106,6 +108,7 @@ import Editor from './views/Editor.vue';
 // import * as Anser from "anser";
 import CharPicker from './components/parts/CharPicker.vue';
 import ColourPicker from './components/parts/ColourPicker.vue';
+import AsciiCursor from './components/parts/AsciiCursor.vue';
 // import pako from 'pako';
 
 export default {
@@ -120,7 +123,7 @@ export default {
     }
   },
   components: {
-    Toolbar, DebugPanel, Editor, CharPicker, ColourPicker,
+    Toolbar, DebugPanel, Editor, CharPicker, ColourPicker, AsciiCursor
   },
   name: 'Dashboard',
   data: () => ({
@@ -134,8 +137,8 @@ export default {
     currentTab: 1,
     canvasX: null,
     canvasY: null,
-    dashboardX: null,
-    dashboardY: null,
+    dashboardX: 0,
+    dashboardY: 0,
     importType: null,
   }),
   methods: {
@@ -581,6 +584,22 @@ export default {
 
       return arr;
     },
+    captureMouse(event) {
+        // clientX/Y gives the coordinates relative to the viewport in CSS pixels.
+        // console.log("viewport", event.clientX);
+        // console.log("viewport", event.clientY);
+
+        // // pageX/Y gives the coordinates relative to the <html> element in CSS pixels.
+        // console.log("element", event.pageX);
+        // console.log("element", event.pageY);
+
+        this.dashboardX = event.pageX
+        this.dashboardY = event.pageY
+
+        // // screenX/Y gives the coordinates relative to the screen in device pixels.
+        // console.log("screen", event.screenX);
+        // console.log("screen", event.screenY);
+    }
   },
 };
 </script>
