@@ -1,5 +1,7 @@
 <template>
   <div id="app">
+    
+
     <t-modal
       name="create-ascii-modal"
       header="Create new ASCII"
@@ -95,11 +97,17 @@
           $store.getters.getToolbarState.isChoosingBg
         "
       />
-
-      <!-- <AsciiCursor :mousex="dashboardX" :mousey="dashboardY" :z="500" /> -->
+      
+      
     </div>
   </div>
 </template>
+
+<style>
+html { 
+  cursor: url('assets/mouse-pointer-solid.svg'), auto;
+}
+</style>
 
 <script>
 import Toolbar from './components/Toolbar.vue';
@@ -108,7 +116,7 @@ import Editor from './views/Editor.vue';
 // import * as Anser from "anser";
 import CharPicker from './components/parts/CharPicker.vue';
 import ColourPicker from './components/parts/ColourPicker.vue';
-import AsciiCursor from './components/parts/AsciiCursor.vue';
+// import AsciiCursor from './components/parts/AsciiCursor.vue';
 // import pako from 'pako';
 
 export default {
@@ -121,9 +129,12 @@ export default {
       this.mircAsciiImport(asciiData, asciiUrl);
       window.location.href = '/';
     }
+
+    // console.log(this.currentTool.svgPath)
+    // document.getElementsByTagName("body")[0].style.setProperty('cursor', "url('assets/fill-drip-solid.svg'), auto")
   },
   components: {
-    Toolbar, DebugPanel, Editor, CharPicker, ColourPicker, AsciiCursor
+    Toolbar, DebugPanel, Editor, CharPicker, ColourPicker
   },
   name: 'Dashboard',
   data: () => ({
@@ -141,6 +152,14 @@ export default {
     dashboardY: 0,
     importType: null,
   }),
+  computed: {
+      currentTool() {
+          return this.$store.getters.getToolbarIcons[this.$store.getters.getCurrentTool] ?? null
+      },
+      icon() {
+          return [this.currentTool.fa ?? 'fas', this.currentTool.icon ?? 'mouse-pointer']
+      },
+  },
   methods: {
     updateCoords(value) {
       this.canvasX = value.x;

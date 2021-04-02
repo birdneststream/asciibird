@@ -217,7 +217,7 @@ export default {
             break;
 
           case 'fill':
-            // this.fillTool(targetBlock);
+            this.fillTool();
             break;
 
           case 'brush':
@@ -266,41 +266,40 @@ export default {
         this.$store.getters.currentAscii.blocks[this.y]
         && this.$store.getters.currentAscii.blocks[this.y][this.x]
       ) {
+        const targetBlock = this.$store.getters.currentAscii.blocks[this.y][this.x];
+
         switch (this.$store.getters.getToolbarIcons[this.$store.getters.getCurrentTool].name) {
           case 'brush':
             if (this.canTool) {
               if (this.$store.getters.getTargetingFg) {
-                this.$store.getters.currentAscii.blocks[this.y][this.x].fg = this.$store.getters.getFgColour;
+                targetBlock.fg = this.$store.getters.getFgColour;
               }
 
               if (this.$store.getters.getTargetingBg) {
-                this.$store.getters.currentAscii.blocks[this.y][this.x].bg = this.$store.getters.getBgColour;
+                targetBlock.bg = this.$store.getters.getBgColour;
               }
 
               if (this.$store.getters.getTargetingChar) {
-                this.$store.getters.currentAscii.blocks[this.y][this.x].char = this.$store.getters.getSelectedChar;
+                targetBlock.char = this.$store.getters.getSelectedChar;
               }
             }
             break;
 
           case 'eraser':
             if (this.canTool) {
-              if (this.$store.getters.getTargetingFg) {
-                this.$store.getters.currentAscii.blocks[this.y][
-                  this.x
-                ].fg = null;
+              if (this.$store.getters.getTargetingFg)
+              {
+                targetBlock.fg = null;
               }
 
-              if (this.$store.getters.getTargetingBg) {
-                this.$store.getters.currentAscii.blocks[this.y][
-                  this.x
-                ].bg = null;
+              if (this.$store.getters.getTargetingBg)
+              {
+                targetBlock.bg = null;
               }
 
-              if (this.$store.getters.getTargetingChar) {
-                this.$store.getters.currentAscii.blocks[this.y][
-                  this.x
-                ].char = null;
+              if (this.$store.getters.getTargetingChar)
+              {
+                targetBlock.char = null;
               }
             }
             break;
@@ -321,71 +320,76 @@ export default {
     },
 
     // TOOLS
-    fillTool( x = this.x, y = this.y, originalBg = blocks[this.y][this.x].bg, blockArray = []) {
+    fillTool( x = null, y = null, originalBg = null, blockArray = []) {
         // Cycle through possible blocks top, left, bellow and right
         let blocks = this.$store.getters.currentAscii.blocks
         
-        if (!x) {
+        if (null === x) {
           x = this.x
         }
 
-        if (!y) {
+        if (null === y) {
           y = this.y
         }
 
-        if (!originalBg) {
-          originalBg = blocks[this.y][this.x].bg
+        let curBlock = blocks[y][x]
+        curBlock.x = x;
+        curBlock.y = y;
+
+        if (null === originalBg) {
+          originalBg = curBlock.bg
         }
 
-        let curBlock = this.$store.getters.currentAscii.blocks[y][x]
-        
         // Top
         if (blocks[y-1] &&
             blocks[y-1][x] &&
-            blocks[y-1][x].bg === originalBg) {
+            blocks[y-1][x].bg === originalBg &&
+            !blockArray.includes(curBlock)) {
 
-            // console.log("topBlock", topBlock);
+            blockArray.push(curBlock)
+            this.fillTool( x, y-1, originalBg, blockArray)
+            
+        } 
+        
+        if (blocks[y] &&
+            blocks[y][x+1] &&
+            blocks[y][x+1].bg === originalBg &&
+            !blockArray.includes(curBlock)) {
 
-            curBlock.bg = this.$store.getters.getBgColour;
+            blockArray.push(curBlock)
+            this.fillTool( x+1, y, originalBg, blockArray)
+            
+        } 
+        
+        if (blocks[y+1] &&
+            blocks[y+1][x] &&
+            blocks[y+1][x].bg === originalBg &&
+            !blockArray.includes(curBlock)) {
 
-            this.fillTool( x, y-1, originalBg)
+            blockArray.push(curBlock)
+            this.fillTool( x, y+1, originalBg, blockArray)
+            
+        } 
+        
+        if (blocks[y] &&
+            blocks[y][x-1] &&
+            blocks[y][x-1].bg === originalBg &&
+            !blockArray.includes(curBlock)) {
+
+
+            blockArray.push(curBlock)
+            this.fillTool( x-1, y, originalBg, blockArray)
             
         }
         
-        // Left
-        if (blocks[y] &&
-            blocks[y][x+1] &&
-            blocks[y][x+1].bg === originalBg) {
+        if (blockArray.length) {
+          for(let i = 0; i <= blockArray.length-1;i++) {
+            let targetBlock = this.$store.getters.currentAscii.blocks[blockArray[i].y][blockArray[i].x]
+            console.log(targetBlock)
+            targetBlock.bg = this.$store.getters.getBgColour;
+          }
 
-            // console.log("leftBlock", leftBlock);
-
-            curBlock.bg = this.$store.getters.getBgColour;
-
-            this.fillTool( x+1, y, originalBg)
-            
-        }
-
-        // Bellow
-        if (blocks[y+1] &&
-            blocks[y+1][x] &&
-            blocks[y+1][x].bg === originalBg) {
-
-            // console.log("bellowBlock", bellowBlock);
-
-            curBlock.bg = this.$store.getters.getBgColour;
-
-            this.fillTool( x, y+1, originalBg)
-            
-        }
-
-        // Right
-        if (blocks[y] &&
-            blocks[y][x-1] &&
-            blocks[y][x-1].bg === originalBg) {
-            
-
-            this.fillTool( x-1, y, originalBg)
-            
+          this.delayRedrawCanvas()
         }
     },
   },
