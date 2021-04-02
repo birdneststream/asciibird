@@ -323,12 +323,82 @@ export default {
     },
 
     // TOOLS
-    fillTool(block) {
-      if (this.$store.getters.getTargetingBg) {
-        const fillSameBg = block.bg;
-      }
+    fillTool( x = null, y = null, originalBg = null) {
+        // Cycle through possible blocks top, left, bellow and right
+        let blocks = this.$store.getters.currentAscii.blocks
+        
+        if (!x) {
+          x = this.x
+        }
 
-      console.log(block);
+        if (!y) {
+          y = this.y
+        }
+
+        if (!originalBg) {
+          originalBg = blocks[this.y][this.x].bg
+        }
+
+        let curBlock = this.$store.getters.currentAscii.blocks[y][x]
+        
+
+
+
+        // Top
+        if (blocks[y-1] &&
+            blocks[y-1][x] &&
+            blocks[y-1][x].bg === originalBg) {
+
+            // let topBlock = Object.assign({},blocks[y-1][x])
+            console.log("topBlock", topBlock);
+
+            curBlock.bg = this.$store.getters.getBgColour;
+
+            this.fillTool( x, y-1, originalBg)
+            
+        }
+        
+        // Left
+        if (blocks[y] &&
+            blocks[y][x+1] &&
+            blocks[y][x+1].bg === originalBg) {
+
+            // let leftBlock = Object.assign({},blocks[y][x+1])
+            console.log("leftBlock", leftBlock);
+
+            curBlock.bg = this.$store.getters.getBgColour;
+
+            this.fillTool( x+1, y, originalBg)
+            
+        }
+
+        // Bellow
+        if (blocks[y+1] &&
+            blocks[y+1][x] &&
+            blocks[y+1][x].bg === originalBg) {
+
+            // let bellowBlock = Object.assign({},blocks[y+1][x])
+            console.log("bellowBlock", bellowBlock);
+
+            curBlock.bg = this.$store.getters.getBgColour;
+
+            this.fillTool( x, y+1, originalBg)
+            
+        }
+
+        // Right
+        if (blocks[y] &&
+            blocks[y][x-1] &&
+            blocks[y][x-1].bg === originalBg) {
+
+            // let rightBlock = Object.assign({},blocks[y][x-1])
+            console.log("rightBlock", rightBlock);
+
+            curBlock.bg = this.$store.getters.getBgColour;
+
+            this.fillTool( x-1, y, originalBg)
+            
+        }
     },
   },
 };

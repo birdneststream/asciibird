@@ -13,7 +13,7 @@
         type="number"
         name="width"
         v-model="forms.createAscii.width"
-        max="3"
+        min="1"
       />
 
       Height
@@ -21,7 +21,7 @@
         type="number"
         name="height"
         v-model="forms.createAscii.height"
-        max="4"
+        min="1"
       />
 
       Title
@@ -279,8 +279,8 @@ export default {
         blockWidth: 8 * this.$store.getters.blockSizeMultiplier,
         blockHeight: 13 * this.$store.getters.blockSizeMultiplier,
         blocks: this.create2DArray(asciiImport.split('\n').length),
-        x: 50, // the dragable ascii canvas x
-        y: 100, // the dragable ascii canvas y
+        x: 247, // the dragable ascii canvas x
+        y: 24, // the dragable ascii canvas y
       };
 
       // Turn the entire ascii string into an array
@@ -548,8 +548,8 @@ export default {
         height: this.forms.createAscii.height,
         blockWidth: 8,
         blockHeight: 13,
-        x: 50, // the dragable ascii canvas x
-        y: 100, // the dragable ascii canvas y
+        x: 247, // the dragable ascii canvas x
+        y: 24, // the dragable ascii canvas y
         blocks: this.create2DArray(this.forms.createAscii.height),
       };
 
