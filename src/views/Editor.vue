@@ -269,14 +269,14 @@ export default {
           if (!blocks[y]) {
             blocks[y] = [];
             for (let x = 0; x < canvasBlockWidth; x++) {
-              blocks[y][x] = emptyBlock;
+              blocks[y][x] = Object.assign({},emptyBlock);
             }
           } else {
             // blocks[y]
             // no new rows but new cols
             for (let x = 0; x < canvasBlockWidth; x++) {
               if (blocks[y] && !blocks[y][x]) {
-                blocks[y][x] = emptyBlock;
+                blocks[y][x] = Object.assign({},emptyBlock)
               }
             }
           }
