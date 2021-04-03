@@ -118,32 +118,36 @@ export default new Vuex.Store({
       targetingFg: true,
       targetingBg: true,
       targetingChar: true,
-      x: 24, 
+      x: 24,
       y: 28,
     },
     debugPanelState: {
-      x: 26, 
+      x: 26,
       y: 344,
     },
     blockSizeMultiplier: 1,
   },
   mutations: {
     changeState(state, payload) {
-      Object.assign(state,payload)
+      Object.assign(state, payload);
     },
     changeTab(state, payload) {
       state.tab = payload;
     },
     changeDebugPanelState(state, payload) {
-      state.debugPanelState = payload
+      state.debugPanelState = payload;
     },
     changeToolBarState(state, payload) {
-      state.toolbarState.x = payload.x
-      state.toolbarState.y = payload.y
+      state.toolbarState.x = payload.x;
+      state.toolbarState.y = payload.y;
+    },
+    changeAsciiWidthHeight(state, payload) {
+      state.asciibirdMeta[state.tab].width = payload.width;
+      state.asciibirdMeta[state.tab].height = payload.height;
     },
     changeAsciiCanvasState(state, payload) {
-      state.asciibirdMeta[state.tab].x = payload.x
-      state.asciibirdMeta[state.tab].y = payload.y
+      state.asciibirdMeta[state.tab].x = payload.x;
+      state.asciibirdMeta[state.tab].y = payload.y;
     },
     changeColourFg(state, payload) {
       state.toolbarState.currentColourFg = payload;

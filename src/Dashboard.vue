@@ -1,6 +1,5 @@
 <template>
   <div id="app">
-    
 
     <t-modal
       name="create-ascii-modal"
@@ -97,16 +96,16 @@
           $store.getters.getToolbarState.isChoosingBg
         "
       />
-      
-      
+
     </div>
   </div>
 </template>
 
 <style>
-html { 
+/* html {
   cursor: url('assets/mouse-pointer-solid.svg'), auto;
-}
+} */
+
 </style>
 
 <script>
@@ -131,10 +130,10 @@ export default {
     }
 
     // console.log(this.currentTool.svgPath)
-    // document.getElementsByTagName("body")[0].style.setProperty('cursor', "url('assets/fill-drip-solid.svg'), auto")
+    // document.getElementsByTagName("html")[0].style.setProperty('cursor', "url('assets/fill-drip-solid.svg'), auto")
   },
   components: {
-    Toolbar, DebugPanel, Editor, CharPicker, ColourPicker
+    Toolbar, DebugPanel, Editor, CharPicker, ColourPicker,
   },
   name: 'Dashboard',
   data: () => ({
@@ -153,12 +152,12 @@ export default {
     importType: null,
   }),
   computed: {
-      currentTool() {
-          return this.$store.getters.getToolbarIcons[this.$store.getters.getCurrentTool] ?? null
-      },
-      icon() {
-          return [this.currentTool.fa ?? 'fas', this.currentTool.icon ?? 'mouse-pointer']
-      },
+    currentTool() {
+      return this.$store.getters.getToolbarIcons[this.$store.getters.getCurrentTool] ?? null;
+    },
+    icon() {
+      return [this.currentTool.fa ?? 'fas', this.currentTool.icon ?? 'mouse-pointer'];
+    },
   },
   methods: {
     updateCoords(value) {
@@ -170,20 +169,17 @@ export default {
       const filename = files[0].name;
       const fileReader = new FileReader();
 
-      var _importType = this.importType
+      const _importType = this.importType;
       fileReader.addEventListener('load', () => {
-        
-        switch(_importType) {
-
+        switch (_importType) {
           case 'asb':
-            this.importAsciibirdState(fileReader.result, filename)
+            this.importAsciibirdState(fileReader.result, filename);
             break;
 
           case 'mirc':
-              this.mircAsciiImport(fileReader.result, filename);
+            this.mircAsciiImport(fileReader.result, filename);
             break;
         }
-
       });
 
       // This will fire the file reader 'load' event
@@ -192,8 +188,8 @@ export default {
     startImport(type) {
       // For ANSI we'll need to add back in the
       // type cariable here
-      this.importType = type
-      console.log(this.importType)
+      this.importType = type;
+      console.log(this.importType);
       this.$refs.asciiInput.click();
     },
     // We can maybe try something different to import ANSI
@@ -461,8 +457,8 @@ export default {
       //   const charData = strData.split('').map(function(x){return x.charCodeAt(0); });
 
       //   // var strData = String.fromCharCode.apply(null, pako.inflate(String.fromCharCode.apply(null, input).split("").map(function(x){return x.charCodeAt(0);})));
-      //   input = pako.inflate(charData, { to: 'string' });  
-        
+      //   input = pako.inflate(charData, { to: 'string' });
+
       //   console.log(input);
       // } catch (err) {
       //   console.log(err);
@@ -471,7 +467,7 @@ export default {
       // console.log(fileContents)
 
       // No gz for now unless can get the above working
-      this.$store.commit("changeState", Object.assign({},JSON.parse(fileContents)));
+      this.$store.commit('changeState', { ...JSON.parse(fileContents) });
     },
     exportAsciibirdState() {
       // Download to a gzipped json file
@@ -484,13 +480,13 @@ export default {
         output = JSON.stringify(this.$store.getters.getState);
 
         // Default timestamp for filename
-        let today = new Date();
-        let y = today.getFullYear();
-        let m = today.getMonth() + 1; // JavaScript months are 0-based.
-        let d = today.getDate();
-        let h = today.getHours();
-        let mi = today.getMinutes();
-        let s = today.getSeconds();
+        const today = new Date();
+        const y = today.getFullYear();
+        const m = today.getMonth() + 1; // JavaScript months are 0-based.
+        const d = today.getDate();
+        const h = today.getHours();
+        const mi = today.getMinutes();
+        const s = today.getSeconds();
 
         this.downloadToFile(output, `asciibird-${y}-${m}-${d}-${h}-${mi}-${s}.asb`, 'application/json');
       } catch (err) {
@@ -512,7 +508,7 @@ export default {
           if (curBlock.bg !== prevBlock.bg || curBlock.fg !== prevBlock.fg) {
             Object.assign(curBlock, currentAscii.blocks[y][x]);
             const zeroPad = (num, places) => String(num).padStart(places, '0');
-            output.push(`\u0003${zeroPad(curBlock.fg ?? this.$store.getstate.options.defaultFg, 2)},${zeroPad(curBlock.bg ?? this.$store.getstate.options.defaultBg, 2)}`);
+            output.push(`\u0003${zeroPad(curBlock.fg ?? this.$store.getters.getOptions.defaultFg, 2)},${zeroPad(curBlock.bg ?? this.$store.getters.getOptions.defaultBg, 2)}`);
           }
 
           // null .chars will end up as space
@@ -546,8 +542,8 @@ export default {
 
         URL.revokeObjectURL(a.href);
       };
-      
-      return downloadToFile(content, filename, contentType)
+
+      return downloadToFile(content, filename, contentType);
     },
     createClick() {
       this.forms.createAscii.title = `New ASCII ${this.$store.getters.asciibirdMeta.length}`;
@@ -604,21 +600,21 @@ export default {
       return arr;
     },
     captureMouse(event) {
-        // clientX/Y gives the coordinates relative to the viewport in CSS pixels.
-        // console.log("viewport", event.clientX);
-        // console.log("viewport", event.clientY);
+      // clientX/Y gives the coordinates relative to the viewport in CSS pixels.
+      // console.log("viewport", event.clientX);
+      // console.log("viewport", event.clientY);
 
-        // // pageX/Y gives the coordinates relative to the <html> element in CSS pixels.
-        // console.log("element", event.pageX);
-        // console.log("element", event.pageY);
+      // // pageX/Y gives the coordinates relative to the <html> element in CSS pixels.
+      // console.log("element", event.pageX);
+      // console.log("element", event.pageY);
 
-        this.dashboardX = event.pageX
-        this.dashboardY = event.pageY
+      this.dashboardX = event.pageX;
+      this.dashboardY = event.pageY;
 
-        // // screenX/Y gives the coordinates relative to the screen in device pixels.
-        // console.log("screen", event.screenX);
-        // console.log("screen", event.screenY);
-    }
+      // // screenX/Y gives the coordinates relative to the screen in device pixels.
+      // console.log("screen", event.screenX);
+      // console.log("screen", event.screenY);
+    },
   },
 };
 </script>
