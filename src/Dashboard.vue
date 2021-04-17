@@ -42,9 +42,10 @@
       </template>
     </t-modal>
 
+
     <context-menu :display="showContextMenu" ref="menu">
       <ul>
-        <li @click="createClick()" class="ml-1">New ASCII</li>
+        <li @click="createClick()" class="ml-1" @contextmenu.prevent>New ASCII</li>
         <li @click="clearCache()" class="ml-1">Clear and Refresh</li>
         <li @click="startImport('mirc')" class="ml-1">Import mIRC</li>
         <li
@@ -129,6 +130,7 @@ import ContextMenu from "./components/parts/ContextMenu.vue";
 // import AsciiCursor from './components/parts/AsciiCursor.vue';
 // import pako from 'pako';
 
+
 export default {
   async created() {
     // Load from irc watch if present in the URL bar
@@ -146,7 +148,7 @@ export default {
     Editor,
     CharPicker,
     ColourPicker,
-    ContextMenu,
+    ContextMenu
   },
   name: "Dashboard",
   data: () => ({
@@ -299,6 +301,9 @@ export default {
 
     //   this.$store.commit("newAsciibirdMeta", this.finalAscii);
     // },
+    onTriggeredEventHandler(payload) {
+      console.log(`You have pressed CMD (CTRL) + ${payload.keyString}`);
+    },
     mircAsciiImport(contents, filename) {
       const MIRC_MAX_COLOURS = this.$store.getters.mircColours.length;
 
