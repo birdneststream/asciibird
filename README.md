@@ -5,9 +5,11 @@ ASCIIBIRD DEVELOPMENT - TAKING FLIGHT
 # FOCUSING ON NOW
 
 * Toolbar stuff / Brush Size
+
 * Context Menus (right click menu)
 * Keyboard shortcuts
 * Undo feature
+
 * BLOCK BUG WITH WHITE CHARS
 * COMPRESSION inside the localStorage
 
