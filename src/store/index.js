@@ -14,7 +14,6 @@ export default new Vuex.Store({
     // end up in its own modal I guess
     options: {
       canvasRedrawSpeed: 2,
-      draggableUpdateSpeed: 200, // How long between updating the vuex store when dragging any of the panels
       defaultBg: 1,
       defaultFg: 0,
     },
@@ -110,6 +109,8 @@ export default new Vuex.Store({
       isChoosingFg: false,
       isChoosingBg: false,
       isChoosingChar: false,
+      brushSizeWidth: 1,
+      brushSizeHeight: 1,
       selectedFg: 0,
       selectedBg: 1,
       selectedChar: 'A',
@@ -194,6 +195,10 @@ export default new Vuex.Store({
     updateAsciiBlocks(state, payload) {
       Object.assign(state.asciibirdMeta[state.tab].blocks, payload);
     },
+    updateBrushSize(state, payload) {
+      state.toolbarState.brushSizeHeight = payload.brushSizeHeight;
+      state.toolbarState.brushSizeWidth = payload.brushSizeWidth;
+    },
   },
   getters: {
     getState: (state) => state,
@@ -215,6 +220,8 @@ export default new Vuex.Store({
     currentAsciiBlocks: (state) => state.asciibirdMeta[state.tab].blocks ?? false,
     asciibirdMeta: (state) => state.asciibirdMeta,
     nextTabValue: (state) => state.asciibirdMeta.length,
+    brushSizeHeight: (state) => state.toolbarState.brushSizeHeight,
+    brushSizeWidth: (state) => state.toolbarState.brushSizeWidth,
     blockSizeMultiplier: (state) => state.blockSizeMultiplier,
   },
   actions: {},

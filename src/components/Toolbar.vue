@@ -6,15 +6,15 @@
         $store.getters.currentAscii.blockHeight,
         $store.getters.currentAscii.blockWidth,
       ]"
-      style="z-index: 5; min-height: 500px"
+      style="z-index: 5;"
       :min-width="200"
       :max-width="500"
-      :min-height="500"
-      :max-height="700"
+      :min-height="300"
+      :max-height="500"
       :x="$store.getters.getToolbarState.x"
       :y="$store.getters.getToolbarState.y"
     >
-      <t-card header="Tools and Stuff" style="height: 100%">
+      <t-card style="height: 100%">
         <label class="flex ml-1">
           <t-checkbox
             name="targetingFg"
@@ -51,8 +51,6 @@
 
         <Colours />
 
-        <h5>Brushes and Shit</h5>
-
         <t-button
           type="button"
           v-for="(value, keyToolbar) in $store.getters.getToolbarIcons"
@@ -64,6 +62,11 @@
         </t-button>
 
 
+        <hr />
+
+
+        <BrushPreview />
+
 
 
       </t-card>
@@ -73,11 +76,12 @@
 
 <script>
 import Colours from "./Colours.vue";
+import BrushPreview from "./parts/BrushPreview.vue";
 
 export default {
   created() {},
   name: "Toolbar",
-  components: { Colours },
+  components: { Colours, BrushPreview },
 
   data: () => ({
     floating: {

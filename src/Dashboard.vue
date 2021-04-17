@@ -451,13 +451,13 @@ export default {
 
       // try {
       //   // convert the incoming base64 -> binary
-      //   const strData = fileContents;
+      //   // const strData = fileContents;
 
       //   // split it into an array rather than a "string"
-      //   const charData = strData.split('').map(function(x){return x.charCodeAt(0); });
+      //   // const charData = strData.split('').map(function(x){return x.charCodeAt(0); });
 
       //   // var strData = String.fromCharCode.apply(null, pako.inflate(String.fromCharCode.apply(null, input).split("").map(function(x){return x.charCodeAt(0);})));
-      //   input = pako.inflate(charData, { to: 'string' });
+      //   input = pako.inflate(fileContents);
 
       //   console.log(input);
       // } catch (err) {
@@ -476,7 +476,7 @@ export default {
       try {
         // Make a gzipped JSON of the asciibird app state
         // While making a gzip bellow works, had some trouble gunzipping in importAsciibirdState(fileContents, fileName)
-        // output = pako.gzip(JSON.stringify(this.$store.getters.getState), {level:"9"});
+        // output = pako.gzip(JSON.stringify(this.$store.getters.getState), {level:"6"});
         output = JSON.stringify(this.$store.getters.getState);
 
         // Default timestamp for filename

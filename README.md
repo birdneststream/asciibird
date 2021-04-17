@@ -8,6 +8,8 @@ ASCIIBIRD DEVELOPMENT - TAKING FLIGHT
 * Context Menus (right click menu)
 * Keyboard shortcuts
 * Undo feature
+* BLOCK BUG WITH WHITE CHARS
+* COMPRESSION inside the localStorage
 
 # KILLER ASCIIBIRD FEATURES DONE
 
