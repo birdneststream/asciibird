@@ -10,6 +10,9 @@ const vuexLocal = new VuexPersistence({
 export default new Vuex.Store({
 
   state: {
+    modalState: {
+      newAscii: false,
+    },
     // The various options of ASCIIBIRD will eventually
     // end up in its own modal I guess
     options: {
@@ -205,9 +208,19 @@ export default new Vuex.Store({
       state.toolbarState.brushSizeHeight = payload.brushSizeHeight;
       state.toolbarState.brushSizeWidth = payload.brushSizeWidth;
     },
+    openModal(state, type) {
+      switch (type) {
+        case 'new-ascii':
+          state.modalState.newAscii = !state.modalState.newAscii
+        break;
+
+
+      }
+    }
   },
   getters: {
     getState: (state) => state,
+    modalState: (state) => state.modalState,
     getOptions: (state) => state.options,
     getToolbarIcons: (state) => state.toolbarIcons,
     getToolbarState: (state) => state.toolbarState,

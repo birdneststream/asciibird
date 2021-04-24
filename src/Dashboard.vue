@@ -1,11 +1,11 @@
 <template>
   <div id="app">
-    <NewAscii :showNewAsciiModal="showNewAsciiModal" />
+    <NewAscii />
 
     <context-menu :display="showContextMenu" ref="menu">
       <ul>
         <li
-          @click="showNewAsciiModal = !showNewAsciiModal"
+          @click="$store.commit('openModal', 'new-ascii')"
           class="ml-1"
           @contextmenu.prevent
         >

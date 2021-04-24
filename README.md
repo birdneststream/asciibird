@@ -5,8 +5,10 @@ ASCIIBIRD DEVELOPMENT - TAKING FLIGHT
 # FOCUSING ON NOW
 
 * Modals
+ * Edit current ascii
+ * Asciibird options
+ * Tool options
 
-* Export to clipboard
 * Encodings
 
 * Toolbar stuff / Brush Size
@@ -23,6 +25,10 @@ ASCIIBIRD DEVELOPMENT - TAKING FLIGHT
 * Update text colours without deleting the block
 * Floating pattlets, resizeable and remembers positions
 * .ASB file, but it's not gzipped yet just json.
+* Export mIRC to clipboard
+
+* Modals
+ * New ascii modal
 
 # KILLER ASCIIBIRD FEATURES TO DO
 

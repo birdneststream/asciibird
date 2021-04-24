@@ -1,52 +1,51 @@
 <template>
-    <t-modal
-      name="create-ascii-modal"
-      header="Create new ASCII"
-      :clickToClose="false"
-      :escToClose="true"
-      @before-closed="closeNewASCII"
-    >
-      Width
-      <t-input
-        type="number"
-        name="width"
-        v-model="forms.createAscii.width"
-        min="1"
-      />
+  <t-modal
+    name="create-ascii-modal"
+    header="Create new ASCII"
+    :clickToClose="false"
+    :escToClose="true"
+    @before-closed="closeNewASCII"
+  >
+    Width
+    <t-input
+      type="number"
+      name="width"
+      v-model="forms.createAscii.width"
+      min="1"
+    />
 
-      Height
-      <t-input
-        type="number"
-        name="height"
-        v-model="forms.createAscii.height"
-        min="1"
-      />
+    Height
+    <t-input
+      type="number"
+      name="height"
+      v-model="forms.createAscii.height"
+      min="1"
+    />
 
-      Title
-      <t-input
-        type="text"
-        name="title"
-        v-model="forms.createAscii.title"
-        max="128"
-      />
+    Title
+    <t-input
+      type="text"
+      name="title"
+      v-model="forms.createAscii.title"
+      max="128"
+    />
 
-      <template v-slot:footer>
-        <div
-          class="flex justify-between"
-          @click="$modal.hide('create-ascii-modal')"
-        >
-          <t-button type="button"> Cancel </t-button>
-          <t-button type="button" @click="createNewASCII()"> Ok </t-button>
-        </div>
-      </template>
-    </t-modal>
+    <template v-slot:footer>
+      <div
+        class="flex justify-between"
+        @click="$modal.hide('create-ascii-modal')"
+      >
+        <t-button type="button"> Cancel </t-button>
+        <t-button type="button" @click="createNewASCII()"> Ok </t-button>
+      </div>
+    </template>
+  </t-modal>
 </template>
 
 <script>
 export default {
   name: "NewAsciiModal",
   created() {},
-  prop: ['showNewAsciiModal'],
   data: () => ({
     forms: {
       createAscii: {
@@ -56,13 +55,15 @@ export default {
       },
     },
   }),
+  computed: {
+    showNewAsciiModal() {
+      return this.$store.getters.modalState.newAscii;
+    },
+  },
   watch: {
-      showNewAsciiModal(val, old) {
-          console.log(val, old)
-          if (val === true) {
-              this.createClick()
-          }
-      }
+    showNewAsciiModal(val, old) {
+      this.createClick()
+    },
   },
   methods: {
     createClick() {
@@ -94,8 +95,9 @@ export default {
       }
 
       this.$store.commit("newAsciibirdMeta", payload);
+      this.$store.commit('openModal', 'new-ascii')
       this.$modal.hide("create-ascii-modal");
-      this.show = false
+      this.show = false;
     },
     closeNewASCII({ params, cancel }) {
       this.forms.createAscii.width = 5;
