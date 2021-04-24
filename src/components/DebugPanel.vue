@@ -2,37 +2,46 @@
   <div>
     <vue-draggable-resizable
       @dragstop="onDragStop"
+      :grid="[currentAscii.blockWidth, currentAscii.blockHeight]"
+      :min-width="8 * 100"
+      :max-width="8 * 150"
+      :min-height="13 * 4"
+      :max-height="13 * 4"
       style="z-index: 5;"
-      :min-width="200"
-      :max-width="500"
-      :min-height="200"
-      :max-height="500"
-      :x="$store.getters.getDebugPanelState.x"
-      :y="$store.getters.getDebugPanelState.y"
+      :w="debugPanelState.w"
+      :h="debugPanelState.h"
+      :x="debugPanelState.x"
+      :y="debugPanelState.y"
     >
       
         <t-card style="height: 100%;">
-          <p v-html="`Tool: ${getToolName}`"></p>
-          <p v-html="`FgColour: ${$store.getters.getFgColour}`"></p>
-          <p v-html="`BgColor: ${$store.getters.getBgColour}`"></p>
-          <p v-html="`Char: ${$store.getters.getToolbarState.selectedChar}`"></p>
+          <span class="ml-5" v-html="`Tool: ${getToolName}`"></span>
+          <span class="ml-5" v-html="`FgColour: ${$store.getters.getFgColour}`"></span>
+          <span class="ml-5" v-html="`BgColor: ${$store.getters.getBgColour}`"></span>
+          <span class="ml-5" v-html="`Char: ${$store.getters.getToolbarState.selectedChar}`"></span>
 
-          <p v-html="`canvasX: ${canvasX}`"></p>
-          <p v-html="`canvasY: ${canvasY}`"></p>
+          <span class="ml-5" v-html="`canvasX: ${canvasX}`"></span>
+          <span class="ml-5" v-html="`canvasY: ${canvasY}`"></span>
         </t-card>
       
     </vue-draggable-resizable>
   </div>
 </template>
 <script>
+
 export default {
-  created() {},
+  created() {
+    this.panel.x = this.debugPanelState.x
+    this.panel.y = this.debugPanelState.y
+    this.panel.w = this.debugPanelState.w
+    this.panel.h = this.debugPanelState.h
+  },
   name: "DebugPanel",
   props: ["canvasX", "canvasY"],
   data: () => ({
-    floating: {
-      width: 0,
-      height: 0,
+    panel: {
+      w: 0,
+      h: 0,
       x: 100,
       y: 100,
     },
@@ -41,21 +50,29 @@ export default {
   computed: {
     getToolName() {
       return this.$store.getters.getToolbarIcons[this.$store.getters.getCurrentTool] ? this.$store.getters.getToolbarIcons[this.$store.getters.getCurrentTool].name : 'none'
-    }
+    },
+    debugPanelState() {
+      return this.$store.getters.getDebugPanelState
+    },
+    currentAscii() {
+      return this.$store.getters.currentAscii;
+    },
   },
   watch: {},
   methods: {
-    onResize(x, y, width, height) {
-      this.floating.x = x;
-      this.floating.y = y;
-      this.floating.width = width;
-      this.floating.height = height;
+    onResize(x, y, w, h) {
+      this.panel.x = x;
+      this.panel.y = y;
+      this.panel.w = w;
+      this.panel.h = h;
+
+      this.$store.commit("changeDebugPanelState", this.panel)
     },
     onDragStop(x, y) {
-      this.floating.x = x;
-      this.floating.y = y;
+      this.panel.x = x;
+      this.panel.y = y;
 
-      this.$store.commit("changeDebugPanelState", {x: x, y: y})
+      this.$store.commit("changeDebugPanelState", this.panel)
     },
   },
 };

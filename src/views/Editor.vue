@@ -2,10 +2,10 @@
   <div>
     <div id="canvas-area">
       <vue-draggable-resizable
-        style="z-index: 5"
-        :grid="[currentAscii.blockHeight, currentAscii.blockWidth]"
-        :w="canvas.width + currentAscii.blockWidth"
-        :h="canvas.height + currentAscii.blockHeight"
+        style="z-index:5;"
+        :grid="[currentAscii.blockWidth, currentAscii.blockHeight]"
+        :w="canvas.width"
+        :h="canvas.height"
         :draggable="$store.getters.getCurrentTool === 0"
         @resizestop="onCanvasResize"
         @dragstop="onCavasDragStop"
@@ -141,6 +141,9 @@ export default {
           .name === "select"
       );
     },
+    dragboxStyle() {
+      return `z-index: 5;width:${this.canvas.width+4};height:${this.canvas.height+4};`
+    }
   },
   watch: {
     currentAscii(val, old) {

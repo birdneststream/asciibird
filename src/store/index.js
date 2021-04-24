@@ -119,12 +119,16 @@ export default new Vuex.Store({
       targetingFg: true,
       targetingBg: true,
       targetingChar: true,
-      x: 24,
-      y: 28,
+      x: 8 * 2,
+      y: 13 * 2,
+      h: 13 * 25,
+      w: 8 * 15,
     },
     debugPanelState: {
-      x: 26,
-      y: 344,
+      x: 8 * 2,
+      y: 13 * 60,
+      h: 13 * 3,
+      w: 8 * 150,
     },
     blockSizeMultiplier: 1,
   },
@@ -141,6 +145,8 @@ export default new Vuex.Store({
     changeToolBarState(state, payload) {
       state.toolbarState.x = payload.x;
       state.toolbarState.y = payload.y;
+      state.toolbarState.w = payload.w;
+      state.toolbarState.h = payload.h;
     },
     changeAsciiWidthHeight(state, payload) {
       state.asciibirdMeta[state.tab].width = payload.width;

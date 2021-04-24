@@ -2,23 +2,22 @@
   <div>
     <vue-draggable-resizable
       @dragstop="onDragStop"
-      :grid="[
-        $store.getters.currentAscii.blockHeight,
-        $store.getters.currentAscii.blockWidth,
-      ]"
+      :grid="[currentAscii.blockWidth, currentAscii.blockHeight]"
       style="z-index: 5;"
-      :min-width="200"
-      :max-width="500"
-      :min-height="300"
-      :max-height="500"
-      :x="$store.getters.getToolbarState.x"
-      :y="$store.getters.getToolbarState.y"
+      :min-width="8 * 15"
+      :max-width="8 * 25"
+      :max-height="13 * 26"
+      :min-height="13 * 25"
+      :w="toolbarState.w"
+      :h="toolbarState.h"
+      :x="toolbarState.x"
+      :y="toolbarState.y"
     >
       <t-card style="height: 100%">
         <label class="flex ml-1">
           <t-checkbox
             name="targetingFg"
-            v-model="$store.getters.getToolbarState.targetingFg"
+            v-model="toolbarState.targetingFg"
             :disabled="
               !$store.getters.getTargetingBg && !$store.getters.getTargetingChar
             "
@@ -28,7 +27,7 @@
         <label class="flex ml-1">
           <t-checkbox
             name="targetingBg"
-            v-model="$store.getters.getToolbarState.targetingBg"
+            v-model="toolbarState.targetingBg"
             :disabled="
               !$store.getters.getTargetingFg && !$store.getters.getTargetingChar
             "
@@ -39,7 +38,7 @@
         <label class="flex ml-1">
           <t-checkbox
             name="targetingChar"
-            v-model="$store.getters.getToolbarState.targetingChar"
+            v-model="toolbarState.targetingChar"
             :disabled="
               !$store.getters.getTargetingFg && !$store.getters.getTargetingBg
             "
@@ -61,13 +60,9 @@
           <font-awesome-icon :icon="[value.fa, value.icon]" />
         </t-button>
 
-
         <hr />
 
-
         <BrushPreview />
-
-
 
       </t-card>
     </vue-draggable-resizable>
@@ -79,32 +74,46 @@ import Colours from "./Colours.vue";
 import BrushPreview from "./parts/BrushPreview.vue";
 
 export default {
-  created() {},
+  created() {
+    this.toolbar.x = this.toolbarState.x
+    this.toolbar.y = this.toolbarState.y
+    this.toolbar.w = this.toolbarState.w
+    this.toolbar.h = this.toolbarState.h
+  },
   name: "Toolbar",
   components: { Colours, BrushPreview },
 
   data: () => ({
-    floating: {
-      width: 0,
-      height: 0,
+    toolbar: {
+      w: 0,
+      h: 0,
       x: 100,
       y: 100,
     },
   }),
-  computed: {},
+  computed: {
+    toolbarState() {
+      return this.$store.getters.getToolbarState
+    },
+    currentAscii() {
+      return this.$store.getters.currentAscii;
+    },
+  },
   watch: {},
   methods: {
-    onResize(x, y, width, height) {
-      this.floating.x = x;
-      this.floating.y = y;
-      this.floating.width = width;
-      this.floating.height = height;
+    onResize(x, y, w, h) {
+      this.toolbar.x = x;
+      this.toolbar.y = y;
+      this.toolbar.w = w;
+      this.toolbar.h = h;
+
+      this.$store.commit("changeToolBarState", {x: x, y: y, w: this.toolbar.w, h: this.toolbar.h})
     },
     onDragStop(x, y) {
-      this.floating.x = x;
-      this.floating.y = y;
+      this.toolbar.x = x;
+      this.toolbar.y = y;
 
-      this.$store.commit("changeToolBarState", {x: x, y: y})
+      this.$store.commit("changeToolBarState", {x: x, y: y, w: this.toolbar.w, h: this.toolbar.h})
     },
   },
 };

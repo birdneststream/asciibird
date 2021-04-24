@@ -4,6 +4,11 @@ ASCIIBIRD DEVELOPMENT - TAKING FLIGHT
 
 # FOCUSING ON NOW
 
+* Modals
+
+* Export to clipboard
+* Encodings
+
 * Toolbar stuff / Brush Size
 * Context Menus (right click menu) - we started this
 * Keyboard shortcuts
@@ -54,6 +59,8 @@ ASCIIBIRD DEVELOPMENT - TAKING FLIGHT
 
 * https://modern.ircdocs.horse/formatting.html#color
 * https://www.mirc.com/colors.html
+
+* https://github.com/polygonplanet/encoding.js/
 
 ## Project setup
 ```

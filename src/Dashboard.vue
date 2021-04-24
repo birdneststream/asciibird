@@ -1,59 +1,31 @@
 <template>
   <div id="app">
-    <t-modal
-      name="create-ascii-modal"
-      header="Create new ASCII"
-      :clickToClose="false"
-      :escToClose="false"
-      @before-closed="closeNewASCII"
-    >
-      Width
-      <t-input
-        type="number"
-        name="width"
-        v-model="forms.createAscii.width"
-        min="1"
-      />
-
-      Height
-      <t-input
-        type="number"
-        name="height"
-        v-model="forms.createAscii.height"
-        min="1"
-      />
-
-      Title
-      <t-input
-        type="text"
-        name="title"
-        v-model="forms.createAscii.title"
-        max="128"
-      />
-
-      <template v-slot:footer>
-        <div
-          class="flex justify-between"
-          @click="$modal.hide('create-ascii-modal')"
-        >
-          <t-button type="button"> Cancel </t-button>
-          <t-button type="button" @click="createNewASCII()"> Ok </t-button>
-        </div>
-      </template>
-    </t-modal>
-
+    <NewAscii :showNewAsciiModal="showNewAsciiModal" />
 
     <context-menu :display="showContextMenu" ref="menu">
       <ul>
-        <li @click="createClick()" class="ml-1" @contextmenu.prevent>New ASCII</li>
+        <li
+          @click="showNewAsciiModal = !showNewAsciiModal"
+          class="ml-1"
+          @contextmenu.prevent
+        >
+          New ASCII
+        </li>
         <li @click="clearCache()" class="ml-1">Clear and Refresh</li>
         <li @click="startImport('mirc')" class="ml-1">Import mIRC</li>
         <li
-          @click="exportMirc()"
+          @click="exportMirc('file')"
           class="ml-1"
           v-if="this.$store.getters.asciibirdMeta.length"
         >
-          Export ASCII to mIRC
+          Export mIRC to File
+        </li>
+        <li
+          class="ml-1"
+          @click="exportMirc('clipboard')"         
+          v-if="this.$store.getters.asciibirdMeta.length"
+        >
+          Export mIRC to Clipboard
         </li>
         <li
           @click="exportAsciibirdState()"
@@ -127,20 +99,29 @@ import Editor from "./views/Editor.vue";
 import CharPicker from "./components/parts/CharPicker.vue";
 import ColourPicker from "./components/parts/ColourPicker.vue";
 import ContextMenu from "./components/parts/ContextMenu.vue";
+
+import NewAscii from "./components/modals/NewAscii.vue";
 // import AsciiCursor from './components/parts/AsciiCursor.vue';
 // import pako from 'pako';
-
 
 export default {
   async created() {
     // Load from irc watch if present in the URL bar
-    // const asciiUrl = new URL(location.href).searchParams.get("ircwatch");
-    // if (asciiUrl) {
-    //   const res = await fetch(`https://irc.watch/ascii/txt/${asciiUrl}`);
-    //   const asciiData = await res.text();
-    //   this.mircAsciiImport(asciiData, asciiUrl);
-    //   window.location.href = "/";
-    // }
+    console.log(window.asciiList);
+    const asciiUrl = new URL(location.href).searchParams.get("ascii");
+    if (asciiUrl) {
+      const res = await fetch(`https://ascii.jewbird.live/${asciiUrl}`, {
+        method: "GET",
+        headers: {
+          Accept: "text/plain",
+        },
+      });
+
+      const asciiData = await res.text();
+      console.log({ asciiData, asciiUrl });
+      this.mircAsciiImport(asciiData, asciiUrl);
+      window.location.href = "/";
+    }
   },
   components: {
     Toolbar,
@@ -148,17 +129,12 @@ export default {
     Editor,
     CharPicker,
     ColourPicker,
-    ContextMenu
+    ContextMenu,
+    NewAscii,
   },
   name: "Dashboard",
   data: () => ({
-    forms: {
-      createAscii: {
-        width: 5,
-        height: 5,
-        title: "ascii",
-      },
-    },
+    showNewAsciiModal: false,
     currentTab: 1,
     canvasX: null,
     canvasY: null,
@@ -326,8 +302,8 @@ export default {
         blockWidth: 8 * this.$store.getters.blockSizeMultiplier,
         blockHeight: 13 * this.$store.getters.blockSizeMultiplier,
         blocks: this.create2DArray(asciiImport.split("\n").length),
-        x: 247, // the dragable ascii canvas x
-        y: 24, // the dragable ascii canvas y
+        x: 8 * 35, // the dragable ascii canvas x
+        y: 13 * 2, // the dragable ascii canvas y
       };
 
       // Turn the entire ascii string into an array
@@ -368,7 +344,7 @@ export default {
             // trimmed it will trim the entire ascii!
             if (!finalAscii.width) {
               finalAscii.width =
-                asciiImport.split("\n")[0].length - 1 - widthOfColCodes; // minus \n for the proper width
+                asciiImport.split("\n")[0].length - widthOfColCodes; // minus \n for the proper width
             }
 
             // Resets the X value
@@ -542,7 +518,7 @@ export default {
         console.log(err);
       }
     },
-    exportMirc() {
+    exportMirc(type) {
       const { currentAscii } = this.$store.getters;
       const output = [];
       let curBlock = null;
@@ -589,7 +565,23 @@ export default {
         currentAscii.title.slice(currentAscii.title.length - 3) === "txt"
           ? currentAscii.title
           : `${currentAscii.title}.txt`;
-      this.downloadToFile(output.join(""), filename, "text/plain");
+
+      switch (type) {
+        case "clipboard":
+              this.$copyText(output.join("")).then(function (e) {
+                alert('Copied')
+                console.log(e)
+              }, function (e) {
+                alert('Can not copy')
+                console.log(e)
+              })
+          break;
+
+        default:
+        case "file":
+          this.downloadToFile(output.join(""), filename, "text/plain");
+          break;
+      }
     },
     downloadToFile(content, filename, contentType) {
       const downloadToFile = (content, filename, contentType) => {
@@ -605,10 +597,6 @@ export default {
 
       return downloadToFile(content, filename, contentType);
     },
-    createClick() {
-      this.forms.createAscii.title = `New ASCII ${this.$store.getters.asciibirdMeta.length}`;
-      this.$modal.show("create-ascii-modal");
-    },
     changeTab(key, value) {
       // Update the tab index in vuex store
       this.currentTab = key;
@@ -618,38 +606,7 @@ export default {
       localStorage.clear();
       window.location.href = "/";
     },
-    createNewASCII() {
-      const payload = {
-        title: this.forms.createAscii.title,
-        key: this.$store.getters.asciibirdMeta.length,
-        width: this.forms.createAscii.width,
-        height: this.forms.createAscii.height,
-        blockWidth: 8,
-        blockHeight: 13,
-        x: 247, // the dragable ascii canvas x
-        y: 24, // the dragable ascii canvas y
-        blocks: this.create2DArray(this.forms.createAscii.height),
-      };
 
-      // Push all the default ASCII blocks
-      for (let x = 0; x < payload.width; x++) {
-        for (let y = 0; y < payload.height; y++) {
-          payload.blocks[y].push({
-            bg: null,
-            fg: null,
-            char: null,
-          });
-        }
-      }
-
-      this.$store.commit("newAsciibirdMeta", payload);
-      this.$modal.hide("create-ascii-modal");
-    },
-    closeNewASCII({ params, cancel }) {
-      this.forms.createAscii.width = 5;
-      this.forms.createAscii.height = 5;
-      this.forms.createAscii.title = "New ASCII";
-    },
     create2DArray(rows) {
       const arr = [];
 
