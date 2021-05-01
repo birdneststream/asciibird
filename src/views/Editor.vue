@@ -2,7 +2,7 @@
   <div>
     <div id="canvas-area">
       <vue-draggable-resizable
-        style="z-index:5;"
+        style="z-index: 5"
         :grid="[currentAscii.blockWidth, currentAscii.blockHeight]"
         :w="canvas.width"
         :h="canvas.height"
@@ -15,7 +15,7 @@
         <canvas
           ref="canvastools"
           id="canvastools"
-          class="toolscanvas"
+          class="canvastools"
           :width="canvas.width"
           :height="canvas.height"
           @mousemove="canvasMouseMove"
@@ -43,7 +43,7 @@ body {
   background: #eee;
 }
 
-.toolscanvas {
+.canvastools {
   position: absolute;
   z-index: 100;
 }
@@ -65,7 +65,7 @@ export default {
   mounted() {
     if (this.$store.getters.currentAscii.blocks) {
       this.ctx = this.$refs.canvas.getContext("2d");
-      this.toolsCtx = this.$refs.canvastools.getContext("2d");
+      this.toolCtx = this.$refs.canvastools.getContext("2d");
 
       this.canvas.width =
         this.$store.getters.currentAscii.width *
@@ -142,8 +142,10 @@ export default {
       );
     },
     dragboxStyle() {
-      return `z-index: 5;width:${this.canvas.width+4};height:${this.canvas.height+4};`
-    }
+      return `z-index: 5;width:${this.canvas.width + 4};height:${
+        this.canvas.height + 4
+      };`;
+    },
   },
   watch: {
     currentAscii(val, old) {
@@ -184,17 +186,17 @@ export default {
     redrawToolCanvas() {
       if (this.currentAscii.blocks.length) {
         this.clearToolCanvas();
-        this.toolsCtx.fillStyle = "rgba(255, 255, 255, 0.4)";
+        this.toolCtx.fillStyle = "rgba(255, 255, 255, 0.4)";
         const BLOCK_WIDTH = this.currentAscii.blockWidth;
         const BLOCK_HEIGHT = this.currentAscii.blockHeight;
 
-        this.toolsCtx.fillRect(
+        this.toolCtx.fillRect(
           this.selecting.startX,
           this.selecting.startY,
-          this.selecting.endX * BLOCK_WIDTH,
-          this.selecting.endY * BLOCK_HEIGHT
+          this.selecting.endX,
+          this.selecting.endY
         );
-        this.toolsCtx.stroke();
+        this.toolCtx.stroke();
       }
     },
     redrawCanvas() {
@@ -335,11 +337,13 @@ export default {
 
           switch (char) {
             case "Backspace":
-              if (this.currentAscii.blocks[this.textEditing.startY][this.textEditing.startX-1]) {
-
+              if (
+                this.currentAscii.blocks[this.textEditing.startY][
+                  this.textEditing.startX - 1
+                ]
+              ) {
                 this.textEditing.startX--;
                 targetBlock.char = null;
-
               }
               break;
 
@@ -407,7 +411,7 @@ export default {
       this.delayRedrawCanvas();
     },
     canvasMouseDown() {
-      this.toolsCtx.clearRect(0, 0, 10000, 10000);
+      this.toolCtx.clearRect(0, 0, 10000, 10000);
 
       if (
         this.currentAscii.blocks[this.y] &&
@@ -471,8 +475,8 @@ export default {
         this.y = e.offsetY;
       }
 
-      this.x = Math.floor(this.x / this.currentAscii.blockWidth);
-      this.y = Math.floor(this.y / this.currentAscii.blockHeight);
+      this.x = Math.round(this.x / this.currentAscii.blockWidth);
+      this.y = Math.round(this.y / this.currentAscii.blockHeight);
 
       this.$emit("coordsupdate", { x: this.x, y: this.y });
 
@@ -488,7 +492,58 @@ export default {
           ].name
         ) {
           case "brush":
-            if (this.canTool) {
+            if (!this.canTool && this.currentTool.name === 'brush') {
+              this.clearToolCanvas();
+
+              //
+              const BLOCK_WIDTH = this.currentAscii.blockWidth;
+              const BLOCK_HEIGHT = this.currentAscii.blockHeight;
+              for (let y = 0; y < this.$store.getters.brushBlocks.length; y++) {
+                for (
+                  let x = 0;
+                  x < this.$store.getters.brushBlocks[0].length;
+                  x++
+                ) {
+                  let curBlock = this.$store.getters.brushBlocks[y][x];
+
+                  if (curBlock.bg) {
+                    this.toolCtx.fillStyle = this.$store.getters.mircColours[
+                      curBlock.bg
+                    ];
+
+                    this.toolCtx.fillRect(
+                      this.x * BLOCK_WIDTH,
+                      this.y * BLOCK_HEIGHT,
+                      BLOCK_WIDTH,
+                      BLOCK_HEIGHT
+                    );
+                  }
+
+                  if (curBlock.fg) {
+                    this.toolCtx.fillStyle = this.$store.getters.mircColours[
+                      curBlock.fg
+                    ];
+                  }
+
+                  if (curBlock.char) {
+                    this.toolCtx.fillStyle = this.$store.getters.mircColours[
+                      curBlock.fg
+                    ];
+                    this.toolCtx.fillText(
+                      curBlock.char,
+                      x + this.x * BLOCK_WIDTH - 1,
+                      y + this.y * BLOCK_HEIGHT + BLOCK_HEIGHT - 3
+                    );
+
+
+                    
+                  }
+                }
+
+                this.toolCtx.stroke();
+              }
+            } else if (this.canTool && this.currentTool.name === 'brush') {
+              // 1x1 brush by default
               if (this.$store.getters.getTargetingFg) {
                 targetBlock.fg = this.$store.getters.getFgColour;
               }
@@ -532,9 +587,9 @@ export default {
       this.delayRedrawCanvas();
     },
     clearToolCanvas() {
-      if (this.toolsCtx) {
-        this.toolsCtx.clearRect(0, 0, 10000, 10000);
-        this.toolsCtx.stroke();
+      if (this.toolCtx) {
+        this.toolCtx.clearRect(0, 0, 10000, 10000);
+        this.toolCtx.stroke();
       }
     },
     delayRedrawCanvas() {
@@ -588,12 +643,12 @@ export default {
       }
 
       // If row is greater than image length
-      if (x > this.currentAscii.width) {
+      if (x >= this.currentAscii.width) {
         return;
       }
 
       // If column is greater than image length
-      if (y > this.currentAscii.height) {
+      if (y >= this.currentAscii.height) {
         return;
       }
 

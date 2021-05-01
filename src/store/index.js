@@ -114,6 +114,8 @@ export default new Vuex.Store({
       isChoosingChar: false,
       brushSizeWidth: 1,
       brushSizeHeight: 1,
+      // square, circle, cross
+      brushSizeType: 'square',
       selectedFg: 0,
       selectedBg: 1,
       selectedChar: 'A',
@@ -124,7 +126,7 @@ export default new Vuex.Store({
       targetingChar: true,
       x: 8 * 2,
       y: 13 * 2,
-      h: 13 * 25,
+      h: 13 * 39,
       w: 8 * 15,
     },
     debugPanelState: {
@@ -134,6 +136,7 @@ export default new Vuex.Store({
       w: 8 * 150,
     },
     blockSizeMultiplier: 1,
+    brushBlocks: [],
   },
   mutations: {
     changeState(state, payload) {
@@ -207,6 +210,10 @@ export default new Vuex.Store({
     updateBrushSize(state, payload) {
       state.toolbarState.brushSizeHeight = payload.brushSizeHeight;
       state.toolbarState.brushSizeWidth = payload.brushSizeWidth;
+      state.toolbarState.brushSizeType = payload.brushSizeType;
+    },
+    brushBlocks(state, payload) {
+      state.brushBlocks = payload;
     },
     openModal(state, type) {
       switch (type) {
@@ -241,7 +248,9 @@ export default new Vuex.Store({
     nextTabValue: (state) => state.asciibirdMeta.length,
     brushSizeHeight: (state) => state.toolbarState.brushSizeHeight,
     brushSizeWidth: (state) => state.toolbarState.brushSizeWidth,
+    brushSizeType: (state) => state.toolbarState.brushSizeType,
     blockSizeMultiplier: (state) => state.blockSizeMultiplier,
+    brushBlocks: (state) => state.brushBlocks,
   },
   actions: {},
   modules: {},

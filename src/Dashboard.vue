@@ -468,27 +468,12 @@ export default {
     },
     importAsciibirdState(fileContents, fileName) {
       // Import from a gzipped json file
-      // let input;
 
-      // try {
-      //   // convert the incoming base64 -> binary
-      //   // const strData = fileContents;
-
-      //   // split it into an array rather than a "string"
-      //   // const charData = strData.split('').map(function(x){return x.charCodeAt(0); });
-
-      //   // var strData = String.fromCharCode.apply(null, pako.inflate(String.fromCharCode.apply(null, input).split("").map(function(x){return x.charCodeAt(0);})));
-      //   input = pako.inflate(fileContents);
-
-      //   console.log(input);
-      // } catch (err) {
-      //   console.log(err);
-      // }
-
-      // console.log(fileContents)
+      // const restored = JSON.parse(pako.inflate(fileContents, { to: 'string' }));
+      console.log(restored)
 
       // No gz for now unless can get the above working
-      this.$store.commit("changeState", { ...JSON.parse(fileContents) });
+      // this.$store.commit("changeState", { ...JSON.parse(fileContents) });
     },
     exportAsciibirdState() {
       // Download to a gzipped json file

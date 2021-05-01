@@ -4,17 +4,20 @@ ASCIIBIRD DEVELOPMENT - TAKING FLIGHT
 
 # FOCUSING ON NOW
 
+* Toolbar stuff / Brush Size
+
 * Modals
  * Edit current ascii
  * Asciibird options
  * Tool options
 
-* Encodings
+* Encodings - UTF8 vs NOT that
 
-* Toolbar stuff / Brush Size
 * Context Menus (right click menu) - we started this
 * Keyboard shortcuts
+
 * Undo feature
+
 * COMPRESSION inside the localStorage
 
 # KILLER ASCIIBIRD FEATURES DONE

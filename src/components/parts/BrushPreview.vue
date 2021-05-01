@@ -4,7 +4,7 @@
       type="number"
       name="width"
       v-model="brushSizeWidth"
-      @change="updateBrushSizeWidth"
+      @change="updateBrushSize"
       min="1"
       max="10"
     />
@@ -13,10 +13,43 @@
       type="number"
       name="height"
       v-model="brushSizeHeight"
-      @change="updateBrushSizeHeight"
+      @change="updateBrushSize"
       min="1"
       max="10"
     />
+
+    <div class="flex">
+      <label class="block">
+        <t-radio
+          name="options"
+          value="square"
+          checked
+          v-model="brushSizeType"
+          @change="updateBrushSize"
+        />
+        <span class="text-sm">Square</span>
+      </label>
+
+      <label class="block">
+        <t-radio
+          name="options"
+          value="circle"
+          v-model="brushSizeType"
+          @change="updateBrushSize"
+        />
+        <span class="text-sm">Circle</span>
+      </label>
+
+      <label class="block">
+        <t-radio
+          name="options"
+          value="cross"
+          v-model="brushSizeType"
+          @change="updateBrushSize"
+        />
+        <span class="text-sm">Cross</span>
+      </label>
+    </div>
 
     <canvas
       ref="brushcanvas"
@@ -34,12 +67,17 @@ export default {
   mounted() {
     this.ctx = this.$refs.brushcanvas.getContext("2d");
     this.delayRedrawCanvas();
+
+    this.brushSizeHeight = this.$store.getters.brushSizeHeight;
+    this.brushSizeWidth = this.$store.getters.brushSizeWidth;
+    this.brushSizeType = this.$store.getters.brushSizeType;
   },
   data: () => ({
     ctx: null,
     redraw: true,
     brushSizeHeight: 1,
     brushSizeWidth: 1,
+    brushSizeType: "square",
   }),
   computed: {
     currentAscii() {
@@ -55,34 +93,16 @@ export default {
       return this.brushSizeHeight;
     },
   },
-  watch: {
-    toolbarState(val, old) {
-      console.log(val);
-      this.delayRedrawCanvas();
-    },
-    watchBrushSizeWidth(val, old) {
-      //   console.log(val, old);
-      //   this.brushSizeWidth = val;
-      this.delayRedrawCanvas();
-    },
-    watchBrushSizeHeight(val, old) {
-      //   console.log(val, old);
-      //   this.brushSizeHeight = val;
-      this.delayRedrawCanvas();
-    },
-  },
+  watch: {},
   methods: {
-    updateBrushSizeHeight() {
+    updateBrushSize() {
       this.$store.commit("updateBrushSize", {
         brushSizeHeight: this.brushSizeHeight,
         brushSizeWidth: this.brushSizeWidth,
+        brushSizeType: this.brushSizeType,
       });
-    },
-    updateBrushSizeWidth() {
-      this.$store.commit("updateBrushSize", {
-        brushSizeHeight: this.brushSizeHeight,
-        brushSizeWidth: this.brushSizeWidth,
-      });
+
+      this.delayRedrawCanvas();
     },
     drawPreview() {
       let brushHeight = this.toolbarState.brushSizeHeight;
@@ -114,27 +134,21 @@ export default {
       let minX = 5 - brushWidth;
       let maxX = 5 + brushWidth;
 
-      for (y = 0; y < 10; y++) {
+      let block = {
+        fg: this.$store.getters.getFgColour,
+        bg: this.$store.getters.getBgColour,
+        char: this.$store.getters.getSelectedChar,
+      };
+
+      // Recreate 2d array for preview
+      for (y = 0; y < brushHeight; y++) {
         blocks[y] = [];
-
-        if (y < maxY && y > minY) {
-          for (x = 0; x < 10; x++) {
-            if (x < maxX && x > minX) {
-              let block = {
-                fg: this.$store.getters.getFgColour,
-                bg: this.$store.getters.getBgColour,
-                char: this.$store.getters.getSelectedChar,
-              };
-
-              blocks[y][x] = Object.assign({}, block);
-            } else {
-              blocks[y][x] = Object.assign({}, emptyBlock);
-            }
-          }
+        for (x = 0; x < brushWidth; x++) {
+          blocks[y][x] = Object.assign({}, block);
         }
       }
 
-      console.log("blocks", blocks);
+      this.$store.commit("brushBlocks", blocks)
 
       // Get middle block
       for (y = 0; y < blocks.length; y++) {
@@ -176,7 +190,7 @@ export default {
         setTimeout(() => {
           this.redraw = true;
           this.drawPreview();
-        }, this.$store.state.options.canvasRedrawSpeed);
+        }, 100);
       }
     },
   },

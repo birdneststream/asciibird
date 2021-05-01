@@ -2,8 +2,6 @@ import Vue from 'vue';
 import VueTailwind from 'vue-tailwind';
 import VueDraggableResizable from 'vue-draggable-resizable';
 import VueClipboard from 'vue-clipboard2'
-import Pako from 'pako';
-
 
 import {
   TInput,
@@ -166,7 +164,22 @@ const settings = {
       // Variants and fixed classes in the same `object` format ...
     }
   },
-  // ...Rest of the components
+  't-radio': {
+    component: TRadio,
+    props: {
+      wrapped: true,
+      classes: {
+        label: 'text-sm uppercase mx-2 text-gray-700',
+        input: 'text-blue-500 transition duration-100 ease-in-out border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 focus:ring-offset-0  disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out',
+        inputWrapper: 'inline-flex',
+        wrapper: 'flex items-center',
+        // labelChecked: '',
+        // inputWrapperChecked: '',
+        // wrapperChecked: '',
+      }
+      // Variants and fixed classes in the same `object` format ...
+    }
+  },
 };
 
 Vue.use(VueTailwind, settings);
@@ -176,7 +189,6 @@ Vue.use(VueClipboard)
 
 new Vue({
   store,
-  Pako,
   render: (h) => h(Dashboard),
 }).$mount('#app');
 
