@@ -78,6 +78,7 @@ export default {
     brushSizeHeight: 1,
     brushSizeWidth: 1,
     brushSizeType: "square",
+    blocks: [],
   }),
   computed: {
     currentAscii() {
@@ -86,14 +87,15 @@ export default {
     toolbarState() {
       return this.$store.getters.getToolbarState;
     },
-    watchBrushSizeWidth() {
-      return this.brushSizeWidth;
+  },
+  watch: {
+    brushSizeWidth() {
+      this.delayRedrawCanvas()
     },
-    watchBrushSizeHeight() {
-      return this.brushSizeHeight;
+    brushSizeHeight() {
+      this.delayRedrawCanvas()
     },
   },
-  watch: {},
   methods: {
     updateBrushSize() {
       this.$store.commit("updateBrushSize", {
@@ -102,13 +104,15 @@ export default {
         brushSizeType: this.brushSizeType,
       });
 
+      this.ctx.clearRect(0, 0, 1000, 1000);
       this.delayRedrawCanvas();
+      this.$store.commit("brushBlocks", this.blocks)
     },
     drawPreview() {
       let brushHeight = this.toolbarState.brushSizeHeight;
       let brushWidth = this.toolbarState.brushSizeWidth;
 
-      this.ctx.clearRect(0, 0, 1000, 1000);
+      
       this.ctx.fillStyle = this.$store.getters.mircColours[1];
 
       const BLOCK_WIDTH = this.currentAscii.blockWidth;
@@ -126,8 +130,6 @@ export default {
         char: null,
       };
 
-      let blocks = [];
-
       let minY = 5 - brushHeight;
       let maxY = 5 + brushHeight;
 
@@ -142,18 +144,16 @@ export default {
 
       // Recreate 2d array for preview
       for (y = 0; y < brushHeight; y++) {
-        blocks[y] = [];
+        this.blocks[y] = [];
         for (x = 0; x < brushWidth; x++) {
-          blocks[y][x] = Object.assign({}, block);
+          this.blocks[y][x] = Object.assign({}, block);
         }
-      }
-
-      this.$store.commit("brushBlocks", blocks)
+      }     
 
       // Get middle block
-      for (y = 0; y < blocks.length; y++) {
-        for (x = 0; x < blocks[0].length; x++) {
-          let curBlock = blocks[y][x];
+      for (y = 0; y < this.blocks.length; y++) {
+        for (x = 0; x < this.blocks[0].length; x++) {
+          let curBlock = this.blocks[y][x];
 
           if (curBlock.bg) {
             this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.bg];
@@ -190,7 +190,7 @@ export default {
         setTimeout(() => {
           this.redraw = true;
           this.drawPreview();
-        }, 100);
+        }, 2);
       }
     },
   },

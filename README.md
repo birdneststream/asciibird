@@ -5,6 +5,7 @@ ASCIIBIRD DEVELOPMENT - TAKING FLIGHT
 # FOCUSING ON NOW
 
 * Toolbar stuff / Brush Size
+ * Need to make brush center on the mouse x and y
 
 * Modals
  * Edit current ascii

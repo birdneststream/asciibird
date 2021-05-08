@@ -49,8 +49,8 @@ export default {
   data: () => ({
     forms: {
       createAscii: {
-        width: 5,
-        height: 5,
+        width: 80,
+        height: 30,
         title: "ascii",
       },
     },
@@ -67,7 +67,7 @@ export default {
   },
   methods: {
     createClick() {
-      this.forms.createAscii.title = `New ASCII ${this.$store.getters.asciibirdMeta.length}`;
+      this.forms.createAscii.title = `New ASCII ${this.$store.getters.asciibirdMeta.length+1}`;
       this.$modal.show("create-ascii-modal");
     },
     createNewASCII() {
@@ -97,11 +97,22 @@ export default {
       this.$store.commit("newAsciibirdMeta", payload);
       this.$store.commit('openModal', 'new-ascii')
       this.$modal.hide("create-ascii-modal");
+
+      // To show the ASCII after importing we get the last key
+      // from the asciiBirdMeta array
+      const keys = this.$store.getters.asciibirdMeta
+        .map((v, k) => k)
+        .filter((i) => i !== undefined);
+
+      // Set the current tab and pop the array for the last value
+      this.currentTab = keys.pop();
+      this.$store.commit("changeTab", this.currentTab);
+
       this.show = false;
     },
     closeNewASCII({ params, cancel }) {
-      this.forms.createAscii.width = 5;
-      this.forms.createAscii.height = 5;
+      this.forms.createAscii.width = 80;
+      this.forms.createAscii.height = 30;
       this.forms.createAscii.title = "New ASCII";
     },
     create2DArray(rows) {
