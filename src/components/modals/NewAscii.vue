@@ -78,6 +78,7 @@ export default {
         height: this.forms.createAscii.height,
         blockWidth: 8,
         blockHeight: 13,
+        history: [],
         x: 247, // the dragable ascii canvas x
         y: 24, // the dragable ascii canvas y
         blocks: this.create2DArray(this.forms.createAscii.height),

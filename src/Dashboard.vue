@@ -302,6 +302,7 @@ export default {
         blockWidth: 8 * this.$store.getters.blockSizeMultiplier,
         blockHeight: 13 * this.$store.getters.blockSizeMultiplier,
         blocks: this.create2DArray(asciiImport.split("\n").length),
+        history: [],
         x: 8 * 35, // the dragable ascii canvas x
         y: 13 * 2, // the dragable ascii canvas y
       };

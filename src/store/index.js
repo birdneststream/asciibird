@@ -1,5 +1,5 @@
 import Vue from 'vue';
-import Vuex from 'vuex';
+import Vuex, { Store } from 'vuex';
 import VuexPersistence from 'vuex-persist';
 
 Vue.use(Vuex);
@@ -204,9 +204,44 @@ export default new Vuex.Store({
     updateToolBarState(state, payload) {
       state.toolbarState = payload;
     },
-    updateAsciiBlocks(state, payload) {
+    updateAsciiBlocks(state, payload, skipUndo = false) {
+      // before - state.asciibirdMeta[state.tab].blocks
+      // current - payload
+
+      if (!skipUndo) {
+        state.asciibirdMeta[state.tab].history.push(JSON.stringify(state.asciibirdMeta[state.tab].blocks))
+      }
+
       Object.assign(state.asciibirdMeta[state.tab].blocks, payload);
     },
+    undoBlocks(state) {
+      // let blocksHistory = state.asciibirdMeta[state.tab].history[store.getters.undoIndex]
+ // Object.assign(state.asciibirdMeta[state.tab].history, );
+      if (this.getters.undoIndex === 0) {
+        Object.assign(state.asciibirdMeta[state.tab].blocks, JSON.parse(state.asciibirdMeta[state.tab].history[this.getters.undoIndex]));
+        state.asciibirdMeta[state.tab].history.pop()
+      }
+
+      if (state.asciibirdMeta[state.tab].history[this.getters.undoIndex-1]) {
+        Object.assign(state.asciibirdMeta[state.tab].blocks, JSON.parse(state.asciibirdMeta[state.tab].history[this.getters.undoIndex-1]));
+        state.asciibirdMeta[state.tab].history.pop()
+      }
+
+      // if (blocksHistory[blocksHistory.length - 1]) {
+        // let prevBlockHistory = blocksHistory[store.getters.undoIndex];
+        
+
+        // state.asciibirdMeta[state.tab].history.pop()
+      // }
+    },
+    // redoBlocks(state) {
+    //   let blocksHistory = state.asciibirdMeta[state.tab].history
+
+    //   if (blocksHistory[blocksHistory.length + 1]) {
+    //     let prevBlockHistory = blocksHistory[blocksHistory.length + 1];
+    //     Object.assign(state.asciibirdMeta[state.tab].blocks, prevBlockHistory);
+    //   }
+    // },
     updateBrushSize(state, payload) {
       state.toolbarState.brushSizeHeight = payload.brushSizeHeight;
       state.toolbarState.brushSizeWidth = payload.brushSizeWidth;
@@ -220,6 +255,8 @@ export default new Vuex.Store({
         case 'new-ascii':
           state.modalState.newAscii = !state.modalState.newAscii
         break;
+
+
 
 
       }
@@ -251,6 +288,7 @@ export default new Vuex.Store({
     brushSizeType: (state) => state.toolbarState.brushSizeType,
     blockSizeMultiplier: (state) => state.blockSizeMultiplier,
     brushBlocks: (state) => state.brushBlocks,
+    undoIndex: (state) => state.asciibirdMeta[state.tab].history.length-1
   },
   actions: {},
   modules: {},

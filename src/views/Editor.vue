@@ -79,17 +79,30 @@ export default {
 
       const _this = this;
       this._keyListener = function (e) {
-        // if (e.key === "s" && (e.ctrlKey || e.metaKey)) {
-        e.preventDefault(); // present "Save Page" from getting triggered.
-
-        _this.canvasKeyDown(e.key);
-        // }
+        if (this.currentToolIsText) {
+          e.preventDefault(); 
+          _this.canvasKeyDown(e.key);
+        }
+        
+        // Ctrl Z here
+        if (e.key === "z" && (e.ctrlKey)) {
+          console.log("undo " + "z");
+          e.preventDefault();
+          this.undo()
+        }
+      
+        // Ctrl Y here
+        if (e.key === "y" && (e.ctrlKey)) {
+          // console.log("undo " + "y");
+          // e.preventDefault();
+          // this.$store.commit("redoBlocks");
+          // this.delayRedrawCanvas()
+        }
       };
 
       document.addEventListener("keydown", this._keyListener.bind(this));
     }
   },
-  created() {},
   data: () => ({
     ctx: null,
     toolCtx: null,
@@ -118,6 +131,9 @@ export default {
     canvasStyle() {
       return `width:${this.canvas.width};height:${this.canvas.height};`;
     },
+    undoIndex() {
+      return this.$store.getters.undoIndex ?? -1
+    },
     generateTitle() {
       return this.$store.getters.currentAscii.title ?? "";
     },
@@ -128,6 +144,11 @@ export default {
       return this.$store.getters.getToolbarIcons[
         this.$store.getters.getCurrentTool
       ];
+    },
+    currentToolIsText() {
+      return this.$store.getters.getToolbarIcons[
+        this.$store.getters.getCurrentTool
+      ] === 'text';
     },
     canFg() {
       return this.$store.getters.getTargetingFg
@@ -192,6 +213,10 @@ export default {
     },
   },
   methods: {
+    undo() {
+        this.$store.commit("undoBlocks");
+        this.delayRedrawCanvas()
+    },
     redrawToolCanvas() {
       if (this.currentAscii.blocks.length) {
         this.clearToolCanvas();
@@ -390,10 +415,15 @@ export default {
       switch (this.currentTool.name) {
         case "brush":
           this.canTool = false;
+
+          this.$store.commit("updateAsciiBlocks", this.currentAscii.blocks);
+          
           break;
 
         case "eraser":
           this.canTool = false;
+
+          this.$store.commit("updateAsciiBlocks", this.currentAscii.blocks);
           break;
 
         case "fill":

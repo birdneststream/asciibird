@@ -1,8 +1,31 @@
 # ASCIIBIRD
 
-ASCIIBIRD DEVELOPMENT - TAKING FLIGHT
+```
+                           ┏   ┰╛    ╔═━┉┈┉╼━━╌┈╍┅┉╌┄┉┉━═╾─┈═──┄┈╼╍═┈┄╍═╍╼━┈─┈╼┉╍┅╌╮
+                         ╘███╏████╒█ ┕█   http://jewbird.live/                     ╏
+                            █┻█  █┦█  █╕  http://yt.jewbird.live/                  ┇
+                          ╔╼█ ████ ████╚━ http://patreon.jewbird.live/             ┃
+                         ╕  █ █ █┉╍█ ┌█═  http://streamlabs.jewbird.live/          ╽
+                       ━█████ █ ██ █ ╯█   ASCIIBIRD TAKING FLIGHT                  ╎
+                          ┸╮    ╛     ╘╼┈┅┅──━┈┉┅┈╍┄┈┄┈╍┉╾╾╼╍═━╾╾┄╼╾═─┈═┉═╼┅─┈━╌╾╾┅╯
+
+                              [BTC] 1L2u8mQs5pe7k11ozn2BgX388e3fGMD7qo
+[XMR] 832owKc3ZuGCnmjHXHeZeeJzGAxyKx5uWU9WxoaXg6BhQ7aWSnZ6EhxFK8Mzw137nSgGAfMM8FgHjM6rpq5s1EofD7UT2yp
+           [STREAMLABS] http://streamlabs.jewbird.live [PATREON] http://patreon.jewbird.live
+     [YT] http://yt.jewbird.live [TWITCH] http://twitch.jewbird.live [GITHUB] http://git.jewbird.live
+```
+# BUGS
+
+* Resize to the left and wont make blocks, diagonal resize works
+* Need to click circle then click square again to update the brush preview properly
+* Context menu / right click / browsers context menu issue
+* Brush Y changing wont update when making smaller
 
 # FOCUSING ON NOW
+
+* UNDO
+ * Can we compress and decompress a string?
+ * vuex mutation undo vs array
 
 * Toolbar stuff / Brush Size
  * Need to make brush center on the mouse x and y
