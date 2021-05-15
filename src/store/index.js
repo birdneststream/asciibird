@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import Vuex, { Store } from 'vuex';
 import VuexPersistence from 'vuex-persist';
+import LZString from 'lz-string';
 
 Vue.use(Vuex);
 const vuexLocal = new VuexPersistence({
@@ -209,30 +210,23 @@ export default new Vuex.Store({
       // current - payload
 
       if (!skipUndo) {
-        state.asciibirdMeta[state.tab].history.push(JSON.stringify(state.asciibirdMeta[state.tab].blocks))
+        state.asciibirdMeta[state.tab].history.push(LZString.compressToUTF16(JSON.stringify(state.asciibirdMeta[state.tab].blocks)))
       }
 
       Object.assign(state.asciibirdMeta[state.tab].blocks, payload);
     },
     undoBlocks(state) {
-      // let blocksHistory = state.asciibirdMeta[state.tab].history[store.getters.undoIndex]
- // Object.assign(state.asciibirdMeta[state.tab].history, );
-      if (this.getters.undoIndex === 0) {
-        Object.assign(state.asciibirdMeta[state.tab].blocks, JSON.parse(state.asciibirdMeta[state.tab].history[this.getters.undoIndex]));
-        state.asciibirdMeta[state.tab].history.pop()
-      }
-
       if (state.asciibirdMeta[state.tab].history[this.getters.undoIndex-1]) {
-        Object.assign(state.asciibirdMeta[state.tab].blocks, JSON.parse(state.asciibirdMeta[state.tab].history[this.getters.undoIndex-1]));
+
+        // {decompressed: 45465, compressed: 2029} huge saving!
+        // console.log({
+        //   decompressed: LZString.decompressFromUTF16(state.asciibirdMeta[state.tab].history[this.getters.undoIndex-1]).length,
+        //   compressed: state.asciibirdMeta[state.tab].history[this.getters.undoIndex - 1].length
+        // })
+
+        Object.assign(state.asciibirdMeta[state.tab].blocks, JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab].history[this.getters.undoIndex-1])));
         state.asciibirdMeta[state.tab].history.pop()
       }
-
-      // if (blocksHistory[blocksHistory.length - 1]) {
-        // let prevBlockHistory = blocksHistory[store.getters.undoIndex];
-        
-
-        // state.asciibirdMeta[state.tab].history.pop()
-      // }
     },
     // redoBlocks(state) {
     //   let blocksHistory = state.asciibirdMeta[state.tab].history

@@ -102,12 +102,11 @@ import ContextMenu from "./components/parts/ContextMenu.vue";
 
 import NewAscii from "./components/modals/NewAscii.vue";
 // import AsciiCursor from './components/parts/AsciiCursor.vue';
-// import pako from 'pako';
+import LZString from 'lz-string';
 
 export default {
   async created() {
     // Load from irc watch if present in the URL bar
-    console.log(window.asciiList);
     const asciiUrl = new URL(location.href).searchParams.get("ascii");
     if (asciiUrl) {
       const res = await fetch(`https://ascii.jewbird.live/${asciiUrl}`, {
@@ -467,24 +466,16 @@ export default {
       // Update the browsers title to the ASCII filename
       document.title = `asciibird - ${this.$store.getters.currentAscii.title}`;
     },
-    importAsciibirdState(fileContents, fileName) {
-      // Import from a gzipped json file
-
-      // const restored = JSON.parse(pako.inflate(fileContents, { to: 'string' }));
-      console.log(restored)
-
-      // No gz for now unless can get the above working
-      // this.$store.commit("changeState", { ...JSON.parse(fileContents) });
+    importAsciibirdState(fileContents) {
+      let contents = JSON.parse(LZString.decompressFromEncodedURIComponent(fileContents))
+      this.$store.commit("changeState", { ... contents });
     },
     exportAsciibirdState() {
       // Download to a gzipped json file
       let output;
 
       try {
-        // Make a gzipped JSON of the asciibird app state
-        // While making a gzip bellow works, had some trouble gunzipping in importAsciibirdState(fileContents, fileName)
-        // output = pako.gzip(JSON.stringify(this.$store.getters.getState), {level:"6"});
-        output = JSON.stringify(this.$store.getters.getState);
+        output = LZString.compressToEncodedURIComponent(JSON.stringify(this.$store.getters.getState));
 
         // Default timestamp for filename
         const today = new Date();
@@ -498,7 +489,7 @@ export default {
         this.downloadToFile(
           output,
           `asciibird-${y}-${m}-${d}-${h}-${mi}-${s}.asb`,
-          "application/json"
+          "application/gzip"
         );
       } catch (err) {
         console.log(err);
