@@ -315,7 +315,7 @@ export default {
       );
       const canvasBlockWidth = Math.floor(width / this.currentAscii.blockWidth);
 
-      if (canvasBlockHeight > oldHeight) {
+      if (canvasBlockHeight > oldHeight || canvasBlockWidth > oldWidth) {
         console.log({ canvasBlockHeight, oldHeight });
 
         for (let y = 0; y < canvasBlockHeight; y++) {

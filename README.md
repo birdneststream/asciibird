@@ -16,10 +16,10 @@
 ```
 # BUGS
 
-* Resize to the left and wont make blocks, diagonal resize works
 * Need to click circle then click square again to update the brush preview properly
 * Context menu / right click / browsers context menu issue
 * Brush Y changing wont update when making smaller
+* Text broken
 
 # FOCUSING ON NOW
 
