@@ -63,7 +63,7 @@ export default {
   name: "Editor",
   components: { Block },
   mounted() {
-    if (this.$store.getters.currentAscii.blocks) {
+    if (this.currentAsciiBlocks) {
       this.ctx = this.$refs.canvas.getContext("2d");
       this.toolCtx = this.$refs.canvastools.getContext("2d");
 
@@ -139,6 +139,9 @@ export default {
     },
     currentAscii() {
       return this.$store.getters.currentAscii;
+    },
+    currentAsciiBlocks() {
+      return this.$store.getters.currentAsciiBlocks;
     },
     currentTool() {
       return this.$store.getters.getToolbarIcons[
@@ -218,7 +221,7 @@ export default {
         this.delayRedrawCanvas()
     },
     redrawToolCanvas() {
-      if (this.currentAscii.blocks.length) {
+      if (this.currentAsciiBlocks.length) {
         this.clearToolCanvas();
         this.toolCtx.fillStyle = "rgba(255, 255, 255, 0.4)";
         const BLOCK_WIDTH = this.currentAscii.blockWidth;
@@ -238,7 +241,7 @@ export default {
       // we need to clear the canvas
       this.ctx.clearRect(0, 0, 10000, 10000);
 
-      if (this.currentAscii.blocks.length) {
+      if (this.currentAsciiBlocks.length) {
         const BLOCK_WIDTH = this.currentAscii.blockWidth;
         const BLOCK_HEIGHT = this.currentAscii.blockHeight;
 
@@ -258,10 +261,10 @@ export default {
           canvasY = BLOCK_HEIGHT * y;
 
           for (x = 0; x < this.currentAscii.width + 1; x++) {
-            if (this.currentAscii.blocks[y] && this.currentAscii.blocks[y][x]) {
+            if (this.currentAsciiBlocks[y] && this.currentAsciiBlocks[y][x]) {
               curBlock = Object.assign(
                 curBlock,
-                this.currentAscii.blocks[y][x]
+                this.currentAsciiBlocks[y][x]
               );
 
               canvasX = BLOCK_WIDTH * x;
@@ -360,19 +363,19 @@ export default {
     canvasKeyDown(char) {
       if (this.isTextEditing) {
         if (
-          this.currentAscii.blocks[this.textEditing.startY] &&
-          this.currentAscii.blocks[this.textEditing.startY][
+          this.currentAsciiBlocks[this.textEditing.startY] &&
+          this.currentAsciiBlocks[this.textEditing.startY][
             this.textEditing.startX
           ]
         ) {
-          const targetBlock = this.currentAscii.blocks[this.textEditing.startY][
+          const targetBlock = this.currentAsciiBlocks[this.textEditing.startY][
             this.textEditing.startX
           ];
 
           switch (char) {
             case "Backspace":
               if (
-                this.currentAscii.blocks[this.textEditing.startY][
+                this.currentAsciiBlocks[this.textEditing.startY][
                   this.textEditing.startX - 1
                 ]
               ) {
@@ -390,7 +393,7 @@ export default {
                 targetBlock.char = char;
 
                 if (
-                  this.currentAscii.blocks[this.textEditing.startY][
+                  this.currentAsciiBlocks[this.textEditing.startY][
                     this.textEditing.startX + 1
                   ]
                 ) {
@@ -416,14 +419,14 @@ export default {
         case "brush":
           this.canTool = false;
 
-          this.$store.commit("updateAsciiBlocks", this.currentAscii.blocks);
+          this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
           
           break;
 
         case "eraser":
           this.canTool = false;
 
-          this.$store.commit("updateAsciiBlocks", this.currentAscii.blocks);
+          this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
           break;
 
         case "fill":
@@ -453,11 +456,11 @@ export default {
       this.toolCtx.clearRect(0, 0, 10000, 10000);
 
       if (
-        this.currentAscii.blocks[this.y] &&
-        this.currentAscii.blocks[this.y][this.x] &&
+        this.currentAsciiBlocks[this.y] &&
+        this.currentAsciiBlocks[this.y][this.x] &&
         this.currentTool
       ) {
-        const targetBlock = this.currentAscii.blocks[this.y][this.x];
+        const targetBlock = this.currentAsciiBlocks[this.y][this.x];
 
         switch (this.currentTool.name) {
           case "default":
@@ -521,10 +524,10 @@ export default {
       this.$emit("coordsupdate", { x: this.x, y: this.y });
 
       if (
-        this.currentAscii.blocks[this.y] &&
-        this.currentAscii.blocks[this.y][this.x]
+        this.currentAsciiBlocks[this.y] &&
+        this.currentAsciiBlocks[this.y][this.x]
       ) {
-        let targetBlock = this.currentAscii.blocks[this.y][this.x];
+        let targetBlock = this.currentAsciiBlocks[this.y][this.x];
 
         switch (
           this.$store.getters.getToolbarIcons[
@@ -588,7 +591,7 @@ export default {
               const BLOCK_WIDTH = this.currentAscii.blockWidth;
               const BLOCK_HEIGHT = this.currentAscii.blockHeight;
 
-              let targetBlock = this.currentAscii.blocks[this.y][this.x];
+              let targetBlock = this.currentAsciiBlocks[this.y][this.x];
 
               for (let y = 0; y < this.$store.getters.brushBlocks.length; y++) {
                 for (let x = 0;x < this.$store.getters.brushBlocks[0].length;x++) {
@@ -606,8 +609,8 @@ export default {
                   let brushX = (this.x * BLOCK_WIDTH) + (x * BLOCK_WIDTH);
                   let brushY = (this.y * BLOCK_HEIGHT) + (y * BLOCK_HEIGHT);
 
-                  if (this.currentAscii.blocks[arrayY] && this.currentAscii.blocks[arrayY][arrayX]) {
-                      targetBlock = this.currentAscii.blocks[arrayY][arrayX];
+                  if (this.currentAsciiBlocks[arrayY] && this.currentAsciiBlocks[arrayY][arrayX]) {
+                      targetBlock = this.currentAsciiBlocks[arrayY][arrayX];
 
                       if (this.canBg) {
                         this.toolCtx.fillStyle = this.$store.getters.mircColours[curBlock.bg];
@@ -655,28 +658,24 @@ export default {
               this.toolCtx.stroke();
     },
     fill() {
-      const fillBlocks = {
-        ...this.currentAscii.blocks,
-      };
-
       const { x } = this;
       const { y } = this;
 
       const newColor = this.$store.getters.getBgColour;
 
       // Get the input which needs to be replaced.
-      const current = fillBlocks[y][x].bg;
+      const current = this.currentAsciiBlocks[y][x].bg;
 
       // If the newColor is same as the existing
       // Then return the original image.
       if (current === newColor) {
-        return fillBlocks;
+        return this.currentAsciiBlocks;
       }
 
       // Other wise call the fill function which will fill in the existing image.
-      this.fillTool(fillBlocks, y, x, newColor, current);
+      this.fillTool(this.currentAsciiBlocks, y, x, newColor, current);
 
-      this.$store.commit("updateAsciiBlocks", fillBlocks);
+      this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
     },
     fillTool(fillBlocks, y, x, newColor, current) {
       // If row is less than 0
@@ -704,15 +703,9 @@ export default {
       }
 
       // If the current pixel is not which needs to be replaced
-      // Bug with null bg stuff
-      // if (fillBlocks[y] && fillBlocks[y][x] && fillBlocks[y][x].bg !== null) {
       if (fillBlocks[y][x].bg !== current) {
         return;
       }
-
-      // Update the new color
-
-      // }
 
       fillBlocks[y][x].bg = newColor;
 

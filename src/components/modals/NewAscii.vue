@@ -43,6 +43,8 @@
 </template>
 
 <script>
+import LZString from 'lz-string';
+
 export default {
   name: "NewAsciiModal",
   created() {},
@@ -71,7 +73,7 @@ export default {
       this.$modal.show("create-ascii-modal");
     },
     createNewASCII() {
-      const payload = {
+      let newAscii = {
         title: this.forms.createAscii.title,
         key: this.$store.getters.asciibirdMeta.length,
         width: this.forms.createAscii.width,
@@ -85,9 +87,9 @@ export default {
       };
 
       // Push all the default ASCII blocks
-      for (let x = 0; x < payload.width; x++) {
-        for (let y = 0; y < payload.height; y++) {
-          payload.blocks[y].push({
+      for (let x = 0; x < newAscii.width; x++) {
+        for (let y = 0; y < newAscii.height; y++) {
+          newAscii.blocks[y].push({
             bg: null,
             fg: null,
             char: null,
@@ -95,7 +97,9 @@ export default {
         }
       }
 
-      this.$store.commit("newAsciibirdMeta", payload);
+      newAscii.blocks = LZString.compressToUTF16(JSON.stringify(newAscii.blocks))
+      newAscii.history.push( ... newAscii.blocks)
+      this.$store.commit("newAsciibirdMeta", newAscii);
       this.$store.commit('openModal', 'new-ascii')
       this.$modal.hide("create-ascii-modal");
 

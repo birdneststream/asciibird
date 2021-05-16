@@ -210,22 +210,14 @@ export default new Vuex.Store({
       // current - payload
 
       if (!skipUndo) {
-        state.asciibirdMeta[state.tab].history.push(LZString.compressToUTF16(JSON.stringify(state.asciibirdMeta[state.tab].blocks)))
+        state.asciibirdMeta[state.tab].history.push(state.asciibirdMeta[state.tab].blocks)
       }
 
-      Object.assign(state.asciibirdMeta[state.tab].blocks, payload);
+      state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(payload));
     },
     undoBlocks(state) {
-      if (state.asciibirdMeta[state.tab].history[this.getters.undoIndex-1]) {
-
-        // {decompressed: 45465, compressed: 2029} huge saving!
-        // console.log({
-        //   decompressed: LZString.decompressFromUTF16(state.asciibirdMeta[state.tab].history[this.getters.undoIndex-1]).length,
-        //   compressed: state.asciibirdMeta[state.tab].history[this.getters.undoIndex - 1].length
-        // })
-
-        Object.assign(state.asciibirdMeta[state.tab].blocks, JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab].history[this.getters.undoIndex-1])));
-        state.asciibirdMeta[state.tab].history.pop()
+      if (state.asciibirdMeta[state.tab].history.length > 1) {
+        state.asciibirdMeta[state.tab].blocks = state.asciibirdMeta[state.tab].history.pop();
       }
     },
     // redoBlocks(state) {
@@ -273,8 +265,10 @@ export default new Vuex.Store({
     currentTab: (state) => state.tab,
     charCodes: (state) => state.charCodes,
     mircColours: (state) => state.mircColours,
-    currentAscii: (state) => state.asciibirdMeta[state.tab] ?? false,
-    currentAsciiBlocks: (state) => state.asciibirdMeta[state.tab].blocks ?? false,
+    currentAscii: state => state.asciibirdMeta[state.tab] ?? false,
+    currentAsciiBlocks: state => {
+      return JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab].blocks))
+    },
     asciibirdMeta: (state) => state.asciibirdMeta,
     nextTabValue: (state) => state.asciibirdMeta.length,
     brushSizeHeight: (state) => state.toolbarState.brushSizeHeight,

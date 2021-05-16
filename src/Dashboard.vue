@@ -165,7 +165,7 @@ export default {
       this.canvasX = value.x;
       this.canvasY = value.y;
     },
-    onImport() {
+    async onImport() {
       const { files } = this.$refs.asciiInput;
       const filename = files[0].name;
       const fileReader = new FileReader();
@@ -451,6 +451,8 @@ export default {
       } // End loop charPos
 
       // Store the ASCII
+      finalAscii.blocks = LZString.compressToUTF16(JSON.stringify(finalAscii.blocks))
+      finalAscii.history.push(  finalAscii.blocks )
       this.$store.commit("newAsciibirdMeta", finalAscii);
 
       // To show the ASCII after importing we get the last key
@@ -471,7 +473,6 @@ export default {
       this.$store.commit("changeState", { ... contents });
     },
     exportAsciibirdState() {
-      // Download to a gzipped json file
       let output;
 
       try {
@@ -497,18 +498,19 @@ export default {
     },
     exportMirc(type) {
       const { currentAscii } = this.$store.getters;
+      let blocks = this.$store.getters.currentAsciiBlocks
       const output = [];
       let curBlock = null;
       let prevBlock = { bg: -1, fg: -1 };
 
-      for (let y = 0; y <= currentAscii.blocks.length - 1; y++) {
-        for (let x = 0; x <= currentAscii.blocks[y].length - 1; x++) {
-          curBlock = currentAscii.blocks[y][x];
+      for (let y = 0; y <= blocks.length - 1; y++) {
+        for (let x = 0; x <= blocks[y].length - 1; x++) {
+          curBlock = blocks[y][x];
 
           // If we have a difference between our previous block
           // we'll put a colour codes and continue as normal
           if (curBlock.bg !== prevBlock.bg || curBlock.fg !== prevBlock.fg) {
-            Object.assign(curBlock, currentAscii.blocks[y][x]);
+            Object.assign(curBlock, blocks[y][x]);
             const zeroPad = (num, places) => String(num).padStart(places, "0");
             output.push(
               `\u0003${zeroPad(
@@ -523,7 +525,7 @@ export default {
 
           // null .chars will end up as space
           output.push(curBlock.char ?? " ");
-          prevBlock = currentAscii.blocks[y][x];
+          prevBlock = blocks[y][x];
         }
 
         // We can never have a -1 colour code so we'll always
@@ -531,7 +533,7 @@ export default {
         prevBlock = { bg: -1, fg: -1 };
 
         // New line except for the very last line
-        if (y < currentAscii.blocks.length - 1) {
+        if (y < blocks.length - 1) {
           output.push("\n");
         }
       }
