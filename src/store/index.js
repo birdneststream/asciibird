@@ -128,7 +128,7 @@ export default new Vuex.Store({
       x: 8 * 2,
       y: 13 * 2,
       h: 13 * 39,
-      w: 8 * 15,
+      w: 8 * 25,
     },
     debugPanelState: {
       x: 8 * 2,
@@ -214,20 +214,22 @@ export default new Vuex.Store({
       }
 
       state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(payload));
+      state.asciibirdMeta[state.tab].redo = [];
     },
     undoBlocks(state) {
       if (state.asciibirdMeta[state.tab].history.length > 1) {
-        state.asciibirdMeta[state.tab].blocks = state.asciibirdMeta[state.tab].history.pop();
+        let previous = state.asciibirdMeta[state.tab].history.pop();
+        state.asciibirdMeta[state.tab].blocks = previous
+        state.asciibirdMeta[state.tab].redo.push(previous)
       }
     },
-    // redoBlocks(state) {
-    //   let blocksHistory = state.asciibirdMeta[state.tab].history
-
-    //   if (blocksHistory[blocksHistory.length + 1]) {
-    //     let prevBlockHistory = blocksHistory[blocksHistory.length + 1];
-    //     Object.assign(state.asciibirdMeta[state.tab].blocks, prevBlockHistory);
-    //   }
-    // },
+    redoBlocks(state) {
+      if (state.asciibirdMeta[state.tab].redo.length > 0) {
+        let next = state.asciibirdMeta[state.tab].redo.pop();
+        state.asciibirdMeta[state.tab].blocks = next
+        state.asciibirdMeta[state.tab].history.push(next)
+      }
+    },
     updateBrushSize(state, payload) {
       state.toolbarState.brushSizeHeight = payload.brushSizeHeight;
       state.toolbarState.brushSizeWidth = payload.brushSizeWidth;
@@ -276,7 +278,7 @@ export default new Vuex.Store({
     brushSizeType: (state) => state.toolbarState.brushSizeType,
     blockSizeMultiplier: (state) => state.blockSizeMultiplier,
     brushBlocks: (state) => state.brushBlocks,
-    undoIndex: (state) => state.asciibirdMeta[state.tab].history.length-1
+    undoIndex: (state) => state.asciibirdMeta[state.tab].history.length-1,
   },
   actions: {},
   modules: {},

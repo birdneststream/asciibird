@@ -14,18 +14,15 @@
            [STREAMLABS] http://streamlabs.jewbird.live [PATREON] http://patreon.jewbird.live
      [YT] http://yt.jewbird.live [TWITCH] http://twitch.jewbird.live [GITHUB] http://git.jewbird.live
 ```
+
+FIRST SHOW OF COMPRESSION IN LOCALSTORAGE AND ASCIIBIRD STATE FILES !!!
+
 # BUGS
 
-* Need to click circle then click square again to update the brush preview properly
-* Context menu / right click / browsers context menu issue
-* Brush Y changing wont update when making smaller
-* Text broken
-
+* Escape chars in asciis
+* If you resize an ascii, and then undo and try fill in blocks it will error cuz the blocks don't exist
+* Redo (ctrl y) is a buggy
 # FOCUSING ON NOW
-
-* UNDO
- * Can we compress and decompress a string?
- * vuex mutation undo vs array
 
 * Toolbar stuff / Brush Size
  * Need to make brush center on the mouse x and y
@@ -39,10 +36,8 @@
 
 * Context Menus (right click menu) - we started this
 * Keyboard shortcuts
+* Context menu / right click / browsers context menu issue
 
-* Undo feature
-
-* COMPRESSION inside the localStorage
 
 # KILLER ASCIIBIRD FEATURES DONE
 
@@ -51,7 +46,7 @@
 * Import ASCII from https://irc.watch/
 * Update text colours without deleting the block
 * Floating pattlets, resizeable and remembers positions
-* .ASB file, but it's not gzipped yet just json.
+* .ASB file, compressed asciibird state
 * Export mIRC to clipboard
 
 * Modals
@@ -60,10 +55,7 @@
 # KILLER ASCIIBIRD FEATURES TO DO
 
 * Layers / Insert ASCII as layer
-
-* Undo for brush settings and shit changes
 * Overlay image for nance tracing mode
-
 
 # ASCIIBIRD API?
 

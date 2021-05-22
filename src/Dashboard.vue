@@ -107,9 +107,24 @@ import LZString from 'lz-string';
 export default {
   async created() {
     // Load from irc watch if present in the URL bar
-    const asciiUrl = new URL(location.href).searchParams.get("ascii");
+    const asciiUrlCdn = new URL(location.href).searchParams.get("ascii");
+    if (asciiUrlCdn) {
+      const res = await fetch(`https://ascii.jewbird.live/${asciiUrlCdn}`, {
+        method: "GET",
+        headers: {
+          Accept: "text/plain",
+        },
+      });
+
+      const asciiData = await res.text();
+      console.log({ asciiData, asciiUrlCdn });
+      this.mircAsciiImport(asciiData, asciiUrlCdn);
+      window.location.href = "/";
+    }
+
+    const asciiUrl = new URL(location.href).searchParams.get("ircwatch");
     if (asciiUrl) {
-      const res = await fetch(`https://ascii.jewbird.live/${asciiUrl}`, {
+      const res = await fetch(`https://irc.watch/ascii/txt/${ircwatch}`, {
         method: "GET",
         headers: {
           Accept: "text/plain",
@@ -302,6 +317,7 @@ export default {
         blockHeight: 13 * this.$store.getters.blockSizeMultiplier,
         blocks: this.create2DArray(asciiImport.split("\n").length),
         history: [],
+        redo: [],
         x: 8 * 35, // the dragable ascii canvas x
         y: 13 * 2, // the dragable ascii canvas y
       };

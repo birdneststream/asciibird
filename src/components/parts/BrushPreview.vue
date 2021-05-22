@@ -67,18 +67,17 @@ export default {
   mounted() {
     this.ctx = this.$refs.brushcanvas.getContext("2d");
     this.delayRedrawCanvas();
-
-    this.brushSizeHeight = this.$store.getters.brushSizeHeight;
     this.brushSizeWidth = this.$store.getters.brushSizeWidth;
+    this.brushSizeHeight = this.$store.getters.brushSizeHeight;
     this.brushSizeType = this.$store.getters.brushSizeType;
   },
   data: () => ({
     ctx: null,
     redraw: true,
+    blocks: [],
     brushSizeHeight: 1,
     brushSizeWidth: 1,
-    brushSizeType: "square",
-    blocks: [],
+    brushSizeType: 'square',
   }),
   computed: {
     currentAscii() {
@@ -87,12 +86,57 @@ export default {
     toolbarState() {
       return this.$store.getters.getToolbarState;
     },
+    getTargetingBg() {
+      return this.$store.getters.getTargetingBg
+    },
+    getTargetingFg() {
+      return this.$store.getters.getTargetingFg
+    },
+    getTargetingChar() {
+      return this.$store.getters.getTargetingChar
+    },
+    getFgColour() {
+      return this.$store.getters.getFgColour
+    },
+    getBgColour() {
+      return this.$store.getters.getBgColour
+    },
+    getSelectedChar() {
+      return this.$store.getters.getSelectedChar
+    },
+    brushSizeHeightPreview() {
+      return this.$store.getters.brushSizeHeight
+    },
+    brushSizeWidthPreview() {
+      return this.$store.getters.brushSizeWidth
+    },
+    brushSizeTypePreview() {
+      return this.$store.getters.brushSizeType
+    },
   },
   watch: {
     brushSizeWidth() {
       this.delayRedrawCanvas()
     },
     brushSizeHeight() {
+      this.delayRedrawCanvas()
+    },
+    getTargetingBg() {
+      this.delayRedrawCanvas()
+    },
+    getTargetingFg() {
+      this.delayRedrawCanvas()
+    },
+    getTargetingChar() {
+      this.delayRedrawCanvas()
+    },
+    getFgColour() {
+      this.delayRedrawCanvas()
+    },
+    getBgColour() {
+      this.delayRedrawCanvas()
+    },
+    getSelectedChar() {
       this.delayRedrawCanvas()
     },
   },
@@ -106,13 +150,14 @@ export default {
 
       this.ctx.clearRect(0, 0, 1000, 1000);
       this.delayRedrawCanvas();
-      this.$store.commit("brushBlocks", this.blocks)
+      
     },
     drawPreview() {
-      let brushHeight = this.toolbarState.brushSizeHeight;
-      let brushWidth = this.toolbarState.brushSizeWidth;
+      let brushHeight = this.brushSizeHeightPreview;
+      let brushWidth = this.brushSizeWidthPreview;
 
-      
+      this.blocks = [];
+
       this.ctx.fillStyle = this.$store.getters.mircColours[1];
 
       const BLOCK_WIDTH = this.currentAscii.blockWidth;
@@ -124,29 +169,49 @@ export default {
       let y = 0;
       let x = 0;
 
+      let targetY = 0;
+      let targetX = 0;
+
+      let block = {
+        fg: this.getFgColour,
+        bg: this.getBgColour,
+        char: this.getSelectedChar,
+      };
+
       let emptyBlock = {
         fg: null,
         bg: null,
         char: null,
       };
 
-      let minY = 5 - brushHeight;
-      let maxY = 5 + brushHeight;
-
-      let minX = 5 - brushWidth;
-      let maxX = 5 + brushWidth;
-
-      let block = {
-        fg: this.$store.getters.getFgColour,
-        bg: this.$store.getters.getBgColour,
-        char: this.$store.getters.getSelectedChar,
-      };
-
       // Recreate 2d array for preview
       for (y = 0; y < brushHeight; y++) {
         this.blocks[y] = [];
         for (x = 0; x < brushWidth; x++) {
-          this.blocks[y][x] = Object.assign({}, block);
+          switch(this.brushSizeTypePreview) {
+            case 'cross':
+              this.blocks[y][x] = Object.assign({}, emptyBlock); 
+
+              targetX = x;
+              
+              if (y % 2 === 0) {
+                targetX = targetX - 1
+              } 
+
+              if (this.blocks[y]) {
+                if (x % 2 === 0) {
+                  this.blocks[y][targetX] = Object.assign({}, emptyBlock); 
+                } else {
+                  this.blocks[y][targetX] = Object.assign({}, block);
+                }
+              }
+            break;
+
+            default:
+            case 'square':
+              this.blocks[y][x] = Object.assign({}, block);
+              break;
+          }
         }
       }     
 
@@ -155,32 +220,70 @@ export default {
         for (x = 0; x < this.blocks[0].length; x++) {
           let curBlock = this.blocks[y][x];
 
-          if (curBlock.bg) {
-            this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.bg];
+          switch(this.brushSizeTypePreview) {
+            case 'cross':
+                
+                  if (curBlock.bg && this.getTargetingBg) {
+                    this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.bg];
 
-            this.ctx.fillRect(
-              x * BLOCK_WIDTH,
-              y * BLOCK_HEIGHT,
-              BLOCK_WIDTH,
-              BLOCK_HEIGHT
-            );
+                    this.ctx.fillRect(
+                      x * BLOCK_WIDTH,
+                      y * BLOCK_HEIGHT,
+                      BLOCK_WIDTH,
+                      BLOCK_HEIGHT
+                    );
+                  }
+
+                  if (curBlock.fg && this.getTargetingFg) {
+                    this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.fg];
+                  }
+
+                  if (curBlock.char && this.getTargetingChar) {
+                    this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.fg];
+                    this.ctx.fillText(
+                      curBlock.char,
+                      x * BLOCK_WIDTH - 1,
+                      y * BLOCK_HEIGHT + BLOCK_HEIGHT - 3
+                    );
+                  }
+                           
+              break;
+
+
+            default:
+            case 'square':
+                if (curBlock.bg && this.getTargetingBg) {
+                  this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.bg];
+
+                  this.ctx.fillRect(
+                    x * BLOCK_WIDTH,
+                    y * BLOCK_HEIGHT,
+                    BLOCK_WIDTH,
+                    BLOCK_HEIGHT
+                  );
+                }
+
+                if (curBlock.fg && this.getTargetingFg) {
+                  this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.fg];
+                }
+
+                if (curBlock.char && this.getTargetingChar) {
+                  this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.fg];
+                  this.ctx.fillText(
+                    curBlock.char,
+                    x * BLOCK_WIDTH - 1,
+                    y * BLOCK_HEIGHT + BLOCK_HEIGHT - 3
+                  );
+                }
+              break;
+            
           }
 
-          if (curBlock.fg) {
-            this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.fg];
-          }
-
-          if (curBlock.char) {
-            this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.fg];
-            this.ctx.fillText(
-              curBlock.char,
-              x * BLOCK_WIDTH - 1,
-              y * BLOCK_HEIGHT + BLOCK_HEIGHT - 3
-            );
-          }
         }
 
         this.ctx.stroke();
+
+        this.$store.commit("brushBlocks", this.blocks)
       }
     },
     delayRedrawCanvas() {

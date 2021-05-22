@@ -81,6 +81,7 @@ export default {
         blockWidth: 8,
         blockHeight: 13,
         history: [],
+        redo: [],
         x: 247, // the dragable ascii canvas x
         y: 24, // the dragable ascii canvas y
         blocks: this.create2DArray(this.forms.createAscii.height),
@@ -98,7 +99,7 @@ export default {
       }
 
       newAscii.blocks = LZString.compressToUTF16(JSON.stringify(newAscii.blocks))
-      newAscii.history.push( ... newAscii.blocks)
+      newAscii.history.push( newAscii.blocks)
       this.$store.commit("newAsciibirdMeta", newAscii);
       this.$store.commit('openModal', 'new-ascii')
       this.$modal.hide("create-ascii-modal");
