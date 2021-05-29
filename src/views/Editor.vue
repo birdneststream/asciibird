@@ -606,7 +606,16 @@ export default {
     //
     drawIndicator() {
       this.clearToolCanvas();
-      this.toolCtx.fillStyle = this.$store.getters.mircColours[0];
+
+      let targetBlock = this.currentAsciiBlocks[this.y][this.x];
+
+      let indicatorColour = targetBlock.bg === 0 ? 1 : 0
+
+      if (targetBlock.bg === 8) {
+        indicatorColour = 1;
+      }
+
+      this.toolCtx.fillStyle = this.$store.getters.mircColours[indicatorColour];
       const BLOCK_WIDTH = this.currentAscii.blockWidth;
       const BLOCK_HEIGHT = this.currentAscii.blockHeight;
       this.toolCtx.fillRect(
@@ -615,6 +624,7 @@ export default {
         BLOCK_WIDTH,
         BLOCK_HEIGHT
       );
+
 
       this.toolCtx.stroke();
     },
