@@ -639,27 +639,22 @@ export default {
 
       let targetBlock = this.currentAsciiBlocks[this.y][this.x];
 
+      let brushDiffX = Math.round(this.$store.getters.brushBlocks[0].length / 2) * BLOCK_WIDTH;
+      let brushDiffY = Math.round(this.$store.getters.brushBlocks.length / 2) * BLOCK_HEIGHT;
+
       for (let y = 0; y < this.$store.getters.brushBlocks.length; y++) {
         for (let x = 0; x < this.$store.getters.brushBlocks[0].length; x++) {
           let brushBlock = this.$store.getters.brushBlocks[y][x];
 
-          let arrayX = this.x + x;
-          let arrayY = this.y + y;
-
-          let diffX = Math.ceil(arrayX / 2);
-          let diffY = Math.ceil(arrayY / 2);
-
-          let brushDiffX = arrayX - diffX;
-          let brushDiffY = arrayY - diffY;
-
-          let brushX = this.x * BLOCK_WIDTH + x * BLOCK_WIDTH;
-          let brushY = this.y * BLOCK_HEIGHT + y * BLOCK_HEIGHT;
+          let brushX = (this.x * BLOCK_WIDTH + x * BLOCK_WIDTH) - brushDiffX;
+          let brushY = (this.y * BLOCK_HEIGHT + y * BLOCK_HEIGHT) - brushDiffY;
 
           if (
-            this.currentAsciiBlocks[arrayY] &&
-            this.currentAsciiBlocks[arrayY][arrayX]
+            this.currentAsciiBlocks[brushY/BLOCK_HEIGHT] &&
+            this.currentAsciiBlocks[brushY/BLOCK_HEIGHT][brushX/BLOCK_WIDTH] 
           ) {
-            targetBlock = this.currentAsciiBlocks[arrayY][arrayX];
+
+            targetBlock = this.currentAsciiBlocks[brushY/BLOCK_HEIGHT][brushX/BLOCK_WIDTH];
 
             if (!plain) {
               if (this.canBg && brushBlock.bg) {
@@ -679,7 +674,7 @@ export default {
                   brushBlock.fg
                 ];
 
-                if (this.canTool ) {
+                if (this.canTool) {
                   targetBlock.fg = this.$store.getters.getFgColour;
                 }
               }
@@ -688,6 +683,7 @@ export default {
                 this.toolCtx.fillStyle = this.$store.getters.mircColours[
                   brushBlock.fg
                 ];
+
                 this.toolCtx.fillText(
                   brushBlock.char,
                   brushX - 1,

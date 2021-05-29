@@ -14,9 +14,6 @@
            [STREAMLABS] http://streamlabs.jewbird.live [PATREON] http://patreon.jewbird.live
      [YT] http://yt.jewbird.live [TWITCH] http://twitch.jewbird.live [GITHUB] http://git.jewbird.live
 ```
-
-FIRST SHOW OF COMPRESSION IN LOCALSTORAGE AND ASCIIBIRD STATE FILES !!!
-
 # BUGS
 
 * Escape chars in asciis
@@ -24,8 +21,7 @@ FIRST SHOW OF COMPRESSION IN LOCALSTORAGE AND ASCIIBIRD STATE FILES !!!
 * Redo (ctrl y) is a buggy
 # FOCUSING ON NOW
 
-* Toolbar stuff / Brush Size
- * Need to make brush center on the mouse x and y
+* SELECT
 
 * Modals
  * Edit current ascii
@@ -37,7 +33,6 @@ FIRST SHOW OF COMPRESSION IN LOCALSTORAGE AND ASCIIBIRD STATE FILES !!!
 * Context Menus (right click menu) - we started this
 * Keyboard shortcuts
 * Context menu / right click / browsers context menu issue
-
 
 # KILLER ASCIIBIRD FEATURES DONE
 

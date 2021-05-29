@@ -95,13 +95,12 @@
 import Toolbar from "./components/Toolbar.vue";
 import DebugPanel from "./components/DebugPanel.vue";
 import Editor from "./views/Editor.vue";
-// import * as Anser from "anser";
+
 import CharPicker from "./components/parts/CharPicker.vue";
 import ColourPicker from "./components/parts/ColourPicker.vue";
 import ContextMenu from "./components/parts/ContextMenu.vue";
 
 import NewAscii from "./components/modals/NewAscii.vue";
-// import AsciiCursor from './components/parts/AsciiCursor.vue';
 import LZString from 'lz-string';
 
 export default {
@@ -119,12 +118,12 @@ export default {
       const asciiData = await res.text();
       console.log({ asciiData, asciiUrlCdn });
       this.mircAsciiImport(asciiData, asciiUrlCdn);
-      window.location.href = "/";
+      // window.location.href = "/";
     }
 
     const asciiUrl = new URL(location.href).searchParams.get("ircwatch");
     if (asciiUrl) {
-      const res = await fetch(`https://irc.watch/ascii/txt/${ircwatch}`, {
+      const res = await fetch(`https://irc.watch/ascii/txt/${asciiUrl}`, {
         method: "GET",
         headers: {
           Accept: "text/plain",
@@ -134,7 +133,7 @@ export default {
       const asciiData = await res.text();
       console.log({ asciiData, asciiUrl });
       this.mircAsciiImport(asciiData, asciiUrl);
-      window.location.href = "/";
+      // window.location.href = "/";
     }
   },
   components: {
