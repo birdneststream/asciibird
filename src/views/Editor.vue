@@ -51,6 +51,7 @@ body {
   position: absolute;
   z-index: 100;
   opacity: 0.5;
+  cursor: crosshair;
 }
 
 .canvas {
@@ -530,8 +531,8 @@ export default {
         this.y = e.offsetY;
       }
 
-      this.x = Math.round(this.x / this.currentAscii.blockWidth);
-      this.y = Math.round(this.y / this.currentAscii.blockHeight);
+      this.x = Math.floor(this.x / this.currentAscii.blockWidth);
+      this.y = Math.floor(this.y / this.currentAscii.blockHeight);
 
       this.$emit("coordsupdate", { x: this.x, y: this.y });
 
@@ -618,6 +619,7 @@ export default {
       this.toolCtx.fillStyle = this.$store.getters.mircColours[indicatorColour];
       const BLOCK_WIDTH = this.currentAscii.blockWidth;
       const BLOCK_HEIGHT = this.currentAscii.blockHeight;
+      
       this.toolCtx.fillRect(
         this.x * BLOCK_WIDTH,
         this.y * BLOCK_HEIGHT,
@@ -630,7 +632,16 @@ export default {
     },
     drawTextIndicator() {
       this.clearToolCanvas();
-      this.toolCtx.fillStyle = this.$store.getters.mircColours[0];
+
+      let targetBlock = this.currentAsciiBlocks[this.textEditing.startY][this.textEditing.startX];
+
+      let indicatorColour = targetBlock.bg === 0 ? 1 : 0
+
+      if (targetBlock.bg === 8) {
+        indicatorColour = 1;
+      }
+
+      this.toolCtx.fillStyle = this.$store.getters.mircColours[indicatorColour];
       const BLOCK_WIDTH = this.currentAscii.blockWidth;
       const BLOCK_HEIGHT = this.currentAscii.blockHeight;
       this.toolCtx.fillRect(
@@ -649,8 +660,8 @@ export default {
 
       let targetBlock = this.currentAsciiBlocks[this.y][this.x];
 
-      let brushDiffX = Math.round(this.$store.getters.brushBlocks[0].length / 2) * BLOCK_WIDTH;
-      let brushDiffY = Math.round(this.$store.getters.brushBlocks.length / 2) * BLOCK_HEIGHT;
+      let brushDiffX = Math.floor(this.$store.getters.brushBlocks[0].length / 2) * BLOCK_WIDTH;
+      let brushDiffY = Math.floor(this.$store.getters.brushBlocks.length / 2) * BLOCK_HEIGHT;
 
       for (let y = 0; y < this.$store.getters.brushBlocks.length; y++) {
         for (let x = 0; x < this.$store.getters.brushBlocks[0].length; x++) {
@@ -659,12 +670,15 @@ export default {
           let brushX = (this.x * BLOCK_WIDTH + x * BLOCK_WIDTH) - brushDiffX;
           let brushY = (this.y * BLOCK_HEIGHT + y * BLOCK_HEIGHT) - brushDiffY;
 
+          let brushYHeight = brushY/BLOCK_HEIGHT;
+          let brushXWidth = brushX/BLOCK_WIDTH;
+
           if (
-            this.currentAsciiBlocks[brushY/BLOCK_HEIGHT] &&
-            this.currentAsciiBlocks[brushY/BLOCK_HEIGHT][brushX/BLOCK_WIDTH] 
+            this.currentAsciiBlocks[brushYHeight] &&
+            this.currentAsciiBlocks[brushYHeight][brushXWidth] 
           ) {
 
-            targetBlock = this.currentAsciiBlocks[brushY/BLOCK_HEIGHT][brushX/BLOCK_WIDTH];
+            targetBlock = this.currentAsciiBlocks[brushYHeight][brushXWidth];
 
             if (!plain) {
               if (this.canBg && brushBlock.bg) {
@@ -672,14 +686,14 @@ export default {
                   brushBlock.bg
                 ];
 
-                this.toolCtx.fillRect(brushX, brushY, BLOCK_WIDTH, BLOCK_HEIGHT);
+                this.toolCtx.fillRect(brushX , brushY , BLOCK_WIDTH, BLOCK_HEIGHT);
 
                 if (this.canTool ) {
                   targetBlock.bg = this.$store.getters.getBgColour;
                 }
               }
 
-              if (this.canFg) {
+              if (this.canFg && brushBlock.fg) {
                 this.toolCtx.fillStyle = this.$store.getters.mircColours[
                   brushBlock.fg
                 ];
@@ -724,27 +738,21 @@ export default {
 
         let targetBlock = this.currentAsciiBlocks[this.y][this.x];
 
+        let brushDiffX = Math.floor(this.$store.getters.brushBlocks[0].length / 2) * BLOCK_WIDTH;
+        let brushDiffY = Math.floor(this.$store.getters.brushBlocks.length / 2) * BLOCK_HEIGHT;
+
         for (let y = 0; y < this.$store.getters.brushBlocks.length; y++) {
           for (let x = 0; x < this.$store.getters.brushBlocks[0].length; x++) {
-            let curBlock = this.$store.getters.brushBlocks[y][x];
+            
+          let brushX = (this.x * BLOCK_WIDTH + x * BLOCK_WIDTH) - brushDiffX;
+          let brushY = (this.y * BLOCK_HEIGHT + y * BLOCK_HEIGHT) - brushDiffY;
 
-            let arrayX = this.x + x;
-            let arrayY = this.y + y;
+          if (
+            this.currentAsciiBlocks[brushY/BLOCK_HEIGHT] &&
+            this.currentAsciiBlocks[brushY/BLOCK_HEIGHT][brushX/BLOCK_WIDTH] 
+          ) {
 
-            let diffX = Math.ceil(arrayX / 2);
-            let diffY = Math.ceil(arrayY / 2);
-
-            let brushDiffX = arrayX - diffX;
-            let brushDiffY = arrayY - diffY;
-
-            let brushX = this.x * BLOCK_WIDTH + x * BLOCK_WIDTH;
-            let brushY = this.y * BLOCK_HEIGHT + y * BLOCK_HEIGHT;
-
-            if (
-              this.currentAsciiBlocks[arrayY] &&
-              this.currentAsciiBlocks[arrayY][arrayX]
-            ) {
-              targetBlock = this.currentAsciiBlocks[arrayY][arrayX];
+            targetBlock = this.currentAsciiBlocks[brushY/BLOCK_HEIGHT][brushX/BLOCK_WIDTH];
 
               if (this.$store.getters.getTargetingFg) {
                 targetBlock.fg = null;
@@ -757,7 +765,8 @@ export default {
               if (this.$store.getters.getTargetingChar) {
                 targetBlock.char = null;
               }
-            }
+
+          }
           }
         }
       }
