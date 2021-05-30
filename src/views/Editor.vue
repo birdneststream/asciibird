@@ -90,14 +90,14 @@ export default {
           _this.canvasKeyDown(e.key);
         }
 
-        // Ctrl Z here
-        if (e.key === "z" && e.ctrlKey) {
+        // Ctrl Z here (Now supports Macs -- skg)
+        if ((e.key === "z" && e.ctrlKey) || (e.key === "z" && e.metaKey)) {
           e.preventDefault();
           this.undo();
         }
 
         // Ctrl Y here
-        if (e.key === "y" && e.ctrlKey) {
+        if ((e.key === "y" && e.ctrlKey) || (e.key === "z" && e.metaKey)) {
           console.log("ctrl y");
           e.preventDefault();
           this.redo();
