@@ -138,6 +138,7 @@ export default new Vuex.Store({
     },
     blockSizeMultiplier: 1,
     brushBlocks: [],
+    selectBlocks: [],
   },
   mutations: {
     changeState(state, payload) {
@@ -238,6 +239,9 @@ export default new Vuex.Store({
     brushBlocks(state, payload) {
       state.brushBlocks = payload;
     },
+    selectBlocks(state, payload) {
+      state.selectBlocks = payload;
+    },
     openModal(state, type) {
       switch (type) {
         case 'new-ascii':
@@ -278,6 +282,7 @@ export default new Vuex.Store({
     brushSizeType: (state) => state.toolbarState.brushSizeType,
     blockSizeMultiplier: (state) => state.blockSizeMultiplier,
     brushBlocks: (state) => state.brushBlocks,
+    selectBlocks: (state) => state.selectBlocks,
     undoIndex: (state) => state.asciibirdMeta[state.tab].history.length-1,
   },
   actions: {},

@@ -91,16 +91,60 @@ export default {
         }
 
         // Ctrl Z here
-        if (e.key === "z" && e.ctrlKey) {
+        // skg - thanks for mac key suggestion, bro
+        if (e.key === "z" && (e.ctrlKey || e.metaKey)) {
           e.preventDefault();
           this.undo();
         }
 
         // Ctrl Y here
-        if (e.key === "y" && e.ctrlKey) {
+        if (e.key === "y" && (e.ctrlKey || e.metaKey)) {
           console.log("ctrl y");
           e.preventDefault();
           this.redo();
+        }
+
+        // Ctrl C - copy blocks
+        if (e.key === "c" && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault();
+
+          if (this.isSelecting && this.isSelected && this.selectBlocks.length) {
+            this.$store.commit("selectBlocks", this.selectBlocks);
+            console.log("ctrl c", this.selectBlocks);
+          }          
+        }
+
+
+        // Ctrl V - paste blocks
+        // Not working
+        if (e.key === "v" && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault();
+
+          if (this.isSelecting && this.isSelected && this.selectBlocks.length) {
+                const BLOCK_WIDTH = this.currentAscii.blockWidth;
+                const BLOCK_HEIGHT = this.currentAscii.blockHeight;
+                let x = 0;
+                let y = 0;
+
+                for (y = 0; y <= this.selectBlocks.height; y++) {
+                  canvasY = BLOCK_HEIGHT * y;
+
+                  for (x = 0; x <= this.selectBlocks.width; x++) {
+                    if (this.currentAsciiBlocks[y] && this.currentAsciiBlocks[y][x]) {
+
+                      if (this.selectBlocks[y] && this.selectBlocks[y][x]) {
+                          this.currentAsciiBlocks[y][x] = { ... this.selectBlocks[y][x]}
+                      }
+ 
+                    }
+                  }
+                }
+
+            console.log("ctrl v", this.selectBlocks);
+
+            this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
+            this.delayRedrawCanvas();
+          }          
         }
       };
 
@@ -131,6 +175,7 @@ export default {
       canSelect: false,
     },
     isMouseOnCanvas: false,
+    selectBlocks: [],
   }),
   computed: {
     canvasStyle() {
@@ -185,6 +230,14 @@ export default {
         this.canvas.height + 4
       };`;
     },
+    isSelected() {
+      return (
+        this.selecting.startX &&
+        this.selecting.startY &&
+        this.selecting.endX &&
+        this.selecting.endY
+      );
+    },
   },
   watch: {
     currentAscii(val, old) {
@@ -233,19 +286,22 @@ export default {
       this.$store.commit("redoBlocks");
       this.delayRedrawCanvas();
     },
-    redrawToolCanvas() {
+    redrawSelect() {
       if (this.currentAsciiBlocks.length) {
+        let targetBlock = this.currentAsciiBlocks[this.y][this.x];
+
         this.clearToolCanvas();
-        this.toolCtx.fillStyle = "rgba(255, 255, 255, 0.4)";
+        this.toolCtx.fillStyle = this.$store.getters.mircColours[0];
         const BLOCK_WIDTH = this.currentAscii.blockWidth;
         const BLOCK_HEIGHT = this.currentAscii.blockHeight;
 
         this.toolCtx.fillRect(
-          this.selecting.startX,
-          this.selecting.startY,
-          this.selecting.endX,
-          this.selecting.endY
+          this.selecting.startX * BLOCK_WIDTH,
+          this.selecting.startY * BLOCK_HEIGHT,
+          this.selecting.endX * BLOCK_WIDTH,
+          this.selecting.endY * BLOCK_HEIGHT
         );
+
         this.toolCtx.stroke();
       }
     },
@@ -427,6 +483,9 @@ export default {
     },
     // Mouse Up, Down and Move
     canvasMouseUp() {
+      const BLOCK_WIDTH = this.currentAscii.blockWidth;
+      const BLOCK_HEIGHT = this.currentAscii.blockHeight;
+
       switch (this.currentTool.name) {
         case "brush":
           this.canTool = false;
@@ -444,11 +503,52 @@ export default {
         case "fill":
           this.canTool = false;
 
+          this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
           break;
 
         case "select":
           this.selecting.canSelect = false;
           this.clearToolCanvas();
+
+          //
+          let x = this.selecting.startX;
+          let y = this.selecting.startY;
+          let canvasY = 0;
+          let canvasX = 0;
+          let curBlock = {};
+          this.selectBlocks = [];
+
+          for (y = 0; y <= this.currentAscii.height; y++) {
+            canvasY = BLOCK_HEIGHT * y;
+
+            if (y >= this.selecting.startY && y <= this.selecting.endY) {
+              if (!this.selectBlocks[y]) {
+                this.selectBlocks[y] = [];
+              }
+
+              for (x = 0; x <= this.currentAscii.width; x++) {
+                if (x >= this.selecting.startX && x <= this.selecting.endX) {
+                  if (
+                    this.currentAsciiBlocks[y] &&
+                    this.currentAsciiBlocks[y][x]
+                  ) {
+                    curBlock = Object.assign(
+                      curBlock,
+                      this.currentAsciiBlocks[y][x]
+                    );
+
+                    if (!this.selectBlocks[y][x]) {
+                      this.selectBlocks[y][x] = { ...curBlock };
+                    }
+
+                    canvasX = BLOCK_WIDTH * x;
+                  }
+                }
+              }
+            }
+          }
+
+          this.redrawSelect();
           break;
 
         case "text":
@@ -481,7 +581,8 @@ export default {
           case "select":
             if (
               this.selecting.startX === null ||
-              this.selecting.startY === null
+              (this.selecting.startY === null &&
+                this.selecting.canSelect === false)
             ) {
               this.selecting.startX = this.x;
               this.selecting.startY = this.y;
@@ -561,12 +662,16 @@ export default {
             break;
 
           case "select":
-            this.drawIndicator();
-
             if (this.selecting.canSelect) {
               this.selecting.endX = this.x;
               this.selecting.endY = this.y;
-            }
+
+              this.redrawSelect();
+            } 
+
+            if (!this.isSelected) {
+              this.redrawSelect();
+            }            
 
             break;
 
@@ -610,7 +715,7 @@ export default {
 
       let targetBlock = this.currentAsciiBlocks[this.y][this.x];
 
-      let indicatorColour = targetBlock.bg === 0 ? 1 : 0
+      let indicatorColour = targetBlock.bg === 0 ? 1 : 0;
 
       if (targetBlock.bg === 8) {
         indicatorColour = 1;
@@ -619,7 +724,7 @@ export default {
       this.toolCtx.fillStyle = this.$store.getters.mircColours[indicatorColour];
       const BLOCK_WIDTH = this.currentAscii.blockWidth;
       const BLOCK_HEIGHT = this.currentAscii.blockHeight;
-      
+
       this.toolCtx.fillRect(
         this.x * BLOCK_WIDTH,
         this.y * BLOCK_HEIGHT,
@@ -627,15 +732,16 @@ export default {
         BLOCK_HEIGHT
       );
 
-
       this.toolCtx.stroke();
     },
     drawTextIndicator() {
       this.clearToolCanvas();
 
-      let targetBlock = this.currentAsciiBlocks[this.textEditing.startY][this.textEditing.startX];
+      let targetBlock = this.currentAsciiBlocks[this.textEditing.startY][
+        this.textEditing.startX
+      ];
 
-      let indicatorColour = targetBlock.bg === 0 ? 1 : 0
+      let indicatorColour = targetBlock.bg === 0 ? 1 : 0;
 
       if (targetBlock.bg === 8) {
         indicatorColour = 1;
@@ -660,50 +766,64 @@ export default {
 
       let targetBlock = this.currentAsciiBlocks[this.y][this.x];
 
-      let brushDiffX = Math.floor(this.$store.getters.brushBlocks[0].length / 2) * BLOCK_WIDTH;
-      let brushDiffY = Math.floor(this.$store.getters.brushBlocks.length / 2) * BLOCK_HEIGHT;
+      let brushDiffX =
+        Math.floor(this.$store.getters.brushBlocks[0].length / 2) * BLOCK_WIDTH;
+      let brushDiffY =
+        Math.floor(this.$store.getters.brushBlocks.length / 2) * BLOCK_HEIGHT;
 
       for (let y = 0; y < this.$store.getters.brushBlocks.length; y++) {
         for (let x = 0; x < this.$store.getters.brushBlocks[0].length; x++) {
           let brushBlock = this.$store.getters.brushBlocks[y][x];
 
-          let brushX = (this.x * BLOCK_WIDTH + x * BLOCK_WIDTH) - brushDiffX;
-          let brushY = (this.y * BLOCK_HEIGHT + y * BLOCK_HEIGHT) - brushDiffY;
+          let brushX = this.x * BLOCK_WIDTH + x * BLOCK_WIDTH - brushDiffX;
+          let brushY = this.y * BLOCK_HEIGHT + y * BLOCK_HEIGHT - brushDiffY;
 
-          let brushYHeight = brushY/BLOCK_HEIGHT;
-          let brushXWidth = brushX/BLOCK_WIDTH;
+          let brushYHeight = brushY / BLOCK_HEIGHT;
+          let brushXWidth = brushX / BLOCK_WIDTH;
 
           if (
             this.currentAsciiBlocks[brushYHeight] &&
-            this.currentAsciiBlocks[brushYHeight][brushXWidth] 
+            this.currentAsciiBlocks[brushYHeight][brushXWidth]
           ) {
-
             targetBlock = this.currentAsciiBlocks[brushYHeight][brushXWidth];
 
             if (!plain) {
-              if (this.canBg && brushBlock.bg) {
-                this.toolCtx.fillStyle = this.$store.getters.mircColours[
-                  brushBlock.bg
-                ];
+              if (this.canBg) {
+                if (brushBlock.bg !== null) {
+                  this.toolCtx.fillStyle = this.$store.getters.mircColours[
+                    brushBlock.bg
+                  ];
+                } else {
+                  this.toolCtx.fillStyle = "#FFFFFF";
+                }
 
-                this.toolCtx.fillRect(brushX , brushY , BLOCK_WIDTH, BLOCK_HEIGHT);
+                this.toolCtx.fillRect(
+                  brushX,
+                  brushY,
+                  BLOCK_WIDTH,
+                  BLOCK_HEIGHT
+                );
 
-                if (this.canTool ) {
+                if (this.canTool) {
                   targetBlock.bg = this.$store.getters.getBgColour;
                 }
               }
 
-              if (this.canFg && brushBlock.fg) {
-                this.toolCtx.fillStyle = this.$store.getters.mircColours[
-                  brushBlock.fg
-                ];
+              if (this.canFg) {
+                if (brushBlock.fg !== null) {
+                  this.toolCtx.fillStyle = this.$store.getters.mircColours[
+                    brushBlock.fg
+                  ];
+                } else {
+                  this.toolCtx.fillStyle = "#000000";
+                }
 
                 if (this.canTool) {
                   targetBlock.fg = this.$store.getters.getFgColour;
                 }
               }
 
-              if (this.canText && brushBlock.char) {
+              if (this.canText && brushBlock.char !== null) {
                 this.toolCtx.fillStyle = this.$store.getters.mircColours[
                   brushBlock.fg
                 ];
@@ -714,16 +834,14 @@ export default {
                   brushY + BLOCK_HEIGHT - 3
                 );
 
-                if (this.canTool ) {
+                if (this.canTool) {
                   targetBlock.char = this.$store.getters.getSelectedChar;
                 }
               }
             } else {
-                this.toolCtx.fillStyle = this.$store.getters.mircColours[
-                  0
-                ];
+              this.toolCtx.fillStyle = this.$store.getters.mircColours[0];
 
-                this.toolCtx.fillRect(brushX, brushY, BLOCK_WIDTH, BLOCK_HEIGHT);
+              this.toolCtx.fillRect(brushX, brushY, BLOCK_WIDTH, BLOCK_HEIGHT);
             }
           }
         }
@@ -738,21 +856,26 @@ export default {
 
         let targetBlock = this.currentAsciiBlocks[this.y][this.x];
 
-        let brushDiffX = Math.floor(this.$store.getters.brushBlocks[0].length / 2) * BLOCK_WIDTH;
-        let brushDiffY = Math.floor(this.$store.getters.brushBlocks.length / 2) * BLOCK_HEIGHT;
+        let brushDiffX =
+          Math.floor(this.$store.getters.brushBlocks[0].length / 2) *
+          BLOCK_WIDTH;
+        let brushDiffY =
+          Math.floor(this.$store.getters.brushBlocks.length / 2) * BLOCK_HEIGHT;
 
         for (let y = 0; y < this.$store.getters.brushBlocks.length; y++) {
           for (let x = 0; x < this.$store.getters.brushBlocks[0].length; x++) {
-            
-          let brushX = (this.x * BLOCK_WIDTH + x * BLOCK_WIDTH) - brushDiffX;
-          let brushY = (this.y * BLOCK_HEIGHT + y * BLOCK_HEIGHT) - brushDiffY;
+            let brushX = this.x * BLOCK_WIDTH + x * BLOCK_WIDTH - brushDiffX;
+            let brushY = this.y * BLOCK_HEIGHT + y * BLOCK_HEIGHT - brushDiffY;
 
-          if (
-            this.currentAsciiBlocks[brushY/BLOCK_HEIGHT] &&
-            this.currentAsciiBlocks[brushY/BLOCK_HEIGHT][brushX/BLOCK_WIDTH] 
-          ) {
-
-            targetBlock = this.currentAsciiBlocks[brushY/BLOCK_HEIGHT][brushX/BLOCK_WIDTH];
+            if (
+              this.currentAsciiBlocks[brushY / BLOCK_HEIGHT] &&
+              this.currentAsciiBlocks[brushY / BLOCK_HEIGHT][
+                brushX / BLOCK_WIDTH
+              ]
+            ) {
+              targetBlock = this.currentAsciiBlocks[brushY / BLOCK_HEIGHT][
+                brushX / BLOCK_WIDTH
+              ];
 
               if (this.$store.getters.getTargetingFg) {
                 targetBlock.fg = null;
@@ -765,12 +888,10 @@ export default {
               if (this.$store.getters.getTargetingChar) {
                 targetBlock.char = null;
               }
-
-          }
+            }
           }
         }
       }
-
     },
     // Fill tool
     fill() {
