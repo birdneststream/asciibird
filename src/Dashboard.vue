@@ -22,7 +22,7 @@
         </li>
         <li
           class="ml-1"
-          @click="exportMirc('clipboard')"         
+          @click="exportMirc('clipboard')"
           v-if="this.$store.getters.asciibirdMeta.length"
         >
           Export mIRC to Clipboard
@@ -101,7 +101,7 @@ import ColourPicker from "./components/parts/ColourPicker.vue";
 import ContextMenu from "./components/parts/ContextMenu.vue";
 
 import NewAscii from "./components/modals/NewAscii.vue";
-import LZString from 'lz-string';
+import LZString from "lz-string";
 
 export default {
   async created() {
@@ -304,7 +304,13 @@ export default {
       };
 
       // set asciiImport as the entire file contents as a string
-      const asciiImport = contents.split("\u0003\u0003").join("\u0003");
+      const asciiImport = contents
+        .split("\u0003\u0003")
+        .join("\u0003")
+        .split("\r")
+        .join("\n")
+        .split("\b")
+        .join("");
 
       // This will end up in the asciibirdMeta
       const finalAscii = {
@@ -336,6 +342,13 @@ export default {
       // This variable just counts the amount of colour and char codes to minus
       // to get the real width
       let widthOfColCodes = 0;
+      let maxWidth = 0;
+
+      for(let i = 0; i < asciiImport.split("\n").length; i++) {
+        if (asciiImport.split("\n")[i].length > maxWidth) {
+          maxWidth = asciiImport.split("\n")[i].length;
+        }
+      }
 
       while (asciiStringArray.length) {
         const curChar = asciiStringArray[0];
@@ -357,15 +370,19 @@ export default {
             // We can determine the width at the end of the first line
             // If for some reason like in aphex.txt the first line is
             // trimmed it will trim the entire ascii!
-            if (!finalAscii.width) {
+            if (!finalAscii.width && widthOfColCodes > 0) {
               finalAscii.width =
                 asciiImport.split("\n")[0].length - widthOfColCodes; // minus \n for the proper width
+            } else if (!finalAscii.width && widthOfColCodes === 0) {
+              finalAscii.width =
+                maxWidth; // minus \n for the proper width
             }
 
             // Resets the X value
             asciiX = 0;
 
             asciiStringArray.shift();
+            // widthOfColCodes = 0;
             break;
 
           case "\u0003":
@@ -466,8 +483,10 @@ export default {
       } // End loop charPos
 
       // Store the ASCII
-      finalAscii.blocks = LZString.compressToUTF16(JSON.stringify(finalAscii.blocks))
-      finalAscii.history.push(  finalAscii.blocks )
+      finalAscii.blocks = LZString.compressToUTF16(
+        JSON.stringify(finalAscii.blocks)
+      );
+      finalAscii.history.push(finalAscii.blocks);
       this.$store.commit("newAsciibirdMeta", finalAscii);
 
       // To show the ASCII after importing we get the last key
@@ -484,14 +503,18 @@ export default {
       document.title = `asciibird - ${this.$store.getters.currentAscii.title}`;
     },
     importAsciibirdState(fileContents) {
-      let contents = JSON.parse(LZString.decompressFromEncodedURIComponent(fileContents))
-      this.$store.commit("changeState", { ... contents });
+      let contents = JSON.parse(
+        LZString.decompressFromEncodedURIComponent(fileContents)
+      );
+      this.$store.commit("changeState", { ...contents });
     },
     exportAsciibirdState() {
       let output;
 
       try {
-        output = LZString.compressToEncodedURIComponent(JSON.stringify(this.$store.getters.getState));
+        output = LZString.compressToEncodedURIComponent(
+          JSON.stringify(this.$store.getters.getState)
+        );
 
         // Default timestamp for filename
         const today = new Date();
@@ -513,7 +536,7 @@ export default {
     },
     exportMirc(type) {
       const { currentAscii } = this.$store.getters;
-      let blocks = this.$store.getters.currentAsciiBlocks
+      let blocks = this.$store.getters.currentAsciiBlocks;
       const output = [];
       let curBlock = null;
       let prevBlock = { bg: -1, fg: -1 };
@@ -562,13 +585,16 @@ export default {
 
       switch (type) {
         case "clipboard":
-              this.$copyText(output.join("")).then(function (e) {
-                alert('Copied')
-                console.log(e)
-              }, function (e) {
-                alert('Can not copy')
-                console.log(e)
-              })
+          this.$copyText(output.join("")).then(
+            function (e) {
+              alert("Copied");
+              console.log(e);
+            },
+            function (e) {
+              alert("Can not copy");
+              console.log(e);
+            }
+          );
           break;
 
         default:

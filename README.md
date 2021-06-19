@@ -21,7 +21,12 @@
 * Redo (ctrl y) is a buggy
 # FOCUSING ON NOW
 
+* Circle brush
+
 * SELECT
+ * CLIPBOARD
+
+* Circle brush
 
 * Modals
  * Edit current ascii
