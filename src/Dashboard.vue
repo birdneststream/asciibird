@@ -308,10 +308,8 @@ export default {
       const asciiImport = contents
         .split("\u0003\u0003")
         .join("\u0003")
-        .split("\r")
-        .join("\n")
-        .split("\b")
-        .join("");
+        .split("\u000F").join("")
+        .split("\u0003\n").join("\n");
 
       // This will end up in the asciibirdMeta
       const finalAscii = {
@@ -330,6 +328,7 @@ export default {
 
       // Turn the entire ascii string into an array
       let asciiStringArray = asciiImport.split("");
+      let linesArray = asciiImport.split("\n");
 
       // The proper X and Y value of the block inside the ASCII
       let asciiX = 0;
@@ -343,11 +342,16 @@ export default {
       // This variable just counts the amount of colour and char codes to minus
       // to get the real width
       let widthOfColCodes = 0;
-      let maxWidth = 0;
 
-      for(let i = 0; i < asciiImport.split("\n").length; i++) {
-        if (asciiImport.split("\n")[i].length > maxWidth) {
-          maxWidth = asciiImport.split("\n")[i].length;
+      // Better for colourful asciis
+      let maxWidthLoop = 0;
+
+      // Used before the loop, better for plain text
+      let maxWidthFound = 0;
+
+      for(let i = 0; i < linesArray.length; i++) {
+        if (linesArray[i].length > maxWidthFound) {
+          maxWidthFound = linesArray[i].length;
         }
       }
 
@@ -365,24 +369,28 @@ export default {
               char: null,
             };
 
+            if (linesArray[asciiY] && linesArray[asciiY].length > maxWidthLoop) {
+              maxWidthLoop = linesArray[asciiY].length;
+            }
+
             // the Y value of the ascii
             asciiY++;
 
             // Calculate widths mirc asciis vs plain text
             if (!finalAscii.width && widthOfColCodes > 0) {
               finalAscii.width =
-                asciiImport.split("\n")[0].length - widthOfColCodes; // minus \n for the proper width
+                maxWidthLoop - widthOfColCodes; // minus \n for the proper width
             } else if (!finalAscii.width && widthOfColCodes === 0) {
               // Plain text
               finalAscii.width =
-                maxWidth; // minus \n for the proper width
+                maxWidthFound; // minus \n for the proper width
             }
 
             // Resets the X value
             asciiX = 0;
 
             asciiStringArray.shift();
-            // widthOfColCodes = 0;
+            widthOfColCodes = 0;
             break;
 
           case "\u0003":
