@@ -1,5 +1,5 @@
-<template>
-<div class="context-menu" v-show="show" :style="style" ref="context" tabindex="0" @blur="close">
+<template @contextmenu.prevent>
+<div class="context-menu" v-show="show" :style="style" ref="context" tabindex="0" @blur="close" @contextmenu.prevent>
         <slot></slot>
     </div>
 </template>

@@ -77,7 +77,7 @@ export default {
     blocks: [],
     brushSizeHeight: 1,
     brushSizeWidth: 1,
-    brushSizeType: 'square',
+    brushSizeType: "square",
   }),
   computed: {
     currentAscii() {
@@ -87,57 +87,57 @@ export default {
       return this.$store.getters.getToolbarState;
     },
     getTargetingBg() {
-      return this.$store.getters.getTargetingBg
+      return this.$store.getters.getTargetingBg;
     },
     getTargetingFg() {
-      return this.$store.getters.getTargetingFg
+      return this.$store.getters.getTargetingFg;
     },
     getTargetingChar() {
-      return this.$store.getters.getTargetingChar
+      return this.$store.getters.getTargetingChar;
     },
     getFgColour() {
-      return this.$store.getters.getFgColour
+      return this.$store.getters.getFgColour;
     },
     getBgColour() {
-      return this.$store.getters.getBgColour
+      return this.$store.getters.getBgColour;
     },
     getSelectedChar() {
-      return this.$store.getters.getSelectedChar
+      return this.$store.getters.getSelectedChar;
     },
     brushSizeHeightPreview() {
-      return this.$store.getters.brushSizeHeight
+      return this.$store.getters.brushSizeHeight;
     },
     brushSizeWidthPreview() {
-      return this.$store.getters.brushSizeWidth
+      return this.$store.getters.brushSizeWidth;
     },
     brushSizeTypePreview() {
-      return this.$store.getters.brushSizeType
+      return this.$store.getters.brushSizeType;
     },
   },
   watch: {
     brushSizeWidth() {
-      this.delayRedrawCanvas()
+      this.delayRedrawCanvas();
     },
     brushSizeHeight() {
-      this.delayRedrawCanvas()
+      this.delayRedrawCanvas();
     },
     getTargetingBg() {
-      this.delayRedrawCanvas()
+      this.delayRedrawCanvas();
     },
     getTargetingFg() {
-      this.delayRedrawCanvas()
+      this.delayRedrawCanvas();
     },
     getTargetingChar() {
-      this.delayRedrawCanvas()
+      this.delayRedrawCanvas();
     },
     getFgColour() {
-      this.delayRedrawCanvas()
+      this.delayRedrawCanvas();
     },
     getBgColour() {
-      this.delayRedrawCanvas()
+      this.delayRedrawCanvas();
     },
     getSelectedChar() {
-      this.delayRedrawCanvas()
+      this.delayRedrawCanvas();
     },
   },
   methods: {
@@ -150,7 +150,6 @@ export default {
 
       this.ctx.clearRect(0, 0, 1000, 1000);
       this.delayRedrawCanvas();
-      
     },
     drawPreview() {
       let brushHeight = this.brushSizeHeightPreview;
@@ -184,76 +183,72 @@ export default {
         char: null,
       };
 
+      let middlePoint = Math.round(brushHeight / 2);
+
+      let startWidth = Math.round(brushWidth / 2);
+
+      // let checkWidth = 
+
       // Recreate 2d array for preview
       for (y = 0; y < brushHeight; y++) {
         this.blocks[y] = [];
         for (x = 0; x < brushWidth; x++) {
-          switch(this.brushSizeTypePreview) {
-            case 'cross':
-              this.blocks[y][x] = Object.assign({}, emptyBlock); 
+          switch (this.brushSizeTypePreview) {
+            case "cross":
+              this.blocks[y][x] = Object.assign({}, emptyBlock);
 
               targetX = x;
-              
+
               if (y % 2 === 0) {
-                targetX = targetX - 1
-              } 
+                targetX = targetX - 1;
+              }
 
               if (this.blocks[y]) {
                 if (x % 2 === 0) {
-                  this.blocks[y][targetX] = Object.assign({}, emptyBlock); 
+                  this.blocks[y][targetX] = Object.assign({}, emptyBlock);
                 } else {
                   this.blocks[y][targetX] = Object.assign({}, block);
                 }
               }
-            break;
+              break;
 
             default:
-            case 'square':
+            case "square":
               this.blocks[y][x] = Object.assign({}, block);
               break;
+
+            // case "circle":
+
+            //   // Top half
+            //   if (y < middlePoint) {
+
+            //     if (x = brushWidth-1) {
+            //       this.blocks[y][x] = Object.assign({}, block);
+            //     } else {
+            //       this.blocks[y][x] = Object.assign({}, emptyBlock);
+            //     }               
+
+            //   } else {
+            //     // Bottom half
+            //     this.blocks[y][x] = Object.assign({}, block);
+            //   }
+
+            //   break;
           }
         }
-      }     
+      }
 
       // Get middle block
       for (y = 0; y < this.blocks.length; y++) {
         for (x = 0; x < this.blocks[0].length; x++) {
-          let curBlock = this.blocks[y][x];
+          if (this.blocks[y] && this.blocks[y][x]) {
+            let curBlock = this.blocks[y][x];
 
-          switch(this.brushSizeTypePreview) {
-            case 'cross':
-                
-                  if (curBlock.bg && this.getTargetingBg) {
-                    this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.bg];
-
-                    this.ctx.fillRect(
-                      x * BLOCK_WIDTH,
-                      y * BLOCK_HEIGHT,
-                      BLOCK_WIDTH,
-                      BLOCK_HEIGHT
-                    );
-                  }
-
-                  if (curBlock.fg && this.getTargetingFg) {
-                    this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.fg];
-                  }
-
-                  if (curBlock.char && this.getTargetingChar) {
-                    this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.fg];
-                    this.ctx.fillText(
-                      curBlock.char,
-                      x * BLOCK_WIDTH - 1,
-                      y * BLOCK_HEIGHT + BLOCK_HEIGHT - 3
-                    );
-                  }
-                           
-              break;
-
-
-            default:
-            case 'square':
+            switch (this.brushSizeTypePreview) {
+              case "cross":
                 if (curBlock.bg && this.getTargetingBg) {
-                  this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.bg];
+                  this.ctx.fillStyle =
+                    this.$store.getters.mircColours[curBlock.bg];
 
                   this.ctx.fillRect(
                     x * BLOCK_WIDTH,
@@ -264,26 +259,88 @@ export default {
                 }
 
                 if (curBlock.fg && this.getTargetingFg) {
-                  this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.fg];
+                  this.ctx.fillStyle =
+                    this.$store.getters.mircColours[curBlock.fg];
                 }
 
                 if (curBlock.char && this.getTargetingChar) {
-                  this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.fg];
+                  this.ctx.fillStyle =
+                    this.$store.getters.mircColours[curBlock.fg];
                   this.ctx.fillText(
                     curBlock.char,
                     x * BLOCK_WIDTH - 1,
                     y * BLOCK_HEIGHT + BLOCK_HEIGHT - 3
                   );
                 }
-              break;
-            
-          }
 
+                break;
+
+              // case "circle":
+              //   if (curBlock.bg && this.getTargetingBg) {
+              //     this.ctx.fillStyle =
+              //       this.$store.getters.mircColours[curBlock.bg];
+
+              //     this.ctx.fillRect(
+              //       x * BLOCK_WIDTH,
+              //       y * BLOCK_HEIGHT,
+              //       BLOCK_WIDTH,
+              //       BLOCK_HEIGHT
+              //     );
+              //   }
+
+              //   if (curBlock.fg && this.getTargetingFg) {
+              //     this.ctx.fillStyle =
+              //       this.$store.getters.mircColours[curBlock.fg];
+              //   }
+
+              //   if (curBlock.char && this.getTargetingChar) {
+              //     this.ctx.fillStyle =
+              //       this.$store.getters.mircColours[curBlock.fg];
+              //     this.ctx.fillText(
+              //       curBlock.char,
+              //       x * BLOCK_WIDTH - 1,
+              //       y * BLOCK_HEIGHT + BLOCK_HEIGHT - 3
+              //     );
+              //   }
+
+              //   break;
+
+              default:
+              case "square":
+                if (curBlock.bg && this.getTargetingBg) {
+                  this.ctx.fillStyle =
+                    this.$store.getters.mircColours[curBlock.bg];
+
+                  this.ctx.fillRect(
+                    x * BLOCK_WIDTH,
+                    y * BLOCK_HEIGHT,
+                    BLOCK_WIDTH,
+                    BLOCK_HEIGHT
+                  );
+                }
+
+                if (curBlock.fg && this.getTargetingFg) {
+                  this.ctx.fillStyle =
+                    this.$store.getters.mircColours[curBlock.fg];
+                }
+
+                if (curBlock.char && this.getTargetingChar) {
+                  this.ctx.fillStyle =
+                    this.$store.getters.mircColours[curBlock.fg];
+                  this.ctx.fillText(
+                    curBlock.char,
+                    x * BLOCK_WIDTH - 1,
+                    y * BLOCK_HEIGHT + BLOCK_HEIGHT - 3
+                  );
+                }
+                break;
+            }
+          }
         }
 
         this.ctx.stroke();
 
-        this.$store.commit("brushBlocks", this.blocks)
+        this.$store.commit("brushBlocks", this.blocks);
       }
     },
     delayRedrawCanvas() {

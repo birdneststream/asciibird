@@ -804,7 +804,7 @@ export default {
                   BLOCK_HEIGHT
                 );
 
-                if (this.canTool) {
+                if (this.canTool && brushBlock.bg !== null) {
                   targetBlock.bg = this.$store.getters.getBgColour;
                 }
               }
@@ -818,7 +818,7 @@ export default {
                   this.toolCtx.fillStyle = "#000000";
                 }
 
-                if (this.canTool) {
+                if (this.canTool && brushBlock.fg !== null) {
                   targetBlock.fg = this.$store.getters.getFgColour;
                 }
               }
@@ -834,7 +834,7 @@ export default {
                   brushY + BLOCK_HEIGHT - 3
                 );
 
-                if (this.canTool) {
+                if (this.canTool && brushBlock.char !== null) {
                   targetBlock.char = this.$store.getters.getSelectedChar;
                 }
               }

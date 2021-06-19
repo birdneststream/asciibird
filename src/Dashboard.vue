@@ -173,6 +173,7 @@ export default {
   },
   methods: {
     openContextMenu(e) {
+      e.preventDefault();
       this.$refs.menu.open(e);
     },
     updateCoords(value) {
@@ -358,7 +359,7 @@ export default {
         switch (curChar) {
           case "\n":
             // Reset the colours here on a new line
-            curBlock = {
+            curBlock = { 
               fg: null,
               bg: null,
               char: null,
@@ -367,13 +368,12 @@ export default {
             // the Y value of the ascii
             asciiY++;
 
-            // We can determine the width at the end of the first line
-            // If for some reason like in aphex.txt the first line is
-            // trimmed it will trim the entire ascii!
+            // Calculate widths mirc asciis vs plain text
             if (!finalAscii.width && widthOfColCodes > 0) {
               finalAscii.width =
                 asciiImport.split("\n")[0].length - widthOfColCodes; // minus \n for the proper width
             } else if (!finalAscii.width && widthOfColCodes === 0) {
+              // Plain text
               finalAscii.width =
                 maxWidth; // minus \n for the proper width
             }

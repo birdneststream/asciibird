@@ -16,7 +16,6 @@
 ```
 # BUGS
 
-* Escape chars in asciis
 * If you resize an ascii, and then undo and try fill in blocks it will error cuz the blocks don't exist
 * Redo (ctrl y) is a buggy
 # FOCUSING ON NOW
@@ -25,8 +24,6 @@
 
 * SELECT
  * CLIPBOARD
-
-* Circle brush
 
 * Modals
  * Edit current ascii
@@ -37,7 +34,6 @@
 
 * Context Menus (right click menu) - we started this
 * Keyboard shortcuts
-* Context menu / right click / browsers context menu issue
 
 # KILLER ASCIIBIRD FEATURES DONE
 
