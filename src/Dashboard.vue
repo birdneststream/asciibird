@@ -309,7 +309,8 @@ export default {
         .split("\u0003\u0003")
         .join("\u0003")
         .split("\u000F").join("")
-        .split("\u0003\n").join("\n");
+        .split("\u0003\n").join("\n")
+        .split("\u0002\u0003").join("\u0003");
 
       // This will end up in the asciibirdMeta
       const finalAscii = {
@@ -380,7 +381,10 @@ export default {
             if (!finalAscii.width && widthOfColCodes > 0) {
               finalAscii.width =
                 maxWidthLoop - widthOfColCodes; // minus \n for the proper width
-            } else if (!finalAscii.width && widthOfColCodes === 0) {
+            } 
+            
+            
+            if (!finalAscii.width && widthOfColCodes === 0) {
               // Plain text
               finalAscii.width =
                 maxWidthFound; // minus \n for the proper width
@@ -548,9 +552,19 @@ export default {
       const output = [];
       let curBlock = null;
       let prevBlock = { bg: -1, fg: -1 };
-
+      
       for (let y = 0; y <= blocks.length - 1; y++) {
+        
+        if (y >= currentAscii.height) {
+          continue;
+        }
+
         for (let x = 0; x <= blocks[y].length - 1; x++) {
+
+          if (x >= currentAscii.width) {
+            continue;
+          }
+
           curBlock = blocks[y][x];
 
           // If we have a difference between our previous block

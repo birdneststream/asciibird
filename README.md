@@ -16,9 +16,12 @@
 ```
 # BUGS
 
+* Odd row width makes brush off by one
 * If you resize an ascii, and then undo and try fill in blocks it will error cuz the blocks don't exist
 * Redo (ctrl y) is a buggy
 # FOCUSING ON NOW
+
+* EXPORT ascii, trim to canvas size
 
 * Circle brush
 
@@ -34,6 +37,8 @@
 
 * Context Menus (right click menu) - we started this
 * Keyboard shortcuts
+
+* LAYERS
 
 # KILLER ASCIIBIRD FEATURES DONE
 

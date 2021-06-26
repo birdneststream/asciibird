@@ -203,7 +203,7 @@ export default {
                 targetX = targetX - 1;
               }
 
-              if (this.blocks[y]) {
+              if (this.blocks[y] && this.blocks[y][targetX]) {
                 if (x % 2 === 0) {
                   this.blocks[y][targetX] = Object.assign({}, emptyBlock);
                 } else {
