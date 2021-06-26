@@ -19,11 +19,8 @@
 * Odd row width makes brush off by one
 * If you resize an ascii, and then undo and try fill in blocks it will error cuz the blocks don't exist
 * Redo (ctrl y) is a buggy
+* Circle brush (works okay for odd width and height numbers)
 # FOCUSING ON NOW
-
-* EXPORT ascii, trim to canvas size
-
-* Circle brush
 
 * SELECT
  * CLIPBOARD
@@ -40,7 +37,7 @@
 
 * LAYERS
 
-# KILLER ASCIIBIRD FEATURES DONE
+# FEATURES DONE
 
 * Tabbed editing for asciis
 * Remembers ASCII states, can export and import ASCIIBIRD state files
@@ -49,11 +46,12 @@
 * Floating pattlets, resizeable and remembers positions
 * .ASB file, compressed asciibird state
 * Export mIRC to clipboard
+* EXPORT ascii, trim to canvas size
 
 * Modals
  * New ascii modal
 
-# KILLER ASCIIBIRD FEATURES TO DO
+# FEATURES TO DO
 
 * Layers / Insert ASCII as layer
 * Overlay image for nance tracing mode
@@ -66,9 +64,6 @@
 # Things To Do Later
 
 * Properly get CSS into the JS stuff ya lazy bird
-* Animated ASCII (key frames like in flash with sound) (Possible with JSON but it will be FKN memory hog maybe)
- * We could do this, but these custom ASCIIs could only be played in our player
-
 # References
 
 * https://jp.itch.io/playscii / http://vectorpoem.com/playscii/

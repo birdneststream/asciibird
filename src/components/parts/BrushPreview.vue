@@ -55,8 +55,8 @@
       ref="brushcanvas"
       id="brushcanvas"
       class="brushcanvas"
-      :width="100"
-      :height="100"
+      :width="brushSizeWidthPreview * currentAscii.blockWidth"
+      :height="brushSizeHeightPreview * currentAscii.blockHeight"
     ></canvas>
   </div>
 </template>
@@ -183,11 +183,9 @@ export default {
         char: null,
       };
 
-      let middlePoint = Math.round(brushHeight / 2);
-
-      let startWidth = Math.round(brushWidth / 2);
-
-      // let checkWidth = 
+      let middleY = Math.floor(brushHeight / 2);
+      let middleX = Math.floor(brushWidth / 2);
+      let yModifier = 0;
 
       // Recreate 2d array for preview
       for (y = 0; y < brushHeight; y++) {
@@ -212,28 +210,35 @@ export default {
               }
               break;
 
-            default:
+            // default:
             case "square":
               this.blocks[y][x] = Object.assign({}, block);
               break;
 
-            // case "circle":
+            case "circle":            
 
-            //   // Top half
-            //   if (y < middlePoint) {
+              if (middleY >= y) {
+                // Top half
+                yModifier = y;
+                if ( (x <= middleX+yModifier) && (x >= middleX-yModifier) ) {
+                  this.blocks[y][x] = Object.assign({}, block);
+                } else {
+                  this.blocks[y][x] = Object.assign({}, emptyBlock);
+                }
 
-            //     if (x = brushWidth-1) {
-            //       this.blocks[y][x] = Object.assign({}, block);
-            //     } else {
-            //       this.blocks[y][x] = Object.assign({}, emptyBlock);
-            //     }               
+                
+              } else {
+                // Bottom half
+                yModifier = middleY - (y- middleY);
 
-            //   } else {
-            //     // Bottom half
-            //     this.blocks[y][x] = Object.assign({}, block);
-            //   }
+                if ( (x <= middleX+yModifier) && (x >= middleX-yModifier) ) {
+                  this.blocks[y][x] = Object.assign({}, block);
+                } else {
+                  this.blocks[y][x] = Object.assign({}, emptyBlock);
+                }
+              }
 
-            //   break;
+              break;
           }
         }
       }
