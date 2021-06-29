@@ -101,7 +101,8 @@ export default {
         if (e.key === "y" && (e.ctrlKey || e.metaKey)) {
           console.log("ctrl y");
           e.preventDefault();
-          this.redo();
+          // Fk it works :\
+          this.redo();this.redo();
         }
 
         // Ctrl C - copy blocks
@@ -110,6 +111,11 @@ export default {
 
           if (this.isSelecting && this.isSelected && this.selectBlocks.length) {
             this.$store.commit("selectBlocks", this.selectBlocks);
+
+            // this.$store.commit("brushBlocks", this.selectBlocks);
+            // this.canTool = true;
+            // this.drawBrush();
+
             console.log("ctrl c", this.selectBlocks);
           }          
         }
@@ -238,6 +244,9 @@ export default {
         this.selecting.endY
       );
     },
+    brushBlocks() {
+      return this.$store.getters.brushBlocks;
+    }
   },
   watch: {
     currentAscii(val, old) {
@@ -511,14 +520,18 @@ export default {
           this.clearToolCanvas();
 
           //
-          let x = this.selecting.startX;
-          let y = this.selecting.startY;
+          let x = 0;
+          let y = 0;
+
+          let arrayX = 0;
+          let arrayY = 0;
+
           let canvasY = 0;
           let canvasX = 0;
           let curBlock = {};
           this.selectBlocks = [];
 
-          for (y = 0; y <= this.currentAscii.height; y++) {
+          for (y = 0; y < this.currentAscii.height; y++) {
             canvasY = BLOCK_HEIGHT * y;
 
             if (y >= this.selecting.startY && y <= this.selecting.endY) {
@@ -526,7 +539,7 @@ export default {
                 this.selectBlocks[y] = [];
               }
 
-              for (x = 0; x <= this.currentAscii.width; x++) {
+              for (x = 0; x < this.currentAscii.width; x++) {
                 if (x >= this.selecting.startX && x <= this.selecting.endX) {
                   if (
                     this.currentAsciiBlocks[y] &&
@@ -767,13 +780,13 @@ export default {
       let targetBlock = this.currentAsciiBlocks[this.y][this.x];
 
       let brushDiffX =
-        Math.floor(this.$store.getters.brushBlocks[0].length / 2) * BLOCK_WIDTH;
+        Math.floor(this.brushBlocks[0].length / 2) * BLOCK_WIDTH;
       let brushDiffY =
-        Math.floor(this.$store.getters.brushBlocks.length / 2) * BLOCK_HEIGHT;
+        Math.floor(this.brushBlocks.length / 2) * BLOCK_HEIGHT;
 
-      for (let y = 0; y < this.$store.getters.brushBlocks.length; y++) {
-        for (let x = 0; x < this.$store.getters.brushBlocks[0].length; x++) {
-          let brushBlock = this.$store.getters.brushBlocks[y][x];
+      for (let y = 0; y < this.brushBlocks.length; y++) {
+        for (let x = 0; x < this.brushBlocks[0].length; x++) {
+          let brushBlock = this.brushBlocks[y][x];
 
           let brushX = this.x * BLOCK_WIDTH + x * BLOCK_WIDTH - brushDiffX;
           let brushY = this.y * BLOCK_HEIGHT + y * BLOCK_HEIGHT - brushDiffY;

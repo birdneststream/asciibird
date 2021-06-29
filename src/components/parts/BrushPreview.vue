@@ -55,8 +55,8 @@
       ref="brushcanvas"
       id="brushcanvas"
       class="brushcanvas"
-      :width="brushSizeWidthPreview * currentAscii.blockWidth"
-      :height="brushSizeHeightPreview * currentAscii.blockHeight"
+      :width="brushSizeWidthPreview + 1 * currentAscii.blockWidth"
+      :height="brushSizeHeightPreview + 1 * currentAscii.blockHeight"
     ></canvas>
   </div>
 </template>
@@ -193,13 +193,23 @@ export default {
         for (x = 0; x < brushWidth; x++) {
           switch (this.brushSizeTypePreview) {
             case "cross":
-              this.blocks[y][x] = Object.assign({}, emptyBlock);
+              // If we are 1x1 force fill 1 block, to avoid an empty 1x1
+              if (x === 0 && y === 0) {
+                this.blocks[y][x] = Object.assign({}, block);
+                continue;
+              }
+
+              if (x === brushWidth) {
+                this.blocks[y][x] = Object.assign({}, emptyBlock);
+              } else {
+                this.blocks[y][x] = Object.assign({}, block);
+              }
 
               targetX = x;
 
               if (y % 2 === 0) {
-                targetX = targetX - 1;
-              }
+                targetX = targetX -1;
+              }  
 
               if (this.blocks[y] && this.blocks[y][targetX]) {
                 if (x % 2 === 0) {
@@ -208,6 +218,7 @@ export default {
                   this.blocks[y][targetX] = Object.assign({}, block);
                 }
               }
+
               break;
 
             // default:
@@ -215,23 +226,21 @@ export default {
               this.blocks[y][x] = Object.assign({}, block);
               break;
 
-            case "circle":            
-
+            case "circle":
               if (middleY >= y) {
                 // Top half
                 yModifier = y;
-                if ( (x <= middleX+yModifier) && (x >= middleX-yModifier) ) {
+
+                if (x <= middleX + yModifier && x >= middleX - yModifier) {
                   this.blocks[y][x] = Object.assign({}, block);
                 } else {
                   this.blocks[y][x] = Object.assign({}, emptyBlock);
                 }
-
-                
               } else {
                 // Bottom half
-                yModifier = middleY - (y- middleY);
+                yModifier = middleY - (y - middleY);
 
-                if ( (x <= middleX+yModifier) && (x >= middleX-yModifier) ) {
+                if (x <= middleX + yModifier && x >= middleX - yModifier) {
                   this.blocks[y][x] = Object.assign({}, block);
                 } else {
                   this.blocks[y][x] = Object.assign({}, emptyBlock);
@@ -249,96 +258,28 @@ export default {
           if (this.blocks[y] && this.blocks[y][x]) {
             let curBlock = this.blocks[y][x];
 
-            switch (this.brushSizeTypePreview) {
-              case "cross":
-                if (curBlock.bg && this.getTargetingBg) {
-                  this.ctx.fillStyle =
-                    this.$store.getters.mircColours[curBlock.bg];
+            if (curBlock.bg && this.getTargetingBg) {
+              this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.bg];
 
-                  this.ctx.fillRect(
-                    x * BLOCK_WIDTH,
-                    y * BLOCK_HEIGHT,
-                    BLOCK_WIDTH,
-                    BLOCK_HEIGHT
-                  );
-                }
+              this.ctx.fillRect(
+                x * BLOCK_WIDTH,
+                y * BLOCK_HEIGHT,
+                BLOCK_WIDTH,
+                BLOCK_HEIGHT
+              );
+            }
 
-                if (curBlock.fg && this.getTargetingFg) {
-                  this.ctx.fillStyle =
-                    this.$store.getters.mircColours[curBlock.fg];
-                }
+            if (curBlock.fg && this.getTargetingFg) {
+              this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.fg];
+            }
 
-                if (curBlock.char && this.getTargetingChar) {
-                  this.ctx.fillStyle =
-                    this.$store.getters.mircColours[curBlock.fg];
-                  this.ctx.fillText(
-                    curBlock.char,
-                    x * BLOCK_WIDTH - 1,
-                    y * BLOCK_HEIGHT + BLOCK_HEIGHT - 3
-                  );
-                }
-
-                break;
-
-              // case "circle":
-              //   if (curBlock.bg && this.getTargetingBg) {
-              //     this.ctx.fillStyle =
-              //       this.$store.getters.mircColours[curBlock.bg];
-
-              //     this.ctx.fillRect(
-              //       x * BLOCK_WIDTH,
-              //       y * BLOCK_HEIGHT,
-              //       BLOCK_WIDTH,
-              //       BLOCK_HEIGHT
-              //     );
-              //   }
-
-              //   if (curBlock.fg && this.getTargetingFg) {
-              //     this.ctx.fillStyle =
-              //       this.$store.getters.mircColours[curBlock.fg];
-              //   }
-
-              //   if (curBlock.char && this.getTargetingChar) {
-              //     this.ctx.fillStyle =
-              //       this.$store.getters.mircColours[curBlock.fg];
-              //     this.ctx.fillText(
-              //       curBlock.char,
-              //       x * BLOCK_WIDTH - 1,
-              //       y * BLOCK_HEIGHT + BLOCK_HEIGHT - 3
-              //     );
-              //   }
-
-              //   break;
-
-              default:
-              case "square":
-                if (curBlock.bg && this.getTargetingBg) {
-                  this.ctx.fillStyle =
-                    this.$store.getters.mircColours[curBlock.bg];
-
-                  this.ctx.fillRect(
-                    x * BLOCK_WIDTH,
-                    y * BLOCK_HEIGHT,
-                    BLOCK_WIDTH,
-                    BLOCK_HEIGHT
-                  );
-                }
-
-                if (curBlock.fg && this.getTargetingFg) {
-                  this.ctx.fillStyle =
-                    this.$store.getters.mircColours[curBlock.fg];
-                }
-
-                if (curBlock.char && this.getTargetingChar) {
-                  this.ctx.fillStyle =
-                    this.$store.getters.mircColours[curBlock.fg];
-                  this.ctx.fillText(
-                    curBlock.char,
-                    x * BLOCK_WIDTH - 1,
-                    y * BLOCK_HEIGHT + BLOCK_HEIGHT - 3
-                  );
-                }
-                break;
+            if (curBlock.char && this.getTargetingChar) {
+              this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.fg];
+              this.ctx.fillText(
+                curBlock.char,
+                x * BLOCK_WIDTH - 1,
+                y * BLOCK_HEIGHT + BLOCK_HEIGHT - 3
+              );
             }
           }
         }

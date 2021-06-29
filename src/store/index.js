@@ -218,11 +218,13 @@ export default new Vuex.Store({
       state.asciibirdMeta[state.tab].redo = [];
     },
     undoBlocks(state) {
-      if (state.asciibirdMeta[state.tab].history.length > 1) {
+      if (state.asciibirdMeta[state.tab].history.length > 0) {
         let previous = state.asciibirdMeta[state.tab].history.pop();
         state.asciibirdMeta[state.tab].blocks = previous
         state.asciibirdMeta[state.tab].redo.push(previous)
       }
+
+
     },
     redoBlocks(state) {
       if (state.asciibirdMeta[state.tab].redo.length > 0) {
@@ -230,6 +232,8 @@ export default new Vuex.Store({
         state.asciibirdMeta[state.tab].blocks = next
         state.asciibirdMeta[state.tab].history.push(next)
       }
+
+
     },
     updateBrushSize(state, payload) {
       state.toolbarState.brushSizeHeight = payload.brushSizeHeight;
