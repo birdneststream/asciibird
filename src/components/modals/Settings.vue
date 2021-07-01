@@ -29,7 +29,7 @@ export default {
   data: () => ({
     forms: {
       settingsForm: {
-        fontFamily: "Hack",
+        fontFamily: 'Hack',
       },
     },
   }),
