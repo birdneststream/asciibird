@@ -13,6 +13,7 @@ export default new Vuex.Store({
   state: {
     modalState: {
       newAscii: false,
+      settingsModal: false,
     },
     // The various options of ASCIIBIRD will eventually
     // end up in its own modal I guess
@@ -250,11 +251,11 @@ export default new Vuex.Store({
       switch (type) {
         case 'new-ascii':
           state.modalState.newAscii = !state.modalState.newAscii
-        break;
-
-
-
-
+          break;
+        case 'open-settings':
+          console.log("HI")
+          state.modalState.settingsModal = !state.modalState.settingsModal
+          break;
       }
     }
   },

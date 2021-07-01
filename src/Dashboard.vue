@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <NewAscii />
+    <Settings />
 
     <context-menu :display="showContextMenu" ref="menu">
       <ul>
@@ -35,6 +36,13 @@
           Save Asciibird State
         </li>
         <li @click="startImport('asb')" class="ml-1">Load Asciibird State</li>
+        <li
+          @click="$store.commit('openModal', 'open-settings')"
+          class="ml-1"
+          @contextmenu.prevent
+        >
+        Settings...
+        </li>
       </ul>
     </context-menu>
 
@@ -101,6 +109,8 @@ import ColourPicker from "./components/parts/ColourPicker.vue";
 import ContextMenu from "./components/parts/ContextMenu.vue";
 
 import NewAscii from "./components/modals/NewAscii.vue";
+import Settings from "./components/modals/Settings.vue"
+
 import LZString from "lz-string";
 
 export default {
@@ -144,10 +154,12 @@ export default {
     ColourPicker,
     ContextMenu,
     NewAscii,
+    Settings,
   },
   name: "Dashboard",
   data: () => ({
     showNewAsciiModal: false,
+    showSettingsModal: false,
     currentTab: 1,
     canvasX: null,
     canvasY: null,
@@ -364,7 +376,7 @@ export default {
         switch (curChar) {
           case "\n":
             // Reset the colours here on a new line
-            curBlock = { 
+            curBlock = {
               fg: null,
               bg: null,
               char: null,
@@ -381,9 +393,9 @@ export default {
             if (!finalAscii.width && widthOfColCodes > 0) {
               finalAscii.width =
                 maxWidthLoop - widthOfColCodes; // minus \n for the proper width
-            } 
-            
-            
+            }
+
+
             if (!finalAscii.width && widthOfColCodes === 0) {
               // Plain text
               finalAscii.width =
@@ -552,9 +564,9 @@ export default {
       const output = [];
       let curBlock = null;
       let prevBlock = { bg: -1, fg: -1 };
-      
+
       for (let y = 0; y <= blocks.length - 1; y++) {
-        
+
         if (y >= currentAscii.height) {
           continue;
         }

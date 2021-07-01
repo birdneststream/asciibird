@@ -31,6 +31,9 @@
     />
 
     <template v-slot:footer>
+      <!--
+        Why do you make it so clicking anywhere in the gray box closes the modal
+      -->
       <div
         class="flex justify-between"
         @click="$modal.hide('create-ascii-modal')"
