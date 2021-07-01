@@ -117,7 +117,8 @@ export default {
   // load settings?
   beforeCreate() {
     // change the font
-  },
+    document.body.style.fontFamily = this.$store.getters.getOptions.font;
+    },
 
   async created() {
     // Load from irc watch if present in the URL bar

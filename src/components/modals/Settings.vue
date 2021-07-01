@@ -5,7 +5,7 @@
    :clickToClose="false"
    :escToClose="true"
   >
-    Font
+    Font Family
     <t-input
       type="text"
       name="font"
@@ -53,6 +53,8 @@ export default {
     updateSettings() {
       // font settings
       this.$store.getters.getOptions.font = this.forms.settings.font;
+      // actually change the font here too.
+      document.body.style.fontFamily = this.forms.settings.font;
       this.$modal.hide('settings-modal');
       this.show = false;
     },
