@@ -212,7 +212,7 @@ export default new Vuex.Store({
       // current - payload
 
       if (!skipUndo) {
-        state.asciibirdMeta[state.tab].history.push(state.asciibirdMeta[state.tab].blocks)
+        state.asciibirdMeta[state.tab].history.push(state.asciibirdMeta[state.tab].blocks);
       }
 
       state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(payload));
@@ -220,21 +220,17 @@ export default new Vuex.Store({
     },
     undoBlocks(state) {
       if (state.asciibirdMeta[state.tab].history.length > 0) {
-        let previous = state.asciibirdMeta[state.tab].history.pop();
-        state.asciibirdMeta[state.tab].blocks = previous
-        state.asciibirdMeta[state.tab].redo.push(previous)
+        const previous = state.asciibirdMeta[state.tab].history.pop();
+        state.asciibirdMeta[state.tab].blocks = previous;
+        state.asciibirdMeta[state.tab].redo.push(previous);
       }
-
-
     },
     redoBlocks(state) {
       if (state.asciibirdMeta[state.tab].redo.length > 0) {
-        let next = state.asciibirdMeta[state.tab].redo.pop();
-        state.asciibirdMeta[state.tab].blocks = next
-        state.asciibirdMeta[state.tab].history.push(next)
+        const next = state.asciibirdMeta[state.tab].redo.pop();
+        state.asciibirdMeta[state.tab].blocks = next;
+        state.asciibirdMeta[state.tab].history.push(next);
       }
-
-
     },
     updateBrushSize(state, payload) {
       state.toolbarState.brushSizeHeight = payload.brushSizeHeight;
@@ -250,14 +246,14 @@ export default new Vuex.Store({
     openModal(state, type) {
       switch (type) {
         case 'new-ascii':
-          state.modalState.newAscii = !state.modalState.newAscii
+          state.modalState.newAscii = !state.modalState.newAscii;
           break;
         case 'open-settings':
-          console.log("HI")
-          state.modalState.settingsModal = !state.modalState.settingsModal
+          console.log('HI');
+          state.modalState.settingsModal = !state.modalState.settingsModal;
           break;
       }
-    }
+    },
   },
   getters: {
     getState: (state) => state,
@@ -276,10 +272,8 @@ export default new Vuex.Store({
     currentTab: (state) => state.tab,
     charCodes: (state) => state.charCodes,
     mircColours: (state) => state.mircColours,
-    currentAscii: state => state.asciibirdMeta[state.tab] ?? false,
-    currentAsciiBlocks: state => {
-      return JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab].blocks))
-    },
+    currentAscii: (state) => state.asciibirdMeta[state.tab] ?? false,
+    currentAsciiBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab].blocks)),
     asciibirdMeta: (state) => state.asciibirdMeta,
     nextTabValue: (state) => state.asciibirdMeta.length,
     brushSizeHeight: (state) => state.toolbarState.brushSizeHeight,
@@ -288,7 +282,7 @@ export default new Vuex.Store({
     blockSizeMultiplier: (state) => state.blockSizeMultiplier,
     brushBlocks: (state) => state.brushBlocks,
     selectBlocks: (state) => state.selectBlocks,
-    undoIndex: (state) => state.asciibirdMeta[state.tab].history.length-1,
+    undoIndex: (state) => state.asciibirdMeta[state.tab].history.length - 1,
   },
   actions: {},
   modules: {},

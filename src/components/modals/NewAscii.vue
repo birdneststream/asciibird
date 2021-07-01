@@ -49,14 +49,14 @@
 import LZString from 'lz-string';
 
 export default {
-  name: "NewAsciiModal",
+  name: 'NewAsciiModal',
   created() {},
   data: () => ({
     forms: {
       createAscii: {
         width: 80,
         height: 30,
-        title: "ascii",
+        title: 'ascii',
       },
     },
   }),
@@ -67,16 +67,16 @@ export default {
   },
   watch: {
     showNewAsciiModal(val, old) {
-      this.createClick()
+      this.createClick();
     },
   },
   methods: {
     createClick() {
-      this.forms.createAscii.title = `New ASCII ${this.$store.getters.asciibirdMeta.length+1}`;
-      this.$modal.show("create-ascii-modal");
+      this.forms.createAscii.title = `New ASCII ${this.$store.getters.asciibirdMeta.length + 1}`;
+      this.$modal.show('create-ascii-modal');
     },
     createNewASCII() {
-      let newAscii = {
+      const newAscii = {
         title: this.forms.createAscii.title,
         key: this.$store.getters.asciibirdMeta.length,
         width: this.forms.createAscii.width,
@@ -101,11 +101,11 @@ export default {
         }
       }
 
-      newAscii.blocks = LZString.compressToUTF16(JSON.stringify(newAscii.blocks))
-      newAscii.history.push( newAscii.blocks)
-      this.$store.commit("newAsciibirdMeta", newAscii);
-      this.$store.commit('openModal', 'new-ascii')
-      this.$modal.hide("create-ascii-modal");
+      newAscii.blocks = LZString.compressToUTF16(JSON.stringify(newAscii.blocks));
+      newAscii.history.push(newAscii.blocks);
+      this.$store.commit('newAsciibirdMeta', newAscii);
+      this.$store.commit('openModal', 'new-ascii');
+      this.$modal.hide('create-ascii-modal');
 
       // To show the ASCII after importing we get the last key
       // from the asciiBirdMeta array
@@ -115,14 +115,14 @@ export default {
 
       // Set the current tab and pop the array for the last value
       this.currentTab = keys.pop();
-      this.$store.commit("changeTab", this.currentTab);
+      this.$store.commit('changeTab', this.currentTab);
 
       this.show = false;
     },
     closeNewASCII({ params, cancel }) {
       this.forms.createAscii.width = 80;
       this.forms.createAscii.height = 30;
-      this.forms.createAscii.title = "New ASCII";
+      this.forms.createAscii.title = 'New ASCII';
     },
     create2DArray(rows) {
       const arr = [];

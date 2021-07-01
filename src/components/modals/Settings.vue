@@ -12,26 +12,26 @@
 <script>
 
 export default {
-  name: "SettingsModal",
+  name: 'SettingsModal',
   created() {},
   data: () => ({
-    
+
   }),
   computed: {
     showSettingsModal() {
       return this.$store.getters.modalState.settingsModal;
-    }
+    },
   },
   watch: {
     showSettingsModal(val, old) {
-      this.createClick()
-    }
+      this.createClick();
+    },
   },
   methods: {
     createClick() {
-      this.$modal.show('settings-modal')
-    }
-  }
+      this.$modal.show('settings-modal');
+    },
+  },
 };
 
 </script>
