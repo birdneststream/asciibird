@@ -113,6 +113,12 @@ import NewAscii from './components/modals/NewAscii.vue';
 import Settings from './components/modals/Settings.vue';
 
 export default {
+
+  // load settings?
+  beforeCreate() {
+    // change the font
+  },
+
   async created() {
     // Load from irc watch if present in the URL bar
     const asciiUrlCdn = new URL(location.href).searchParams.get('ascii');
