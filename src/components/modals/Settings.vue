@@ -46,16 +46,16 @@ export default {
   },
   methods: {
     createClick() {
-      this.forms.settings.font = this.$store.getters.getOptions.font
+      this.forms.settings.font = this.$store.getters.getOptions.font;
       this.$modal.show('settings-modal');
     },
 
     updateSettings() {
       // font settings
-      this.$store.getters.getOptions.font = this.forms.settings.font
-      this.$modal.hide('settings-modal')
-      this.show = false
-    }
+      this.$store.getters.getOptions.font = this.forms.settings.font;
+      this.$modal.hide('settings-modal');
+      this.show = false;
+    },
   },
 };
 
