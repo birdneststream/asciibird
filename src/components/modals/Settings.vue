@@ -5,7 +5,19 @@
    :clickToClose="false"
    :escToClose="true"
   >
-  <p> hi! </p>
+    Font
+    <t-input
+      type="text"
+      name="font"
+      v-modal="forms.settingsForm.fontFamily"
+    />
+    <template v-slot:footer>
+      <div class="flex justify-between">
+        <t-button type="button"
+        @click="$modal.hide('settings-modal')"> Cancel </t-button>
+        <t-button type="button"> Ok </t-button>
+      </div>
+    </template>
   </t-modal>
 </template>
 
@@ -15,7 +27,11 @@ export default {
   name: 'SettingsModal',
   created() {},
   data: () => ({
-
+    forms: {
+      settingsForm: {
+        fontFamily: "Hack",
+      },
+    },
   }),
   computed: {
     showSettingsModal() {
