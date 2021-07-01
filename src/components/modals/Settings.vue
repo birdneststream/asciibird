@@ -9,13 +9,14 @@
     <t-input
       type="text"
       name="font"
-      v-modal="forms.settingsForm.fontFamily"
+      v-model="forms.settings.font"
+      min="1"
     />
     <template v-slot:footer>
       <div class="flex justify-between">
         <t-button type="button"
         @click="$modal.hide('settings-modal')"> Cancel </t-button>
-        <t-button type="button"> Ok </t-button>
+        <t-button type="button" @click="updateSettings()"> Ok </t-button>
       </div>
     </template>
   </t-modal>
@@ -28,8 +29,8 @@ export default {
   created() {},
   data: () => ({
     forms: {
-      settingsForm: {
-        fontFamily: 'Hack',
+      settings: {
+        font: 'Hack',
       },
     },
   }),
@@ -45,8 +46,16 @@ export default {
   },
   methods: {
     createClick() {
+      this.forms.settings.font = this.$store.getters.getOptions.font
       this.$modal.show('settings-modal');
     },
+
+    updateSettings() {
+      // font settings
+      this.$store.getters.getOptions.font = this.forms.settings.font
+      this.$modal.hide('settings-modal')
+      this.show = false
+    }
   },
 };
 

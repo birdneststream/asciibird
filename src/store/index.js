@@ -21,7 +21,7 @@ export default new Vuex.Store({
       canvasRedrawSpeed: 2,
       defaultBg: 1,
       defaultFg: 0,
-      defaultFont: 'Hack',
+      font: "Hack"
     },
 
     // 0  => 'white',
