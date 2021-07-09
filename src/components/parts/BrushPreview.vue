@@ -70,6 +70,27 @@ export default {
     this.brushSizeWidth = this.$store.getters.brushSizeWidth;
     this.brushSizeHeight = this.$store.getters.brushSizeHeight;
     this.brushSizeType = this.$store.getters.brushSizeType;
+
+    const _this = this;
+    this.brushListener = function (e) {
+      if (e.key === "[" && (e.ctrlKey || e.metaKey)) {
+        if (this.brushSizeHeight > 0) {
+          this.brushSizeHeight++;
+          this.updateBrushSize();
+          console.log("[")
+        }
+      }
+
+      if (e.key === "]" && (e.ctrlKey || e.metaKey)) {
+        if (this.brushSizeWidth <= 10) {
+          this.brushSizeWidth++;
+          this.updateBrushSize();
+          console.log("]")
+        }
+      }
+
+      document.addEventListener("keydown", this.brushListener.bind(this));
+    };
   },
   data: () => ({
     ctx: null,
@@ -208,8 +229,8 @@ export default {
               targetX = x;
 
               if (y % 2 === 0) {
-                targetX = targetX -1;
-              }  
+                targetX = targetX - 1;
+              }
 
               if (this.blocks[y] && this.blocks[y][targetX]) {
                 if (x % 2 === 0) {

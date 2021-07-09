@@ -17,9 +17,10 @@
 # BUGS
 
 * If you resize an ascii, and then undo and try fill in blocks it will error cuz the blocks don't exist
-* Redo (ctrl y) is a buggy
 * Circle brush (works okay for odd width and height numbers)
 # FOCUSING ON NOW
+
+WEBGL
 
 * SELECT
  * CLIPBOARD
