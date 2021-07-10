@@ -333,7 +333,7 @@ export default {
         let curBlock = {};
 
         // hack font for ascii shout outs 2 beenz
-        this.ctx.font = "12.5px Hack";
+        this.ctx.font = "13px Hack";
 
         for (y = 0; y < this.currentAscii.height + 1; y++) {
           canvasY = BLOCK_HEIGHT * y;

@@ -25,7 +25,6 @@
         <li
           class="ml-1"
           @click="$store.commit('openModal', 'paste-modal')"
-          v-if="this.$store.getters.asciibirdMeta.length"
         >
           Import mIRC from Clipboard
         </li>
@@ -44,7 +43,7 @@
           Save Asciibird State
         </li>
         <li @click="startImport('asb')" class="ml-1">Load Asciibird State</li>
-        <li @click="$store.commit('openModal', 'edit-ascii')" class="ml-1">Edit Current Ascii</li>
+        <li @click="$store.commit('openModal', 'edit-ascii')" class="ml-1" v-if="this.$store.getters.asciibirdMeta.length">Edit Current Ascii</li>
       </ul>
     </context-menu>
 
