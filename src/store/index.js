@@ -13,6 +13,9 @@ export default new Vuex.Store({
   state: {
     modalState: {
       newAscii: false,
+      editAscii: false,
+      pasteModal: false,
+      
     },
     // The various options of ASCIIBIRD will eventually
     // end up in its own modal I guess
@@ -217,8 +220,11 @@ export default new Vuex.Store({
       state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(payload));
       state.asciibirdMeta[state.tab].redo = [];
     },
+    updateAscii(state, payload) {
+      state.asciibirdMeta[state.tab] = payload
+    },
     undoBlocks(state) {
-      if (state.asciibirdMeta[state.tab].history.length > 0) {
+      if (state.asciibirdMeta[state.tab].history.length > 1) {
         let previous = state.asciibirdMeta[state.tab].history.pop();
         state.asciibirdMeta[state.tab].blocks = previous
         state.asciibirdMeta[state.tab].redo.push(previous)
@@ -252,8 +258,13 @@ export default new Vuex.Store({
           state.modalState.newAscii = !state.modalState.newAscii
         break;
 
+        case 'edit-ascii':
+          state.modalState.editAscii = !state.modalState.editAscii
+        break;
 
-
+        case 'paste-modal':
+          state.modalState.pasteModal = !state.modalState.pasteModal
+        break;
 
       }
     }

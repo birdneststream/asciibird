@@ -1,6 +1,8 @@
 <template>
   <div id="app">
     <NewAscii />
+    <EditAscii />
+    <PasteAscii />
 
     <context-menu :display="showContextMenu" ref="menu">
       <ul>
@@ -22,6 +24,13 @@
         </li>
         <li
           class="ml-1"
+          @click="$store.commit('openModal', 'paste-modal')"
+          v-if="this.$store.getters.asciibirdMeta.length"
+        >
+          Import mIRC from Clipboard
+        </li>
+        <li
+          class="ml-1"
           @click="exportMirc('clipboard')"
           v-if="this.$store.getters.asciibirdMeta.length"
         >
@@ -35,6 +44,7 @@
           Save Asciibird State
         </li>
         <li @click="startImport('asb')" class="ml-1">Load Asciibird State</li>
+        <li @click="$store.commit('openModal', 'edit-ascii')" class="ml-1">Edit Current Ascii</li>
       </ul>
     </context-menu>
 
@@ -101,6 +111,8 @@ import ColourPicker from "./components/parts/ColourPicker.vue";
 import ContextMenu from "./components/parts/ContextMenu.vue";
 
 import NewAscii from "./components/modals/NewAscii.vue";
+import EditAscii from "./components/modals/EditAscii.vue";
+import PasteAscii from "./components/modals/PasteAscii.vue";
 import LZString from "lz-string";
 
 export default {
@@ -144,6 +156,8 @@ export default {
     ColourPicker,
     ContextMenu,
     NewAscii,
+    EditAscii,
+    PasteAscii
   },
   name: "Dashboard",
   data: () => ({
@@ -205,7 +219,7 @@ export default {
       // For ANSI we'll need to add back in the
       // type cariable here
       this.importType = type;
-      console.log(this.importType);
+      // console.log(this.importType);
       this.$refs.asciiInput.click();
     },
     // We can maybe try something different to import ANSI

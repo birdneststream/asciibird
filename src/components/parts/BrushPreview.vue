@@ -152,6 +152,8 @@ export default {
       this.delayRedrawCanvas();
     },
     drawPreview() {
+      this.ctx.clearRect(0, 0, 10000, 10000)
+      
       let brushHeight = this.brushSizeHeightPreview;
       let brushWidth = this.brushSizeWidthPreview;
 
@@ -186,6 +188,7 @@ export default {
       let middleY = Math.floor(brushHeight / 2);
       let middleX = Math.floor(brushWidth / 2);
       let yModifier = 0;
+
 
       // Recreate 2d array for preview
       for (y = 0; y < brushHeight; y++) {
