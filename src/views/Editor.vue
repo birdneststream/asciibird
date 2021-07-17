@@ -113,9 +113,9 @@ export default {
           if (this.isSelecting && this.isSelected && this.selectBlocks.length) {
             this.$store.commit("selectBlocks", this.selectBlocks);
 
-            // this.$store.commit("brushBlocks", this.selectBlocks);
-            // this.canTool = true;
-            // this.drawBrush();
+            this.$store.commit("brushBlocks", this.selectBlocks);
+            this.canTool = true;
+            this.drawBrush();
 
             console.log("ctrl c", this.selectBlocks);
           }
@@ -126,16 +126,15 @@ export default {
         if (e.key === "v" && (e.ctrlKey || e.metaKey)) {
           e.preventDefault();
 
-          if (this.isSelecting && this.isSelected && this.selectBlocks.length) {
-            const BLOCK_WIDTH = this.currentAscii.blockWidth;
-            const BLOCK_HEIGHT = this.currentAscii.blockHeight;
+          if (this.selectBlocks.length) {
             let x = 0;
             let y = 0;
 
-            for (y = 0; y <= this.selectBlocks.height; y++) {
-              canvasY = BLOCK_HEIGHT * y;
+            let blocksHeight = this.selectBlocks.length;
+            let blocksWidth = this.selectBlocks[0].length;
 
-              for (x = 0; x <= this.selectBlocks.width; x++) {
+            for (y = 0; y < blocksHeight; y++) {
+              for (x = 0; x < blocksWidth; x++) {
                 if (
                   this.currentAsciiBlocks[y] &&
                   this.currentAsciiBlocks[y][x]
@@ -213,6 +212,15 @@ export default {
     canText() {
       return this.$store.getters.getTargetingChar;
     },
+    currentFg() {
+      return this.$store.getters.getFgColour;
+    },
+    currentBg() {
+      return this.$store.getters.getBgColour;
+    },
+    currentChar() {
+      return this.$store.getters.getSelectedChar;
+    },
     isTextEditing() {
       return (
         this.$store.getters.getToolbarIcons[this.$store.getters.getCurrentTool]
@@ -246,7 +254,9 @@ export default {
     currentAscii(val, old) {
       console.log("changed");
       if (val !== old) {
-        this.onCanvasResize(100,100,
+        this.onCanvasResize(
+          100,
+          100,
           this.currentAscii.width * this.currentAscii.blockWidth,
           this.currentAscii.height * this.currentAscii.blockHeight
         );
@@ -283,7 +293,9 @@ export default {
       }
     },
     isMouseOnCanvas() {
-      this.clearToolCanvas();
+      if (!this.isSelecting) {
+        this.clearToolCanvas();
+      }
     },
   },
   methods: {
@@ -577,6 +589,9 @@ export default {
       this.delayRedrawCanvas();
     },
     canvasMouseDown() {
+      const BLOCK_WIDTH = this.currentAscii.blockWidth;
+      const BLOCK_HEIGHT = this.currentAscii.blockHeight;
+
       this.toolCtx.clearRect(0, 0, 10000, 10000);
 
       if (
@@ -591,6 +606,7 @@ export default {
             break;
 
           case "select":
+
             if (
               this.selecting.startX === null ||
               (this.selecting.startY === null &&
@@ -644,6 +660,9 @@ export default {
         this.y = e.offsetY;
       }
 
+      let canvasX = this.x;
+      let canvasY = this.y;
+
       this.x = Math.floor(this.x / this.currentAscii.blockWidth);
       this.y = Math.floor(this.y / this.currentAscii.blockHeight);
 
@@ -675,8 +694,8 @@ export default {
 
           case "select":
             if (this.selecting.canSelect) {
-              this.selecting.endX = this.x;
-              this.selecting.endY = this.y;
+              this.selecting.endX = canvasX;
+              this.selecting.endY = canvasY;
 
               this.redrawSelect();
             }
@@ -907,7 +926,7 @@ export default {
       const { x } = this;
       const { y } = this;
 
-      const newColor = this.$store.getters.getBgColour;
+      const newColor = this.currengBg;
 
       // Get the input which needs to be replaced.
       const current = this.currentAsciiBlocks[y][x].bg;
@@ -953,7 +972,17 @@ export default {
         return;
       }
 
-      fillBlocks[y][x].bg = newColor;
+      if (this.canBg) {
+        fillBlocks[y][x].bg = this.currentBg;
+      }
+
+      if (this.canFg) {
+        fillBlocks[y][x].fg = this.currentFg;
+      }
+
+      if (this.canText) {
+        fillBlocks[y][x].char = this.currentChar;
+      }
 
       // Fill in all four directions
       // Fill Prev row

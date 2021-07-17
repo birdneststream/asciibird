@@ -21,6 +21,9 @@
 * Circle brush (works okay for odd width and height numbers)
 # FOCUSING ON NOW
 
+* SELECT TOOL DEV, JUST FINISH IT
+* OPTIONS MODAL (SORRY SKG LOL)
+
 * SELECT
  * CLIPBOARD
 

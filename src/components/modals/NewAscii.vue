@@ -36,14 +36,14 @@
         @click="$modal.hide('create-ascii-modal')"
       >
         <t-button type="button"> Cancel </t-button>
-        <t-button type="button" @click="createNewASCII()"> Ok </t-button>
+        <t-button type="button" @click="initiateNewAscii()"> Ok </t-button>
       </div>
     </template>
   </t-modal>
 </template>
 
 <script>
-import LZString from 'lz-string';
+import createNewASCII from "./../../ascii.js" 
 
 export default {
   name: "NewAsciiModal",
@@ -72,64 +72,17 @@ export default {
       this.forms.createAscii.title = `New ASCII ${this.$store.getters.asciibirdMeta.length+1}`;
       this.$modal.show("create-ascii-modal");
     },
-    createNewASCII() {
-      let newAscii = {
-        title: this.forms.createAscii.title,
-        key: this.$store.getters.asciibirdMeta.length,
-        width: this.forms.createAscii.width,
-        height: this.forms.createAscii.height,
-        blockWidth: 8,
-        blockHeight: 13,
-        history: [],
-        redo: [],
-        x: 247, // the dragable ascii canvas x
-        y: 24, // the dragable ascii canvas y
-        blocks: this.create2DArray(this.forms.createAscii.height),
-      };
-
-      // Push all the default ASCII blocks
-      for (let x = 0; x < newAscii.width; x++) {
-        for (let y = 0; y < newAscii.height; y++) {
-          newAscii.blocks[y].push({
-            bg: null,
-            fg: null,
-            char: null,
-          });
-        }
-      }
-
-      newAscii.blocks = LZString.compressToUTF16(JSON.stringify(newAscii.blocks))
-      newAscii.history.push( newAscii.blocks)
-      this.$store.commit("newAsciibirdMeta", newAscii);
-      this.$store.commit('openModal', 'new-ascii')
+    initiateNewAscii() {
+      console.log("all good")
+      createNewASCII(this.forms);
       this.$modal.hide("create-ascii-modal");
-
-      // To show the ASCII after importing we get the last key
-      // from the asciiBirdMeta array
-      const keys = this.$store.getters.asciibirdMeta
-        .map((v, k) => k)
-        .filter((i) => i !== undefined);
-
-      // Set the current tab and pop the array for the last value
-      this.currentTab = keys.pop();
-      this.$store.commit("changeTab", this.currentTab);
-
-      this.show = false;
     },
     closeNewASCII({ params, cancel }) {
       this.forms.createAscii.width = 80;
       this.forms.createAscii.height = 30;
       this.forms.createAscii.title = "New ASCII";
     },
-    create2DArray(rows) {
-      const arr = [];
 
-      for (let i = 0; i < rows; i++) {
-        arr[i] = [];
-      }
-
-      return arr;
-    },
   },
 };
 </script>
