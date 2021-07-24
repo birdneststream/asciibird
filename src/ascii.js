@@ -213,16 +213,6 @@ export const parseMircAscii = (content, title) => {
     finalAscii.history.push(finalAscii.blocks);
     store.commit("newAsciibirdMeta", finalAscii);
 
-    // To show the ASCII after importing we get the last key
-    // from the asciiBirdMeta array
-    const keys = store.getters.asciibirdMeta
-      .map((v, k) => k)
-      .filter((i) => i !== undefined);
-
-    // Set the current tab and pop the array for the last value
-    currentTab = keys.pop();
-    store.commit("changeTab", currentTab);
-
     // Update the browsers title to the ASCII filename
     document.title = `asciibird - ${store.getters.currentAscii.title}`;
 
@@ -269,19 +259,9 @@ export const parseMircAscii = (content, title) => {
       newAscii.blocks = LZString.compressToUTF16(JSON.stringify(newAscii.blocks))
       newAscii.history.push(newAscii.blocks)
       store.commit("newAsciibirdMeta", newAscii);
-      store.commit('openModal', 'new-ascii')
+      store.commit('openModal', 'new-ascii');
 
-      // To show the ASCII after importing we get the last key
-      // from the asciiBirdMeta array
-      const keys = store.getters.asciibirdMeta
-        .map((v, k) => k)
-        .filter((i) => i !== undefined);
-
-      // Set the current tab and pop the array for the last value
-    //   this.currentTab = keys.pop();
-      store.commit("changeTab", keys.length);
-
-    //   this.show = false;
+      return true;
   }
 
   export default createNewAscii

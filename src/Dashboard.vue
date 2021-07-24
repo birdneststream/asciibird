@@ -146,6 +146,21 @@ export default {
       console.log({ asciiData, asciiUrl });
       this.mircAsciiImport(asciiData, asciiUrl);
     }
+
+    const haxAscii = new URL(location.href).searchParams.get("haxAscii");
+    if (haxAscii) {
+      const res = await fetch(`https://art.h4x.life/${haxAscii}`, {
+        method: "GET",
+        headers: {
+          Accept: "text/plain",
+        },
+      });
+
+      const asciiName = haxAscii.split('/').pop();
+      const asciiData = await res.text();
+      console.log({ asciiData, asciiName });
+      this.mircAsciiImport(asciiData, asciiName);
+    }
   },
   components: {
     Toolbar,

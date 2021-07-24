@@ -19,6 +19,8 @@
 * If you resize an ascii, and then undo and try fill in blocks it will error cuz the blocks don't exist
 * Redo (ctrl y) is a buggy
 * Circle brush (works okay for odd width and height numbers)
+* Select only works from dragging top left to bottom right, not the other way around
+* Copying 
 # FOCUSING ON NOW
 
 * SELECT TOOL DEV, JUST FINISH IT

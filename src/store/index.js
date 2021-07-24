@@ -205,6 +205,7 @@ export default new Vuex.Store({
     },
     newAsciibirdMeta(state, payload) {
       state.asciibirdMeta.push(payload);
+      state.tab = state.asciibirdMeta.length-1
     },
     updateToolBarState(state, payload) {
       state.toolbarState = payload;
