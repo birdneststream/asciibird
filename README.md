@@ -20,14 +20,22 @@
 * Redo (ctrl y) is a buggy
 * Circle brush (works okay for odd width and height numbers)
 * Select only works from dragging top left to bottom right, not the other way around
-* Copying 
+* Resizing the canvas a certain way wont make new blocks
+* No undo using text tool
+* Brush preview for mirror X and Y doesn't show chars/fg, but brushes fine
 # FOCUSING ON NOW
+
+* Cut / copy then paste with ctrl v
+* drawBrush preview flip / rotate
+* Type letter when choosing char, leave char panel open after
+* color choosing panel, close or cancel
+* close tabs
+
+* Brush library
+* edit brush
 
 * SELECT TOOL DEV, JUST FINISH IT
 * OPTIONS MODAL (SORRY SKG LOL)
-
-* SELECT
- * CLIPBOARD
 
 * Modals
  * Edit current ascii

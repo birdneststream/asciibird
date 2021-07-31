@@ -46,6 +46,27 @@
           <span class="text-sm">Text</span>
         </label>
 
+
+        <hr />
+
+        <label class="flex ml-1">
+          <t-checkbox
+            name="targetingFg"
+            v-model="mirror.x"
+            @change="updateMirror()"
+          />
+          <span class="text-sm">Mirror X</span>
+        </label>
+        <label class="flex ml-1">
+          <t-checkbox
+            name="targetingBg"
+            v-model="mirror.y"
+            @change="updateMirror()"
+          />
+          <span class="text-sm">Mirror Y</span>
+        </label>
+
+
         <hr />
 
         <Colours />
@@ -64,6 +85,10 @@
 
         <BrushPreview />
 
+
+
+
+
       </t-card>
     </vue-draggable-resizable>
   </div>
@@ -79,6 +104,9 @@ export default {
     this.toolbar.y = this.toolbarState.y
     this.toolbar.w = this.toolbarState.w
     this.toolbar.h = this.toolbarState.h
+
+    this.mirror.x = this.toolbarState.mirrorX
+    this.mirror.y = this.toolbarState.mirrorY
   },
   name: "Toolbar",
   components: { Colours, BrushPreview },
@@ -90,6 +118,10 @@ export default {
       x: 100,
       y: 100,
     },
+    mirror: {
+      x: false,
+      y: false,
+    }
   }),
   computed: {
     toolbarState() {
@@ -101,6 +133,10 @@ export default {
   },
   watch: {},
   methods: {
+    updateMirror() {
+      console.log(this.mirror)
+      this.$store.commit("updateMirror", this.mirror)
+    },
     onResize(x, y, w, h) {
       this.toolbar.x = x;
       this.toolbar.y = y;

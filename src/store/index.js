@@ -128,6 +128,8 @@ export default new Vuex.Store({
       targetingFg: true,
       targetingBg: true,
       targetingChar: true,
+      mirrorX: false,
+      mirrorY: false,
       x: 8 * 2,
       y: 13 * 2,
       h: 13 * 39,
@@ -209,6 +211,10 @@ export default new Vuex.Store({
     },
     updateToolBarState(state, payload) {
       state.toolbarState = payload;
+    },
+    updateMirror(state, payload) {
+      state.toolbarState.mirrorX = payload.x;
+      state.toolbarState.mirrorY = payload.y;
     },
     updateAsciiBlocks(state, payload, skipUndo = false) {
       // before - state.asciibirdMeta[state.tab].blocks
