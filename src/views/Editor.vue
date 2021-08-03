@@ -190,11 +190,6 @@ export default {
     isSelecting() {
       return this.currentTool.name === "select";
     },
-    dragboxStyle() {
-      return `z-index: 5;width:${this.canvas.width + 4};height:${
-        this.canvas.height + 4
-      };`;
-    },
     isSelected() {
       return (
         this.selecting.startX &&
@@ -211,9 +206,6 @@ export default {
     },
     canvasY() {
       return this.y * this.currentAscii.blockHeight;
-    },
-    asciiMetaLength() {
-      return this.$store.getters.nextTabValue;
     },
     toolbarState() {
       return this.$store.getters.toolbarState;
@@ -519,6 +511,8 @@ export default {
     },
     // Mouse Up, Down and Move
     canvasMouseUp() {
+      if (this.currentTool.name === "default") return;
+
       switch (this.currentTool.name) {
         case "brush":
           this.canTool = false;
@@ -555,6 +549,8 @@ export default {
       this.delayRedrawCanvas();
     },
     canvasMouseDown() {
+      if (this.currentTool.name === "default") return;
+
       this.toolCtx.clearRect(0, 0, 10000, 10000);
 
       if (
@@ -607,6 +603,8 @@ export default {
       }
     },
     canvasMouseMove(e) {
+      if (this.currentTool.name === "default") return;
+
       if (e.offsetX >= 0) {
         this.x = e.offsetX;
       }
@@ -639,6 +637,8 @@ export default {
             break;
 
           case "select":
+            this.drawIndicator();
+            
             if (this.selecting.canSelect) {
               this.selecting.endX = this.canvasX;
               this.selecting.endY = this.canvasY;
