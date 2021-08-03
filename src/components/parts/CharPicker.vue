@@ -7,19 +7,26 @@
     >
     <t-button
       type="button"
-      v-for="(char, keyChar) in $store.getters.charCodes"
+      v-for="(char, keyChar) in charCodes"
       :key="keyChar"
       class="border-gray-200 p-2 min-h-0"
       @click="onCharChange(char)"
-    >{{ char }}</t-button>
+    >{{ (char === " ") ? 'space' : char }}</t-button>
     </vue-draggable-resizable>
 </template>
 
 <script>
+import { charCodes } from "../../ascii.js"
+
 export default {
   name: "CharPicker",
   async created() {},
   props: ["canvasX", "canvasY"],
+  computed: {
+    charCodes() {
+      return charCodes;
+    },
+  },
   methods: {
     onCharChange(char) {
         this.$store.commit("changeChar", char);

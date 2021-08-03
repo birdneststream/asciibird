@@ -63,7 +63,7 @@ body {
 </style>
 
 <script>
-import { emptyBlock } from "./../ascii.js";
+import { emptyBlock, toolbarIcons, mircColours99 } from "./../ascii.js";
 
 export default {
   name: "Editor",
@@ -161,7 +161,7 @@ export default {
       return this.$store.getters.currentAsciiBlocks;
     },
     currentTool() {
-      return this.$store.getters.toolbarIcons[this.$store.getters.currentTool];
+      return toolbarIcons[this.$store.getters.currentTool];
     },
     mircColours() {
       return this.$store.getters.mircColours;
@@ -230,6 +230,9 @@ export default {
     },
     haveSelectBlocks() {
       return this.selectBlocks.length ? true : false;
+    },
+    mircColours() {
+      return mircColours99;
     }
   },
   watch: {
@@ -637,7 +640,7 @@ export default {
             break;
 
           case "select":
-            this.drawIndicator();
+            // this.drawIndicator();
             
             if (this.selecting.canSelect) {
               this.selecting.endX = this.canvasX;

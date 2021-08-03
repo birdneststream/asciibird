@@ -1,7 +1,5 @@
 <template>
   <t-card>
-
-
     <t-button
       type="button"
       :style="`background-color: ${mircColours[currentFg]} !important;`"
@@ -29,26 +27,26 @@
       <font-awesome-icon :icon="['fas', 'sync']" />
     </t-button>
 
-
     <t-button
       type="button"
       :style="`background-color: ${mircColours[currentBg]} !important;color: ${mircColours[currentFg]};`"
-      class="border-gray-200 p-1"
+      class="border-gray-200 p-1 w-8 h-8"
       id="currentChar"
       @click="$store.commit('changeIsUpdatingChar', true)"
-      >{{ `${toolbarState.selectedChar}` }}</t-button
+      >{{ toolbarState.selectedChar }}</t-button
     >
-
   </t-card>
 </template>
 
 <script>
+import { mircColours99 } from "../ascii.js";
+
 export default {
   name: "Colours",
   data: () => ({}),
   computed: {
     mircColours() {
-      return this.$store.getters.mircColours;
+      return mircColours99;
     },
     toolbarState() {
       return this.$store.getters.toolbarState;

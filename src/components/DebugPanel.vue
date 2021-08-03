@@ -35,6 +35,7 @@
   </div>
 </template>
 <script>
+import { toolbarIcons, mircColours99 } from "../ascii.js"
 
 export default {
   created() {
@@ -57,7 +58,7 @@ export default {
   }),
   computed: {
     getToolName() {
-      return this.$store.getters.toolbarIcons[this.$store.getters.currentTool] ? this.$store.getters.toolbarIcons[this.$store.getters.currentTool].name : 'none'
+      return toolbarIcons[this.$store.getters.currentTool] ? toolbarIcons[this.$store.getters.currentTool].name : 'none'
     },
     debugPanelState() {
       return this.$store.getters.debugPanel
@@ -81,12 +82,12 @@ export default {
         }
     },
     currentTool() {
-      return this.$store.getters.toolbarIcons[
+      return toolbarIcons[
         this.$store.getters.currentTool
       ];
     },
     mircColours() {
-      return this.$store.getters.mircColours;
+      return mircColours99;
     },
     canFg() {
       return this.$store.getters.isTargettingFg;

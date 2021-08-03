@@ -22,10 +22,7 @@
         >
           Export mIRC to File
         </li>
-        <li
-          class="ml-1"
-          @click="$store.commit('openModal', 'paste-modal')"
-        >
+        <li class="ml-1" @click="$store.commit('openModal', 'paste-modal')">
           Import mIRC from Clipboard
         </li>
         <li
@@ -43,7 +40,13 @@
           Save Asciibird State
         </li>
         <li @click="startImport('asb')" class="ml-1">Load Asciibird State</li>
-        <li @click="$store.commit('openModal', 'edit-ascii')" class="ml-1" v-if="asciibirdMeta.length">Edit Current Ascii</li>
+        <li
+          @click="$store.commit('openModal', 'edit-ascii')"
+          class="ml-1"
+          v-if="asciibirdMeta.length"
+        >
+          Edit Current Ascii
+        </li>
       </ul>
     </context-menu>
 
@@ -72,15 +75,16 @@
       </t-button>
 
       <Toolbar :canvas-x="canvasX" :canvas-y="canvasY" />
-      <DebugPanel :canvas-x="canvasX" :canvas-y="canvasY" v-if="debugPanelState.visible" />
+      <DebugPanel
+        :canvas-x="canvasX"
+        :canvas-y="canvasY"
+        v-if="debugPanelState.visible"
+      />
       <Editor @coordsupdate="updateCoords" />
 
       <CharPicker v-if="toolbarState.isChoosingChar" />
       <ColourPicker
-        v-if="
-          toolbarState.isChoosingFg ||
-          toolbarState.isChoosingBg
-        "
+        v-if="toolbarState.isChoosingFg || toolbarState.isChoosingBg"
       />
     </template>
     <template v-else>
@@ -108,7 +112,7 @@ import EditAscii from "./components/modals/EditAscii.vue";
 import PasteAscii from "./components/modals/PasteAscii.vue";
 import LZString from "lz-string";
 
-import { parseMircAscii } from "./ascii.js" 
+import { parseMircAscii, toolbarIcons } from "./ascii.js";
 
 export default {
   async created() {
@@ -149,7 +153,7 @@ export default {
       });
 
       // Considers paths
-      const asciiName = haxAscii.split('/').pop();
+      const asciiName = haxAscii.split("/").pop();
       const asciiData = await res.text();
       this.mircAsciiImport(asciiData, asciiName);
     }
@@ -163,7 +167,7 @@ export default {
     ContextMenu,
     NewAscii,
     EditAscii,
-    PasteAscii
+    PasteAscii,
   },
   name: "Dashboard",
   data: () => ({
@@ -178,11 +182,7 @@ export default {
   }),
   computed: {
     currentTool() {
-      return (
-        this.$store.getters.toolbarIcons[
-          this.$store.getters.currentTool
-        ] ?? null
-      );
+      return toolbarIcons[this.$store.getters.currentTool] ?? null;
     },
     icon() {
       return [
@@ -218,7 +218,7 @@ export default {
       return this.$store.getters.asciibirdMeta;
     },
     debugPanelState() {
-      return this.$store.getters.debugPanel
+      return this.$store.getters.debugPanel;
     },
   },
   methods: {
@@ -259,7 +259,7 @@ export default {
       this.$refs.asciiInput.click();
     },
     mircAsciiImport(contents, filename) {
-      parseMircAscii(contents, filename)
+      parseMircAscii(contents, filename);
     },
     importAsciibirdState(fileContents) {
       let contents = JSON.parse(
@@ -299,15 +299,13 @@ export default {
       const output = [];
       let curBlock = null;
       let prevBlock = { bg: -1, fg: -1 };
-      
+
       for (let y = 0; y <= blocks.length - 1; y++) {
-        
         if (y >= currentAscii.height) {
           continue;
         }
 
         for (let x = 0; x <= blocks[y].length - 1; x++) {
-
           if (x >= currentAscii.width) {
             continue;
           }
@@ -317,16 +315,13 @@ export default {
           // If we have a difference between our previous block
           // we'll put a colour codes and continue as normal
           if (curBlock.bg !== prevBlock.bg || curBlock.fg !== prevBlock.fg) {
-            curBlock = { ... blocks[y][x]};
+            curBlock = { ...blocks[y][x] };
             const zeroPad = (num, places) => String(num).padStart(places, "0");
             output.push(
               `\u0003${zeroPad(
                 curBlock.fg ?? this.options.defaultFg,
                 2
-              )},${zeroPad(
-                curBlock.bg ?? this.options.defaultBg,
-                2
-              )}`
+              )},${zeroPad(curBlock.bg ?? this.options.defaultBg, 2)}`
             );
           }
 

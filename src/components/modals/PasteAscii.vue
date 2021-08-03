@@ -6,12 +6,7 @@
     :escToClose="true"
   >
     Title
-    <t-input
-      type="text"
-      name="title"
-      v-model="title"
-      max="128"
-    />
+    <t-input type="text" name="title" v-model="title" max="128" />
 
     <t-textarea v-model="pasteContent" name="paste-ascii" rows="10" />
 
@@ -21,23 +16,27 @@
         @click="$modal.hide('paste-ascii-modal')"
       >
         <t-button type="button"> Cancel </t-button>
-        <t-button type="button" @click="importPasteAscii()" :disabled="checkPasteContent">Import Clipboard</t-button>
+        <t-button
+          type="button"
+          @click="importPasteAscii()"
+          :disabled="checkPasteContent"
+          >Import Clipboard</t-button
+        >
       </div>
     </template>
   </t-modal>
 </template>
 
 <script>
-// 
-import { parseMircAscii } from "../../ascii.js" 
+//
+import { parseMircAscii } from "../../ascii.js";
 
 export default {
   name: "PasteAsciiModal",
-  created() {
-  },
+  created() {},
   data: () => ({
     pasteContent: "",
-    title: "clipboard.txt"
+    title: "clipboard.txt",
   }),
   computed: {
     showPasteModal() {
@@ -45,13 +44,13 @@ export default {
     },
     checkPasteContent() {
       return !this.pasteContent.length ? true : false;
-    }
+    },
   },
   watch: {
     showPasteModal(val, old) {
-        if (val !== old) {
-            this.pasteModal();
-        }
+      if (val !== old) {
+        this.pasteModal();
+      }
     },
   },
   methods: {
@@ -59,12 +58,11 @@ export default {
       this.$modal.show("paste-ascii-modal");
     },
     importPasteAscii() {
+      parseMircAscii(this.pasteContent, this.title);
 
-        parseMircAscii(this.pasteContent, this.title)
-
-        this.$modal.hide("paste-ascii-modal");
-        this.pasteContent = null;
-        this.title = 'clipboard.txt';
+      this.$modal.hide("paste-ascii-modal");
+      this.pasteContent = null;
+      this.title = "clipboard.txt";
     },
   },
 };

@@ -3,7 +3,7 @@
     <vue-draggable-resizable
       @dragstop="onDragStop"
       :grid="[currentAscii.blockWidth, currentAscii.blockHeight]"
-      style="z-index: 5;"
+      style="z-index: 5"
       :min-width="8 * 25"
       :max-width="8 * 30"
       :max-height="13 * 39"
@@ -40,7 +40,6 @@
           <span class="text-sm">Text</span>
         </label>
 
-
         <hr />
 
         <label class="flex ml-1">
@@ -60,7 +59,6 @@
           <span class="text-sm">Mirror Y</span>
         </label>
 
-
         <hr />
 
         <Colours />
@@ -69,7 +67,11 @@
           type="button"
           v-for="(value, keyToolbar) in toolbarIcons"
           :key="keyToolbar + 50"
-          :class="`max-h-7 max-w-5 w-7  ${(currentTool.name === value.name ? 'border-gray-900' : 'border-gray-200')}`"
+          :class="`max-h-7 max-w-5 w-7  ${
+            currentTool.name === value.name
+              ? 'border-gray-900'
+              : 'border-gray-200'
+          }`"
           @click="$store.commit('changeTool', keyToolbar)"
         >
           <font-awesome-icon :icon="[value.fa, value.icon]" />
@@ -78,7 +80,6 @@
         <hr />
 
         <BrushPreview />
-
       </t-card>
     </vue-draggable-resizable>
   </div>
@@ -87,16 +88,17 @@
 <script>
 import Colours from "./Colours.vue";
 import BrushPreview from "./parts/BrushPreview.vue";
+import { toolbarIcons } from "../ascii.js";
 
 export default {
   created() {
-    this.toolbar.x = this.toolbarState.x
-    this.toolbar.y = this.toolbarState.y
-    this.toolbar.w = this.toolbarState.w
-    this.toolbar.h = this.toolbarState.h
+    this.toolbar.x = this.toolbarState.x;
+    this.toolbar.y = this.toolbarState.y;
+    this.toolbar.w = this.toolbarState.w;
+    this.toolbar.h = this.toolbarState.h;
 
-    this.mirror.x = this.toolbarState.mirrorX
-    this.mirror.y = this.toolbarState.mirrorY
+    this.mirror.x = this.toolbarState.mirrorX;
+    this.mirror.y = this.toolbarState.mirrorY;
   },
   name: "Toolbar",
   components: { Colours, BrushPreview },
@@ -111,22 +113,20 @@ export default {
     mirror: {
       x: false,
       y: false,
-    }
+    },
   }),
   computed: {
     toolbarIcons() {
-      return this.$store.getters.toolbarIcons
+      return toolbarIcons;
     },
     toolbarState() {
-      return this.$store.getters.toolbarState
+      return this.$store.getters.toolbarState;
     },
     currentAscii() {
       return this.$store.getters.currentAscii;
     },
     currentTool() {
-      return this.$store.getters.toolbarIcons[
-        this.$store.getters.currentTool
-      ];
+      return toolbarIcons[this.$store.getters.currentTool];
     },
     canFg() {
       return this.$store.getters.isTargettingFg;
@@ -150,7 +150,7 @@ export default {
   watch: {},
   methods: {
     updateMirror() {
-      this.$store.commit("updateMirror", this.mirror)
+      this.$store.commit("updateMirror", this.mirror);
     },
     onResize(x, y, w, h) {
       this.toolbar.x = x;
@@ -158,13 +158,23 @@ export default {
       this.toolbar.w = w;
       this.toolbar.h = h;
 
-      this.$store.commit("changeToolBarState", {x: x, y: y, w: this.toolbar.w, h: this.toolbar.h})
+      this.$store.commit("changeToolBarState", {
+        x: x,
+        y: y,
+        w: this.toolbar.w,
+        h: this.toolbar.h,
+      });
     },
     onDragStop(x, y) {
       this.toolbar.x = x;
       this.toolbar.y = y;
 
-      this.$store.commit("changeToolBarState", {x: x, y: y, w: this.toolbar.w, h: this.toolbar.h})
+      this.$store.commit("changeToolBarState", {
+        x: x,
+        y: y,
+        w: this.toolbar.w,
+        h: this.toolbar.h,
+      });
     },
   },
 };
