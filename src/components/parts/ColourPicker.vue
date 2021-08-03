@@ -9,9 +9,9 @@
     <t-card>
     <t-button
       type="button"
-      v-for="(value, keyColours) in $store.getters.mircColours"
+      v-for="(value, keyColours) in mircColours"
       :key="keyColours"
-      :style="`background-color: ${$store.getters.mircColours[keyColours]} !important;`"
+      :style="`background-color: ${mircColours[keyColours]} !important;`"
       class="border-gray-200 p-3"
       @click="onColourChange(keyColours)"
     ></t-button>
@@ -23,14 +23,22 @@
 <script>
 export default {
   name: "ColourPicker",
-  async created() {},
+  created() {},
+  computed: {
+    mircColours() {
+      return this.$store.getters.mircColours;
+    },
+    toolbarState() {
+      return this.$store.getters.toolbarState;
+    },
+  },
   methods: {
     onColourChange(colour) {
-      if (this.$store.getters.getToolbarState.isChoosingFg) {
+      if (this.toolbarState.isChoosingFg) {
         this.$store.commit("changeColourFg", colour);
       }
 
-      if (this.$store.getters.getToolbarState.isChoosingBg) {
+      if (this.toolbarState.isChoosingBg) {
         this.$store.commit("changeColourBg", colour);
       }
     },

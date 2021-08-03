@@ -138,12 +138,14 @@ export default new Vuex.Store({
     debugPanelState: {
       x: 8 * 2,
       y: 13 * 60,
-      h: 13 * 3,
-      w: 8 * 150,
+      h: 13 * 20,
+      w: 8 * 40,
+      visible: false,
     },
     blockSizeMultiplier: 1,
     brushBlocks: [],
     selectBlocks: [],
+    libraryBlocks: [],
   },
   mutations: {
     changeState(state, payload) {
@@ -154,6 +156,9 @@ export default new Vuex.Store({
     },
     changeDebugPanelState(state, payload) {
       state.debugPanelState = payload;
+    },
+    toggleDebugPanel(state, payload) {
+      state.debugPanelState.visible = payload;
     },
     changeToolBarState(state, payload) {
       state.toolbarState.x = payload.x;
@@ -217,9 +222,6 @@ export default new Vuex.Store({
       state.toolbarState.mirrorY = payload.y;
     },
     updateAsciiBlocks(state, payload, skipUndo = false) {
-      // before - state.asciibirdMeta[state.tab].blocks
-      // current - payload
-
       if (!skipUndo) {
         state.asciibirdMeta[state.tab].history.push(state.asciibirdMeta[state.tab].blocks)
       }
@@ -236,8 +238,6 @@ export default new Vuex.Store({
         state.asciibirdMeta[state.tab].blocks = previous
         state.asciibirdMeta[state.tab].redo.push(previous)
       }
-
-
     },
     redoBlocks(state) {
       if (state.asciibirdMeta[state.tab].redo.length > 0) {
@@ -245,8 +245,6 @@ export default new Vuex.Store({
         state.asciibirdMeta[state.tab].blocks = next
         state.asciibirdMeta[state.tab].history.push(next)
       }
-
-
     },
     updateBrushSize(state, payload) {
       state.toolbarState.brushSizeHeight = payload.brushSizeHeight;
@@ -277,19 +275,19 @@ export default new Vuex.Store({
     }
   },
   getters: {
-    getState: (state) => state,
+    state: (state) => state,
     modalState: (state) => state.modalState,
-    getOptions: (state) => state.options,
-    getToolbarIcons: (state) => state.toolbarIcons,
-    getToolbarState: (state) => state.toolbarState,
-    getDebugPanelState: (state) => state.debugPanelState,
-    getCurrentTool: (state) => state.toolbarState.currentTool,
-    getTargetingBg: (state) => state.toolbarState.targetingBg,
-    getTargetingFg: (state) => state.toolbarState.targetingFg,
-    getTargetingChar: (state) => state.toolbarState.targetingChar,
-    getFgColour: (state) => state.toolbarState.currentColourFg,
-    getBgColour: (state) => state.toolbarState.currentColourBg,
-    getSelectedChar: (state) => state.toolbarState.selectedChar,
+    options: (state) => state.options,
+    toolbarIcons: (state) => state.toolbarIcons,
+    toolbarState: (state) => state.toolbarState,
+    debugPanel: (state) => state.debugPanelState,
+    currentTool: (state) => state.toolbarState.currentTool,
+    isTargettingBg: (state) => state.toolbarState.targetingBg,
+    isTargettingFg: (state) => state.toolbarState.targetingFg,
+    isTargettingChar: (state) => state.toolbarState.targetingChar,
+    currentFg: (state) => state.toolbarState.currentColourFg,
+    currentBg: (state) => state.toolbarState.currentColourBg,
+    getChar: (state) => state.toolbarState.selectedChar,
     currentTab: (state) => state.tab,
     charCodes: (state) => state.charCodes,
     mircColours: (state) => state.mircColours,
@@ -305,7 +303,6 @@ export default new Vuex.Store({
     blockSizeMultiplier: (state) => state.blockSizeMultiplier,
     brushBlocks: (state) => state.brushBlocks,
     selectBlocks: (state) => state.selectBlocks,
-    undoIndex: (state) => state.asciibirdMeta[state.tab].history.length-1,
   },
   actions: {},
   modules: {},

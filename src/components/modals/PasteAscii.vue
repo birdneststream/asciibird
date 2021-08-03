@@ -21,7 +21,7 @@
         @click="$modal.hide('paste-ascii-modal')"
       >
         <t-button type="button"> Cancel </t-button>
-        <t-button type="button" @click="importPasteAscii()">Import Clipboard</t-button>
+        <t-button type="button" @click="importPasteAscii()" :disabled="checkPasteContent">Import Clipboard</t-button>
       </div>
     </template>
   </t-modal>
@@ -36,13 +36,16 @@ export default {
   created() {
   },
   data: () => ({
-    pasteContent: null,
+    pasteContent: "",
     title: "clipboard.txt"
   }),
   computed: {
     showPasteModal() {
       return this.$store.getters.modalState.pasteModal;
     },
+    checkPasteContent() {
+      return !this.pasteContent.length ? true : false;
+    }
   },
   watch: {
     showPasteModal(val, old) {

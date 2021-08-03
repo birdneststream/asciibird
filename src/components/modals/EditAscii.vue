@@ -31,12 +31,7 @@
 
     <hr class="mt-5 mb-5">
 
-    <p>Block Size Compressed: {{ asciiStats.sizeCompressed }} </p>
-    <p>Block Size Uncompressed: {{ asciiStats.sizeUncompressed }} </p>
-    <p>Percent Compressed: {{ asciiStats.sizePercentage }}% </p>
-
-    <p>Undo: {{ asciiStats.redo }} </p>
-    <p>Redo: {{ asciiStats.undo }} </p>
+   
 
     <template v-slot:footer>
       <div
@@ -75,20 +70,6 @@ export default {
     currentAsciiEditingTitle() {
         return `Editing ASCII ${this.currentAscii.title}`;
     },
-    currentAsciiBlocks() {
-        return this.$store.getters.currentAsciiBlocks
-    },
-    asciiStats() {
-        let compressed = (this.currentAscii.blocks.length / 1024).toFixed(2);
-        let uncompressed = ( JSON.stringify(this.currentAsciiBlocks).length / 1024).toFixed(2)
-        return {
-            sizeCompressed: compressed + 'kb',
-            sizeUncompressed: uncompressed + 'kb',
-            sizePercentage: (100 - (uncompressed / compressed)).toFixed(2),
-            redo: this.currentAscii.redo.length,
-            history: this.currentAscii.history.length
-        }
-    }
   },
   watch: {
     showEditAsciiModal(val, old) {

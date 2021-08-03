@@ -73,7 +73,6 @@ export default {
       this.$modal.show("create-ascii-modal");
     },
     initiateNewAscii() {
-      console.log("all good")
       createNewASCII(this.forms);
       this.$modal.hide("create-ascii-modal");
     },

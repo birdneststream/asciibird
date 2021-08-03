@@ -28,10 +28,6 @@ import {
 import Dashboard from './Dashboard.vue';
 import store from './store';
 
-import {
-  parseMircAscii
-} from "./ascii"
-
 // optionally import default styles
 import 'vue-draggable-resizable/dist/VueDraggableResizable.css';
 import {

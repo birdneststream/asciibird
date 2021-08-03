@@ -62,14 +62,16 @@
 </template>
 
 <script>
+import { emptyBlock } from "./../../ascii.js" 
+
 export default {
   name: "BrushPreview",
   mounted() {
     this.ctx = this.$refs.brushcanvas.getContext("2d");
     this.delayRedrawCanvas();
-    this.brushSizeWidth = this.$store.getters.brushSizeWidth;
-    this.brushSizeHeight = this.$store.getters.brushSizeHeight;
-    this.brushSizeType = this.$store.getters.brushSizeType;
+    this.brushSizeWidth = this.brushSizeWidthPreview;
+    this.brushSizeHeight = this.brushSizeHeightPreview;
+    this.brushSizeType = this.brushSizeTypePreview;
   },
   data: () => ({
     ctx: null,
@@ -84,25 +86,25 @@ export default {
       return this.$store.getters.currentAscii;
     },
     toolbarState() {
-      return this.$store.getters.getToolbarState;
+      return this.$store.getters.toolbarState;
     },
-    getTargetingBg() {
-      return this.$store.getters.getTargetingBg;
+    isTargettingBg() {
+      return this.$store.getters.isTargettingBg;
     },
-    getTargetingFg() {
-      return this.$store.getters.getTargetingFg;
+    isTargettingFg() {
+      return this.$store.getters.isTargettingFg;
     },
-    getTargetingChar() {
-      return this.$store.getters.getTargetingChar;
+    isTargettingChar() {
+      return this.$store.getters.isTargettingChar;
     },
-    getFgColour() {
-      return this.$store.getters.getFgColour;
+    currentFg() {
+      return this.$store.getters.currentFg;
     },
-    getBgColour() {
-      return this.$store.getters.getBgColour;
+    currentBg() {
+      return this.$store.getters.currentBg;
     },
-    getSelectedChar() {
-      return this.$store.getters.getSelectedChar;
+    getChar() {
+      return this.$store.getters.getChar;
     },
     brushSizeHeightPreview() {
       return this.$store.getters.brushSizeHeight;
@@ -113,6 +115,9 @@ export default {
     brushSizeTypePreview() {
       return this.$store.getters.brushSizeType;
     },
+    mircColours() {
+      return this.$store.getters.mircColours;
+    },
   },
   watch: {
     brushSizeWidth() {
@@ -121,22 +126,22 @@ export default {
     brushSizeHeight() {
       this.delayRedrawCanvas();
     },
-    getTargetingBg() {
+    isTargettingBg() {
       this.delayRedrawCanvas();
     },
-    getTargetingFg() {
+    isTargettingFg() {
       this.delayRedrawCanvas();
     },
-    getTargetingChar() {
+    isTargettingChar() {
       this.delayRedrawCanvas();
     },
-    getFgColour() {
+    currentFg() {
       this.delayRedrawCanvas();
     },
-    getBgColour() {
+    currentBg() {
       this.delayRedrawCanvas();
     },
-    getSelectedChar() {
+    getChar() {
       this.delayRedrawCanvas();
     },
   },
@@ -159,13 +164,13 @@ export default {
 
       this.blocks = [];
 
-      this.ctx.fillStyle = this.$store.getters.mircColours[1];
+      this.ctx.fillStyle = this.mircColours[1];
 
       const BLOCK_WIDTH = this.currentAscii.blockWidth;
       const BLOCK_HEIGHT = this.currentAscii.blockHeight;
 
       // hack font for ascii shout outs 2 beenz
-      this.ctx.font = "12.5px Hack";
+      this.ctx.font = "13px Hack";
 
       let y = 0;
       let x = 0;
@@ -174,21 +179,14 @@ export default {
       let targetX = 0;
 
       let block = {
-        fg: this.getFgColour,
-        bg: this.getBgColour,
-        char: this.getSelectedChar,
-      };
-
-      let emptyBlock = {
-        fg: null,
-        bg: null,
-        char: null,
+        fg: this.currentFg,
+        bg: this.currentBg,
+        char: this.getChar,
       };
 
       let middleY = Math.floor(brushHeight / 2);
       let middleX = Math.floor(brushWidth / 2);
       let yModifier = 0;
-
 
       // Recreate 2d array for preview
       for (y = 0; y < brushHeight; y++) {
@@ -261,8 +259,8 @@ export default {
           if (this.blocks[y] && this.blocks[y][x]) {
             let curBlock = this.blocks[y][x];
 
-            if (curBlock.bg && this.getTargetingBg) {
-              this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.bg];
+            if (curBlock.bg && this.isTargettingBg) {
+              this.ctx.fillStyle = this.mircColours[curBlock.bg];
 
               this.ctx.fillRect(
                 x * BLOCK_WIDTH,
@@ -272,12 +270,12 @@ export default {
               );
             }
 
-            if (curBlock.fg && this.getTargetingFg) {
-              this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.fg];
+            if (curBlock.fg && this.isTargettingFg) {
+              this.ctx.fillStyle = this.mircColours[curBlock.fg];
             }
 
-            if (curBlock.char && this.getTargetingChar) {
-              this.ctx.fillStyle = this.$store.getters.mircColours[curBlock.fg];
+            if (curBlock.char && this.isTargettingChar) {
+              this.ctx.fillStyle = this.mircColours[curBlock.fg];
               this.ctx.fillText(
                 curBlock.char,
                 x * BLOCK_WIDTH - 1,

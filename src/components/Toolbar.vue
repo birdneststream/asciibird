@@ -18,9 +18,7 @@
           <t-checkbox
             name="targetingFg"
             v-model="toolbarState.targetingFg"
-            :disabled="
-              !$store.getters.getTargetingBg && !$store.getters.getTargetingChar
-            "
+            :disabled="!canBg && !canText"
           />
           <span class="text-sm">FG</span>
         </label>
@@ -28,9 +26,7 @@
           <t-checkbox
             name="targetingBg"
             v-model="toolbarState.targetingBg"
-            :disabled="
-              !$store.getters.getTargetingFg && !$store.getters.getTargetingChar
-            "
+            :disabled="!canFg && !canText"
             checked
           />
           <span class="text-sm">BG</span>
@@ -39,9 +35,7 @@
           <t-checkbox
             name="targetingChar"
             v-model="toolbarState.targetingChar"
-            :disabled="
-              !$store.getters.getTargetingFg && !$store.getters.getTargetingBg
-            "
+            :disabled="!canFg && !canBg"
           />
           <span class="text-sm">Text</span>
         </label>
@@ -73,9 +67,9 @@
 
         <t-button
           type="button"
-          v-for="(value, keyToolbar) in $store.getters.getToolbarIcons"
+          v-for="(value, keyToolbar) in toolbarIcons"
           :key="keyToolbar + 50"
-          :class="`max-h-7 max-w-5 w-7  ${($store.getters.getCurrentTool == keyToolbar ? 'border-gray-900' : 'border-gray-200')}`"
+          :class="`max-h-7 max-w-5 w-7  ${(currentTool.name === value.name ? 'border-gray-900' : 'border-gray-200')}`"
           @click="$store.commit('changeTool', keyToolbar)"
         >
           <font-awesome-icon :icon="[value.fa, value.icon]" />
@@ -84,10 +78,6 @@
         <hr />
 
         <BrushPreview />
-
-
-
-
 
       </t-card>
     </vue-draggable-resizable>
@@ -124,17 +114,42 @@ export default {
     }
   }),
   computed: {
+    toolbarIcons() {
+      return this.$store.getters.toolbarIcons
+    },
     toolbarState() {
-      return this.$store.getters.getToolbarState
+      return this.$store.getters.toolbarState
     },
     currentAscii() {
       return this.$store.getters.currentAscii;
+    },
+    currentTool() {
+      return this.$store.getters.toolbarIcons[
+        this.$store.getters.currentTool
+      ];
+    },
+    canFg() {
+      return this.$store.getters.isTargettingFg;
+    },
+    canBg() {
+      return this.$store.getters.isTargettingBg;
+    },
+    canText() {
+      return this.$store.getters.isTargettingChar;
+    },
+    currentFg() {
+      return this.$store.getters.currentFg;
+    },
+    currentBg() {
+      return this.$store.getters.currentBg;
+    },
+    currentChar() {
+      return this.$store.getters.getChar;
     },
   },
   watch: {},
   methods: {
     updateMirror() {
-      console.log(this.mirror)
       this.$store.commit("updateMirror", this.mirror)
     },
     onResize(x, y, w, h) {

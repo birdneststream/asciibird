@@ -23,6 +23,7 @@
 * Resizing the canvas a certain way wont make new blocks
 * No undo using text tool
 * Brush preview for mirror X and Y doesn't show chars/fg, but brushes fine
+* Brush cannot brush row 0 in mirror mode
 # FOCUSING ON NOW
 
 * Cut / copy then paste with ctrl v
@@ -48,6 +49,12 @@
 * Keyboard shortcuts
 
 * LAYERS
+
+# Keyboard Shortcuts
+
+* Ctrl D - shows/hides debug panel
+* Ctrl Z - Undo (sometimes have to press twice)
+* Ctrl Y - Redo (sometimes have to press twice)
 
 # FEATURES DONE
 

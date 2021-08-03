@@ -10,7 +10,7 @@
         :grid="[currentAscii.blockWidth, currentAscii.blockHeight]"
         :w="canvas.width"
         :h="canvas.height"
-        :draggable="$store.getters.getCurrentTool === 0"
+        :draggable="$store.getters.currentTool === 0"
         @resizestop="onCanvasResize"
         @dragstop="onCavasDragStop"
         :x="currentAscii.x"
@@ -63,43 +63,45 @@ body {
 </style>
 
 <script>
-import Block from "../components/Block.vue";
+import { emptyBlock } from "./../ascii.js" 
 
 export default {
   name: "Editor",
-  components: { Block },
   mounted() {
+
     if (this.currentAsciiBlocks) {
       this.ctx = this.$refs.canvas.getContext("2d");
       this.toolCtx = this.$refs.canvastools.getContext("2d");
 
       this.canvas.width =
-        this.$store.getters.currentAscii.width *
-        this.$store.getters.currentAscii.blockWidth;
+        this.currentAscii.width *
+        this.currentAscii.blockWidth;
       this.canvas.height =
-        this.$store.getters.currentAscii.height *
-        this.$store.getters.currentAscii.blockHeight;
+        this.currentAscii.height *
+        this.currentAscii.blockHeight;
 
       this.delayRedrawCanvas();
       this.$store.commit("changeTool", 0);
 
       const _this = this;
       this._keyListener = function (e) {
-        if (this.currentToolIsText) {
+        if (this.isTextEditing) {
           e.preventDefault();
           _this.canvasKeyDown(e.key);
+          return;
         }
+
+        let ctrlKey = (e.ctrlKey || e.metaKey);
 
         // Ctrl Z here
         // skg - thanks for mac key suggestion, bro
-        if (e.key === "z" && (e.ctrlKey || e.metaKey)) {
+        if (e.key === "z" && ctrlKey) {
           e.preventDefault();
           this.undo();
         }
 
         // Ctrl Y here
-        if (e.key === "y" && (e.ctrlKey || e.metaKey)) {
-          console.log("ctrl y");
+        if (e.key === "y" && ctrlKey) {
           e.preventDefault();
           // Fk it works :\
           this.redo();
@@ -107,52 +109,28 @@ export default {
         }
 
         // Ctrl C - copy blocks
-        if (e.key === "c" && (e.ctrlKey || e.metaKey)) {
+        if (e.key === "c" && ctrlKey) {
           e.preventDefault();
 
           if (this.selectBlocks.length) {
             this.$store.commit("selectBlocks", this.selectBlocks);
-            this.$store.commit("brushBlocks", this.selectBlocks);
-
-            this.$store.commit("changeTool", 4);
-
-            console.log("ctrl c", this.selectBlocks);
           }
         }
 
         // Ctrl V - paste blocks
-        // Not working
-        //   if (e.key === "v" && (e.ctrlKey || e.metaKey)) {
-        //     e.preventDefault();
+        if (e.key === "v" && ctrlKey) {
+          e.preventDefault();
 
-        //     if (this.selectBlocks.length) {
-        //       let x = 0;
-        //       let y = 0;
+          if (this.selectBlocks.length) {
+            this.$store.commit("brushBlocks", this.selectBlocks);
+            this.$store.commit("changeTool", 4);
+          }
+        }
 
-        //       let blocksHeight = this.selectBlocks.length;
-        //       let blocksWidth = this.selectBlocks[0] ? this.selectBlocks[0].length : this.currentAscii.width;
-
-        //       for (y = 0; y < blocksHeight; y++) {
-        //         for (x = 0; x < blocksWidth; x++) {
-        //           if (
-        //             this.currentAsciiBlocks[y] &&
-        //             this.currentAsciiBlocks[y][x]
-        //           ) {
-        //             if (this.selectBlocks[y] && this.selectBlocks[y][x]) {
-        //               this.currentAsciiBlocks[y][x] = {
-        //                 ...this.selectBlocks[y][x],
-        //               };
-        //             }
-        //           }
-        //         }
-        //       }
-
-        //       console.log("ctrl v", this.selectBlocks);
-
-        //       this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
-        //       this.delayRedrawCanvas();
-        //     }
-        //   }
+        if (e.key === "d" && ctrlKey) {
+          e.preventDefault();
+          this.$store.commit("toggleDebugPanel", !this.debugPanelState.visible)
+        }
       };
 
       document.addEventListener("keydown", this._keyListener.bind(this));
@@ -192,47 +170,36 @@ export default {
       return this.$store.getters.currentAsciiBlocks;
     },
     currentTool() {
-      return this.$store.getters.getToolbarIcons[
-        this.$store.getters.getCurrentTool
+      return this.$store.getters.toolbarIcons[
+        this.$store.getters.currentTool
       ];
     },
-    currentToolIsText() {
-      return (
-        this.$store.getters.getToolbarIcons[this.$store.getters.getCurrentTool]
-          .name === "text"
-      );
+    mircColours() {
+      return this.$store.getters.mircColours;
     },
     canFg() {
-      return this.$store.getters.getTargetingFg;
+      return this.$store.getters.isTargettingFg;
     },
     canBg() {
-      return this.$store.getters.getTargetingBg;
+      return this.$store.getters.isTargettingBg;
     },
     canText() {
-      return this.$store.getters.getTargetingChar;
+      return this.$store.getters.isTargettingChar;
     },
     currentFg() {
-      return this.$store.getters.getFgColour;
+      return this.$store.getters.currentFg;
     },
     currentBg() {
-      return this.$store.getters.getBgColour;
+      return this.$store.getters.currentBg;
     },
     currentChar() {
-      return this.$store.getters.getSelectedChar;
+      return this.$store.getters.getChar;
     },
-    isTextEditing() { {
-
-    }
-      return (
-        this.$store.getters.getToolbarIcons[this.$store.getters.getCurrentTool]
-          .name === "text"
-      );
+    isTextEditing() {
+      return this.currentTool.name === "text"
     },
     isSelecting() {
-      return (
-        this.$store.getters.getToolbarIcons[this.$store.getters.getCurrentTool]
-          .name === "select"
-      );
+      return this.currentTool.name === "select"
     },
     dragboxStyle() {
       return `z-index: 5;width:${this.canvas.width + 4};height:${
@@ -260,13 +227,16 @@ export default {
       return this.$store.getters.nextTabValue;
     },
     toolbarState() {
-      return this.$store.getters.getToolbarState;
+      return this.$store.getters.toolbarState;
     },
     mirrorX() {
       return this.toolbarState.mirrorX;
     },
     mirrorY() {
       return this.toolbarState.mirrorY;
+    },
+    debugPanelState() {
+      return this.$store.getters.debugPanel
     },
   },
   watch: {
@@ -291,10 +261,10 @@ export default {
     },
     currentTool() {
       switch (
-        this.$store.getters.getToolbarIcons[this.$store.getters.getCurrentTool]
-          .name
+        this.currentTool.name
       ) {
         case "default":
+          // Reset default values for tools
           Object.assign(this.textEditing, {
             startX: null,
             startY: null,
@@ -313,6 +283,7 @@ export default {
     isMouseOnCanvas() {
       if (!this.isSelecting) {
         this.clearToolCanvas();
+        this.canTool = false;
       }
     },
   },
@@ -328,7 +299,7 @@ export default {
     redrawSelect() {
       if (this.currentAsciiBlocks.length) {
         this.clearToolCanvas();
-        this.toolCtx.fillStyle = this.$store.getters.mircColours[0];
+        this.toolCtx.fillStyle = this.mircColours[0];
 
         this.toolCtx.fillRect(
           this.selecting.startX,
@@ -373,7 +344,7 @@ export default {
               // Background block
               if (curBlock.bg !== null) {
                 this.ctx.fillStyle =
-                  this.$store.getters.mircColours[curBlock.bg];
+                  this.mircColours[curBlock.bg];
                 this.ctx.fillRect(canvasX, canvasY, BLOCK_WIDTH, BLOCK_HEIGHT);
               } else {
                 this.ctx.fillStyle = "rgba(0, 0, 200, 0)";
@@ -382,7 +353,7 @@ export default {
               if (curBlock.char) {
                 if (curBlock.fg !== null) {
                   this.ctx.fillStyle =
-                    this.$store.getters.mircColours[curBlock.fg];
+                    this.mircColours[curBlock.fg];
                 } else {
                   this.ctx.fillStyle = "#000000";
                 }
@@ -401,13 +372,7 @@ export default {
       this.ctx.stroke();
     },
     onCanvasResize(left, top, width, height) {
-      const emptyBlock = {
-        bg: null,
-        fg: null,
-        char: null,
-      };
-
-      const blocks = this.$store.getters.currentAsciiBlocks;
+      const blocks = this.currentAsciiBlocks;
 
       const oldWidth = blocks[0].length;
       const oldHeight = blocks.length;
@@ -580,56 +545,7 @@ export default {
         case "select":
           this.selecting.canSelect = false;
           this.clearToolCanvas();
-
-          //
-          let x = 0;
-          let y = 0;
-
-          let curBlock = {};
-          this.selectBlocks = [];
-
-          for (y = 0; y < this.currentAscii.height; y++) {
-            if (
-              y >=
-                Math.floor(
-                  this.selecting.startY / this.currentAscii.blockHeight
-                ) &&
-              y <=
-                Math.floor(this.selecting.endY / this.currentAscii.blockHeight)
-            ) {
-              if (!this.selectBlocks[y]) {
-                this.selectBlocks[y] = [];
-              }
-
-              for (x = 0; x < this.currentAscii.width; x++) {
-                if (
-                  x >=
-                    Math.floor(
-                      this.selecting.startX / this.currentAscii.blockWidth
-                    ) &&
-                  x <=
-                    Math.floor(
-                      this.selecting.endX / this.currentAscii.blockWidth
-                    )
-                ) {
-                  if (
-                    this.currentAsciiBlocks[y] &&
-                    this.currentAsciiBlocks[y][x]
-                  ) {
-                    curBlock = Object.assign(
-                      curBlock,
-                      this.currentAsciiBlocks[y][x]
-                    );
-
-                    if (!this.selectBlocks[y][x]) {
-                      this.selectBlocks[y][x] = { ...curBlock };
-                    }
-                  }
-                }
-              }
-            }
-          }
-
+          this.processSelect();
           this.redrawSelect();
           break;
 
@@ -712,8 +628,8 @@ export default {
         this.currentAsciiBlocks[this.y][this.x]
       ) {
         switch (
-          this.$store.getters.getToolbarIcons[
-            this.$store.getters.getCurrentTool
+          this.$store.getters.toolbarIcons[
+            this.$store.getters.currentTool
           ].name
         ) {
           case "brush":
@@ -778,6 +694,56 @@ export default {
     //
     // TOOLS
     //
+    processSelect() {
+         //
+          let x = 0;
+          let y = 0;
+
+          let curBlock = {};
+          this.selectBlocks = [];
+
+          for (y = 0; y < this.currentAscii.height; y++) {
+            if (
+              y >=
+                Math.floor(
+                  this.selecting.startY / this.currentAscii.blockHeight
+                ) &&
+              y <=
+                Math.floor(this.selecting.endY / this.currentAscii.blockHeight)
+            ) {
+              if (!this.selectBlocks[y]) {
+                this.selectBlocks[y] = [];
+              }
+
+              for (x = 0; x < this.currentAscii.width; x++) {
+                if (
+                  x >=
+                    Math.floor(
+                      this.selecting.startX / this.currentAscii.blockWidth
+                    ) &&
+                  x <=
+                    Math.floor(
+                      this.selecting.endX / this.currentAscii.blockWidth
+                    )
+                ) {
+                  if (
+                    this.currentAsciiBlocks[y] &&
+                    this.currentAsciiBlocks[y][x]
+                  ) {
+                    curBlock = Object.assign(
+                      curBlock,
+                      this.currentAsciiBlocks[y][x]
+                    );
+
+                    if (!this.selectBlocks[y][x]) {
+                      this.selectBlocks[y][x] = { ...curBlock };
+                    }
+                  }
+                }
+              }
+            }
+          }
+    },
     drawIndicator() {
       this.clearToolCanvas();
 
@@ -789,7 +755,7 @@ export default {
         indicatorColour = 1;
       }
 
-      this.toolCtx.fillStyle = this.$store.getters.mircColours[indicatorColour];
+      this.toolCtx.fillStyle = this.mircColours[indicatorColour];
       const BLOCK_WIDTH = this.currentAscii.blockWidth;
       const BLOCK_HEIGHT = this.currentAscii.blockHeight;
 
@@ -845,7 +811,7 @@ export default {
         indicatorColour = 1;
       }
 
-      this.toolCtx.fillStyle = this.$store.getters.mircColours[indicatorColour];
+      this.toolCtx.fillStyle = this.mircColours[indicatorColour];
       const BLOCK_WIDTH = this.currentAscii.blockWidth;
       const BLOCK_HEIGHT = this.currentAscii.blockHeight;
 
@@ -943,7 +909,7 @@ export default {
               if (this.canBg) {
                 this.toolCtx.fillStyle =
                   brushBlock.bg !== null
-                    ? this.$store.getters.mircColours[brushBlock.bg]
+                    ? this.mircColours[brushBlock.bg]
                     : "#FFFFFF";
 
                 this.toolCtx.fillRect(
@@ -982,14 +948,14 @@ export default {
 
                 if (this.canTool && brushBlock.bg !== null) {
                   targetBlock.bg = !this.$store.getters.selectBlocks.length
-                    ? this.$store.getters.getBgColour
+                    ? this.$store.getters.currentBg
                     : brushBlock.bg;
 
                   if (this.mirrorX) {
                     this.currentAsciiBlocks[arrayY][
                       asciiWidth - arrayX
                     ].bg = !this.$store.getters.selectBlocks.length
-                      ? this.$store.getters.getBgColour
+                      ? this.$store.getters.currentBg
                       : brushBlock.bg;
                   }
 
@@ -997,7 +963,7 @@ export default {
                     this.currentAsciiBlocks[asciiHeight - arrayY][
                       arrayX
                     ].bg = !this.$store.getters.selectBlocks.length
-                      ? this.$store.getters.getBgColour
+                      ? this.$store.getters.currentBg
                       : brushBlock.bg;
                   }
 
@@ -1005,7 +971,7 @@ export default {
                     this.currentAsciiBlocks[asciiHeight - arrayY][
                       asciiWidth - arrayX
                     ].bg = !this.$store.getters.selectBlocks.length
-                      ? this.$store.getters.getBgColour
+                      ? this.$store.getters.currentBg
                       : brushBlock.bg;
                   }
                 }
@@ -1014,7 +980,7 @@ export default {
               if (this.canFg) {
                 this.toolCtx.fillStyle =
                   brushBlock.fg !== null
-                    ? this.$store.getters.mircColours[brushBlock.fg]
+                    ? this.mircColours[brushBlock.fg]
                     : "#000000";
 
                 if (this.canTool && brushBlock.fg !== null) {
@@ -1050,7 +1016,7 @@ export default {
 
               if (this.canText && brushBlock.char !== null) {
                 this.toolCtx.fillStyle =
-                  this.$store.getters.mircColours[brushBlock.fg];
+                  this.mircColours[brushBlock.fg];
 
                 this.toolCtx.fillText(
                   brushBlock.char,
@@ -1060,14 +1026,14 @@ export default {
 
                 if (this.canTool && brushBlock.char !== null) {
                   targetBlock.char = !this.$store.getters.selectBlocks.length
-                    ? this.$store.getters.getSelectedChar
+                    ? this.$store.getters.getChar
                     : brushBlock.char;
 
                   if (this.mirrorX) {
                     this.currentAsciiBlocks[arrayY][
                       asciiWidth - arrayX
                     ].char = !this.$store.getters.selectBlocks.length
-                      ? this.$store.getters.getSelectedChar
+                      ? this.$store.getters.getChar
                       : brushBlock.char;
                   }
 
@@ -1075,7 +1041,7 @@ export default {
                     this.currentAsciiBlocks[asciiHeight - arrayY][
                       arrayX
                     ].char = !this.$store.getters.selectBlocks.length
-                      ? this.$store.getters.getSelectedChar
+                      ? this.$store.getters.getChar
                       : brushBlock.char;
                   }
 
@@ -1083,13 +1049,13 @@ export default {
                     this.currentAsciiBlocks[asciiHeight - arrayY][
                       asciiWidth - arrayX
                     ].char = !this.$store.getters.selectBlocks.length
-                      ? this.$store.getters.getSelectedChar
+                      ? this.$store.getters.getChar
                       : brushBlock.char;
                   }
                 }
               }
             } else {
-              this.toolCtx.fillStyle = this.$store.getters.mircColours[0];
+              this.toolCtx.fillStyle = this.mircColours[0];
               this.toolCtx.fillRect(brushX, brushY, BLOCK_WIDTH, BLOCK_HEIGHT);
 
               if (this.mirrorX) {
@@ -1251,9 +1217,7 @@ export default {
       const { x } = this;
       const { y } = this;
 
-      const newColor = this.currengBg;
-
-      // Get the input which needs to be replaced.
+      const newColor = this.currentBg;
       const current = this.currentAsciiBlocks[y][x].bg;
 
       // If the newColor is same as the existing
@@ -1262,12 +1226,11 @@ export default {
         return this.currentAsciiBlocks;
       }
 
-      // Other wise call the fill function which will fill in the existing image.
-      this.fillTool(this.currentAsciiBlocks, y, x, newColor, current);
+      this.fillTool(this.currentAsciiBlocks, y, x, current);
 
       this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
     },
-    fillTool(fillBlocks, y, x, newColor, current) {
+    fillTool(fillBlocks, y, x, current) {
       // If row is less than 0
       if (x < 0) {
         return;
@@ -1311,16 +1274,16 @@ export default {
 
       // Fill in all four directions
       // Fill Prev row
-      this.fillTool(fillBlocks, y, x - 1, newColor, current);
+      this.fillTool(fillBlocks, y, x - 1, current);
 
       // Fill Next row
-      this.fillTool(fillBlocks, y, x + 1, newColor, current);
+      this.fillTool(fillBlocks, y, x + 1, current);
 
       // Fill Prev col
-      this.fillTool(fillBlocks, y - 1, x, newColor, current);
+      this.fillTool(fillBlocks, y - 1, x, current);
 
       // Fill next col
-      this.fillTool(fillBlocks, y + 1, x, newColor, current);
+      this.fillTool(fillBlocks, y + 1, x, current);
     },
   },
 };

@@ -230,6 +230,12 @@ export const parseMircAscii = (content, title) => {
       return arr;
   }
 
+  export const emptyBlock = {
+        bg: null,
+        fg: null,
+        char: null,
+      };
+
   export const createNewAscii = (forms) => {
       let newAscii = {
         title: forms.createAscii.title,

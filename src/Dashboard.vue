@@ -18,7 +18,7 @@
         <li
           @click="exportMirc('file')"
           class="ml-1"
-          v-if="this.$store.getters.asciibirdMeta.length"
+          v-if="asciibirdMeta.length"
         >
           Export mIRC to File
         </li>
@@ -31,19 +31,19 @@
         <li
           class="ml-1"
           @click="exportMirc('clipboard')"
-          v-if="this.$store.getters.asciibirdMeta.length"
+          v-if="asciibirdMeta.length"
         >
           Export mIRC to Clipboard
         </li>
         <li
           @click="exportAsciibirdState()"
           class="ml-1"
-          v-if="this.$store.getters.asciibirdMeta.length"
+          v-if="asciibirdMeta.length"
         >
           Save Asciibird State
         </li>
         <li @click="startImport('asb')" class="ml-1">Load Asciibird State</li>
-        <li @click="$store.commit('openModal', 'edit-ascii')" class="ml-1" v-if="this.$store.getters.asciibirdMeta.length">Edit Current Ascii</li>
+        <li @click="$store.commit('openModal', 'edit-ascii')" class="ml-1" v-if="asciibirdMeta.length">Edit Current Ascii</li>
       </ul>
     </context-menu>
 
@@ -60,9 +60,9 @@
       @change="onImport()"
     />
 
-    <template v-if="this.$store.getters.asciibirdMeta.length">
+    <template v-if="asciibirdMeta.length">
       <t-button
-        v-for="(value, key) in this.$store.getters.asciibirdMeta"
+        v-for="(value, key) in asciibirdMeta"
         v-bind:key="key"
         class="ml-1"
         @click="changeTab(key, value)"
@@ -72,14 +72,14 @@
       </t-button>
 
       <Toolbar :canvas-x="canvasX" :canvas-y="canvasY" />
-      <DebugPanel :canvas-x="canvasX" :canvas-y="canvasY" />
+      <DebugPanel :canvas-x="canvasX" :canvas-y="canvasY" v-if="debugPanelState.visible" />
       <Editor @coordsupdate="updateCoords" />
 
-      <CharPicker v-if="$store.getters.getToolbarState.isChoosingChar" />
+      <CharPicker v-if="toolbarState.isChoosingChar" />
       <ColourPicker
         v-if="
-          $store.getters.getToolbarState.isChoosingFg ||
-          $store.getters.getToolbarState.isChoosingBg
+          toolbarState.isChoosingFg ||
+          toolbarState.isChoosingBg
         "
       />
     </template>
@@ -93,12 +93,6 @@
     </template>
   </div>
 </template>
-
-<style>
-/* html {
-  cursor: url('assets/mouse-pointer-solid.svg'), auto;
-} */
-</style>
 
 <script>
 import Toolbar from "./components/Toolbar.vue";
@@ -129,7 +123,6 @@ export default {
       });
 
       const asciiData = await res.text();
-      console.log({ asciiData, asciiUrlCdn });
       this.mircAsciiImport(asciiData, asciiUrlCdn);
     }
 
@@ -143,7 +136,6 @@ export default {
       });
 
       const asciiData = await res.text();
-      console.log({ asciiData, asciiUrl });
       this.mircAsciiImport(asciiData, asciiUrl);
     }
 
@@ -156,9 +148,9 @@ export default {
         },
       });
 
+      // Considers paths
       const asciiName = haxAscii.split('/').pop();
       const asciiData = await res.text();
-      console.log({ asciiData, asciiName });
       this.mircAsciiImport(asciiData, asciiName);
     }
   },
@@ -187,8 +179,8 @@ export default {
   computed: {
     currentTool() {
       return (
-        this.$store.getters.getToolbarIcons[
-          this.$store.getters.getCurrentTool
+        this.$store.getters.toolbarIcons[
+          this.$store.getters.currentTool
         ] ?? null
       );
     },
@@ -197,6 +189,36 @@ export default {
         this.currentTool.fa ?? "fas",
         this.currentTool.icon ?? "mouse-pointer",
       ];
+    },
+    options() {
+      return this.$store.getters.options;
+    },
+    canFg() {
+      return this.$store.getters.isTargettingFg;
+    },
+    canBg() {
+      return this.$store.getters.isTargettingBg;
+    },
+    canText() {
+      return this.$store.getters.isTargettingChar;
+    },
+    currentFg() {
+      return this.$store.getters.currentFg;
+    },
+    currentBg() {
+      return this.$store.getters.currentBg;
+    },
+    currentChar() {
+      return this.$store.getters.getChar;
+    },
+    toolbarState() {
+      return this.$store.getters.toolbarState;
+    },
+    asciibirdMeta() {
+      return this.$store.getters.asciibirdMeta;
+    },
+    debugPanelState() {
+      return this.$store.getters.debugPanel
     },
   },
   methods: {
@@ -250,7 +272,7 @@ export default {
 
       try {
         output = LZString.compressToEncodedURIComponent(
-          JSON.stringify(this.$store.getters.getState)
+          JSON.stringify(this.$store.getters.state)
         );
 
         // Default timestamp for filename
@@ -299,10 +321,10 @@ export default {
             const zeroPad = (num, places) => String(num).padStart(places, "0");
             output.push(
               `\u0003${zeroPad(
-                curBlock.fg ?? this.$store.getters.getOptions.defaultFg,
+                curBlock.fg ?? this.options.defaultFg,
                 2
               )},${zeroPad(
-                curBlock.bg ?? this.$store.getters.getOptions.defaultBg,
+                curBlock.bg ?? this.options.defaultBg,
                 2
               )}`
             );
