@@ -211,6 +211,7 @@ export const parseMircAscii = (content, title) => {
       JSON.stringify(finalAscii.blocks)
     );
     finalAscii.history.push(finalAscii.blocks);
+
     store.commit("newAsciibirdMeta", finalAscii);
 
     // Update the browsers title to the ASCII filename

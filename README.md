@@ -22,7 +22,6 @@
 * Select only works from dragging top left to bottom right, not the other way around
 * Resizing the canvas a certain way wont make new blocks
 * No undo using text tool
-* Brush preview for mirror X and Y doesn't show chars/fg, but brushes fine
 * Brush cannot brush row 0 in mirror mode
 # FOCUSING ON NOW
 

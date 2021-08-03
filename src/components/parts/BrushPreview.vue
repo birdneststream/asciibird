@@ -196,14 +196,14 @@ export default {
             case "cross":
               // If we are 1x1 force fill 1 block, to avoid an empty 1x1
               if (x === 0 && y === 0) {
-                this.blocks[y][x] = Object.assign({}, block);
+                this.blocks[y][x] = { ... block};
                 continue;
               }
 
               if (x === brushWidth) {
-                this.blocks[y][x] = Object.assign({}, emptyBlock);
+                this.blocks[y][x] = { ... emptyBlock};
               } else {
-                this.blocks[y][x] = Object.assign({}, block);
+                this.blocks[y][x] = { ... block};
               }
 
               targetX = x;
@@ -214,9 +214,9 @@ export default {
 
               if (this.blocks[y] && this.blocks[y][targetX]) {
                 if (x % 2 === 0) {
-                  this.blocks[y][targetX] = Object.assign({}, emptyBlock);
+                  this.blocks[y][targetX] = { ... emptyBlock};
                 } else {
-                  this.blocks[y][targetX] = Object.assign({}, block);
+                  this.blocks[y][targetX] = { ... block};
                 }
               }
 
@@ -224,7 +224,7 @@ export default {
 
             // default:
             case "square":
-              this.blocks[y][x] = Object.assign({}, block);
+              this.blocks[y][x] = { ... block};
               break;
 
             case "circle":
@@ -233,18 +233,18 @@ export default {
                 yModifier = y;
 
                 if (x <= middleX + yModifier && x >= middleX - yModifier) {
-                  this.blocks[y][x] = Object.assign({}, block);
+                  this.blocks[y][x] = { ... block};
                 } else {
-                  this.blocks[y][x] = Object.assign({}, emptyBlock);
+                  this.blocks[y][x] = { ... emptyBlock};
                 }
               } else {
                 // Bottom half
                 yModifier = middleY - (y - middleY);
 
                 if (x <= middleX + yModifier && x >= middleX - yModifier) {
-                  this.blocks[y][x] = Object.assign({}, block);
+                  this.blocks[y][x] = { ... block};
                 } else {
-                  this.blocks[y][x] = Object.assign({}, emptyBlock);
+                  this.blocks[y][x] = { ... emptyBlock};
                 }
               }
 

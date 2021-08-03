@@ -234,13 +234,12 @@ export default new Vuex.Store({
     },
     undoBlocks(state) {
       if (state.asciibirdMeta[state.tab].history.length > 1) {
-        let previous = state.asciibirdMeta[state.tab].history.pop();
-        state.asciibirdMeta[state.tab].blocks = previous
-        state.asciibirdMeta[state.tab].redo.push(previous)
+        state.asciibirdMeta[state.tab].redo.push(state.asciibirdMeta[state.tab].blocks)
+        state.asciibirdMeta[state.tab].blocks = state.asciibirdMeta[state.tab].history.pop()
       }
     },
     redoBlocks(state) {
-      if (state.asciibirdMeta[state.tab].redo.length > 0) {
+      if (state.asciibirdMeta[state.tab].redo.length) {
         let next = state.asciibirdMeta[state.tab].redo.pop();
         state.asciibirdMeta[state.tab].blocks = next
         state.asciibirdMeta[state.tab].history.push(next)
@@ -252,10 +251,10 @@ export default new Vuex.Store({
       state.toolbarState.brushSizeType = payload.brushSizeType;
     },
     brushBlocks(state, payload) {
-      state.brushBlocks = payload;
+      state.brushBlocks = LZString.compressToUTF16(JSON.stringify(payload));
     },
     selectBlocks(state, payload) {
-      state.selectBlocks = payload;
+      state.selectBlocks = LZString.compressToUTF16(JSON.stringify(payload));
     },
     openModal(state, type) {
       switch (type) {
@@ -293,7 +292,7 @@ export default new Vuex.Store({
     mircColours: (state) => state.mircColours,
     currentAscii: state => state.asciibirdMeta[state.tab] ?? false,
     currentAsciiBlocks: state => {
-      return JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab].blocks))
+      return JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab].blocks)) || []
     },
     asciibirdMeta: (state) => state.asciibirdMeta,
     nextTabValue: (state) => state.asciibirdMeta.length,
@@ -301,8 +300,12 @@ export default new Vuex.Store({
     brushSizeWidth: (state) => state.toolbarState.brushSizeWidth,
     brushSizeType: (state) => state.toolbarState.brushSizeType,
     blockSizeMultiplier: (state) => state.blockSizeMultiplier,
-    brushBlocks: (state) => state.brushBlocks,
-    selectBlocks: (state) => state.selectBlocks,
+    brushBlocks: state => {
+      return JSON.parse(LZString.decompressFromUTF16(state.brushBlocks)) || []
+    },
+    selectBlocks: state => {
+      return JSON.parse(LZString.decompressFromUTF16(state.selectBlocks)) || []
+    },
   },
   actions: {},
   modules: {},

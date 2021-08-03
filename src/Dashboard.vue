@@ -317,7 +317,7 @@ export default {
           // If we have a difference between our previous block
           // we'll put a colour codes and continue as normal
           if (curBlock.bg !== prevBlock.bg || curBlock.fg !== prevBlock.fg) {
-            Object.assign(curBlock, blocks[y][x]);
+            curBlock = { ... blocks[y][x]};
             const zeroPad = (num, places) => String(num).padStart(places, "0");
             output.push(
               `\u0003${zeroPad(
