@@ -1,11 +1,6 @@
-const tailwindcss = require('tailwindcss');
-
 module.exports = {
-  purge: [
-    './MySettings.js',
-    'node_modules/vue-tailwind/dist/*.js',
-  ],
-  darkMode: false, // or 'media' or 'class'
+  purge: ["./index.html", "./src/**/*.{vue,js,ts,jsx,tsx}"],
+  darkMode: false,
   theme: {
     extend: {},
   },
@@ -13,6 +8,8 @@ module.exports = {
     extend: {},
   },
   plugins: [
-    tailwindcss,
+      require('@tailwindcss/forms'),
+      require('tailwindcss'),
+      require('autoprefixer'),
   ],
 };

@@ -12,8 +12,13 @@
     "@fortawesome/free-regular-svg-icons": "^5.15.3",
     "@fortawesome/free-solid-svg-icons": "^5.15.3",
     "@fortawesome/vue-fontawesome": "^2.0.2",
+    "@tailwindcss/forms": "^0.3.3",
+    "@tailwindcss/postcss7-compat": "^2.2.7",
+    "autoprefixer": "^9",
     "lz-string": "^1.4.4",
-    "tailwindcss": "^2.2.7",
+    "postcss": "^7",
+    "postcss-loader": "^6.1.1",
+    "tailwindcss": "npm:@tailwindcss/postcss7-compat",
     "vue": "^2.6.11",
     "vue-clipboard2": "^0.3.1",
     "vue-draggable-resizable": "^2.3.0",
@@ -26,7 +31,6 @@
     "@vue/cli-plugin-eslint": "~4.5.0",
     "@vue/cli-plugin-vuex": "~4.5.0",
     "@vue/cli-service": "~4.5.0",
-    "@vue/eslint-config-airbnb": "^5.0.2",
     "babel-eslint": "^10.1.0",
     "eslint": "^6.7.2",
     "eslint-plugin-import": "^2.20.2",
@@ -34,7 +38,8 @@
     "lint-staged": "^9.5.0",
     "sass": "^1.26.5",
     "sass-loader": "^8.0.2",
-    "vue-template-compiler": "^2.6.11"
+    "vue-template-compiler": "^2.6.11",
+    "webpack": "^5.48.0"
   },
   "eslintConfig": {
     "root": true,
@@ -42,8 +47,7 @@
       "node": true
     },
     "extends": [
-      "plugin:vue/essential",
-      "@vue/airbnb"
+      "plugin:vue/strongly-recommended"
     ],
     "parserOptions": {
       "parser": "babel-eslint"
