@@ -1,7 +1,5 @@
 import Vue from 'vue';
-import Vuex, {
-  Store
-} from 'vuex';
+import Vuex from 'vuex';
 import VuexPersistence from 'vuex-persist';
 import LZString from 'lz-string';
 
@@ -16,7 +14,7 @@ export default new Vuex.Store({
     modalState: {
       newAscii: false,
       editAscii: false,
-      pasteModal: false
+      pasteModal: false,
     },
     // The various options of ASCIIBIRD will eventually
     // end up in its own modal I guess
@@ -131,7 +129,7 @@ export default new Vuex.Store({
     },
     newAsciibirdMeta(state, payload) {
       state.asciibirdMeta.push(payload);
-      state.tab = state.asciibirdMeta.length - 1
+      state.tab = state.asciibirdMeta.length - 1;
     },
     updateToolBarState(state, payload) {
       state.toolbarState = payload;
@@ -142,26 +140,26 @@ export default new Vuex.Store({
     },
     updateAsciiBlocks(state, payload, skipUndo = false) {
       if (!skipUndo) {
-        state.asciibirdMeta[state.tab].history.push(state.asciibirdMeta[state.tab].blocks)
+        state.asciibirdMeta[state.tab].history.push(state.asciibirdMeta[state.tab].blocks);
       }
 
       state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(payload));
       state.asciibirdMeta[state.tab].redo = [];
     },
     updateAscii(state, payload) {
-      state.asciibirdMeta[state.tab] = payload
+      state.asciibirdMeta[state.tab] = payload;
     },
     undoBlocks(state) {
       if (state.asciibirdMeta[state.tab].history.length > 1) {
-        state.asciibirdMeta[state.tab].redo.push(state.asciibirdMeta[state.tab].blocks)
-        state.asciibirdMeta[state.tab].blocks = state.asciibirdMeta[state.tab].history.pop()
+        state.asciibirdMeta[state.tab].redo.push(state.asciibirdMeta[state.tab].blocks);
+        state.asciibirdMeta[state.tab].blocks = state.asciibirdMeta[state.tab].history.pop();
       }
     },
     redoBlocks(state) {
       if (state.asciibirdMeta[state.tab].redo.length) {
-        let next = state.asciibirdMeta[state.tab].redo.pop();
-        state.asciibirdMeta[state.tab].blocks = next
-        state.asciibirdMeta[state.tab].history.push(next)
+        const next = state.asciibirdMeta[state.tab].redo.pop();
+        state.asciibirdMeta[state.tab].blocks = next;
+        state.asciibirdMeta[state.tab].history.push(next);
       }
     },
     updateBrushSize(state, payload) {
@@ -178,19 +176,18 @@ export default new Vuex.Store({
     openModal(state, type) {
       switch (type) {
         case 'new-ascii':
-          state.modalState.newAscii = !state.modalState.newAscii
+          state.modalState.newAscii = !state.modalState.newAscii;
           break;
 
         case 'edit-ascii':
-          state.modalState.editAscii = !state.modalState.editAscii
+          state.modalState.editAscii = !state.modalState.editAscii;
           break;
 
         case 'paste-modal':
-          state.modalState.pasteModal = !state.modalState.pasteModal
+          state.modalState.pasteModal = !state.modalState.pasteModal;
           break;
-
       }
-    }
+    },
   },
   getters: {
     state: (state) => state,
@@ -206,23 +203,17 @@ export default new Vuex.Store({
     currentBg: (state) => state.toolbarState.currentColourBg,
     getChar: (state) => state.toolbarState.selectedChar,
     currentTab: (state) => state.tab,
-    currentAscii: state => state.asciibirdMeta[state.tab] ?? false,
-    currentAsciiBlocks: state => {
-      return JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
-        .blocks)) || []
-    },
+    currentAscii: (state) => state.asciibirdMeta[state.tab] ?? false,
+    currentAsciiBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
+      .blocks)) || [],
     asciibirdMeta: (state) => state.asciibirdMeta,
     nextTabValue: (state) => state.asciibirdMeta.length,
     brushSizeHeight: (state) => state.toolbarState.brushSizeHeight,
     brushSizeWidth: (state) => state.toolbarState.brushSizeWidth,
     brushSizeType: (state) => state.toolbarState.brushSizeType,
     blockSizeMultiplier: (state) => state.blockSizeMultiplier,
-    brushBlocks: state => {
-      return JSON.parse(LZString.decompressFromUTF16(state.brushBlocks)) || []
-    },
-    selectBlocks: state => {
-      return JSON.parse(LZString.decompressFromUTF16(state.selectBlocks)) || []
-    },
+    brushBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.brushBlocks)) || [],
+    selectBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.selectBlocks)) || [],
   },
   actions: {},
   modules: {},

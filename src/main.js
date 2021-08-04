@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import VueTailwind from 'vue-tailwind';
 import VueDraggableResizable from 'vue-draggable-resizable';
-import VueClipboard from 'vue-clipboard2'
+import VueClipboard from 'vue-clipboard2';
 
 import {
   TInput,
@@ -25,14 +25,12 @@ import {
   // TToggle,
   // TDialog,
 } from 'vue-tailwind/dist/components';
-import Dashboard from './Dashboard.vue';
-import store from './store';
 
 // optionally import default styles
 import 'vue-draggable-resizable/dist/VueDraggableResizable.css';
 import {
-  library
-} from '@fortawesome/fontawesome-svg-core'
+  library,
+} from '@fortawesome/fontawesome-svg-core';
 import {
   faMousePointer,
   faFont,
@@ -40,17 +38,19 @@ import {
   faPaintBrush,
   faEyeDropper,
   faEraser,
-  faSync
-} from '@fortawesome/free-solid-svg-icons'
+  faSync,
+} from '@fortawesome/free-solid-svg-icons';
 import {
-  faSquare
-} from '@fortawesome/free-regular-svg-icons'
+  faSquare,
+} from '@fortawesome/free-regular-svg-icons';
 import {
-  FontAwesomeIcon
-} from '@fortawesome/vue-fontawesome'
+  FontAwesomeIcon,
+} from '@fortawesome/vue-fontawesome';
+import store from './store';
+import Dashboard from './Dashboard.vue';
 
 library.add(faMousePointer, faSquare, faFont, faFillDrip, faPaintBrush, faEyeDropper, faEraser,
-  faSync)
+  faSync);
 
 Vue.config.productionTip = false;
 
@@ -161,9 +161,9 @@ const settings = {
         // labelChecked: '',
         // inputWrapperChecked: '',
         // wrapperChecked: '',
-      }
+      },
       // Variants and fixed classes in the same `object` format ...
-    }
+    },
   },
   't-radio': {
     component: TRadio,
@@ -177,16 +177,16 @@ const settings = {
         // labelChecked: '',
         // inputWrapperChecked: '',
         // wrapperChecked: '',
-      }
+      },
       // Variants and fixed classes in the same `object` format ...
-    }
+    },
   },
 };
 
 Vue.use(VueTailwind, settings);
-Vue.component('font-awesome-icon', FontAwesomeIcon)
+Vue.component('font-awesome-icon', FontAwesomeIcon);
 Vue.component('vue-draggable-resizable', VueDraggableResizable);
-Vue.use(VueClipboard)
+Vue.use(VueClipboard);
 
 new Vue({
   store,

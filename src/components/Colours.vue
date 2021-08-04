@@ -6,8 +6,9 @@
       class="border-gray-200 p-1"
       id="currentColourFg"
       @click="$store.commit('changeIsUpdatingFg', true)"
-      >FG</t-button
     >
+      FG
+    </t-button>
 
     <t-button
       type="button"
@@ -15,8 +16,9 @@
       class="border-gray-200 p-1"
       id="currentColourBg"
       @click="$store.commit('changeIsUpdatingBg', true)"
-      >BG</t-button
     >
+      BG
+    </t-button>
 
     <t-button
       type="button"
@@ -33,16 +35,17 @@
       class="border-gray-200 p-1 w-8 h-8"
       id="currentChar"
       @click="$store.commit('changeIsUpdatingChar', true)"
-      >{{ toolbarState.selectedChar }}</t-button
     >
+      {{ toolbarState.selectedChar }}
+    </t-button>
   </t-card>
 </template>
 
 <script>
-import { mircColours99 } from "../ascii.js";
+import { mircColours99 } from '../ascii';
 
 export default {
-  name: "Colours",
+  name: 'Colours',
   data: () => ({}),
   computed: {
     mircColours() {
@@ -60,11 +63,11 @@ export default {
   },
   methods: {
     swapColours() {
-      let bg = this.currentBg;
-      let fg = this.currentFg;
+      const bg = this.currentBg;
+      const fg = this.currentFg;
 
-      this.$store.commit("changeColourFg", bg);
-      this.$store.commit("changeColourBg", fg);
+      this.$store.commit('changeColourFg', bg);
+      this.$store.commit('changeColourBg', fg);
     },
   },
 };

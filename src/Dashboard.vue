@@ -4,7 +4,10 @@
     <EditAscii />
     <PasteAscii />
 
-    <context-menu :display="showContextMenu" ref="menu">
+    <context-menu
+      :display="showContextMenu"
+      ref="menu"
+    >
       <ul>
         <li
           @click="$store.commit('openModal', 'new-ascii')"
@@ -13,8 +16,18 @@
         >
           New ASCII
         </li>
-        <li @click="clearCache()" class="ml-1">Clear and Refresh</li>
-        <li @click="startImport('mirc')" class="ml-1">Import mIRC</li>
+        <li
+          @click="clearCache()"
+          class="ml-1"
+        >
+          Clear and Refresh
+        </li>
+        <li
+          @click="startImport('mirc')"
+          class="ml-1"
+        >
+          Import mIRC
+        </li>
         <li
           @click="exportMirc('file')"
           class="ml-1"
@@ -22,7 +35,10 @@
         >
           Export mIRC to File
         </li>
-        <li class="ml-1" @click="$store.commit('openModal', 'paste-modal')">
+        <li
+          class="ml-1"
+          @click="$store.commit('openModal', 'paste-modal')"
+        >
           Import mIRC from Clipboard
         </li>
         <li
@@ -39,7 +55,12 @@
         >
           Save Asciibird State
         </li>
-        <li @click="startImport('asb')" class="ml-1">Load Asciibird State</li>
+        <li
+          @click="startImport('asb')"
+          class="ml-1"
+        >
+          Load Asciibird State
+        </li>
         <li
           @click="$store.commit('openModal', 'edit-ascii')"
           class="ml-1"
@@ -54,19 +75,19 @@
       @mouseup.right="openContextMenu"
       @contextmenu.prevent
       style="width: 100%; height: 100%; position: absolute; z-index: -1"
-    ></span>
+    />
 
     <input
       type="file"
       style="display: none"
       ref="asciiInput"
       @change="onImport()"
-    />
+    >
 
     <template v-if="asciibirdMeta.length">
       <t-button
         v-for="(value, key) in asciibirdMeta"
-        v-bind:key="key"
+        :key="key"
         class="ml-1"
         @click="changeTab(key, value)"
         :disabled="false"
@@ -74,7 +95,10 @@
         {{ value.title }}
       </t-button>
 
-      <Toolbar :canvas-x="canvasX" :canvas-y="canvasY" />
+      <Toolbar
+        :canvas-x="canvasX"
+        :canvas-y="canvasY"
+      />
       <DebugPanel
         :canvas-x="canvasX"
         :canvas-y="canvasY"
@@ -89,7 +113,9 @@
     </template>
     <template v-else>
       <div style="left: 35%; top: 15%; position: absolute; z-index: -2">
-        <h1 style="font-size: 72px; text-align: center">ASCIIBIRD</h1>
+        <h1 style="font-size: 72px; text-align: center">
+          ASCIIBIRD
+        </h1>
         <h1 style="font-size: 13px; text-align: center">
           Right click to start
         </h1>
@@ -99,30 +125,30 @@
 </template>
 
 <script>
-import Toolbar from "./components/Toolbar.vue";
-import DebugPanel from "./components/DebugPanel.vue";
-import Editor from "./views/Editor.vue";
+import LZString from 'lz-string';
+import Toolbar from './components/Toolbar.vue';
+import DebugPanel from './components/DebugPanel.vue';
+import Editor from './views/Editor.vue';
 
-import CharPicker from "./components/parts/CharPicker.vue";
-import ColourPicker from "./components/parts/ColourPicker.vue";
-import ContextMenu from "./components/parts/ContextMenu.vue";
+import CharPicker from './components/parts/CharPicker.vue';
+import ColourPicker from './components/parts/ColourPicker.vue';
+import ContextMenu from './components/parts/ContextMenu.vue';
 
-import NewAscii from "./components/modals/NewAscii.vue";
-import EditAscii from "./components/modals/EditAscii.vue";
-import PasteAscii from "./components/modals/PasteAscii.vue";
-import LZString from "lz-string";
+import NewAscii from './components/modals/NewAscii.vue';
+import EditAscii from './components/modals/EditAscii.vue';
+import PasteAscii from './components/modals/PasteAscii.vue';
 
-import { parseMircAscii, toolbarIcons } from "./ascii.js";
+import { parseMircAscii, toolbarIcons } from './ascii';
 
 export default {
   async created() {
     // Load from irc watch if present in the URL bar
-    const asciiUrlCdn = new URL(location.href).searchParams.get("ascii");
+    const asciiUrlCdn = new URL(location.href).searchParams.get('ascii');
     if (asciiUrlCdn) {
       const res = await fetch(`https://ascii.jewbird.live/${asciiUrlCdn}`, {
-        method: "GET",
+        method: 'GET',
         headers: {
-          Accept: "text/plain",
+          Accept: 'text/plain',
         },
       });
 
@@ -130,12 +156,12 @@ export default {
       this.mircAsciiImport(asciiData, asciiUrlCdn);
     }
 
-    const asciiUrl = new URL(location.href).searchParams.get("ircwatch");
+    const asciiUrl = new URL(location.href).searchParams.get('ircwatch');
     if (asciiUrl) {
       const res = await fetch(`https://irc.watch/ascii/txt/${asciiUrl}`, {
-        method: "GET",
+        method: 'GET',
         headers: {
-          Accept: "text/plain",
+          Accept: 'text/plain',
         },
       });
 
@@ -143,17 +169,17 @@ export default {
       this.mircAsciiImport(asciiData, asciiUrl);
     }
 
-    const haxAscii = new URL(location.href).searchParams.get("haxAscii");
+    const haxAscii = new URL(location.href).searchParams.get('haxAscii');
     if (haxAscii) {
       const res = await fetch(`https://art.h4x.life/${haxAscii}`, {
-        method: "GET",
+        method: 'GET',
         headers: {
-          Accept: "text/plain",
+          Accept: 'text/plain',
         },
       });
 
       // Considers paths
-      const asciiName = haxAscii.split("/").pop();
+      const asciiName = haxAscii.split('/').pop();
       const asciiData = await res.text();
       this.mircAsciiImport(asciiData, asciiName);
     }
@@ -169,7 +195,7 @@ export default {
     EditAscii,
     PasteAscii,
   },
-  name: "Dashboard",
+  name: 'Dashboard',
   data: () => ({
     showNewAsciiModal: false,
     currentTab: 1,
@@ -186,8 +212,8 @@ export default {
     },
     icon() {
       return [
-        this.currentTool.fa ?? "fas",
-        this.currentTool.icon ?? "mouse-pointer",
+        this.currentTool.fa ?? 'fas',
+        this.currentTool.icon ?? 'mouse-pointer',
       ];
     },
     options() {
@@ -235,21 +261,22 @@ export default {
       const filename = files[0].name;
       const fileReader = new FileReader();
 
-      const _importType = this.importType;
-      fileReader.addEventListener("load", () => {
-        switch (_importType) {
-          case "asb":
+      const fileType = this.importType;
+      fileReader.addEventListener('load', () => {
+        switch (fileType) {
+          case 'asb':
             this.importAsciibirdState(fileReader.result, filename);
             break;
 
-          case "mirc":
+          default:
+          case 'mirc':
             this.mircAsciiImport(fileReader.result, filename);
             break;
         }
       });
 
       // This will fire the file reader 'load' event
-      const asciiImport = fileReader.readAsText(files[0]);
+      fileReader.readAsText(files[0]);
     },
     startImport(type) {
       // For ANSI we'll need to add back in the
@@ -262,17 +289,17 @@ export default {
       parseMircAscii(contents, filename);
     },
     importAsciibirdState(fileContents) {
-      let contents = JSON.parse(
-        LZString.decompressFromEncodedURIComponent(fileContents)
+      const contents = JSON.parse(
+        LZString.decompressFromEncodedURIComponent(fileContents),
       );
-      this.$store.commit("changeState", { ...contents });
+      this.$store.commit('changeState', { ...contents });
     },
     exportAsciibirdState() {
       let output;
 
       try {
         output = LZString.compressToEncodedURIComponent(
-          JSON.stringify(this.$store.getters.state)
+          JSON.stringify(this.$store.getters.state),
         );
 
         // Default timestamp for filename
@@ -287,7 +314,7 @@ export default {
         this.downloadToFile(
           output,
           `asciibird-${y}-${m}-${d}-${h}-${mi}-${s}.asb`,
-          "application/gzip"
+          'application/gzip',
         );
       } catch (err) {
         console.log(err);
@@ -295,7 +322,7 @@ export default {
     },
     exportMirc(type) {
       const { currentAscii } = this.$store.getters;
-      let blocks = this.$store.getters.currentAsciiBlocks;
+      const blocks = this.$store.getters.currentAsciiBlocks;
       const output = [];
       let curBlock = null;
       let prevBlock = { bg: -1, fg: -1 };
@@ -316,17 +343,17 @@ export default {
           // we'll put a colour codes and continue as normal
           if (curBlock.bg !== prevBlock.bg || curBlock.fg !== prevBlock.fg) {
             curBlock = { ...blocks[y][x] };
-            const zeroPad = (num, places) => String(num).padStart(places, "0");
+            const zeroPad = (num, places) => String(num).padStart(places, '0');
             output.push(
               `\u0003${zeroPad(
                 curBlock.fg ?? this.options.defaultFg,
-                2
-              )},${zeroPad(curBlock.bg ?? this.options.defaultBg, 2)}`
+                2,
+              )},${zeroPad(curBlock.bg ?? this.options.defaultBg, 2)}`,
             );
           }
 
           // null .chars will end up as space
-          output.push(curBlock.char ?? " ");
+          output.push(curBlock.char ?? ' ');
           prevBlock = blocks[y][x];
         }
 
@@ -336,40 +363,39 @@ export default {
 
         // New line except for the very last line
         if (y < blocks.length - 1) {
-          output.push("\n");
+          output.push('\n');
         }
       }
 
       // Download to a txt file
       // Check if txt already exists and append it
-      const filename =
-        currentAscii.title.slice(currentAscii.title.length - 3) === "txt"
-          ? currentAscii.title
-          : `${currentAscii.title}.txt`;
+      const filename = currentAscii.title.slice(currentAscii.title.length - 3) === 'txt'
+        ? currentAscii.title
+        : `${currentAscii.title}.txt`;
 
       switch (type) {
-        case "clipboard":
-          this.$copyText(output.join("")).then(
-            function (e) {
-              alert("Copied");
+        case 'clipboard':
+          this.$copyText(output.join('')).then(
+            (e) => {
+              alert('Copied');
               console.log(e);
             },
-            function (e) {
-              alert("Can not copy");
+            (e) => {
+              alert('Can not copy');
               console.log(e);
-            }
+            },
           );
           break;
 
         default:
-        case "file":
-          this.downloadToFile(output.join(""), filename, "text/plain");
+        case 'file':
+          this.downloadToFile(output.join(''), filename, 'text/plain');
           break;
       }
     },
     downloadToFile(content, filename, contentType) {
-      const downloadToFile = (content, filename, contentType) => {
-        const a = document.createElement("a");
+      const downloadFile = (content, filename, contentType) => {
+        const a = document.createElement('a');
         const file = new Blob([content], { type: contentType });
 
         a.href = URL.createObjectURL(file);
@@ -379,16 +405,16 @@ export default {
         URL.revokeObjectURL(a.href);
       };
 
-      return downloadToFile(content, filename, contentType);
+      return downloadFile(content, filename, contentType);
     },
-    changeTab(key, value) {
+    changeTab(key) {
       // Update the tab index in vuex store
       this.currentTab = key;
-      this.$store.commit("changeTab", key);
+      this.$store.commit('changeTab', key);
     },
     clearCache() {
       localStorage.clear();
-      window.location.href = "/";
+      window.location.href = '/';
     },
     captureMouse(event) {
       this.dashboardX = event.pageX;

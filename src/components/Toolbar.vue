@@ -40,7 +40,7 @@
           <span class="text-sm">Text</span>
         </label>
 
-        <hr />
+        <hr>
 
         <label class="flex ml-1">
           <t-checkbox
@@ -59,7 +59,7 @@
           <span class="text-sm">Mirror Y</span>
         </label>
 
-        <hr />
+        <hr>
 
         <Colours />
 
@@ -77,7 +77,7 @@
           <font-awesome-icon :icon="[value.fa, value.icon]" />
         </t-button>
 
-        <hr />
+        <hr>
 
         <BrushPreview />
       </t-card>
@@ -86,9 +86,9 @@
 </template>
 
 <script>
-import Colours from "./Colours.vue";
-import BrushPreview from "./parts/BrushPreview.vue";
-import { toolbarIcons } from "../ascii.js";
+import Colours from './Colours.vue';
+import BrushPreview from './parts/BrushPreview.vue';
+import { toolbarIcons } from '../ascii';
 
 export default {
   created() {
@@ -100,7 +100,7 @@ export default {
     this.mirror.x = this.toolbarState.mirrorX;
     this.mirror.y = this.toolbarState.mirrorY;
   },
-  name: "Toolbar",
+  name: 'Toolbar',
   components: { Colours, BrushPreview },
 
   data: () => ({
@@ -150,7 +150,7 @@ export default {
   watch: {},
   methods: {
     updateMirror() {
-      this.$store.commit("updateMirror", this.mirror);
+      this.$store.commit('updateMirror', this.mirror);
     },
     onResize(x, y, w, h) {
       this.toolbar.x = x;
@@ -158,9 +158,9 @@ export default {
       this.toolbar.w = w;
       this.toolbar.h = h;
 
-      this.$store.commit("changeToolBarState", {
-        x: x,
-        y: y,
+      this.$store.commit('changeToolBarState', {
+        x,
+        y,
         w: this.toolbar.w,
         h: this.toolbar.h,
       });
@@ -169,9 +169,9 @@ export default {
       this.toolbar.x = x;
       this.toolbar.y = y;
 
-      this.$store.commit("changeToolBarState", {
-        x: x,
-        y: y,
+      this.$store.commit('changeToolBarState', {
+        x,
+        y,
         w: this.toolbar.w,
         h: this.toolbar.h,
       });

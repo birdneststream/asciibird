@@ -57,17 +57,17 @@
       class="brushcanvas"
       :width="brushSizeWidthPreview + 1 * currentAscii.blockWidth"
       :height="brushSizeHeightPreview + 1 * currentAscii.blockHeight"
-    ></canvas>
+    />
   </div>
 </template>
 
 <script>
-import { emptyBlock, mircColours99 } from "./../../ascii.js";
+import { emptyBlock, mircColours99 } from '../../ascii';
 
 export default {
-  name: "BrushPreview",
+  name: 'BrushPreview',
   mounted() {
-    this.ctx = this.$refs.brushcanvas.getContext("2d");
+    this.ctx = this.$refs.brushcanvas.getContext('2d');
     this.delayRedrawCanvas();
     this.brushSizeWidth = this.brushSizeWidthPreview;
     this.brushSizeHeight = this.brushSizeHeightPreview;
@@ -79,7 +79,7 @@ export default {
     blocks: [],
     brushSizeHeight: 1,
     brushSizeWidth: 1,
-    brushSizeType: "square",
+    brushSizeType: 'square',
   }),
   computed: {
     currentAscii() {
@@ -147,7 +147,7 @@ export default {
   },
   methods: {
     updateBrushSize() {
-      this.$store.commit("updateBrushSize", {
+      this.$store.commit('updateBrushSize', {
         brushSizeHeight: this.brushSizeHeight,
         brushSizeWidth: this.brushSizeWidth,
         brushSizeType: this.brushSizeType,
@@ -159,8 +159,8 @@ export default {
     drawPreview() {
       this.ctx.clearRect(0, 0, 10000, 10000);
 
-      let brushHeight = this.brushSizeHeightPreview;
-      let brushWidth = this.brushSizeWidthPreview;
+      const brushHeight = this.brushSizeHeightPreview;
+      const brushWidth = this.brushSizeWidthPreview;
 
       this.blocks = [];
 
@@ -170,22 +170,20 @@ export default {
       const BLOCK_HEIGHT = this.currentAscii.blockHeight;
 
       // hack font for ascii shout outs 2 beenz
-      this.ctx.font = "13px Hack";
+      this.ctx.font = '13px Hack';
 
       let y = 0;
       let x = 0;
-
-      let targetY = 0;
       let targetX = 0;
 
-      let block = {
+      const block = {
         fg: this.currentFg,
         bg: this.currentBg,
         char: this.getChar,
       };
 
-      let middleY = Math.floor(brushHeight / 2);
-      let middleX = Math.floor(brushWidth / 2);
+      const middleY = Math.floor(brushHeight / 2);
+      const middleX = Math.floor(brushWidth / 2);
       let yModifier = 0;
 
       // Recreate 2d array for preview
@@ -193,7 +191,7 @@ export default {
         this.blocks[y] = [];
         for (x = 0; x < brushWidth; x++) {
           switch (this.brushSizeTypePreview) {
-            case "cross":
+            case 'cross':
               // If we are 1x1 force fill 1 block, to avoid an empty 1x1
               if (x === 0 && y === 0) {
                 this.blocks[y][x] = { ...block };
@@ -209,7 +207,7 @@ export default {
               targetX = x;
 
               if (y % 2 === 0) {
-                targetX = targetX - 1;
+                targetX -= 1;
               }
 
               if (this.blocks[y] && this.blocks[y][targetX]) {
@@ -223,11 +221,11 @@ export default {
               break;
 
             // default:
-            case "square":
+            case 'square':
               this.blocks[y][x] = { ...block };
               break;
 
-            case "circle":
+            case 'circle':
               if (middleY >= y) {
                 // Top half
                 yModifier = y;
@@ -257,7 +255,7 @@ export default {
       for (y = 0; y < this.blocks.length; y++) {
         for (x = 0; x < this.blocks[0].length; x++) {
           if (this.blocks[y] && this.blocks[y][x]) {
-            let curBlock = this.blocks[y][x];
+            const curBlock = this.blocks[y][x];
 
             if (curBlock.bg && this.isTargettingBg) {
               this.ctx.fillStyle = this.mircColours[curBlock.bg];
@@ -266,7 +264,7 @@ export default {
                 x * BLOCK_WIDTH,
                 y * BLOCK_HEIGHT,
                 BLOCK_WIDTH,
-                BLOCK_HEIGHT
+                BLOCK_HEIGHT,
               );
             }
 
@@ -279,7 +277,7 @@ export default {
               this.ctx.fillText(
                 curBlock.char,
                 x * BLOCK_WIDTH - 1,
-                y * BLOCK_HEIGHT + BLOCK_HEIGHT - 3
+                y * BLOCK_HEIGHT + BLOCK_HEIGHT - 3,
               );
             }
           }
@@ -287,7 +285,7 @@ export default {
 
         this.ctx.stroke();
 
-        this.$store.commit("brushBlocks", this.blocks);
+        this.$store.commit('brushBlocks', this.blocks);
       }
     },
     delayRedrawCanvas() {

@@ -13,39 +13,61 @@
       :x="debugPanelState.x"
       :y="debugPanelState.y"
     >
-      
-        <t-card style="height: 100%;">
-          <span class="ml-5" v-html="`Tool: ${getToolName}`"></span> <br>
-          <span class="ml-5" v-html="`FgColour: ${currentFg}`"></span> <br>
-          <span class="ml-5" v-html="`BgColor: ${currentBg}`"></span> <br>
-          <span class="ml-5" v-html="`Char: ${currentChar}`"></span> <br>
+      <t-card style="height: 100%;">
+        <span
+          class="ml-5"
+          v-html="`Tool: ${getToolName}`"
+        /> <br>
+        <span
+          class="ml-5"
+          v-html="`FgColour: ${currentFg}`"
+        /> <br>
+        <span
+          class="ml-5"
+          v-html="`BgColor: ${currentBg}`"
+        /> <br>
+        <span
+          class="ml-5"
+          v-html="`Char: ${currentChar}`"
+        /> <br>
 
-          <span class="ml-5" v-html="`canvasX: ${canvasX}`"></span> <br>
-          <span class="ml-5" v-html="`canvasY: ${canvasY}`"></span> <br>
+        <span
+          class="ml-5"
+          v-html="`canvasX: ${canvasX}`"
+        /> <br>
+        <span
+          class="ml-5"
+          v-html="`canvasY: ${canvasY}`"
+        /> <br>
 
-          <span class="ml-5" v-html="`mirrorX: ${mirrorX}`"></span> <br>
-          <span class="ml-5" v-html="`mirrorY: ${mirrorY}`"></span> <br>
+        <span
+          class="ml-5"
+          v-html="`mirrorX: ${mirrorX}`"
+        /> <br>
+        <span
+          class="ml-5"
+          v-html="`mirrorY: ${mirrorY}`"
+        /> <br>
 
-          <span class="ml-5"> Size: {{ asciiStats.sizeCompressed }} ({{ asciiStats.sizeUncompressed }} / {{ asciiStats.sizePercentage }}%) </span> <br>
+        <span class="ml-5"> Size: {{ asciiStats.sizeCompressed }} ({{ asciiStats.sizeUncompressed }} / {{ asciiStats.sizePercentage }}%) </span> <br>
 
-          <span class="ml-5"> State Size: {{ asciiStats.stateSize }}</span> <br>
-        </t-card>
-      
+        <span class="ml-5"> State Size: {{ asciiStats.stateSize }}</span> <br>
+      </t-card>
     </vue-draggable-resizable>
   </div>
 </template>
 <script>
-import { toolbarIcons, mircColours99 } from "../ascii.js"
+import { toolbarIcons, mircColours99 } from '../ascii';
 
 export default {
   created() {
-    this.panel.x = this.debugPanelState.x
-    this.panel.y = this.debugPanelState.y
-    this.panel.w = this.debugPanelState.w
-    this.panel.h = this.debugPanelState.h
+    this.panel.x = this.debugPanelState.x;
+    this.panel.y = this.debugPanelState.y;
+    this.panel.w = this.debugPanelState.w;
+    this.panel.h = this.debugPanelState.h;
   },
-  name: "DebugPanel",
-  props: ["canvasX", "canvasY"],
+  name: 'DebugPanel',
+  props: ['canvasX', 'canvasY'],
   data: () => ({
     panel: {
       w: 0,
@@ -58,28 +80,28 @@ export default {
   }),
   computed: {
     getToolName() {
-      return toolbarIcons[this.$store.getters.currentTool] ? toolbarIcons[this.$store.getters.currentTool].name : 'none'
+      return toolbarIcons[this.$store.getters.currentTool] ? toolbarIcons[this.$store.getters.currentTool].name : 'none';
     },
     debugPanelState() {
-      return this.$store.getters.debugPanel
+      return this.$store.getters.debugPanel;
     },
     currentAscii() {
       return this.$store.getters.currentAscii;
     },
     currentAsciiBlocks() {
-        return this.$store.getters.currentAsciiBlocks
+      return this.$store.getters.currentAsciiBlocks;
     },
     asciiStats() {
-        let compressed = (this.currentAscii.blocks.length / 1024).toFixed(2);
-        let uncompressed = ( JSON.stringify(this.currentAsciiBlocks).length / 1024).toFixed(2)
+      const compressed = (this.currentAscii.blocks.length / 1024).toFixed(2);
+      const uncompressed = (JSON.stringify(this.currentAsciiBlocks).length / 1024).toFixed(2);
 
-        let stateSize = ( JSON.stringify(this.state).length / 1024).toFixed(2);
-        return {
-            sizeCompressed: compressed + 'kb',
-            sizeUncompressed: uncompressed + 'kb',
-            stateSize: stateSize + 'kb',
-            sizePercentage: (100 - (uncompressed / compressed)).toFixed(2),
-        }
+      const stateSize = (JSON.stringify(this.state).length / 1024).toFixed(2);
+      return {
+        sizeCompressed: `${compressed}kb`,
+        sizeUncompressed: `${uncompressed}kb`,
+        stateSize: `${stateSize}kb`,
+        sizePercentage: (100 - (uncompressed / compressed)).toFixed(2),
+      };
     },
     currentTool() {
       return toolbarIcons[
@@ -108,17 +130,17 @@ export default {
       return this.$store.getters.getChar;
     },
     isTextEditing() {
-      return this.currentTool.name === "text"
+      return this.currentTool.name === 'text';
     },
     isSelecting() {
-      return this.currentTool.name === "select"
+      return this.currentTool.name === 'select';
     },
     isSelected() {
       return (
-        this.selecting.startX &&
-        this.selecting.startY &&
-        this.selecting.endX &&
-        this.selecting.endY
+        this.selecting.startX
+        && this.selecting.startY
+        && this.selecting.endX
+        && this.selecting.endY
       );
     },
     brushBlocks() {
@@ -141,7 +163,7 @@ export default {
     },
     state() {
       return this.$store.getters.state;
-    }
+    },
   },
   watch: {},
   methods: {
@@ -151,13 +173,13 @@ export default {
       this.panel.w = w;
       this.panel.h = h;
 
-      this.$store.commit("changeDebugPanelState", this.panel)
+      this.$store.commit('changeDebugPanelState', this.panel);
     },
     onDragStop(x, y) {
       this.panel.x = x;
       this.panel.y = y;
 
-      this.$store.commit("changeDebugPanelState", this.panel)
+      this.$store.commit('changeDebugPanelState', this.panel);
     },
   },
 };

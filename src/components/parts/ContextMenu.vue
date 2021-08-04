@@ -8,14 +8,14 @@
     @blur="close"
     @contextmenu.prevent
   >
-    <slot></slot>
+    <slot />
   </div>
 </template>
 <script>
-import Vue from "vue";
+import Vue from 'vue';
 
 export default {
-  name: "ContextMenu",
+  name: 'ContextMenu',
   props: {
     display: Boolean, // prop detect if we should show context menu
   },
@@ -30,8 +30,8 @@ export default {
     // get position of context menu
     style() {
       return {
-        top: this.top + "px",
-        left: this.left + "px",
+        top: `${this.top}px`,
+        left: `${this.left}px`,
       };
     },
   },

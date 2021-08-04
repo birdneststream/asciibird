@@ -2,25 +2,37 @@
   <t-modal
     name="paste-ascii-modal"
     header="Import from Clipboard"
-    :clickToClose="false"
-    :escToClose="true"
+    :click-to-close="false"
+    :esc-to-close="true"
   >
     Title
-    <t-input type="text" name="title" v-model="title" max="128" />
+    <t-input
+      type="text"
+      name="title"
+      v-model="title"
+      max="128"
+    />
 
-    <t-textarea v-model="pasteContent" name="paste-ascii" rows="10" />
+    <t-textarea
+      v-model="pasteContent"
+      name="paste-ascii"
+      rows="10"
+    />
 
     <template v-slot:footer>
       <div
         class="flex justify-between"
       >
-        <t-button type="button"> Cancel </t-button>
+        <t-button type="button">
+          Cancel
+        </t-button>
         <t-button
           type="button"
           @click="importPasteAscii()"
           :disabled="checkPasteContent"
-          >Import Clipboard</t-button
         >
+          Import Clipboard
+        </t-button>
       </div>
     </template>
   </t-modal>
@@ -28,21 +40,21 @@
 
 <script>
 //
-import { parseMircAscii } from "../../ascii.js";
+import { parseMircAscii } from '../../ascii';
 
 export default {
-  name: "PasteAsciiModal",
+  name: 'PasteAsciiModal',
   created() {},
   data: () => ({
-    pasteContent: "",
-    title: "clipboard.txt",
+    pasteContent: '',
+    title: 'clipboard.txt',
   }),
   computed: {
     showPasteModal() {
       return this.$store.getters.modalState.pasteModal;
     },
     checkPasteContent() {
-      return !this.pasteContent.length ? true : false;
+      return !this.pasteContent.length;
     },
   },
   watch: {
@@ -54,13 +66,13 @@ export default {
   },
   methods: {
     pasteModal() {
-        this.$modal.show("paste-ascii-modal")
+      this.$modal.show('paste-ascii-modal');
     },
     importPasteAscii() {
-      parseMircAscii(this.pasteContent, this.title);     
-      this.pasteContent = "";
-      this.title = "clipboard.txt";
-      this.$modal.hide("paste-ascii-modal");
+      parseMircAscii(this.pasteContent, this.title);
+      this.pasteContent = '';
+      this.title = 'clipboard.txt';
+      this.$modal.hide('paste-ascii-modal');
     },
   },
 };
