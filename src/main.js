@@ -5,9 +5,6 @@ import VueDraggableResizable from 'vue-draggable-resizable';
 import VueClipboard from 'vue-clipboard2';
 import { tailwindCss } from './tailwindSettings';
 import 'vue-draggable-resizable/dist/VueDraggableResizable.css';
-
-import 'hack-font/build/web/hack.css';
-
 import store from './store';
 import Dashboard from './Dashboard.vue';
 
