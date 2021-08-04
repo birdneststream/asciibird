@@ -1,9 +1,9 @@
 <template>
-  <t-card>
+  <div>
     <t-button
       type="button"
       :style="`background-color: ${mircColours[currentFg]} !important;`"
-      class="border-gray-200 p-1"
+      class="border-gray-200 p-3 w-14 h-14 text-2xl"
       id="currentColourFg"
       @click="$store.commit('changeIsUpdatingFg', true)"
     >
@@ -13,7 +13,7 @@
     <t-button
       type="button"
       :style="`background-color: ${mircColours[currentBg]} !important;`"
-      class="border-gray-200 p-1"
+      class="border-gray-200 p-3 w-14 h-14 text-2xl"
       id="currentColourBg"
       @click="$store.commit('changeIsUpdatingBg', true)"
     >
@@ -22,30 +22,31 @@
 
     <t-button
       type="button"
-      class="p-1 bg-white"
+      class="bg-white absolute rounded-full"
+      style="margin-left: -67px; margin-top: 15px"
       id="swapColour"
       @click="swapColours()"
     >
-      <font-awesome-icon :icon="['fas', 'sync']" />
+      <font-awesome-icon :icon="['fas', 'sync']" size="lg"/>
     </t-button>
 
     <t-button
       type="button"
       :style="`background-color: ${mircColours[currentBg]} !important;color: ${mircColours[currentFg]};`"
-      class="border-gray-200 p-1 w-8 h-8"
+      class="border-gray-200 p-3 w-14 h-14 text-2xl"
       id="currentChar"
       @click="$store.commit('changeIsUpdatingChar', true)"
     >
-      {{ toolbarState.selectedChar }}
+      {{ toolbarState.selectedChar === " " ? "SP" : toolbarState.selectedChar }}
     </t-button>
-  </t-card>
+  </div>
 </template>
 
 <script>
-import { mircColours99 } from '../ascii';
+import { mircColours99 } from "../ascii";
 
 export default {
-  name: 'Colours',
+  name: "Colours",
   data: () => ({}),
   computed: {
     mircColours() {
@@ -66,8 +67,8 @@ export default {
       const bg = this.currentBg;
       const fg = this.currentFg;
 
-      this.$store.commit('changeColourFg', bg);
-      this.$store.commit('changeColourBg', fg);
+      this.$store.commit("changeColourFg", bg);
+      this.$store.commit("changeColourBg", fg);
     },
   },
 };

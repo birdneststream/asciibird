@@ -19,7 +19,7 @@ export default new Vuex.Store({
     // The various options of ASCIIBIRD will eventually
     // end up in its own modal I guess
     options: {
-      canvasRedrawSpeed: 2,
+      canvasRedrawSpeed: 50,
       defaultBg: 1,
       defaultFg: 0,
     },
@@ -204,8 +204,7 @@ export default new Vuex.Store({
     getChar: (state) => state.toolbarState.selectedChar,
     currentTab: (state) => state.tab,
     currentAscii: (state) => state.asciibirdMeta[state.tab] ?? false,
-    currentAsciiBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
-      .blocks)) || [],
+    currentAsciiBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab].blocks)) || [],
     asciibirdMeta: (state) => state.asciibirdMeta,
     nextTabValue: (state) => state.asciibirdMeta.length,
     brushSizeHeight: (state) => state.toolbarState.brushSizeHeight,

@@ -20,8 +20,6 @@
 * Redo (ctrl y) is a buggy
 * Circle brush (works okay for odd width and height numbers)
 * Select only works from dragging top left to bottom right, not the other way around
-* Resizing the canvas a certain way wont make new blocks
-* No undo using text tool
 * Brush cannot brush row 0 in mirror mode
 # FOCUSING ON NOW
 
@@ -52,8 +50,8 @@
 # Keyboard Shortcuts
 
 * Ctrl D - shows/hides debug panel
-* Ctrl Z - Undo (sometimes have to press twice)
-* Ctrl Y - Redo (sometimes have to press twice)
+* Ctrl Z - Undo
+* Ctrl Y - Redo
 
 # FEATURES DONE
 
@@ -78,10 +76,6 @@
 
 * Insert image to convert to ASCII into a layer
 * Support for tdfiglet, toilet, figlet importing
-
-# Things To Do Later
-
-* Properly get CSS into the JS stuff ya lazy bird
 # References
 
 * https://jp.itch.io/playscii / http://vectorpoem.com/playscii/

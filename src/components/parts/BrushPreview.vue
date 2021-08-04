@@ -1,22 +1,28 @@
 <template>
   <div>
-    <t-input
-      type="number"
-      name="width"
-      v-model="brushSizeWidth"
-      @change="updateBrushSize"
-      min="1"
-      max="10"
-    />
+    <div class="flex">
+      <div class="w-1/2">
+        <t-input
+          type="number"
+          name="width"
+          v-model="brushSizeWidth"
+          @change="updateBrushSize"
+          min="1"
+          max="10"
+        />
+      </div>
 
-    <t-input
-      type="number"
-      name="height"
-      v-model="brushSizeHeight"
-      @change="updateBrushSize"
-      min="1"
-      max="10"
-    />
+      <div class="w-1/2">
+        <t-input
+          type="number"
+          name="height"
+          v-model="brushSizeHeight"
+          @change="updateBrushSize"
+          min="1"
+          max="10"
+        />
+      </div>
+    </div>
 
     <div class="flex">
       <label class="block">
@@ -62,12 +68,12 @@
 </template>
 
 <script>
-import { emptyBlock, mircColours99 } from '../../ascii';
+import { emptyBlock, mircColours99 } from "../../ascii";
 
 export default {
-  name: 'BrushPreview',
+  name: "BrushPreview",
   mounted() {
-    this.ctx = this.$refs.brushcanvas.getContext('2d');
+    this.ctx = this.$refs.brushcanvas.getContext("2d");
     this.delayRedrawCanvas();
     this.brushSizeWidth = this.brushSizeWidthPreview;
     this.brushSizeHeight = this.brushSizeHeightPreview;
@@ -79,7 +85,7 @@ export default {
     blocks: [],
     brushSizeHeight: 1,
     brushSizeWidth: 1,
-    brushSizeType: 'square',
+    brushSizeType: "square",
   }),
   computed: {
     currentAscii() {
@@ -118,6 +124,9 @@ export default {
     mircColours() {
       return mircColours99;
     },
+    options() {
+      return this.$store.getters.options;
+    },
   },
   watch: {
     brushSizeWidth() {
@@ -147,7 +156,7 @@ export default {
   },
   methods: {
     updateBrushSize() {
-      this.$store.commit('updateBrushSize', {
+      this.$store.commit("updateBrushSize", {
         brushSizeHeight: this.brushSizeHeight,
         brushSizeWidth: this.brushSizeWidth,
         brushSizeType: this.brushSizeType,
@@ -170,7 +179,7 @@ export default {
       const BLOCK_HEIGHT = this.currentAscii.blockHeight;
 
       // hack font for ascii shout outs 2 beenz
-      this.ctx.font = '13px Hack';
+      this.ctx.font = "13px Hack";
 
       let y = 0;
       let x = 0;
@@ -191,7 +200,7 @@ export default {
         this.blocks[y] = [];
         for (x = 0; x < brushWidth; x++) {
           switch (this.brushSizeTypePreview) {
-            case 'cross':
+            case "cross":
               // If we are 1x1 force fill 1 block, to avoid an empty 1x1
               if (x === 0 && y === 0) {
                 this.blocks[y][x] = { ...block };
@@ -221,11 +230,11 @@ export default {
               break;
 
             // default:
-            case 'square':
+            case "square":
               this.blocks[y][x] = { ...block };
               break;
 
-            case 'circle':
+            case "circle":
               if (middleY >= y) {
                 // Top half
                 yModifier = y;
@@ -264,7 +273,7 @@ export default {
                 x * BLOCK_WIDTH,
                 y * BLOCK_HEIGHT,
                 BLOCK_WIDTH,
-                BLOCK_HEIGHT,
+                BLOCK_HEIGHT
               );
             }
 
@@ -277,7 +286,7 @@ export default {
               this.ctx.fillText(
                 curBlock.char,
                 x * BLOCK_WIDTH - 1,
-                y * BLOCK_HEIGHT + BLOCK_HEIGHT - 3,
+                y * BLOCK_HEIGHT + BLOCK_HEIGHT - 3
               );
             }
           }
@@ -285,7 +294,7 @@ export default {
 
         this.ctx.stroke();
 
-        this.$store.commit('brushBlocks', this.blocks);
+        this.$store.commit("brushBlocks", this.blocks);
       }
     },
     delayRedrawCanvas() {
@@ -295,7 +304,7 @@ export default {
         setTimeout(() => {
           this.redraw = true;
           this.drawPreview();
-        }, 2);
+        }, this.options.canvasRedrawSpeed);
       }
     },
   },

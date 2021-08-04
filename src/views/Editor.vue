@@ -351,38 +351,28 @@ export default {
     onCanvasResize(left, top, width, height) {
       const blocks = this.currentAsciiBlocks;
 
-      const oldWidth = blocks[0].length;
-      const oldHeight = blocks.length;
-
       const canvasBlockHeight = Math.floor(
         height / this.currentAscii.blockHeight,
       );
       const canvasBlockWidth = Math.floor(width / this.currentAscii.blockWidth);
 
-      if (canvasBlockHeight > oldHeight || canvasBlockWidth > oldWidth) {
-        // console.log({ canvasBlockHeight, oldHeight });
-
-        for (let y = 0; y < canvasBlockHeight; y++) {
-          // New row
-          if (!blocks[y]) {
-            blocks[y] = [];
-            for (let x = 0; x < canvasBlockWidth; x++) {
+      // Previously we had an if statement to check if we needed new blocks
+      // removed it so we can get all blocks always
+      for (let y = 0; y < canvasBlockHeight; y++) {
+        // New row
+        if (!blocks[y]) {
+          blocks[y] = [];
+          for (let x = 0; x < canvasBlockWidth; x++) {
+            blocks[y][x] = { ...emptyBlock };
+          }
+        } else {
+          // no new rows but new cols
+          for (let x = 0; x < canvasBlockWidth; x++) {
+            if (blocks[y] && !blocks[y][x]) {
               blocks[y][x] = { ...emptyBlock };
-            }
-          } else {
-            // blocks[y]
-            // no new rows but new cols
-            for (let x = 0; x < canvasBlockWidth; x++) {
-              if (blocks[y] && !blocks[y][x]) {
-                blocks[y][x] = { ...emptyBlock };
-              }
             }
           }
         }
-      }
-
-      if (canvasBlockWidth > oldWidth) {
-        // console.log({ canvasBlockWidth, oldWidth });
       }
 
       this.canvas.width = width;
@@ -394,7 +384,7 @@ export default {
       });
 
       this.$store.commit('updateAsciiBlocks', blocks);
-      // Restructure blocks code here
+
       this.delayRedrawCanvas();
     },
     onCavasDragStop(x, y) {

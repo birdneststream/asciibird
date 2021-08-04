@@ -14,70 +14,81 @@
       :y="toolbarState.y"
     >
       <t-card style="height: 100%">
-        <label class="flex ml-1">
-          <t-checkbox
-            name="targetingFg"
-            v-model="toolbarState.targetingFg"
-            :disabled="!canBg && !canText"
-          />
-          <span class="text-sm">FG</span>
-        </label>
-        <label class="flex ml-1">
-          <t-checkbox
-            name="targetingBg"
-            v-model="toolbarState.targetingBg"
-            :disabled="!canFg && !canText"
-            checked
-          />
-          <span class="text-sm">BG</span>
-        </label>
-        <label class="flex ml-1">
-          <t-checkbox
-            name="targetingChar"
-            v-model="toolbarState.targetingChar"
-            :disabled="!canFg && !canBg"
-          />
-          <span class="text-sm">Text</span>
-        </label>
+         <Colours />
 
-        <hr>
 
-        <label class="flex ml-1">
-          <t-checkbox
-            name="targetingFg"
-            v-model="mirror.x"
-            @change="updateMirror()"
-          />
-          <span class="text-sm">Mirror X</span>
-        </label>
-        <label class="flex ml-1">
-          <t-checkbox
-            name="targetingBg"
-            v-model="mirror.y"
-            @change="updateMirror()"
-          />
-          <span class="text-sm">Mirror Y</span>
-        </label>
 
-        <hr>
+        <div class="flex">
+          <label class="ml-1 w-1/3">
+            <t-checkbox
+              name="targetingFg"
+              v-model="toolbarState.targetingFg"
+              :disabled="!canBg && !canText"
+            />
+            <span class="text-sm">FG</span>
+          </label>
 
-        <Colours />
+          <label class="ml-1 w-1/3">
+            <t-checkbox
+              name="targetingBg"
+              v-model="toolbarState.targetingBg"
+              :disabled="!canFg && !canText"
+              checked
+            />
+            <span class="text-sm">BG</span>
+          </label>
 
+          <label class="ml-1 w-1/3">
+            <t-checkbox
+              name="targetingChar"
+              v-model="toolbarState.targetingChar"
+              :disabled="!canFg && !canBg"
+            />
+            <span class="text-sm">Text</span>
+          </label>
+        </div>
+
+        <hr class="m-3" />
+    
         <t-button
           type="button"
           v-for="(value, keyToolbar) in toolbarIcons"
           :key="keyToolbar + 50"
-          :class="`max-h-7 max-w-5 w-7  ${
+          :class="`w-10 h-10 ${
             currentTool.name === value.name
-              ? 'border-gray-900'
-              : 'border-gray-200'
+              ? 'border-gray-900 bg-blue-500'
+              : 'border-gray-200 bg-gray-500'
           }`"
           @click="$store.commit('changeTool', keyToolbar)"
         >
           <font-awesome-icon :icon="[value.fa, value.icon]" />
         </t-button>
 
-        <hr>
+        <hr class="m-3" />
+
+
+        <div class="flex">
+          <label class="ml-1 w-1/2">
+            <t-checkbox
+              name="targetingFg"
+              v-model="mirror.x"
+              @change="updateMirror()"
+            />
+            <span class="text-sm">Mirror X</span>
+          </label>
+          <label class="ml-1 w-1/2">
+            <t-checkbox
+              name="targetingBg"
+              v-model="mirror.y"
+              @change="updateMirror()"
+            />
+            <span class="text-sm">Mirror Y</span>
+          </label>
+        </div>
+
+        <hr class="m-2"  />
+
+
 
         <BrushPreview />
       </t-card>
@@ -86,9 +97,9 @@
 </template>
 
 <script>
-import Colours from './Colours.vue';
-import BrushPreview from './parts/BrushPreview.vue';
-import { toolbarIcons } from '../ascii';
+import Colours from "./Colours.vue";
+import BrushPreview from "./parts/BrushPreview.vue";
+import { toolbarIcons } from "../ascii";
 
 export default {
   created() {
@@ -100,7 +111,7 @@ export default {
     this.mirror.x = this.toolbarState.mirrorX;
     this.mirror.y = this.toolbarState.mirrorY;
   },
-  name: 'Toolbar',
+  name: "Toolbar",
   components: { Colours, BrushPreview },
 
   data: () => ({
@@ -150,7 +161,7 @@ export default {
   watch: {},
   methods: {
     updateMirror() {
-      this.$store.commit('updateMirror', this.mirror);
+      this.$store.commit("updateMirror", this.mirror);
     },
     onResize(x, y, w, h) {
       this.toolbar.x = x;
@@ -158,7 +169,7 @@ export default {
       this.toolbar.w = w;
       this.toolbar.h = h;
 
-      this.$store.commit('changeToolBarState', {
+      this.$store.commit("changeToolBarState", {
         x,
         y,
         w: this.toolbar.w,
@@ -169,7 +180,7 @@ export default {
       this.toolbar.x = x;
       this.toolbar.y = y;
 
-      this.$store.commit('changeToolBarState', {
+      this.$store.commit("changeToolBarState", {
         x,
         y,
         w: this.toolbar.w,
