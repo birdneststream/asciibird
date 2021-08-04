@@ -295,9 +295,7 @@ export default {
       }
     },
     redrawCanvas() {
-      // Clears the whole canvas, we can maybe get a better way to check how far
-      // we need to clear the canvas
-      this.ctx.clearRect(0, 0, 10000, 10000);
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
       if (this.currentAsciiBlocks.length) {
         const BLOCK_WIDTH = this.currentAscii.blockWidth;
