@@ -339,8 +339,6 @@ export default {
               if (curBlock.bg !== null) {
                 this.ctx.fillStyle = this.mircColours[curBlock.bg];
                 this.ctx.fillRect(canvasX, canvasY, BLOCK_WIDTH, BLOCK_HEIGHT);
-              } else {
-                this.ctx.fillStyle = "rgba(0, 0, 200, 0)";
               }
 
               if (curBlock.char) {
@@ -1220,11 +1218,8 @@ export default {
     },
     // Fill tool
     fill() {
-      const { x } = this;
-      const { y } = this;
-
       const newColor = this.currentBg;
-      const current = this.currentAsciiBlocks[y][x].bg;
+      const current = this.currentAsciiBlocks[this.y][this.x].bg;
 
       // If the newColor is same as the existing
       // Then return the original image.
@@ -1232,9 +1227,7 @@ export default {
         return this.currentAsciiBlocks;
       }
 
-      this.fillTool(this.currentAsciiBlocks, y, x, current);
-
-      this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
+      this.fillTool(this.currentAsciiBlocks, this.y, this.x, current);
     },
     fillTool(fillBlocks, y, x, current) {
       // If row is less than 0
