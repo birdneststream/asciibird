@@ -74,11 +74,7 @@ export const parseMircAscii = (content, title) => {
       switch (curChar) {
         case "\n":
           // Reset the colours here on a new line
-          curBlock = {
-            fg: null,
-            bg: null,
-            char: null,
-          };
+          curBlock = emptyBlock;
 
           if (linesArray[asciiY] && linesArray[asciiY].length > maxWidthLoop) {
             maxWidthLoop = linesArray[asciiY].length;
@@ -210,6 +206,8 @@ export const parseMircAscii = (content, title) => {
     finalAscii.blocks = LZString.compressToUTF16(
       JSON.stringify(finalAscii.blocks)
     );
+
+    // We need to also store in the first undo history the original state
     finalAscii.history.push(finalAscii.blocks);
 
     store.commit("newAsciibirdMeta", finalAscii);
@@ -218,7 +216,6 @@ export const parseMircAscii = (content, title) => {
     document.title = `asciibird - ${store.getters.currentAscii.title}`;
 
     return true;
-
   };
 
   export const create2DArray = (rows) => {
@@ -243,8 +240,8 @@ export const parseMircAscii = (content, title) => {
         key: store.getters.asciibirdMeta.length,
         width: forms.createAscii.width,
         height: forms.createAscii.height,
-        blockWidth: 8,
-        blockHeight: 13,
+        blockWidth: 8 * store.getters.blockSizeMultiplier,
+        blockHeight: 13 * store.getters.blockSizeMultiplier,
         history: [],
         redo: [],
         x: 247, // the dragable ascii canvas x
@@ -255,11 +252,7 @@ export const parseMircAscii = (content, title) => {
       // Push all the default ASCII blocks
       for (let x = 0; x < newAscii.width; x++) {
         for (let y = 0; y < newAscii.height; y++) {
-          newAscii.blocks[y].push({
-            bg: null,
-            fg: null,
-            char: null,
-          });
+          newAscii.blocks[y].push(emptyBlock);
         }
       }
 
@@ -385,12 +378,10 @@ export const parseMircAscii = (content, title) => {
     'rgb(129,129,129)',
     'rgb(159,159,159)',
     'rgb(188,188,188)',
-    'rgb(226,226,226)',
-    'rgb(255,255,255))'
+    'rgb(226,226,226)'
   ];
 
-      // White list of chars we want to accept, not at the moment
-      // though, we just use this for random chars on new ascii
+// Chars that end up in the toolbar
 export const charCodes = [' ', '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/',
         '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?', '@', 'A',
         'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
@@ -406,7 +397,7 @@ export const charCodes = [' ', '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*'
         '¸', '°', '¨', '·', '¹', '³', '²'
       ];
 
-
+// Toolbar icons
 export const toolbarIcons = [{
         name: 'default',
         icon: 'mouse-pointer',

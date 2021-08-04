@@ -13,7 +13,6 @@
     <template v-slot:footer>
       <div
         class="flex justify-between"
-        @click="$modal.hide('paste-ascii-modal')"
       >
         <t-button type="button"> Cancel </t-button>
         <t-button
@@ -55,14 +54,13 @@ export default {
   },
   methods: {
     pasteModal() {
-      this.$modal.show("paste-ascii-modal");
+        this.$modal.show("paste-ascii-modal")
     },
     importPasteAscii() {
-      parseMircAscii(this.pasteContent, this.title);
-
-      this.$modal.hide("paste-ascii-modal");
-      this.pasteContent = null;
+      parseMircAscii(this.pasteContent, this.title);     
+      this.pasteContent = "";
       this.title = "clipboard.txt";
+      this.$modal.hide("paste-ascii-modal");
     },
   },
 };
