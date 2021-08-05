@@ -7,26 +7,16 @@
     @closed="$store.commit('closeModal', 'paste-ascii')"
   >
     Title
-    <t-input
-      type="text"
-      name="title"
-      v-model="title"
-      max="128"
-    />
+    <t-input type="text" name="title" v-model="title" max="128" />
 
-    <t-textarea
-      v-model="pasteContent"
-      name="paste-ascii"
-      rows="10"
-    />
+    <t-textarea v-model="pasteContent" name="paste-ascii" rows="10" />
 
     <template v-slot:footer>
-      <div
-        class="flex justify-between"
-      >
-        <t-button 
+      <div class="flex justify-between">
+        <t-button
           type="button"
-          @click="$store.commit('closeModal', 'paste-ascii')">
+          @click="$store.commit('closeModal', 'paste-ascii')"
+        >
           Cancel
         </t-button>
         <t-button
@@ -43,14 +33,14 @@
 
 <script>
 //
-import { parseMircAscii } from '../../ascii';
+import { parseMircAscii } from "../../ascii";
 
 export default {
-  name: 'PasteAsciiModal',
+  name: "PasteAsciiModal",
   created() {},
   data: () => ({
-    pasteContent: '',
-    title: 'clipboard.txt',
+    pasteContent: "",
+    title: "clipboard.txt",
   }),
   computed: {
     showPasteAscii() {
@@ -64,28 +54,26 @@ export default {
     showPasteAscii(val, old) {
       if (val === true) {
         this.open();
-      } 
+      }
 
       if (val === false) {
         this.close();
-      } 
+      }
     },
   },
   methods: {
     open() {
-      this.$modal.show('paste-ascii-modal');
-      // this.$store.commit('openModal', 'paste-ascii')
+      this.$modal.show("paste-ascii-modal");
     },
     close() {
-      console.log("close")
-      this.pasteContent = '';
-      this.title = 'clipboard.txt';
-      this.$modal.hide('paste-ascii-modal');
-      
+      console.log("close");
+      this.pasteContent = "";
+      this.title = "clipboard.txt";
+      this.$modal.hide("paste-ascii-modal");
     },
     importPasteAscii() {
-      parseMircAscii(this.pasteContent, this.title);     
-      this.close()
+      parseMircAscii(this.pasteContent, this.title);
+      this.close();
     },
   },
 };

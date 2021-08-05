@@ -2,7 +2,10 @@ import Vue from 'vue';
 import Vuex from 'vuex';
 import VuexPersistence from 'vuex-persist';
 import LZString from 'lz-string';
-import { blockWidth, blockHeight } from "../ascii";
+import {
+  blockWidth,
+  blockHeight
+} from "../ascii";
 
 Vue.use(Vuex);
 const vuexLocal = new VuexPersistence({
@@ -220,7 +223,8 @@ export default new Vuex.Store({
     getChar: (state) => state.toolbarState.selectedChar,
     currentTab: (state) => state.tab,
     currentAscii: (state) => state.asciibirdMeta[state.tab] ?? false,
-    currentAsciiBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab].blocks)) || [],
+    currentAsciiBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[
+      state.tab].blocks)) || [],
     asciibirdMeta: (state) => state.asciibirdMeta,
     nextTabValue: (state) => state.asciibirdMeta.length,
     brushSizeHeight: (state) => state.toolbarState.brushSizeHeight,
@@ -230,11 +234,11 @@ export default new Vuex.Store({
     brushBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.brushBlocks)) || [],
     selectBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.selectBlocks)) || [],
     isModalOpen: (state) => {
-        for (const modalState in state.modalState) {
-          if (state.modalState[modalState] === true)
-            return true
-        }
-        return false
+      for (const modalState in state.modalState) {
+        if (state.modalState[modalState] === true)
+          return true
+      }
+      return false
     },
   },
   actions: {},

@@ -30,22 +30,15 @@
       max="128"
     />
 
-    <hr class="mt-5 mb-5">
+    <hr class="mt-5 mb-5" />
 
     <template v-slot:footer>
       <div
         class="flex justify-between"
         @click="$store.commit('closeModal', 'edit-ascii')"
       >
-        <t-button type="button">
-          Cancel
-        </t-button>
-        <t-button
-          type="button"
-          @click="updateAscii()"
-        >
-          Update
-        </t-button>
+        <t-button type="button"> Cancel </t-button>
+        <t-button type="button" @click="updateAscii()"> Update </t-button>
       </div>
     </template>
   </t-modal>
@@ -53,7 +46,7 @@
 
 <script>
 export default {
-  name: 'EditAsciiModal',
+  name: "EditAsciiModal",
   created() {
     this.forms.editAscii = this.currentAscii;
   },
@@ -62,7 +55,7 @@ export default {
       editAscii: {
         width: 80,
         height: 30,
-        title: 'ascii',
+        title: "ascii",
       },
     },
   }),
@@ -81,24 +74,24 @@ export default {
     showEditAsciiModal(val) {
       if (val === true) {
         this.open();
-      } 
+      }
 
       if (val === false) {
         this.close();
-      } 
+      }
     },
   },
   methods: {
     updateAscii() {
-      this.$store.commit('updateAscii', this.forms.editAscii);
-      this.close()
+      this.$store.commit("updateAscii", this.forms.editAscii);
+      this.close();
     },
     open() {
       this.forms.editAscii = this.currentAscii;
-      this.$modal.show('edit-ascii-modal');
+      this.$modal.show("edit-ascii-modal");
     },
     close() {
-      this.$modal.hide('edit-ascii-modal');
+      this.$modal.hide("edit-ascii-modal");
     },
   },
 };

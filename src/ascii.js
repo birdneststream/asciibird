@@ -486,9 +486,9 @@ export const exportMirc = () => {
         const zeroPad = (num, places) => String(num).padStart(places, '0');
         output.push(
           `\u0003${zeroPad(
-                curBlock.fg ?? this.options.defaultFg,
+                curBlock.fg ?? store.getters.options.defaultFg,
                 2,
-              )},${zeroPad(curBlock.bg ?? this.options.defaultBg, 2)}`,
+              )},${zeroPad(curBlock.bg ?? store.getters.options.defaultBg, 2)}`,
         );
       }
 
