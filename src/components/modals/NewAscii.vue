@@ -1,10 +1,10 @@
 <template>
   <t-modal
-    name="create-ascii-modal"
+    name="new-ascii-modal"
     header="Create new ASCII"
     :click-to-close="false"
     :esc-to-close="true"
-    @before-closed="closeNewASCII"
+    @closed="$store.commit('closeModal', 'new-ascii')"
   >
     Width
     <t-input
@@ -33,7 +33,7 @@
     <template v-slot:footer>
       <div
         class="flex justify-between"
-        @click="$modal.hide('create-ascii-modal')"
+        @click="$store.commit('closeModal', 'new-ascii')"
       >
         <t-button type="button">
           Cancel
@@ -70,25 +70,30 @@ export default {
     },
   },
   watch: {
-    showNewAsciiModal() {
-      this.createClick();
+    showNewAsciiModal(val) {
+      if (val === true) {
+        this.open();
+      } 
+
+      if (val === false) {
+        this.close();
+      } 
     },
   },
   methods: {
-    createClick() {
+    open() {
+      this.$modal.show('new-ascii-modal');
       this.forms.createAscii.title = `New ASCII ${this.$store.getters.asciibirdMeta.length + 1}`;
-      this.$modal.show('create-ascii-modal');
     },
-    initiateNewAscii() {
-      createNewASCII(this.forms);
-      this.$modal.hide('create-ascii-modal');
-    },
-    closeNewASCII() {
+    close() {
+      this.$modal.hide('new-ascii-modal');
       this.forms.createAscii.width = 80;
       this.forms.createAscii.height = 30;
       this.forms.createAscii.title = 'New ASCII';
     },
-
+    initiateNewAscii() {
+      createNewASCII(this.forms);      
+    },
   },
 };
 </script>

@@ -49,9 +49,21 @@
 
 # Keyboard Shortcuts
 
-* Ctrl D - shows/hides debug panel
-* Ctrl Z - Undo
-* Ctrl Y - Redo
+## ASCII Editing
+
+* Ctrl + D - shows/hides debug panel
+* Ctrl + Z - Undo
+* Ctrl + Y - Redo
+* Ctrl + M - New ASCII (lol @ cannot override ctrl n ?!)
+* Ctrl + E - Edit ASCII
+* Ctrl + P - Paste ASCII from Clipboard
+
+* Ctrl + Shift + C - Save to clipboard
+* Ctrl + Shift + F - Save to txt file
+## Brush and Toolbar
+
+* Ctrl + ] - Increase brush size
+* Ctrl + [ - Decrease brush size
 
 # FEATURES DONE
 

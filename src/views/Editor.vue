@@ -63,7 +63,7 @@ body {
 </style>
 
 <script>
-import { emptyBlock, toolbarIcons, mircColours99 } from '../ascii';
+import { emptyBlock, toolbarIcons, mircColours99, exportMirc, downloadFile } from '../ascii';
 
 export default {
   name: 'Editor',
@@ -80,6 +80,12 @@ export default {
 
       const thisIs = this;
       this.keyListener = function (e) {
+
+        // Stop blocking input when modals are open
+        if (this.isModalOpen) {
+          return
+        }
+
         e.preventDefault();
 
         if (this.isTextEditing) {
@@ -88,6 +94,7 @@ export default {
         }
 
         const ctrlKey = e.ctrlKey || e.metaKey;
+        const shiftKey = e.shiftKey;
 
         // Ctrl Z here
         // skg - thanks for mac key suggestion, bro
@@ -97,12 +104,11 @@ export default {
 
         // Ctrl Y here
         if (e.key === 'y' && ctrlKey) {
-          // Fk it works :\
           this.redo();
         }
 
         // Ctrl C - copy blocks
-        if (e.key === 'c' && ctrlKey) {
+        if (e.key === 'c' && ctrlKey && !shiftKey) {
           if (this.selectedBlocks.length) {
             this.$store.commit('selectBlocks', this.selectedBlocks);
             this.selectedBlocks = [];
@@ -117,10 +123,69 @@ export default {
           }
         }
 
+        // Show / hide debug panel
         if (e.key === 'd' && ctrlKey) {
           this.$store.commit('toggleDebugPanel', !this.debugPanelState.visible);
         }
+
+        // New ASCII
+        // Ctrl N doesn't seem to work in chrome? https://github.com/liftoff/GateOne/issues/290
+        if (e.key === 'm' && ctrlKey) {
+          this.$store.commit('openModal', 'new-ascii');
+        }
+
+        // Edit ASCII
+        if (e.key === 'e' && ctrlKey) {
+          this.$store.commit('openModal', 'edit-ascii');
+        }
+
+        // Paste ASCII
+        if (e.key === 'p' && ctrlKey) {
+          this.$store.commit('openModal', 'paste-ascii');
+        }
+
+        // Export to clipboard
+        if (e.key === 'C' && ctrlKey && shiftKey) {
+          let ascii = exportMirc();
+          this.$copyText(ascii.output.join('')).then(
+            (e) => {
+              alert('Copied');
+            },
+            (e) => {
+              alert('Can not copy');
+            },
+          );
+        }
+
+        // Export to txt
+        if (e.key === 'F' && ctrlKey && shiftKey) {
+          let ascii = exportMirc();
+          downloadFile(ascii.output.join(''), ascii.filename, 'text/plain');
+        }
+
+        if (e.key === ']' && ctrlKey &&
+        (this.brushSizeHeight < 10 && this.brushSizeHeight >= 1) &&
+        (this.brushSizeWidth < 10 && this.brushSizeWidth >= 1)) {
+
+          this.$store.commit("updateBrushSize", {
+            brushSizeHeight: this.brushSizeHeight + 1,
+            brushSizeWidth: this.brushSizeWidth + 1,
+            brushSizeType: this.brushSizeType,
+          });
+        }
+
+        if (e.key === '[' && ctrlKey &&
+        (this.brushSizeHeight < 10 && this.brushSizeHeight >= 1) &&
+        (this.brushSizeWidth < 10 && this.brushSizeWidth >= 1)) {
+
+          this.$store.commit("updateBrushSize", {
+            brushSizeHeight: this.brushSizeHeight - 1,
+            brushSizeWidth: this.brushSizeWidth - 1,
+            brushSizeType: this.brushSizeType,
+          });
+        }
       };
+
 
       document.addEventListener('keydown', this.keyListener.bind(this));
     }
@@ -151,6 +216,18 @@ export default {
     selectedBlocks: [],
   }),
   computed: {
+    isModalOpen() {
+      return this.$store.getters.isModalOpen;
+    },
+    brushSizeHeight() {
+      return this.$store.getters.brushSizeHeight;
+    },
+    brushSizeWidth() {
+      return this.$store.getters.brushSizeWidth;
+    },
+    brushSizeType() {
+      return this.$store.getters.brushSizeType;
+    },
     currentAscii() {
       return this.$store.getters.currentAscii;
     },

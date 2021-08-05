@@ -4,6 +4,7 @@
     header="Import from Clipboard"
     :click-to-close="false"
     :esc-to-close="true"
+    @closed="$store.commit('closeModal', 'paste-ascii')"
   >
     Title
     <t-input
@@ -23,7 +24,9 @@
       <div
         class="flex justify-between"
       >
-        <t-button type="button">
+        <t-button 
+          type="button"
+          @click="$store.commit('closeModal', 'paste-ascii')">
           Cancel
         </t-button>
         <t-button
@@ -50,29 +53,39 @@ export default {
     title: 'clipboard.txt',
   }),
   computed: {
-    showPasteModal() {
-      return this.$store.getters.modalState.pasteModal;
+    showPasteAscii() {
+      return this.$store.getters.modalState.pasteAscii;
     },
     checkPasteContent() {
       return !this.pasteContent.length;
     },
   },
   watch: {
-    showPasteModal(val, old) {
-      if (val !== old) {
-        this.pasteModal();
-      }
+    showPasteAscii(val, old) {
+      if (val === true) {
+        this.open();
+      } 
+
+      if (val === false) {
+        this.close();
+      } 
     },
   },
   methods: {
-    pasteModal() {
+    open() {
       this.$modal.show('paste-ascii-modal');
+      // this.$store.commit('openModal', 'paste-ascii')
     },
-    importPasteAscii() {
-      parseMircAscii(this.pasteContent, this.title);
+    close() {
+      console.log("close")
       this.pasteContent = '';
       this.title = 'clipboard.txt';
       this.$modal.hide('paste-ascii-modal');
+      
+    },
+    importPasteAscii() {
+      parseMircAscii(this.pasteContent, this.title);     
+      this.close()
     },
   },
 };

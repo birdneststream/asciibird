@@ -120,6 +120,68 @@ export const mircColours99 = [
   "#ffffff",
 ];
 
+// Chars that end up in the toolbar
+export const charCodes = [' ', '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-',
+  '.', '/',
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?', '@', 'A',
+  'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
+  'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '[', '\\', ']', '^', '_', '`', 'a', 'b', 'c', 'd', 'e',
+  'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w',
+  'x', 'y', 'z', '{', '|', '}', '~', 'Ç', 'ü', 'é', 'â', 'ä', 'à', 'å', 'ç', 'ê', 'ë', 'è',
+  'ï', 'î', 'ì', 'Ä', 'Å', 'É', 'æ', 'Æ', 'ô', 'ö', 'ò', 'û', 'ù', 'ÿ', 'Ö', 'Ü', 'ø', '£',
+  'Ø', '×', 'ƒ', 'á', 'í', 'ó', 'ú', 'ñ', 'Ñ', 'ª', 'º', '¿', '®', '¬', '½', '¼', '¡', '«',
+  '»', '░', '▒', '▓', '│', '┤', 'Á', 'Â', 'À', '©', '╣', '║', '╗', '╝', '¢', '¥', '┐', '└',
+  '┴', '┬', '├', '─', '┼', 'ã', 'Ã', '╚', '╔', '╩', '╦', '╠', '═', '╬', '¤', 'ð', 'Ð', 'Ê',
+  'Ë', 'È', 'ı', 'Í', 'Î', 'Ï', '┘', '┌', '█', '▄', '¦', 'Ì', '▀', 'Ó', 'ß', 'Ô', 'Ò', 'õ',
+  'Õ', 'µ', 'þ', 'Þ', 'Ú', 'Û', 'Ù', 'ý', 'Ý', '¯', '´', '≡', '±', '‗', '¾', '¶', '§', '÷',
+  '¸', '°', '¨', '·', '¹', '³', '²',
+];
+
+// Toolbar icons
+export const toolbarIcons = [{
+    name: 'default',
+    icon: 'mouse-pointer',
+    fa: 'fas',
+    svgPath: 'assets/mouse-pointer-solid.svg',
+  },
+  {
+    name: 'select',
+    icon: 'square',
+    fa: 'far',
+    svgPath: 'assets/square-regular.svg',
+  },
+  {
+    name: 'text',
+    icon: 'font',
+    fa: 'fas',
+    svgPath: 'assets/font-solid.svg',
+  },
+  {
+    name: 'fill',
+    icon: 'fill-drip',
+    fa: 'fas',
+    svgPath: 'assets/fill-drip-solid.svg',
+  },
+  {
+    name: 'brush',
+    icon: 'paint-brush',
+    fa: 'fas',
+    svgPath: 'assets/paint-brush-solid.svg',
+  },
+  {
+    name: 'dropper',
+    icon: 'eye-dropper',
+    fa: 'fas',
+    svgPath: 'assets/eye-dropper-solid.svg',
+  },
+  {
+    name: 'eraser',
+    icon: 'eraser',
+    fa: 'fas',
+    svgPath: 'assets/eraser-solid.svg',
+  },
+];
+
 export const emptyBlock = {
   bg: null,
   fg: null,
@@ -286,11 +348,11 @@ export const parseMircAscii = (content, title) => {
         parsedColour = parseInt(`${colourChar1}${colourChar2}`);
 
         if (
-          !Number.isNaN(colourChar1)
-          && !Number.isNaN(colourChar2)
-          && parseInt(colourChar2) > parseInt(colourChar1)
-          && !Number.isNaN(parsedColour)
-          && parseInt(parsedColour) < 10
+          !Number.isNaN(colourChar1) &&
+          !Number.isNaN(colourChar2) &&
+          parseInt(colourChar2) > parseInt(colourChar1) &&
+          !Number.isNaN(parsedColour) &&
+          parseInt(parsedColour) < 10
         ) {
           parsedColour = parseInt(colourChar2);
           widthOfColCodes += 1;
@@ -298,8 +360,8 @@ export const parseMircAscii = (content, title) => {
         }
 
         if (
-          parseInt(colourChar2) === parseInt(colourChar1)
-          && parseInt(parsedColour) < 10
+          parseInt(colourChar2) === parseInt(colourChar1) &&
+          parseInt(parsedColour) < 10
         ) {
           parsedColour = parseInt(colourChar1);
           asciiStringArray.shift();
@@ -357,6 +419,7 @@ export const parseMircAscii = (content, title) => {
   return true;
 };
 
+// Creates new blank ASCII
 export const createNewAscii = (forms) => {
   const newAscii = {
     title: forms.createAscii.title,
@@ -389,66 +452,134 @@ export const createNewAscii = (forms) => {
   return true;
 };
 
-// Chars that end up in the toolbar
-export const charCodes = [' ', '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-',
-  '.', '/',
-  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ':', ';', '<', '=', '>', '?', '@', 'A',
-  'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S',
-  'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '[', '\\', ']', '^', '_', '`', 'a', 'b', 'c', 'd', 'e',
-  'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w',
-  'x', 'y', 'z', '{', '|', '}', '~', 'Ç', 'ü', 'é', 'â', 'ä', 'à', 'å', 'ç', 'ê', 'ë', 'è',
-  'ï', 'î', 'ì', 'Ä', 'Å', 'É', 'æ', 'Æ', 'ô', 'ö', 'ò', 'û', 'ù', 'ÿ', 'Ö', 'Ü', 'ø', '£',
-  'Ø', '×', 'ƒ', 'á', 'í', 'ó', 'ú', 'ñ', 'Ñ', 'ª', 'º', '¿', '®', '¬', '½', '¼', '¡', '«',
-  '»', '░', '▒', '▓', '│', '┤', 'Á', 'Â', 'À', '©', '╣', '║', '╗', '╝', '¢', '¥', '┐', '└',
-  '┴', '┬', '├', '─', '┼', 'ã', 'Ã', '╚', '╔', '╩', '╦', '╠', '═', '╬', '¤', 'ð', 'Ð', 'Ê',
-  'Ë', 'È', 'ı', 'Í', 'Î', 'Ï', '┘', '┌', '█', '▄', '¦', 'Ì', '▀', 'Ó', 'ß', 'Ô', 'Ò', 'õ',
-  'Õ', 'µ', 'þ', 'Þ', 'Ú', 'Û', 'Ù', 'ý', 'Ý', '¯', '´', '≡', '±', '‗', '¾', '¶', '§', '÷',
-  '¸', '°', '¨', '·', '¹', '³', '²',
-];
+// Converts ASCIIBIRD blocks to mIRC colours
+export const exportMirc = () => {
+  const {
+    currentAscii
+  } = store.getters;
+  const blocks = store.getters.currentAsciiBlocks;
+  const output = [];
+  let curBlock = null;
+  let prevBlock = {
+    bg: -1,
+    fg: -1
+  };
 
-// Toolbar icons
-export const toolbarIcons = [{
-  name: 'default',
-  icon: 'mouse-pointer',
-  fa: 'fas',
-  svgPath: 'assets/mouse-pointer-solid.svg',
-},
-{
-  name: 'select',
-  icon: 'square',
-  fa: 'far',
-  svgPath: 'assets/square-regular.svg',
-},
-{
-  name: 'text',
-  icon: 'font',
-  fa: 'fas',
-  svgPath: 'assets/font-solid.svg',
-},
-{
-  name: 'fill',
-  icon: 'fill-drip',
-  fa: 'fas',
-  svgPath: 'assets/fill-drip-solid.svg',
-},
-{
-  name: 'brush',
-  icon: 'paint-brush',
-  fa: 'fas',
-  svgPath: 'assets/paint-brush-solid.svg',
-},
-{
-  name: 'dropper',
-  icon: 'eye-dropper',
-  fa: 'fas',
-  svgPath: 'assets/eye-dropper-solid.svg',
-},
-{
-  name: 'eraser',
-  icon: 'eraser',
-  fa: 'fas',
-  svgPath: 'assets/eraser-solid.svg',
-},
-];
+  for (let y = 0; y <= blocks.length - 1; y++) {
+    if (y >= currentAscii.height) {
+      continue;
+    }
+
+    for (let x = 0; x <= blocks[y].length - 1; x++) {
+      if (x >= currentAscii.width) {
+        continue;
+      }
+
+      curBlock = blocks[y][x];
+
+      // If we have a difference between our previous block
+      // we'll put a colour codes and continue as normal
+      if (curBlock.bg !== prevBlock.bg || curBlock.fg !== prevBlock.fg) {
+        curBlock = {
+          ...blocks[y][x]
+        };
+        const zeroPad = (num, places) => String(num).padStart(places, '0');
+        output.push(
+          `\u0003${zeroPad(
+                curBlock.fg ?? this.options.defaultFg,
+                2,
+              )},${zeroPad(curBlock.bg ?? this.options.defaultBg, 2)}`,
+        );
+      }
+
+      // null .chars will end up as space
+      output.push(curBlock.char ?? ' ');
+      prevBlock = blocks[y][x];
+    }
+
+    // We can never have a -1 colour code so we'll always
+    // write one at the start of each line
+    prevBlock = {
+      bg: -1,
+      fg: -1
+    };
+
+    // New line except for the very last line
+    if (y < blocks.length - 1) {
+      output.push('\n');
+    }
+  }
+
+  // Download to a txt file
+  // Check if txt already exists and append it
+  const filename = currentAscii.title.slice(currentAscii.title.length - 3) === 'txt' ?
+    currentAscii.title :
+    `${currentAscii.title}.txt`;
+
+  return {
+    filename,
+    output
+  }
+}
+
+// Download a string to a file with a filename
+export const downloadFile = (content, filename, contentType) => {
+  const a = document.createElement('a');
+  const file = new Blob([content], {
+    type: contentType
+  });
+
+  a.href = URL.createObjectURL(file);
+  a.download = filename;
+  a.click();
+
+  URL.revokeObjectURL(a.href);
+};
+
+export const checkForGetRequest = async () => {
+  const asciiUrlCdn = new URL(location.href).searchParams.get('ascii');
+  if (asciiUrlCdn) {
+    const res = await fetch(`https://ascii.jewbird.live/${asciiUrlCdn}`, {
+      method: 'GET',
+      headers: {
+        Accept: 'text/plain',
+      },
+    });
+
+    const asciiData = await res.text();
+    parseMircAscii(asciiData, asciiUrlCdn);
+    return;
+  }
+
+  const asciiUrl = new URL(location.href).searchParams.get('ircwatch');
+  if (asciiUrl) {
+    const res = await fetch(`https://irc.watch/ascii/txt/${asciiUrl}`, {
+      method: 'GET',
+      headers: {
+        Accept: 'text/plain',
+      },
+    });
+
+    const asciiData = await res.text();
+    parseMircAscii(asciiData, asciiUrl);
+    return;
+  }
+
+  const haxAscii = new URL(location.href).searchParams.get('haxAscii');
+  if (haxAscii) {
+    const res = await fetch(`https://art.h4x.life/${haxAscii}`, {
+      method: 'GET',
+      headers: {
+        Accept: 'text/plain',
+      },
+    });
+
+    // Considers paths
+    const asciiName = haxAscii.split('/').pop();
+    const asciiData = await res.text();
+    parseMircAscii(asciiData, asciiName);
+    return;
+  }
+}
 
 export default createNewAscii;

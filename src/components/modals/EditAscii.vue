@@ -4,6 +4,7 @@
     :header="currentAsciiEditingTitle"
     :click-to-close="false"
     :esc-to-close="true"
+    @closed="$store.commit('closeModal', 'edit-ascii')"
   >
     Width
     <t-input
@@ -34,7 +35,7 @@
     <template v-slot:footer>
       <div
         class="flex justify-between"
-        @click="$modal.hide('edit-ascii-modal')"
+        @click="$store.commit('closeModal', 'edit-ascii')"
       >
         <t-button type="button">
           Cancel
@@ -77,22 +78,26 @@ export default {
     },
   },
   watch: {
-    showEditAsciiModal(val, old) {
-      if (val !== old) {
-        this.showEditModal();
-      }
+    showEditAsciiModal(val) {
+      if (val === true) {
+        this.open();
+      } 
 
-      // this.showEditModal();
+      if (val === false) {
+        this.close();
+      } 
     },
   },
   methods: {
-    showEditModal() {
-    //   this.forms.editAscii.title = `Editing ASCII ${this.currentAscii.title}`;
+    updateAscii() {
+      this.$store.commit('updateAscii', this.forms.editAscii);
+      this.close()
+    },
+    open() {
       this.forms.editAscii = this.currentAscii;
       this.$modal.show('edit-ascii-modal');
     },
-    updateAscii() {
-      this.$store.commit('updateAscii', this.forms.editAscii);
+    close() {
       this.$modal.hide('edit-ascii-modal');
     },
   },

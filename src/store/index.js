@@ -15,7 +15,7 @@ export default new Vuex.Store({
     modalState: {
       newAscii: false,
       editAscii: false,
-      pasteModal: false,
+      pasteAscii: false,
     },
     // The various options of ASCIIBIRD will eventually
     // end up in its own modal I guess
@@ -177,15 +177,30 @@ export default new Vuex.Store({
     openModal(state, type) {
       switch (type) {
         case 'new-ascii':
-          state.modalState.newAscii = !state.modalState.newAscii;
+          state.modalState.newAscii = true;
           break;
 
         case 'edit-ascii':
-          state.modalState.editAscii = !state.modalState.editAscii;
+          state.modalState.editAscii = true;
           break;
 
-        case 'paste-modal':
-          state.modalState.pasteModal = !state.modalState.pasteModal;
+        case 'paste-ascii':
+          state.modalState.pasteAscii = true;
+          break;
+      }
+    },
+    closeModal(state, type) {
+      switch (type) {
+        case 'new-ascii':
+          state.modalState.newAscii = false;
+          break;
+
+        case 'edit-ascii':
+          state.modalState.editAscii = false;
+          break;
+
+        case 'paste-ascii':
+          state.modalState.pasteAscii = false;
           break;
       }
     },
@@ -214,6 +229,13 @@ export default new Vuex.Store({
     blockSizeMultiplier: (state) => state.blockSizeMultiplier,
     brushBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.brushBlocks)) || [],
     selectBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.selectBlocks)) || [],
+    isModalOpen: (state) => {
+        for (const modalState in state.modalState) {
+          if (state.modalState[modalState] === true)
+            return true
+        }
+        return false
+    },
   },
   actions: {},
   modules: {},

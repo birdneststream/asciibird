@@ -5,7 +5,7 @@
         <t-input
           type="number"
           name="width"
-          v-model="brushSizeWidth"
+          v-model="brushSizeWidthInput"
           @change="updateBrushSize"
           min="1"
           max="10"
@@ -16,7 +16,7 @@
         <t-input
           type="number"
           name="height"
-          v-model="brushSizeHeight"
+          v-model="brushSizeHeightInput"
           @change="updateBrushSize"
           min="1"
           max="10"
@@ -30,7 +30,7 @@
           name="options"
           value="square"
           checked
-          v-model="brushSizeType"
+          v-model="brushSizeTypeInput"
           @change="updateBrushSize"
         />
         <span class="text-sm">Square</span>
@@ -40,7 +40,7 @@
         <t-radio
           name="options"
           value="circle"
-          v-model="brushSizeType"
+          v-model="brushSizeTypeInput"
           @change="updateBrushSize"
         />
         <span class="text-sm">Circle</span>
@@ -50,7 +50,7 @@
         <t-radio
           name="options"
           value="cross"
-          v-model="brushSizeType"
+          v-model="brushSizeTypeInput"
           @change="updateBrushSize"
         />
         <span class="text-sm">Cross</span>
@@ -61,8 +61,8 @@
       ref="brushcanvas"
       id="brushcanvas"
       class="brushcanvas"
-      :width="brushSizeWidthPreview + 1 * currentAscii.blockWidth"
-      :height="brushSizeHeightPreview + 1 * currentAscii.blockHeight"
+      :width="brushSizeWidth * currentAscii.blockWidth"
+      :height="brushSizeHeight * currentAscii.blockHeight"
     />
   </div>
 </template>
@@ -75,17 +75,17 @@ export default {
   mounted() {
     this.ctx = this.$refs.brushcanvas.getContext("2d");
     this.delayRedrawCanvas();
-    this.brushSizeWidth = this.brushSizeWidthPreview;
-    this.brushSizeHeight = this.brushSizeHeightPreview;
-    this.brushSizeType = this.brushSizeTypePreview;
+    this.brushSizeWidthInput = this.brushSizeWidth;
+    this.brushSizeHeightInput = this.brushSizeHeight;
+    this.brushSizeTypeInput = this.brushSizeType;
   },
   data: () => ({
     ctx: null,
     redraw: true,
     blocks: [],
-    brushSizeHeight: 1,
-    brushSizeWidth: 1,
-    brushSizeType: "square",
+    brushSizeHeightInput: 1,
+    brushSizeWidthInput: 1,
+    brushSizeTypeInput: "square",
   }),
   computed: {
     currentAscii() {
@@ -112,13 +112,13 @@ export default {
     getChar() {
       return this.$store.getters.getChar;
     },
-    brushSizeHeightPreview() {
+    brushSizeHeight() {
       return this.$store.getters.brushSizeHeight;
     },
-    brushSizeWidthPreview() {
+    brushSizeWidth() {
       return this.$store.getters.brushSizeWidth;
     },
-    brushSizeTypePreview() {
+    brushSizeType() {
       return this.$store.getters.brushSizeType;
     },
     mircColours() {
@@ -131,9 +131,15 @@ export default {
   watch: {
     brushSizeWidth() {
       this.delayRedrawCanvas();
+      this.brushSizeWidthInput = this.brushSizeWidth;
     },
     brushSizeHeight() {
       this.delayRedrawCanvas();
+      this.brushSizeHeightInput = this.brushSizeHeight;
+    },
+    brushSizeType() {
+      this.delayRedrawCanvas();
+      this.brushSizeTypeInput = this.brushSizeType;
     },
     isTargettingBg() {
       this.delayRedrawCanvas();
@@ -157,19 +163,19 @@ export default {
   methods: {
     updateBrushSize() {
       this.$store.commit("updateBrushSize", {
-        brushSizeHeight: this.brushSizeHeight,
-        brushSizeWidth: this.brushSizeWidth,
-        brushSizeType: this.brushSizeType,
+        brushSizeHeight: this.brushSizeHeightInput,
+        brushSizeWidth: this.brushSizeWidthInput,
+        brushSizeType: this.brushSizeTypeInput,
       });
 
-      this.ctx.clearRect(0, 0, 1000, 1000);
+      this.ctx.clearRect(0, 0, 10000, 10000);
       this.delayRedrawCanvas();
     },
     drawPreview() {
       this.ctx.clearRect(0, 0, 10000, 10000);
 
-      const brushHeight = this.brushSizeHeightPreview;
-      const brushWidth = this.brushSizeWidthPreview;
+      const brushHeight = this.brushSizeHeight;
+      const brushWidth = this.brushSizeWidth;
 
       this.blocks = [];
 
@@ -199,7 +205,7 @@ export default {
       for (y = 0; y < brushHeight; y++) {
         this.blocks[y] = [];
         for (x = 0; x < brushWidth; x++) {
-          switch (this.brushSizeTypePreview) {
+          switch (this.brushSizeType) {
             case "cross":
               // If we are 1x1 force fill 1 block, to avoid an empty 1x1
               if (x === 0 && y === 0) {
