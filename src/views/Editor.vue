@@ -502,9 +502,9 @@ export default {
           break;
 
         case 'fill':
-          this.canTool = false;
+          // this.canTool = false;
 
-          this.$store.commit('updateAsciiBlocks', this.currentAsciiBlocks);
+          // this.$store.commit('updateAsciiBlocks', this.currentAsciiBlocks);
           break;
 
         case 'select':
@@ -546,6 +546,8 @@ export default {
 
           case 'fill':
             this.fill();
+            this.canTool = false;
+            this.$store.commit('updateAsciiBlocks', this.currentAsciiBlocks);
             break;
 
           case 'brush':

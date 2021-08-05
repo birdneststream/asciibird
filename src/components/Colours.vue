@@ -3,7 +3,7 @@
     <t-button
       type="button"
       :style="`background-color: ${mircColours[currentFg]} !important;`"
-      class="border-gray-200 p-3 w-14 h-14 text-2xl"
+      class="border-gray-200 w-12 h-12 text-2xl"
       id="currentColourFg"
       @click="$store.commit('changeIsUpdatingFg', true)"
     >
@@ -13,7 +13,7 @@
     <t-button
       type="button"
       :style="`background-color: ${mircColours[currentBg]} !important;`"
-      class="border-gray-200 p-3 w-14 h-14 text-2xl"
+      class="border-gray-200 w-12 h-12 text-2xl ml-2"
       id="currentColourBg"
       @click="$store.commit('changeIsUpdatingBg', true)"
     >
@@ -22,18 +22,18 @@
 
     <t-button
       type="button"
-      class="bg-white absolute rounded-full"
-      style="margin-left: -67px; margin-top: 15px"
+      class="bg-white absolute rounded-3xl"
+      style="margin-left: -62px; margin-top: 12px"
       id="swapColour"
       @click="swapColours()"
     >
-      <font-awesome-icon :icon="['fas', 'sync']" size="lg"/>
+      <font-awesome-icon :icon="['fas', 'sync']" />
     </t-button>
 
     <t-button
       type="button"
       :style="`background-color: ${mircColours[currentBg]} !important;color: ${mircColours[currentFg]};`"
-      class="border-gray-200 p-3 w-14 h-14 text-2xl"
+      class="border-gray-200 w-12 h-12 text-2xl ml-2"
       id="currentChar"
       @click="$store.commit('changeIsUpdatingChar', true)"
     >

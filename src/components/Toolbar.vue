@@ -4,19 +4,17 @@
       @dragstop="onDragStop"
       :grid="[currentAscii.blockWidth, currentAscii.blockHeight]"
       style="z-index: 5"
-      :min-width="8 * 25"
-      :max-width="8 * 30"
-      :max-height="13 * 39"
-      :min-height="13 * 38"
+      :min-width="blockWidth * 25"
+      :max-width="blockWidth * 30"
+      :max-height="blockHeight * 39"
+      :min-height="blockHeight * 38"
       :w="toolbarState.w"
       :h="toolbarState.h"
       :x="toolbarState.x"
       :y="toolbarState.y"
     >
-      <t-card style="height: 100%">
-         <Colours />
-
-
+      <t-card class="h-full">
+        <Colours />
 
         <div class="flex">
           <label class="ml-1 w-1/3">
@@ -49,7 +47,7 @@
         </div>
 
         <hr class="m-3" />
-    
+
         <t-button
           type="button"
           v-for="(value, keyToolbar) in toolbarIcons"
@@ -61,11 +59,10 @@
           }`"
           @click="$store.commit('changeTool', keyToolbar)"
         >
-          <font-awesome-icon :icon="[value.fa, value.icon]" />
+          <font-awesome-icon :icon="[value.fa, value.icon]" size="lg" />
         </t-button>
 
         <hr class="m-3" />
-
 
         <div class="flex">
           <label class="ml-1 w-1/2">
@@ -86,9 +83,7 @@
           </label>
         </div>
 
-        <hr class="m-2"  />
-
-
+        <hr class="m-2" />
 
         <BrushPreview />
       </t-card>
@@ -99,7 +94,7 @@
 <script>
 import Colours from "./Colours.vue";
 import BrushPreview from "./parts/BrushPreview.vue";
-import { toolbarIcons } from "../ascii";
+import { toolbarIcons, blockWidth, blockHeight } from "../ascii";
 
 export default {
   created() {
@@ -129,6 +124,12 @@ export default {
   computed: {
     toolbarIcons() {
       return toolbarIcons;
+    },
+    blockWidth() {
+      return blockWidth;
+    },
+    blockHeight() {
+      return blockHeight;
     },
     toolbarState() {
       return this.$store.getters.toolbarState;

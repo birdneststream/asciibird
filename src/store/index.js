@@ -2,6 +2,7 @@ import Vue from 'vue';
 import Vuex from 'vuex';
 import VuexPersistence from 'vuex-persist';
 import LZString from 'lz-string';
+import { blockWidth, blockHeight } from "../ascii";
 
 Vue.use(Vuex);
 const vuexLocal = new VuexPersistence({
@@ -47,10 +48,10 @@ export default new Vuex.Store({
       targetingChar: true,
       mirrorX: false,
       mirrorY: false,
-      x: 8 * 2,
-      y: 13 * 2,
-      h: 13 * 39,
-      w: 8 * 25,
+      x: blockWidth * 2,
+      y: blockHeight * 2,
+      h: blockHeight * 39,
+      w: blockWidth * 25,
     },
     debugPanelState: {
       x: 936,

@@ -3,10 +3,10 @@
     <vue-draggable-resizable
       @dragstop="onDragStop"
       :grid="[currentAscii.blockWidth, currentAscii.blockHeight]"
-      :min-width="8 * 40"
-      :max-width="8 * 40"
-      :min-height="13 * 20"
-      :max-height="13 * 20"
+      :min-width="blockWidth * 40"
+      :max-width="blockWidth * 40"
+      :min-height="blockHeight * 20"
+      :max-height="blockHeight * 20"
       style="z-index: 5;"
       :w="debugPanelState.w"
       :h="debugPanelState.h"
@@ -57,7 +57,7 @@
   </div>
 </template>
 <script>
-import { toolbarIcons, mircColours99 } from '../ascii';
+import { toolbarIcons, mircColours99, blockWidth, blockHeight } from '../ascii';
 
 export default {
   created() {
@@ -79,6 +79,12 @@ export default {
     throttle: true,
   }),
   computed: {
+    blockWidth() {
+      return blockWidth;
+    },
+    blockHeight() {
+      return blockHeight;
+    },
     getToolName() {
       return toolbarIcons[this.$store.getters.currentTool] ? toolbarIcons[this.$store.getters.currentTool].name : 'none';
     },

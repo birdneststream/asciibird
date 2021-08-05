@@ -78,6 +78,8 @@
 * Support for tdfiglet, toilet, figlet importing
 # References
 
+* http://anti.teamidiot.de/static/nei/*/extended_mirc_color_proposal.html - Good for 99 colours info
+
 * https://jp.itch.io/playscii / http://vectorpoem.com/playscii/
 * https://mircart.org/
 * https://asdf.us/asciiblaster/
@@ -89,6 +91,7 @@
 
 * https://gist.github.com/xon52/fb895e33d64a8d322da165d158fa11b2 / https://xon5.medium.com/flexible-canvas-grid-without-blurred-lines-907fcadf5bfc - Grid canvas draw stuff
 * http://wepump.in/ascii/
+* https://irc.watch/ascii/
 
 * https://modern.ircdocs.horse/formatting.html#color
 * https://www.mirc.com/colors.html
