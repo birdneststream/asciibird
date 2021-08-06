@@ -1,12 +1,13 @@
 <template>
   <div>
-    <t-card>
+    <t-card  >
     <canvas
       :ref="canvasName"
       :id="canvasName"
-      :class="canvasName"
+      
       :width="blocksWidthHeight.w"
       :height="blocksWidthHeight.h"
+      
     />
     </t-card>
   </div>

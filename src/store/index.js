@@ -200,6 +200,13 @@ export default new Vuex.Store({
         hash: hashValue
       });
     },
+    removeBrushLibrary(state, payload) {
+      let hashValue = cyrb53(JSON.stringify(payload))
+
+      state.brushLibrary = state.brushLibrary.filter(function (item) {
+        return item.hash !== hashValue
+      });
+    },
     openModal(state, type) {
       switch (type) {
         case 'new-ascii':

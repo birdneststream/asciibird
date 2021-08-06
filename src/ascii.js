@@ -583,6 +583,7 @@ export const checkForGetRequest = async () => {
 }
 
 // Hashing algo to detect duplicate brushes
+// from https://stackoverflow.com/questions/7616461/generate-a-hash-from-string-in-javascript
 export const cyrb53 = function (str, seed = 1337) {
   let h1 = 0xdeadbeef ^ seed,
     h2 = 0x41c6ce57 ^ seed;

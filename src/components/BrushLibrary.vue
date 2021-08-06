@@ -2,8 +2,8 @@
   <div>
     <vue-draggable-resizable
       :grid="[currentAscii.blockWidth, currentAscii.blockHeight]"
-      :min-width="blockWidth * 50"
-      :max-width="blockWidth * 50"
+      :min-width="blockWidth * 25"
+      :max-width="blockWidth * 30"
       :min-height="blockHeight * 50"
       :max-height="blockHeight * 50"
       :w="blockWidth * 50"
@@ -11,51 +11,87 @@
       :x="blockWidth * 150"
       :y="blockHeight * 3"
     >
+      <t-card class="h-full overflow-y-scroll">
+        <t-button
+          type="button"
+          :class="`block w-full ${
+            tab === 1
+              ? 'border-gray-900 bg-blue-500'
+              : 'border-gray-200 bg-gray-500'
+          }`"
+          @click="tab = 1"
+          >Library</t-button
+        >
 
-    <t-card class="h-full">
+        <t-button
+          type="button"
+          :class="`block w-full ${
+            tab === 0
+              ? 'border-gray-900 bg-blue-500'
+              : 'border-gray-200 bg-gray-500'
+          }`"
+          @click="tab = 0"
+          >History</t-button
+        >
 
-      <div class="flex mx-auto">
-        <div class="w-1/2">
-          <t-button type="button" class="block w-full" @click="tab = 1">Library</t-button>
+        <div class="flex">
+          <div v-if="tab === 0">
+            <div v-for="(brush, key) in brushHistory" :key="key">
+              <t-card
+                :class="`hover:border-blue-900 border-gray-300 bg-gray-200`"
+              >
+                <BrushCanvas :blocks="decompressBlock(brush.blocks)" />
+
+                <t-button
+                  type="button"
+                  @click="saveToLibrary(decompressBlock(brush.blocks))"
+                  ><font-awesome-icon :icon="['fas', 'save']" size="lg"
+                /></t-button>
+                <t-button
+                  type="button"
+                  @click="reuseBlocks(decompressBlock(brush.blocks))"
+                  ><font-awesome-icon :icon="['fas', 'paint-brush']" size="lg"
+                /></t-button>
+              </t-card>
+            </div>
+          </div>
+
+          <div v-if="tab === 1">
+            <div v-for="(brush, key) in brushLibrary" :key="key">
+              <t-card
+                :class="`hover:border-blue-900 border-gray-300 bg-gray-200`"
+              >
+                <BrushCanvas :blocks="decompressBlock(brush.blocks)" />
+                
+                <t-button
+                  type="button"
+                  @click="removeFromLibrary(decompressBlock(brush.blocks))"
+                  ><font-awesome-icon :icon="['fas', 'trash']" size="lg"
+                /></t-button>
+                <t-button
+                  type="button"
+                  @click="reuseBlocks(decompressBlock(brush.blocks))"
+                  ><font-awesome-icon :icon="['fas', 'paint-brush']" size="lg"
+                /></t-button>
+              </t-card>
+            </div>
+          </div>
         </div>
-        <div class="w-1/2">
-          <t-button type="button" class="block w-full" @click="tab = 0">History</t-button>
-        </div>
-      </div>
-
-      <div v-if="tab === 0">
-        <div v-for="(brush, key) in brushHistory" :key="key">
-          <BrushCanvas :blocks="decompressBlock(brush.blocks)" />
-         
-          <t-button type="button" @click="reuseBlocks(decompressBlock(brush.blocks))">Reuse</t-button>
-          <t-button type="button" @click="saveToLibrary(decompressBlock(brush.blocks))">Save to Library</t-button>
-        </div>
-      </div>
-
-      <div v-if="tab === 1">
-        <div v-for="(brush, key) in brushLibrary" :key="key">
-          <BrushCanvas :blocks="decompressBlock(brush.blocks)" />
-          <t-button type="button" @click="reuseBlocks(decompressBlock(brush.blocks))">Reuse</t-button>
-        </div>
-      </div>
-
-    </t-card>
-
+      </t-card>
     </vue-draggable-resizable>
   </div>
 </template>
 
 <script>
 import { mircColours99, blockWidth, blockHeight } from "../ascii";
-import BrushCanvas from "./parts/BrushCanvas.vue"
-import LZString from 'lz-string';
+import BrushCanvas from "./parts/BrushCanvas.vue";
+import LZString from "lz-string";
 
 export default {
   name: "BrushLibrary",
-  mounted() {
-  },
+  mounted() {},
   data: () => ({
-    tab: 1
+    tab: 1,
   }),
   components: {
     BrushCanvas,
@@ -101,7 +137,7 @@ export default {
       return this.$store.getters.brushSizeType;
     },
     brushHistory() {
-      return this.$store.getters.brushHistory.slice(0,5);
+      return this.$store.getters.brushHistory.slice(0, 25);
     },
     brushLibrary() {
       return this.$store.getters.brushLibrary;
@@ -116,26 +152,24 @@ export default {
       return this.$store.getters.brushBlocks;
     },
   },
-  watch: {
-  },
+  watch: {},
   methods: {
     changeTab(tab) {
-      this.tab = tab
+      this.tab = tab;
     },
     decompressBlock(item) {
-      console.log(JSON.parse(LZString.decompressFromUTF16(item)))
-      return JSON.parse(LZString.decompressFromUTF16(item))
+      console.log(JSON.parse(LZString.decompressFromUTF16(item)));
+      return JSON.parse(LZString.decompressFromUTF16(item));
     },
     reuseBlocks(value) {
-      // this.$store.commit('pushBrushHistory', this.brushBlocks)
-      // this.$store.commit('changeColourFg', value[0][0].fg )
-      // this.$store.commit('changeColourBg', value[0][0].bg )
-      // this.$store.commit('changeChar', value[0][0].char )
-      this.$store.commit('brushBlocks', value)
+      this.$store.commit("brushBlocks", value);
     },
     saveToLibrary(value) {
-      this.$store.commit('pushBrushLibrary', value)
-    }    
+      this.$store.commit("pushBrushLibrary", value);
+    },
+    removeFromLibrary(value) {
+      this.$store.commit("removeBrushLibrary", value);
+    },
   },
 };
 </script>
