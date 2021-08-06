@@ -981,28 +981,20 @@ export default {
                 }
 
                 if (this.canTool && brushBlock.bg !== null) {
-                  targetBlock.bg = !this.haveSelectBlocks
-                    ? this.currentBg
-                    : brushBlock.bg;
+                  targetBlock.bg = brushBlock.bg;
 
                   if (this.mirrorX) {
-                    this.currentAsciiBlocks[arrayY][asciiWidth - arrayX].bg = !this.haveSelectBlocks
-                      ? this.currentBg
-                      : brushBlock.bg;
+                    this.currentAsciiBlocks[arrayY][asciiWidth - arrayX].bg = brushBlock.bg;
                   }
 
                   if (this.mirrorY) {
-                    this.currentAsciiBlocks[asciiHeight - arrayY][arrayX].bg = !this.haveSelectBlocks
-                      ? this.currentBg
-                      : brushBlock.bg;
+                    this.currentAsciiBlocks[asciiHeight - arrayY][arrayX].bg = brushBlock.bg;
                   }
 
                   if (this.mirrorY && this.mirrorX) {
                     this.currentAsciiBlocks[asciiHeight - arrayY][
                       asciiWidth - arrayX
-                    ].bg = !this.haveSelectBlocks
-                      ? this.currentBg
-                      : brushBlock.bg;
+                    ].bg = brushBlock.bg;
                   }
                 }
               }
@@ -1013,28 +1005,20 @@ export default {
                   : '#000000';
 
                 if (this.canTool && brushBlock.fg !== null) {
-                  targetBlock.fg = !this.haveSelectBlocks
-                    ? this.currentFg
-                    : brushBlock.fg;
+                  targetBlock.fg = brushBlock.fg;
 
                   if (this.mirrorX) {
-                    this.currentAsciiBlocks[arrayY][asciiWidth - arrayX].fg = !this.haveSelectBlocks
-                      ? this.currentFg
-                      : brushBlock.fg;
+                    this.currentAsciiBlocks[arrayY][asciiWidth - arrayX].fg = brushBlock.fg;
                   }
 
                   if (this.mirrorY) {
-                    this.currentAsciiBlocks[asciiHeight - arrayY][arrayX].fg = !this.haveSelectBlocks
-                      ? this.currentFg
-                      : brushBlock.fg;
+                    this.currentAsciiBlocks[asciiHeight - arrayY][arrayX].fg = brushBlock.fg;
                   }
 
                   if (this.mirrorY && this.mirrorX) {
                     this.currentAsciiBlocks[asciiHeight - arrayY][
                       asciiWidth - arrayX
-                    ].fg = !this.haveSelectBlocks
-                      ? this.currentFg
-                      : brushBlock.fg;
+                    ].fg = brushBlock.fg;
                   }
                 }
               }
@@ -1077,23 +1061,17 @@ export default {
                     : brushBlock.char;
 
                   if (this.mirrorX) {
-                    this.currentAsciiBlocks[arrayY][asciiWidth - arrayX].char = !this.haveSelectBlocks
-                      ? this.currentChar
-                      : brushBlock.char;
+                    this.currentAsciiBlocks[arrayY][asciiWidth - arrayX].char = brushBlock.char;
                   }
 
                   if (this.mirrorY) {
-                    this.currentAsciiBlocks[asciiHeight - arrayY][arrayX].char = !this.haveSelectBlocks
-                      ? this.currentChar
-                      : brushBlock.char;
+                    this.currentAsciiBlocks[asciiHeight - arrayY][arrayX].char = brushBlock.char;
                   }
 
                   if (this.mirrorY && this.mirrorX) {
                     this.currentAsciiBlocks[asciiHeight - arrayY][
                       asciiWidth - arrayX
-                    ].char = !this.haveSelectBlocks
-                      ? this.currentChar
-                      : brushBlock.char;
+                    ].char = brushBlock.char;
                   }
                 }
               }

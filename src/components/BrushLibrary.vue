@@ -101,7 +101,7 @@ export default {
       return this.$store.getters.brushSizeType;
     },
     brushHistory() {
-      return this.$store.getters.brushHistory;
+      return this.$store.getters.brushHistory.slice(0,5);
     },
     brushLibrary() {
       return this.$store.getters.brushLibrary;

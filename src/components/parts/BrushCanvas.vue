@@ -13,7 +13,7 @@
 </template>
 
 <script>
-import { mircColours99, blockWidth, blockHeight } from "../../ascii";
+import { mircColours99, blockWidth, blockHeight, cyrb53 } from "../../ascii";
 
 export default {
   name: "BrushCanvas",
@@ -73,7 +73,8 @@ export default {
       return this.$store.getters.canvasKey + Math.round(Math.random()*1000);
     },
     canvasName() {
-      return `${this.canvasKey}-brush-canvas`;
+      let hash = cyrb53(JSON.stringify(this.getBlocks))
+      return `${hash}-brush-canvas`;
     },
     getBlocks() {
       return this.blocks === false
@@ -150,7 +151,7 @@ export default {
               const curBlock = this.getBlocks[y][x];
 
               if ((!this.isMainCanvas && curBlock.bg) || (curBlock.bg && this.isMainCanvas && this.isTargettingBg)) {
-                this.ctx.fillStyle = this.mircColours[(this.isMainCanvas ? this.currentBg : curBlock.bg)];
+                this.ctx.fillStyle = this.mircColours[curBlock.bg];
 
                 this.ctx.fillRect(
                   x * BLOCK_WIDTH,
@@ -161,13 +162,13 @@ export default {
               }
 
               if ((!this.isMainCanvas && curBlock.fg) || (curBlock.fg && this.isMainCanvas && this.isTargettingFg)) {
-                this.ctx.fillStyle = this.mircColours[(this.isMainCanvas ? this.currentFg : curBlock.fg)];
+                this.ctx.fillStyle = this.mircColours[curBlock.fg];
               }
 
               if ((!this.isMainCanvas && curBlock.char) || (curBlock.char && this.isMainCanvas && this.isTargettingChar)) {
-                this.ctx.fillStyle = this.mircColours[(this.isMainCanvas ? this.currentFg : curBlock.fg)];
+                this.ctx.fillStyle = this.mircColours[curBlock.fg];
                 this.ctx.fillText(
-                  (this.isMainCanvas ? this.currentChar : curBlock.char),
+                  curBlock.char,
                   x * BLOCK_WIDTH - 1,
                   y * BLOCK_HEIGHT + BLOCK_HEIGHT - 3
                 );
