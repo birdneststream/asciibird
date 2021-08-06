@@ -138,7 +138,6 @@ export default {
   },
   name: "Dashboard",
   data: () => ({
-    showNewAsciiModal: false,
     currentTab: 1,
     canvasX: null,
     canvasY: null,
@@ -176,7 +175,7 @@ export default {
       return this.$store.getters.currentBg;
     },
     currentChar() {
-      return this.$store.getters.getChar;
+      return this.$store.getters.currentChar;
     },
     toolbarState() {
       return this.$store.getters.toolbarState;

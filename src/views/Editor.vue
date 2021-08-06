@@ -168,8 +168,8 @@ export default {
         (this.brushSizeWidth < 10 && this.brushSizeWidth >= 1)) {
 
           this.$store.commit("updateBrushSize", {
-            brushSizeHeight: this.brushSizeHeight + 1,
-            brushSizeWidth: this.brushSizeWidth + 1,
+            brushSizeHeight: parseInt(this.brushSizeHeight) + 1,
+            brushSizeWidth: parseInt(this.brushSizeWidth) + 1,
             brushSizeType: this.brushSizeType,
           });
         }
@@ -179,8 +179,8 @@ export default {
         (this.brushSizeWidth < 10 && this.brushSizeWidth >= 1)) {
 
           this.$store.commit("updateBrushSize", {
-            brushSizeHeight: this.brushSizeHeight - 1,
-            brushSizeWidth: this.brushSizeWidth - 1,
+            brushSizeHeight: parseInt(this.brushSizeHeight) - 1,
+            brushSizeWidth: parseInt(this.brushSizeWidth) - 1,
             brushSizeType: this.brushSizeType,
           });
         }
@@ -253,7 +253,7 @@ export default {
       return this.$store.getters.currentBg;
     },
     currentChar() {
-      return this.$store.getters.getChar;
+      return this.$store.getters.currentChar;
     },
     isTextEditing() {
       return this.currentTool.name === 'text';

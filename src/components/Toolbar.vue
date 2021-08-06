@@ -156,7 +156,7 @@ export default {
       return this.$store.getters.currentBg;
     },
     currentChar() {
-      return this.$store.getters.getChar;
+      return this.$store.getters.currentChar;
     },
   },
   watch: {},

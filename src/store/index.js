@@ -15,6 +15,7 @@ const vuexLocal = new VuexPersistence({
 export default new Vuex.Store({
 
   state: {
+    key: 0,
     modalState: {
       newAscii: false,
       editAscii: false,
@@ -220,7 +221,7 @@ export default new Vuex.Store({
     isTargettingChar: (state) => state.toolbarState.targetingChar,
     currentFg: (state) => state.toolbarState.currentColourFg,
     currentBg: (state) => state.toolbarState.currentColourBg,
-    getChar: (state) => state.toolbarState.selectedChar,
+    currentChar: (state) => state.toolbarState.selectedChar,
     currentTab: (state) => state.tab,
     currentAscii: (state) => state.asciibirdMeta[state.tab] ?? false,
     currentAsciiBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[
@@ -239,6 +240,10 @@ export default new Vuex.Store({
           return true
       }
       return false
+    },
+    canvasKey: (state) => {
+      state.key = state.key + 1;
+      return state.key
     },
   },
   actions: {},

@@ -66,7 +66,6 @@ export default {
       this.$modal.show("paste-ascii-modal");
     },
     close() {
-      console.log("close");
       this.pasteContent = "";
       this.title = "clipboard.txt";
       this.$modal.hide("paste-ascii-modal");

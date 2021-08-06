@@ -447,7 +447,7 @@ export const createNewAscii = (forms) => {
   newAscii.blocks = LZString.compressToUTF16(JSON.stringify(newAscii.blocks));
   newAscii.history.push(newAscii.blocks);
   store.commit('newAsciibirdMeta', newAscii);
-  store.commit('openModal', 'new-ascii');
+  store.commit('closeModal', 'new-ascii');
 
   return true;
 };
