@@ -99,6 +99,9 @@ export default {
     },
     currentAsciiBlocks() {
       return this.$store.getters.currentAsciiBlocks
+    },
+    brushBlocks() {
+      return this.$store.getters.brushBlocks
     }
   },
   watch: {
@@ -126,6 +129,25 @@ export default {
         this.createBlocks()
       } 
     },
+    currentChar(val, old) {
+      if (val !== old) {
+        
+        this.createBlocks()
+      } 
+    },
+    currentBg(val, old) {
+      if (val !== old) {
+        this.createBlocks()
+      } 
+    },
+    currentFg(val, old) {
+      if (val !== old) {
+        this.createBlocks()
+      } 
+    },
+    brushBlocks() {
+      this.$store.commit("pushBrushHistory", this.brushBlocks)
+    }
   },
   methods: {
     updateBrushSize() {
@@ -155,6 +177,8 @@ export default {
       const middleY = Math.floor(brushHeight / 2);
       const middleX = Math.floor(brushWidth / 2);
       let yModifier = 0;
+
+      // 
 
       // Recreate 2d array for preview
       for (y = 0; y < brushHeight; y++) {

@@ -1,17 +1,19 @@
 <template>
   <div>
+    <t-card>
     <canvas
       :ref="canvasName"
       :id="canvasName"
       :class="canvasName"
-      :width="brushSizeWidth * currentAscii.blockWidth"
-      :height="brushSizeHeight * currentAscii.blockHeight"
+      :width="blocksWidthHeight.w"
+      :height="blocksWidthHeight.h"
     />
+    </t-card>
   </div>
 </template>
 
 <script>
-import { mircColours99 } from "../../ascii";
+import { mircColours99, blockWidth, blockHeight } from "../../ascii";
 
 export default {
   name: "BrushCanvas",
@@ -81,12 +83,21 @@ export default {
     isMainCanvas() {
       return this.blocks === false;
     },
+    blocksWidthHeight() {
+      return {
+          w: 20 * blockWidth,
+          h: this.getBlocks.length * blockHeight
+        } 
+    },
     mircColours() {
       return mircColours99;
     },
   },
   watch: {
     getBlocks() {
+      this.delayRedrawCanvas();
+    },
+    blocks() {
       this.delayRedrawCanvas();
     },
     currentAscii() {

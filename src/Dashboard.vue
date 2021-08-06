@@ -86,6 +86,8 @@
       <ColourPicker
         v-if="toolbarState.isChoosingFg || toolbarState.isChoosingBg"
       />
+
+      <BrushLibrary />
     </template>
     <template v-else>
       <div style="left: 35%; top: 15%; position: absolute; z-index: -2">
@@ -102,6 +104,7 @@
 import LZString from "lz-string";
 import Toolbar from "./components/Toolbar.vue";
 import DebugPanel from "./components/DebugPanel.vue";
+import BrushLibrary from "./components/BrushLibrary.vue";
 import Editor from "./views/Editor.vue";
 
 import CharPicker from "./components/parts/CharPicker.vue";
@@ -135,6 +138,7 @@ export default {
     NewAscii,
     EditAscii,
     PasteAscii,
+    BrushLibrary
   },
   name: "Dashboard",
   data: () => ({

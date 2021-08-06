@@ -1,28 +1,71 @@
 <template>
   <div>
+    <vue-draggable-resizable
+      :grid="[currentAscii.blockWidth, currentAscii.blockHeight]"
+      :min-width="blockWidth * 50"
+      :max-width="blockWidth * 50"
+      :min-height="blockHeight * 50"
+      :max-height="blockHeight * 50"
+      :w="blockWidth * 50"
+      :h="blockWidth * 50"
+      :x="blockWidth * 150"
+      :y="blockHeight * 3"
+    >
 
+    <t-card class="h-full">
 
+      <div class="flex mx-auto">
+        <div class="w-1/2">
+          <t-button type="button" class="block w-full" @click="tab = 1">Library</t-button>
+        </div>
+        <div class="w-1/2">
+          <t-button type="button" class="block w-full" @click="tab = 0">History</t-button>
+        </div>
+      </div>
 
+      <div v-if="tab === 0">
+        <div v-for="(value, key) in brushHistory" :key="key">
+          <BrushCanvas :blocks="decompressBlock(value)" />
+          <t-button type="button" @click="reuseBlocks(decompressBlock(value))">Reuse</t-button>
+          <t-button type="button" @click="saveToLibrary(decompressBlock(value))">Save to Library</t-button>
+        </div>
+      </div>
 
+      <div v-if="tab === 1">
+        <div v-for="(value, key) in brushLibrary" :key="key">
+          <BrushCanvas :blocks="decompressBlock(value)" />
+          <t-button type="button" @click="reuseBlocks(decompressBlock(value))">Reuse</t-button>
+        </div>
+      </div>
 
+    </t-card>
+
+    </vue-draggable-resizable>
   </div>
 </template>
 
 <script>
-import { emptyBlock, mircColours99 } from "../../ascii";
+import { mircColours99, blockWidth, blockHeight } from "../ascii";
+import BrushCanvas from "./parts/BrushCanvas.vue"
+import LZString from 'lz-string';
 
 export default {
   name: "BrushLibrary",
   mounted() {
-    this.ctx = this.$refs.brushcanvas.getContext("2d");
-    this.delayRedrawCanvas();
   },
   data: () => ({
-    ctx: null,
-    redraw: true,
-    blocks: [],
+    tab: 1
   }),
+  components: {
+    BrushCanvas,
+  },
   computed: {
+    blockWidth() {
+      return blockWidth;
+    },
+    blockHeight() {
+      return blockHeight;
+    },
     currentAscii() {
       return this.$store.getters.currentAscii;
     },
@@ -56,198 +99,42 @@ export default {
     brushSizeType() {
       return this.$store.getters.brushSizeType;
     },
+    brushHistory() {
+      return this.$store.getters.brushHistory.slice(0,10);
+    },
+    brushLibrary() {
+      return this.$store.getters.brushLibrary;
+    },
     mircColours() {
       return mircColours99;
     },
     options() {
       return this.$store.getters.options;
     },
+    brushBlocks() {
+      return this.$store.getters.brushBlocks;
+    },
   },
   watch: {
-    brushSizeWidth() {
-      this.delayRedrawCanvas();
-      this.brushSizeWidthInput = this.brushSizeWidth;
-    },
-    brushSizeHeight() {
-      this.delayRedrawCanvas();
-      this.brushSizeHeightInput = this.brushSizeHeight;
-    },
-    brushSizeType() {
-      this.delayRedrawCanvas();
-      this.brushSizeTypeInput = this.brushSizeType;
-    },
-    isTargettingBg() {
-      this.delayRedrawCanvas();
-    },
-    isTargettingFg() {
-      this.delayRedrawCanvas();
-    },
-    isTargettingChar() {
-      this.delayRedrawCanvas();
-    },
-    currentFg() {
-      this.delayRedrawCanvas();
-    },
-    currentBg() {
-      this.delayRedrawCanvas();
-    },
-    currentChar() {
-      this.delayRedrawCanvas();
-    },
   },
   methods: {
-    updateBrushSize() {
-      this.$store.commit("updateBrushSize", {
-        brushSizeHeight: this.brushSizeHeightInput,
-        brushSizeWidth: this.brushSizeWidthInput,
-        brushSizeType: this.brushSizeTypeInput,
-      });
-
-      this.ctx.clearRect(0, 0, 10000, 10000);
-      this.delayRedrawCanvas();
+    changeTab(tab) {
+      this.tab = tab
     },
-    drawPreview() {
-      this.ctx.clearRect(0, 0, 10000, 10000);
-
-      const brushHeight = this.brushSizeHeight;
-      const brushWidth = this.brushSizeWidth;
-
-      this.blocks = [];
-
-      this.ctx.fillStyle = this.mircColours[1];
-
-      const BLOCK_WIDTH = this.currentAscii.blockWidth;
-      const BLOCK_HEIGHT = this.currentAscii.blockHeight;
-
-      // hack font for ascii shout outs 2 beenz
-      this.ctx.font = "13px Hack";
-
-      let y = 0;
-      let x = 0;
-      let targetX = 0;
-
-      const block = {
-        fg: this.currentFg,
-        bg: this.currentBg,
-        char: this.currentChar,
-      };
-
-      const middleY = Math.floor(brushHeight / 2);
-      const middleX = Math.floor(brushWidth / 2);
-      let yModifier = 0;
-
-      // Recreate 2d array for preview
-      for (y = 0; y < brushHeight; y++) {
-        this.blocks[y] = [];
-        for (x = 0; x < brushWidth; x++) {
-          switch (this.brushSizeType) {
-            case "cross":
-              // If we are 1x1 force fill 1 block, to avoid an empty 1x1
-              if (x === 0 && y === 0) {
-                this.blocks[y][x] = { ...block };
-                continue;
-              }
-
-              if (x === brushWidth) {
-                this.blocks[y][x] = { ...emptyBlock };
-              } else {
-                this.blocks[y][x] = { ...block };
-              }
-
-              targetX = x;
-
-              if (y % 2 === 0) {
-                targetX -= 1;
-              }
-
-              if (this.blocks[y] && this.blocks[y][targetX]) {
-                if (x % 2 === 0) {
-                  this.blocks[y][targetX] = { ...emptyBlock };
-                } else {
-                  this.blocks[y][targetX] = { ...block };
-                }
-              }
-
-              break;
-
-            // default:
-            case "square":
-              this.blocks[y][x] = { ...block };
-              break;
-
-            case "circle":
-              if (middleY >= y) {
-                // Top half
-                yModifier = y;
-
-                if (x <= middleX + yModifier && x >= middleX - yModifier) {
-                  this.blocks[y][x] = { ...block };
-                } else {
-                  this.blocks[y][x] = { ...emptyBlock };
-                }
-              } else {
-                // Bottom half
-                yModifier = middleY - (y - middleY);
-
-                if (x <= middleX + yModifier && x >= middleX - yModifier) {
-                  this.blocks[y][x] = { ...block };
-                } else {
-                  this.blocks[y][x] = { ...emptyBlock };
-                }
-              }
-
-              break;
-          }
-        }
-      }
-
-      // Get middle block
-      for (y = 0; y < this.blocks.length; y++) {
-        for (x = 0; x < this.blocks[0].length; x++) {
-          if (this.blocks[y] && this.blocks[y][x]) {
-            const curBlock = this.blocks[y][x];
-
-            if (curBlock.bg && this.isTargettingBg) {
-              this.ctx.fillStyle = this.mircColours[curBlock.bg];
-
-              this.ctx.fillRect(
-                x * BLOCK_WIDTH,
-                y * BLOCK_HEIGHT,
-                BLOCK_WIDTH,
-                BLOCK_HEIGHT
-              );
-            }
-
-            if (curBlock.fg && this.isTargettingFg) {
-              this.ctx.fillStyle = this.mircColours[curBlock.fg];
-            }
-
-            if (curBlock.char && this.isTargettingChar) {
-              this.ctx.fillStyle = this.mircColours[curBlock.fg];
-              this.ctx.fillText(
-                curBlock.char,
-                x * BLOCK_WIDTH - 1,
-                y * BLOCK_HEIGHT + BLOCK_HEIGHT - 3
-              );
-            }
-          }
-        }
-
-        this.ctx.stroke();
-
-        this.$store.commit("brushBlocks", this.blocks);
-      }
+    decompressBlock(item) {
+      console.log(JSON.parse(LZString.decompressFromUTF16(item)))
+      return JSON.parse(LZString.decompressFromUTF16(item))
     },
-    delayRedrawCanvas() {
-      if (this.redraw) {
-        this.redraw = false;
-
-        setTimeout(() => {
-          this.redraw = true;
-          this.drawPreview();
-        }, this.options.canvasRedrawSpeed);
-      }
+    reuseBlocks(value) {
+      // this.$store.commit('pushBrushHistory', this.brushBlocks)
+      this.$store.commit('changeColourFg', value[0][0].fg )
+      this.$store.commit('changeColourBg', value[0][0].bg )
+      this.$store.commit('changeChar', value[0][0].char )
+      this.$store.commit('brushBlocks', value)
     },
+    saveToLibrary(value) {
+      this.$store.commit('pushBrushLibrary', value)
+    }    
   },
 };
 </script>

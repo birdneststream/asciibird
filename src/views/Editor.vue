@@ -118,6 +118,7 @@ export default {
         // Ctrl V - paste blocks
         if (e.key === 'v' && ctrlKey) {
           if (this.haveSelectBlocks) {
+            this.$store.commit("pushBrushHistory", this.brushBlocks)
             this.$store.commit('brushBlocks', this.selectBlocks);
             this.$store.commit('changeTool', 4);
           }

@@ -66,8 +66,9 @@ export default new Vuex.Store({
     },
     blockSizeMultiplier: 1,
     brushBlocks: [],
+    brushHistory: [],
     selectBlocks: [],
-    libraryBlocks: [],
+    brushLibrary: [],
   },
   mutations: {
     changeState(state, payload) {
@@ -178,6 +179,12 @@ export default new Vuex.Store({
     selectBlocks(state, payload) {
       state.selectBlocks = LZString.compressToUTF16(JSON.stringify(payload));
     },
+    pushBrushHistory(state, payload) {
+      state.brushHistory.unshift(LZString.compressToUTF16(JSON.stringify(payload)));
+    },
+    pushBrushLibrary(state, payload) {
+      state.brushLibrary.unshift(LZString.compressToUTF16(JSON.stringify(payload)));
+    },
     openModal(state, type) {
       switch (type) {
         case 'new-ascii':
@@ -232,6 +239,8 @@ export default new Vuex.Store({
     brushSizeWidth: (state) => state.toolbarState.brushSizeWidth,
     brushSizeType: (state) => state.toolbarState.brushSizeType,
     blockSizeMultiplier: (state) => state.blockSizeMultiplier,
+    brushHistory: (state) => state.brushHistory,
+    brushLibrary: (state) => state.brushLibrary,
     brushBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.brushBlocks)) || [],
     selectBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.selectBlocks)) || [],
     isModalOpen: (state) => {

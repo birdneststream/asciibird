@@ -13,7 +13,7 @@
       :x="debugPanelState.x"
       :y="debugPanelState.y"
     >
-      <t-card style="height: 100%;">
+      <t-card class="h-full">
         <span
           class="ml-5"
           v-html="`Tool: ${getToolName}`"
