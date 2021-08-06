@@ -127,9 +127,9 @@ export default {
     },
     reuseBlocks(value) {
       // this.$store.commit('pushBrushHistory', this.brushBlocks)
-      this.$store.commit('changeColourFg', value[0][0].fg )
-      this.$store.commit('changeColourBg', value[0][0].bg )
-      this.$store.commit('changeChar', value[0][0].char )
+      // this.$store.commit('changeColourFg', value[0][0].fg )
+      // this.$store.commit('changeColourBg', value[0][0].bg )
+      // this.$store.commit('changeChar', value[0][0].char )
       this.$store.commit('brushBlocks', value)
     },
     saveToLibrary(value) {
