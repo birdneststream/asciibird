@@ -24,17 +24,18 @@
       </div>
 
       <div v-if="tab === 0">
-        <div v-for="(value, key) in brushHistory" :key="key">
-          <BrushCanvas :blocks="decompressBlock(value)" />
-          <t-button type="button" @click="reuseBlocks(decompressBlock(value))">Reuse</t-button>
-          <t-button type="button" @click="saveToLibrary(decompressBlock(value))">Save to Library</t-button>
+        <div v-for="(brush, key) in brushHistory" :key="key">
+          <BrushCanvas :blocks="decompressBlock(brush.blocks)" />
+         
+          <t-button type="button" @click="reuseBlocks(decompressBlock(brush.blocks))">Reuse</t-button>
+          <t-button type="button" @click="saveToLibrary(decompressBlock(brush.blocks))">Save to Library</t-button>
         </div>
       </div>
 
       <div v-if="tab === 1">
-        <div v-for="(value, key) in brushLibrary" :key="key">
-          <BrushCanvas :blocks="decompressBlock(value)" />
-          <t-button type="button" @click="reuseBlocks(decompressBlock(value))">Reuse</t-button>
+        <div v-for="(brush, key) in brushLibrary" :key="key">
+          <BrushCanvas :blocks="decompressBlock(brush.blocks)" />
+          <t-button type="button" @click="reuseBlocks(decompressBlock(brush.blocks))">Reuse</t-button>
         </div>
       </div>
 
@@ -100,7 +101,7 @@ export default {
       return this.$store.getters.brushSizeType;
     },
     brushHistory() {
-      return this.$store.getters.brushHistory.slice(0,10);
+      return this.$store.getters.brushHistory;
     },
     brushLibrary() {
       return this.$store.getters.brushLibrary;

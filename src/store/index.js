@@ -4,7 +4,8 @@ import VuexPersistence from 'vuex-persist';
 import LZString from 'lz-string';
 import {
   blockWidth,
-  blockHeight
+  blockHeight,
+  cyrb53
 } from "../ascii";
 
 Vue.use(Vuex);
@@ -180,10 +181,24 @@ export default new Vuex.Store({
       state.selectBlocks = LZString.compressToUTF16(JSON.stringify(payload));
     },
     pushBrushHistory(state, payload) {
-      state.brushHistory.unshift(LZString.compressToUTF16(JSON.stringify(payload)));
+      // Check and remove duplicate brushes based on hash value
+      let hashValue = cyrb53(JSON.stringify(payload))
+      state.brushHistory = state.brushHistory.filter(obj => obj.hash !== hashValue);
+
+      state.brushHistory.unshift({
+        blocks: LZString.compressToUTF16(JSON.stringify(payload)),
+        hash: hashValue
+      });
     },
     pushBrushLibrary(state, payload) {
-      state.brushLibrary.unshift(LZString.compressToUTF16(JSON.stringify(payload)));
+      // Check and remove duplicate brushes based on hash value
+      let hashValue = cyrb53(JSON.stringify(payload))
+      state.brushLibrary = state.brushLibrary.filter(obj => obj.hash !== hashValue);
+
+      state.brushLibrary.unshift({
+        blocks: LZString.compressToUTF16(JSON.stringify(payload)),
+        hash: hashValue
+      });
     },
     openModal(state, type) {
       switch (type) {
