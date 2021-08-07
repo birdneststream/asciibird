@@ -401,8 +401,6 @@ export default {
           this.selecting.endX - this.selecting.startX,
           this.selecting.endY - this.selecting.startY
         );
-
-        this.toolCtx.stroke();
       }
     },
     redrawCanvas() {
@@ -456,8 +454,6 @@ export default {
           }
         }
       }
-
-      this.ctx.stroke();
     },
     onCanvasResize(left, top, width, height) {
       const blocks = this.currentAsciiBlocks;
@@ -890,8 +886,6 @@ export default {
           );
         }
       }
-
-      this.toolCtx.stroke();
     },
     drawTextIndicator() {
       this.clearToolCanvas();
@@ -944,8 +938,6 @@ export default {
           BLOCK_HEIGHT
         );
       }
-
-      this.toolCtx.stroke();
     },
     //
     // drawBrush
@@ -1230,8 +1222,6 @@ export default {
           }
         }
       }
-
-      this.toolCtx.stroke();
     },
     eraser() {
       if (this.canTool) {
