@@ -63,7 +63,7 @@ body {
 </style>
 
 <script>
-import { emptyBlock, toolbarIcons, mircColours99, exportMirc, downloadFile } from '../ascii';
+import { emptyBlock, toolbarIcons, mircColours99, exportMirc, downloadFile, filterNullBlocks } from '../ascii';
 
 export default {
   name: 'Editor',
@@ -110,7 +110,7 @@ export default {
         // Ctrl C - copy blocks
         if (e.key === 'c' && ctrlKey && !shiftKey) {
           if (this.selectedBlocks.length) {
-            this.$store.commit('selectBlocks', this.selectedBlocks);
+            this.$store.commit('selectBlocks', this.filterNullBlocks(this.selectedBlocks));
             this.selectedBlocks = [];
           }
         }
@@ -118,6 +118,7 @@ export default {
         // Ctrl V - paste blocks
         if (e.key === 'v' && ctrlKey) {
           if (this.haveSelectBlocks) {
+            
             this.$store.commit("pushBrushHistory", this.brushBlocks)
             this.$store.commit('brushBlocks', this.selectBlocks);
             this.$store.commit('changeTool', 4);
@@ -127,6 +128,11 @@ export default {
         // Show / hide debug panel
         if (e.key === 'd' && ctrlKey) {
           this.$store.commit('toggleDebugPanel', !this.debugPanelState.visible);
+        }
+
+        // Show / hide brush library
+        if (e.key === 'b' && ctrlKey) {
+          this.$store.commit('toggleBrushLibrary', !this.brushLibraryState.visible);
         }
 
         // New ASCII
@@ -303,6 +309,9 @@ export default {
     mircColours() {
       return mircColours99;
     },
+    brushLibraryState() {
+      return this.$store.getters.brushLibraryState;
+    },    
   },
   watch: {
     currentAscii(val, old) {
@@ -738,6 +747,12 @@ export default {
         }, this.options.canvasRedrawSpeed);
       }
     },
+    getBlocksWidth(blocks) {
+      return getBlocksWidth(blocks)
+    },
+    filterNullBlocks(blocks) {
+      return filterNullBlocks(blocks)
+    },
     //
     // TOOLS
     //
@@ -749,11 +764,27 @@ export default {
       let curBlock = {};
       this.selectedBlocks = [];
 
+      if (this.selecting.endY < this.selecting.startY) {
+        let end = this.selecting.endY;
+        let start = this.selecting.startY;
+
+        this.selecting.startY = end;
+        this.selecting.endY = start;
+      }
+
+      if (this.selecting.endX < this.selecting.startX) {
+        let end = this.selecting.endX;
+        let start = this.selecting.startX;
+
+        this.selecting.startX = end;
+        this.selecting.endX = start;
+      }
+
       for (y = 0; y < this.currentAscii.height; y++) {
         if (
           y
-            >= Math.floor(this.selecting.startY / this.currentAscii.blockHeight)
-          && y <= Math.floor(this.selecting.endY / this.currentAscii.blockHeight)
+            > Math.floor(this.selecting.startY / this.currentAscii.blockHeight)-1
+          && y < Math.floor(this.selecting.endY / this.currentAscii.blockHeight)
         ) {
           if (!this.selectedBlocks[y]) {
             this.selectedBlocks[y] = [];
@@ -762,11 +793,11 @@ export default {
           for (x = 0; x < this.currentAscii.width; x++) {
             if (
               x
-                >= Math.floor(
+                > Math.ceil(
                   this.selecting.startX / this.currentAscii.blockWidth,
-                )
+                )-1
               && x
-                <= Math.floor(this.selecting.endX / this.currentAscii.blockWidth)
+                <= Math.ceil(this.selecting.endX / this.currentAscii.blockWidth)-1
             ) {
               if (this.currentAsciiBlocks[y] && this.currentAsciiBlocks[y][x]) {
                 curBlock = { ...this.currentAsciiBlocks[y][x] };
@@ -983,15 +1014,17 @@ export default {
                 if (this.canTool && brushBlock.bg !== null) {
                   targetBlock.bg = brushBlock.bg;
 
-                  if (this.mirrorX) {
+                  if (this.mirrorX &&  this.currentAsciiBlocks[arrayY] && this.currentAsciiBlocks[arrayY][asciiWidth - arrayX]) {
                     this.currentAsciiBlocks[arrayY][asciiWidth - arrayX].bg = brushBlock.bg;
                   }
 
-                  if (this.mirrorY) {
+                  if (this.mirrorY && this.currentAsciiBlocks[asciiHeight - arrayY] && this.currentAsciiBlocks[asciiHeight - arrayY][arrayX]) {
                     this.currentAsciiBlocks[asciiHeight - arrayY][arrayX].bg = brushBlock.bg;
                   }
 
-                  if (this.mirrorY && this.mirrorX) {
+                  if (this.mirrorY && this.mirrorX && this.currentAsciiBlocks[asciiHeight - arrayY] && this.currentAsciiBlocks[asciiHeight - arrayY][
+                      asciiWidth - arrayX
+                    ]) {
                     this.currentAsciiBlocks[asciiHeight - arrayY][
                       asciiWidth - arrayX
                     ].bg = brushBlock.bg;
@@ -1007,15 +1040,17 @@ export default {
                 if (this.canTool && brushBlock.fg !== null) {
                   targetBlock.fg = brushBlock.fg;
 
-                  if (this.mirrorX) {
+                  if (this.mirrorX && this.currentAsciiBlocks[arrayY] && this.currentAsciiBlocks[arrayY][asciiWidth - arrayX]) {
                     this.currentAsciiBlocks[arrayY][asciiWidth - arrayX].fg = brushBlock.fg;
                   }
 
-                  if (this.mirrorY) {
+                  if (this.mirrorY && this.currentAsciiBlocks[asciiHeight - arrayY] && this.currentAsciiBlocks[asciiHeight - arrayY][arrayX]) {
                     this.currentAsciiBlocks[asciiHeight - arrayY][arrayX].fg = brushBlock.fg;
                   }
 
-                  if (this.mirrorY && this.mirrorX) {
+                  if (this.mirrorY && this.mirrorX && this.currentAsciiBlocks[asciiHeight - arrayY] && this.currentAsciiBlocks[asciiHeight - arrayY][
+                      asciiWidth - arrayX
+                    ]) {
                     this.currentAsciiBlocks[asciiHeight - arrayY][
                       asciiWidth - arrayX
                     ].fg = brushBlock.fg;
@@ -1060,15 +1095,17 @@ export default {
                     ? this.currentChar
                     : brushBlock.char;
 
-                  if (this.mirrorX) {
+                  if (this.mirrorX && this.currentAsciiBlocks[arrayY] && this.currentAsciiBlocks[arrayY][asciiWidth - arrayX]) {
                     this.currentAsciiBlocks[arrayY][asciiWidth - arrayX].char = brushBlock.char;
                   }
 
-                  if (this.mirrorY) {
+                  if (this.mirrorY && this.currentAsciiBlocks[asciiHeight - arrayY] && this.currentAsciiBlocks[asciiHeight - arrayY][arrayX]) {
                     this.currentAsciiBlocks[asciiHeight - arrayY][arrayX].char = brushBlock.char;
                   }
 
-                  if (this.mirrorY && this.mirrorX) {
+                  if (this.mirrorY && this.mirrorX && this.currentAsciiBlocks[asciiHeight - arrayY] && this.currentAsciiBlocks[asciiHeight - arrayY][
+                      asciiWidth - arrayX
+                    ]) {
                     this.currentAsciiBlocks[asciiHeight - arrayY][
                       asciiWidth - arrayX
                     ].char = brushBlock.char;

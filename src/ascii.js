@@ -597,5 +597,49 @@ export const cyrb53 = function (str, seed = 1337) {
   return 4294967296 * (2097151 & h2) + (h1 >>> 0);
 };
 
+export const fillNullBlocks = function (blocks) {
+  for (let y = 0; y < blocks.length; y++) {
+    for (let x = 0; x < blocks[0].length; x++) {
+      if (blocks[y] && !blocks[y][x]) {
+        blocks[y][x] = {
+          ...emptyBlock
+        }
+      }
+    }
+  }
+
+  return blocks
+}
+
+export const getBlocksWidth = function (blocks) {
+  for (let y = 0; y < blocks.length; y++) {
+
+    if (!blocks[y]) {
+      continue
+    }
+
+    if (blocks[y]) {
+      return blocks[y].length
+    }
+  }
+}
+
+export const filterNullBlocks = function (blocks) {
+  let newBlocks = [];
+  let y;
+
+  blocks = blocks.filter(function (item) {
+    return item !== null
+  });
+
+  for (y = 0; y < blocks.length; y++) {
+    newBlocks[y] = (blocks[y].filter(function (item) {
+      return item !== null
+    }))
+  }
+
+  return newBlocks
+}
+
 
 export default createNewAscii;

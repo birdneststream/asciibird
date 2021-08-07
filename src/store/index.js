@@ -16,7 +16,6 @@ const vuexLocal = new VuexPersistence({
 export default new Vuex.Store({
 
   state: {
-    key: 0,
     modalState: {
       newAscii: false,
       editAscii: false,
@@ -70,6 +69,13 @@ export default new Vuex.Store({
     brushHistory: [],
     selectBlocks: [],
     brushLibrary: [],
+    brushLibraryState: {
+      x: blockWidth * 130,
+      y: blockHeight * 2,
+      h: blockHeight * 50,
+      w: blockWidth * 25,
+      visible: true,
+    },
   },
   mutations: {
     changeState(state, payload) {
@@ -83,6 +89,12 @@ export default new Vuex.Store({
     },
     toggleDebugPanel(state, payload) {
       state.debugPanelState.visible = payload;
+    },
+    changeBrushLibraryState(state, payload) {
+      state.brushLibraryState = payload;
+    },
+    toggleBrushLibrary(state, payload) {
+      state.brushLibraryState.visible = payload;
     },
     changeToolBarState(state, payload) {
       state.toolbarState.x = payload.x;
@@ -263,6 +275,7 @@ export default new Vuex.Store({
     blockSizeMultiplier: (state) => state.blockSizeMultiplier,
     brushHistory: (state) => state.brushHistory,
     brushLibrary: (state) => state.brushLibrary,
+    brushLibraryState: (state) => state.brushLibraryState,
     brushBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.brushBlocks)) || [],
     selectBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.selectBlocks)) || [],
     isModalOpen: (state) => {

@@ -87,7 +87,7 @@
         v-if="toolbarState.isChoosingFg || toolbarState.isChoosingBg"
       />
 
-      <BrushLibrary />
+      <BrushLibrary v-if="brushLibraryState.visible" />
     </template>
     <template v-else>
       <div style="left: 35%; top: 15%; position: absolute; z-index: -2">
@@ -189,6 +189,9 @@ export default {
     },
     debugPanelState() {
       return this.$store.getters.debugPanel;
+    },
+    brushLibraryState() {
+      return this.$store.getters.brushLibraryState;
     },
   },
   methods: {

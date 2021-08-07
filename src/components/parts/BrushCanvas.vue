@@ -14,7 +14,7 @@
 </template>
 
 <script>
-import { mircColours99, blockWidth, blockHeight, cyrb53 } from "../../ascii";
+import { mircColours99, blockWidth, blockHeight, cyrb53, getBlocksWidth, filterNullBlocks  } from "../../ascii";
 
 export default {
   name: "BrushCanvas",
@@ -69,9 +69,6 @@ export default {
     },
     options() {
       return this.$store.getters.options;
-    },
-    canvasKey() {
-      return this.$store.getters.canvasKey + Math.round(Math.random()*1000);
     },
     canvasName() {
       let hash = cyrb53(JSON.stringify(this.getBlocks))
@@ -131,6 +128,12 @@ export default {
     },
   },
   methods: {
+    getBlocksWidth(blocks) {
+      return getBlocksWidth(blocks)
+    },
+    filterNullBlocks(blocks) {
+      return filterNullBlocks(blocks)
+    },
     drawPreview() {
       this.ctx.clearRect(0, 0, 10000, 10000);
       this.ctx.fillStyle = this.mircColours[1];
@@ -146,8 +149,10 @@ export default {
 
       // Get middle block
       if (this.getBlocks) {
+
+        let blocksWidth = this.getBlocksWidth(this.getBlocks)
         for (y = 0; y < this.getBlocks.length; y++) {
-          for (x = 0; x < this.getBlocks[0].length; x++) {
+          for (x = 0; x < blocksWidth; x++) {
             if (this.getBlocks[y] && this.getBlocks[y][x]) {
               const curBlock = this.getBlocks[y][x];
 

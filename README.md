@@ -20,25 +20,22 @@
 * Redo (ctrl y) is a buggy
 * Circle brush (works okay for odd width and height numbers)
 * Select only works from dragging top left to bottom right, not the other way around
-* Brush cannot brush row 0 in mirror mode
 # FOCUSING ON NOW
 
 * Cut / copy then paste with ctrl v
 * drawBrush preview flip / rotate
 * Type letter when choosing char, leave char panel open after
-* color choosing panel, close or cancel
 * close tabs
+* Edit brush
 
-* Brush library
-* edit brush
-
-* SELECT TOOL DEV, JUST FINISH IT
-* OPTIONS MODAL (SORRY SKG LOL)
-
+* SELECT TOOL DEV
+ * Reverse select bug fix needed
+ 
 * Modals
  * Edit current ascii
  * Asciibird options
  * Tool options
+ * OPTIONS MODAL (SORRY SKG LOL)
 
 * Encodings - UTF8 vs NOT that
 

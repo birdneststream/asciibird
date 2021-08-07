@@ -1,15 +1,16 @@
 <template>
   <div>
     <vue-draggable-resizable
+      @dragstop="onDragStop"
       :grid="[currentAscii.blockWidth, currentAscii.blockHeight]"
       :min-width="blockWidth * 25"
-      :max-width="blockWidth * 30"
+      :max-width="blockWidth * 50"
       :min-height="blockHeight * 50"
-      :max-height="blockHeight * 50"
-      :w="blockWidth * 50"
-      :h="blockWidth * 50"
-      :x="blockWidth * 150"
-      :y="blockHeight * 3"
+      :max-height="blockHeight * 100"
+      :w="brushLibraryState.w"
+      :h="brushLibraryState.h"
+      :x="brushLibraryState.x"
+      :y="brushLibraryState.y"
     >
       <t-card class="h-full overflow-y-scroll">
         <t-button
@@ -89,9 +90,21 @@ import LZString from "lz-string";
 
 export default {
   name: "BrushLibrary",
-  mounted() {},
+  created() {
+    this.panel.x = this.brushLibraryState.x;
+    this.panel.y = this.brushLibraryState.y;
+    this.panel.w = this.brushLibraryState.w;
+    this.panel.h = this.brushLibraryState.h;
+  },
   data: () => ({
     tab: 1,
+    panel: {
+      w: 0,
+      h: 0,
+      x: 100,
+      y: 100,
+      visible: true,
+    },
   }),
   components: {
     BrushCanvas,
@@ -137,7 +150,7 @@ export default {
       return this.$store.getters.brushSizeType;
     },
     brushHistory() {
-      return this.$store.getters.brushHistory.slice(0, 25);
+      return this.$store.getters.brushHistory.slice(0, 100);
     },
     brushLibrary() {
       return this.$store.getters.brushLibrary;
@@ -151,6 +164,9 @@ export default {
     brushBlocks() {
       return this.$store.getters.brushBlocks;
     },
+    brushLibraryState() {
+      return this.$store.getters.brushLibraryState;
+    },
   },
   watch: {},
   methods: {
@@ -158,7 +174,6 @@ export default {
       this.tab = tab;
     },
     decompressBlock(item) {
-      console.log(JSON.parse(LZString.decompressFromUTF16(item)));
       return JSON.parse(LZString.decompressFromUTF16(item));
     },
     reuseBlocks(value) {
@@ -169,6 +184,20 @@ export default {
     },
     removeFromLibrary(value) {
       this.$store.commit("removeBrushLibrary", value);
+    },
+    onResize(x, y, w, h) {
+      this.panel.x = x;
+      this.panel.y = y;
+      this.panel.w = w;
+      this.panel.h = h;
+
+      this.$store.commit('changeBrushLibraryState', this.panel);
+    },
+    onDragStop(x, y) {
+      this.panel.x = x;
+      this.panel.y = y;
+
+      this.$store.commit('changeBrushLibraryState', this.panel);
     },
   },
 };
