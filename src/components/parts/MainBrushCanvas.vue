@@ -18,7 +18,7 @@
             />
        </div>
     </t-card>
-   
+
   </div>
 </template>
 
@@ -208,10 +208,10 @@ export default {
       if (this.redraw) {
         this.redraw = false;
 
-        setTimeout(() => {
+        requestAnimationFrame(() => {
           this.redraw = true;
           this.drawPreview();
-        }, this.options.canvasRedrawSpeed);
+        });
       }
     },
     // Basic block editing

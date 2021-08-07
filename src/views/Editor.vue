@@ -401,8 +401,6 @@ export default {
           this.selecting.endX - this.selecting.startX,
           this.selecting.endY - this.selecting.startY
         );
-
-        this.toolCtx.stroke();
       }
     },
     redrawCanvas() {
@@ -456,8 +454,6 @@ export default {
           }
         }
       }
-
-      this.ctx.stroke();
     },
     onCanvasResize(left, top, width, height) {
       const blocks = this.currentAsciiBlocks;
@@ -624,9 +620,7 @@ export default {
 
         case "select":
           this.selecting.canSelect = false;
-          this.clearToolCanvas();
           this.processSelect();
-          this.redrawSelect();
           break;
 
         case "text":
@@ -639,8 +633,6 @@ export default {
     },
     canvasMouseDown() {
       if (this.currentTool.name === "default") return;
-
-      this.toolCtx.clearRect(0, 0, 10000, 10000);
 
       if (
         this.currentAsciiBlocks[this.y] &&
@@ -657,6 +649,7 @@ export default {
             this.selecting.startX = this.canvasX;
             this.selecting.startY = this.canvasY;
             this.selecting.canSelect = true;
+            this.clearToolCanvas();
             break;
 
           case "fill":
@@ -696,6 +689,9 @@ export default {
     canvasMouseMove(e) {
       if (this.currentTool.name === "default") return;
 
+      let lastX = this.x;
+      let lastY = this.y;
+
       if (e.offsetX >= 0) {
         this.x = e.offsetX;
       }
@@ -707,6 +703,9 @@ export default {
       this.x = Math.floor(this.x / this.currentAscii.blockWidth);
       this.y = Math.floor(this.y / this.currentAscii.blockHeight);
 
+      if(this.x === lastX && this.y === lastY) {
+        return;
+      }
       this.$emit("coordsupdate", { x: this.x, y: this.y });
 
       if (
@@ -761,18 +760,16 @@ export default {
     },
     clearToolCanvas() {
       if (this.toolCtx) {
-        this.toolCtx.clearRect(0, 0, 10000, 10000);
-        this.toolCtx.stroke();
+        this.toolCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       }
     },
     delayRedrawCanvas() {
       if (this.redraw) {
         this.redraw = false;
-
-        setTimeout(() => {
+        requestAnimationFrame(() => {
           this.redraw = true;
           this.redrawCanvas();
-        }, this.options.canvasRedrawSpeed);
+        });
       }
     },
     getBlocksWidth(blocks) {
@@ -894,8 +891,6 @@ export default {
           );
         }
       }
-
-      this.toolCtx.stroke();
     },
     drawTextIndicator() {
       this.clearToolCanvas();
@@ -948,8 +943,6 @@ export default {
           BLOCK_HEIGHT
         );
       }
-
-      this.toolCtx.stroke();
     },
     //
     // drawBrush
@@ -1234,8 +1227,6 @@ export default {
           }
         }
       }
-
-      this.toolCtx.stroke();
     },
     eraser() {
       if (this.canTool) {

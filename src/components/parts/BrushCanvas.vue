@@ -95,7 +95,7 @@ export default {
       return {
           w: getBlocksWidth(this.getBlocks) * blockWidth,
           h: this.getBlocks.length * blockHeight
-        } 
+        }
     },
     mircColours() {
       return mircColours99;
@@ -144,7 +144,7 @@ export default {
       return filterNullBlocks(blocks)
     },
     drawPreview() {
-      this.ctx.clearRect(0, 0, 10000, 10000);
+      this.ctx.clearRect(0, 0, this.canvasName.width, this.canvasName.height);
       this.ctx.fillStyle = this.mircColours[1];
 
       const BLOCK_WIDTH = this.currentAscii.blockWidth;
@@ -158,7 +158,6 @@ export default {
 
       // Get middle block
       if (this.getBlocks) {
-
         let blocksWidth = this.getBlocksWidth(this.getBlocks)
         for (y = 0; y < this.getBlocks.length; y++) {
           for (x = 0; x < blocksWidth; x++) {
@@ -191,18 +190,16 @@ export default {
             }
           }
         }
-
-        this.ctx.stroke();
       }
     },
     delayRedrawCanvas() {
       if (this.redraw) {
         this.redraw = false;
 
-        setTimeout(() => {
+        requestAnimationFrame(() => {
           this.redraw = true;
           this.drawPreview();
-        }, this.options.canvasRedrawSpeed);
+        });
       }
     },
   },
