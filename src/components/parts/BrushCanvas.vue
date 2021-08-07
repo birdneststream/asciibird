@@ -144,7 +144,7 @@ export default {
       return filterNullBlocks(blocks)
     },
     drawPreview() {
-      this.ctx.clearRect(0, 0, this.canvasName.width, this.canvasName.height);
+      this.ctx.clearRect(0, 0, this.$refs[this.canvasName].width, this.$refs[this.canvasName].height);
       this.ctx.fillStyle = this.mircColours[1];
 
       const BLOCK_WIDTH = this.currentAscii.blockWidth;
