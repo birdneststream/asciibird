@@ -640,7 +640,7 @@ export default {
     canvasMouseDown() {
       if (this.currentTool.name === "default") return;
 
-      this.toolCtx.clearRect(0, 0, 10000, 10000);
+      this.clearToolCanvas();
 
       if (
         this.currentAsciiBlocks[this.y] &&
@@ -761,8 +761,7 @@ export default {
     },
     clearToolCanvas() {
       if (this.toolCtx) {
-        this.toolCtx.clearRect(0, 0, 10000, 10000);
-        this.toolCtx.stroke();
+        this.toolCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
       }
     },
     delayRedrawCanvas() {
