@@ -154,7 +154,7 @@ export default {
       return filterNullBlocks(blocks);
     },
     drawPreview() {
-      this.ctx.clearRect(0, 0, 10000, 10000);
+      this.ctx.clearRect(0, 0, this.$refs.brushcanvas.width, this.$refs.brushcanvas.height);
       this.ctx.fillStyle = this.mircColours[1];
 
       const BLOCK_WIDTH = this.currentAscii.blockWidth;
@@ -200,8 +200,6 @@ export default {
             }
           }
         }
-
-        this.ctx.stroke();
       }
     },
     delayRedrawCanvas() {
