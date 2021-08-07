@@ -28,7 +28,7 @@ import { mircColours99, blockWidth, blockHeight, cyrb53, getBlocksWidth, filterN
 export default {
   name: "BrushCanvas",
   mounted() {
-    this.ctx = this.$refs[this.canvasName].getContext("2d");
+    this.ctx = this.canvasRef.getContext("2d");
     this.delayRedrawCanvas();
   },
   props: {
@@ -100,6 +100,9 @@ export default {
     mircColours() {
       return mircColours99;
     },
+    canvasRef() {
+      return this.$refs[this.canvasName];
+    }
   },
   watch: {
     getBlocks() {
@@ -144,7 +147,7 @@ export default {
       return filterNullBlocks(blocks)
     },
     drawPreview() {
-      this.ctx.clearRect(0, 0, this.$refs[this.canvasName].width, this.$refs[this.canvasName].height);
+      this.ctx.clearRect(0, 0, this.canvasRef.width, this.canvasRef.height);
       this.ctx.fillStyle = this.mircColours[1];
 
       const BLOCK_WIDTH = this.currentAscii.blockWidth;

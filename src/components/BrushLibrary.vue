@@ -38,7 +38,7 @@
         <div class="flex">
           <div v-if="panel.tab === 0">
             <div v-for="(brush, key) in brushHistory" :key="key">
-              <t-card class="hover:border-blue-900 border-gray-300 bg-gray-200">
+              <t-card class="hover:border-blue-900 border-gray-300 bg-gray-200 mt-2">
                 <BrushCanvas :blocks="decompressBlock(brush.blocks)" />
 
                 <t-button
@@ -64,7 +64,7 @@
           <div v-if="panel.tab === 1">
             <div v-for="(brush, key) in brushLibrary" :key="key">
               <t-card
-                :class="`hover:border-blue-900 border-gray-300 bg-gray-200`"
+                :class="`hover:border-blue-900 border-gray-300 bg-gray-200 mt-2`"
               >
                 <BrushCanvas :blocks="decompressBlock(brush.blocks)" />
 

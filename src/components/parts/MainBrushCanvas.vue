@@ -44,7 +44,7 @@ import {
 export default {
   name: "MainBrushCanvas",
   mounted() {
-    this.ctx = this.$refs.brushcanvas.getContext("2d");
+    this.ctx = this.canvasRef.getContext("2d");
     this.delayRedrawCanvas();
   },
   data: () => ({
@@ -113,6 +113,9 @@ export default {
     mircColours() {
       return mircColours99;
     },
+    canvasRef() {
+      return this.$refs.brushcanvas;
+    }
   },
   watch: {
     brushBlocks() {
@@ -154,7 +157,7 @@ export default {
       return filterNullBlocks(blocks);
     },
     drawPreview() {
-      this.ctx.clearRect(0, 0, this.$refs.brushcanvas.width, this.$refs.brushcanvas.height);
+      this.ctx.clearRect(0, 0, this.canvasRef.width, this.canvasRef.height);
       this.ctx.fillStyle = this.mircColours[1];
 
       const BLOCK_WIDTH = this.currentAscii.blockWidth;
