@@ -689,6 +689,9 @@ export default {
     canvasMouseMove(e) {
       if (this.currentTool.name === "default") return;
 
+      let lastX = this.x;
+      let lastY = this.y;
+
       if (e.offsetX >= 0) {
         this.x = e.offsetX;
       }
@@ -700,6 +703,9 @@ export default {
       this.x = Math.floor(this.x / this.currentAscii.blockWidth);
       this.y = Math.floor(this.y / this.currentAscii.blockHeight);
 
+      if(this.x === lastX && this.y === lastY) {
+        return;
+      }
       this.$emit("coordsupdate", { x: this.x, y: this.y });
 
       if (
