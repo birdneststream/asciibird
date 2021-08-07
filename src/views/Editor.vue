@@ -624,9 +624,7 @@ export default {
 
         case "select":
           this.selecting.canSelect = false;
-          this.clearToolCanvas();
           this.processSelect();
-          this.redrawSelect();
           break;
 
         case "text":
