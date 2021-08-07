@@ -1,16 +1,26 @@
 <template>
   <div>
-    <t-card  >
-    <canvas
-      :ref="canvasName"
-      :id="canvasName"
-      
-      :width="blocksWidthHeight.w"
-      :height="blocksWidthHeight.h"
-    />
+    <t-card class="overflow-x-scroll h-full">
+      <div :style="`height: ${blocksWidthHeight.h}px;width: ${blocksWidthHeight.w}px;`">
+        <canvas
+          :ref="canvasName"
+          :id="canvasName"
+          class="previewcanvas"
+          :width="blocksWidthHeight.w"
+          :height="blocksWidthHeight.h"
+        />
+    </div>
     </t-card>
   </div>
 </template>
+
+<style>
+.previewcanvas {
+  background: rgba(0, 0, 0, 0.1);
+  border: lightgrey 1px solid;
+  z-index: 0;
+}
+</style>
 
 <script>
 import { mircColours99, blockWidth, blockHeight, cyrb53, getBlocksWidth, filterNullBlocks  } from "../../ascii";
@@ -83,7 +93,7 @@ export default {
     },
     blocksWidthHeight() {
       return {
-          w: 20 * blockWidth,
+          w: getBlocksWidth(this.getBlocks) * blockWidth,
           h: this.getBlocks.length * blockHeight
         } 
     },
@@ -155,7 +165,7 @@ export default {
             if (this.getBlocks[y] && this.getBlocks[y][x]) {
               const curBlock = this.getBlocks[y][x];
 
-              if ((!this.isMainCanvas && curBlock.bg) || (curBlock.bg && this.isMainCanvas && this.isTargettingBg)) {
+              if (curBlock.bg !== null) {
                 this.ctx.fillStyle = this.mircColours[curBlock.bg];
 
                 this.ctx.fillRect(
@@ -166,11 +176,11 @@ export default {
                 );
               }
 
-              if ((!this.isMainCanvas && curBlock.fg) || (curBlock.fg && this.isMainCanvas && this.isTargettingFg)) {
+              if (curBlock.fg !== null) {
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
               }
 
-              if ((!this.isMainCanvas && curBlock.char) || (curBlock.char && this.isMainCanvas && this.isTargettingChar)) {
+              if (curBlock.char !== null) {
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
                 this.ctx.fillText(
                   curBlock.char,

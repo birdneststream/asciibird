@@ -1,40 +1,31 @@
 <template>
   <div>
-    <t-card>
-      <canvas
-        ref="brushcanvas"
-        id="brushcanvas"
-        class="brushcanvas"
-        @mousemove="canvasMouseMove"
-        @mouseup="disable"
-        @mousedown.left="addBlock"
-        @mousedown.right="eraseBlock"
-        @contextmenu.prevent
-        :width="blocksWidthHeight.w"
-        :height="blocksWidthHeight.h"
-        @mouseenter="disableToolbarMoving"
-        @mouseleave="enableToolbarMoving"
-      />
+    <t-card class="overflow-x-scroll h-full" >
+        <div :style="`height: ${blocksWidthHeight.h}px;width: ${blocksWidthHeight.w}px;`">
+            <canvas
+                ref="brushcanvas"
+                id="brushcanvas"
+                class="brushcanvas"
+                @mousemove="canvasMouseMove"
+                @mouseup="disable"
+                @mousedown.left="addBlock"
+                @mousedown.right="eraseBlock"
+                @contextmenu.prevent
+                :width="blocksWidthHeight.w"
+                :height="blocksWidthHeight.h"
+                @mouseenter="disableToolbarMoving"
+                @mouseleave="enableToolbarMoving"
+            />
+       </div>
     </t-card>
+   
   </div>
 </template>
 
 
 <style>
-body {
-  background: #eee;
-}
-
-.brushcanvastools {
-  position: absolute;
-  z-index: 100;
-  opacity: 0.5;
-  cursor: crosshair;
-}
-
 .brushcanvas {
-  position: absolute;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.1);
   border: lightgrey 1px solid;
   z-index: 0;
 }
