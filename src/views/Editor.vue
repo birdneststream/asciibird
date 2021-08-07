@@ -760,11 +760,10 @@ export default {
     delayRedrawCanvas() {
       if (this.redraw) {
         this.redraw = false;
-
-        setTimeout(() => {
+        requestAnimationFrame(() => {
           this.redraw = true;
           this.redrawCanvas();
-        }, this.options.canvasRedrawSpeed);
+        });
       }
     },
     getBlocksWidth(blocks) {
