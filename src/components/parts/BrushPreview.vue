@@ -34,43 +34,34 @@
       </label>
 
       <label class="block">
-        <t-radio
-          name="options"
-          value="circle"
-          v-model="brushSizeTypeInput"
-        />
+        <t-radio name="options" value="circle" v-model="brushSizeTypeInput" />
         <span class="text-sm">Circle</span>
       </label>
 
       <label class="block">
-        <t-radio
-          name="options"
-          value="cross"
-          v-model="brushSizeTypeInput"
-        />
+        <t-radio name="options" value="cross" v-model="brushSizeTypeInput" />
         <span class="text-sm">Cross</span>
       </label>
     </div>
 
-    <BrushCanvas />
-
+    <MainBrushCanvas />
   </div>
 </template>
 
 <script>
 import { emptyBlock } from "../../ascii";
-import BrushCanvas from "./BrushCanvas.vue"
+import MainBrushCanvas from "./MainBrushCanvas.vue";
 
 export default {
   name: "BrushPreview",
   components: {
-    BrushCanvas,
+    MainBrushCanvas,
   },
   mounted() {
     this.brushSizeWidthInput = this.brushSizeWidth;
     this.brushSizeHeightInput = this.brushSizeHeight;
     this.brushSizeTypeInput = this.brushSizeType;
-    this.createBlocks()
+    this.createBlocks();
   },
   data: () => ({
     blocks: [],
@@ -98,11 +89,11 @@ export default {
       return this.$store.getters.brushSizeType;
     },
     currentAsciiBlocks() {
-      return this.$store.getters.currentAsciiBlocks
+      return this.$store.getters.currentAsciiBlocks;
     },
     brushBlocks() {
-      return this.$store.getters.brushBlocks
-    }
+      return this.$store.getters.brushBlocks;
+    },
   },
   watch: {
     brushSizeWidth() {
@@ -116,38 +107,37 @@ export default {
     },
     brushSizeHeightInput(val, old) {
       if (val !== old) {
-        this.createBlocks()
-      } 
+        this.createBlocks();
+      }
     },
     brushSizeWidthInput(val, old) {
       if (val !== old) {
-        this.createBlocks()
-      } 
+        this.createBlocks();
+      }
     },
     brushSizeTypeInput(val, old) {
       if (val !== old) {
-        this.createBlocks()
-      } 
+        this.createBlocks();
+      }
     },
     currentChar(val, old) {
       if (val !== old) {
-        
-        this.createBlocks()
-      } 
+        this.createBlocks();
+      }
     },
     currentBg(val, old) {
       if (val !== old) {
-        this.createBlocks()
-      } 
+        this.createBlocks();
+      }
     },
     currentFg(val, old) {
       if (val !== old) {
-        this.createBlocks()
-      } 
+        this.createBlocks();
+      }
     },
     brushBlocks() {
-      this.$store.commit("pushBrushHistory", this.brushBlocks)
-    }
+      this.$store.commit("pushBrushHistory", this.brushBlocks);
+    },
   },
   methods: {
     updateBrushSize() {
@@ -158,7 +148,7 @@ export default {
       });
     },
     createBlocks() {
-      this.updateBrushSize()
+      this.updateBrushSize();
 
       const brushHeight = this.brushSizeHeight;
       const brushWidth = this.brushSizeWidth;
@@ -178,7 +168,7 @@ export default {
       const middleX = Math.floor(brushWidth / 2);
       let yModifier = 0;
 
-      // 
+      //
 
       // Recreate 2d array for preview
       for (y = 0; y < brushHeight; y++) {
@@ -239,13 +229,13 @@ export default {
                   this.blocks[y][x] = { ...emptyBlock };
                 }
               }
-          
+
               break;
           }
         }
       }
 
-      this.$store.commit("brushBlocks", this.blocks)
+      this.$store.commit("brushBlocks", this.blocks);
     },
   },
 };

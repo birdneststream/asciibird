@@ -138,7 +138,7 @@ export default {
     NewAscii,
     EditAscii,
     PasteAscii,
-    BrushLibrary
+    BrushLibrary,
   },
   name: "Dashboard",
   data: () => ({

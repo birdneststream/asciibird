@@ -7,7 +7,6 @@
       
       :width="blocksWidthHeight.w"
       :height="blocksWidthHeight.h"
-      
     />
     </t-card>
   </div>

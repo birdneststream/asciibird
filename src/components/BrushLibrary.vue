@@ -16,63 +16,73 @@
         <t-button
           type="button"
           :class="`block w-full ${
-            tab === 1
+            panel.tab === 1
               ? 'border-gray-900 bg-blue-500'
               : 'border-gray-200 bg-gray-500'
           }`"
-          @click="tab = 1"
+          @click="changeTab(1)"
           >Library</t-button
         >
 
         <t-button
           type="button"
           :class="`block w-full ${
-            tab === 0
+            panel.tab === 0
               ? 'border-gray-900 bg-blue-500'
               : 'border-gray-200 bg-gray-500'
           }`"
-          @click="tab = 0"
+          @click="changeTab(0)"
           >History</t-button
         >
 
         <div class="flex">
-          <div v-if="tab === 0">
+          <div v-if="panel.tab === 0">
             <div v-for="(brush, key) in brushHistory" :key="key">
-              <t-card
-                :class="`hover:border-blue-900 border-gray-300 bg-gray-200`"
-              >
+              <t-card class="hover:border-blue-900 border-gray-300 bg-gray-200">
                 <BrushCanvas :blocks="decompressBlock(brush.blocks)" />
 
                 <t-button
                   type="button"
                   @click="saveToLibrary(decompressBlock(brush.blocks))"
-                  ><font-awesome-icon :icon="['fas', 'save']" size="lg"
+                  ><font-awesome-icon
+                    :icon="['fas', 'save']"
+                    size="lg"
+                    class="p-1 mx-1"
                 /></t-button>
                 <t-button
                   type="button"
                   @click="reuseBlocks(decompressBlock(brush.blocks))"
-                  ><font-awesome-icon :icon="['fas', 'paint-brush']" size="lg"
+                  ><font-awesome-icon
+                    :icon="['fas', 'paint-brush']"
+                    size="lg"
+                    class="p-1 mx-1"
                 /></t-button>
               </t-card>
             </div>
           </div>
 
-          <div v-if="tab === 1">
+          <div v-if="panel.tab === 1">
             <div v-for="(brush, key) in brushLibrary" :key="key">
               <t-card
                 :class="`hover:border-blue-900 border-gray-300 bg-gray-200`"
               >
                 <BrushCanvas :blocks="decompressBlock(brush.blocks)" />
-                
+
                 <t-button
                   type="button"
                   @click="removeFromLibrary(decompressBlock(brush.blocks))"
-                  ><font-awesome-icon :icon="['fas', 'trash']" size="lg"
+                  ><font-awesome-icon
+                    :icon="['fas', 'trash']"
+                    size="lg"
+                    class="p-1 mx-1"
                 /></t-button>
                 <t-button
                   type="button"
                   @click="reuseBlocks(decompressBlock(brush.blocks))"
-                  ><font-awesome-icon :icon="['fas', 'paint-brush']" size="lg"
+                  ><font-awesome-icon
+                    :icon="['fas', 'paint-brush']"
+                    size="lg"
+                    class="p-1 mx-1"
                 /></t-button>
               </t-card>
             </div>
@@ -95,15 +105,16 @@ export default {
     this.panel.y = this.brushLibraryState.y;
     this.panel.w = this.brushLibraryState.w;
     this.panel.h = this.brushLibraryState.h;
+    this.panel.tab = this.brushLibraryState.tab;
   },
   data: () => ({
-    tab: 1,
     panel: {
       w: 0,
       h: 0,
       x: 100,
       y: 100,
       visible: true,
+      tab: 1,
     },
   }),
   components: {
@@ -171,13 +182,15 @@ export default {
   watch: {},
   methods: {
     changeTab(tab) {
-      this.tab = tab;
+      this.panel.tab = tab;
+      this.$store.commit("changeBrushLibraryState", this.panel);
     },
     decompressBlock(item) {
       return JSON.parse(LZString.decompressFromUTF16(item));
     },
     reuseBlocks(value) {
       this.$store.commit("brushBlocks", value);
+      this.$store.commit("changeTool", 4);
     },
     saveToLibrary(value) {
       this.$store.commit("pushBrushLibrary", value);
@@ -190,14 +203,13 @@ export default {
       this.panel.y = y;
       this.panel.w = w;
       this.panel.h = h;
-
-      this.$store.commit('changeBrushLibraryState', this.panel);
+      this.$store.commit("changeBrushLibraryState", this.panel);
     },
     onDragStop(x, y) {
       this.panel.x = x;
       this.panel.y = y;
 
-      this.$store.commit('changeBrushLibraryState', this.panel);
+      this.$store.commit("changeBrushLibraryState", this.panel);
     },
   },
 };

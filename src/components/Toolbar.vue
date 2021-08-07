@@ -12,6 +12,7 @@
       :h="toolbarState.h"
       :x="toolbarState.x"
       :y="toolbarState.y"
+      :draggable="draggable"
     >
       <t-card class="h-full">
         <Colours />
@@ -157,6 +158,9 @@ export default {
     },
     currentChar() {
       return this.$store.getters.currentChar;
+    },
+    draggable() {
+      return this.toolbarState.draggable;
     },
   },
   watch: {},

@@ -56,6 +56,7 @@ export default new Vuex.Store({
       y: blockHeight * 2,
       h: blockHeight * 39,
       w: blockWidth * 25,
+      draggable: true,
     },
     debugPanelState: {
       x: 936,
@@ -75,6 +76,7 @@ export default new Vuex.Store({
       h: blockHeight * 50,
       w: blockWidth * 25,
       visible: true,
+      tab: 0,
     },
   },
   mutations: {
@@ -101,6 +103,9 @@ export default new Vuex.Store({
       state.toolbarState.y = payload.y;
       state.toolbarState.w = payload.w;
       state.toolbarState.h = payload.h;
+    },
+    changeToolBarDraggable(state, payload) {
+      state.toolbarState.draggable = payload;
     },
     changeAsciiWidthHeight(state, payload) {
       state.asciibirdMeta[state.tab].width = payload.width;

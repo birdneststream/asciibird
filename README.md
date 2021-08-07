@@ -19,17 +19,13 @@
 * If you resize an ascii, and then undo and try fill in blocks it will error cuz the blocks don't exist
 * Redo (ctrl y) is a buggy
 * Circle brush (works okay for odd width and height numbers)
-* Select only works from dragging top left to bottom right, not the other way around
 # FOCUSING ON NOW
 
 * Cut / copy then paste with ctrl v
 * drawBrush preview flip / rotate
 * Type letter when choosing char, leave char panel open after
 * close tabs
-* Edit brush
-
-* SELECT TOOL DEV
- * Reverse select bug fix needed
+* Enhance how the select tool looks and and make selected blocks more obvious
  
 * Modals
  * Edit current ascii
@@ -38,10 +34,8 @@
  * OPTIONS MODAL (SORRY SKG LOL)
 
 * Encodings - UTF8 vs NOT that
-
 * Context Menus (right click menu) - we started this
 * Keyboard shortcuts
-
 * LAYERS
 
 # Keyboard Shortcuts
