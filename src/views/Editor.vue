@@ -653,6 +653,7 @@ export default {
             this.selecting.startX = this.canvasX;
             this.selecting.startY = this.canvasY;
             this.selecting.canSelect = true;
+            this.clearToolCanvas();
             break;
 
           case "fill":
