@@ -638,8 +638,6 @@ export default {
     canvasMouseDown() {
       if (this.currentTool.name === "default") return;
 
-      this.clearToolCanvas();
-
       if (
         this.currentAsciiBlocks[this.y] &&
         this.currentAsciiBlocks[this.y][this.x] &&
