@@ -403,6 +403,9 @@ export const parseMircAscii = (content, title) => {
     } // End Switch
   } // End loop charPos
 
+  // Ensure we have no null blocks
+  finalAscii.blocks = fillNullBlocks(finalAscii.blocks)
+
   // Store the ASCII
   finalAscii.blocks = LZString.compressToUTF16(
     JSON.stringify(finalAscii.blocks),
@@ -411,6 +414,7 @@ export const parseMircAscii = (content, title) => {
   // We need to also store in the first undo history the original state
   finalAscii.history.push(finalAscii.blocks);
 
+  // Save ASCII to storage
   store.commit('newAsciibirdMeta', finalAscii);
 
   // Update the browsers title to the ASCII filename
@@ -597,6 +601,8 @@ export const cyrb53 = function (str, seed = 1337) {
   return 4294967296 * (2097151 & h2) + (h1 >>> 0);
 };
 
+// Mostly plain text asciis wont have all their blocks
+// so this will fix that
 export const fillNullBlocks = function (blocks) {
   for (let y = 0; y < blocks.length; y++) {
     for (let x = 0; x < blocks[0].length; x++) {
@@ -611,6 +617,8 @@ export const fillNullBlocks = function (blocks) {
   return blocks
 }
 
+// Sometimes if we copy blocks the initial Y values will be null
+// and cause an error when trying to calculate width
 export const getBlocksWidth = function (blocks) {
   for (let y = 0; y < blocks.length; y++) {
 
@@ -624,6 +632,8 @@ export const getBlocksWidth = function (blocks) {
   }
 }
 
+// This removes the null blocks from our copy and paste
+// to make sure it's centered better
 export const filterNullBlocks = function (blocks) {
   let newBlocks = [];
   let y;
