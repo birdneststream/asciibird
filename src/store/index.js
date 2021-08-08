@@ -228,6 +228,13 @@ export default new Vuex.Store({
         return item.hash !== hashValue
       });
     },
+    removeBrushHistory(state, payload) {
+      let hashValue = cyrb53(JSON.stringify(payload))
+
+      state.brushHistory = state.brushHistory.filter(function (item) {
+        return item.hash !== hashValue
+      });
+    },
     openModal(state, type) {
       switch (type) {
         case 'new-ascii':
@@ -256,6 +263,14 @@ export default new Vuex.Store({
         case 'paste-ascii':
           state.modalState.pasteAscii = false;
           break;
+      }
+    },
+    closeTab(state, tab) {
+      state.asciibirdMeta.splice(tab, 1);
+
+      // If we closed the tab we are viewing jump to the end tab
+      if (tab === state.tab) {
+        state.tab = state.asciibirdMeta.length - 1
       }
     },
   },

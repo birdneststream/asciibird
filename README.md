@@ -24,8 +24,6 @@
 * Cut / copy then paste with ctrl v
 * drawBrush preview flip / rotate
 * Type letter when choosing char, leave char panel open after
-* close tabs
-* Enhance how the select tool looks and and make selected blocks more obvious
  
 * Modals
  * Edit current ascii
@@ -48,11 +46,14 @@
 * Ctrl + M - New ASCII (lol @ cannot override ctrl n ?!)
 * Ctrl + E - Edit ASCII
 * Ctrl + P - Paste ASCII from Clipboard
+* Ctrl + G - Toggle grid mode
 
 * Ctrl + Shift + C - Save to clipboard
 * Ctrl + Shift + F - Save to txt file
+
 ## Brush and Toolbar
 
+* Ctrl + B - Show / hide brushes library
 * Ctrl + ] - Increase brush size
 * Ctrl + [ - Decrease brush size
 

@@ -57,6 +57,15 @@
                     size="lg"
                     class="p-1 mx-1"
                 /></t-button>
+
+                <t-button
+                  type="button"
+                  @click="removeFromHistory(decompressBlock(brush.blocks))"
+                  ><font-awesome-icon
+                    :icon="['fas', 'trash']"
+                    size="lg"
+                    class="p-1 mx-1 right-auto"
+                /></t-button>
               </t-card>
             </div>
           </div>
@@ -164,6 +173,9 @@ export default {
     },
     removeFromLibrary(value) {
       this.$store.commit("removeBrushLibrary", value);
+    },
+    removeFromHistory(value) {
+      this.$store.commit("removeBrushHistory", value);
     },
     onResize(x, y, w, h) {
       this.panel.x = x;

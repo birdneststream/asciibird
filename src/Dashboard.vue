@@ -64,15 +64,21 @@
     />
 
     <template v-if="asciibirdMeta.length">
-      <t-button
-        v-for="(value, key) in asciibirdMeta"
-        :key="key"
-        class="ml-1"
-        @click="changeTab(key, value)"
-        :disabled="false"
-      >
-        {{ value.title }}
-      </t-button>
+      <span v-for="(value, key) in asciibirdMeta" :key="key" class="mr-2">
+        
+          <t-button class="p-1" @click="changeTab(key, value)">
+            {{ value.title }}
+
+              <t-button
+                class="text-sm pl-1 p-1 h-8 rounded-xl text-white border border-transparent shadow-sm hover:bg-blue-500 bg-gray-600"
+                @click="closeTab(key)"
+              >
+                X
+              </t-button>
+          </t-button>
+
+        
+      </span>
 
       <Toolbar :canvas-x="canvasX" :canvas-y="canvasY" />
       <DebugPanel
@@ -90,11 +96,22 @@
       <BrushLibrary v-if="brushLibraryState.visible" />
     </template>
     <template v-else>
-      <div style="left: 35%; top: 15%; position: absolute; z-index: -2">
-        <h1 style="font-size: 72px; text-align: center">ASCIIBIRD</h1>
-        <h1 style="font-size: 13px; text-align: center">
-          Right click to start
-        </h1>
+      <div
+        class="
+          absolute
+          top-1/2
+          left-1/2
+          transform
+          -translate-x-1/2 -translate-y-1/2
+          text-center
+        "
+        @mouseup.right="openContextMenu"
+        @contextmenu.prevent
+      >
+        <h1 class="text-4xl">ASCIIBIRD</h1>
+        <h3>Right click to start</h3>
+
+        <BrushCanvas :blocks="splashAscii" />
       </div>
     </template>
   </div>
@@ -115,12 +132,15 @@ import NewAscii from "./components/modals/NewAscii.vue";
 import EditAscii from "./components/modals/EditAscii.vue";
 import PasteAscii from "./components/modals/PasteAscii.vue";
 
+import BrushCanvas from "./components/parts/BrushCanvas.vue";
+
 import {
   parseMircAscii,
   toolbarIcons,
   exportMirc,
   downloadFile,
   checkForGetRequest,
+  splashAscii,
 } from "./ascii";
 
 export default {
@@ -139,6 +159,7 @@ export default {
     EditAscii,
     PasteAscii,
     BrushLibrary,
+    BrushCanvas,
   },
   name: "Dashboard",
   data: () => ({
@@ -151,6 +172,9 @@ export default {
     showContextMenu: false,
   }),
   computed: {
+    splashAscii() {
+      return splashAscii;
+    },
     currentTool() {
       return toolbarIcons[this.$store.getters.currentTool] ?? null;
     },
@@ -192,6 +216,9 @@ export default {
     },
     brushLibraryState() {
       return this.$store.getters.brushLibraryState;
+    },
+    currentAscii() {
+      return this.$store.getters.currentAscii;
     },
   },
   methods: {
@@ -289,6 +316,19 @@ export default {
       // Update the tab index in vuex store
       this.currentTab = key;
       this.$store.commit("changeTab", key);
+    },
+    closeTab(key) {
+      this.$dialog
+        .confirm({
+          title: `Close ${this.currentAscii.name}?`,
+          text: "This action cannot be undone and the ASCII will be gone.",
+          icon: "info",
+        })
+        .then((result) => {
+          if (result.isOk) {
+            this.$store.commit("closeTab", key);
+          }
+        });
     },
     clearCache() {
       localStorage.clear();

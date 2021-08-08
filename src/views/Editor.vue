@@ -465,6 +465,7 @@ export default {
                 this.ctx.fillRect(canvasX, canvasY, BLOCK_WIDTH, BLOCK_HEIGHT);
 
                 if (this.gridView) {
+                  
                   this.ctx.setLineDash([1]);
                   this.ctx.strokeStyle = "rgba(0, 0, 0, 0.2)"
                   this.ctx.strokeRect(
