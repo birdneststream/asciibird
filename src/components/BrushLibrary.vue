@@ -130,36 +130,6 @@ export default {
     currentAscii() {
       return this.$store.getters.currentAscii;
     },
-    toolbarState() {
-      return this.$store.getters.toolbarState;
-    },
-    isTargettingBg() {
-      return this.$store.getters.isTargettingBg;
-    },
-    isTargettingFg() {
-      return this.$store.getters.isTargettingFg;
-    },
-    isTargettingChar() {
-      return this.$store.getters.isTargettingChar;
-    },
-    currentFg() {
-      return this.$store.getters.currentFg;
-    },
-    currentBg() {
-      return this.$store.getters.currentBg;
-    },
-    currentChar() {
-      return this.$store.getters.currentChar;
-    },
-    brushSizeHeight() {
-      return this.$store.getters.brushSizeHeight;
-    },
-    brushSizeWidth() {
-      return this.$store.getters.brushSizeWidth;
-    },
-    brushSizeType() {
-      return this.$store.getters.brushSizeType;
-    },
     brushHistory() {
       return this.$store.getters.brushHistory.slice(0, 100);
     },
@@ -168,9 +138,6 @@ export default {
     },
     mircColours() {
       return mircColours99;
-    },
-    options() {
-      return this.$store.getters.options;
     },
     brushBlocks() {
       return this.$store.getters.brushBlocks;

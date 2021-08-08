@@ -50,7 +50,7 @@ body {
 .canvastools {
   position: absolute;
   z-index: 100;
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: crosshair;
 }
 
@@ -82,9 +82,9 @@ export default {
       this.toolCtx = this.$refs.canvastools.getContext("2d");
 
       this.canvas.width =
-        this.currentAscii.width * this.currentAscii.blockWidth;
+        this.currentAscii.width * blockWidth;
       this.canvas.height =
-        this.currentAscii.height * this.currentAscii.blockHeight;
+        this.currentAscii.height * blockHeight;
 
       this.delayRedrawCanvas();
       this.$store.commit("changeTool", 0);
@@ -140,6 +140,11 @@ export default {
         // Show / hide debug panel
         if (e.key === "d" && ctrlKey) {
           this.$store.commit("toggleDebugPanel", !this.debugPanelState.visible);
+        }
+
+        // Show / hide grid view
+        if (e.key === "g" && ctrlKey) {
+          this.$store.commit("toggleGridView", !this.gridView);
         }
 
         // Show / hide brush library
@@ -214,9 +219,16 @@ export default {
             brushSizeType: this.brushSizeType,
           });
         }
+
+        this.canKey = false
       };
 
+      // this.keyListenerUp = function (e) {
+      //     this.canKey = true
+      // };
+
       document.addEventListener("keydown", this.keyListener.bind(this));
+      // document.addEventListener("keyup", this.keyListenerUp.bind(this));
     }
   },
   data: () => ({
@@ -302,10 +314,10 @@ export default {
       return this.$store.getters.brushBlocks;
     },
     canvasX() {
-      return this.x * this.currentAscii.blockWidth;
+      return this.x * blockWidth;
     },
     canvasY() {
-      return this.y * this.currentAscii.blockHeight;
+      return this.y * blockHeight;
     },
     toolbarState() {
       return this.$store.getters.toolbarState;
@@ -334,6 +346,9 @@ export default {
     brushLibraryState() {
       return this.$store.getters.brushLibraryState;
     },
+    gridView() {
+      return this.$store.getters.gridView
+    }
   },
   watch: {
     currentAscii(val, old) {
@@ -341,14 +356,14 @@ export default {
         this.onCanvasResize(
           100,
           100,
-          this.currentAscii.width * this.currentAscii.blockWidth,
-          this.currentAscii.height * this.currentAscii.blockHeight
+          this.currentAscii.width * blockWidth,
+          this.currentAscii.height * blockHeight
         );
 
         this.canvas.width =
-          this.currentAscii.width * this.currentAscii.blockWidth;
+          this.currentAscii.width * blockWidth;
         this.canvas.height =
-          this.currentAscii.height * this.currentAscii.blockHeight;
+          this.currentAscii.height * blockHeight;
 
         this.delayRedrawCanvas();
 
@@ -380,6 +395,11 @@ export default {
         this.canTool = false;
       }
     },
+    gridView(val,old) {
+      if (val !== old) {
+        this.delayRedrawCanvas()
+      }
+    }
   },
   methods: {
     undo() {
@@ -401,14 +421,22 @@ export default {
           this.selecting.endX - this.selecting.startX,
           this.selecting.endY - this.selecting.startY
         );
+
+        this.toolCtx.setLineDash([6]);
+        this.toolCtx.strokeRect(
+          this.selecting.startX,
+          this.selecting.startY,
+          this.selecting.endX - this.selecting.startX,
+          this.selecting.endY - this.selecting.startY
+        );
       }
     },
     redrawCanvas() {
-      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
       if (this.currentAsciiBlocks.length) {
-        const BLOCK_WIDTH = this.currentAscii.blockWidth;
-        const BLOCK_HEIGHT = this.currentAscii.blockHeight;
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+        const BLOCK_WIDTH = blockWidth;
+        const BLOCK_HEIGHT = blockHeight;
 
         // Position of the meta array
         let x = 0;
@@ -435,6 +463,14 @@ export default {
               if (curBlock.bg !== null) {
                 this.ctx.fillStyle = this.mircColours[curBlock.bg];
                 this.ctx.fillRect(canvasX, canvasY, BLOCK_WIDTH, BLOCK_HEIGHT);
+
+                if (this.gridView) {
+                  this.ctx.setLineDash([1]);
+                  this.ctx.strokeStyle = "rgba(0, 0, 0, 0.2)"
+                  this.ctx.strokeRect(
+                    canvasX, canvasY, BLOCK_WIDTH, BLOCK_HEIGHT
+                  );
+                }
               }
 
               if (curBlock.char) {
@@ -459,9 +495,9 @@ export default {
       const blocks = this.currentAsciiBlocks;
 
       const canvasBlockHeight = Math.floor(
-        height / this.currentAscii.blockHeight
+        height / blockHeight
       );
-      const canvasBlockWidth = Math.floor(width / this.currentAscii.blockWidth);
+      const canvasBlockWidth = Math.floor(width / blockWidth);
 
       // Previously we had an if statement to check if we needed new blocks
       // removed it so we can get all blocks always
@@ -613,9 +649,7 @@ export default {
           break;
 
         case "fill":
-          // this.canTool = false;
-
-          // this.$store.commit('updateAsciiBlocks', this.currentAsciiBlocks);
+          this.canTool = false;
           break;
 
         case "select":
@@ -700,10 +734,10 @@ export default {
         this.y = e.offsetY;
       }
 
-      this.x = Math.floor(this.x / this.currentAscii.blockWidth);
-      this.y = Math.floor(this.y / this.currentAscii.blockHeight);
+      this.x = Math.floor(this.x / blockWidth);
+      this.y = Math.floor(this.y / blockHeight);
 
-      if(this.x === lastX && this.y === lastY) {
+      if (this.x === lastX && this.y === lastY) {
         return;
       }
       this.$emit("coordsupdate", { x: this.x, y: this.y });
@@ -810,9 +844,9 @@ export default {
       for (y = 0; y < this.currentAscii.height; y++) {
         if (
           y >
-            Math.floor(this.selecting.startY / this.currentAscii.blockHeight) -
+            Math.floor(this.selecting.startY / blockHeight) -
               1 &&
-          y < Math.floor(this.selecting.endY / this.currentAscii.blockHeight)
+          y < Math.floor(this.selecting.endY / blockHeight)
         ) {
           if (!this.selectedBlocks[y]) {
             this.selectedBlocks[y] = [];
@@ -822,11 +856,11 @@ export default {
             if (
               x >
                 Math.ceil(
-                  this.selecting.startX / this.currentAscii.blockWidth
+                  this.selecting.startX / blockWidth
                 ) -
                   1 &&
               x <=
-                Math.ceil(this.selecting.endX / this.currentAscii.blockWidth) -
+                Math.ceil(this.selecting.endX / blockWidth) -
                   1
             ) {
               if (this.currentAsciiBlocks[y] && this.currentAsciiBlocks[y][x]) {
@@ -853,8 +887,8 @@ export default {
       }
 
       this.toolCtx.fillStyle = this.mircColours[indicatorColour];
-      const BLOCK_WIDTH = this.currentAscii.blockWidth;
-      const BLOCK_HEIGHT = this.currentAscii.blockHeight;
+      const BLOCK_WIDTH = blockWidth;
+      const BLOCK_HEIGHT = blockHeight;
 
       this.toolCtx.fillRect(
         this.x * BLOCK_WIDTH,
@@ -907,8 +941,8 @@ export default {
       }
 
       this.toolCtx.fillStyle = this.mircColours[indicatorColour];
-      const BLOCK_WIDTH = this.currentAscii.blockWidth;
-      const BLOCK_HEIGHT = this.currentAscii.blockHeight;
+      const BLOCK_WIDTH = blockWidth;
+      const BLOCK_HEIGHT = blockHeight;
 
       this.toolCtx.fillRect(
         this.textEditing.startX * BLOCK_WIDTH,
@@ -951,8 +985,8 @@ export default {
     //  - also works with the copy / paste
     drawBrush(plain = false) {
       this.clearToolCanvas();
-      const BLOCK_WIDTH = this.currentAscii.blockWidth;
-      const BLOCK_HEIGHT = this.currentAscii.blockHeight;
+      const BLOCK_WIDTH = blockWidth;
+      const BLOCK_HEIGHT = blockHeight;
 
       let targetBlock = this.currentAsciiBlocks[this.y][this.x];
       let brushDiffX = 0;
@@ -1005,6 +1039,14 @@ export default {
                     ? this.mircColours[brushBlock.bg]
                     : "rgba(255,255,255,0.4)";
 
+                this.toolCtx.setLineDash([1, 2]);
+                this.toolCtx.strokeRect(
+                  brushX,
+                  brushY,
+                  BLOCK_WIDTH,
+                  BLOCK_HEIGHT
+                );
+
                 this.toolCtx.fillRect(
                   brushX,
                   brushY,
@@ -1019,6 +1061,14 @@ export default {
                     BLOCK_WIDTH,
                     BLOCK_HEIGHT
                   );
+
+                  this.toolCtx.setLineDash([1, 2]);
+                  this.toolCtx.strokeRect(
+                    (asciiWidth - arrayX) * BLOCK_WIDTH,
+                    brushY,
+                    BLOCK_WIDTH,
+                    BLOCK_HEIGHT
+                  );
                 }
 
                 if (this.mirrorY) {
@@ -1028,10 +1078,26 @@ export default {
                     BLOCK_WIDTH,
                     BLOCK_HEIGHT
                   );
+
+                  this.toolCtx.setLineDash([1, 2]);
+                  this.toolCtx.strokeRect(
+                    brushX,
+                    (asciiHeight - arrayY) * BLOCK_HEIGHT,
+                    BLOCK_WIDTH,
+                    BLOCK_HEIGHT
+                  );
                 }
 
                 if (this.mirrorY && this.mirrorX) {
                   this.toolCtx.fillRect(
+                    (asciiWidth - arrayX) * BLOCK_WIDTH,
+                    (asciiHeight - arrayY) * BLOCK_HEIGHT,
+                    BLOCK_WIDTH,
+                    BLOCK_HEIGHT
+                  );
+
+                  this.toolCtx.setLineDash([1, 2]);
+                  this.toolCtx.strokeRect(
                     (asciiWidth - arrayX) * BLOCK_WIDTH,
                     (asciiHeight - arrayY) * BLOCK_HEIGHT,
                     BLOCK_WIDTH,
@@ -1230,8 +1296,8 @@ export default {
     },
     eraser() {
       if (this.canTool) {
-        const BLOCK_WIDTH = this.currentAscii.blockWidth;
-        const BLOCK_HEIGHT = this.currentAscii.blockHeight;
+        const BLOCK_WIDTH = blockWidth;
+        const BLOCK_HEIGHT = blockHeight;
 
         let targetBlock = this.currentAsciiBlocks[this.y][this.x];
 

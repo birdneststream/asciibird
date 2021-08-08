@@ -30,6 +30,7 @@ export default new Vuex.Store({
     },
     // Current tab user is viewing
     tab: 0,
+    gridView: false,
     // asciibirdMeta holds all of the ASCII information for all the tabs
     asciibirdMeta: [],
     toolbarState: {
@@ -197,6 +198,9 @@ export default new Vuex.Store({
     selectBlocks(state, payload) {
       state.selectBlocks = LZString.compressToUTF16(JSON.stringify(payload));
     },
+    toggleGridView(state, payload) {
+      state.gridView = payload;
+    },
     pushBrushHistory(state, payload) {
       // Check and remove duplicate brushes based on hash value
       let hashValue = cyrb53(JSON.stringify(payload))
@@ -280,6 +284,7 @@ export default new Vuex.Store({
     blockSizeMultiplier: (state) => state.blockSizeMultiplier,
     brushHistory: (state) => state.brushHistory,
     brushLibrary: (state) => state.brushLibrary,
+    gridView: (state) => state.gridView,
     brushLibraryState: (state) => state.brushLibraryState,
     brushBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.brushBlocks)) || [],
     selectBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.selectBlocks)) || [],
