@@ -142,43 +142,36 @@ export const toolbarIcons = [{
     name: 'default',
     icon: 'mouse-pointer',
     fa: 'fas',
-    svgPath: 'assets/mouse-pointer-solid.svg',
   },
   {
     name: 'select',
     icon: 'square',
     fa: 'far',
-    svgPath: 'assets/square-regular.svg',
   },
   {
     name: 'text',
     icon: 'font',
     fa: 'fas',
-    svgPath: 'assets/font-solid.svg',
   },
   {
     name: 'fill',
     icon: 'fill-drip',
     fa: 'fas',
-    svgPath: 'assets/fill-drip-solid.svg',
   },
   {
     name: 'brush',
     icon: 'paint-brush',
     fa: 'fas',
-    svgPath: 'assets/paint-brush-solid.svg',
   },
   {
     name: 'dropper',
     icon: 'eye-dropper',
     fa: 'fas',
-    svgPath: 'assets/eye-dropper-solid.svg',
   },
   {
     name: 'eraser',
     icon: 'eraser',
     fa: 'fas',
-    svgPath: 'assets/eraser-solid.svg',
   },
 ];
 

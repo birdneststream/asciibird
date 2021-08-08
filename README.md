@@ -22,7 +22,6 @@
 # FOCUSING ON NOW
 
 * Cut / copy then paste with ctrl v
-* drawBrush preview flip / rotate
 * Type letter when choosing char, leave char panel open after
  
 * Modals

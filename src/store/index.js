@@ -5,7 +5,8 @@ import LZString from 'lz-string';
 import {
   blockWidth,
   blockHeight,
-  cyrb53
+  cyrb53,
+  getBlocksWidth
 } from "../ascii";
 
 Vue.use(Vuex);
@@ -201,6 +202,44 @@ export default new Vuex.Store({
     toggleGridView(state, payload) {
       state.gridView = payload;
     },
+    //
+    // Brush stuff
+    //
+    flipRotateBlocks(state, payload) {
+      let tempBlocks = JSON.parse(LZString.decompressFromUTF16(state.brushBlocks))
+      let parsedBlocks = [];
+      let x = 0;
+      let y = 0;
+
+      switch(payload.type) {
+        case 'flip':
+          tempBlocks = tempBlocks.reverse()
+          for(y = 0; y < tempBlocks.length; y++) {
+            parsedBlocks[y] = tempBlocks[y];
+
+            for (x = 0; x < getBlocksWidth(tempBlocks); x++) {
+              parsedBlocks[y][x] = tempBlocks[y][x];
+            }
+          }
+
+        break;
+
+        case 'rotate':
+          for (y = 0; y < tempBlocks.length; y++) {
+            parsedBlocks[y] = tempBlocks[y].reverse();
+
+            for (x = 0; x < getBlocksWidth(tempBlocks); x++) {
+              parsedBlocks[y][x] = tempBlocks[y][x];
+            }
+          }
+        break;
+
+      }
+
+      state.brushBlocks = LZString.compressToUTF16(JSON.stringify(parsedBlocks));
+    },
+
+    // Brush Library
     pushBrushHistory(state, payload) {
       // Check and remove duplicate brushes based on hash value
       let hashValue = cyrb53(JSON.stringify(payload))
@@ -235,6 +274,8 @@ export default new Vuex.Store({
         return item.hash !== hashValue
       });
     },
+
+    // Modals / Tabs
     openModal(state, type) {
       switch (type) {
         case 'new-ascii':

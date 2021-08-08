@@ -320,7 +320,7 @@ export default {
     closeTab(key) {
       this.$dialog
         .confirm({
-          title: `Close ${this.currentAscii.name}?`,
+          title: `Close ${this.currentAscii.title}?`,
           text: "This action cannot be undone and the ASCII will be gone.",
           icon: "info",
         })

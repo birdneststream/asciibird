@@ -81,10 +81,8 @@ export default {
       this.ctx = this.$refs.canvas.getContext("2d");
       this.toolCtx = this.$refs.canvastools.getContext("2d");
 
-      this.canvas.width =
-        this.currentAscii.width * blockWidth;
-      this.canvas.height =
-        this.currentAscii.height * blockHeight;
+      this.canvas.width = this.currentAscii.width * blockWidth;
+      this.canvas.height = this.currentAscii.height * blockHeight;
 
       this.delayRedrawCanvas();
       this.$store.commit("changeTool", 0);
@@ -98,13 +96,13 @@ export default {
 
         e.preventDefault();
 
+        const ctrlKey = e.ctrlKey || e.metaKey;
+        const shiftKey = e.shiftKey;
+
         if (this.isTextEditing) {
           thisIs.canvasKeyDown(e.key);
           return;
         }
-
-        const ctrlKey = e.ctrlKey || e.metaKey;
-        const shiftKey = e.shiftKey;
 
         // Ctrl Z here
         // skg - thanks for mac key suggestion, bro
@@ -220,7 +218,22 @@ export default {
           });
         }
 
-        this.canKey = false
+        // Hopefully we can still pick up the previous inputs
+        // while in brush mode
+        if (this.isBrushing) {
+          if (e.key === "e") {
+            this.$store.commit("flipRotateBlocks", {
+              type: "flip",
+            });
+          }
+
+          if (e.key === "q") {
+            this.$store.commit("flipRotateBlocks", {
+              type: "rotate",
+            });
+          }
+          return;
+        }
       };
 
       // this.keyListenerUp = function (e) {
@@ -302,6 +315,9 @@ export default {
     isSelecting() {
       return this.currentTool.name === "select";
     },
+    isBrushing() {
+      return this.currentTool.name === "brush";
+    },
     isSelected() {
       return (
         this.selecting.startX &&
@@ -347,8 +363,8 @@ export default {
       return this.$store.getters.brushLibraryState;
     },
     gridView() {
-      return this.$store.getters.gridView
-    }
+      return this.$store.getters.gridView;
+    },
   },
   watch: {
     currentAscii(val, old) {
@@ -360,10 +376,8 @@ export default {
           this.currentAscii.height * blockHeight
         );
 
-        this.canvas.width =
-          this.currentAscii.width * blockWidth;
-        this.canvas.height =
-          this.currentAscii.height * blockHeight;
+        this.canvas.width = this.currentAscii.width * blockWidth;
+        this.canvas.height = this.currentAscii.height * blockHeight;
 
         this.delayRedrawCanvas();
 
@@ -395,11 +409,17 @@ export default {
         this.canTool = false;
       }
     },
-    gridView(val,old) {
+    gridView(val, old) {
       if (val !== old) {
-        this.delayRedrawCanvas()
+        this.delayRedrawCanvas();
       }
-    }
+    },
+    brushBlocks() {
+      this.clearToolCanvas();
+      if (this.isMouseOnCanvas) {
+        this.drawBrush();
+      }
+    },
   },
   methods: {
     undo() {
@@ -465,11 +485,13 @@ export default {
                 this.ctx.fillRect(canvasX, canvasY, BLOCK_WIDTH, BLOCK_HEIGHT);
 
                 if (this.gridView) {
-                  
                   this.ctx.setLineDash([1]);
-                  this.ctx.strokeStyle = "rgba(0, 0, 0, 0.2)"
+                  this.ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
                   this.ctx.strokeRect(
-                    canvasX, canvasY, BLOCK_WIDTH, BLOCK_HEIGHT
+                    canvasX,
+                    canvasY,
+                    BLOCK_WIDTH,
+                    BLOCK_HEIGHT
                   );
                 }
               }
@@ -495,9 +517,7 @@ export default {
     onCanvasResize(left, top, width, height) {
       const blocks = this.currentAsciiBlocks;
 
-      const canvasBlockHeight = Math.floor(
-        height / blockHeight
-      );
+      const canvasBlockHeight = Math.floor(height / blockHeight);
       const canvasBlockWidth = Math.floor(width / blockWidth);
 
       // Previously we had an if statement to check if we needed new blocks
@@ -844,9 +864,7 @@ export default {
 
       for (y = 0; y < this.currentAscii.height; y++) {
         if (
-          y >
-            Math.floor(this.selecting.startY / blockHeight) -
-              1 &&
+          y > Math.floor(this.selecting.startY / blockHeight) - 1 &&
           y < Math.floor(this.selecting.endY / blockHeight)
         ) {
           if (!this.selectedBlocks[y]) {
@@ -855,14 +873,8 @@ export default {
 
           for (x = 0; x < this.currentAscii.width; x++) {
             if (
-              x >
-                Math.ceil(
-                  this.selecting.startX / blockWidth
-                ) -
-                  1 &&
-              x <=
-                Math.ceil(this.selecting.endX / blockWidth) -
-                  1
+              x > Math.ceil(this.selecting.startX / blockWidth) - 1 &&
+              x <= Math.ceil(this.selecting.endX / blockWidth) - 1
             ) {
               if (this.currentAsciiBlocks[y] && this.currentAsciiBlocks[y][x]) {
                 curBlock = { ...this.currentAsciiBlocks[y][x] };
