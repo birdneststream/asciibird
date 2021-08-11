@@ -49,6 +49,7 @@ body {
 
 .canvastools {
   position: absolute;
+  font-family: "Hack";
   z-index: 100;
   opacity: 0.6;
   cursor: crosshair;
@@ -56,9 +57,15 @@ body {
 
 .canvas {
   position: absolute;
+  font-family: "Hack";
   background: rgba(0, 0, 0, 0.8);
   border: lightgrey 1px solid;
   z-index: 0;
+}
+
+.fatoolbar {
+  font-family: "Font Awesome 5 Free";
+  font-weight: 600;
 }
 </style>
 
@@ -85,6 +92,7 @@ export default {
       this.canvas.height = this.currentAscii.height * blockHeight;
 
       this.delayRedrawCanvas();
+
       this.$store.commit("changeTool", 0);
 
       const thisIs = this;
@@ -122,6 +130,12 @@ export default {
               "selectBlocks",
               this.filterNullBlocks(this.selectedBlocks)
             );
+
+            this.$toasted.show("Copied blocks!", {
+              type: "success",
+              icon: "fa-check-circle",
+            });
+
             this.selectedBlocks = [];
           }
         }
@@ -174,10 +188,14 @@ export default {
           let ascii = exportMirc();
           this.$copyText(ascii.output.join("")).then(
             (e) => {
-              alert("Copied");
+              this.$toasted.show("Copied mIRC to clipboard!", {
+                type: "success",
+              });
             },
             (e) => {
-              alert("Can not copy");
+              this.$toasted.show("Error when copying mIRC to clipboard!", {
+                type: "error",
+              });
             }
           );
         }
@@ -315,6 +333,9 @@ export default {
     isSelecting() {
       return this.currentTool.name === "select";
     },
+    isDefault() {
+      return this.currentTool.name === "default";
+    },
     isBrushing() {
       return this.currentTool.name === "brush";
     },
@@ -364,6 +385,12 @@ export default {
     },
     gridView() {
       return this.$store.getters.gridView;
+    },
+    asciiBlockAtXy() {
+      return this.currentAsciiBlocks[this.y] &&
+        this.currentAsciiBlocks[this.y][this.x]
+        ? this.currentAsciiBlocks[this.y][this.x]
+        : false;
     },
   },
   watch: {
@@ -416,7 +443,9 @@ export default {
     },
     brushBlocks() {
       this.clearToolCanvas();
-      if (this.isMouseOnCanvas) {
+
+      // This was supposed to update the brush preview real time
+      if (this.isMouseOnCanvas && this.isBrushing) {
         this.drawBrush();
       }
     },
@@ -478,6 +507,8 @@ export default {
               curBlock = { ...this.currentAsciiBlocks[y][x] };
 
               canvasX = BLOCK_WIDTH * x;
+
+              this.ctx.font = "13px Hack";
 
               // Background block
               if (curBlock.bg !== null) {
@@ -653,7 +684,7 @@ export default {
     },
     // Mouse Up, Down and Move
     canvasMouseUp() {
-      if (this.currentTool.name === "default") return;
+      if (this.isDefault) return;
 
       switch (this.currentTool.name) {
         case "brush":
@@ -669,6 +700,7 @@ export default {
           this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
           break;
 
+        case "fill-eraser":
         case "fill":
           this.canTool = false;
           break;
@@ -687,19 +719,12 @@ export default {
       this.delayRedrawCanvas();
     },
     canvasMouseDown() {
-      if (this.currentTool.name === "default") return;
+      if (this.isDefault) return;
 
-      if (
-        this.currentAsciiBlocks[this.y] &&
-        this.currentAsciiBlocks[this.y][this.x] &&
-        this.currentTool
-      ) {
-        const targetBlock = this.currentAsciiBlocks[this.y][this.x];
+      if (this.asciiBlockAtXy && this.currentTool) {
+        const targetBlock = this.asciiBlockAtXy;
 
         switch (this.currentTool.name) {
-          case "default":
-            break;
-
           case "select":
             this.selecting.startX = this.canvasX;
             this.selecting.startY = this.canvasY;
@@ -709,6 +734,12 @@ export default {
 
           case "fill":
             this.fill();
+            this.canTool = false;
+            this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
+            break;
+
+          case "fill-eraser":
+            this.fill(true);
             this.canTool = false;
             this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
             break;
@@ -742,7 +773,7 @@ export default {
       }
     },
     canvasMouseMove(e) {
-      if (this.currentTool.name === "default") return;
+      if (this.isDefault) return;
 
       let lastX = this.x;
       let lastY = this.y;
@@ -763,10 +794,7 @@ export default {
       }
       this.$emit("coordsupdate", { x: this.x, y: this.y });
 
-      if (
-        this.currentAsciiBlocks[this.y] &&
-        this.currentAsciiBlocks[this.y][this.x]
-      ) {
+      if (this.asciiBlockAtXy) {
         switch (this.currentTool.name) {
           case "brush":
             if (this.isMouseOnCanvas) {
@@ -806,6 +834,7 @@ export default {
             break;
 
           case "fill":
+          case "fill-eraser":
             this.drawIndicator();
             break;
         }
@@ -891,7 +920,7 @@ export default {
     drawIndicator() {
       this.clearToolCanvas();
 
-      const targetBlock = this.currentAsciiBlocks[this.y][this.x];
+      const targetBlock = this.asciiBlockAtXy;
 
       let indicatorColour = targetBlock.bg === 0 ? 1 : 0;
 
@@ -909,6 +938,16 @@ export default {
         BLOCK_WIDTH,
         BLOCK_HEIGHT
       );
+
+      if (this.isTextEditing) {
+        this.toolCtx.font = '600 22px "Font Awesome 5 Free"';
+        this.toolCtx.fillText(
+          "\uf031",
+          this.x * BLOCK_WIDTH,
+          this.y * BLOCK_HEIGHT + BLOCK_HEIGHT * 2
+        );
+        this.toolCtx.font = "13px Hack";
+      }
 
       if (this.isTextEditing) {
         if (this.mirrorX) {
@@ -1001,7 +1040,7 @@ export default {
       const BLOCK_WIDTH = blockWidth;
       const BLOCK_HEIGHT = blockHeight;
 
-      let targetBlock = this.currentAsciiBlocks[this.y][this.x];
+      let targetBlock = this.asciiBlockAtXy;
       let brushDiffX = 0;
       let xLength = 0;
 
@@ -1312,7 +1351,7 @@ export default {
         const BLOCK_WIDTH = blockWidth;
         const BLOCK_HEIGHT = blockHeight;
 
-        let targetBlock = this.currentAsciiBlocks[this.y][this.x];
+        let targetBlock = this.asciiBlockAtXy;
 
         const brushDiffX =
           Math.floor(this.brushBlocks[0].length / 2) * BLOCK_WIDTH;
@@ -1328,10 +1367,7 @@ export default {
             const arrayY = brushY / BLOCK_HEIGHT;
             const arrayX = brushX / BLOCK_WIDTH;
 
-            if (
-              this.currentAsciiBlocks[arrayY] &&
-              this.currentAsciiBlocks[arrayY][arrayX]
-            ) {
+            if (this.asciiBlockAtXy) {
               targetBlock = this.currentAsciiBlocks[arrayY][arrayX];
 
               if (this.canFg) {
@@ -1429,19 +1465,19 @@ export default {
       }
     },
     // Fill tool
-    fill() {
+    fill(eraser = false) {
       const newColor = this.currentBg;
-      const current = this.currentAsciiBlocks[this.y][this.x].bg;
+      const current = this.asciiBlockAtXy.bg;
 
       // If the newColor is same as the existing
       // Then return the original image.
-      if (current === newColor) {
+      if (current === newColor && !eraser) {
         return this.currentAsciiBlocks;
       }
 
-      this.fillTool(this.currentAsciiBlocks, this.y, this.x, current);
+      this.fillTool(this.currentAsciiBlocks, this.y, this.x, current, eraser);
     },
-    fillTool(fillBlocks, y, x, current) {
+    fillTool(fillBlocks, y, x, current, eraser) {
       // If row is less than 0
       if (x < 0) {
         return;
@@ -1471,30 +1507,31 @@ export default {
         return;
       }
 
+      // We can eraser or fill
       if (this.canBg) {
-        fillBlocks[y][x].bg = this.currentBg;
+        fillBlocks[y][x].bg = eraser ? null : this.currentBg;
       }
 
       if (this.canFg) {
-        fillBlocks[y][x].fg = this.currentFg;
+        fillBlocks[y][x].fg = eraser ? null : this.currentFg;
       }
 
       if (this.canText) {
-        fillBlocks[y][x].char = this.currentChar;
+        fillBlocks[y][x].char = eraser ? null : this.currentChar;
       }
 
       // Fill in all four directions
       // Fill Prev row
-      this.fillTool(fillBlocks, y, x - 1, current);
+      this.fillTool(fillBlocks, y, x - 1, current, eraser);
 
       // Fill Next row
-      this.fillTool(fillBlocks, y, x + 1, current);
+      this.fillTool(fillBlocks, y, x + 1, current, eraser);
 
       // Fill Prev col
-      this.fillTool(fillBlocks, y - 1, x, current);
+      this.fillTool(fillBlocks, y - 1, x, current, eraser);
 
       // Fill next col
-      this.fillTool(fillBlocks, y + 1, x, current);
+      this.fillTool(fillBlocks, y + 1, x, current, eraser);
     },
   },
 };

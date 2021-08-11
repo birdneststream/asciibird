@@ -173,6 +173,11 @@ export const toolbarIcons = [{
     icon: 'eraser',
     fa: 'fas',
   },
+  {
+    name: 'fill-eraser',
+    icon: 'fill',
+    fa: 'fas',
+  },
 ];
 
 export const emptyBlock = {
@@ -196,7 +201,7 @@ export const create2DArray = (rows) => {
 export const blockWidth = 8;
 export const blockHeight = 15;
 
-export const parseMircAscii = (content, title) => {
+export const parseMircAscii = async (content, title) => {
   const MIRC_MAX_COLOURS = mircColours99.length;
 
   // The current state of the Colours

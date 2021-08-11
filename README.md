@@ -56,6 +56,11 @@
 * Ctrl + ] - Increase brush size
 * Ctrl + [ - Decrease brush size
 
+### When in Brush Mode Only
+
+* E - rotate brush
+* Q - flip brush
+
 # FEATURES DONE
 
 * Tabbed editing for asciis
