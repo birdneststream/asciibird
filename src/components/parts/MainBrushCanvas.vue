@@ -193,7 +193,7 @@ export default {
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
                 this.ctx.fillText(
                   curBlock.char,
-                  x * blockWidth - 1,
+                  x * blockWidth,
                   y * blockHeight + blockHeight - 3
                 );
               }

@@ -134,6 +134,13 @@ export default {
           return;
         }
 
+        // Show / hide grid view
+        if (e.key === "g" && altKey) {
+          this.$store.commit("toggleGridView", !this.gridView);
+
+          return;
+        }
+
         // Ctrl Z here
         // skg - thanks for mac key suggestion, bro
         if (e.key === "z" && ctrlKey) {
@@ -197,12 +204,7 @@ export default {
           return;
         }
 
-        // Show / hide grid view
-        if (e.key === "g" && altKey) {
-          this.$store.commit("toggleGridView", !this.gridView);
 
-          return;
-        }
 
         // Choose FG or BG with Keyboard
         if (
@@ -222,7 +224,7 @@ export default {
         }
 
         // Ctrl C - copy blocks
-        if (e.key === "c" && ctrlKey && !shiftKey && this.isSelected) {
+        if (e.key === "c" && ctrlKey && !shiftKey) {
           if (this.selectedBlocks.length) {
             this.$store.commit(
               "selectBlocks",
@@ -345,7 +347,7 @@ export default {
         }
 
         // Edit ASCII
-        if (e.key === "e" && this.isDefault) {
+        if (e.key === "e" && this.isDefault && !this.isTextEditing) {
           this.$store.commit("openModal", "edit-ascii");
 
           return;
@@ -524,10 +526,10 @@ export default {
     },
     isSelected() {
       return (
-        this.selecting.startX &&
-        this.selecting.startY &&
-        this.selecting.endX &&
-        this.selecting.endY
+        this.selecting.startX !== null &&
+        this.selecting.startY !== null &&
+        this.selecting.endX !== null &&
+        this.selecting.endY !== null
       );
     },
     brushBlocks() {
@@ -694,8 +696,6 @@ export default {
 
               canvasX = blockWidth * x;
 
-              this.ctx.font = "13px Hack";
-
               if (this.gridView) {
                 this.ctx.setLineDash([1]);
                 this.ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
@@ -717,7 +717,7 @@ export default {
 
                 this.ctx.fillText(
                   curBlock.char,
-                  canvasX + 0.5,
+                  canvasX ,
                   canvasY + blockHeight - 3
                 );
               }
@@ -1233,7 +1233,7 @@ export default {
           this.x * blockWidth,
           this.y * blockHeight + blockHeight * 2
         );
-        this.toolCtx.font = "13px Hack";
+        // this.toolCtx.font = "13px Hack";
       }
 
       if (this.isTextEditing) {
@@ -1302,6 +1302,7 @@ export default {
         }
       }
 
+      this.toolCtx.font = "Hack 13px"
       // We always have a Y array
       const brushDiffY = Math.floor(this.brushBlocks.length / 2) * blockHeight;
 
@@ -1480,37 +1481,35 @@ export default {
 
                 this.toolCtx.fillText(
                   brushBlock.char,
-                  brushX - 1,
-                  brushY + blockHeight - 2
+                  brushX + 3,
+                  brushY + blockHeight - 4
                 );
 
                 if (this.mirrorX) {
                   this.toolCtx.fillText(
                     brushBlock.char,
-                    (asciiWidth - arrayX) * blockWidth,
-                    brushY + blockHeight - 2
+                    (asciiWidth - arrayX) * blockWidth  + 3,
+                    brushY + blockHeight - 4
                   );
                 }
 
                 if (this.mirrorY) {
                   this.toolCtx.fillText(
                     brushBlock.char,
-                    brushX - 1,
+                    brushX  + 3,
                     (asciiHeight - arrayY) * blockHeight + 10
                   );
                 }
                 if (this.mirrorY && this.mirrorX) {
                   this.toolCtx.fillText(
                     brushBlock.char,
-                    (asciiWidth - arrayX) * blockWidth,
+                    (asciiWidth - arrayX) * blockWidth  + 3,
                     (asciiHeight - arrayY) * blockHeight + 10
                   );
                 }
 
                 if (this.canTool && brushBlock.char !== null) {
-                  targetBlock.char = !this.haveSelectBlocks
-                    ? this.currentChar
-                    : brushBlock.char;
+                  targetBlock.char = brushBlock.char;
 
                   if (
                     this.mirrorX &&
@@ -1708,7 +1707,7 @@ export default {
       // If the newColor is same as the existing
       // Then return the original image.
       if (current === newColor && !eraser) {
-        return this.currentAsciiBlocks;
+        return
       }
 
       this.fillTool(this.currentAsciiBlocks, this.y, this.x, current, eraser);
