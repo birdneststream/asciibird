@@ -98,6 +98,13 @@ export default {
 
         e.preventDefault();
 
+        if (this.toolbarState.isChoosingChar) {
+          if (e.key.length === 1) {
+            this.$store.commit("changeChar", e.key)
+            return
+          }
+        }
+
         const ctrlKey = e.ctrlKey || e.metaKey;
         const shiftKey = e.shiftKey;
 

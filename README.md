@@ -21,7 +21,6 @@
 * Circle brush (works okay for odd width and height numbers)
 # FOCUSING ON NOW
 
-* Cut / copy then paste with ctrl v
 * Type letter when choosing char, leave char panel open after
  
 * Modals
