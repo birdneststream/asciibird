@@ -87,14 +87,14 @@ export default {
 
       this.delayRedrawCanvas();
 
-      this.$store.commit("changeTool", 0);
+      // this.$store.commit("changeTool", 0);
 
       const thisIs = this;
       this.keyListener = function (e) {
         // Stop blocking input when modals are open
         // Whatever this char "'\0'" is it'd occur even without pressing any keys
         // This fixes it
-        if (this.isModalOpen || e.key === '\0') {
+        if (this.isModalOpen || e.key === "\0") {
           return;
         }
 
@@ -102,9 +102,9 @@ export default {
 
         // When press escape go back to default took
         if (e.key === "Escape" && !this.isDefault) {
-          this.clearToolCanvas()
+          this.clearToolCanvas();
           this.$store.commit("changeTool", 0);
-          return
+          return;
         }
 
         // Change char when car picker is open
@@ -113,8 +113,19 @@ export default {
           return;
         }
 
+        // Keys without any ctrl, shift or alt are also integrated
+        // and are available only in their toolbar context
+        // for example pressing E in default mode will toggle edit ascii
+        // E in text mode will type the character E
+        // E in brush mode will flip the brush
+
+        // Copy and paste,
         const ctrlKey = e.ctrlKey || e.metaKey;
+
+        // Files / system related
         const shiftKey = e.shiftKey;
+
+        // Alt key functions are toolbar related
         const altKey = e.altKey;
 
         // Used for text typing
@@ -139,15 +150,18 @@ export default {
         // Change toolbar icon
         if (
           Number.parseInt(e.key) >= 1 &&
-          Number.parseInt(e.key) <= 8 
+          Number.parseInt(e.key) <= 8 &&
+          !this.toolbarState.isChoosingFg &&
+          !this.toolbarState.isChoosingBg &&
+          altKey
         ) {
-          this.$store.commit("changeTool",  Number.parseInt(e.key-1));
-          this.clearToolCanvas()
-          return
+          this.$store.commit("changeTool", Number.parseInt(e.key - 1));
+          this.clearToolCanvas();
+          return;
         }
 
         // Swap colours
-        if (e.key === "r" && this.isDefault) {
+        if (e.key === "r" && altKey) {
           let bg = this.currentBg;
           let fg = this.currentFg;
 
@@ -157,7 +171,7 @@ export default {
         }
 
         // Show FG
-        if (e.key === "f" && this.isDefault) {
+        if (e.key === "f" && altKey && !ctrlKey) {
           this.$store.commit(
             "changeIsUpdatingFg",
             !this.toolbarState.isChoosingFg
@@ -166,7 +180,7 @@ export default {
         }
 
         // Show BG
-        if (e.key === "b" && this.isDefault) {
+        if (e.key === "b" && altKey && !ctrlKey) {
           this.$store.commit(
             "changeIsUpdatingBg",
             !this.toolbarState.isChoosingBg
@@ -175,7 +189,7 @@ export default {
         }
 
         // Show Character select
-        if (e.key === "c" && this.isDefault) {
+        if (e.key === "c" && altKey && !ctrlKey) {
           this.$store.commit(
             "changeIsUpdatingChar",
             !this.toolbarState.isChoosingChar
@@ -183,12 +197,17 @@ export default {
           return;
         }
 
-        // Choose FG with Keyboard
+        // Show / hide grid view
+        if (e.key === "g" && altKey) {
+          this.$store.commit("toggleGridView", !this.gridView);
+
+          return;
+        }
+
+        // Choose FG or BG with Keyboard
         if (
           Number.parseInt(e.key) >= 0 &&
           Number.parseInt(e.key) <= 9 &&
-          this.isDefault &&
-          !altKey &&
           (this.toolbarState.isChoosingFg || this.toolbarState.isChoosingBg)
         ) {
           if (this.toolbarState.isChoosingFg) {
@@ -196,7 +215,6 @@ export default {
             return;
           }
 
-          // Choose BG with Keyboard
           if (this.toolbarState.isChoosingBg) {
             this.$store.commit("changeColourBg", Number.parseInt(e.key));
             return;
@@ -304,13 +322,6 @@ export default {
         // Show / hide debug panel
         if (e.key === "d" && this.isDefault) {
           this.$store.commit("toggleDebugPanel", !this.debugPanelState.visible);
-
-          return;
-        }
-
-        // Show / hide grid view
-        if (e.key === "g" && this.isDefault) {
-          this.$store.commit("toggleGridView", !this.gridView);
 
           return;
         }

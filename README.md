@@ -14,73 +14,121 @@
            [STREAMLABS] http://streamlabs.jewbird.live [PATREON] http://patreon.jewbird.live
      [YT] http://yt.jewbird.live [TWITCH] http://twitch.jewbird.live [GITHUB] http://git.jewbird.live
 ```
-# BUGS
+
+ASCIIBIRD is an IRC ascii art editor to create or edit mIRC art, it is most times worked on during live stream. It's 100% client side and created in vue2 and may be migrated to vue3 in the future.
+
+You can view and load ASCII art from https://irc.watch/ascii into asciibird.
+
+A most latest production build to use is available at https://asciibird.jewbird.live/
+
+# Current Features
+
+* Tabbed ASCII editing
+* Copy and paste between tabs
+* Remembers state on refresh and when the browser loads, can also export the state to a file and load elsewhere.
+ * So you never lose your ascii art!
+* Can import from clipboard, load from irc.watch/ascii, load from file
+* Can export to mirc ascii to clipboard or file
+* 99 Colour support, flip colours
+* Mirror X and Y
+* Grid mode with alt + g
+* Undo and redo with ctrl + z and ctrl + y
+* Fg, Bg and Char boxes to filter when using certain tools
+ * For example filling with Char unchecked will ignore characters when filling
+
+* Toolbar containing
+ * Select
+ * Text mode
+ * Fill background blocks
+ * Brush mode
+ * Block picker (grab fg, bg and char of a block)
+ * Eraser - remove blocks
+ * Fill Eraser - Fill remove blocks by bg
+
+* Brush Library and History
+ * Make circle, square and cross brushes by sizes
+ * Brush history, can save or re-use old brushes
+ * Library - Save most used brushes to library
+
+* Brush Preview
+ * Editable brush preview
+ * Clicking updates block
+ * Right clicking removes block
+ * Hovering outside brush area will save brush to history
+
+## Noted Bugs to Fix
+
+ASCIIBIRD is mostly usable. There are some bugs however to note at the moment.
 
 * If you resize an ascii, and then undo and try fill in blocks it will error cuz the blocks don't exist
 * Redo (ctrl y) is a buggy
 * Circle brush (works okay for odd width and height numbers)
-# FOCUSING ON NOW
+* Importer could be re-written with regex
+## Focusing on Now
 
-* Modals
- * Edit current ascii
- * Asciibird options
- * Tool options
- * OPTIONS MODAL (SORRY SKG LOL)
+* Modals to add
+ * Asciibird options / Options modal from skgs PR
 
-* Encodings - UTF8 vs NOT that
-* Context Menus (right click menu) - we started this
-* Keyboard shortcuts
-* LAYERS
-
+* Review encodings check on file import - UTF8 vs Latin something
+* Context Menus (right click menu) - add to other areas of asciibird
+* LAYERS, drag and drop to arrange layers
+* Image overlay for trace mode
 # Keyboard Shortcuts
-
 ## ASCII Editing
 
-* Ctrl + D - shows/hides debug panel
+Until the keyboard shortcuts are moved out of `Editor.vue` they will only work when the editor is visible.
+
 * Ctrl + Z - Undo
 * Ctrl + Y - Redo
-* Ctrl + M - New ASCII (lol @ cannot override ctrl n ?!)
-* Ctrl + E - Edit ASCII
-* Ctrl + P - Paste ASCII from Clipboard
-* Ctrl + G - Toggle grid mode
 
 * Ctrl + Shift + C - Save to clipboard
 * Ctrl + Shift + F - Save to txt file
 
-## Brush and Toolbar
+* Escape - Return to default mode / stop using any tool
 
-* Ctrl + B - Show / hide brushes library
-* Ctrl + ] - Increase brush size
-* Ctrl + [ - Decrease brush size
+* When the colour picker is open, the first 0 to 9 colours can be chosen with the keyboards number.
+* When the character picker is open, you can also press any key on your keyboard to set the character.
+## Toolbar Keyboard Shortcusts
+The toolbar keyboard shorts are used with the ALT key.
 
-### When in Brush Mode Only
+* Alt 1 to 8 - Will toggle the corresponding toolbar icon
 
-* E - rotate brush
-* Q - flip brush
+* Alt + c - Opens character Panel (You can then press on the keyboard your desired character or select from the list)
+* Alt + f - Opens foreground panel (can then press 0 to 9 for the colour)
+* Alt + b - Opens background panel (can then press 0 to 9 for the colour)
 
-# FEATURES DONE
+* Alt + g - Toggle grid mode
 
-* Tabbed editing for asciis
-* Remembers ASCII states, can export and import ASCIIBIRD state files
-* Import ASCII from https://irc.watch/
-* Update text colours without deleting the block
-* Floating pattlets, resizeable and remembers positions
-* .ASB file, compressed asciibird state
-* Export mIRC to clipboard
-* EXPORT ascii, trim to canvas size
+* Ctrl + ] - Increase both brush sizes by 1
+* Ctrl + [ - Decrease both brush sizes by 1
 
-* Modals
- * New ascii modal
+### Default Mode Only
 
-# FEATURES TO DO
+* l - Show / hide brushes library
+* d - Show and Hide debug bar
+* e - Edit ASCII
+* p - Paste ASCII from Clipboard
+* n - New ASCII
 
-* Layers / Insert ASCII as layer
-* Overlay image for nance tracing mode
+### Select Mode Only
 
-# ASCIIBIRD API?
+* Ctrl + c - Copy blocks to clipboard
+* Ctrl + x - Cut blocks to clipboard
+* Ctrl + v - Paste blocks
+* Delete - Delete selected blocks
 
-* Insert image to convert to ASCII into a layer
-* Support for tdfiglet, toilet, figlet importing
+### Brush Mode Only
+
+* e - rotate brush
+* q - flip brush
+
+### Text mode
+
+* Four arrow keys control text cursor
+* Delete - Remove text from highlighted block
+* Backspace - Remove current character and move to previous block
+* Enter - Go to next line and reset X position to 0
+
 # References
 
 * http://anti.teamidiot.de/static/nei/*/extended_mirc_color_proposal.html - Good for 99 colours info

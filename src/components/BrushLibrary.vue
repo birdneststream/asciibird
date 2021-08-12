@@ -2,6 +2,7 @@
   <div>
     <vue-draggable-resizable
       @dragstop="onDragStop"
+      @resizestop="onResize"
       :grid="[currentAscii.blockWidth, currentAscii.blockHeight]"
       :min-width="blockWidth * 25"
       :max-width="blockWidth * 50"
