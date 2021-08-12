@@ -47,24 +47,6 @@
           </label>
         </div>
 
-        <hr class="m-3" />
-
-        <t-button
-          type="button"
-          v-for="(value, keyToolbar) in toolbarIcons"
-          :key="keyToolbar + 50"
-          :class="`w-10 h-10 ${
-            currentTool.name === value.name
-              ? 'border-gray-900 bg-blue-500'
-              : 'border-gray-200 bg-gray-500'
-          }`"
-          @click="$store.commit('changeTool', keyToolbar)"
-        >
-          <font-awesome-icon :icon="[value.fa, value.icon]" size="lg" />
-        </t-button>
-
-        <hr class="m-3" />
-
         <div class="flex">
           <label class="ml-1 w-1/2">
             <t-checkbox
@@ -84,8 +66,24 @@
           </label>
         </div>
 
-        <hr class="m-2" />
+        <hr class="m-3" />
 
+        <t-button
+          type="button"
+          v-for="(value, keyToolbar) in toolbarIcons"
+          :key="keyToolbar + 50"
+          :class="`w-10 h-10 ${
+            currentTool.name === value.name
+              ? 'border-gray-900 bg-blue-500'
+              : 'border-gray-200 bg-gray-500'
+          }`"
+          @click="$store.commit('changeTool', keyToolbar)"
+        >
+          <font-awesome-icon :icon="[value.fa, value.icon]" size="lg" />
+        </t-button>
+
+        <hr class="m-3" />
+        <small>Brush</small>
         <BrushPreview />
       </t-card>
     </vue-draggable-resizable>

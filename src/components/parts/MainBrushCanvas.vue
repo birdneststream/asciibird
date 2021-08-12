@@ -160,9 +160,6 @@ export default {
       this.ctx.clearRect(0, 0, this.canvasRef.width, this.canvasRef.height);
       this.ctx.fillStyle = this.mircColours[1];
 
-      const BLOCK_WIDTH = this.currentAscii.blockWidth;
-      const BLOCK_HEIGHT = this.currentAscii.blockHeight;
-
       // hack font for ascii shout outs 2 beenz
       this.ctx.font = "13px Hack";
 
@@ -181,10 +178,10 @@ export default {
                 this.ctx.fillStyle = this.mircColours[curBlock.bg];
 
                 this.ctx.fillRect(
-                  x * BLOCK_WIDTH,
-                  y * BLOCK_HEIGHT,
-                  BLOCK_WIDTH,
-                  BLOCK_HEIGHT
+                  x * blockWidth,
+                  y * blockHeight,
+                  blockWidth,
+                  blockHeight
                 );
               }
 
@@ -196,8 +193,8 @@ export default {
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
                 this.ctx.fillText(
                   curBlock.char,
-                  x * BLOCK_WIDTH - 1,
-                  y * BLOCK_HEIGHT + BLOCK_HEIGHT - 3
+                  x * blockWidth - 1,
+                  y * blockHeight + blockHeight - 3
                 );
               }
             }

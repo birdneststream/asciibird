@@ -7,7 +7,7 @@
           name="width"
           v-model="brushSizeWidthInput"
           min="1"
-          max="10"
+          :max="maxBrushSize"
         />
       </div>
 
@@ -17,7 +17,7 @@
           name="height"
           v-model="brushSizeHeightInput"
           min="1"
-          max="10"
+          :max="maxBrushSize"
         />
       </div>
     </div>
@@ -49,7 +49,7 @@
 </template>
 
 <script>
-import { emptyBlock } from "../../ascii";
+import { emptyBlock, maxBrushSize } from "../../ascii";
 import MainBrushCanvas from "./MainBrushCanvas.vue";
 
 export default {
@@ -58,10 +58,12 @@ export default {
     MainBrushCanvas,
   },
   mounted() {
-    this.brushSizeWidthInput = this.brushSizeWidth;
-    this.brushSizeHeightInput = this.brushSizeHeight;
-    this.brushSizeTypeInput = this.brushSizeType;
-    this.createBlocks();
+    if (this.brushBlocksEmpty) {
+      this.brushSizeWidthInput = this.brushSizeWidth;
+      this.brushSizeHeightInput = this.brushSizeHeight;
+      this.brushSizeTypeInput = this.brushSizeType;
+      this.createBlocks();
+    }
   },
   data: () => ({
     blocks: [],
@@ -94,6 +96,12 @@ export default {
     brushBlocks() {
       return this.$store.getters.brushBlocks;
     },
+    brushBlocksEmpty() {
+      return this.brushBlocks.length === 0;
+    },
+    maxBrushSize() {
+      return maxBrushSize
+    }
   },
   watch: {
     brushSizeWidth() {
@@ -116,21 +124,6 @@ export default {
       }
     },
     brushSizeTypeInput(val, old) {
-      if (val !== old) {
-        this.createBlocks();
-      }
-    },
-    currentChar(val, old) {
-      if (val !== old) {
-        this.createBlocks();
-      }
-    },
-    currentBg(val, old) {
-      if (val !== old) {
-        this.createBlocks();
-      }
-    },
-    currentFg(val, old) {
       if (val !== old) {
         this.createBlocks();
       }
@@ -167,9 +160,7 @@ export default {
       const middleY = Math.floor(brushHeight / 2);
       const middleX = Math.floor(brushWidth / 2);
       let yModifier = 0;
-
-      //
-
+      
       // Recreate 2d array for preview
       for (y = 0; y < brushHeight; y++) {
         this.blocks[y] = [];
