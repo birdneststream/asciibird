@@ -1,5 +1,6 @@
 <template>
   <div id="app">
+    
     <NewAscii />
     <EditAscii />
     <PasteAscii />
@@ -130,6 +131,7 @@ import EditAscii from "./components/modals/EditAscii.vue";
 import PasteAscii from "./components/modals/PasteAscii.vue";
 
 import BrushCanvas from "./components/parts/BrushCanvas.vue";
+// import KeyboardShortcuts from "./components/parts/KeyboardShortcuts.vue";
 
 import {
   parseMircAscii,
@@ -157,6 +159,7 @@ export default {
     PasteAscii,
     BrushLibrary,
     BrushCanvas,
+    // KeyboardShortcuts
   },
   name: "Dashboard",
   data: () => ({

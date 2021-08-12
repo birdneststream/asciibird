@@ -10,7 +10,7 @@
         :grid="[currentAscii.blockWidth, currentAscii.blockHeight]"
         :w="canvas.width"
         :h="canvas.height"
-        :draggable="$store.getters.currentTool === 0"
+        :draggable="isDefault"
         @resizestop="onCanvasResize"
         @dragstop="onCavasDragStop"
         :x="currentAscii.x"
@@ -71,6 +71,8 @@ import {
   blockHeight,
   maxBrushSize,
   fillNullBlocks,
+  emptyBlock,
+  getBlocksWidth,
 } from "../ascii";
 
 export default {
@@ -116,7 +118,7 @@ export default {
         }
 
         // Ctrl C - copy blocks
-        if (e.key === "c" && ctrlKey && !shiftKey) {
+        if (e.key === "c" && ctrlKey && !shiftKey && this.isSelected) {
           if (this.selectedBlocks.length) {
             this.$store.commit(
               "selectBlocks",
@@ -129,6 +131,64 @@ export default {
             });
 
             this.selectedBlocks = [];
+
+            // Reset and hide the select after successful copy
+            this.resetSelect()
+            this.processSelect()
+          }
+        }
+
+
+        // Delte blocks but do not save them when pressing Delete when selected
+        if (e.key === "Delete" && this.isSelected) {
+          if (this.selectedBlocks.length) {
+
+            for (let y = 0; y < this.selectedBlocks.length + 1; y++) {
+              for (let x = 0; x < getBlocksWidth(this.selectedBlocks) + 1; x++) {
+                if (this.selectedBlocks[y] && this.selectedBlocks[y][x]) {
+                  this.currentAsciiBlocks[y][x] = { ... emptyBlock }
+                }
+              }
+            }
+
+            // Reset and hide the select after successful copy
+            this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
+            this.delayRedrawCanvas()
+            
+            this.$toasted.show("Deleted blocks!", {
+              type: "success",
+              icon: "fa-check-circle",
+            });
+          }
+        }
+
+        // Ctrl X - cut blocks
+        if (e.key === "x" && ctrlKey && !shiftKey && this.isSelected) {
+          if (this.selectedBlocks.length) {
+            for (let y = 0; y < this.selectedBlocks.length + 1; y++) {
+              for (let x = 0; x < getBlocksWidth(this.selectedBlocks) + 1; x++) {
+                if (this.selectedBlocks[y] && this.selectedBlocks[y][x]) {
+                  this.currentAsciiBlocks[y][x] = { ... emptyBlock }
+                }
+              }
+            }
+
+            this.$store.commit(
+              "selectBlocks",
+              this.filterNullBlocks(this.selectedBlocks)
+            );
+
+            this.selectedBlocks = [];
+
+            // Reset and hide the select after successful copy
+
+            this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
+            // this.delayRedrawCanvas()
+
+            this.$toasted.show("Cut blocks!", {
+              type: "success",
+              icon: "fa-check-circle",
+            });
           }
         }
 
@@ -246,12 +306,7 @@ export default {
         }
       };
 
-      // this.keyListenerUp = function (e) {
-      //     this.canKey = true
-      // };
-
       document.addEventListener("keydown", this.keyListener.bind(this));
-      // document.addEventListener("keyup", this.keyListenerUp.bind(this));
     }
   },
   data: () => ({
@@ -323,7 +378,9 @@ export default {
       return this.currentTool.name === "text";
     },
     isTextEditingValues() {
-      return this.textEditing.startX !== null && this.textEditing.startY !== null;
+      return (
+        this.textEditing.startX !== null && this.textEditing.startY !== null
+      );
     },
     isSelecting() {
       return this.currentTool.name === "select";
@@ -405,6 +462,8 @@ export default {
         this.canvas.height = this.currentAscii.height * blockHeight;
 
         this.delayRedrawCanvas();
+
+        document.title = `asciibird - ${this.currentAscii.title}`;
       }
     },
     currentTool() {
@@ -416,13 +475,7 @@ export default {
             startY: null,
           };
 
-          this.selecting = {
-            startX: null,
-            startY: null,
-            endX: null,
-            endY: null,
-            canSelect: false,
-          };
+          this.resetSelect()
           break;
       }
     },
@@ -454,6 +507,15 @@ export default {
     redo() {
       this.$store.commit("redoBlocks");
       this.delayRedrawCanvas();
+    },
+    resetSelect() {
+      this.selecting = {
+        startX: null,
+        startY: null,
+        endX: null,
+        endY: null,
+        canSelect: false,
+      };
     },
     redrawSelect() {
       if (this.currentAsciiBlocks.length) {
@@ -774,13 +836,13 @@ export default {
 
         case "eraser":
           this.canTool = false;
-
           this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
           break;
 
         case "fill-eraser":
         case "fill":
           this.canTool = false;
+          this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
           break;
 
         case "select":
@@ -813,13 +875,11 @@ export default {
           case "fill":
             this.fill();
             this.canTool = false;
-            this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
             break;
 
           case "fill-eraser":
             this.fill(true);
             this.canTool = false;
-            this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
             break;
 
           case "brush":
@@ -1031,7 +1091,7 @@ export default {
       // if (clear) {
       //   this.clearToolCanvas();
       // }
-      
+
       this.drawRectangleBlock(this.x, this.y);
 
       if (this.isTextEditing) {
@@ -1062,7 +1122,6 @@ export default {
       }
     },
     drawTextIndicator() {
-      
       this.drawRectangleBlock(this.textEditing.startX, this.textEditing.startY);
 
       if (this.mirrorX) {
@@ -1407,8 +1466,7 @@ export default {
         for (let y = 0; y < this.brushBlocks.length; y++) {
           for (let x = 0; x < this.brushBlocks[0].length; x++) {
             const brushX = this.x * blockWidth + x * blockWidth - brushDiffX;
-            const brushY =
-              this.y * blockHeight + y * blockHeight - brushDiffY;
+            const brushY = this.y * blockHeight + y * blockHeight - brushDiffY;
 
             const arrayY = brushY / blockHeight;
             const arrayX = brushX / blockWidth;
