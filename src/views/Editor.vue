@@ -92,22 +92,32 @@ export default {
       const thisIs = this;
       this.keyListener = function (e) {
         // Stop blocking input when modals are open
-        if (this.isModalOpen) {
+        // Whatever this char "'\0'" is it'd occur even without pressing any keys
+        // This fixes it
+        if (this.isModalOpen || e.key === '\0') {
           return;
         }
 
         e.preventDefault();
 
-        if (this.toolbarState.isChoosingChar) {
-          if (e.key.length === 1) {
-            this.$store.commit("changeChar", e.key)
-            return
-          }
+        // When press escape go back to default took
+        if (e.key === "Escape" && !this.isDefault) {
+          this.clearToolCanvas()
+          this.$store.commit("changeTool", 0);
+          return
+        }
+
+        // Change char when car picker is open
+        if (this.toolbarState.isChoosingChar && e.key.length === 1) {
+          this.$store.commit("changeChar", e.key);
+          return;
         }
 
         const ctrlKey = e.ctrlKey || e.metaKey;
         const shiftKey = e.shiftKey;
+        const altKey = e.altKey;
 
+        // Used for text typing
         if (this.isTextEditing) {
           thisIs.canvasKeyDown(e.key);
           return;
@@ -117,11 +127,80 @@ export default {
         // skg - thanks for mac key suggestion, bro
         if (e.key === "z" && ctrlKey) {
           this.undo();
+          return;
         }
 
         // Ctrl Y here
         if (e.key === "y" && ctrlKey) {
           this.redo();
+          return;
+        }
+
+        // Change toolbar icon
+        if (
+          Number.parseInt(e.key) >= 1 &&
+          Number.parseInt(e.key) <= 8 
+        ) {
+          this.$store.commit("changeTool",  Number.parseInt(e.key-1));
+          this.clearToolCanvas()
+          return
+        }
+
+        // Swap colours
+        if (e.key === "r" && this.isDefault) {
+          let bg = this.currentBg;
+          let fg = this.currentFg;
+
+          this.$store.commit("changeColourFg", bg);
+          this.$store.commit("changeColourBg", fg);
+          return;
+        }
+
+        // Show FG
+        if (e.key === "f" && this.isDefault) {
+          this.$store.commit(
+            "changeIsUpdatingFg",
+            !this.toolbarState.isChoosingFg
+          );
+          return;
+        }
+
+        // Show BG
+        if (e.key === "b" && this.isDefault) {
+          this.$store.commit(
+            "changeIsUpdatingBg",
+            !this.toolbarState.isChoosingBg
+          );
+          return;
+        }
+
+        // Show Character select
+        if (e.key === "c" && this.isDefault) {
+          this.$store.commit(
+            "changeIsUpdatingChar",
+            !this.toolbarState.isChoosingChar
+          );
+          return;
+        }
+
+        // Choose FG with Keyboard
+        if (
+          Number.parseInt(e.key) >= 0 &&
+          Number.parseInt(e.key) <= 9 &&
+          this.isDefault &&
+          !altKey &&
+          (this.toolbarState.isChoosingFg || this.toolbarState.isChoosingBg)
+        ) {
+          if (this.toolbarState.isChoosingFg) {
+            this.$store.commit("changeColourFg", Number.parseInt(e.key));
+            return;
+          }
+
+          // Choose BG with Keyboard
+          if (this.toolbarState.isChoosingBg) {
+            this.$store.commit("changeColourBg", Number.parseInt(e.key));
+            return;
+          }
         }
 
         // Ctrl C - copy blocks
@@ -140,42 +219,52 @@ export default {
             this.selectedBlocks = [];
 
             // Reset and hide the select after successful copy
-            this.resetSelect()
-            this.processSelect()
+            this.resetSelect();
+            this.processSelect();
           }
-        }
 
+          return;
+        }
 
         // Delte blocks but do not save them when pressing Delete when selected
         if (e.key === "Delete" && this.isSelected) {
           if (this.selectedBlocks.length) {
-
             for (let y = 0; y < this.selectedBlocks.length + 1; y++) {
-              for (let x = 0; x < getBlocksWidth(this.selectedBlocks) + 1; x++) {
+              for (
+                let x = 0;
+                x < getBlocksWidth(this.selectedBlocks) + 1;
+                x++
+              ) {
                 if (this.selectedBlocks[y] && this.selectedBlocks[y][x]) {
-                  this.currentAsciiBlocks[y][x] = { ... emptyBlock }
+                  this.currentAsciiBlocks[y][x] = { ...emptyBlock };
                 }
               }
             }
 
             // Reset and hide the select after successful copy
             this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
-            this.delayRedrawCanvas()
-            
+            this.delayRedrawCanvas();
+
             this.$toasted.show("Deleted blocks!", {
               type: "success",
               icon: "fa-check-circle",
             });
           }
+
+          return;
         }
 
         // Ctrl X - cut blocks
         if (e.key === "x" && ctrlKey && !shiftKey && this.isSelected) {
           if (this.selectedBlocks.length) {
             for (let y = 0; y < this.selectedBlocks.length + 1; y++) {
-              for (let x = 0; x < getBlocksWidth(this.selectedBlocks) + 1; x++) {
+              for (
+                let x = 0;
+                x < getBlocksWidth(this.selectedBlocks) + 1;
+                x++
+              ) {
                 if (this.selectedBlocks[y] && this.selectedBlocks[y][x]) {
-                  this.currentAsciiBlocks[y][x] = { ... emptyBlock }
+                  this.currentAsciiBlocks[y][x] = { ...emptyBlock };
                 }
               }
             }
@@ -197,6 +286,8 @@ export default {
               icon: "fa-check-circle",
             });
           }
+
+          return;
         }
 
         // Ctrl V - paste blocks
@@ -206,40 +297,54 @@ export default {
             this.$store.commit("brushBlocks", this.selectBlocks);
             this.$store.commit("changeTool", 4);
           }
+
+          return;
         }
 
         // Show / hide debug panel
-        if (e.key === "d" && ctrlKey) {
+        if (e.key === "d" && this.isDefault) {
           this.$store.commit("toggleDebugPanel", !this.debugPanelState.visible);
+
+          return;
         }
 
         // Show / hide grid view
-        if (e.key === "g" && ctrlKey) {
+        if (e.key === "g" && this.isDefault) {
           this.$store.commit("toggleGridView", !this.gridView);
+
+          return;
         }
 
         // Show / hide brush library
-        if (e.key === "b" && ctrlKey) {
+        if (e.key === "l" && this.isDefault) {
           this.$store.commit(
             "toggleBrushLibrary",
             !this.brushLibraryState.visible
           );
+
+          return;
         }
 
         // New ASCII
         // Ctrl N doesn't seem to work in chrome? https://github.com/liftoff/GateOne/issues/290
-        if (e.key === "m" && ctrlKey) {
+        if (e.key === "n" && this.isDefault) {
           this.$store.commit("openModal", "new-ascii");
+
+          return;
         }
 
         // Edit ASCII
-        if (e.key === "e" && ctrlKey) {
+        if (e.key === "e" && this.isDefault) {
           this.$store.commit("openModal", "edit-ascii");
+
+          return;
         }
 
         // Paste ASCII
-        if (e.key === "p" && ctrlKey) {
+        if (e.key === "p" && this.isDefault) {
           this.$store.commit("openModal", "paste-ascii");
+
+          return;
         }
 
         // Export to clipboard
@@ -257,12 +362,16 @@ export default {
               });
             }
           );
+
+          return;
         }
 
         // Export to txt
         if (e.key === "F" && ctrlKey && shiftKey) {
           let ascii = exportMirc();
           downloadFile(ascii.output.join(""), ascii.filename, "text/plain");
+
+          return;
         }
 
         if (
@@ -278,6 +387,8 @@ export default {
             brushSizeWidth: parseInt(this.brushSizeWidth) + 1,
             brushSizeType: this.brushSizeType,
           });
+
+          return;
         }
 
         if (
@@ -293,6 +404,8 @@ export default {
             brushSizeWidth: parseInt(this.brushSizeWidth) - 1,
             brushSizeType: this.brushSizeType,
           });
+
+          return;
         }
 
         // Hopefully we can still pick up the previous inputs
@@ -482,7 +595,7 @@ export default {
             startY: null,
           };
 
-          this.resetSelect()
+          this.resetSelect();
           break;
       }
     },
@@ -849,7 +962,6 @@ export default {
         case "fill-eraser":
         case "fill":
           this.canTool = false;
-          this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
           break;
 
         case "select":
@@ -881,11 +993,13 @@ export default {
 
           case "fill":
             this.fill();
+            this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
             this.canTool = false;
             break;
 
           case "fill-eraser":
             this.fill(true);
+            this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
             this.canTool = false;
             break;
 

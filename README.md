@@ -21,8 +21,6 @@
 * Circle brush (works okay for odd width and height numbers)
 # FOCUSING ON NOW
 
-* Type letter when choosing char, leave char panel open after
- 
 * Modals
  * Edit current ascii
  * Asciibird options
