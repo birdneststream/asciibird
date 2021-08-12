@@ -419,7 +419,7 @@ export const parseMircAscii = async (content, title) => {
   store.commit('newAsciibirdMeta', finalAscii);
 
   // Update the browsers title to the ASCII filename
-  document.title = `asciibird - ${store.getters.currentAscii.title}`;
+  
 
   return true;
 };

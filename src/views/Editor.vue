@@ -405,8 +405,6 @@ export default {
         this.canvas.height = this.currentAscii.height * blockHeight;
 
         this.delayRedrawCanvas();
-
-        document.title = `asciibird - ${this.currentAscii.title}`;
       }
     },
     currentTool() {

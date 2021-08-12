@@ -65,19 +65,16 @@
 
     <template v-if="asciibirdMeta.length">
       <span v-for="(value, key) in asciibirdMeta" :key="key" class="mr-2">
-        
-          <t-button class="p-1" @click="changeTab(key, value)">
-            {{ value.title }}
+        <t-button class="p-1" @click="changeTab(key, value)">
+          {{ value.title }}
 
-              <t-button
-                class="text-sm pl-1 p-1 h-8 rounded-xl text-white border border-transparent shadow-sm hover:bg-blue-500 bg-gray-600"
-                @click="closeTab(key)"
-              >
-                X
-              </t-button>
+          <t-button
+            :class="`(currentTab === key) ? 'text-sm pl-1 p-1 h-8 rounded-xl text-white border border-transparent shadow-sm hover:bg-blue-500 bg-gray-600' : ''`"
+            @click="closeTab(key)"
+          >
+            X
           </t-button>
-
-        
+        </t-button>
       </span>
 
       <Toolbar :canvas-x="canvasX" :canvas-y="canvasY" />
@@ -220,6 +217,11 @@ export default {
     currentAscii() {
       return this.$store.getters.currentAscii;
     },
+    buttonStyle() {
+      return this.currentTab
+        ? `text-sm pl-1 p-1 h-8 rounded-xl text-white border border-transparent shadow-sm hover:bg-blue-500 bg-gray-600`
+        : `text-sm pl-1 p-1 h-8 rounded-xl text-white border border-transparent shadow-sm hover:bg-blue-500 bg-gray-600`;
+    },
   },
   methods: {
     openContextMenu(e) {
@@ -288,7 +290,9 @@ export default {
           "application/gzip"
         );
       } catch (err) {
-        console.log(err);
+        this.$toasted.show(err, {
+          type: "error",
+        });
       }
     },
     startExport(type) {
@@ -298,10 +302,14 @@ export default {
         case "clipboard":
           this.$copyText(ascii.output.join("")).then(
             (e) => {
-              alert("Copied");
+              this.$toasted.show("Copied mIRC to clipboard!", {
+                type: "success",
+              });
             },
             (e) => {
-              alert("Can not copy");
+              this.$toasted.show("Error when copying mIRC to clipboard!", {
+                type: "error",
+              });
             }
           );
           break;
@@ -320,7 +328,7 @@ export default {
     closeTab(key) {
       this.$dialog
         .confirm({
-          title: `Close ${this.currentAscii.title}?`,
+          title: `Close ${this.asciibirdMeta[key].title}?`,
           text: "This action cannot be undone and the ASCII will be gone.",
           icon: "info",
         })

@@ -87,6 +87,7 @@ export default new Vuex.Store({
     },
     changeTab(state, payload) {
       state.tab = payload;
+      document.title = `asciibird - ${state.asciibirdMeta[payload].title}`;
     },
     changeDebugPanelState(state, payload) {
       state.debugPanelState = payload;
@@ -156,6 +157,7 @@ export default new Vuex.Store({
     newAsciibirdMeta(state, payload) {
       state.asciibirdMeta.push(payload);
       state.tab = state.asciibirdMeta.length - 1;
+      document.title = `asciibird - ${state.asciibirdMeta[state.tab].title}`;
     },
     updateToolBarState(state, payload) {
       state.toolbarState = payload;
@@ -211,10 +213,10 @@ export default new Vuex.Store({
       let x = 0;
       let y = 0;
 
-      switch(payload.type) {
+      switch (payload.type) {
         case 'flip':
           tempBlocks = tempBlocks.reverse()
-          for(y = 0; y < tempBlocks.length; y++) {
+          for (y = 0; y < tempBlocks.length; y++) {
             parsedBlocks[y] = tempBlocks[y];
 
             for (x = 0; x < getBlocksWidth(tempBlocks); x++) {
@@ -222,7 +224,7 @@ export default new Vuex.Store({
             }
           }
 
-        break;
+          break;
 
         case 'rotate':
           for (y = 0; y < tempBlocks.length; y++) {
@@ -232,7 +234,7 @@ export default new Vuex.Store({
               parsedBlocks[y][x] = tempBlocks[y][x];
             }
           }
-        break;
+          break;
 
       }
 
@@ -313,6 +315,13 @@ export default new Vuex.Store({
       if (tab === state.tab) {
         state.tab = state.asciibirdMeta.length - 1
       }
+
+      if (state.asciibirdMeta.length) {
+        document.title = `asciibird - ${state.asciibirdMeta[state.tab].title}`;
+      } else {
+        document.title = `asciibird`
+      }
+
     },
   },
   getters: {
