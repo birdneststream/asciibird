@@ -469,7 +469,7 @@ export const exportMirc = () => {
   const {
     currentAscii
   } = store.getters;
-  const layers = store.getters.currentAsciiLayers.reverse();
+  const layers = [...store.getters.currentAsciiLayers].reverse();
   // const blocks = store.getters.currentAsciiBlocks;
   const output = [];
   let curBlock = false;

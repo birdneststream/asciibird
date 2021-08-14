@@ -136,8 +136,6 @@ import BrushCanvas from "./components/parts/BrushCanvas.vue";
 import BrushPreview from "./components/parts/BrushPreview.vue";
 // import KeyboardShortcuts from "./components/parts/KeyboardShortcuts.vue";
 
-import draggable from "vuedraggable";
-
 import {
   parseMircAscii,
   toolbarIcons,
@@ -165,7 +163,6 @@ export default {
     BrushLibrary,
     BrushCanvas,
     BrushPreview,
-    draggable,
     // KeyboardShortcuts
   },
   name: "Dashboard",
