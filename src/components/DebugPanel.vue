@@ -2,7 +2,7 @@
   <div>
     <vue-draggable-resizable
       @dragstop="onDragStop"
-      :grid="[currentAscii.blockWidth, currentAscii.blockHeight]"
+      :grid="[blockWidth, blockHeight]"
       :min-width="blockWidth * 40"
       :max-width="blockWidth * 40"
       :min-height="blockHeight * 20"
@@ -80,10 +80,13 @@ export default {
   }),
   computed: {
     blockWidth() {
-      return blockWidth;
+      return blockWidth * this.blockSizeMultiplier;
     },
     blockHeight() {
-      return blockHeight;
+      return blockHeight * this.blockSizeMultiplier;
+    },
+    blockSizeMultiplier() {
+      return this.$store.getters.blockSizeMultiplier
     },
     getToolName() {
       return toolbarIcons[this.$store.getters.currentTool] ? toolbarIcons[this.$store.getters.currentTool].name : 'none';
@@ -153,10 +156,10 @@ export default {
       return this.$store.getters.brushBlocks;
     },
     // canvasX() {
-    //   return this.x * this.currentAscii.blockWidth;
+    //   return this.x * this.blockWidth;
     // },
     // canvasY() {
-    //   return this.y * this.currentAscii.blockHeight;
+    //   return this.y * this.blockHeight;
     // },
     toolbarState() {
       return this.$store.getters.toolbarState;

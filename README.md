@@ -64,17 +64,17 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment.
 * Redo (ctrl y) is a buggy
 * Circle brush (works okay for odd width and height numbers)
 * Importer could be re-written with regex
-
+* Exporter will default transparent bg to black by default, which wont for some asciis
 ## Focusing on Now
 
 * Modals to add
  * Asciibird options / Options modal from skgs PR
 
-* Review encodings check on file import - UTF8 vs Latin something
 * Context Menus (right click menu) - add to other areas of asciibird
 * LAYERS, drag and drop to arrange layers
 * Image overlay for trace mode
-
+* Experimental code to only render blocks visible on screen
+* Review encodings check on file import - UTF8 vs Latin something
 # Keyboard Shortcuts
 
 ## ASCII Editing
@@ -92,7 +92,7 @@ Until the keyboard shortcuts are moved out of `Editor.vue` they will only work w
 * When the colour picker is open, the first 0 to 9 colours can be chosen with the keyboards number.
 * When the character picker is open, you can also press any key on your keyboard to set the character.
 
-## Toolbar Keyboard Shortcusts
+## Toolbar Keyboard Shortcuts
 The toolbar keyboard shorts are used with the ALT key.
 
 * Alt 1 to 8 - Will toggle the corresponding toolbar icon
@@ -118,7 +118,7 @@ The toolbar keyboard shorts are used with the ALT key.
 
 * Ctrl + c - Copy blocks to clipboard
 * Ctrl + x - Cut blocks to clipboard
-* Ctrl + v - Paste blocks
+* Ctrl + v - Paste blocks as brush
 * Delete - Delete selected blocks
 
 ### Brush Mode Only

@@ -9,6 +9,7 @@ import store from './store';
 import Dashboard from './Dashboard.vue';
 import Toasted from 'vue-toasted';
 
+
 Vue.config.productionTip = false;
 
 import {

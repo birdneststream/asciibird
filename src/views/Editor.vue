@@ -7,7 +7,7 @@
     >
       <vue-draggable-resizable
         style="z-index: 5"
-        :grid="[currentAscii.blockWidth, currentAscii.blockHeight]"
+        :grid="[blockWidth, blockHeight]"
         :w="canvas.width"
         :h="canvas.height"
         :draggable="isDefault"
@@ -17,20 +17,17 @@
         :y="currentAscii.y"
       >
         <canvas
-          ref="canvastools"
-          id="canvastools"
-          class="canvastools"
-          :width="canvas.width"
-          :height="canvas.height"
-          @mousemove="canvasMouseMove"
-          @mousedown="canvasMouseDown"
-          @mouseup="canvasMouseUp"
-        />
-
-        <canvas
           ref="canvas"
           id="canvas"
           class="canvas"
+          :width="canvas.width"
+          :height="canvas.height"
+        />
+
+        <canvas
+          ref="canvastools"
+          id="canvastools"
+          class="canvastools"
           :width="canvas.width"
           :height="canvas.height"
           @mousemove="canvasMouseMove"
@@ -73,15 +70,23 @@ import {
   fillNullBlocks,
   emptyBlock,
   getBlocksWidth,
+  checkVisible,
 } from "../ascii";
 
 export default {
   name: "Editor",
   mounted() {
-    if (this.currentAsciiBlocks) {
-      this.ctx = this.$refs.canvas.getContext("2d");
-      this.toolCtx = this.$refs.canvastools.getContext("2d");
+    this.ctx = this.canvasRef.getContext("2d");
+    this.toolCtx = this.$refs.canvastools.getContext("2d");
+    this.delayRedrawCanvas();
+  },
+  created() {
+    window.addEventListener("load", () => {
+      // Fixes the font on load issue
+      this.delayRedrawCanvas();
+    });
 
+    if (this.currentAsciiBlocks) {
       this.canvas.width = this.currentAscii.width * blockWidth;
       this.canvas.height = this.currentAscii.height * blockHeight;
 
@@ -203,8 +208,6 @@ export default {
           );
           return;
         }
-
-
 
         // Choose FG or BG with Keyboard
         if (
@@ -439,6 +442,7 @@ export default {
         }
       };
 
+      document.removeEventListener("keydown", this.keyListener.bind(this));
       document.addEventListener("keydown", this.keyListener.bind(this));
     }
   },
@@ -451,6 +455,7 @@ export default {
     },
     x: 0, // Ascii X and Y
     y: 0, // Ascii X and Y
+    top: false,
     redraw: true, // Used to limit canvas redraw
     canTool: false,
     textEditing: {
@@ -468,6 +473,18 @@ export default {
     selectedBlocks: [],
   }),
   computed: {
+    canvasRef() {
+      return this.$refs.canvas;
+    },
+    blockWidth() {
+      return blockWidth * this.blockSizeMultiplier;
+    },
+    blockHeight() {
+      return blockHeight * this.blockSizeMultiplier;
+    },
+    blockSizeMultiplier() {
+      return this.$store.getters.blockSizeMultiplier;
+    },
     isModalOpen() {
       return this.$store.getters.isModalOpen;
     },
@@ -485,6 +502,12 @@ export default {
     },
     currentAsciiBlocks() {
       return this.$store.getters.currentAsciiBlocks;
+    },
+    currentAsciiLayers() {
+      return this.$store.getters.currentAsciiLayers;
+    },
+    currentAsciiLayerBlocks() {
+      return this.currentAsciiLayers[this.currentAscii.selectedLayer].data;
     },
     currentTool() {
       return toolbarIcons[this.$store.getters.currentTool];
@@ -569,7 +592,7 @@ export default {
       return this.$store.getters.brushLibraryState;
     },
     gridView() {
-      return this.$store.getters.gridView;
+      return this.toolbarState.gridView;
     },
     asciiBlockAtXy() {
       return this.currentAsciiBlocks[this.y] &&
@@ -599,6 +622,13 @@ export default {
         document.title = `asciibird - ${this.currentAscii.title}`;
       }
     },
+    currentAsciiLayers() {
+      this.delayRedrawCanvas();
+    },
+
+    // currentAsciiBlocks() {
+    //   this.delayRedrawCanvas();
+    // },
     currentTool() {
       switch (this.currentTool.name) {
         case "default":
@@ -631,8 +661,14 @@ export default {
         this.drawBrush();
       }
     },
+    blockSizeMultiplier() {
+      this.delayRedrawCanvas();
+    },
   },
   methods: {
+    checkVisible(top) {
+      return checkVisible(top, top - this.blockHeight);
+    },
     undo() {
       this.$store.commit("undoBlocks");
       this.delayRedrawCanvas();
@@ -672,12 +708,14 @@ export default {
       }
     },
     redrawCanvas() {
-      if (this.currentAsciiBlocks.length) {
+      if (this.currentAsciiLayers.length) {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
         // Position of the meta array
         let x = 0;
         let y = 0;
+
+        let i = 0;
 
         // Draws the actual rectangle
         let canvasX = 0;
@@ -690,10 +728,41 @@ export default {
         for (y = 0; y < this.currentAscii.height + 1; y++) {
           canvasY = blockHeight * y;
 
-          for (x = 0; x < this.currentAscii.width + 1; x++) {
-            if (this.currentAsciiBlocks[y] && this.currentAsciiBlocks[y][x]) {
-              curBlock = { ...this.currentAsciiBlocks[y][x] };
+          // Experimental code to not rows blocks off screen
+          // if (this.top !== false && !this.checkVisible(this.top + canvasY)) {
+          //   continue;
+          // }
 
+          for (x = 0; x < this.currentAscii.width + 1; x++) {
+            // Loop layers
+            for (i = this.currentAsciiLayers.length - 1; i >= 0; i--) {
+              // If this layer is invisble, skip it
+              if (!this.currentAsciiLayers[i].visible) {
+                continue;
+              }
+
+              // If this block on this layer has no data, skip to next row
+              if (
+                this.currentAsciiLayers[i] &&
+                this.currentAsciiLayers[i].data &&
+                this.currentAsciiLayers[i].data[y] &&
+                this.currentAsciiLayers[i].data[y][x] &&
+                i > 0 &&
+                JSON.stringify(this.currentAsciiLayers[i].data[y][x]) ===
+                  JSON.stringify(emptyBlock)
+              ) {
+                continue;
+              } else if (
+                // Otherwise if we are on the very first layer we need to render it
+                this.currentAsciiLayers[i] &&
+                this.currentAsciiLayers[i].data &&
+                this.currentAsciiLayers[i].data[y] &&
+                this.currentAsciiLayers[i].data[y][x]
+              ) {
+                curBlock = { ...this.currentAsciiLayers[i].data[y][x] };
+              }
+
+              // this.currentAsciiBlocks[y][x] = { ... curBlock}
               canvasX = blockWidth * x;
 
               if (this.gridView) {
@@ -717,10 +786,12 @@ export default {
 
                 this.ctx.fillText(
                   curBlock.char,
-                  canvasX ,
+                  canvasX,
                   canvasY + blockHeight - 3
                 );
               }
+
+              break;
             }
           }
         }
@@ -735,6 +806,7 @@ export default {
         canvasBlockWidth
       );
 
+      this.top = top;
       this.canvas.width = width;
       this.canvas.height = height;
 
@@ -749,7 +821,13 @@ export default {
     },
     onCavasDragStop(x, y) {
       // Update left and top in panel
+      this.top = y;
       this.$store.commit("changeAsciiCanvasState", { x, y });
+      this.delayRedrawCanvas();
+    },
+    onCanvasDrag(x, y) {
+      this.top = y;
+      this.delayRedrawCanvas();
     },
     canvasKeyDown(char) {
       if (this.isTextEditing) {
@@ -1302,7 +1380,7 @@ export default {
         }
       }
 
-      this.toolCtx.font = "Hack 13px"
+      this.toolCtx.font = "Hack 13px";
       // We always have a Y array
       const brushDiffY = Math.floor(this.brushBlocks.length / 2) * blockHeight;
 
@@ -1488,7 +1566,7 @@ export default {
                 if (this.mirrorX) {
                   this.toolCtx.fillText(
                     brushBlock.char,
-                    (asciiWidth - arrayX) * blockWidth  + 3,
+                    (asciiWidth - arrayX) * blockWidth + 3,
                     brushY + blockHeight - 4
                   );
                 }
@@ -1496,14 +1574,14 @@ export default {
                 if (this.mirrorY) {
                   this.toolCtx.fillText(
                     brushBlock.char,
-                    brushX  + 3,
+                    brushX + 3,
                     (asciiHeight - arrayY) * blockHeight + 10
                   );
                 }
                 if (this.mirrorY && this.mirrorX) {
                   this.toolCtx.fillText(
                     brushBlock.char,
-                    (asciiWidth - arrayX) * blockWidth  + 3,
+                    (asciiWidth - arrayX) * blockWidth + 3,
                     (asciiHeight - arrayY) * blockHeight + 10
                   );
                 }
@@ -1707,7 +1785,7 @@ export default {
       // If the newColor is same as the existing
       // Then return the original image.
       if (current === newColor && !eraser) {
-        return
+        return;
       }
 
       this.fillTool(this.currentAsciiBlocks, this.y, this.x, current, eraser);

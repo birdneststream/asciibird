@@ -92,6 +92,8 @@
       />
 
       <BrushLibrary v-if="brushLibraryState.visible" />
+      <BrushPreview />
+
     </template>
     <template v-else>
       <div
@@ -131,7 +133,10 @@ import EditAscii from "./components/modals/EditAscii.vue";
 import PasteAscii from "./components/modals/PasteAscii.vue";
 
 import BrushCanvas from "./components/parts/BrushCanvas.vue";
+import BrushPreview from "./components/parts/BrushPreview.vue";
 // import KeyboardShortcuts from "./components/parts/KeyboardShortcuts.vue";
+
+import draggable from "vuedraggable";
 
 import {
   parseMircAscii,
@@ -159,6 +164,8 @@ export default {
     PasteAscii,
     BrushLibrary,
     BrushCanvas,
+    BrushPreview,
+    draggable,
     // KeyboardShortcuts
   },
   name: "Dashboard",

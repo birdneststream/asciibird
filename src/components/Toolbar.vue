@@ -2,12 +2,12 @@
   <div>
     <vue-draggable-resizable
       @dragstop="onDragStop"
-      :grid="[currentAscii.blockWidth, currentAscii.blockHeight]"
+      :grid="[blockWidth, blockHeight]"
       style="z-index: 5"
       :min-width="blockWidth * 25"
-      :max-width="blockWidth * 30"
-      :max-height="blockHeight * 39"
-      :min-height="blockHeight * 38"
+      :max-width="blockWidth * 40"
+      :max-height="blockHeight * 20"
+      :min-height="blockHeight * 19"
       :w="toolbarState.w"
       :h="toolbarState.h"
       :x="toolbarState.x"
@@ -50,7 +50,7 @@
         <div class="flex">
           <label class="ml-1 w-1/2">
             <t-checkbox
-              name="targetingFg"
+              name="mirror-x"
               v-model="mirror.x"
               @change="updateMirror()"
             />
@@ -58,11 +58,30 @@
           </label>
           <label class="ml-1 w-1/2">
             <t-checkbox
-              name="targetingBg"
+              name="mirror-y"
               v-model="mirror.y"
               @change="updateMirror()"
             />
             <span class="text-sm">Mirror Y</span>
+          </label>
+        </div>
+
+        <div class="flex">
+          <label class="ml-1 w-1/2">
+            <t-checkbox
+              name="update-brush"
+              v-model="toolbarState.updateBrush"
+              @change="$store.commit('toggleUpdateBrush', updateBrush)"
+            />
+            <span class="text-sm">Update Brush</span>
+          </label>
+          <label class="ml-1 w-1/2">
+            <t-checkbox
+              name="grid"
+              v-model="toolbarState.gridView"
+              @change="$store.commit('toggleGridView', gridView)"
+            />
+            <span class="text-sm">Grid</span>
           </label>
         </div>
 
@@ -82,9 +101,6 @@
           <font-awesome-icon :icon="[value.fa, value.icon]" size="lg" />
         </t-button>
 
-        <hr class="m-3" />
-        <small>Brush</small>
-        <BrushPreview />
       </t-card>
     </vue-draggable-resizable>
   </div>
@@ -92,7 +108,6 @@
 
 <script>
 import Colours from "./Colours.vue";
-import BrushPreview from "./parts/BrushPreview.vue";
 import { toolbarIcons, blockWidth, blockHeight } from "../ascii";
 
 export default {
@@ -106,7 +121,7 @@ export default {
     this.mirror.y = this.toolbarState.mirrorY;
   },
   name: "Toolbar",
-  components: { Colours, BrushPreview },
+  components: { Colours },
 
   data: () => ({
     toolbar: {
@@ -125,10 +140,13 @@ export default {
       return toolbarIcons;
     },
     blockWidth() {
-      return blockWidth;
+      return blockWidth * this.blockSizeMultiplier;
     },
     blockHeight() {
-      return blockHeight;
+      return blockHeight * this.blockSizeMultiplier;
+    },
+    blockSizeMultiplier() {
+      return this.$store.getters.blockSizeMultiplier
     },
     toolbarState() {
       return this.$store.getters.toolbarState;
@@ -159,6 +177,12 @@ export default {
     },
     draggable() {
       return this.toolbarState.draggable;
+    },
+    gridView() {
+      return this.toolbarState.gridView;
+    },
+    updateBrush() {
+      return this.toolbarState.updateBrush;
     },
   },
   watch: {},

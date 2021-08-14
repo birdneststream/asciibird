@@ -3,8 +3,8 @@
     <vue-draggable-resizable
       @dragstop="onDragStop"
       @resizestop="onResize"
-      :grid="[currentAscii.blockWidth, currentAscii.blockHeight]"
-      :min-width="blockWidth * 25"
+      :grid="[blockWidth, blockHeight]"
+      :min-width="blockWidth * 35"
       :max-width="blockWidth * 50"
       :min-height="blockHeight * 50"
       :max-height="blockHeight * 100"
@@ -36,10 +36,23 @@
           >History</t-button
         >
 
+        <t-button
+          type="button"
+          :class="`block w-full ${
+            panel.tab === 1
+              ? 'border-gray-900 bg-blue-500'
+              : 'border-gray-200 bg-gray-500'
+          }`"
+          @click="changeTab(2)"
+          >Layers</t-button
+        >
+
         <div class="flex">
           <div v-if="panel.tab === 0">
             <div v-for="(brush, key) in brushHistory" :key="key">
-              <t-card class="hover:border-blue-900 border-gray-300 bg-gray-200 mt-2">
+              <t-card
+                class="hover:border-blue-900 border-gray-300 bg-gray-200 mt-2"
+              >
                 <BrushCanvas :blocks="decompressBlock(brush.blocks)" />
 
                 <t-button
@@ -97,16 +110,37 @@
               </t-card>
             </div>
           </div>
+
+          <div
+            v-if="panel.tab === 2"
+            class="w-full bg-white rounded-lg shadow-lg"
+          >
+
+            <Layers />
+          </div>
         </div>
       </t-card>
     </vue-draggable-resizable>
   </div>
 </template>
 
+<style scoped>
+.buttons {
+  margin-top: 35px;
+}
+.ghost {
+  opacity: 0.5;
+  background: #c8ebfb;
+}
+</style>
+
 <script>
 import { mircColours99, blockWidth, blockHeight } from "../ascii";
 import BrushCanvas from "./parts/BrushCanvas.vue";
+import BrushPreview from "./parts/BrushPreview.vue";
+import Layers from "./parts/Layers.vue";
 import LZString from "lz-string";
+
 
 export default {
   name: "BrushLibrary",
@@ -125,17 +159,23 @@ export default {
       y: 100,
       visible: true,
       tab: 1,
+      dragging: false,
     },
   }),
   components: {
     BrushCanvas,
+    BrushPreview,
+    Layers
   },
   computed: {
     blockWidth() {
-      return blockWidth;
+      return blockWidth * this.blockSizeMultiplier;
     },
     blockHeight() {
-      return blockHeight;
+      return blockHeight * this.blockSizeMultiplier;
+    },
+    blockSizeMultiplier() {
+      return this.$store.getters.blockSizeMultiplier;
     },
     currentAscii() {
       return this.$store.getters.currentAscii;

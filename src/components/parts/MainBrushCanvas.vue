@@ -43,9 +43,14 @@ import {
 
 export default {
   name: "MainBrushCanvas",
+  created() {
+    window.addEventListener('load', () => {
+         // Fixes the font on load issue
+         this.delayRedrawCanvas();
+    })
+  },
   mounted() {
     this.ctx = this.canvasRef.getContext("2d");
-    this.delayRedrawCanvas();
   },
   data: () => ({
     ctx: null,
@@ -56,6 +61,15 @@ export default {
     y: 0,
   }),
   computed: {
+    blockWidth() {
+      return blockWidth * this.blockSizeMultiplier;
+    },
+    blockHeight() {
+      return blockHeight * this.blockSizeMultiplier;
+    },
+    blockSizeMultiplier() {
+      return this.$store.getters.blockSizeMultiplier
+    },
     currentAscii() {
       return this.$store.getters.currentAscii;
     },
@@ -148,6 +162,9 @@ export default {
     currentChar() {
       this.delayRedrawCanvas();
     },
+    blockSizeMultiplier() {
+      this.delayRedrawCanvas();
+    },
   },
   methods: {
     getBlocksWidth(blocks) {
@@ -156,6 +173,7 @@ export default {
     filterNullBlocks(blocks) {
       return filterNullBlocks(blocks);
     },
+
     drawPreview() {
       this.ctx.clearRect(0, 0, this.canvasRef.width, this.canvasRef.height);
       this.ctx.fillStyle = this.mircColours[1];

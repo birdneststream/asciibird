@@ -7,7 +7,7 @@ import { mircColours99, toolbarIcons, maxBrushSize } from '../../ascii';
 
 export default {
   name: 'KeyboardShortcuts',
-  mounted() {
+  created() {
       const thisIs = this;
       this.keyListener = function (e) {
         // Stop blocking input when modals are open
@@ -69,7 +69,7 @@ export default {
 
         // Show / hide grid view
         if (e.key === "g" && ctrlKey) {
-          this.$store.commit("toggleGridView", !this.gridView);
+          this.$store.commit("toggleGridView", !this.toolbarState.gridView);
         }
 
         // Show / hide brush library
@@ -260,9 +260,6 @@ export default {
     },
     brushLibraryState() {
       return this.$store.getters.brushLibraryState;
-    },
-    gridView() {
-      return this.$store.getters.gridView;
     },
     maxBrushSize() {
       return maxBrushSize;

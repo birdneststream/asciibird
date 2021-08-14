@@ -1,55 +1,82 @@
 <template>
   <div>
-    <div class="flex">
-      <div class="w-1/2">
-        <t-input
-          type="number"
-          name="width"
-          v-model="brushSizeWidthInput"
-          min="1"
-          :max="maxBrushSize"
-        />
-      </div>
+    <vue-draggable-resizable
+      @dragstop="onDragStop"
+      @resizestop="onResize"
+      :grid="[blockWidth, blockHeight]"
+      :min-width="blockWidth * 20"
+      :max-width="blockWidth * 80"
+      :min-height="blockHeight * 20"
+      :max-height="blockHeight * 80"
+      :w="brushPreviewState.w"
+      :h="brushPreviewState.h"
+      :x="brushPreviewState.x"
+      :y="brushPreviewState.y"
+      :draggable="canDrag"
+    >
+      <t-card class="h-full">
+        <div class="flex w-full">
+          <div class="w-1/2">
+            <t-input
+              type="number"
+              name="width"
+              v-model="brushSizeWidthInput"
+              min="1"
+              :max="maxBrushSize"
+            />
+          </div>
 
-      <div class="w-1/2">
-        <t-input
-          type="number"
-          name="height"
-          v-model="brushSizeHeightInput"
-          min="1"
-          :max="maxBrushSize"
-        />
-      </div>
-    </div>
+          <div class="w-1/2">
+            <t-input
+              type="number"
+              name="height"
+              v-model="brushSizeHeightInput"
+              min="1"
+              :max="maxBrushSize"
+            />
+          </div>
+        </div>
 
-    <div class="flex">
-      <label class="block">
-        <t-radio
-          name="options"
-          value="square"
-          checked
-          v-model="brushSizeTypeInput"
-        />
-        <span class="text-sm">Square</span>
-      </label>
+        <div class="flex w-full">
+          <label class="block">
+            <t-radio
+              name="options"
+              value="square"
+              checked
+              v-model="brushSizeTypeInput"
+            />
+            <span class="text-sm">Square</span>
+          </label>
 
-      <label class="block">
-        <t-radio name="options" value="circle" v-model="brushSizeTypeInput" />
-        <span class="text-sm">Circle</span>
-      </label>
+          <label class="block">
+            <t-radio
+              name="options"
+              value="circle"
+              v-model="brushSizeTypeInput"
+            />
+            <span class="text-sm">Circle</span>
+          </label>
 
-      <label class="block">
-        <t-radio name="options" value="cross" v-model="brushSizeTypeInput" />
-        <span class="text-sm">Cross</span>
-      </label>
-    </div>
+          <label class="block">
+            <t-radio
+              name="options"
+              value="cross"
+              v-model="brushSizeTypeInput"
+            />
+            <span class="text-sm">Cross</span>
+          </label>
+        </div>
 
-    <MainBrushCanvas />
+        <div @mouseenter="canDrag = false" @mouseleave="canDrag = true">
+          <MainBrushCanvas />
+        </div>
+      </t-card>
+    </vue-draggable-resizable>
   </div>
 </template>
 
 <script>
-import { emptyBlock, maxBrushSize } from "../../ascii";
+import { emptyBlock, maxBrushSize, blockWidth, blockHeight } from "../../ascii";
 import MainBrushCanvas from "./MainBrushCanvas.vue";
 
 export default {
@@ -57,21 +84,52 @@ export default {
   components: {
     MainBrushCanvas,
   },
-  mounted() {
+  created() {
     if (this.brushBlocksEmpty) {
+      this.createBlocks();
       this.brushSizeWidthInput = this.brushSizeWidth;
       this.brushSizeHeightInput = this.brushSizeHeight;
       this.brushSizeTypeInput = this.brushSizeType;
-      this.createBlocks();
     }
+
+    this.panel.x = this.brushPreviewState.x;
+    this.panel.y = this.brushPreviewState.y;
+    this.panel.w = this.brushPreviewState.w;
+    this.panel.h = this.brushPreviewState.h;
   },
   data: () => ({
+    canDrag: true,
     blocks: [],
     brushSizeHeightInput: 1,
     brushSizeWidthInput: 1,
     brushSizeTypeInput: "square",
+    panel: {
+      w: 0,
+      h: 0,
+      x: 100,
+      y: 100,
+      visible: true,
+    },
   }),
   computed: {
+    blockWidth() {
+      return blockWidth * this.blockSizeMultiplier;
+    },
+    blockHeight() {
+      return blockHeight * this.blockSizeMultiplier;
+    },
+    blockSizeMultiplier() {
+      return this.$store.getters.blockSizeMultiplier;
+    },
+    canFg() {
+      return this.$store.getters.isTargettingFg;
+    },
+    canBg() {
+      return this.$store.getters.isTargettingBg;
+    },
+    canText() {
+      return this.$store.getters.isTargettingChar;
+    },
     currentFg() {
       return this.$store.getters.currentFg;
     },
@@ -80,6 +138,9 @@ export default {
     },
     currentChar() {
       return this.$store.getters.currentChar;
+    },
+    toolbarState() {
+      return this.$store.getters.toolbarState;
     },
     brushSizeHeight() {
       return this.$store.getters.brushSizeHeight;
@@ -100,8 +161,14 @@ export default {
       return this.brushBlocks.length === 0;
     },
     maxBrushSize() {
-      return maxBrushSize
-    }
+      return maxBrushSize;
+    },
+    brushPreviewState() {
+      return this.$store.getters.brushPreviewState;
+    },
+    updateBrush() {
+      return this.toolbarState.updateBrush;
+    },    
   },
   watch: {
     brushSizeWidth() {
@@ -128,9 +195,40 @@ export default {
         this.createBlocks();
       }
     },
+    canFg(val, old) {
+      if (val !== old && this.updateBrush) {
+        this.createBlocks();
+      }
+    },
+    canBg(val, old) {
+      if (val !== old && this.updateBrush) {
+        this.createBlocks();
+      }
+    },
+    canText(val, old) {
+      if (val !== old && this.updateBrush) {
+        this.createBlocks();
+      }
+    },
+    currentFg(val, old) {
+      if (val !== old && this.updateBrush) {
+        this.createBlocks();
+      }
+    },
+    currentBg(val, old) {
+      if (val !== old && this.updateBrush) {
+        this.createBlocks();
+      }
+    },
+    currentChar(val, old) {
+      if (val !== old && this.updateBrush) {
+        this.createBlocks();
+      }
+    },
     brushBlocks() {
       this.$store.commit("pushBrushHistory", this.brushBlocks);
     },
+    
   },
   methods: {
     updateBrushSize() {
@@ -160,7 +258,7 @@ export default {
       const middleY = Math.floor(brushHeight / 2);
       const middleX = Math.floor(brushWidth / 2);
       let yModifier = 0;
-      
+
       // Recreate 2d array for preview
       for (y = 0; y < brushHeight; y++) {
         this.blocks[y] = [];
@@ -227,6 +325,20 @@ export default {
       }
 
       this.$store.commit("brushBlocks", this.blocks);
+    },
+    onResize(x, y, w, h) {
+      this.panel.x = x;
+      this.panel.y = y;
+      this.panel.w = w;
+      this.panel.h = h;
+
+      this.$store.commit("changeBrushPreviewState", this.panel);
+    },
+    onDragStop(x, y) {
+      this.panel.x = x;
+      this.panel.y = y;
+
+      this.$store.commit("changeBrushPreviewState", this.panel);
     },
   },
 };
