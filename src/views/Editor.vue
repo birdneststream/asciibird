@@ -86,7 +86,7 @@ export default {
       this.delayRedrawCanvas();
     });
 
-    if (this.currentAsciiBlocks) {
+    if (this.currentAsciiLayerBlocks) {
       this.canvas.width = this.currentAscii.width * blockWidth;
       this.canvas.height = this.currentAscii.height * blockHeight;
 
@@ -259,13 +259,16 @@ export default {
                 x++
               ) {
                 if (this.selectedBlocks[y] && this.selectedBlocks[y][x]) {
-                  this.currentAsciiBlocks[y][x] = { ...emptyBlock };
+                  this.currentAsciiLayerBlocks[y][x] = { ...emptyBlock };
                 }
               }
             }
 
             // Reset and hide the select after successful copy
-            this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
+            this.$store.commit(
+              "updateAsciiBlocks",
+              this.currentAsciiLayerBlocks
+            );
             this.delayRedrawCanvas();
 
             this.$toasted.show("Deleted blocks!", {
@@ -287,7 +290,7 @@ export default {
                 x++
               ) {
                 if (this.selectedBlocks[y] && this.selectedBlocks[y][x]) {
-                  this.currentAsciiBlocks[y][x] = { ...emptyBlock };
+                  this.currentAsciiLayerBlocks[y][x] = { ...emptyBlock };
                 }
               }
             }
@@ -301,7 +304,10 @@ export default {
 
             // Reset and hide the select after successful copy
 
-            this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
+            this.$store.commit(
+              "updateAsciiBlocks",
+              this.currentAsciiLayerBlocks
+            );
             // this.delayRedrawCanvas()
 
             this.$toasted.show("Cut blocks!", {
@@ -343,7 +349,7 @@ export default {
 
         // New ASCII
         // Ctrl N doesn't seem to work in chrome? https://github.com/liftoff/GateOne/issues/290
-        if (e.key === "n" && this.isDefault) {
+        if (e.key === "n" && this.isDefault && !this.isTextEditing) {
           this.$store.commit("openModal", "new-ascii");
 
           return;
@@ -357,7 +363,7 @@ export default {
         }
 
         // Paste ASCII
-        if (e.key === "p" && this.isDefault) {
+        if (e.key === "p" && this.isDefault && !this.isTextEditing) {
           this.$store.commit("openModal", "paste-ascii");
 
           return;
@@ -595,9 +601,9 @@ export default {
       return this.toolbarState.gridView;
     },
     asciiBlockAtXy() {
-      return this.currentAsciiBlocks[this.y] &&
-        this.currentAsciiBlocks[this.y][this.x]
-        ? this.currentAsciiBlocks[this.y][this.x]
+      return this.currentAsciiLayerBlocks[this.y] &&
+        this.currentAsciiLayerBlocks[this.y][this.x]
+        ? this.currentAsciiLayerBlocks[this.y][this.x]
         : false;
     },
     maxBrushSize() {
@@ -622,13 +628,12 @@ export default {
         document.title = `asciibird - ${this.currentAscii.title}`;
       }
     },
+    currentAsciiLayerBlocks() {
+      this.delayRedrawCanvas();
+    },
     currentAsciiLayers() {
       this.delayRedrawCanvas();
     },
-
-    // currentAsciiBlocks() {
-    //   this.delayRedrawCanvas();
-    // },
     currentTool() {
       switch (this.currentTool.name) {
         case "default":
@@ -687,7 +692,7 @@ export default {
       };
     },
     redrawSelect() {
-      if (this.currentAsciiBlocks.length) {
+      if (this.currentAsciiLayerBlocks.length) {
         this.clearToolCanvas();
         this.toolCtx.fillStyle = this.mircColours[0];
 
@@ -736,62 +741,68 @@ export default {
           for (x = 0; x < this.currentAscii.width + 1; x++) {
             // Loop layers
             for (i = this.currentAsciiLayers.length - 1; i >= 0; i--) {
+              // for (i = 0; i >= this.currentAsciiLayers.length - 1; i++) {
               // If this layer is invisble, skip it
-              if (!this.currentAsciiLayers[i].visible) {
-                continue;
-              }
+              if (this.currentAsciiLayers[i].visible === true) {
+                // If this block on this layer has no data, skip to next row
+                if (
+                  this.currentAsciiLayers[i] &&
+                  this.currentAsciiLayers[i].data &&
+                  this.currentAsciiLayers[i].data[y] &&
+                  this.currentAsciiLayers[i].data[y][x] &&
+                  i > 0 &&
+                  JSON.stringify(this.currentAsciiLayers[i].data[y][x]) ===
+                    JSON.stringify(emptyBlock)
+                ) {
+                  continue;
+                } else if (
+                  // Otherwise if we are on the very first layer we need to render it
+                  this.currentAsciiLayers[i] &&
+                  this.currentAsciiLayers[i].data &&
+                  this.currentAsciiLayers[i].data[y] &&
+                  this.currentAsciiLayers[i].data[y][x]
+                ) {
+                  curBlock = { ...this.currentAsciiLayers[i].data[y][x] };
 
-              // If this block on this layer has no data, skip to next row
-              if (
-                this.currentAsciiLayers[i] &&
-                this.currentAsciiLayers[i].data &&
-                this.currentAsciiLayers[i].data[y] &&
-                this.currentAsciiLayers[i].data[y][x] &&
-                i > 0 &&
-                JSON.stringify(this.currentAsciiLayers[i].data[y][x]) ===
-                  JSON.stringify(emptyBlock)
-              ) {
-                continue;
-              } else if (
-                // Otherwise if we are on the very first layer we need to render it
-                this.currentAsciiLayers[i] &&
-                this.currentAsciiLayers[i].data &&
-                this.currentAsciiLayers[i].data[y] &&
-                this.currentAsciiLayers[i].data[y][x]
-              ) {
-                curBlock = { ...this.currentAsciiLayers[i].data[y][x] };
-              }
-
-              // this.currentAsciiBlocks[y][x] = { ... curBlock}
-              canvasX = blockWidth * x;
-
-              if (this.gridView) {
-                this.ctx.setLineDash([1]);
-                this.ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
-                this.ctx.strokeRect(canvasX, canvasY, blockWidth, blockHeight);
-              }
-
-              // Background block
-              if (curBlock.bg !== null) {
-                this.ctx.fillStyle = this.mircColours[curBlock.bg];
-                this.ctx.fillRect(canvasX, canvasY, blockWidth, blockHeight);
-              }
-
-              if (curBlock.char) {
-                if (curBlock.fg !== null) {
-                  this.ctx.fillStyle = this.mircColours[curBlock.fg];
-                } else {
-                  this.ctx.fillStyle = "#000000";
+                  // break;
                 }
 
-                this.ctx.fillText(
-                  curBlock.char,
-                  canvasX,
-                  canvasY + blockHeight - 3
-                );
-              }
+                // this.currentAsciiBlocks[y][x] = { ... curBlock}
+                canvasX = blockWidth * x;
 
-              break;
+                if (this.gridView) {
+                  this.ctx.setLineDash([1]);
+                  this.ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+                  this.ctx.strokeRect(
+                    canvasX,
+                    canvasY,
+                    blockWidth,
+                    blockHeight
+                  );
+                }
+
+                // Background block
+                if (curBlock.bg !== null) {
+                  this.ctx.fillStyle = this.mircColours[curBlock.bg];
+                  this.ctx.fillRect(canvasX, canvasY, blockWidth, blockHeight);
+                }
+
+                if (curBlock.char) {
+                  if (curBlock.fg !== null) {
+                    this.ctx.fillStyle = this.mircColours[curBlock.fg];
+                  } else {
+                    this.ctx.fillStyle = "#000000";
+                  }
+
+                  this.ctx.fillText(
+                    curBlock.char,
+                    canvasX,
+                    canvasY + blockHeight - 3
+                  );
+                }
+
+                break;
+              }
             }
           }
         }
@@ -801,7 +812,7 @@ export default {
       const canvasBlockHeight = Math.floor(height / blockHeight);
       const canvasBlockWidth = Math.floor(width / blockWidth);
       let blocks = fillNullBlocks(
-        this.currentAsciiBlocks,
+        this.currentAsciiLayerBlocks,
         canvasBlockHeight,
         canvasBlockWidth
       );
@@ -832,13 +843,13 @@ export default {
     canvasKeyDown(char) {
       if (this.isTextEditing) {
         if (
-          this.currentAsciiBlocks[this.textEditing.startY] &&
-          this.currentAsciiBlocks[this.textEditing.startY][
+          this.currentAsciiLayerBlocks[this.textEditing.startY] &&
+          this.currentAsciiLayerBlocks[this.textEditing.startY][
             this.textEditing.startX
           ]
         ) {
           let targetBlock =
-            this.currentAsciiBlocks[this.textEditing.startY][
+            this.currentAsciiLayerBlocks[this.textEditing.startY][
               this.textEditing.startX
             ];
 
@@ -846,16 +857,16 @@ export default {
             // Remove a character
             case "Backspace":
               if (
-                this.currentAsciiBlocks[this.textEditing.startY][
+                this.currentAsciiLayerBlocks[this.textEditing.startY][
                   this.textEditing.startX - 1
                 ]
               ) {
                 targetBlock =
-                  this.currentAsciiBlocks[this.textEditing.startY][
+                  this.currentAsciiLayerBlocks[this.textEditing.startY][
                     this.textEditing.startX - 1
                   ];
 
-                this.currentAsciiBlocks[this.textEditing.startY][
+                this.currentAsciiLayerBlocks[this.textEditing.startY][
                   this.textEditing.startX - 1
                 ].char = null;
                 this.textEditing.startX -= 1;
@@ -864,16 +875,16 @@ export default {
             // Remove char as current position, but don't change position after
             case "Delete":
               if (
-                this.currentAsciiBlocks[this.textEditing.startY][
+                this.currentAsciiLayerBlocks[this.textEditing.startY][
                   this.textEditing.startX
                 ]
               ) {
                 targetBlock =
-                  this.currentAsciiBlocks[this.textEditing.startY][
+                  this.currentAsciiLayerBlocks[this.textEditing.startY][
                     this.textEditing.startX
                   ];
 
-                this.currentAsciiBlocks[this.textEditing.startY][
+                this.currentAsciiLayerBlocks[this.textEditing.startY][
                   this.textEditing.startX
                 ].char = null;
               }
@@ -881,7 +892,7 @@ export default {
               // Also remove in mirror mode the other chars
               if (this.mirrorX) {
                 targetBlock =
-                  this.currentAsciiBlocks[this.textEditing.startY][
+                  this.currentAsciiLayerBlocks[this.textEditing.startY][
                     this.currentAscii.width - this.textEditing.startX
                   ];
 
@@ -890,7 +901,7 @@ export default {
 
               if (this.mirrorY) {
                 targetBlock =
-                  this.currentAsciiBlocks[
+                  this.currentAsciiLayerBlocks[
                     this.currentAscii.height - this.textEditing.startY
                   ][this.textEditing.startX];
                 targetBlock.char = null;
@@ -898,7 +909,7 @@ export default {
 
               if (this.mirrorY && this.mirrorX) {
                 targetBlock =
-                  this.currentAsciiBlocks[
+                  this.currentAsciiLayerBlocks[
                     this.currentAscii.height - this.textEditing.startY
                   ][this.currentAscii.width - this.textEditing.startX];
 
@@ -909,7 +920,9 @@ export default {
 
             // Jump to next line at the 0 X position
             case "Enter":
-              if (this.currentAsciiBlocks[this.textEditing.startY + 1][0]) {
+              if (
+                this.currentAsciiLayerBlocks[this.textEditing.startY + 1][0]
+              ) {
                 this.textEditing.startX = 0;
                 this.textEditing.startY += 1;
               }
@@ -918,7 +931,7 @@ export default {
             // Move the text indicator around with the arrow keys
             case "ArrowUp":
               if (
-                this.currentAsciiBlocks[this.textEditing.startY - 1][
+                this.currentAsciiLayerBlocks[this.textEditing.startY - 1][
                   this.textEditing.startX
                 ]
               ) {
@@ -928,7 +941,7 @@ export default {
 
             case "ArrowDown":
               if (
-                this.currentAsciiBlocks[this.textEditing.startY + 1][
+                this.currentAsciiLayerBlocks[this.textEditing.startY + 1][
                   this.textEditing.startX
                 ]
               ) {
@@ -938,7 +951,7 @@ export default {
 
             case "ArrowLeft":
               if (
-                this.currentAsciiBlocks[this.textEditing.startY][
+                this.currentAsciiLayerBlocks[this.textEditing.startY][
                   this.textEditing.startX - 1
                 ]
               ) {
@@ -948,7 +961,7 @@ export default {
 
             case "ArrowRight":
               if (
-                this.currentAsciiBlocks[this.textEditing.startY][
+                this.currentAsciiLayerBlocks[this.textEditing.startY][
                   this.textEditing.startX + 1
                 ]
               ) {
@@ -967,7 +980,7 @@ export default {
 
                 if (this.mirrorX) {
                   targetBlock =
-                    this.currentAsciiBlocks[this.textEditing.startY][
+                    this.currentAsciiLayerBlocks[this.textEditing.startY][
                       this.currentAscii.width - this.textEditing.startX
                     ];
 
@@ -980,7 +993,7 @@ export default {
 
                 if (this.mirrorY) {
                   targetBlock =
-                    this.currentAsciiBlocks[
+                    this.currentAsciiLayerBlocks[
                       this.currentAscii.height - this.textEditing.startY
                     ][this.textEditing.startX];
 
@@ -993,7 +1006,7 @@ export default {
 
                 if (this.mirrorY && this.mirrorX) {
                   targetBlock =
-                    this.currentAsciiBlocks[
+                    this.currentAsciiLayerBlocks[
                       this.currentAscii.height - this.textEditing.startY
                     ][this.currentAscii.width - this.textEditing.startX];
 
@@ -1005,7 +1018,7 @@ export default {
                 }
 
                 if (
-                  this.currentAsciiBlocks[this.textEditing.startY][
+                  this.currentAsciiLayerBlocks[this.textEditing.startY][
                     this.textEditing.startX + 1
                   ]
                 ) {
@@ -1025,7 +1038,7 @@ export default {
         this.delayRedrawCanvas();
 
         // It's a bit intense to push this every single keystroke
-        // this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
+        // this.$store.commit("updateAsciiBlocks", this.currentAsciiLayerBlocks);
         this.clearToolCanvas();
         this.drawTextIndicator();
         this.drawIndicator();
@@ -1039,13 +1052,13 @@ export default {
         case "brush":
           this.canTool = false;
 
-          this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
+          this.$store.commit("updateAsciiBlocks", this.currentAsciiLayerBlocks);
 
           break;
 
         case "eraser":
           this.canTool = false;
-          this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
+          this.$store.commit("updateAsciiBlocks", this.currentAsciiLayerBlocks);
           break;
 
         case "fill-eraser":
@@ -1082,13 +1095,19 @@ export default {
 
           case "fill":
             this.fill();
-            this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
+            this.$store.commit(
+              "updateAsciiBlocks",
+              this.currentAsciiLayerBlocks
+            );
             this.canTool = false;
             break;
 
           case "fill-eraser":
             this.fill(true);
-            this.$store.commit("updateAsciiBlocks", this.currentAsciiBlocks);
+            this.$store.commit(
+              "updateAsciiBlocks",
+              this.currentAsciiLayerBlocks
+            );
             this.canTool = false;
             break;
 
@@ -1261,8 +1280,11 @@ export default {
               x > Math.ceil(this.selecting.startX / blockWidth) - 1 &&
               x <= Math.ceil(this.selecting.endX / blockWidth) - 1
             ) {
-              if (this.currentAsciiBlocks[y] && this.currentAsciiBlocks[y][x]) {
-                curBlock = { ...this.currentAsciiBlocks[y][x] };
+              if (
+                this.currentAsciiLayerBlocks[y] &&
+                this.currentAsciiLayerBlocks[y][x]
+              ) {
+                curBlock = { ...this.currentAsciiLayerBlocks[y][x] };
 
                 if (!this.selectedBlocks[y][x]) {
                   this.selectedBlocks[y][x] = { ...curBlock };
@@ -1363,7 +1385,7 @@ export default {
     drawBrush(plain = false) {
       this.clearToolCanvas();
 
-      let targetBlock = this.asciiBlockAtXy;
+      let targetBlock = false;
       let brushDiffX = 0;
       let xLength = 0;
 
@@ -1402,11 +1424,8 @@ export default {
           const arrayY = brushY / blockHeight;
           const arrayX = brushX / blockWidth;
 
-          if (
-            this.currentAsciiBlocks[arrayY] &&
-            this.currentAsciiBlocks[arrayY][arrayX]
-          ) {
-            targetBlock = this.currentAsciiBlocks[arrayY][arrayX];
+          if (this.currentAsciiLayerBlocks[arrayY][arrayX]) {
+            targetBlock = this.currentAsciiLayerBlocks[arrayY][arrayX];
 
             if (!plain) {
               if (this.canBg) {
@@ -1481,31 +1500,33 @@ export default {
 
                   if (
                     this.mirrorX &&
-                    this.currentAsciiBlocks[arrayY] &&
-                    this.currentAsciiBlocks[arrayY][asciiWidth - arrayX]
+                    this.currentAsciiLayerBlocks[arrayY] &&
+                    this.currentAsciiLayerBlocks[arrayY][asciiWidth - arrayX]
                   ) {
-                    this.currentAsciiBlocks[arrayY][asciiWidth - arrayX].bg =
-                      brushBlock.bg;
+                    this.currentAsciiLayerBlocks[arrayY][
+                      asciiWidth - arrayX
+                    ].bg = brushBlock.bg;
                   }
 
                   if (
                     this.mirrorY &&
-                    this.currentAsciiBlocks[asciiHeight - arrayY] &&
-                    this.currentAsciiBlocks[asciiHeight - arrayY][arrayX]
+                    this.currentAsciiLayerBlocks[asciiHeight - arrayY] &&
+                    this.currentAsciiLayerBlocks[asciiHeight - arrayY][arrayX]
                   ) {
-                    this.currentAsciiBlocks[asciiHeight - arrayY][arrayX].bg =
-                      brushBlock.bg;
+                    this.currentAsciiLayerBlocks[asciiHeight - arrayY][
+                      arrayX
+                    ].bg = brushBlock.bg;
                   }
 
                   if (
                     this.mirrorY &&
                     this.mirrorX &&
-                    this.currentAsciiBlocks[asciiHeight - arrayY] &&
-                    this.currentAsciiBlocks[asciiHeight - arrayY][
+                    this.currentAsciiLayerBlocks[asciiHeight - arrayY] &&
+                    this.currentAsciiLayerBlocks[asciiHeight - arrayY][
                       asciiWidth - arrayX
                     ]
                   ) {
-                    this.currentAsciiBlocks[asciiHeight - arrayY][
+                    this.currentAsciiLayerBlocks[asciiHeight - arrayY][
                       asciiWidth - arrayX
                     ].bg = brushBlock.bg;
                   }
@@ -1523,31 +1544,33 @@ export default {
 
                   if (
                     this.mirrorX &&
-                    this.currentAsciiBlocks[arrayY] &&
-                    this.currentAsciiBlocks[arrayY][asciiWidth - arrayX]
+                    this.currentAsciiLayerBlocks[arrayY] &&
+                    this.currentAsciiLayerBlocks[arrayY][asciiWidth - arrayX]
                   ) {
-                    this.currentAsciiBlocks[arrayY][asciiWidth - arrayX].fg =
-                      brushBlock.fg;
+                    this.currentAsciiLayerBlocks[arrayY][
+                      asciiWidth - arrayX
+                    ].fg = brushBlock.fg;
                   }
 
                   if (
                     this.mirrorY &&
-                    this.currentAsciiBlocks[asciiHeight - arrayY] &&
-                    this.currentAsciiBlocks[asciiHeight - arrayY][arrayX]
+                    this.currentAsciiLayerBlocks[asciiHeight - arrayY] &&
+                    this.currentAsciiLayerBlocks[asciiHeight - arrayY][arrayX]
                   ) {
-                    this.currentAsciiBlocks[asciiHeight - arrayY][arrayX].fg =
-                      brushBlock.fg;
+                    this.currentAsciiLayerBlocks[asciiHeight - arrayY][
+                      arrayX
+                    ].fg = brushBlock.fg;
                   }
 
                   if (
                     this.mirrorY &&
                     this.mirrorX &&
-                    this.currentAsciiBlocks[asciiHeight - arrayY] &&
-                    this.currentAsciiBlocks[asciiHeight - arrayY][
+                    this.currentAsciiLayerBlocks[asciiHeight - arrayY] &&
+                    this.currentAsciiLayerBlocks[asciiHeight - arrayY][
                       asciiWidth - arrayX
                     ]
                   ) {
-                    this.currentAsciiBlocks[asciiHeight - arrayY][
+                    this.currentAsciiLayerBlocks[asciiHeight - arrayY][
                       asciiWidth - arrayX
                     ].fg = brushBlock.fg;
                   }
@@ -1591,31 +1614,33 @@ export default {
 
                   if (
                     this.mirrorX &&
-                    this.currentAsciiBlocks[arrayY] &&
-                    this.currentAsciiBlocks[arrayY][asciiWidth - arrayX]
+                    this.currentAsciiLayerBlocks[arrayY] &&
+                    this.currentAsciiLayerBlocks[arrayY][asciiWidth - arrayX]
                   ) {
-                    this.currentAsciiBlocks[arrayY][asciiWidth - arrayX].char =
-                      brushBlock.char;
+                    this.currentAsciiLayerBlocks[arrayY][
+                      asciiWidth - arrayX
+                    ].char = brushBlock.char;
                   }
 
                   if (
                     this.mirrorY &&
-                    this.currentAsciiBlocks[asciiHeight - arrayY] &&
-                    this.currentAsciiBlocks[asciiHeight - arrayY][arrayX]
+                    this.currentAsciiLayerBlocks[asciiHeight - arrayY] &&
+                    this.currentAsciiLayerBlocks[asciiHeight - arrayY][arrayX]
                   ) {
-                    this.currentAsciiBlocks[asciiHeight - arrayY][arrayX].char =
-                      brushBlock.char;
+                    this.currentAsciiLayerBlocks[asciiHeight - arrayY][
+                      arrayX
+                    ].char = brushBlock.char;
                   }
 
                   if (
                     this.mirrorY &&
                     this.mirrorX &&
-                    this.currentAsciiBlocks[asciiHeight - arrayY] &&
-                    this.currentAsciiBlocks[asciiHeight - arrayY][
+                    this.currentAsciiLayerBlocks[asciiHeight - arrayY] &&
+                    this.currentAsciiLayerBlocks[asciiHeight - arrayY][
                       asciiWidth - arrayX
                     ]
                   ) {
-                    this.currentAsciiBlocks[asciiHeight - arrayY][
+                    this.currentAsciiLayerBlocks[asciiHeight - arrayY][
                       asciiWidth - arrayX
                     ].char = brushBlock.char;
                   }
@@ -1681,7 +1706,7 @@ export default {
             const arrayX = brushX / blockWidth;
 
             if (this.asciiBlockAtXy) {
-              targetBlock = this.currentAsciiBlocks[arrayY][arrayX];
+              targetBlock = this.currentAsciiLayerBlocks[arrayY][arrayX];
 
               if (this.canFg) {
                 targetBlock.fg = null;
@@ -1698,13 +1723,13 @@ export default {
 
             if (this.mirrorX) {
               if (
-                this.currentAsciiBlocks[arrayY] &&
-                this.currentAsciiBlocks[arrayY][
+                this.currentAsciiLayerBlocks[arrayY] &&
+                this.currentAsciiLayerBlocks[arrayY][
                   this.currentAscii.width - arrayX
                 ]
               ) {
                 targetBlock =
-                  this.currentAsciiBlocks[arrayY][
+                  this.currentAsciiLayerBlocks[arrayY][
                     this.currentAscii.width - arrayX
                   ];
 
@@ -1724,15 +1749,17 @@ export default {
 
             if (this.mirrorY) {
               if (
-                this.currentAsciiBlocks[this.currentAscii.height - arrayY] &&
-                this.currentAsciiBlocks[this.currentAscii.height - arrayY][
+                this.currentAsciiLayerBlocks[
+                  this.currentAscii.height - arrayY
+                ] &&
+                this.currentAsciiLayerBlocks[this.currentAscii.height - arrayY][
                   arrayX
                 ]
               ) {
                 targetBlock =
-                  this.currentAsciiBlocks[this.currentAscii.height - arrayY][
-                    arrayX
-                  ];
+                  this.currentAsciiLayerBlocks[
+                    this.currentAscii.height - arrayY
+                  ][arrayX];
 
                 if (this.canFg) {
                   targetBlock.fg = null;
@@ -1750,15 +1777,17 @@ export default {
 
             if (this.mirrorY && this.mirrorX) {
               if (
-                this.currentAsciiBlocks[this.currentAscii.height - arrayY] &&
-                this.currentAsciiBlocks[this.currentAscii.height - arrayY][
+                this.currentAsciiLayerBlocks[
+                  this.currentAscii.height - arrayY
+                ] &&
+                this.currentAsciiLayerBlocks[this.currentAscii.height - arrayY][
                   this.currentAscii.width - arrayX
                 ]
               ) {
                 targetBlock =
-                  this.currentAsciiBlocks[this.currentAscii.height - arrayY][
-                    this.currentAscii.width - arrayX
-                  ];
+                  this.currentAsciiLayerBlocks[
+                    this.currentAscii.height - arrayY
+                  ][this.currentAscii.width - arrayX];
 
                 if (this.canFg) {
                   targetBlock.fg = null;
@@ -1788,7 +1817,13 @@ export default {
         return;
       }
 
-      this.fillTool(this.currentAsciiBlocks, this.y, this.x, current, eraser);
+      this.fillTool(
+        this.currentAsciiLayerBlocks,
+        this.y,
+        this.x,
+        current,
+        eraser
+      );
     },
     fillTool(fillBlocks, y, x, current, eraser) {
       // If row is less than 0

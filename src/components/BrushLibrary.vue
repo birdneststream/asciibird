@@ -39,7 +39,7 @@
         <t-button
           type="button"
           :class="`block w-full ${
-            panel.tab === 1
+            panel.tab === 2
               ? 'border-gray-900 bg-blue-500'
               : 'border-gray-200 bg-gray-500'
           }`"

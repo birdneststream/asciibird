@@ -11,7 +11,7 @@
       <hr />
 
       <div class="w-full bg-white rounded-lg shadow">
-        <ul class="divide-y-2 divide-gray-100">
+        <ul class="divide-y-2 divide-gray-100 reverseorder">
           <li
             :class="`p-1 ${selectedLayerClass(key)}`"
             v-for="(layer, key) in currentAsciiLayers"
@@ -52,7 +52,7 @@
                     <t-button
                       type="button"
                       class="rounded-xl"
-                      @click="upLayer(key)"
+                      @click="downLayer(key)"
                       :disabled="!canToggleLayer"
                       ><font-awesome-icon
                         :icon="['fas', 'chevron-circle-up']" /></t-button
@@ -61,7 +61,7 @@
                     <t-button
                       type="button"
                       class="rounded-xl"
-                      @click="downLayer(key)"
+                      @click="upLayer(key)"
                       :disabled="!canToggleLayer"
                       ><font-awesome-icon
                         :icon="['fas', 'chevron-circle-down']"
@@ -76,6 +76,13 @@
     </t-card>
   </div>
 </template>
+
+<style>
+.reverseorder {
+  display: flex;
+  flex-direction: column-reverse;
+}
+</style>
 
 <script>
 export default {

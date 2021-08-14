@@ -210,7 +210,7 @@ export default new Vuex.Store({
         }
       }
 
-      tempLayers.unshift({
+      tempLayers.push({
         label: 'Layer ' + Number.parseInt(tempLayers.length),
         visible: true,
         data: newBlocksArray,
@@ -479,10 +479,6 @@ export default new Vuex.Store({
           return true
       }
       return false
-    },
-    canvasKey: (state) => {
-      state.key = state.key + 1;
-      return state.key
     },
   },
   actions: {},
