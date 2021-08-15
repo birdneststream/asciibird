@@ -24,7 +24,7 @@
                   type="button"
                   class="rounded-xl"
                   @click="toggleLayer(key)"
-                  :disabled="!canToggleLayer && lastVisible"
+                  :disabled="!canToggleLayer"
                 >
                   <font-awesome-icon
                     :icon="[
@@ -105,9 +105,6 @@ export default {
     dragging: false,
   }),
   computed: {
-    toolbarState() {
-      return this.$store.getters.toolbarState;
-    },
     currentAsciiLayers() {
       return this.$store.getters.currentAsciiLayers;
     },
@@ -119,12 +116,15 @@ export default {
       // We want to avoid hiding all the layers, so if there's only one
       // visible left, we have to disable the buttons
     },
+    toolbarState() {
+      return this.$tore.getters.toolbarState;
+    },
     lastVisible() {
       let visibleCount = 0;
 
       for (let i = 0; i < this.currentAsciiLayers.length; i++) {
         if (this.currentAsciiLayers[i].visible) {
-          visibleCount++;
+          visibleCount += 1;
         }
       }
 
@@ -138,11 +138,17 @@ export default {
         this.currentAsciiLayers[key].visible === false &&
         key === this.selectedLayer
       ) {
-        if (this.currentAsciiLayers[key + 1]) {
-          this.changeLayer(key + 1);
-        } else if (this.currentAsciiLayers[key - 1]) {
-          this.changeLayer(key - 1);
-        }
+        // if (this.currentAsciiLayers[key + 1]) {
+        //   this.changeLayer(key + 1);
+        // } else if (this.currentAsciiLayers[key - 1]) {
+        //   this.changeLayer(key - 1);
+        // }
+
+        this.changeLayer(0)
+
+        // this.$toasted.show("Attempting to edit invisible layer!", {
+        //   type: "error",
+        // });
       }
 
       if (!this.currentAsciiLayers[key].visible) {
@@ -164,7 +170,7 @@ export default {
       this.$store.commit("changeLayer", key);
     },
     toggleLayer(key) {
-      if (!this.lastVisible || key !== this.selectedLayer) {
+      if (this.lastVisible || key !== this.selectedLayer) {
         this.$store.commit("toggleLayer", key);
       }
     },
