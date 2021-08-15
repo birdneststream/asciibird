@@ -7,9 +7,10 @@
     >
       <vue-draggable-resizable
         style="z-index: 5"
+        ref="canvasdrag"
         :grid="[blockWidth, blockHeight]"
-        :w="canvas.width"
-        :h="canvas.height"
+        :w="currentAsciiWidth * blockWidth"
+        :h="currentAsciiHeight * blockHeight"
         :draggable="isDefault"
         @resizestop="onCanvasResize"
         @dragstop="onCavasDragStop"
@@ -20,16 +21,16 @@
           ref="canvas"
           id="canvas"
           class="canvas"
-          :width="canvas.width"
-          :height="canvas.height"
+          :width="currentAsciiWidth * blockWidth"
+          :height="currentAsciiHeight * blockHeight"
         />
 
         <canvas
           ref="canvastools"
           id="canvastools"
           class="canvastools"
-          :width="canvas.width"
-          :height="canvas.height"
+          :width="currentAsciiWidth * blockWidth"
+          :height="currentAsciiHeight * blockHeight"
           @mousemove="canvasMouseMove"
           @mousedown="canvasMouseDown"
           @mouseup="canvasMouseUp"
@@ -87,8 +88,8 @@ export default {
     });
 
     if (this.currentAsciiLayerBlocks) {
-      this.canvas.width = this.currentAscii.width * blockWidth;
-      this.canvas.height = this.currentAscii.height * blockHeight;
+      this.canvas.width = this.currentAsciiWidth * blockWidth;
+      this.canvas.height = this.currentAsciiHeight * blockHeight;
 
       this.delayRedrawCanvas();
 
@@ -448,7 +449,8 @@ export default {
         }
       };
 
-      document.removeEventListener("keydown", this.keyListener.bind(this));
+      // document.removeEventListener("keydown", this.keyListener.bind(this));
+      // Doesn't do anything to fix the double key listener when editor loads again
       document.addEventListener("keydown", this.keyListener.bind(this));
     }
   },
@@ -512,8 +514,11 @@ export default {
     currentAsciiLayers() {
       return this.$store.getters.currentAsciiLayers;
     },
+    currentSelectedLayer() {
+      return this.currentAsciiLayers[this.currentAscii.selectedLayer]
+    },
     currentAsciiLayerBlocks() {
-      return this.currentAsciiLayers[this.currentAscii.selectedLayer].data;
+      return this.currentSelectedLayer.data;
     },
     currentTool() {
       return toolbarIcons[this.$store.getters.currentTool];
@@ -609,6 +614,12 @@ export default {
     maxBrushSize() {
       return maxBrushSize;
     },
+    currentAsciiWidth() {
+      return this.currentSelectedLayer.width
+    },
+    currentAsciiHeight() {
+      return this.currentSelectedLayer.height
+    }
   },
   watch: {
     currentAscii(val, old) {
@@ -616,12 +627,12 @@ export default {
         this.onCanvasResize(
           100,
           100,
-          this.currentAscii.width * blockWidth,
-          this.currentAscii.height * blockHeight
+          this.currentAsciiWidth * blockWidth,
+          this.currentAsciiHeight * blockHeight
         );
 
-        this.canvas.width = this.currentAscii.width * blockWidth;
-        this.canvas.height = this.currentAscii.height * blockHeight;
+        this.canvas.width = this.currentAsciiWidth * blockWidth;
+        this.canvas.height = this.currentAsciiHeight * blockHeight;
 
         this.delayRedrawCanvas();
 
@@ -730,7 +741,7 @@ export default {
         // hack font for ascii shout outs 2 beenz
         this.ctx.font = "13px Hack";
 
-        for (y = 0; y < this.currentAscii.height + 1; y++) {
+        for (y = 0; y < this.currentAsciiHeight + 1; y++) {
           canvasY = blockHeight * y;
 
           // Experimental code to not rows blocks off screen
@@ -738,7 +749,7 @@ export default {
           //   continue;
           // }
 
-          for (x = 0; x < this.currentAscii.width + 1; x++) {
+          for (x = 0; x < this.currentAsciiWidth + 1; x++) {
             // Loop layers
             for (i = this.currentAsciiLayers.length - 1; i >= 0; i--) {
               // for (i = 0; i >= this.currentAsciiLayers.length - 1; i++) {
@@ -826,6 +837,9 @@ export default {
         layers: layers
       });
 
+      this.$refs.canvasdrag.width = width
+      this.$refs.canvasdrag.width = height
+
       this.delayRedrawCanvas();
     },
     onCavasDragStop(x, y) {
@@ -891,7 +905,7 @@ export default {
               if (this.mirrorX) {
                 targetBlock =
                   this.currentAsciiLayerBlocks[this.textEditing.startY][
-                    this.currentAscii.width - this.textEditing.startX
+                    this.currentAsciiWidth - this.textEditing.startX
                   ];
 
                 targetBlock.char = null;
@@ -900,7 +914,7 @@ export default {
               if (this.mirrorY) {
                 targetBlock =
                   this.currentAsciiLayerBlocks[
-                    this.currentAscii.height - this.textEditing.startY
+                    this.currentAsciiHeight - this.textEditing.startY
                   ][this.textEditing.startX];
                 targetBlock.char = null;
               }
@@ -908,8 +922,8 @@ export default {
               if (this.mirrorY && this.mirrorX) {
                 targetBlock =
                   this.currentAsciiLayerBlocks[
-                    this.currentAscii.height - this.textEditing.startY
-                  ][this.currentAscii.width - this.textEditing.startX];
+                    this.currentAsciiHeight - this.textEditing.startY
+                  ][this.currentAsciiWidth - this.textEditing.startX];
 
                 targetBlock.char = null;
               }
@@ -979,7 +993,7 @@ export default {
                 if (this.mirrorX) {
                   targetBlock =
                     this.currentAsciiLayerBlocks[this.textEditing.startY][
-                      this.currentAscii.width - this.textEditing.startX
+                      this.currentAsciiWidth - this.textEditing.startX
                     ];
 
                   if (this.canFg) {
@@ -992,7 +1006,7 @@ export default {
                 if (this.mirrorY) {
                   targetBlock =
                     this.currentAsciiLayerBlocks[
-                      this.currentAscii.height - this.textEditing.startY
+                      this.currentAsciiHeight - this.textEditing.startY
                     ][this.textEditing.startX];
 
                   if (this.canFg) {
@@ -1005,8 +1019,8 @@ export default {
                 if (this.mirrorY && this.mirrorX) {
                   targetBlock =
                     this.currentAsciiLayerBlocks[
-                      this.currentAscii.height - this.textEditing.startY
-                    ][this.currentAscii.width - this.textEditing.startX];
+                      this.currentAsciiHeight - this.textEditing.startY
+                    ][this.currentAsciiWidth - this.textEditing.startX];
 
                   if (this.canFg) {
                     targetBlock.fg = this.currentFg;
@@ -1024,7 +1038,7 @@ export default {
                 } else {
                   this.textEditing.startX = 0;
 
-                  if (this.textEditing.startY < this.currentAscii.height) {
+                  if (this.textEditing.startY < this.currentAsciiHeight) {
                     this.textEditing.startY++;
                   }
                 }
@@ -1264,7 +1278,7 @@ export default {
         this.selecting.endX = start;
       }
 
-      for (y = 0; y < this.currentAscii.height; y++) {
+      for (y = 0; y < this.currentAsciiHeight; y++) {
         if (
           y > Math.floor(this.selecting.startY / blockHeight) - 1 &&
           y < Math.floor(this.selecting.endY / blockHeight)
@@ -1273,7 +1287,7 @@ export default {
             this.selectedBlocks[y] = [];
           }
 
-          for (x = 0; x < this.currentAscii.width; x++) {
+          for (x = 0; x < this.currentAsciiWidth; x++) {
             if (
               x > Math.ceil(this.selecting.startX / blockWidth) - 1 &&
               x <= Math.ceil(this.selecting.endX / blockWidth) - 1
@@ -1336,17 +1350,17 @@ export default {
 
       if (this.isTextEditing) {
         if (this.mirrorX) {
-          this.drawRectangleBlock(this.currentAscii.width - this.x, this.y);
+          this.drawRectangleBlock(this.currentAsciiWidth - this.x, this.y);
         }
 
         if (this.mirrorY) {
-          this.drawRectangleBlock(this.x, this.currentAscii.height - this.y);
+          this.drawRectangleBlock(this.x, this.currentAsciiHeight - this.y);
         }
 
         if (this.mirrorY && this.mirrorX) {
           this.drawRectangleBlock(
-            this.currentAscii.width - this.x,
-            this.currentAscii.height - this.y
+            this.currentAsciiWidth - this.x,
+            this.currentAsciiHeight - this.y
           );
         }
       }
@@ -1356,7 +1370,7 @@ export default {
 
       if (this.mirrorX) {
         this.drawRectangleBlock(
-          this.currentAscii.width - this.textEditing.startX,
+          this.currentAsciiWidth - this.textEditing.startX,
           this.textEditing.startY
         );
       }
@@ -1364,14 +1378,14 @@ export default {
       if (this.mirrorY) {
         this.drawRectangleBlock(
           this.textEditing.startX,
-          this.currentAscii.height - this.textEditing.startY
+          this.currentAsciiHeight - this.textEditing.startY
         );
       }
 
       if (this.mirrorY && this.mirrorX) {
         this.drawRectangleBlock(
-          this.currentAscii.width - this.textEditing.startX,
-          this.currentAscii.height - this.textEditing.startY
+          this.currentAsciiWidth - this.textEditing.startX,
+          this.currentAsciiHeight - this.textEditing.startY
         );
       }
     },
@@ -1387,8 +1401,8 @@ export default {
       let brushDiffX = 0;
       let xLength = 0;
 
-      const asciiWidth = this.currentAscii.width;
-      const asciiHeight = this.currentAscii.height;
+      const asciiWidth = this.currentAsciiWidth;
+      const asciiHeight = this.currentAsciiHeight;
 
       // If the first row isn't selected then we cannot get the width
       // with the 0 index
@@ -1723,12 +1737,12 @@ export default {
               if (
                 this.currentAsciiLayerBlocks[arrayY] &&
                 this.currentAsciiLayerBlocks[arrayY][
-                  this.currentAscii.width - arrayX
+                  this.currentAsciiWidth - arrayX
                 ]
               ) {
                 targetBlock =
                   this.currentAsciiLayerBlocks[arrayY][
-                    this.currentAscii.width - arrayX
+                    this.currentAsciiWidth - arrayX
                   ];
 
                 if (this.canFg) {
@@ -1748,15 +1762,15 @@ export default {
             if (this.mirrorY) {
               if (
                 this.currentAsciiLayerBlocks[
-                  this.currentAscii.height - arrayY
+                  this.currentAsciiHeight - arrayY
                 ] &&
-                this.currentAsciiLayerBlocks[this.currentAscii.height - arrayY][
+                this.currentAsciiLayerBlocks[this.currentAsciiHeight - arrayY][
                   arrayX
                 ]
               ) {
                 targetBlock =
                   this.currentAsciiLayerBlocks[
-                    this.currentAscii.height - arrayY
+                    this.currentAsciiHeight - arrayY
                   ][arrayX];
 
                 if (this.canFg) {
@@ -1776,16 +1790,16 @@ export default {
             if (this.mirrorY && this.mirrorX) {
               if (
                 this.currentAsciiLayerBlocks[
-                  this.currentAscii.height - arrayY
+                  this.currentAsciiHeight - arrayY
                 ] &&
-                this.currentAsciiLayerBlocks[this.currentAscii.height - arrayY][
-                  this.currentAscii.width - arrayX
+                this.currentAsciiLayerBlocks[this.currentAsciiHeight - arrayY][
+                  this.currentAsciiWidth - arrayX
                 ]
               ) {
                 targetBlock =
                   this.currentAsciiLayerBlocks[
-                    this.currentAscii.height - arrayY
-                  ][this.currentAscii.width - arrayX];
+                    this.currentAsciiHeight - arrayY
+                  ][this.currentAsciiWidth - arrayX];
 
                 if (this.canFg) {
                   targetBlock.fg = null;
@@ -1835,12 +1849,12 @@ export default {
       }
 
       // If row is greater than image length
-      if (x >= this.currentAscii.width) {
+      if (x >= this.currentAsciiWidth) {
         return;
       }
 
       // If column is greater than image length
-      if (y >= this.currentAscii.height) {
+      if (y >= this.currentAsciiHeight) {
         return;
       }
 

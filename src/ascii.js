@@ -227,16 +227,16 @@ export const parseMircAscii = async (content, title) => {
 
   // This will end up in the asciibirdMeta
   const finalAscii = {
-    width: false, // defined in: switch (curChar) case "\n":
-    height: asciiImport.split('\n').length,
     title: filename,
-    key: store.getters.nextTabValue,
-    blockWidth: blockWidth * store.getters.blockSizeMultiplier,
-    blockHeight: blockHeight * store.getters.blockSizeMultiplier,
+    // key: store.getters.nextTabValue,
+    // blockWidth: blockWidth * store.getters.blockSizeMultiplier,
+    // blockHeight: blockHeight * store.getters.blockSizeMultiplier,
     blocks: [{
       label: filename,
       visible: true,
-      data: create2DArray(asciiImport.split('\n').length)
+      data: create2DArray(asciiImport.split('\n').length),
+      width: false, // defined in: switch (curChar) case "\n":
+      height: asciiImport.split('\n').length,
     }],
     history: [],
     redo: [],
@@ -294,13 +294,13 @@ export const parseMircAscii = async (content, title) => {
         asciiY++;
 
         // Calculate widths mirc asciis vs plain text
-        if (!finalAscii.width && widthOfColCodes > 0) {
-          finalAscii.width = maxWidthLoop - widthOfColCodes; // minus \n for the proper width
+        if (!finalAscii.blocks[0].width && widthOfColCodes > 0) {
+          finalAscii.blocks[0].width = maxWidthLoop - widthOfColCodes;
         }
 
-        if (!finalAscii.width && widthOfColCodes === 0) {
+        if (!finalAscii.blocks[0].width && widthOfColCodes === 0) {
           // Plain text
-          finalAscii.width = maxWidthFound; // minus \n for the proper width
+          finalAscii.blocks[0].width = maxWidthFound;
         }
 
         // Resets the X value
@@ -409,7 +409,8 @@ export const parseMircAscii = async (content, title) => {
     } // End Switch
   } // End loop charPos
 
-  finalAscii.blocks = [ ... fillNullBlocks(finalAscii.height, finalAscii.width, finalAscii.blocks) ];
+  finalAscii.blocks = [...fillNullBlocks(finalAscii.blocks[0].height, finalAscii.blocks[0]
+    .width, finalAscii.blocks)];
   // Store the ASCII and ensure we have no null blocks
   finalAscii.blocks = LZString.compressToUTF16(
     JSON.stringify(finalAscii.blocks),
@@ -428,11 +429,6 @@ export const parseMircAscii = async (content, title) => {
 export const createNewAscii = (forms) => {
   const newAscii = {
     title: forms.createAscii.title,
-    key: store.getters.asciibirdMeta.length,
-    width: forms.createAscii.width,
-    height: forms.createAscii.height,
-    blockWidth: blockWidth * store.getters.blockSizeMultiplier,
-    blockHeight: blockHeight * store.getters.blockSizeMultiplier,
     history: [],
     redo: [],
     x: 247, // the dragable ascii canvas x
@@ -440,14 +436,16 @@ export const createNewAscii = (forms) => {
     blocks: [{
       label: forms.createAscii.title,
       visible: true,
-      data: create2DArray(forms.createAscii.height)
+      data: create2DArray(forms.createAscii.height),
+      width: forms.createAscii.width,
+      height: forms.createAscii.height,
     }],
     selectedLayer: 0,
   };
 
   // Push all the default ASCII blocks
-  for (let x = 0; x < newAscii.width; x++) {
-    for (let y = 0; y < newAscii.height; y++) {
+  for (let x = 0; x < newAscii.blocks[0].width; x++) {
+    for (let y = 0; y < newAscii.blocks[0].height; y++) {
       newAscii.blocks[0].data[y].push({
         ...emptyBlock,
       });
@@ -637,21 +635,21 @@ export const cyrb53 = function (str, seed = 1337) {
 
 // Mostly plain text asciis wont have all their blocks
 // so this will fix that
-export const fillNullBlocks = function (height = false, width = false, layerData = null) {
+export const fillNullBlocks = function (height, width, layerData = null) {
   // Probably used on irc import to make the blocks proper,
   // especially with plain text ascii
 
   if (layerData === null) {
     var layers = [...store.getters.currentAsciiLayers]
   } else {
-    var layers = layerData
+    var layers = [...layerData]
   }
-  
-  if (height === false || width === false) {
-    height = store.getters.currentAscii.height;
-    width = getBlocksWidth(store.getters.currentAsciiLayers[store.getters.currentAscii
-      .selectedLayer].data)
-  }
+
+  // if (height === false || width === false) {
+  //   height = store.getters.currentAscii.height;
+  //   width = getBlocksWidth(store.getters.currentAsciiLayers[store.getters.currentAscii
+  //     .selectedLayer].data)
+  // }
 
   for (let i = 0; i <= layers.length - 1; i++) {
     let blocks = layers[i].data;
@@ -679,6 +677,8 @@ export const fillNullBlocks = function (height = false, width = false, layerData
 
     // Update layer with new blocks
     layers[i].data = [...blocks]
+    layers[i].width = width
+    layers[i].height = height
   }
 
   return layers

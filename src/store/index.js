@@ -123,8 +123,8 @@ export default new Vuex.Store({
       state.toolbarState.draggable = payload;
     },
     changeAsciiWidthHeight(state, payload) {
-      state.asciibirdMeta[state.tab].width = payload.width;
-      state.asciibirdMeta[state.tab].height = payload.height;
+      // state.asciibirdMeta[state.tab].width = payload.width;
+      // state.asciibirdMeta[state.tab].height = payload.height;
 
       state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
         payload.layers));
@@ -202,11 +202,14 @@ export default new Vuex.Store({
       let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
         .blocks))
 
-      let newBlocksArray = create2DArray(state.asciibirdMeta[state.tab].height);
+      let width = tempLayers[0].width;
+      let height = tempLayers[0].height;
+
+      let newBlocksArray = create2DArray(height);
 
       // Push all the default ASCII blocks
-      for (let x = 0; x < state.asciibirdMeta[state.tab].width; x++) {
-        for (let y = 0; y < state.asciibirdMeta[state.tab].height; y++) {
+      for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
           newBlocksArray[y].push({
             ...emptyBlock,
           });
@@ -217,6 +220,8 @@ export default new Vuex.Store({
         label: 'Layer ' + Number.parseInt(tempLayers.length),
         visible: true,
         data: newBlocksArray,
+        width: width,
+        height: height
       })
 
       state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
