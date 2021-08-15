@@ -409,10 +409,8 @@ export const parseMircAscii = async (content, title) => {
     } // End Switch
   } // End loop charPos
 
-  // Ensure we have no null blocks
-  finalAscii.blocks[0].data = fillNullBlocks(finalAscii.blocks[0].data)
-
-  // Store the ASCII
+  finalAscii.blocks = [ ... fillNullBlocks(finalAscii.height, finalAscii.width, finalAscii.blocks) ];
+  // Store the ASCII and ensure we have no null blocks
   finalAscii.blocks = LZString.compressToUTF16(
     JSON.stringify(finalAscii.blocks),
   );
@@ -639,36 +637,51 @@ export const cyrb53 = function (str, seed = 1337) {
 
 // Mostly plain text asciis wont have all their blocks
 // so this will fix that
-export const fillNullBlocks = function (blocks, height = false, width = false) {
+export const fillNullBlocks = function (height = false, width = false, layerData = null) {
   // Probably used on irc import to make the blocks proper,
   // especially with plain text ascii
+
+  if (layerData === null) {
+    var layers = [...store.getters.currentAsciiLayers]
+  } else {
+    var layers = layerData
+  }
+  
   if (height === false || width === false) {
-    height = blocks.length;
-    width = getBlocksWidth(blocks)
+    height = store.getters.currentAscii.height;
+    width = getBlocksWidth(store.getters.currentAsciiLayers[store.getters.currentAscii
+      .selectedLayer].data)
   }
 
-  for (let y = 0; y < height; y++) {
-    // New row
-    if (!blocks[y]) {
-      blocks[y] = [];
-      for (let x = 0; x < width; x++) {
-        blocks[y][x] = {
-          ...emptyBlock
-        };
-      }
-    } else {
-      // no new rows but new cols
-      for (let x = 0; x < width; x++) {
-        if (blocks[y] && !blocks[y][x]) {
+  for (let i = 0; i <= layers.length - 1; i++) {
+    let blocks = layers[i].data;
+
+    for (let y = 0; y < height; y++) {
+      // New row
+      if (!blocks[y]) {
+        blocks[y] = [];
+        for (let x = 0; x < width; x++) {
           blocks[y][x] = {
             ...emptyBlock
           };
         }
+      } else {
+        // no new rows but new cols
+        for (let x = 0; x < width; x++) {
+          if (blocks[y] && !blocks[y][x]) {
+            blocks[y][x] = {
+              ...emptyBlock
+            };
+          }
+        }
       }
     }
+
+    // Update layer with new blocks
+    layers[i].data = [...blocks]
   }
 
-  return blocks
+  return layers
 }
 
 // Sometimes if we copy blocks the initial Y values will be null

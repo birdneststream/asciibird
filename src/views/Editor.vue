@@ -811,8 +811,7 @@ export default {
     onCanvasResize(left, top, width, height) {
       const canvasBlockHeight = Math.floor(height / blockHeight);
       const canvasBlockWidth = Math.floor(width / blockWidth);
-      let blocks = fillNullBlocks(
-        this.currentAsciiLayerBlocks,
+      let layers = fillNullBlocks(
         canvasBlockHeight,
         canvasBlockWidth
       );
@@ -824,9 +823,8 @@ export default {
       this.$store.commit("changeAsciiWidthHeight", {
         width: canvasBlockWidth,
         height: canvasBlockHeight,
+        layers: layers
       });
-
-      this.$store.commit("updateAsciiBlocks", blocks);
 
       this.delayRedrawCanvas();
     },

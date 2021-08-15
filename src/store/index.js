@@ -125,6 +125,9 @@ export default new Vuex.Store({
     changeAsciiWidthHeight(state, payload) {
       state.asciibirdMeta[state.tab].width = payload.width;
       state.asciibirdMeta[state.tab].height = payload.height;
+
+      state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
+        payload.layers));
     },
     changeAsciiCanvasState(state, payload) {
       state.asciibirdMeta[state.tab].x = payload.x;
