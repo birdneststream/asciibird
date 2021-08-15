@@ -24,9 +24,11 @@ A most latest production build to use is available at https://asciibird.jewbird.
 # Current Features
 
 * Tabbed ASCII editing
+* Layers support with visibility and ordering
 * Copy and paste between tabs
 * Remembers state on refresh and when the browser loads, can also export the state to a file and load elsewhere.
  * So you never lose your ascii art!
+ * Saves layers, brushes data also to same file
 * Can import from clipboard, load from irc.watch/ascii, load from file
 * Can export to mirc ascii to clipboard or file
 * 99 Colour support, flip colours
@@ -60,18 +62,17 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 ASCIIBIRD is mostly usable. There are some bugs however to note at the moment.
 
-* If you resize an ascii, and then undo and try fill in blocks it will error cuz the blocks don't exist
 * Redo (ctrl y) is a buggy
 * Circle brush (works okay for odd width and height numbers)
 * Importer could be re-written with regex
 * Exporter will default transparent bg to black by default, which wont for some asciis
+* Duplicate keyboard listeners, if you close all the ascii tabs and open/load a new ASCII it will double up on keyboard events, you can fix this by refreshing the page at the moment.
 ## Focusing on Now
 
 * Modals to add
  * Asciibird options / Options modal from skgs PR
 
 * Context Menus (right click menu) - add to other areas of asciibird
-* LAYERS, drag and drop to arrange layers
 * Image overlay for trace mode
 * Experimental code to only render blocks visible on screen
 * Review encodings check on file import - UTF8 vs Latin something

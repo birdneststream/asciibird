@@ -1,11 +1,13 @@
 <template>
   <div id="app">
-    
     <NewAscii />
     <EditAscii />
     <PasteAscii />
 
-    <context-menu :display="showContextMenu" ref="menu">
+    <context-menu
+      :display="showContextMenu"
+      ref="menu"
+    >
       <ul>
         <li
           @click="$store.commit('openModal', 'new-ascii')"
@@ -14,8 +16,18 @@
         >
           New ASCII
         </li>
-        <li @click="clearCache()" class="ml-1">Clear and Refresh</li>
-        <li @click="startImport('mirc')" class="ml-1">Import mIRC</li>
+        <li
+          @click="clearCache()"
+          class="ml-1"
+        >
+          Clear and Refresh
+        </li>
+        <li
+          @click="startImport('mirc')"
+          class="ml-1"
+        >
+          Import mIRC
+        </li>
         <li
           @click="startExport('file')"
           class="ml-1"
@@ -23,7 +35,10 @@
         >
           Export mIRC to File
         </li>
-        <li class="ml-1" @click="$store.commit('openModal', 'paste-ascii')">
+        <li
+          class="ml-1"
+          @click="$store.commit('openModal', 'paste-ascii')"
+        >
           Import mIRC from Clipboard
         </li>
         <li
@@ -40,7 +55,12 @@
         >
           Save Asciibird State
         </li>
-        <li @click="startImport('asb')" class="ml-1">Load Asciibird State</li>
+        <li
+          @click="startImport('asb')"
+          class="ml-1"
+        >
+          Load Asciibird State
+        </li>
         <li
           @click="$store.commit('openModal', 'edit-ascii')"
           class="ml-1"
@@ -62,11 +82,18 @@
       style="display: none"
       ref="asciiInput"
       @change="onImport()"
-    />
+    >
 
     <template v-if="asciibirdMeta.length">
-      <span v-for="(value, key) in asciibirdMeta" :key="key" class="mr-2">
-        <t-button class="p-1" @click="changeTab(key, value)">
+      <span
+        v-for="(value, key) in asciibirdMeta"
+        :key="key"
+        class="mr-2"
+      >
+        <t-button
+          class="p-1"
+          @click="changeTab(key, value)"
+        >
           {{ value.title }}
 
           <t-button
@@ -78,7 +105,10 @@
         </t-button>
       </span>
 
-      <Toolbar :canvas-x="canvasX" :canvas-y="canvasY" />
+      <Toolbar
+        :canvas-x="canvasX"
+        :canvas-y="canvasY"
+      />
       <DebugPanel
         :canvas-x="canvasX"
         :canvas-y="canvasY"
@@ -93,7 +123,6 @@
 
       <BrushLibrary v-if="brushLibraryState.visible" />
       <BrushPreview />
-
     </template>
     <template v-else>
       <div
@@ -108,7 +137,9 @@
         @mouseup.right="openContextMenu"
         @contextmenu.prevent
       >
-        <h1 class="text-4xl">ASCIIBIRD</h1>
+        <h1 class="text-4xl">
+          ASCIIBIRD
+        </h1>
         <h3>Right click to start</h3>
 
         <BrushCanvas :blocks="splashAscii" />

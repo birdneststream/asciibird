@@ -30,15 +30,22 @@
       max="128"
     />
 
-    <hr class="mt-5 mb-5" />
+    <hr class="mt-5 mb-5">
 
     <template v-slot:footer>
       <div
         class="flex justify-between"
         @click="$store.commit('closeModal', 'edit-ascii')"
       >
-        <t-button type="button"> Cancel </t-button>
-        <t-button type="button" @click="updateAscii()"> Update </t-button>
+        <t-button type="button">
+          Cancel
+        </t-button>
+        <t-button
+          type="button"
+          @click="updateAscii()"
+        >
+          Update
+        </t-button>
       </div>
     </template>
   </t-modal>

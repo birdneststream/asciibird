@@ -219,7 +219,7 @@ export default new Vuex.Store({
       tempLayers.push({
         label: 'Layer ' + Number.parseInt(tempLayers.length),
         visible: true,
-        data: newBlocksArray,
+        data: [...newBlocksArray],
         width: width,
         height: height
       })

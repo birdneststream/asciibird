@@ -645,12 +645,6 @@ export const fillNullBlocks = function (height, width, layerData = null) {
     var layers = [...layerData]
   }
 
-  // if (height === false || width === false) {
-  //   height = store.getters.currentAscii.height;
-  //   width = getBlocksWidth(store.getters.currentAsciiLayers[store.getters.currentAscii
-  //     .selectedLayer].data)
-  // }
-
   for (let i = 0; i <= layers.length - 1; i++) {
     let blocks = layers[i].data;
 

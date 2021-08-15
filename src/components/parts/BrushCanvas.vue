@@ -9,7 +9,7 @@
           :width="blocksWidthHeight.w"
           :height="blocksWidthHeight.h"
         />
-    </div>
+      </div>
     </t-card>
   </div>
 </template>

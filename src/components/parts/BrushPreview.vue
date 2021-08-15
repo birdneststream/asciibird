@@ -67,7 +67,10 @@
           </label>
         </div>
 
-        <div @mouseenter="canDrag = false" @mouseleave="canDrag = true">
+        <div
+          @mouseenter="canDrag = false"
+          @mouseleave="canDrag = true"
+        >
           <MainBrushCanvas />
         </div>
       </t-card>

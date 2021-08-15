@@ -515,7 +515,7 @@ export default {
       return this.$store.getters.currentAsciiLayers;
     },
     currentSelectedLayer() {
-      return this.currentAsciiLayers[this.currentAscii.selectedLayer]
+      return this.currentAsciiLayers[this.currentAscii.selectedLayer];
     },
     currentAsciiLayerBlocks() {
       return this.currentSelectedLayer.data;
@@ -615,21 +615,21 @@ export default {
       return maxBrushSize;
     },
     currentAsciiWidth() {
-      return this.currentSelectedLayer.width
+      return this.currentSelectedLayer.width;
     },
     currentAsciiHeight() {
-      return this.currentSelectedLayer.height
-    }
+      return this.currentSelectedLayer.height;
+    },
   },
   watch: {
     currentAscii(val, old) {
       if (val !== old) {
-        this.onCanvasResize(
-          100,
-          100,
-          this.currentAsciiWidth * blockWidth,
-          this.currentAsciiHeight * blockHeight
-        );
+        // this.onCanvasResize(
+        //   100,
+        //   100,
+        //   this.currentAsciiWidth * blockWidth,
+        //   this.currentAsciiHeight * blockHeight
+        // );
 
         this.canvas.width = this.currentAsciiWidth * blockWidth;
         this.canvas.height = this.currentAsciiHeight * blockHeight;
@@ -680,6 +680,12 @@ export default {
     blockSizeMultiplier() {
       this.delayRedrawCanvas();
     },
+    // Save text to store when finished
+    isTextEditing(val, old) {
+      if (val !== old && val === false) {
+        this.$store.commit("updateAsciiBlocks", this.currentAsciiLayerBlocks)
+      }
+    }
   },
   methods: {
     checkVisible(top) {
@@ -822,10 +828,7 @@ export default {
     onCanvasResize(left, top, width, height) {
       const canvasBlockHeight = Math.floor(height / blockHeight);
       const canvasBlockWidth = Math.floor(width / blockWidth);
-      let layers = fillNullBlocks(
-        canvasBlockHeight,
-        canvasBlockWidth
-      );
+      let layers = fillNullBlocks(canvasBlockHeight, canvasBlockWidth);
 
       this.top = top;
       this.canvas.width = width;
@@ -834,11 +837,11 @@ export default {
       this.$store.commit("changeAsciiWidthHeight", {
         width: canvasBlockWidth,
         height: canvasBlockHeight,
-        layers: layers
+        layers: [...layers],
       });
 
-      this.$refs.canvasdrag.width = width
-      this.$refs.canvasdrag.width = height
+      this.$refs.canvasdrag.width = width;
+      this.$refs.canvasdrag.width = height;
 
       this.delayRedrawCanvas();
     },
@@ -1338,15 +1341,17 @@ export default {
 
       this.drawRectangleBlock(this.x, this.y);
 
-      if (this.isTextEditing) {
-        this.toolCtx.font = '600 22px "Font Awesome 5 Free"';
-        this.toolCtx.fillText(
-          "\uf031",
-          this.x * blockWidth,
-          this.y * blockHeight + blockHeight * 2
-        );
-        // this.toolCtx.font = "13px Hack";
-      }
+      // We can draw icons on the tool canvas with the font awesome CSS
+      // it needs more work though to not conflict with the brush preview chars
+      // if (this.isTextEditing) {
+      //   this.toolCtx.font = '600 22px "Font Awesome 5 Free"';
+      //   this.toolCtx.fillText(
+      //     "\uf031",
+      //     this.x * blockWidth,
+      //     this.y * blockHeight + blockHeight * 2
+      //   );
+      //   // this.toolCtx.font = "13px Hack";
+      // }
 
       if (this.isTextEditing) {
         if (this.mirrorX) {

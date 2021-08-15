@@ -22,8 +22,9 @@
               : 'border-gray-200 bg-gray-500'
           }`"
           @click="changeTab(1)"
-          >Library</t-button
         >
+          Library
+        </t-button>
 
         <t-button
           type="button"
@@ -33,8 +34,9 @@
               : 'border-gray-200 bg-gray-500'
           }`"
           @click="changeTab(0)"
-          >History</t-button
         >
+          History
+        </t-button>
 
         <t-button
           type="button"
@@ -44,12 +46,16 @@
               : 'border-gray-200 bg-gray-500'
           }`"
           @click="changeTab(2)"
-          >Layers</t-button
         >
+          Layers
+        </t-button>
 
         <div class="flex">
           <div v-if="panel.tab === 0">
-            <div v-for="(brush, key) in brushHistory" :key="key">
+            <div
+              v-for="(brush, key) in brushHistory"
+              :key="key"
+            >
               <t-card
                 class="hover:border-blue-900 border-gray-300 bg-gray-200 mt-2"
               >
@@ -58,34 +64,43 @@
                 <t-button
                   type="button"
                   @click="saveToLibrary(decompressBlock(brush.blocks))"
-                  ><font-awesome-icon
+                >
+                  <font-awesome-icon
                     :icon="['fas', 'save']"
                     size="lg"
                     class="p-1 mx-1"
-                /></t-button>
+                  />
+                </t-button>
                 <t-button
                   type="button"
                   @click="reuseBlocks(decompressBlock(brush.blocks))"
-                  ><font-awesome-icon
+                >
+                  <font-awesome-icon
                     :icon="['fas', 'paint-brush']"
                     size="lg"
                     class="p-1 mx-1"
-                /></t-button>
+                  />
+                </t-button>
 
                 <t-button
                   type="button"
                   @click="removeFromHistory(decompressBlock(brush.blocks))"
-                  ><font-awesome-icon
+                >
+                  <font-awesome-icon
                     :icon="['fas', 'trash']"
                     size="lg"
                     class="p-1 mx-1 right-auto"
-                /></t-button>
+                  />
+                </t-button>
               </t-card>
             </div>
           </div>
 
           <div v-if="panel.tab === 1">
-            <div v-for="(brush, key) in brushLibrary" :key="key">
+            <div
+              v-for="(brush, key) in brushLibrary"
+              :key="key"
+            >
               <t-card
                 :class="`hover:border-blue-900 border-gray-300 bg-gray-200 mt-2`"
               >
@@ -94,19 +109,23 @@
                 <t-button
                   type="button"
                   @click="removeFromLibrary(decompressBlock(brush.blocks))"
-                  ><font-awesome-icon
+                >
+                  <font-awesome-icon
                     :icon="['fas', 'trash']"
                     size="lg"
                     class="p-1 mx-1"
-                /></t-button>
+                  />
+                </t-button>
                 <t-button
                   type="button"
                   @click="reuseBlocks(decompressBlock(brush.blocks))"
-                  ><font-awesome-icon
+                >
+                  <font-awesome-icon
                     :icon="['fas', 'paint-brush']"
                     size="lg"
                     class="p-1 mx-1"
-                /></t-button>
+                  />
+                </t-button>
               </t-card>
             </div>
           </div>
@@ -115,7 +134,6 @@
             v-if="panel.tab === 2"
             class="w-full bg-white rounded-lg shadow-lg"
           >
-
             <Layers />
           </div>
         </div>
@@ -137,10 +155,8 @@
 <script>
 import { mircColours99, blockWidth, blockHeight } from "../ascii";
 import BrushCanvas from "./parts/BrushCanvas.vue";
-import BrushPreview from "./parts/BrushPreview.vue";
 import Layers from "./parts/Layers.vue";
 import LZString from "lz-string";
-
 
 export default {
   name: "BrushLibrary",
@@ -164,8 +180,7 @@ export default {
   }),
   components: {
     BrushCanvas,
-    BrushPreview,
-    Layers
+    Layers,
   },
   computed: {
     blockWidth() {

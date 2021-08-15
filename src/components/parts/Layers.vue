@@ -5,10 +5,11 @@
         type="button"
         class="block w-full border-gray-200 bg-gray-500 p-2 m-2"
         @click="addLayer()"
-        >Add Layer</t-button
       >
+        Add Layer
+      </t-button>
 
-      <hr />
+      <hr>
 
       <div class="w-full bg-white rounded-lg shadow">
         <ul class="divide-y-2 divide-gray-100 reverseorder">
@@ -24,23 +25,31 @@
                   class="rounded-xl"
                   @click="toggleLayer(key)"
                   :disabled="!canToggleLayer && lastVisible"
-                  ><font-awesome-icon
+                >
+                  <font-awesome-icon
                     :icon="[
                       'fas',
                       layer.visible ? 'eye' : 'eye-slash',
-                    ]" /></t-button
-                ><br />
+                    ]"
+                  />
+                </t-button><br>
 
                 <t-button
                   type="button"
                   class="rounded-xl"
                   @click="removeLayer(key)"
                   :disabled="!canToggleLayer"
-                  ><font-awesome-icon :icon="['fas', 'trash']"
-                /></t-button>
+                >
+                  <font-awesome-icon
+                    :icon="['fas', 'trash']"
+                  />
+                </t-button>
               </div>
 
-              <div class="w-full" @click="changeLayer(key)">
+              <div
+                class="w-full"
+                @click="changeLayer(key)"
+              >
                 <div class="flex text-right">
                   <div class="w-full">
                     <t-card class="w-full">
@@ -54,18 +63,22 @@
                       class="rounded-xl"
                       @click="downLayer(key)"
                       :disabled="!canToggleLayer"
-                      ><font-awesome-icon
-                        :icon="['fas', 'chevron-circle-up']" /></t-button
-                    ><br />
+                    >
+                      <font-awesome-icon
+                        :icon="['fas', 'chevron-circle-up']"
+                      />
+                    </t-button><br>
 
                     <t-button
                       type="button"
                       class="rounded-xl"
                       @click="upLayer(key)"
                       :disabled="!canToggleLayer"
-                      ><font-awesome-icon
+                    >
+                      <font-awesome-icon
                         :icon="['fas', 'chevron-circle-down']"
-                    /></t-button>
+                      />
+                    </t-button>
                   </div>
                 </div>
               </div>
