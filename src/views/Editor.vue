@@ -624,12 +624,12 @@ export default {
   watch: {
     currentAscii(val, old) {
       if (val !== old) {
-        // this.onCanvasResize(
-        //   100,
-        //   100,
-        //   this.currentAsciiWidth * blockWidth,
-        //   this.currentAsciiHeight * blockHeight
-        // );
+        this.onCanvasResize(
+          100,
+          this.top,
+          this.currentAsciiWidth * blockWidth,
+          this.currentAsciiHeight * blockHeight
+        );
 
         this.canvas.width = this.currentAsciiWidth * blockWidth;
         this.canvas.height = this.currentAsciiHeight * blockHeight;
