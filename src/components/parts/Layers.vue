@@ -9,7 +9,7 @@
         Add Layer
       </t-button>
 
-      <hr>
+      <hr />
 
       <div class="w-full bg-white rounded-lg shadow">
         <ul class="divide-y-2 divide-gray-100 reverseorder">
@@ -24,15 +24,11 @@
                   type="button"
                   class="rounded-xl"
                   @click="toggleLayer(key)"
-                  :disabled="!canToggleLayer"
                 >
                   <font-awesome-icon
-                    :icon="[
-                      'fas',
-                      layer.visible ? 'eye' : 'eye-slash',
-                    ]"
-                  />
-                </t-button><br>
+                    :icon="['fas', layer.visible ? 'eye' : 'eye-slash']"
+                  /> </t-button
+                ><br />
 
                 <t-button
                   type="button"
@@ -40,16 +36,11 @@
                   @click="removeLayer(key)"
                   :disabled="!canToggleLayer"
                 >
-                  <font-awesome-icon
-                    :icon="['fas', 'trash']"
-                  />
+                  <font-awesome-icon :icon="['fas', 'trash']" />
                 </t-button>
               </div>
 
-              <div
-                class="w-full"
-                @click="changeLayer(key)"
-              >
+              <div class="w-full" @click="changeLayer(key)">
                 <div class="flex text-right">
                   <div class="w-full">
                     <t-card class="w-full">
@@ -66,8 +57,8 @@
                     >
                       <font-awesome-icon
                         :icon="['fas', 'chevron-circle-up']"
-                      />
-                    </t-button><br>
+                      /> </t-button
+                    ><br />
 
                     <t-button
                       type="button"
@@ -101,9 +92,7 @@
 export default {
   name: "Layers",
   created() {},
-  data: () => ({
-    dragging: false,
-  }),
+  data: () => ({}),
   computed: {
     currentAsciiLayers() {
       return this.$store.getters.currentAsciiLayers;
@@ -119,38 +108,30 @@ export default {
     toolbarState() {
       return this.$tore.getters.toolbarState;
     },
-    lastVisible() {
-      let visibleCount = 0;
-
-      for (let i = 0; i < this.currentAsciiLayers.length; i++) {
-        if (this.currentAsciiLayers[i].visible) {
-          visibleCount += 1;
-        }
-      }
-
-      return visibleCount === 1;
-    },
+  },
+  watch: {
+    currentAsciiLayers() {
+      this.selectBestLayer()
+    }
   },
   methods: {
+    selectBestLayer() {
+      let found = false;
+      this.currentAsciiLayers.map((item, key) => {
+        if (item.visible) {
+          this.changeLayer(key);
+          found = true
+          return;
+        }
+      });
+
+      // If there's no visible layers we'll target the first one always
+      if (!found) {
+        this.changeLayer(0)
+      }
+    },
     selectedLayerClass(key) {
       // Invisble layers are red
-      if (
-        this.currentAsciiLayers[key].visible === false &&
-        key === this.selectedLayer
-      ) {
-        // if (this.currentAsciiLayers[key + 1]) {
-        //   this.changeLayer(key + 1);
-        // } else if (this.currentAsciiLayers[key - 1]) {
-        //   this.changeLayer(key - 1);
-        // }
-
-        this.changeLayer(0)
-
-        // this.$toasted.show("Attempting to edit invisible layer!", {
-        //   type: "error",
-        // });
-      }
-
       if (!this.currentAsciiLayers[key].visible) {
         return "bg-red-200";
       }
@@ -170,9 +151,7 @@ export default {
       this.$store.commit("changeLayer", key);
     },
     toggleLayer(key) {
-      if (this.lastVisible || key !== this.selectedLayer) {
-        this.$store.commit("toggleLayer", key);
-      }
+      this.$store.commit("toggleLayer", key);
     },
     upLayer(key) {
       this.$store.commit("upLayer", key);

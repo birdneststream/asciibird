@@ -645,7 +645,13 @@ export default {
     currentAsciiLayers() {
       this.delayRedrawCanvas();
     },
+    currentSelectedLayer() {
+      this.delayRedrawCanvas();
+      this.warnInvisibleLayer();
+    },
     currentTool() {
+      this.warnInvisibleLayer();
+
       switch (this.currentTool.name) {
         case "default":
           // Reset default values for tools
@@ -688,6 +694,17 @@ export default {
     },
   },
   methods: {
+    warnInvisibleLayer() {
+      if (!this.currentSelectedLayer.visible) {
+        this.$toasted.show("You are trying to edit an invisible layer!!", {
+          type: "error",
+          icon: "fa-check-cross",
+          singleton: true,
+        });
+
+        return;
+      }
+    },
     checkVisible(top) {
       return checkVisible(top, top - this.blockHeight);
     },
@@ -1393,13 +1410,7 @@ export default {
     //
     // Functions related to drawBrush function bellow
     //
-    drawBrushBlocks(
-      brushX,
-      brushY,
-      brushBlock,
-      target = null,
-      plain = false
-    ) {
+    drawBrushBlocks(brushX, brushY, brushBlock, target = null, plain = false) {
       const arrayY = brushY / blockHeight;
       const arrayX = brushX / blockWidth;
       const asciiWidth = this.currentAsciiWidth;
@@ -1678,37 +1689,16 @@ export default {
           if (this.currentAsciiLayerBlocks[arrayY][arrayX]) {
             if (!plain) {
               if (this.canBg) {
-                this.drawBrushBlocks(
-                  brushX,
-                  brushY,
-                  brushBlock,
-                  "bg"
-                );
+                this.drawBrushBlocks(brushX, brushY, brushBlock, "bg");
               }
 
               if (this.canFg) {
-                this.drawBrushBlocks(
-                  brushX,
-                  brushY,
-                  brushBlock,
-                  "fg"
-                );
+                this.drawBrushBlocks(brushX, brushY, brushBlock, "fg");
               }
 
-              this.drawBrushBlocks(
-                brushX,
-                brushY,
-                brushBlock,
-                null
-              );
+              this.drawBrushBlocks(brushX, brushY, brushBlock, null);
             } else {
-              this.drawBrushBlocks(
-                brushX,
-                brushY,
-                brushBlock,
-                null,
-                true
-              );
+              this.drawBrushBlocks(brushX, brushY, brushBlock, null, true);
             }
           }
         }
