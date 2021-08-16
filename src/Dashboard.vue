@@ -4,6 +4,8 @@
     <EditAscii />
     <PasteAscii />
 
+    <KeyboardShortcuts :selected-blocks="selectedBlocks" :text-editing="textEditing" @updatecanvas="updatecanvas" />
+
     <context-menu
       :display="showContextMenu"
       ref="menu"
@@ -114,7 +116,7 @@
         :canvas-y="canvasY"
         v-if="debugPanelState.visible"
       />
-      <Editor @coordsupdate="updateCoords" />
+      <Editor @coordsupdate="updateCoords" @selectedblocks="selectedblocks" @textediting="textediting" :update-canvas="updateCanvas" />
 
       <CharPicker v-if="toolbarState.isChoosingChar" />
       <ColourPicker
@@ -165,7 +167,7 @@ import PasteAscii from "./components/modals/PasteAscii.vue";
 
 import BrushCanvas from "./components/parts/BrushCanvas.vue";
 import BrushPreview from "./components/parts/BrushPreview.vue";
-// import KeyboardShortcuts from "./components/parts/KeyboardShortcuts.vue";
+import KeyboardShortcuts from "./components/parts/KeyboardShortcuts.vue";
 
 import {
   parseMircAscii,
@@ -194,7 +196,7 @@ export default {
     BrushLibrary,
     BrushCanvas,
     BrushPreview,
-    // KeyboardShortcuts
+    KeyboardShortcuts
   },
   name: "Dashboard",
   data: () => ({
@@ -205,6 +207,9 @@ export default {
     dashboardY: 0,
     importType: null,
     showContextMenu: false,
+    selectedBlocks: null,
+    textEditing: null,
+    updateCanvas: false,
   }),
   computed: {
     splashAscii() {
@@ -269,6 +274,15 @@ export default {
     updateCoords(value) {
       this.canvasX = value.x;
       this.canvasY = value.y;
+    },
+    selectedblocks(value) {
+      this.selectedBlocks = value
+    },
+    textediting(value) {
+      this.textEditing = value
+    },
+    updatecanvas() {
+      this.updateCanvas = !this.updateCanvas
     },
     async onImport() {
       const { files } = this.$refs.asciiInput;

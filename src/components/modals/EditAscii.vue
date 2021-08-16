@@ -10,7 +10,7 @@
     <t-input
       type="number"
       name="width"
-      v-model="forms.editAscii.width"
+      v-model="currentAsciiWidth"
       min="1"
     />
 
@@ -18,7 +18,7 @@
     <t-input
       type="number"
       name="height"
-      v-model="forms.editAscii.height"
+      v-model="currentAsciiHeight"
       min="1"
     />
 
@@ -73,8 +73,21 @@ export default {
     currentAscii() {
       return this.$store.getters.currentAscii;
     },
+
     currentAsciiEditingTitle() {
       return `Editing ASCII ${this.currentAscii.title}`;
+    },
+    currentAsciiLayers() {
+      return this.$store.getters.currentAsciiLayers;
+    },
+    currentSelectedLayer() {
+      return this.currentAsciiLayers[this.currentAscii.selectedLayer];
+    },
+    currentAsciiWidth() {
+      return this.currentSelectedLayer.width;
+    },
+    currentAsciiHeight() {
+      return this.currentSelectedLayer.height;
     },
   },
   watch: {

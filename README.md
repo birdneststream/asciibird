@@ -66,7 +66,7 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment.
 * Circle brush (works okay for odd width and height numbers)
 * Importer could be re-written with regex
 * Exporter will default transparent bg to black by default, which wont for some asciis
-* Duplicate keyboard listeners, if you close all the ascii tabs and open/load a new ASCII it will double up on keyboard events, you can fix this by refreshing the page at the moment.
+* Having more than a few layers depending on ascii size will slow things down, until the `fillNullBlocks` is refactored.
 ## Focusing on Now
 
 * Modals to add
@@ -79,8 +79,6 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment.
 # Keyboard Shortcuts
 
 ## ASCII Editing
-
-Until the keyboard shortcuts are moved out of `Editor.vue` they will only work when the editor is visible.
 
 * Ctrl + Z - Undo
 * Ctrl + Y - Redo

@@ -50,6 +50,7 @@ export default {
   },
   mounted() {
     this.ctx = this.canvasRef.getContext("2d");
+    this.delayRedrawCanvas();
   },
   data: () => ({
     ctx: null,
