@@ -29,7 +29,7 @@ export default {
 
       // When press escape go back to default took
       if (e.key === "Escape" && !this.isDefault && this.haveOpenTabs) {
-        this.clearToolCanvas();
+        this.$emit("updatecanvas");
         this.$store.commit("changeTool", 0);
         return;
       }
@@ -90,7 +90,7 @@ export default {
         
       ) {
         this.$store.commit("changeTool", Number.parseInt(e.key - 1));
-        this.clearToolCanvas();
+        this.$emit("updatecanvas");
         return;
       }
 
@@ -179,7 +179,7 @@ export default {
 
           // Reset and hide the select after successful copy
           this.$store.commit("updateAsciiBlocks", this.currentAsciiLayerBlocks);
-          this.delayRedrawCanvas();
+          this.$emit("updatecanvas");
 
           this.$toasted.show("Deleted blocks!", {
             type: "success",
@@ -211,7 +211,7 @@ export default {
           // Reset and hide the select after successful copy
 
           this.$store.commit("updateAsciiBlocks", this.currentAsciiLayerBlocks);
-          // this.delayRedrawCanvas()
+          this.$emit("updatecanvas");
 
           this.$toasted.show("Cut blocks!", {
             type: "success",

@@ -23,7 +23,7 @@
 </style>
 
 <script>
-import { mircColours99, blockWidth, blockHeight, cyrb53, getBlocksWidth, filterNullBlocks, checkVisible  } from "../../ascii";
+import { mircColours99, blockWidth, blockHeight, cyrb53, getBlocksWidth, filterNullBlocks  } from "../../ascii";
 
 export default {
   name: "BrushCanvas",

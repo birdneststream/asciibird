@@ -76,8 +76,8 @@ export default new Vuex.Store({
     brushLibrary: [],
     brushLibraryState: {
       x: blockWidth * 130,
-      y: blockHeight * 2,
-      h: blockHeight * 50,
+      y: blockHeight * 23,
+      h: blockHeight * 25,
       w: blockWidth * 35,
       visible: true,
       tab: 0,
@@ -87,6 +87,13 @@ export default new Vuex.Store({
       y: blockHeight * 22,
       h: blockHeight * 19,
       w: blockWidth * 25,
+      visible: true,
+    },
+    layersLibraryState: {
+      x: blockWidth * 130,
+      y: blockHeight * 2,
+      h: blockHeight * 19,
+      w: blockWidth * 35,
       visible: true,
     },
   },
@@ -122,10 +129,10 @@ export default new Vuex.Store({
     changeToolBarDraggable(state, payload) {
       state.toolbarState.draggable = payload;
     },
+    changeLayersLibraryState(state, payload) {
+      state.layersLibraryState = payload;
+    },
     changeAsciiWidthHeight(state, payload) {
-      // state.asciibirdMeta[state.tab].width = payload.width;
-      // state.asciibirdMeta[state.tab].height = payload.height;
-
       state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
         payload.layers));
     },
@@ -479,6 +486,7 @@ export default new Vuex.Store({
     brushLibrary: (state) => state.brushLibrary,
     brushLibraryState: (state) => state.brushLibraryState,
     brushPreviewState: (state) => state.brushPreviewState,
+    layersLibraryState: (state) => state.layersLibraryState,
     brushBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.brushBlocks)) || [],
     selectBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.selectBlocks)) || [],
     isModalOpen: (state) => {

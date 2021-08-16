@@ -178,7 +178,7 @@ export default {
       return this.currentTool.name === "select";
     },
     isDefault() {
-      return this.currentTool.name === "default";
+      return this.currentTool.name === "default" || false;
     },
     isBrushing() {
       return this.currentTool.name === "brush";

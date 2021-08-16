@@ -4,7 +4,11 @@
     <EditAscii />
     <PasteAscii />
 
-    <KeyboardShortcuts :selected-blocks="selectedBlocks" :text-editing="textEditing" @updatecanvas="updatecanvas" />
+    <KeyboardShortcuts
+      :selected-blocks="selectedBlocks"
+      :text-editing="textEditing"
+      @updatecanvas="updatecanvas"
+    />
 
     <context-menu
       :display="showContextMenu"
@@ -116,7 +120,12 @@
         :canvas-y="canvasY"
         v-if="debugPanelState.visible"
       />
-      <Editor @coordsupdate="updateCoords" @selectedblocks="selectedblocks" @textediting="textediting" :update-canvas="updateCanvas" />
+      <Editor
+        @coordsupdate="updateCoords"
+        @selectedblocks="selectedblocks"
+        @textediting="textediting"
+        :update-canvas="updateCanvas"
+      />
 
       <CharPicker v-if="toolbarState.isChoosingChar" />
       <ColourPicker
@@ -125,6 +134,7 @@
 
       <BrushLibrary v-if="brushLibraryState.visible" />
       <BrushPreview />
+      <LayersLibrary />
     </template>
     <template v-else>
       <div
@@ -155,6 +165,7 @@ import LZString from "lz-string";
 import Toolbar from "./components/Toolbar.vue";
 import DebugPanel from "./components/DebugPanel.vue";
 import BrushLibrary from "./components/BrushLibrary.vue";
+import LayersLibrary from "./components/LayersLibrary.vue";
 import Editor from "./views/Editor.vue";
 
 import CharPicker from "./components/parts/CharPicker.vue";
@@ -196,7 +207,8 @@ export default {
     BrushLibrary,
     BrushCanvas,
     BrushPreview,
-    KeyboardShortcuts
+    KeyboardShortcuts,
+    LayersLibrary
   },
   name: "Dashboard",
   data: () => ({

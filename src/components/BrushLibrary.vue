@@ -6,14 +6,17 @@
       :grid="[blockWidth, blockHeight]"
       :min-width="blockWidth * 35"
       :max-width="blockWidth * 50"
-      :min-height="blockHeight * 50"
+      :min-height="blockHeight * 15"
       :max-height="blockHeight * 100"
       :w="brushLibraryState.w"
       :h="brushLibraryState.h"
       :x="brushLibraryState.x"
       :y="brushLibraryState.y"
     >
-      <t-card class="h-full overflow-y-scroll">
+      <t-card
+        class="h-full overflow-y-scroll"
+        header="Brushes Manager"
+      >
         <t-button
           type="button"
           :class="`block w-full ${
@@ -36,18 +39,6 @@
           @click="changeTab(0)"
         >
           History
-        </t-button>
-
-        <t-button
-          type="button"
-          :class="`block w-full ${
-            panel.tab === 2
-              ? 'border-gray-900 bg-blue-500'
-              : 'border-gray-200 bg-gray-500'
-          }`"
-          @click="changeTab(2)"
-        >
-          Layers
         </t-button>
 
         <div class="flex">
@@ -129,13 +120,6 @@
               </t-card>
             </div>
           </div>
-
-          <div
-            v-if="panel.tab === 2"
-            class="w-full bg-white rounded-lg shadow-lg"
-          >
-            <Layers />
-          </div>
         </div>
       </t-card>
     </vue-draggable-resizable>
@@ -155,7 +139,6 @@
 <script>
 import { mircColours99, blockWidth, blockHeight } from "../ascii";
 import BrushCanvas from "./parts/BrushCanvas.vue";
-import Layers from "./parts/Layers.vue";
 import LZString from "lz-string";
 
 export default {
@@ -180,7 +163,6 @@ export default {
   }),
   components: {
     BrushCanvas,
-    Layers,
   },
   computed: {
     blockWidth() {

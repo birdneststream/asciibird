@@ -67,6 +67,7 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment.
 * Importer could be re-written with regex
 * Exporter will default transparent bg to black by default, which wont for some asciis
 * Having more than a few layers depending on ascii size will slow things down, until the `fillNullBlocks` is refactored.
+* Refreshing the page seems to fix most strange things
 ## Focusing on Now
 
 * Modals to add
