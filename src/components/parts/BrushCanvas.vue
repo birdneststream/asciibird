@@ -14,13 +14,6 @@
   </div>
 </template>
 
-<style>
-.previewcanvas {
-  background: rgba(0, 0, 0, 0.1);
-  border: lightgrey 1px solid;
-  z-index: 0;
-}
-</style>
 
 <script>
 import { mircColours99, blockWidth, blockHeight, cyrb53, getBlocksWidth, filterNullBlocks  } from "../../ascii";

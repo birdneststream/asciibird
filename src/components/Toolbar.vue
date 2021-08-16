@@ -15,11 +15,14 @@
       :draggable="draggable"
     >
       <t-card class="h-full">
-        <Colours />
+        <div class="flex mb-2">
+          <Colours />
+        </div>
 
         <div class="flex">
           <label class="ml-1 w-1/3">
             <t-checkbox
+              class="form-checkbox m-1"
               name="targetingFg"
               v-model="toolbarState.targetingFg"
               :disabled="!canBg && !canText"
@@ -29,6 +32,7 @@
 
           <label class="ml-1 w-1/3">
             <t-checkbox
+              class="form-checkbox m-1"
               name="targetingBg"
               v-model="toolbarState.targetingBg"
               :disabled="!canFg && !canText"
@@ -39,6 +43,7 @@
 
           <label class="ml-1 w-1/3">
             <t-checkbox
+              class="form-checkbox m-1"
               name="targetingChar"
               v-model="toolbarState.targetingChar"
               :disabled="!canFg && !canBg"
@@ -50,6 +55,7 @@
         <div class="flex">
           <label class="ml-1 w-1/2">
             <t-checkbox
+              class="form-checkbox m-1"
               name="mirror-x"
               v-model="mirror.x"
               @change="updateMirror()"
@@ -58,6 +64,7 @@
           </label>
           <label class="ml-1 w-1/2">
             <t-checkbox
+              class="form-checkbox m-1"
               name="mirror-y"
               v-model="mirror.y"
               @change="updateMirror()"
@@ -69,6 +76,7 @@
         <div class="flex">
           <label class="ml-1 w-1/2">
             <t-checkbox
+              class="form-checkbox m-1"
               name="update-brush"
               v-model="toolbarState.updateBrush"
               @change="$store.commit('toggleUpdateBrush', updateBrush)"
@@ -77,6 +85,7 @@
           </label>
           <label class="ml-1 w-1/2">
             <t-checkbox
+              class="form-checkbox m-1"
               name="grid"
               v-model="toolbarState.gridView"
               @change="$store.commit('toggleGridView', gridView)"
@@ -85,23 +94,20 @@
           </label>
         </div>
 
-        <hr class="m-3">
+        <hr class="m-3" />
 
         <t-button
           type="button"
           v-for="(value, keyToolbar) in toolbarIcons"
           :key="keyToolbar + 50"
-          :class="`w-10 h-10 ${
+          :class="`w-10 h-10 mt-1 ml-1 ${
             currentTool.name === value.name
               ? 'border-gray-900 bg-blue-500'
               : 'border-gray-200 bg-gray-500'
           }`"
           @click="$store.commit('changeTool', keyToolbar)"
         >
-          <font-awesome-icon
-            :icon="[value.fa, value.icon]" 
-            size="lg"
-          />
+          <font-awesome-icon :icon="[value.fa, value.icon]" size="lg" />
         </t-button>
       </t-card>
     </vue-draggable-resizable>

@@ -21,16 +21,6 @@
   </div>
 </template>
 
-
-<style>
-.brushcanvas {
-  background: rgba(0, 0, 0, 0.1);
-  border: lightgrey 1px solid;
-  z-index: 0;
-}
-</style>
-
-
 <script>
 import {
   mircColours99,

@@ -14,8 +14,7 @@
       :y="brushLibraryState.y"
     >
       <t-card
-        class="h-full overflow-y-scroll"
-        header="Brushes Manager"
+        class="h-full overflow-y-auto overflow-x-auto"
       >
         <t-button
           type="button"

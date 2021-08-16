@@ -14,8 +14,7 @@
       :y="layersLibraryState.y"
     >
       <t-card
-        class="h-full overflow-y-scroll"
-        header="Layers"
+        class="h-full overflow-y-auto overflow-x-hidden"
       >
         <Layers />
       </t-card>

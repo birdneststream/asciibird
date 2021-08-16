@@ -72,8 +72,15 @@
           class="ml-1"
           v-if="asciibirdMeta.length"
         >
-          Edit Current Ascii
+          Edit Ascii
         </li>
+        <li
+          @click="closeTab(currentTab)"
+          class="ml-1"
+          v-if="asciibirdMeta.length"
+        >
+          Close Ascii
+        </li>        
       </ul>
     </context-menu>
 
@@ -91,6 +98,15 @@
     >
 
     <template v-if="asciibirdMeta.length">
+      <div class="bg-gray-500" >
+        <t-button
+          class="p-1 rounded-xl"
+          @click="openContextMenu"
+        >
+          :::
+          </t-button>
+
+
       <span
         v-for="(value, key) in asciibirdMeta"
         :key="key"
@@ -98,18 +114,20 @@
       >
         <t-button
           class="p-1"
+          :class="buttonStyle(key)"
           @click="changeTab(key, value)"
         >
           {{ value.title }}
 
           <t-button
-            :class="`(currentTab === key) ? 'text-sm pl-1 p-1 h-8 rounded-xl text-white border border-transparent shadow-sm hover:bg-blue-500 bg-gray-600' : ''`"
+            
             @click="closeTab(key)"
           >
             X
           </t-button>
         </t-button>
       </span>
+      </div>
 
       <Toolbar
         :canvas-x="canvasX"
@@ -212,7 +230,6 @@ export default {
   },
   name: "Dashboard",
   data: () => ({
-    currentTab: 1,
     canvasX: null,
     canvasY: null,
     dashboardX: 0,
@@ -272,13 +289,16 @@ export default {
     currentAscii() {
       return this.$store.getters.currentAscii;
     },
-    buttonStyle() {
-      return this.currentTab
-        ? `text-sm pl-1 p-1 h-8 rounded-xl text-white border border-transparent shadow-sm hover:bg-blue-500 bg-gray-600`
-        : `text-sm pl-1 p-1 h-8 rounded-xl text-white border border-transparent shadow-sm hover:bg-blue-500 bg-gray-600`;
+    currentTab() {
+      return this.$store.getters.currentTab;
     },
   },
   methods: {
+    buttonStyle(key) {
+      return (this.currentTab === key)
+        ? `text-sm pl-1 p-1 h-10 text-white border border-transparent shadow-sm hover:bg-blue-500 bg-gray-900`
+        : `text-sm pl-1 p-1 h-10 text-white border border-transparent shadow-sm hover:bg-blue-500 bg-gray-400`;
+    },    
     openContextMenu(e) {
       e.preventDefault();
       this.$refs.menu.open(e);
@@ -386,7 +406,6 @@ export default {
     },
     changeTab(key) {
       // Update the tab index in vuex store
-      this.currentTab = key;
       this.$store.commit("changeTab", key);
     },
     closeTab(key) {

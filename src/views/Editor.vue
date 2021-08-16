@@ -40,24 +40,6 @@
   </div>
 </template>
 
-<style>
-.canvastools {
-  position: absolute;
-  font-family: "Hack";
-  z-index: 100;
-  opacity: 0.6;
-  cursor: crosshair;
-}
-
-.canvas {
-  position: absolute;
-  font-family: "Hack";
-  background: rgba(0, 0, 0, 0.8);
-  border: lightgrey 1px solid;
-  z-index: 0;
-}
-</style>
-
 <script>
 import {
   toolbarIcons,
@@ -249,13 +231,6 @@ export default {
   watch: {
     currentAscii(val, old) {
       if (val !== old) {
-        this.onCanvasResize(
-          100,
-          this.top,
-          this.currentAsciiWidth * blockWidth,
-          this.currentAsciiHeight * blockHeight
-        );
-
         this.canvas.width = this.currentAsciiWidth * blockWidth;
         this.canvas.height = this.currentAsciiHeight * blockHeight;
 
@@ -446,7 +421,7 @@ export default {
 
                 if (this.gridView) {
                   this.ctx.setLineDash([1]);
-                  this.ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
+                  this.ctx.strokeStyle = "rgba(0, 0, 0, 1)";
                   this.ctx.strokeRect(
                     canvasX,
                     canvasY,

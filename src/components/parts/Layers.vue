@@ -2,7 +2,7 @@
   <div>
     <t-button
       type="button"
-      class="block w-full border-gray-200 bg-gray-500 p-2 m-2"
+      class="block w-full border-gray-200 bg-gray-500"
       @click="addLayer()"
     >
       Add Layer
@@ -79,13 +79,6 @@
     </div>
   </div>
 </template>
-
-<style>
-.reverseorder {
-  display: flex;
-  flex-direction: column-reverse;
-}
-</style>
 
 <script>
 export default {
