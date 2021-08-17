@@ -7,7 +7,6 @@
       :max-width="blockWidth * 40"
       :min-height="blockHeight * 20"
       :max-height="blockHeight * 20"
-      style="z-index: 5;"
       :w="debugPanelState.w"
       :h="debugPanelState.h"
       :x="debugPanelState.x"
@@ -47,7 +46,9 @@
         <span
           class="ml-5"
           v-html="`mirrorY: ${mirrorY}`"
-        /> <br>
+        />
+        
+        <br>
 
         <span class="ml-5"> Size: {{ asciiStats.sizeCompressed }} ({{ asciiStats.sizeUncompressed }} / {{ asciiStats.sizePercentage }}%) </span> <br>
 
@@ -155,12 +156,6 @@ export default {
     brushBlocks() {
       return this.$store.getters.brushBlocks;
     },
-    // canvasX() {
-    //   return this.x * this.blockWidth;
-    // },
-    // canvasY() {
-    //   return this.y * this.blockHeight;
-    // },
     toolbarState() {
       return this.$store.getters.toolbarState;
     },

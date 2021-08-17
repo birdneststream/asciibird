@@ -6,7 +6,6 @@
       @mouseenter="isMouseOnCanvas = true"
     >
       <vue-draggable-resizable
-        style="z-index: 5"
         ref="canvasdrag"
         :grid="[blockWidth, blockHeight]"
         :w="currentAsciiWidth * blockWidth"
@@ -121,8 +120,11 @@ export default {
     currentAsciiLayers() {
       return this.$store.getters.currentAsciiLayers;
     },
+    selectedLayerIndex() {
+      return this.currentAscii.selectedLayer || 0
+    },
     currentSelectedLayer() {
-      return this.currentAsciiLayers[this.currentAscii.selectedLayer];
+      return this.currentAsciiLayers[this.selectedLayerIndex];
     },
     currentAsciiLayerBlocks() {
       return this.currentSelectedLayer.data;
@@ -308,6 +310,9 @@ export default {
         this.delayRedrawCanvas();
       }
     },
+    selecting(val) {
+      this.$emit("selecting", val);
+    },
   },
   methods: {
     warnInvisibleLayer() {
@@ -340,6 +345,7 @@ export default {
         endY: null,
         canSelect: false,
       };
+      this.$emit("selecting", this.selecting);
     },
     redrawSelect() {
       if (this.currentAsciiLayerBlocks.length) {
@@ -389,6 +395,14 @@ export default {
           }
 
           for (x = 0; x < this.currentAsciiWidth + 1; x++) {
+            canvasX = blockWidth * x;
+
+            if (this.gridView) {
+              this.ctx.setLineDash([1]);
+              this.ctx.strokeStyle = "rgba(0, 0, 0, 1)";
+              this.ctx.strokeRect(canvasX, canvasY, blockWidth, blockHeight);
+            }
+
             // Loop layers
             for (i = this.currentAsciiLayers.length - 1; i >= 0; i--) {
               // for (i = 0; i >= this.currentAsciiLayers.length - 1; i++) {
@@ -415,19 +429,6 @@ export default {
                   curBlock = { ...this.currentAsciiLayers[i].data[y][x] };
 
                   // break;
-                }
-
-                canvasX = blockWidth * x;
-
-                if (this.gridView) {
-                  this.ctx.setLineDash([1]);
-                  this.ctx.strokeStyle = "rgba(0, 0, 0, 1)";
-                  this.ctx.strokeRect(
-                    canvasX,
-                    canvasY,
-                    blockWidth,
-                    blockHeight
-                  );
                 }
 
                 // Background block
@@ -739,6 +740,7 @@ export default {
       }
 
       this.$emit("selectedblocks", this.selectedBlocks);
+      this.$emit("selecting", this.selecting);
     },
     drawRectangleBlock(x, y) {
       let indicatorColour = this.asciiBlockAtXy.bg === 0 ? 1 : 0;

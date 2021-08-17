@@ -15,6 +15,9 @@ import {
 
 export default {
   name: "KeyboardShortcuts",
+  destroyed() {
+    window.removeEventListener("keydown", this.keyListener.bind(this));
+  },
   created() {
     const thisIs = this;
     this.keyListener = function (e) {
@@ -35,7 +38,11 @@ export default {
       }
 
       // Change char when car picker is open
-      if (this.toolbarState.isChoosingChar && e.key.length === 1  && this.haveOpenTabs) {
+      if (
+        this.toolbarState.isChoosingChar &&
+        e.key.length === 1 &&
+        this.haveOpenTabs
+      ) {
         this.$store.commit("changeChar", e.key);
         return;
       }
@@ -56,26 +63,29 @@ export default {
       const altKey = e.altKey;
 
       // Used for text typing
-      if (this.isTextEditing  && this.haveOpenTabs) {
+      if (this.isTextEditing && this.haveOpenTabs) {
         thisIs.canvasKeyDown(e.key);
         return;
       }
 
       // Show / hide grid view
       if (e.key === "g" && altKey) {
-        this.$store.commit("toggleGridView", !this.gridView  && this.haveOpenTabs);
+        this.$store.commit(
+          "toggleGridView",
+          !this.gridView && this.haveOpenTabs
+        );
         return;
       }
 
       // Ctrl Z here
       // skg - thanks for mac key suggestion, bro
-      if (e.key === "z" && ctrlKey  && this.haveOpenTabs) {
+      if (e.key === "z" && ctrlKey && this.haveOpenTabs) {
         this.undo();
         return;
       }
 
       // Ctrl Y here
-      if (e.key === "y" && ctrlKey  && this.haveOpenTabs) {
+      if (e.key === "y" && ctrlKey && this.haveOpenTabs) {
         this.redo();
         return;
       }
@@ -86,8 +96,8 @@ export default {
         Number.parseInt(e.key) <= 8 &&
         !this.toolbarState.isChoosingFg &&
         !this.toolbarState.isChoosingBg &&
-        altKey  && this.haveOpenTabs
-        
+        altKey &&
+        this.haveOpenTabs
       ) {
         this.$store.commit("changeTool", Number.parseInt(e.key - 1));
         this.$emit("updatecanvas");
@@ -95,7 +105,7 @@ export default {
       }
 
       // Swap colours
-      if (e.key === "r" && altKey  && this.haveOpenTabs) {
+      if (e.key === "r" && altKey && this.haveOpenTabs) {
         let bg = this.currentBg;
         let fg = this.currentFg;
 
@@ -105,7 +115,7 @@ export default {
       }
 
       // Show FG
-      if (e.key === "f" && altKey && !ctrlKey  && this.haveOpenTabs) {
+      if (e.key === "f" && altKey && !ctrlKey && this.haveOpenTabs) {
         this.$store.commit(
           "changeIsUpdatingFg",
           !this.toolbarState.isChoosingFg
@@ -114,7 +124,7 @@ export default {
       }
 
       // Show BG
-      if (e.key === "b" && altKey && !ctrlKey  && this.haveOpenTabs) {
+      if (e.key === "b" && altKey && !ctrlKey && this.haveOpenTabs) {
         this.$store.commit(
           "changeIsUpdatingBg",
           !this.toolbarState.isChoosingBg
@@ -123,7 +133,7 @@ export default {
       }
 
       // Show Character select
-      if (e.key === "c" && altKey && !ctrlKey  && this.haveOpenTabs) {
+      if (e.key === "c" && altKey && !ctrlKey && this.haveOpenTabs) {
         this.$store.commit(
           "changeIsUpdatingChar",
           !this.toolbarState.isChoosingChar
@@ -135,7 +145,8 @@ export default {
       if (
         Number.parseInt(e.key) >= 0 &&
         Number.parseInt(e.key) <= 9 &&
-        (this.toolbarState.isChoosingFg || this.toolbarState.isChoosingBg)  && this.haveOpenTabs
+        (this.toolbarState.isChoosingFg || this.toolbarState.isChoosingBg) &&
+        this.haveOpenTabs
       ) {
         if (this.toolbarState.isChoosingFg) {
           this.$store.commit("changeColourFg", Number.parseInt(e.key));
@@ -149,7 +160,14 @@ export default {
       }
 
       // Ctrl C - copy blocks
-      if (e.key === "c" && ctrlKey && !shiftKey  && this.haveOpenTabs) {
+      if (
+        e.key === "c" &&
+        ctrlKey &&
+        !shiftKey &&
+        this.haveOpenTabs &&
+        this.isSelected &&
+        this.isSelecting
+      ) {
         if (this.selectedBlocks.length) {
           this.$store.commit(
             "selectBlocks",
@@ -166,7 +184,12 @@ export default {
       }
 
       // Delte blocks but do not save them when pressing Delete when selected
-      if (e.key === "Delete"  && this.haveOpenTabs) {
+      if (
+        e.key === "Delete" &&
+        this.haveOpenTabs &&
+        this.isSelected &&
+        this.isSelecting
+      ) {
         console.log(getBlocksWidth(this.selectedBlocks));
         if (this.selectedBlocks.length) {
           for (let y = 0; y < this.selectedBlocks.length + 1; y++) {
@@ -191,7 +214,14 @@ export default {
       }
 
       // Ctrl X - cut blocks
-      if (e.key === "x" && ctrlKey && !shiftKey && this.haveOpenTabs) {
+      if (
+        e.key === "x" &&
+        ctrlKey &&
+        !shiftKey &&
+        this.haveOpenTabs &&
+        this.isSelected &&
+        this.isSelecting
+      ) {
         if (this.selectedBlocks.length) {
           for (let y = 0; y < this.selectedBlocks.length + 1; y++) {
             for (let x = 0; x < getBlocksWidth(this.selectedBlocks) + 1; x++) {
@@ -259,7 +289,12 @@ export default {
       }
 
       // Edit ASCII
-      if (e.key === "e" && this.isDefault && !this.isTextEditing && this.haveOpenTabs) {
+      if (
+        e.key === "e" &&
+        this.isDefault &&
+        !this.isTextEditing &&
+        this.haveOpenTabs
+      ) {
         this.$store.commit("openModal", "edit-ascii");
 
         return;
@@ -305,7 +340,8 @@ export default {
         this.brushSizeHeight < maxBrushSize &&
         this.brushSizeHeight >= 1 &&
         this.brushSizeWidth < maxBrushSize &&
-        this.brushSizeWidth >= 1 && this.haveOpenTabs
+        this.brushSizeWidth >= 1 &&
+        this.haveOpenTabs
       ) {
         this.$store.commit("updateBrushSize", {
           brushSizeHeight: parseInt(this.brushSizeHeight) + 1,
@@ -322,7 +358,8 @@ export default {
         this.brushSizeHeight <= maxBrushSize &&
         this.brushSizeHeight > 1 &&
         this.brushSizeWidth <= maxBrushSize &&
-        this.brushSizeWidth > 1 && this.haveOpenTabs
+        this.brushSizeWidth > 1 &&
+        this.haveOpenTabs
       ) {
         this.$store.commit("updateBrushSize", {
           brushSizeHeight: parseInt(this.brushSizeHeight) - 1,
@@ -353,7 +390,7 @@ export default {
 
     document.addEventListener("keydown", this.keyListener.bind(this));
   },
-  props: ["selectedBlocks", "textEditing"],
+  props: ["selectedBlocks", "textEditing", "selecting"],
   computed: {
     isModalOpen() {
       return this.$store.getters.isModalOpen;
@@ -369,9 +406,6 @@ export default {
     },
     currentAscii() {
       return this.$store.getters.currentAscii;
-    },
-    currentAsciiBlocks() {
-      return this.$store.getters.currentAsciiBlocks;
     },
     currentTool() {
       return toolbarIcons[this.$store.getters.currentTool];
@@ -454,13 +488,10 @@ export default {
       return this.currentSelectedLayer.height;
     },
     haveOpenTabs() {
-      return this.$store.getters.currentAscii !== false
-    }
+      return this.currentAscii !== false;
+    },
   },
   methods: {
-    filterNullBlocks(val) {
-      return filterNullBlocks(val);
-    },
     undo() {
       this.$store.commit("undoBlocks");
     },

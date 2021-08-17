@@ -23,6 +23,7 @@
                 type="button"
                 class="rounded-xl"
                 @click="toggleLayer(key)"
+                :disabled="!canToggleLayer"
               >
                 <font-awesome-icon
                   :icon="['fas', layer.visible ? 'eye' : 'eye-slash']"
@@ -102,23 +103,22 @@ export default {
     },
   },
   watch: {
-    currentAsciiLayers() {
+    selectedLayer() {
       this.selectBestLayer();
     },
   },
   methods: {
     selectBestLayer() {
       let found = false;
-      this.currentAsciiLayers.map((item, key) => {
-        if (item.visible) {
-          this.changeLayer(key);
+      this.currentAsciiLayers.map((item) => {
+        if (item && item.visible) {
           found = true;
-          return;
         }
       });
 
       // If there's no visible layers we'll target the first one always
       if (!found) {
+        this.$store.commit("toggleLayer", 0);
         this.changeLayer(0);
       }
     },

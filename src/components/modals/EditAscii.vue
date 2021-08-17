@@ -37,12 +37,16 @@
         class="flex justify-between"
         @click="$store.commit('closeModal', 'edit-ascii')"
       >
-        <t-button type="button">
+        <t-button
+          type="button"
+          class="p-2"
+        >
           Cancel
         </t-button>
         <t-button
           type="button"
           @click="updateAscii()"
+          class="p-2"
         >
           Update
         </t-button>
@@ -73,7 +77,9 @@ export default {
     currentAscii() {
       return this.$store.getters.currentAscii;
     },
-
+    selectedLayerIndex() {
+      return this.currentAscii.selectedLayer
+    },
     currentAsciiEditingTitle() {
       return `Editing ASCII ${this.currentAscii.title}`;
     },
@@ -81,13 +87,13 @@ export default {
       return this.$store.getters.currentAsciiLayers;
     },
     currentSelectedLayer() {
-      return this.currentAsciiLayers[this.currentAscii.selectedLayer];
+      return this.currentAsciiLayers[this.selectedLayerIndex];
     },
     currentAsciiWidth() {
-      return this.currentSelectedLayer.width;
+      return this.currentSelectedLayer.width || 0;
     },
     currentAsciiHeight() {
-      return this.currentSelectedLayer.height;
+      return this.currentSelectedLayer.height || 0;
     },
   },
   watch: {

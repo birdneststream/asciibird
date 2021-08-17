@@ -35,11 +35,15 @@
         class="flex justify-between"
         @click="$store.commit('closeModal', 'new-ascii')"
       >
-        <t-button type="button">
+        <t-button
+          type="button"
+          class="p-2"
+        >
           Cancel
         </t-button>
         <t-button
           type="button"
+          class="p-2"
           @click="initiateNewAscii()"
         >
           Ok

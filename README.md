@@ -68,6 +68,9 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment.
 * Exporter will default transparent bg to black by default, which wont for some asciis
 * Having more than a few layers depending on ascii size will slow things down, until the `fillNullBlocks` is refactored.
 * Refreshing the page seems to fix most strange things
+* Cannot manually input brush sizes because keyboard shortcuts is stealing focus
+* Grid slows things down
+* If you open a modal and refresh the page it's stuck as opened inside the state, and you cannot open it again
 ## Focusing on Now
 
 * Modals to add

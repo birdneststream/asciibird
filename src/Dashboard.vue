@@ -1,18 +1,20 @@
 <template>
   <div id="app">
     <NewAscii />
-    <EditAscii />
+    <EditAscii v-if="asciibirdMeta.length" />
     <PasteAscii />
 
     <KeyboardShortcuts
       :selected-blocks="selectedBlocks"
       :text-editing="textEditing"
+      :selecting="selecting"
       @updatecanvas="updatecanvas"
     />
 
     <context-menu
       :display="showContextMenu"
       ref="menu"
+      class="z-50"
     >
       <ul>
         <li
@@ -23,20 +25,28 @@
           New ASCII
         </li>
         <li
-          @click="clearCache()"
+          @click="$store.commit('openModal', 'edit-ascii')"
           class="ml-1"
+          v-if="asciibirdMeta.length"
         >
-          Clear and Refresh
+          Edit Ascii
         </li>
+        <li
+          @click="closeTab(currentTab)"
+          class="ml-1 border-b"
+          v-if="asciibirdMeta.length"
+        >
+          Close Ascii
+        </li> 
         <li
           @click="startImport('mirc')"
           class="ml-1"
         >
-          Import mIRC
+          Import mIRC from File
         </li>
         <li
           @click="startExport('file')"
-          class="ml-1"
+          class="ml-1 border-b"
           v-if="asciibirdMeta.length"
         >
           Export mIRC to File
@@ -48,7 +58,7 @@
           Import mIRC from Clipboard
         </li>
         <li
-          class="ml-1"
+          class="ml-1 border-b"
           @click="startExport('clipboard')"
           v-if="asciibirdMeta.length"
         >
@@ -68,19 +78,11 @@
           Load Asciibird State
         </li>
         <li
-          @click="$store.commit('openModal', 'edit-ascii')"
+          @click="clearCache()"
           class="ml-1"
-          v-if="asciibirdMeta.length"
         >
-          Edit Ascii
+          Reset State
         </li>
-        <li
-          @click="closeTab(currentTab)"
-          class="ml-1"
-          v-if="asciibirdMeta.length"
-        >
-          Close Ascii
-        </li>        
       </ul>
     </context-menu>
 
@@ -98,61 +100,73 @@
     >
 
     <template v-if="asciibirdMeta.length">
-      <div class="bg-gray-500" >
+      <div class="bg-gray-500 z-50">
         <t-button
           class="p-1 rounded-xl"
           @click="openContextMenu"
         >
           :::
-          </t-button>
-
-
-      <span
-        v-for="(value, key) in asciibirdMeta"
-        :key="key"
-        class="mr-2"
-      >
-        <t-button
-          class="p-1"
-          :class="buttonStyle(key)"
-          @click="changeTab(key, value)"
-        >
-          {{ value.title }}
-
-          <t-button
-            
-            @click="closeTab(key)"
-          >
-            X
-          </t-button>
         </t-button>
-      </span>
+
+
+        <span
+          v-for="(value, key) in asciibirdMeta"
+          :key="key"
+          class="mr-2 z-50"
+        >
+          <t-button
+            class="p-1 z-50"
+            :class="buttonStyle(key)"
+            @click="changeTab(key, value)"
+          >
+            {{ value.title }}
+
+            <t-button
+              class="z-50"
+              @click="closeTab(key)"
+            >
+              X
+            </t-button>
+          </t-button>
+        </span>
       </div>
 
       <Toolbar
         :canvas-x="canvasX"
         :canvas-y="canvasY"
+        class="z-10"
       />
       <DebugPanel
         :canvas-x="canvasX"
         :canvas-y="canvasY"
         v-if="debugPanelState.visible"
+        class="z-10"
       />
+
       <Editor
         @coordsupdate="updateCoords"
         @selectedblocks="selectedblocks"
         @textediting="textediting"
         :update-canvas="updateCanvas"
+        @selecting="updateSelecting"
+        class="z-10"
       />
 
-      <CharPicker v-if="toolbarState.isChoosingChar" />
+      <CharPicker
+        v-if="toolbarState.isChoosingChar"
+        class="z-10"
+      />
       <ColourPicker
         v-if="toolbarState.isChoosingFg || toolbarState.isChoosingBg"
+        class="z-10"
       />
 
-      <BrushLibrary v-if="brushLibraryState.visible" />
-      <BrushPreview />
-      <LayersLibrary />
+      <BrushLibrary
+        v-if="brushLibraryState.visible"
+        class="z-10"
+      />
+      <BrushPreview class="z-10" />
+      <LayersLibrary class="z-10" />
     </template>
     <template v-else>
       <div
@@ -239,6 +253,7 @@ export default {
     selectedBlocks: null,
     textEditing: null,
     updateCanvas: false,
+    selecting: null,
   }),
   computed: {
     splashAscii() {
@@ -309,6 +324,9 @@ export default {
     },
     selectedblocks(value) {
       this.selectedBlocks = value
+    },
+    updateSelecting(value) {
+      this.selecting = value
     },
     textediting(value) {
       this.textEditing = value

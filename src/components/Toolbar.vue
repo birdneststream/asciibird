@@ -3,7 +3,6 @@
     <vue-draggable-resizable
       @dragstop="onDragStop"
       :grid="[blockWidth, blockHeight]"
-      style="z-index: 5"
       :min-width="blockWidth * 25"
       :max-width="blockWidth * 40"
       :max-height="blockHeight * 20"
@@ -94,7 +93,7 @@
           </label>
         </div>
 
-        <hr class="m-3" />
+        <hr class="m-3">
 
         <t-button
           type="button"
@@ -107,7 +106,10 @@
           }`"
           @click="$store.commit('changeTool', keyToolbar)"
         >
-          <font-awesome-icon :icon="[value.fa, value.icon]" size="lg" />
+          <font-awesome-icon
+            :icon="[value.fa, value.icon]"
+            size="lg"
+          />
         </t-button>
       </t-card>
     </vue-draggable-resizable>

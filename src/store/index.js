@@ -252,6 +252,16 @@ export default new Vuex.Store({
 
       if (tempLayers.length > 1) {
         tempLayers.splice(payload, 1)
+
+        // Automatically select the next best layer to avoid bugs
+        if (tempLayers[payload + 1]) {
+          state.asciibirdMeta[state.tab].selectedLayer = payload + 1
+        } else if (tempLayers[payload - 1]) {
+          state.asciibirdMeta[state.tab].selectedLayer = payload - 1
+        } else if (tempLayers[0]) {
+          state.asciibirdMeta[state.tab].selectedLayer = 0
+        }
+
         state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
           tempLayers));
       }
@@ -465,9 +475,9 @@ export default new Vuex.Store({
     currentAscii: (state) => state.asciibirdMeta[state.tab] ?? false,
     currentAsciiBlocks: (state) => {
       let blocks = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[
-        state.tab].blocks));
+        state.tab].blocks)) || [];
 
-      return blocks[state.asciibirdMeta[state.tab].selectedLayer].data
+      return blocks[state.asciibirdMeta[state.tab].selectedLayer].data || []
     },
     currentAsciiLayers: (state) => {
       let blocks = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[
