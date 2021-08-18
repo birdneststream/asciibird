@@ -485,32 +485,28 @@ export const exportMirc = () => {
       }
 
       for (let i = blocks.length - 1; i >= 0; i--) {
-        if (blocks[i].visible === true) {
-          currentLayer = i;
-
-          if (
-            blocks[i].data &&
-            blocks[i].data[y] &&
-            blocks[i].data[y][x] &&
-            i > 0 &&
-            JSON.stringify(blocks[i].data[y][x]) ===
-            JSON.stringify(emptyBlock)
-          ) {
-            continue;
-          } else if (
-            // Otherwise if we are on the very first layer we need to render it
-            blocks[i].data &&
-            blocks[i].data[y] &&
-            blocks[i].data[y][x]
-          ) {
-
-            curBlock = {
-              ...blocks[i].data[y][x]
-            };
-
-            break;
-          }
+        if (blocks[i].visible !== true) {
+          continue;
         }
+        currentLayer = i;
+        if (
+          !blocks[i].data ||
+          !blocks[i].data[y] ||
+          !blocks[i].data[y][x]
+        ) {
+          continue;
+        }
+        if (
+          i > 0 &&
+          JSON.stringify(blocks[i].data[y][x]) ===
+          JSON.stringify(emptyBlock)
+        ) {
+          continue;
+        }
+        curBlock = {
+          ...blocks[i].data[y][x]
+        };
+        break;
       }
 
       // If we have a difference between our previous block
@@ -614,7 +610,6 @@ export const checkForGetRequest = async () => {
     const asciiName = haxAscii.split('/').pop();
     const asciiData = await res.text();
     parseMircAscii(asciiData, asciiName);
-    return;
   }
 }
 
