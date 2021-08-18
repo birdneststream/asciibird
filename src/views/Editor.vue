@@ -465,7 +465,7 @@ export default {
                 this.ctx.fillRect(canvasX, canvasY, BLOCK_WIDTH, BLOCK_HEIGHT);
 
                 if (this.gridView) {
-                  
+
                   this.ctx.setLineDash([1]);
                   this.ctx.strokeStyle = "rgba(0, 0, 0, 0.2)"
                   this.ctx.strokeRect(
@@ -1430,27 +1430,7 @@ export default {
       this.fillTool(this.currentAsciiBlocks, this.y, this.x, current);
     },
     fillTool(fillBlocks, y, x, current) {
-      // If row is less than 0
-      if (x < 0) {
-        return;
-      }
-
-      // If column is less than 0
-      if (y < 0) {
-        return;
-      }
-
-      // If row is greater than image length
-      if (x >= this.currentAscii.width) {
-        return;
-      }
-
-      // If column is greater than image length
-      if (y >= this.currentAscii.height) {
-        return;
-      }
-
-      if (!fillBlocks[y] && !fillBlocks[y][x]) {
+      if(fillBlocks[y] === undefined || fillBlocks[y][x] === undefined) {
         return;
       }
 
