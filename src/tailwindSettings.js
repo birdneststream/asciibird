@@ -70,12 +70,12 @@ export const tailwindCss = {
     props: {
       fixedClasses: {
         wrapper: 'border rounded shadow-sm ',
-        body: 'p-3',
-        header: 'border-b p-3 rounded-t',
-        footer: 'border-t p-3 rounded-b'
+        body: 'p-1',
+        header: 'border-b p-1 rounded-t text-sm',
+        footer: 'border-t p-1 rounded-b'
       },
       classes: {
-        wrapper: 'bg-white border-gray-100',
+        wrapper: 'bg-gray-200 border-gray-100',
         body: '',
         header: 'border-gray-100',
         footer: 'border-gray-100'
@@ -95,17 +95,17 @@ export const tailwindCss = {
       fixedClasses: {
         overlay: 'z-40  overflow-auto scrolling-touch left-0 top-0 bottom-0 right-0 w-full h-full fixed bg-opacity-50',
         wrapper: 'relative mx-auto z-50 max-w-lg px-3 py-12',
-        modal: 'overflow-visible relative  rounded',
+        modal: 'overflow-visible relative rounded',
         body: 'p-3',
-        header: 'border-b p-3 rounded-t',
-        footer: ' p-3 rounded-b',
+        header: 'border-b p-3 rounded-t font-bold',
+        footer: 'p-1 rounded-b',
         close: 'flex items-center justify-center rounded-full absolute right-0 top-0 -m-3 h-8 w-8 transition duration-100 ease-in-out focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-opacity-50'
       },
       classes: {
         overlay: 'bg-black',
         wrapper: '',
         modal: 'bg-white shadow',
-        body: 'p-3',
+        body: 'p-1',
         header: 'border-gray-100',
         footer: 'bg-gray-100',
         close: 'bg-gray-100 text-gray-600 hover:bg-gray-200',

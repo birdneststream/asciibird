@@ -9,26 +9,25 @@
           :width="blocksWidthHeight.w"
           :height="blocksWidthHeight.h"
         />
-    </div>
+      </div>
     </t-card>
   </div>
 </template>
 
-<style>
-.previewcanvas {
-  background: rgba(0, 0, 0, 0.1);
-  border: lightgrey 1px solid;
-  z-index: 0;
-}
-</style>
 
 <script>
 import { mircColours99, blockWidth, blockHeight, cyrb53, getBlocksWidth, filterNullBlocks  } from "../../ascii";
 
 export default {
   name: "BrushCanvas",
+  created() {
+    window.addEventListener('load', () => {
+         // Fixes the font on load issue
+         this.delayRedrawCanvas();
+    })
+  },
   mounted() {
-    this.ctx = this.canvasRef.getContext("2d");
+    this.ctx = this.$refs[this.canvasName].getContext("2d");
     this.delayRedrawCanvas();
   },
   props: {
@@ -43,6 +42,15 @@ export default {
     redraw: true,
   }),
   computed: {
+    blockWidth() {
+      return blockWidth * this.blockSizeMultiplier;
+    },
+    blockHeight() {
+      return blockHeight * this.blockSizeMultiplier;
+    },
+    blockSizeMultiplier() {
+      return this.$store.getters.blockSizeMultiplier
+    },
     currentAscii() {
       return this.$store.getters.currentAscii;
     },
@@ -93,8 +101,8 @@ export default {
     },
     blocksWidthHeight() {
       return {
-          w: getBlocksWidth(this.getBlocks) * blockWidth,
-          h: this.getBlocks.length * blockHeight
+          w: getBlocksWidth(this.getBlocks) * this.blockWidth,
+          h: this.getBlocks.length * this.blockHeight
         }
     },
     mircColours() {
@@ -105,6 +113,9 @@ export default {
     }
   },
   watch: {
+    blockSizeMultiplier() {
+      this.delayRedrawCanvas();
+    },
     getBlocks() {
       this.delayRedrawCanvas();
     },
@@ -168,10 +179,10 @@ export default {
                 this.ctx.fillStyle = this.mircColours[curBlock.bg];
 
                 this.ctx.fillRect(
-                  x * blockWidth,
-                  y * blockHeight,
-                  blockWidth,
-                  blockHeight
+                  x * this.blockWidth,
+                  y * this.blockHeight,
+                  this.blockWidth,
+                  this.blockHeight
                 );
               }
 
@@ -183,8 +194,8 @@ export default {
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
                 this.ctx.fillText(
                   curBlock.char,
-                  x * blockWidth - 1,
-                  y * blockHeight + blockHeight - 3
+                  x * this.blockWidth,
+                  y * this.blockHeight + this.blockHeight - 3
                 );
               }
             }

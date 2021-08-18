@@ -5,7 +5,10 @@ import LZString from 'lz-string';
 import {
   blockWidth,
   blockHeight,
-  cyrb53
+  cyrb53,
+  getBlocksWidth,
+  create2DArray,
+  emptyBlock
 } from "../ascii";
 
 Vue.use(Vuex);
@@ -24,13 +27,11 @@ export default new Vuex.Store({
     // The various options of ASCIIBIRD will eventually
     // end up in its own modal I guess
     options: {
-      canvasRedrawSpeed: 50,
       defaultBg: 1,
       defaultFg: 0,
     },
     // Current tab user is viewing
     tab: 0,
-    gridView: false,
     // asciibirdMeta holds all of the ASCII information for all the tabs
     asciibirdMeta: [],
     toolbarState: {
@@ -55,15 +56,17 @@ export default new Vuex.Store({
       mirrorY: false,
       x: blockWidth * 2,
       y: blockHeight * 2,
-      h: blockHeight * 39,
+      h: blockHeight * 19,
       w: blockWidth * 25,
       draggable: true,
+      updateBrush: true,
+      gridView: false,
     },
     debugPanelState: {
-      x: 936,
-      y: 39,
-      h: 260,
-      w: 320,
+      x: blockWidth * 130,
+      y: blockHeight * 2,
+      h: blockHeight * 50,
+      w: blockWidth * 25,
       visible: false,
     },
     blockSizeMultiplier: 1,
@@ -73,11 +76,25 @@ export default new Vuex.Store({
     brushLibrary: [],
     brushLibraryState: {
       x: blockWidth * 130,
-      y: blockHeight * 2,
-      h: blockHeight * 50,
-      w: blockWidth * 25,
+      y: blockHeight * 23,
+      h: blockHeight * 25,
+      w: blockWidth * 35,
       visible: true,
       tab: 0,
+    },
+    brushPreviewState: {
+      x: blockWidth * 2,
+      y: blockHeight * 22,
+      h: blockHeight * 19,
+      w: blockWidth * 25,
+      visible: true,
+    },
+    layersLibraryState: {
+      x: blockWidth * 130,
+      y: blockHeight * 2,
+      h: blockHeight * 19,
+      w: blockWidth * 35,
+      visible: true,
     },
   },
   mutations: {
@@ -86,6 +103,7 @@ export default new Vuex.Store({
     },
     changeTab(state, payload) {
       state.tab = payload;
+      document.title = `asciibird - ${state.asciibirdMeta[payload].title}`;
     },
     changeDebugPanelState(state, payload) {
       state.debugPanelState = payload;
@@ -95,6 +113,9 @@ export default new Vuex.Store({
     },
     changeBrushLibraryState(state, payload) {
       state.brushLibraryState = payload;
+    },
+    changeBrushPreviewState(state, payload) {
+      state.brushPreviewState = payload;
     },
     toggleBrushLibrary(state, payload) {
       state.brushLibraryState.visible = payload;
@@ -108,9 +129,12 @@ export default new Vuex.Store({
     changeToolBarDraggable(state, payload) {
       state.toolbarState.draggable = payload;
     },
+    changeLayersLibraryState(state, payload) {
+      state.layersLibraryState = payload;
+    },
     changeAsciiWidthHeight(state, payload) {
-      state.asciibirdMeta[state.tab].width = payload.width;
-      state.asciibirdMeta[state.tab].height = payload.height;
+      state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
+        payload.layers));
     },
     changeAsciiCanvasState(state, payload) {
       state.asciibirdMeta[state.tab].x = payload.x;
@@ -155,6 +179,7 @@ export default new Vuex.Store({
     newAsciibirdMeta(state, payload) {
       state.asciibirdMeta.push(payload);
       state.tab = state.asciibirdMeta.length - 1;
+      document.title = `asciibird - ${state.asciibirdMeta[state.tab].title}`;
     },
     updateToolBarState(state, payload) {
       state.toolbarState = payload;
@@ -168,12 +193,119 @@ export default new Vuex.Store({
         state.asciibirdMeta[state.tab].history.push(state.asciibirdMeta[state.tab].blocks);
       }
 
-      state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(payload));
+      let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
+        .blocks))
+      tempLayers[state.asciibirdMeta[state.tab].selectedLayer].data = payload
+
+      state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
+        tempLayers));
       state.asciibirdMeta[state.tab].redo = [];
     },
+
+    //
+    // LAYERS
+    //
+    addLayer(state) {
+      let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
+        .blocks))
+
+      let width = tempLayers[0].width;
+      let height = tempLayers[0].height;
+
+      let newBlocksArray = create2DArray(height);
+
+      // Push all the default ASCII blocks
+      for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+          newBlocksArray[y].push({
+            ...emptyBlock,
+          });
+        }
+      }
+
+      tempLayers.push({
+        label: 'Layer ' + Number.parseInt(tempLayers.length),
+        visible: true,
+        data: [...newBlocksArray],
+        width: width,
+        height: height
+      })
+
+      state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
+        tempLayers));
+    },
+    changeLayer(state, payload) {
+      state.asciibirdMeta[state.tab].selectedLayer = payload
+    },
+    toggleLayer(state, payload) {
+      let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
+        .blocks))
+
+      tempLayers[payload].visible = !tempLayers[payload].visible
+
+      state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
+        tempLayers));
+    },
+    removeLayer(state, payload) {
+      let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
+        .blocks))
+
+      if (tempLayers.length > 1) {
+        tempLayers.splice(payload, 1)
+
+        // Automatically select the next best layer to avoid bugs
+        if (tempLayers[payload + 1]) {
+          state.asciibirdMeta[state.tab].selectedLayer = payload + 1
+        } else if (tempLayers[payload - 1]) {
+          state.asciibirdMeta[state.tab].selectedLayer = payload - 1
+        } else if (tempLayers[0]) {
+          state.asciibirdMeta[state.tab].selectedLayer = 0
+        }
+
+        state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
+          tempLayers));
+      }
+
+    },
+    downLayer(state, payload) {
+      let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
+        .blocks))
+
+      if (tempLayers[payload + 1]) {
+        let swap1 = tempLayers[payload + 1];
+        let swap = tempLayers[payload];
+
+        tempLayers[payload + 1] = swap
+        tempLayers[payload] = swap1
+
+        state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
+          tempLayers));
+      }
+
+    },
+    upLayer(state, payload) {
+      let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
+        .blocks))
+
+      if (tempLayers[payload - 1]) {
+        let swap1 = tempLayers[payload - 1];
+        let swap = tempLayers[payload];
+
+        tempLayers[payload - 1] = swap
+        tempLayers[payload] = swap1
+
+        state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
+          tempLayers));
+      }
+
+    },
+
+    // ASCII
     updateAscii(state, payload) {
       state.asciibirdMeta[state.tab] = payload;
     },
+
+    // BLOCKS
     undoBlocks(state) {
       if (state.asciibirdMeta[state.tab].history.length > 1) {
         state.asciibirdMeta[state.tab].redo.push(state.asciibirdMeta[state.tab].blocks);
@@ -187,6 +319,10 @@ export default new Vuex.Store({
         state.asciibirdMeta[state.tab].history.push(next);
       }
     },
+
+    //
+    // Toolbar
+    //
     updateBrushSize(state, payload) {
       state.toolbarState.brushSizeHeight = payload.brushSizeHeight;
       state.toolbarState.brushSizeWidth = payload.brushSizeWidth;
@@ -199,8 +335,47 @@ export default new Vuex.Store({
       state.selectBlocks = LZString.compressToUTF16(JSON.stringify(payload));
     },
     toggleGridView(state, payload) {
-      state.gridView = payload;
+      state.toolbarState.gridView = payload;
     },
+    toggleUpdateBrush(state, payload) {
+      state.toolbarState.updateBrush = payload;
+    },
+
+    flipRotateBlocks(state, payload) {
+      let tempBlocks = JSON.parse(LZString.decompressFromUTF16(state.brushBlocks))
+      let parsedBlocks = [];
+      let x = 0;
+      let y = 0;
+
+      switch (payload.type) {
+        case 'flip':
+          tempBlocks = tempBlocks.reverse()
+          for (y = 0; y < tempBlocks.length; y++) {
+            parsedBlocks[y] = tempBlocks[y];
+
+            for (x = 0; x < getBlocksWidth(tempBlocks); x++) {
+              parsedBlocks[y][x] = tempBlocks[y][x];
+            }
+          }
+
+          break;
+
+        case 'rotate':
+          for (y = 0; y < tempBlocks.length; y++) {
+            parsedBlocks[y] = tempBlocks[y].reverse();
+
+            for (x = 0; x < getBlocksWidth(tempBlocks); x++) {
+              parsedBlocks[y][x] = tempBlocks[y][x];
+            }
+          }
+          break;
+
+      }
+
+      state.brushBlocks = LZString.compressToUTF16(JSON.stringify(parsedBlocks));
+    },
+
+    // Brush Library
     pushBrushHistory(state, payload) {
       // Check and remove duplicate brushes based on hash value
       let hashValue = cyrb53(JSON.stringify(payload))
@@ -235,6 +410,8 @@ export default new Vuex.Store({
         return item.hash !== hashValue
       });
     },
+
+    // Modals / Tabs
     openModal(state, type) {
       switch (type) {
         case 'new-ascii':
@@ -272,6 +449,13 @@ export default new Vuex.Store({
       if (tab === state.tab) {
         state.tab = state.asciibirdMeta.length - 1
       }
+
+      if (state.asciibirdMeta.length) {
+        document.title = `asciibird - ${state.asciibirdMeta[state.tab].title}`;
+      } else {
+        document.title = `asciibird`
+      }
+
     },
   },
   getters: {
@@ -289,8 +473,19 @@ export default new Vuex.Store({
     currentChar: (state) => state.toolbarState.selectedChar,
     currentTab: (state) => state.tab,
     currentAscii: (state) => state.asciibirdMeta[state.tab] ?? false,
-    currentAsciiBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[
-      state.tab].blocks)) || [],
+    currentAsciiBlocks: (state) => {
+      let blocks = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[
+        state.tab].blocks)) || [];
+
+      return blocks[state.asciibirdMeta[state.tab].selectedLayer].data || []
+    },
+    currentAsciiLayers: (state) => {
+      let blocks = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[
+        state.tab].blocks));
+
+      return blocks
+    },
+    selectedLayer: (state) => state.asciibirdMeta[state.tab].selectedLayer,
     asciibirdMeta: (state) => state.asciibirdMeta,
     nextTabValue: (state) => state.asciibirdMeta.length,
     brushSizeHeight: (state) => state.toolbarState.brushSizeHeight,
@@ -299,8 +494,9 @@ export default new Vuex.Store({
     blockSizeMultiplier: (state) => state.blockSizeMultiplier,
     brushHistory: (state) => state.brushHistory,
     brushLibrary: (state) => state.brushLibrary,
-    gridView: (state) => state.gridView,
     brushLibraryState: (state) => state.brushLibraryState,
+    brushPreviewState: (state) => state.brushPreviewState,
+    layersLibraryState: (state) => state.layersLibraryState,
     brushBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.brushBlocks)) || [],
     selectBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.selectBlocks)) || [],
     isModalOpen: (state) => {
@@ -309,10 +505,6 @@ export default new Vuex.Store({
           return true
       }
       return false
-    },
-    canvasKey: (state) => {
-      state.key = state.key + 1;
-      return state.key
     },
   },
   actions: {},

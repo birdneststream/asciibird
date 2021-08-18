@@ -1,36 +1,25 @@
 <template>
   <div>
-    <t-card class="overflow-x-scroll h-full" >
-        <div :style="`height: ${blocksWidthHeight.h}px;width: ${blocksWidthHeight.w}px;`">
-            <canvas
-                ref="brushcanvas"
-                id="brushcanvas"
-                class="brushcanvas"
-                @mousemove="canvasMouseMove"
-                @mouseup="disable"
-                @mousedown.left="addBlock"
-                @mousedown.right="eraseBlock"
-                @contextmenu.prevent
-                :width="blocksWidthHeight.w"
-                :height="blocksWidthHeight.h"
-                @mouseenter="disableToolbarMoving"
-                @mouseleave="enableToolbarMoving"
-            />
-       </div>
+    <t-card class="overflow-x-scroll h-full">
+      <div :style="`height: ${blocksWidthHeight.h}px;width: ${blocksWidthHeight.w}px;`">
+        <canvas
+          ref="brushcanvas"
+          id="brushcanvas"
+          class="brushcanvas"
+          @mousemove="canvasMouseMove"
+          @mouseup="disable"
+          @mousedown.left="addBlock"
+          @mousedown.right="eraseBlock"
+          @contextmenu.prevent
+          :width="blocksWidthHeight.w"
+          :height="blocksWidthHeight.h"
+          @mouseenter="disableToolbarMoving"
+          @mouseleave="enableToolbarMoving"
+        />
+      </div>
     </t-card>
-
   </div>
 </template>
-
-
-<style>
-.brushcanvas {
-  background: rgba(0, 0, 0, 0.1);
-  border: lightgrey 1px solid;
-  z-index: 0;
-}
-</style>
-
 
 <script>
 import {
@@ -43,6 +32,12 @@ import {
 
 export default {
   name: "MainBrushCanvas",
+  created() {
+    window.addEventListener('load', () => {
+         // Fixes the font on load issue
+         this.delayRedrawCanvas();
+    })
+  },
   mounted() {
     this.ctx = this.canvasRef.getContext("2d");
     this.delayRedrawCanvas();
@@ -56,6 +51,15 @@ export default {
     y: 0,
   }),
   computed: {
+    blockWidth() {
+      return blockWidth * this.blockSizeMultiplier;
+    },
+    blockHeight() {
+      return blockHeight * this.blockSizeMultiplier;
+    },
+    blockSizeMultiplier() {
+      return this.$store.getters.blockSizeMultiplier
+    },
     currentAscii() {
       return this.$store.getters.currentAscii;
     },
@@ -148,6 +152,9 @@ export default {
     currentChar() {
       this.delayRedrawCanvas();
     },
+    blockSizeMultiplier() {
+      this.delayRedrawCanvas();
+    },
   },
   methods: {
     getBlocksWidth(blocks) {
@@ -156,12 +163,10 @@ export default {
     filterNullBlocks(blocks) {
       return filterNullBlocks(blocks);
     },
+
     drawPreview() {
       this.ctx.clearRect(0, 0, this.canvasRef.width, this.canvasRef.height);
       this.ctx.fillStyle = this.mircColours[1];
-
-      const BLOCK_WIDTH = this.currentAscii.blockWidth;
-      const BLOCK_HEIGHT = this.currentAscii.blockHeight;
 
       // hack font for ascii shout outs 2 beenz
       this.ctx.font = "13px Hack";
@@ -181,10 +186,10 @@ export default {
                 this.ctx.fillStyle = this.mircColours[curBlock.bg];
 
                 this.ctx.fillRect(
-                  x * BLOCK_WIDTH,
-                  y * BLOCK_HEIGHT,
-                  BLOCK_WIDTH,
-                  BLOCK_HEIGHT
+                  x * blockWidth,
+                  y * blockHeight,
+                  blockWidth,
+                  blockHeight
                 );
               }
 
@@ -196,8 +201,8 @@ export default {
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
                 this.ctx.fillText(
                   curBlock.char,
-                  x * BLOCK_WIDTH - 1,
-                  y * BLOCK_HEIGHT + BLOCK_HEIGHT - 3
+                  x * blockWidth,
+                  y * blockHeight + blockHeight - 3
                 );
               }
             }

@@ -10,7 +10,7 @@
     <t-input
       type="number"
       name="width"
-      v-model="forms.editAscii.width"
+      v-model="currentAsciiWidth"
       min="1"
     />
 
@@ -18,7 +18,7 @@
     <t-input
       type="number"
       name="height"
-      v-model="forms.editAscii.height"
+      v-model="currentAsciiHeight"
       min="1"
     />
 
@@ -30,15 +30,26 @@
       max="128"
     />
 
-    <hr class="mt-5 mb-5" />
+    <hr class="mt-5 mb-5">
 
     <template v-slot:footer>
       <div
         class="flex justify-between"
         @click="$store.commit('closeModal', 'edit-ascii')"
       >
-        <t-button type="button"> Cancel </t-button>
-        <t-button type="button" @click="updateAscii()"> Update </t-button>
+        <t-button
+          type="button"
+          class="p-2"
+        >
+          Cancel
+        </t-button>
+        <t-button
+          type="button"
+          @click="updateAscii()"
+          class="p-2"
+        >
+          Update
+        </t-button>
       </div>
     </template>
   </t-modal>
@@ -66,8 +77,23 @@ export default {
     currentAscii() {
       return this.$store.getters.currentAscii;
     },
+    selectedLayerIndex() {
+      return this.currentAscii.selectedLayer
+    },
     currentAsciiEditingTitle() {
       return `Editing ASCII ${this.currentAscii.title}`;
+    },
+    currentAsciiLayers() {
+      return this.$store.getters.currentAsciiLayers;
+    },
+    currentSelectedLayer() {
+      return this.currentAsciiLayers[this.selectedLayerIndex];
+    },
+    currentAsciiWidth() {
+      return this.currentSelectedLayer.width || 0;
+    },
+    currentAsciiHeight() {
+      return this.currentSelectedLayer.height || 0;
     },
   },
   watch: {

@@ -2,17 +2,20 @@
   <div>
     <vue-draggable-resizable
       @dragstop="onDragStop"
-      :grid="[currentAscii.blockWidth, currentAscii.blockHeight]"
-      :min-width="blockWidth * 25"
+      @resizestop="onResize"
+      :grid="[blockWidth, blockHeight]"
+      :min-width="blockWidth * 35"
       :max-width="blockWidth * 50"
-      :min-height="blockHeight * 50"
+      :min-height="blockHeight * 15"
       :max-height="blockHeight * 100"
       :w="brushLibraryState.w"
       :h="brushLibraryState.h"
       :x="brushLibraryState.x"
       :y="brushLibraryState.y"
     >
-      <t-card class="h-full overflow-y-scroll">
+      <t-card
+        class="h-full overflow-y-auto overflow-x-auto"
+      >
         <t-button
           type="button"
           :class="`block w-full ${
@@ -21,8 +24,9 @@
               : 'border-gray-200 bg-gray-500'
           }`"
           @click="changeTab(1)"
-          >Library</t-button
         >
+          Library
+        </t-button>
 
         <t-button
           type="button"
@@ -32,46 +36,61 @@
               : 'border-gray-200 bg-gray-500'
           }`"
           @click="changeTab(0)"
-          >History</t-button
         >
+          History
+        </t-button>
 
         <div class="flex">
           <div v-if="panel.tab === 0">
-            <div v-for="(brush, key) in brushHistory" :key="key">
-              <t-card class="hover:border-blue-900 border-gray-300 bg-gray-200 mt-2">
+            <div
+              v-for="(brush, key) in brushHistory"
+              :key="key"
+            >
+              <t-card
+                class="hover:border-blue-900 border-gray-300 bg-gray-200 mt-2"
+              >
                 <BrushCanvas :blocks="decompressBlock(brush.blocks)" />
 
                 <t-button
                   type="button"
                   @click="saveToLibrary(decompressBlock(brush.blocks))"
-                  ><font-awesome-icon
+                >
+                  <font-awesome-icon
                     :icon="['fas', 'save']"
                     size="lg"
                     class="p-1 mx-1"
-                /></t-button>
+                  />
+                </t-button>
                 <t-button
                   type="button"
                   @click="reuseBlocks(decompressBlock(brush.blocks))"
-                  ><font-awesome-icon
+                >
+                  <font-awesome-icon
                     :icon="['fas', 'paint-brush']"
                     size="lg"
                     class="p-1 mx-1"
-                /></t-button>
+                  />
+                </t-button>
 
                 <t-button
                   type="button"
                   @click="removeFromHistory(decompressBlock(brush.blocks))"
-                  ><font-awesome-icon
+                >
+                  <font-awesome-icon
                     :icon="['fas', 'trash']"
                     size="lg"
                     class="p-1 mx-1 right-auto"
-                /></t-button>
+                  />
+                </t-button>
               </t-card>
             </div>
           </div>
 
           <div v-if="panel.tab === 1">
-            <div v-for="(brush, key) in brushLibrary" :key="key">
+            <div
+              v-for="(brush, key) in brushLibrary"
+              :key="key"
+            >
               <t-card
                 :class="`hover:border-blue-900 border-gray-300 bg-gray-200 mt-2`"
               >
@@ -80,19 +99,23 @@
                 <t-button
                   type="button"
                   @click="removeFromLibrary(decompressBlock(brush.blocks))"
-                  ><font-awesome-icon
+                >
+                  <font-awesome-icon
                     :icon="['fas', 'trash']"
                     size="lg"
                     class="p-1 mx-1"
-                /></t-button>
+                  />
+                </t-button>
                 <t-button
                   type="button"
                   @click="reuseBlocks(decompressBlock(brush.blocks))"
-                  ><font-awesome-icon
+                >
+                  <font-awesome-icon
                     :icon="['fas', 'paint-brush']"
                     size="lg"
                     class="p-1 mx-1"
-                /></t-button>
+                  />
+                </t-button>
               </t-card>
             </div>
           </div>
@@ -101,6 +124,16 @@
     </vue-draggable-resizable>
   </div>
 </template>
+
+<style scoped>
+.buttons {
+  margin-top: 35px;
+}
+.ghost {
+  opacity: 0.5;
+  background: #c8ebfb;
+}
+</style>
 
 <script>
 import { mircColours99, blockWidth, blockHeight } from "../ascii";
@@ -124,6 +157,7 @@ export default {
       y: 100,
       visible: true,
       tab: 1,
+      dragging: false,
     },
   }),
   components: {
@@ -131,10 +165,13 @@ export default {
   },
   computed: {
     blockWidth() {
-      return blockWidth;
+      return blockWidth * this.blockSizeMultiplier;
     },
     blockHeight() {
-      return blockHeight;
+      return blockHeight * this.blockSizeMultiplier;
+    },
+    blockSizeMultiplier() {
+      return this.$store.getters.blockSizeMultiplier;
     },
     currentAscii() {
       return this.$store.getters.currentAscii;
