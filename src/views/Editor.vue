@@ -474,7 +474,7 @@ export default {
       });
 
       this.$refs.canvasdrag.width = width;
-      this.$refs.canvasdrag.width = height;
+      this.$refs.canvasdrag.height = height;
 
       this.delayRedrawCanvas();
     },
