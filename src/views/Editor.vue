@@ -322,8 +322,6 @@ export default {
           icon: "fa-check-cross",
           singleton: true,
         });
-
-        return;
       }
     },
     checkVisible(top) {
