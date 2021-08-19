@@ -24,7 +24,7 @@ export default {
       // Stop blocking input when modals are open
       // Whatever this char "'\0'" is it'd occur even without pressing any keys
       // This fixes it
-      if (this.isModalOpen || e.key === "\0") {
+      if (this.isModalOpen || e.key === "\0" || this.showingPostUrl) {
         return;
       }
 
@@ -390,7 +390,7 @@ export default {
 
     document.addEventListener("keydown", this.keyListener.bind(this));
   },
-  props: ["selectedBlocks", "textEditing", "selecting"],
+  props: ["selectedBlocks", "textEditing", "selecting", "showingPostUrl"],
   computed: {
     isModalOpen() {
       return this.$store.getters.isModalOpen;

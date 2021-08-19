@@ -8,14 +8,11 @@
       :selected-blocks="selectedBlocks"
       :text-editing="textEditing"
       :selecting="selecting"
+      :showing-post-url="showingPostUrl"
       @updatecanvas="updatecanvas"
     />
 
-    <context-menu
-      :display="showContextMenu"
-      ref="menu"
-      class="z-50"
-    >
+    <context-menu :display="showContextMenu" ref="menu" class="z-50">
       <ul>
         <li
           @click="$store.commit('openModal', 'new-ascii')"
@@ -37,13 +34,8 @@
           v-if="asciibirdMeta.length"
         >
           Close Ascii
-        </li> 
-        <li
-          @click="startImport('mirc')"
-          class="ml-1"
-        >
-          Import mIRC from File
         </li>
+        <li @click="startImport('mirc')" class="ml-1">Import mIRC from File</li>
         <li
           @click="startExport('file')"
           class="ml-1 border-b"
@@ -51,10 +43,7 @@
         >
           Export mIRC to File
         </li>
-        <li
-          class="ml-1"
-          @click="$store.commit('openModal', 'paste-ascii')"
-        >
+        <li class="ml-1" @click="$store.commit('openModal', 'paste-ascii')">
           Import mIRC from Clipboard
         </li>
         <li
@@ -78,18 +67,8 @@
         >
           Save Asciibird State
         </li>
-        <li
-          @click="startImport('asb')"
-          class="ml-1"
-        >
-          Load Asciibird State
-        </li>
-        <li
-          @click="clearCache()"
-          class="ml-1"
-        >
-          Reset State
-        </li>
+        <li @click="startImport('asb')" class="ml-1">Load Asciibird State</li>
+        <li @click="clearCache()" class="ml-1">Reset State</li>
       </ul>
     </context-menu>
 
@@ -104,17 +83,13 @@
       style="display: none"
       ref="asciiInput"
       @change="onImport()"
-    >
+    />
 
     <template v-if="asciibirdMeta.length">
       <div class="bg-gray-500 z-50">
-        <t-button
-          class="p-1 rounded-xl"
-          @click="openContextMenu"
-        >
+        <t-button class="p-1 rounded-xl" @click="openContextMenu">
           :::
         </t-button>
-
 
         <span
           v-for="(value, key) in asciibirdMeta"
@@ -128,21 +103,12 @@
           >
             {{ value.title }}
 
-            <t-button
-              class="z-50"
-              @click="closeTab(key)"
-            >
-              X
-            </t-button>
+            <t-button class="z-50" @click="closeTab(key)"> X </t-button>
           </t-button>
         </span>
       </div>
 
-      <Toolbar
-        :canvas-x="canvasX"
-        :canvas-y="canvasY"
-        class="z-10"
-      />
+      <Toolbar :canvas-x="canvasX" :canvas-y="canvasY" class="z-10" />
       <DebugPanel
         :canvas-x="canvasX"
         :canvas-y="canvasY"
@@ -159,19 +125,13 @@
         class="z-10"
       />
 
-      <CharPicker
-        v-if="toolbarState.isChoosingChar"
-        class="z-10"
-      />
+      <CharPicker v-if="toolbarState.isChoosingChar" class="z-10" />
       <ColourPicker
         v-if="toolbarState.isChoosingFg || toolbarState.isChoosingBg"
         class="z-10"
       />
 
-      <BrushLibrary
-        v-if="brushLibraryState.visible"
-        class="z-10"
-      />
+      <BrushLibrary v-if="brushLibraryState.visible" class="z-10" />
       <BrushPreview class="z-10" />
       <LayersLibrary class="z-10" />
     </template>
@@ -188,9 +148,7 @@
         @mouseup.right="openContextMenu"
         @contextmenu.prevent
       >
-        <h1 class="text-4xl">
-          ASCIIBIRD
-        </h1>
+        <h1 class="text-4xl">ASCIIBIRD</h1>
         <h3>Right click to start</h3>
 
         <BrushCanvas :blocks="splashAscii" />
@@ -247,7 +205,7 @@ export default {
     BrushCanvas,
     BrushPreview,
     KeyboardShortcuts,
-    LayersLibrary
+    LayersLibrary,
   },
   name: "Dashboard",
   data: () => ({
@@ -261,6 +219,7 @@ export default {
     textEditing: null,
     updateCanvas: false,
     selecting: null,
+    showingPostUrl: false,
   }),
   computed: {
     splashAscii() {
@@ -317,10 +276,10 @@ export default {
   },
   methods: {
     buttonStyle(key) {
-      return (this.currentTab === key)
+      return this.currentTab === key
         ? `text-sm pl-1 p-1 h-10 text-white border border-transparent shadow-sm hover:bg-blue-500 bg-gray-900`
         : `text-sm pl-1 p-1 h-10 text-white border border-transparent shadow-sm hover:bg-blue-500 bg-gray-400`;
-    },    
+    },
     openContextMenu(e) {
       e.preventDefault();
       this.$refs.menu.open(e);
@@ -330,16 +289,16 @@ export default {
       this.canvasY = value.y;
     },
     selectedblocks(value) {
-      this.selectedBlocks = value
+      this.selectedBlocks = value;
     },
     updateSelecting(value) {
-      this.selecting = value
+      this.selecting = value;
     },
     textediting(value) {
-      this.textEditing = value
+      this.textEditing = value;
     },
     updatecanvas() {
-      this.updateCanvas = !this.updateCanvas
+      this.updateCanvas = !this.updateCanvas;
     },
     async onImport() {
       const { files } = this.$refs.asciiInput;
@@ -428,22 +387,27 @@ export default {
           downloadFile(ascii.output.join(""), ascii.filename, "text/plain");
           break;
         case "post":
-          if (!this.lastPostURL) {
-            this.lastPostURL = "http://localhost:9991/bot/efnet?target=%23jrh";
-          }
-          let postURL = prompt("Enter URL for POST command", this.lastPostURL);
-          if (postURL == null) {
-            break;
-          }
-          this.lastPostURL = postURL;
-          const requestOptions = {
-            method: "POST",
-            headers: { "Content-Type": "application/octet-stream" },
-            body: ascii.output.join("")
-          };
-          fetch(postURL, requestOptions)
-            .then(response => this.$toasted.show("POSTed ascii!"))
-            .catch(error => this.$toasted.show("Error POSTing"));
+          this.showingPostUrl = true;
+          this.$dialog
+            .prompt("Enter URL", '"Enter URL for POST command', "question")
+            .then((result) => {
+              if (result.isOk) {
+                const requestOptions = {
+                  method: "POST",
+                  headers: { "Content-Type": "application/octet-stream" },
+                  body: ascii.output.join(""),
+                };
+                fetch(
+                  this.lastPostURL ??
+                    "http://localhost:9991/bot/efnet?target=%23jrh",
+                  requestOptions
+                )
+                  .then((response) => this.$toasted.show("POSTed ascii!"))
+                  .catch((error) => this.$toasted.show("Error POSTing"));
+              }
+
+              this.showingPostUrl = false;
+            });
           break;
       }
     },
