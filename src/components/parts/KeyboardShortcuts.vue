@@ -19,7 +19,6 @@ export default {
     window.removeEventListener("keydown", this.keyListener.bind(this));
   },
   created() {
-    const thisIs = this;
     this.keyListener = function (e) {
       // Stop blocking input when modals are open
       // Whatever this char "'\0'" is it'd occur even without pressing any keys
@@ -64,16 +63,13 @@ export default {
 
       // Used for text typing
       if (this.isTextEditing && this.haveOpenTabs) {
-        thisIs.canvasKeyDown(e.key);
+        this.canvasKeyDown(e.key);
         return;
       }
 
       // Show / hide grid view
-      if (e.key === "g" && altKey) {
-        this.$store.commit(
-          "toggleGridView",
-          !this.gridView && this.haveOpenTabs
-        );
+      if (e.key === "g" && altKey && this.haveOpenTabs) {
+        this.$store.commit("toggleGridView", !this.gridView);
         return;
       }
 
@@ -389,7 +385,14 @@ export default {
     };
 
     document.addEventListener("keydown", this.keyListener.bind(this));
+
+    document.body.addEventListener("keyup", function (e) {
+      this.isPressed = false;
+    });
   },
+  data: () => ({
+    isPressed: false,
+  }),
   props: ["selectedBlocks", "textEditing", "selecting"],
   computed: {
     isModalOpen() {
@@ -442,10 +445,10 @@ export default {
     },
     isSelected() {
       return (
-        this.selecting.startX &&
-        this.selecting.startY &&
-        this.selecting.endX &&
-        this.selecting.endY
+        this.selecting.startX >= 0 &&
+        this.selecting.startY >= 0 &&
+        this.selecting.endX >= 0 &&
+        this.selecting.endY >= 0
       );
     },
     brushBlocks() {

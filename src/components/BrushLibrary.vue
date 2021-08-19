@@ -13,9 +13,7 @@
       :x="brushLibraryState.x"
       :y="brushLibraryState.y"
     >
-      <t-card
-        class="h-full overflow-y-auto overflow-x-auto"
-      >
+      <t-card class="h-full overflow-y-auto overflow-x-auto">
         <t-button
           type="button"
           :class="`block w-full ${
@@ -42,10 +40,7 @@
 
         <div class="flex">
           <div v-if="panel.tab === 0">
-            <div
-              v-for="(brush, key) in brushHistory"
-              :key="key"
-            >
+            <div v-for="(brush, key) in brushHistory" :key="key">
               <t-card
                 class="hover:border-blue-900 border-gray-300 bg-gray-200 mt-2"
               >
@@ -87,10 +82,7 @@
           </div>
 
           <div v-if="panel.tab === 1">
-            <div
-              v-for="(brush, key) in brushLibrary"
-              :key="key"
-            >
+            <div v-for="(brush, key) in brushLibrary" :key="key">
               <t-card
                 :class="`hover:border-blue-900 border-gray-300 bg-gray-200 mt-2`"
               >
@@ -177,7 +169,7 @@ export default {
       return this.$store.getters.currentAscii;
     },
     brushHistory() {
-      return this.$store.getters.brushHistory.slice(0, 100);
+      return this.$store.getters.brushHistory;
     },
     brushLibrary() {
       return this.$store.getters.brushLibrary;

@@ -34,7 +34,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
 * 99 Colour support, flip colours
 * Mirror X and Y
 * Grid mode with alt + g
-* Undo and redo with ctrl + z and ctrl + y
+* Undo and redo with ctrl + z and ctrl + y, undos are set to a limit of 50 at the moment.
 * Fg, Bg and Char boxes to filter when using certain tools
   * For example filling with Char unchecked will ignore characters when filling
 * Toolbar containing
@@ -49,6 +49,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
   * Make circle, square and cross brushes by sizes
   * Brush history, can save or re-use old brushes
   * Library - Save most used brushes to library
+  * Brush history is set to a limit of 50
 * Brush Preview
   * Editable brush preview
   * Clicking updates block
@@ -59,16 +60,14 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 ASCIIBIRD is mostly usable. There are some bugs however to note at the moment.
 
-* Redo (ctrl y) is a buggy
+* Keyboard shortcuts can be pressed at the same time which makes bugs for undo and redo if you aren't careful!
 * Circle brush (works okay for odd width and height numbers)
 * Importer could be re-written with regex
 * Exporter will default transparent bg to black by default, which wont for some asciis
 * Having more than a few layers depending on ascii size will slow things down, until the `fillNullBlocks` is refactored.
 * Refreshing the page seems to fix most strange things
 * Cannot manually input brush sizes because keyboard shortcuts is stealing focus
-* Grid slows things down (from chzz)
 * If you open a modal and refresh the page it's stuck as opened inside the state, and you cannot open it again
-* Cannot select very first row or column for copy and paste, has error
 * The code that hides blocks off screen wont work if you scroll down, however it will work if you drag the canvas upward
 * Some work around layers and transparent blocks, skip drawing transparent bg block on top layers. Or get bg from lowest layer if bg is null on higher layers.
 * Select cannot select entire ASCII, is off by one at the end
@@ -83,6 +82,11 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment.
 * Image overlay for trace mode
 * Experimental code to only render blocks visible on screen
 * Review encodings check on file import - UTF8 vs Latin something
+
+## User Feedback Requests
+
+* Toolbars and panels follow when scrolling down
+
 # Keyboard Shortcuts
 
 ## ASCII Editing

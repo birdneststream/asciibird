@@ -8,7 +8,9 @@ import {
   cyrb53,
   getBlocksWidth,
   create2DArray,
-  emptyBlock
+  emptyBlock,
+  maxBrushHistory,
+  maxUndoHistory
 } from "../ascii";
 
 Vue.use(Vuex);
@@ -189,6 +191,10 @@ export default new Vuex.Store({
       state.toolbarState.mirrorY = payload.y;
     },
     updateAsciiBlocks(state, payload, skipUndo = false) {
+      if (state.asciibirdMeta[state.tab].history.length >= maxUndoHistory) {
+        state.asciibirdMeta[state.tab].history.pop()
+      }
+
       if (!skipUndo) {
         state.asciibirdMeta[state.tab].history.push(state.asciibirdMeta[state.tab].blocks);
       }
@@ -310,6 +316,7 @@ export default new Vuex.Store({
       if (state.asciibirdMeta[state.tab].history.length > 1) {
         state.asciibirdMeta[state.tab].redo.push(state.asciibirdMeta[state.tab].blocks);
         state.asciibirdMeta[state.tab].blocks = state.asciibirdMeta[state.tab].history.pop();
+
       }
     },
     redoBlocks(state) {
@@ -377,7 +384,12 @@ export default new Vuex.Store({
 
     // Brush Library
     pushBrushHistory(state, payload) {
-      // Check and remove duplicate brushes based on hash value
+      // Check and remove duplicate brushes based on hash value  
+      console.log(state.brushHistory.length, maxBrushHistory)
+      if (state.brushHistory.length >= maxBrushHistory) {
+        state.brushHistory.pop();
+      }
+
       let hashValue = cyrb53(JSON.stringify(payload))
       state.brushHistory = state.brushHistory.filter(obj => obj.hash !== hashValue);
 
