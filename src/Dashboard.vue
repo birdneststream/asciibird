@@ -65,6 +65,13 @@
           Export mIRC to Clipboard
         </li>
         <li
+          class="ml-1 border-b"
+          @click="startExport('post')"
+          v-if="asciibirdMeta.length"
+        >
+          Post to HTTP
+        </li>
+        <li
           @click="exportAsciibirdState()"
           class="ml-1"
           v-if="asciibirdMeta.length"
@@ -419,6 +426,24 @@ export default {
         default:
         case "file":
           downloadFile(ascii.output.join(""), ascii.filename, "text/plain");
+          break;
+        case "post":
+          if (!this.lastPostURL) {
+            this.lastPostURL = "http://localhost:9991/bot/efnet?target=%23jrh";
+          }
+          let postURL = prompt("Enter URL for POST command", this.lastPostURL);
+          if (postURL == null) {
+            break;
+          }
+          this.lastPostURL = postURL;
+          const requestOptions = {
+            method: "POST",
+            headers: { "Content-Type": "application/octet-stream" },
+            body: ascii.output.join("")
+          };
+          fetch(postURL, requestOptions)
+            .then(response => this.$toasted.show("POSTed ascii!"))
+            .catch(error => this.$toasted.show("Error POSTing"));
           break;
       }
     },
