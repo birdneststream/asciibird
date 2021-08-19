@@ -322,8 +322,6 @@ export default {
           icon: "fa-check-cross",
           singleton: true,
         });
-
-        return;
       }
     },
     checkVisible(top) {
@@ -474,7 +472,7 @@ export default {
       });
 
       this.$refs.canvasdrag.width = width;
-      this.$refs.canvasdrag.width = height;
+      this.$refs.canvasdrag.height = height;
 
       this.delayRedrawCanvas();
     },
@@ -1257,27 +1255,7 @@ export default {
       );
     },
     fillTool(fillBlocks, y, x, current, eraser) {
-      // If row is less than 0
-      if (x < 0) {
-        return;
-      }
-
-      // If column is less than 0
-      if (y < 0) {
-        return;
-      }
-
-      // If row is greater than image length
-      if (x >= this.currentAsciiWidth) {
-        return;
-      }
-
-      // If column is greater than image length
-      if (y >= this.currentAsciiHeight) {
-        return;
-      }
-
-      if (!fillBlocks[y] && !fillBlocks[y][x]) {
+      if(fillBlocks[y] === undefined || fillBlocks[y][x] === undefined) {
         return;
       }
 
