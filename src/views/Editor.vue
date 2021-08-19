@@ -1099,7 +1099,7 @@ export default {
           const arrayY = brushY / blockHeight;
           const arrayX = brushX / blockWidth;
 
-          if (this.currentAsciiLayerBlocks[arrayY][arrayX]) {
+          if (this.currentAsciiLayerBlocks[arrayY] && this.currentAsciiLayerBlocks[arrayY][arrayX]) {
             if (!plain) {
               if (this.canBg) {
                 this.drawBrushBlocks(brushX, brushY, brushBlock, "bg");

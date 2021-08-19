@@ -9,6 +9,7 @@
       :text-editing="textEditing"
       :selecting="selecting"
       @updatecanvas="updatecanvas"
+      :is-inputting-brush-size="this.isInputtingBrushSize"
     />
 
     <context-menu
@@ -165,7 +166,7 @@
         v-if="brushLibraryState.visible"
         class="z-10"
       />
-      <BrushPreview class="z-10" />
+      <BrushPreview class="z-10" @inputtingbrush="inputtingbrush" />
       <LayersLibrary class="z-10" />
     </template>
     <template v-else>
@@ -254,6 +255,7 @@ export default {
     textEditing: null,
     updateCanvas: false,
     selecting: null,
+    isInputtingBrushSize: false,
   }),
   computed: {
     splashAscii() {
@@ -309,6 +311,9 @@ export default {
     },
   },
   methods: {
+    inputtingbrush(val) {
+      this.isInputtingBrushSize = val
+    },
     buttonStyle(key) {
       return (this.currentTab === key)
         ? `text-sm pl-1 p-1 h-10 text-white border border-transparent shadow-sm hover:bg-blue-500 bg-gray-900`

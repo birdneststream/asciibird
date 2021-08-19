@@ -23,6 +23,8 @@
               v-model="brushSizeWidthInput"
               min="1"
               :max="maxBrushSize"
+              @mouseenter="isInputtingBrushSize = true"
+              @mouseleave="isInputtingBrushSize = false"
             />
           </div>
 
@@ -33,6 +35,8 @@
               v-model="brushSizeHeightInput"
               min="1"
               :max="maxBrushSize"
+              @mouseenter="isInputtingBrushSize = true"
+              @mouseleave="isInputtingBrushSize = false"
             />
           </div>
         </div>
@@ -113,6 +117,7 @@ export default {
       y: 100,
       visible: true,
     },
+    isInputtingBrushSize: false,
   }),
   computed: {
     blockWidth() {
@@ -174,6 +179,9 @@ export default {
     },    
   },
   watch: {
+    isInputtingBrushSize(val) {
+      this.$emit("inputtingbrush", val)
+    },
     brushSizeWidth() {
       this.brushSizeWidthInput = this.brushSizeWidth;
     },

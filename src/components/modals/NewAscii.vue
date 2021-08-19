@@ -59,6 +59,13 @@ import createNewASCII from "../../ascii";
 export default {
   name: "NewAsciiModal",
   created() {},
+  mounted() {
+    if (this.showNewAsciiModal) {
+      this.open()
+    } else {
+      this.close()
+    }
+  },  
   data: () => ({
     forms: {
       createAscii: {

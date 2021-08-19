@@ -56,18 +56,20 @@ A most latest production build to use is available at https://asciibird.jewbird.
   * Right clicking removes block
   * Hovering outside brush area will save brush to history
 
+# Fixes
+
+* Cannot manually input brush sizes because keyboard shortcuts is stealing focus
+* If you open a modal and refresh the page it's stuck as opened inside the state, and you cannot open it again
+
 ## Noted Bugs to Fix
 
-ASCIIBIRD is mostly usable. There are some bugs however to note at the moment.
+ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. Refreshing the page seems to fix most strange things.
 
 * Keyboard shortcuts can be pressed at the same time which makes bugs for undo and redo if you aren't careful!
 * Circle brush (works okay for odd width and height numbers)
 * Importer could be re-written with regex
 * Exporter will default transparent bg to black by default, which wont for some asciis
 * Having more than a few layers depending on ascii size will slow things down, until the `fillNullBlocks` is refactored.
-* Refreshing the page seems to fix most strange things
-* Cannot manually input brush sizes because keyboard shortcuts is stealing focus
-* If you open a modal and refresh the page it's stuck as opened inside the state, and you cannot open it again
 * The code that hides blocks off screen wont work if you scroll down, however it will work if you drag the canvas upward
 * Some work around layers and transparent blocks, skip drawing transparent bg block on top layers. Or get bg from lowest layer if bg is null on higher layers.
 * Select cannot select entire ASCII, is off by one at the end
@@ -160,6 +162,8 @@ The toolbar keyboard shorts are used with the ALT key.
 * https://modern.ircdocs.horse/formatting.html#color
 * https://www.mirc.com/colors.html
 * https://github.com/polygonplanet/encoding.js/
+
+
 
 ## Project setup
 ```

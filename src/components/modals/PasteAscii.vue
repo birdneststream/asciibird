@@ -47,6 +47,13 @@ import { parseMircAscii } from "../../ascii";
 export default {
   name: "PasteAsciiModal",
   created() {},
+  mounted() {
+    if (this.showPasteAscii) {
+      this.open()
+    } else {
+      this.close()
+    }
+  },  
   data: () => ({
     pasteContent: "",
     title: "clipboard.txt",

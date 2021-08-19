@@ -23,7 +23,7 @@ export default {
       // Stop blocking input when modals are open
       // Whatever this char "'\0'" is it'd occur even without pressing any keys
       // This fixes it
-      if (this.isModalOpen || e.key === "\0") {
+      if (this.isModalOpen || e.key === "\0" || this.isInputtingBrushSize) {
         return;
       }
 
@@ -393,7 +393,7 @@ export default {
   data: () => ({
     isPressed: false,
   }),
-  props: ["selectedBlocks", "textEditing", "selecting"],
+  props: ["selectedBlocks", "textEditing", "selecting", "isInputtingBrushSize"],
   computed: {
     isModalOpen() {
       return this.$store.getters.isModalOpen;
@@ -493,6 +493,9 @@ export default {
     haveOpenTabs() {
       return this.currentAscii !== false;
     },
+    gridView() {
+      return this.toolbarState.gridView;
+    }
   },
   methods: {
     undo() {

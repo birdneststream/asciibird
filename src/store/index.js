@@ -192,7 +192,7 @@ export default new Vuex.Store({
     },
     updateAsciiBlocks(state, payload, skipUndo = false) {
       if (state.asciibirdMeta[state.tab].history.length >= maxUndoHistory) {
-        state.asciibirdMeta[state.tab].history.pop()
+        state.asciibirdMeta[state.tab].history.shift()
       }
 
       if (!skipUndo) {
@@ -314,8 +314,9 @@ export default new Vuex.Store({
     // BLOCKS
     undoBlocks(state) {
       if (state.asciibirdMeta[state.tab].history.length > 1) {
-        state.asciibirdMeta[state.tab].redo.push(state.asciibirdMeta[state.tab].blocks);
+        
         state.asciibirdMeta[state.tab].blocks = state.asciibirdMeta[state.tab].history.pop();
+        state.asciibirdMeta[state.tab].redo.push(state.asciibirdMeta[state.tab].blocks);
 
       }
     },

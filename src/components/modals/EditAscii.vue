@@ -61,6 +61,13 @@ export default {
   created() {
     this.forms.editAscii = this.currentAscii;
   },
+  mounted() {
+    if (this.showEditAsciiModal) {
+      this.open()
+    } else {
+      this.close()
+    }
+  },
   data: () => ({
     forms: {
       editAscii: {
