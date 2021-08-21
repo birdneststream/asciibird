@@ -21,7 +21,7 @@ export default {
   created() {
     // window.stopKeyEvents = true
     if (!window.stopKeyEvents) {
-      window.stopKeyEvents = true
+      window.stopKeyEvents = false
     }
     
     this.keyListener = function (e) {
