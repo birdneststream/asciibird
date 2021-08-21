@@ -88,6 +88,8 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 ## User Feedback Requests
 
 * Toolbars and panels follow when scrolling down
+* Rename Layers
+* Move brush with keys and space to paint
 
 # Keyboard Shortcuts
 
@@ -105,6 +107,7 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 * When the character picker is open, you can also press any key on your keyboard to set the character.
 
 ## Toolbar Keyboard Shortcuts
+
 The toolbar keyboard shorts are used with the ALT key.
 
 * Alt 1 to 8 - Will toggle the corresponding toolbar icon

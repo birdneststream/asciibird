@@ -23,7 +23,7 @@ export default {
       // Stop blocking input when modals are open
       // Whatever this char "'\0'" is it'd occur even without pressing any keys
       // This fixes it
-      if (this.isModalOpen || e.key === "\0" || this.isInputtingBrushSize) {
+      if (this.isModalOpen || e.key === "\0" || this.isInputtingBrushSize || this.showingPostUrl) {
         return;
       }
 
@@ -393,7 +393,7 @@ export default {
   data: () => ({
     isPressed: false,
   }),
-  props: ["selectedBlocks", "textEditing", "selecting", "isInputtingBrushSize"],
+  props: ["selectedBlocks", "textEditing", "selecting", "isInputtingBrushSize", "showingPostUrl"],
   computed: {
     isModalOpen() {
       return this.$store.getters.isModalOpen;
