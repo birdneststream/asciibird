@@ -8,7 +8,7 @@
       Add Layer
     </t-button>
 
-    <hr>
+    <hr />
 
     <div class="w-full bg-white rounded-lg shadow">
       <ul class="divide-y-2 divide-gray-100 reverseorder">
@@ -27,8 +27,8 @@
               >
                 <font-awesome-icon
                   :icon="['fas', layer.visible ? 'eye' : 'eye-slash']"
-                />
-              </t-button><br>
+                /> </t-button
+              ><br />
 
               <t-button
                 type="button"
@@ -40,14 +40,11 @@
               </t-button>
             </div>
 
-            <div
-              class="w-full"
-              @click="changeLayer(key)"
-            >
+            <div class="w-full" @click="changeLayer(key)">
               <div class="flex text-right">
                 <div class="w-full">
                   <t-card class="w-full">
-                    {{ layer.label }}
+                    <span @dblclick="showLayerRename(key, layer.label)">{{ layer.label }}</span>
                   </t-card>
                 </div>
 
@@ -60,8 +57,8 @@
                   >
                     <font-awesome-icon
                       :icon="['fas', 'chevron-circle-up']"
-                    />
-                  </t-button><br>
+                    /> </t-button
+                  ><br />
 
                   <t-button
                     type="button"
@@ -135,6 +132,38 @@ export default {
 
       // Otherwise gray
       return "bg-gray-200";
+    },
+    showLayerRename(key, label) {
+      window.stopKeyEvents = true
+      this.$dialog
+        .prompt({
+          title: "Rename Layer",
+          text: "Please input your new layer name",
+          icon: "question",
+          inputValue: label,
+          clickToClose: false,
+        })
+        .then((result) => {
+          if (!result.input.length) {
+            this.$toasted.show("You must enter a layer name!", {
+              type: "error",
+            });
+
+            return;
+          }
+
+          if (result.isOk) {
+            this.updateLayerName(key, result.input);
+          }
+
+          window.stopKeyEvents = false
+        });
+    },
+    updateLayerName(key, label) {
+      this.$store.commit("updateLayerName", {
+        key: key,
+        label: label,
+      });
     },
     addLayer() {
       this.$store.commit("addLayer");

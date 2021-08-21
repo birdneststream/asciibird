@@ -19,11 +19,12 @@ export default {
     window.removeEventListener("keydown", this.keyListener.bind(this));
   },
   created() {
+    window.stopKeyEvents = true
     this.keyListener = function (e) {
       // Stop blocking input when modals are open
       // Whatever this char "'\0'" is it'd occur even without pressing any keys
       // This fixes it
-      if (this.isModalOpen || e.key === "\0" || this.isInputtingBrushSize || this.showingPostUrl) {
+      if (this.isModalOpen || e.key === "\0" || this.isInputtingBrushSize || this.showingPostUrl || window.stopKeyEvents) {
         return;
       }
 

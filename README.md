@@ -24,7 +24,10 @@ A most latest production build to use is available at https://asciibird.jewbird.
 # Current Features
 
 * Tabbed ASCII editing
-* Layers support with visibility and ordering
+* Layers support
+  * Show and hide layers
+  * Change layer order
+  * Double click to rename layer
 * Copy and paste between tabs
 * Remembers state on refresh and when the browser loads, can also export the state to a file and load elsewhere.
   * So you never lose your ascii art!
@@ -55,7 +58,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
   * Clicking updates block
   * Right clicking removes block
   * Hovering outside brush area will save brush to history
-  
+
 ## Noted Bugs to Fix
 
 ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. Refreshing the page seems to fix most strange things.
@@ -77,12 +80,10 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
   * Brushes Canvas right click
   * ASCII right click
 * Image overlay for trace mode
-* Experimental code to only render blocks visible on screen
 * Review encodings check on file import - UTF8 vs Latin something
 
 ## User Feedback Requests
 
-* Rename Layers
 * Move brush with keys and space to paint
 * Improve the character panel, group chars
 
@@ -91,6 +92,8 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 * Cannot manually input brush sizes because keyboard shortcuts is stealing focus
 * If you open a modal and refresh the page it's stuck as opened inside the state, and you cannot open it again
 * Toolbars and panels follow when scrolling down
+* Experimental code to only render blocks visible on screen
+* Rename Layers
 
 # Keyboard Shortcuts
 

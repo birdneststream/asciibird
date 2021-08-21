@@ -305,6 +305,17 @@ export default new Vuex.Store({
       }
 
     },
+    updateLayerName(state, payload) {
+      let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
+        .blocks))
+
+      if (tempLayers[payload.key]) {
+        tempLayers[payload.key].label = payload.label;
+        state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
+          tempLayers));
+      }
+
+    },
 
     // ASCII
     updateAscii(state, payload) {
@@ -314,7 +325,7 @@ export default new Vuex.Store({
     // BLOCKS
     undoBlocks(state) {
       if (state.asciibirdMeta[state.tab].history.length > 1) {
-        
+
         state.asciibirdMeta[state.tab].blocks = state.asciibirdMeta[state.tab].history.pop();
         state.asciibirdMeta[state.tab].redo.push(state.asciibirdMeta[state.tab].blocks);
 

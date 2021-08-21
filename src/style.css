@@ -19,6 +19,12 @@
 
 body {
     background: rgb(58, 58, 58);
+    -ms-user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -khtml-user-select: none;
+    user-select: none;
 }
 
 .canvas {
