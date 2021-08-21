@@ -12,7 +12,8 @@
       :h="brushPreviewState.h"
       :x="brushPreviewState.x"
       :y="brushPreviewState.y"
-      :draggable="canDrag"
+      :draggable="canDrag && !isInputtingBrushSize"
+      ref="previewpaneldrag"
     >
       <t-card class="h-full">
         <div class="flex w-full">
@@ -22,9 +23,9 @@
               name="width"
               v-model="brushSizeWidthInput"
               min="1"
-              :max="maxBrushSize"
-              @mouseenter="isInputtingBrushSize = true"
-              @mouseleave="isInputtingBrushSize = false"
+              :max="maxBrushSize"             
+              @focus="isInputtingBrushSize = true"
+              @blur="isInputtingBrushSize = false"
             />
           </div>
 
@@ -34,9 +35,9 @@
               name="height"
               v-model="brushSizeHeightInput"
               min="1"
-              :max="maxBrushSize"
-              @mouseenter="isInputtingBrushSize = true"
-              @mouseleave="isInputtingBrushSize = false"
+              :max="maxBrushSize"              
+              @focus="isInputtingBrushSize = true"
+              @blur="isInputtingBrushSize = false"
             />
           </div>
         </div>
@@ -104,6 +105,7 @@ export default {
     this.panel.w = this.brushPreviewState.w;
     this.panel.h = this.brushPreviewState.h;
   },
+  props: ['yOffset'],
   data: () => ({
     canDrag: true,
     blocks: [],
@@ -239,7 +241,9 @@ export default {
     brushBlocks() {
       this.$store.commit("pushBrushHistory", this.brushBlocks);
     },
-    
+    yOffset(val) {
+     this.$refs.previewpaneldrag.top = Number.parseInt(this.brushPreviewState.y+val)
+    }
   },
   methods: {
     updateBrushSize() {

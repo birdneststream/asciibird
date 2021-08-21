@@ -30,7 +30,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
   * So you never lose your ascii art!
   * Saves layers, brushes data also to same file
 * Can import from clipboard, load from irc.watch/ascii, load from file
-* Can export to mirc ascii to clipboard or file
+* Can export mirc ascii to clipboard, file or HTTP POST
 * 99 Colour support, flip colours
 * Mirror X and Y
 * Grid mode with alt + g
@@ -55,12 +55,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
   * Clicking updates block
   * Right clicking removes block
   * Hovering outside brush area will save brush to history
-
-# Fixes
-
-* Cannot manually input brush sizes because keyboard shortcuts is stealing focus
-* If you open a modal and refresh the page it's stuck as opened inside the state, and you cannot open it again
-
+  
 ## Noted Bugs to Fix
 
 ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. Refreshing the page seems to fix most strange things.
@@ -87,9 +82,15 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 
 ## User Feedback Requests
 
-* Toolbars and panels follow when scrolling down
 * Rename Layers
 * Move brush with keys and space to paint
+* Improve the character panel, group chars
+
+# Fixed / Finished
+
+* Cannot manually input brush sizes because keyboard shortcuts is stealing focus
+* If you open a modal and refresh the page it's stuck as opened inside the state, and you cannot open it again
+* Toolbars and panels follow when scrolling down
 
 # Keyboard Shortcuts
 

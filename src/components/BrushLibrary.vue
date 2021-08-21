@@ -12,6 +12,7 @@
       :h="brushLibraryState.h"
       :x="brushLibraryState.x"
       :y="brushLibraryState.y"
+      ref="brushlibrarypanel"
     >
       <t-card class="h-full overflow-y-auto overflow-x-auto">
         <t-button
@@ -155,6 +156,7 @@ export default {
   components: {
     BrushCanvas,
   },
+  props: ['yOffset'],
   computed: {
     blockWidth() {
       return blockWidth * this.blockSizeMultiplier;
@@ -184,7 +186,11 @@ export default {
       return this.$store.getters.brushLibraryState;
     },
   },
-  watch: {},
+  watch: {
+    yOffset(val) {
+      this.$refs.brushlibrarypanel.top = Number.parseInt(this.brushLibraryState.y+val)
+    }
+  },
   methods: {
     changeTab(tab) {
       this.panel.tab = tab;

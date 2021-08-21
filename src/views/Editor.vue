@@ -100,7 +100,7 @@ export default {
     isMouseOnCanvas: false,
     selectedBlocks: [],
   }),
-  props: ["updateCanvas"],
+  props: ["updateCanvas", "yOffset"],
   computed: {
     canvasRef() {
       return this.$refs.canvas;
@@ -313,6 +313,9 @@ export default {
     selecting(val) {
       this.$emit("selecting", val);
     },
+    yOffset() {
+      this.delayRedrawCanvas()
+    }
   },
   methods: {
     warnInvisibleLayer() {
@@ -388,7 +391,7 @@ export default {
           canvasY = blockHeight * y;
 
           // Experimental code to not rows blocks off screen
-          if (this.top !== false && !this.checkVisible(this.top + canvasY)) {
+          if (this.top !== false && !this.checkVisible(this.top + canvasY - this.yOffset)) {
             continue;
           }
 

@@ -87,7 +87,7 @@
     />
 
     <template v-if="asciibirdMeta.length">
-      <div class="bg-gray-500 z-50">
+      <div class="bg-gray-500 z-50 relative" ref="tabbar" :style="toolbarString">
         <t-button class="p-1 rounded-xl" @click="openContextMenu">
           :::
         </t-button>
@@ -109,12 +109,13 @@
         </span>
       </div>
 
-      <Toolbar :canvas-x="canvasX" :canvas-y="canvasY" class="z-10" />
+      <Toolbar class="z-10" :y-offset="scrollOffset" />
       <DebugPanel
         :canvas-x="canvasX"
         :canvas-y="canvasY"
         v-if="debugPanelState.visible"
         class="z-10"
+        :y-offset="scrollOffset"
       />
 
       <Editor
@@ -123,18 +124,20 @@
         @textediting="textediting"
         :update-canvas="updateCanvas"
         @selecting="updateSelecting"
+        :y-offset="scrollOffset"
         class="z-10"
       />
 
-      <CharPicker v-if="toolbarState.isChoosingChar" class="z-10" />
+      <CharPicker v-if="toolbarState.isChoosingChar" class="z-10" :y-offset="scrollOffset" />
       <ColourPicker
         v-if="toolbarState.isChoosingFg || toolbarState.isChoosingBg"
         class="z-10"
+        :y-offset="scrollOffset"
       />
 
-      <BrushLibrary v-if="brushLibraryState.visible" class="z-10" />
-      <BrushPreview class="z-10" @inputtingbrush="inputtingbrush" />
-      <LayersLibrary class="z-10" />
+      <BrushLibrary v-if="brushLibraryState.visible" class="z-10" :y-offset="scrollOffset" />
+      <BrushPreview class="z-10" @inputtingbrush="inputtingbrush" :y-offset="scrollOffset" />
+      <LayersLibrary class="z-10" :y-offset="scrollOffset" />
     </template>
     <template v-else>
       <div
@@ -191,6 +194,15 @@ export default {
   async created() {
     // Load from irc watch if present in the URL bar
     checkForGetRequest();
+    var isThis = this;
+    window.addEventListener("scroll", function (event) {
+      isThis.scrollOffset = this.scrollY;
+    });
+  },
+  destroyed() {
+    window.removeEventListener("scroll", function (event) {
+      isThis.scrollOffset = this.scrollY;
+    });
   },
   components: {
     Toolbar,
@@ -222,6 +234,8 @@ export default {
     selecting: null,
     isInputtingBrushSize: false,
     showingPostUrl: false,
+    scrollOffset: 0,
+    toolbarString: 'top: 0px;'
   }),
   computed: {
     splashAscii() {
@@ -275,6 +289,12 @@ export default {
     currentTab() {
       return this.$store.getters.currentTab;
     },
+  },
+  watch: {
+    scrollOffset(val) {
+      this.$refs.tabbar.style.top = val
+      this.toolbarString = `top: ${val}px`
+    }
   },
   methods: {
     inputtingbrush(val) {

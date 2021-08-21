@@ -12,6 +12,7 @@
       :h="layersLibraryState.h"
       :x="layersLibraryState.x"
       :y="layersLibraryState.y"
+      ref="layerspanel"
     >
       <t-card
         class="h-full overflow-y-auto overflow-x-hidden"
@@ -51,6 +52,7 @@ export default {
   components: {
     Layers,
   },
+  props: ['yOffset'],
   computed: {
     blockWidth() {
       return blockWidth * this.blockSizeMultiplier;
@@ -64,6 +66,11 @@ export default {
     layersLibraryState() {
       return this.$store.getters.layersLibraryState;
     },
+  },
+  watch: {
+    yOffset(val) {
+      this.$refs.layerspanel.top = Number.parseInt(this.layersLibraryState.y+val)
+    }
   },
   methods: {
     onResize(x, y, w, h) {

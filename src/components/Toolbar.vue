@@ -12,6 +12,7 @@
       :x="toolbarState.x"
       :y="toolbarState.y"
       :draggable="draggable"
+      ref="toolbardrag"
     >
       <t-card class="h-full">
         <div class="flex mb-2">
@@ -93,7 +94,7 @@
           </label>
         </div>
 
-        <hr class="m-3">
+        <hr class="m-3" />
 
         <t-button
           type="button"
@@ -106,10 +107,7 @@
           }`"
           @click="$store.commit('changeTool', keyToolbar)"
         >
-          <font-awesome-icon
-            :icon="[value.fa, value.icon]"
-            size="lg"
-          />
+          <font-awesome-icon :icon="[value.fa, value.icon]" size="lg" />
         </t-button>
       </t-card>
     </vue-draggable-resizable>
@@ -132,7 +130,7 @@ export default {
   },
   name: "Toolbar",
   components: { Colours },
-
+  props: ["yOffset"],
   data: () => ({
     toolbar: {
       w: 0,
@@ -195,7 +193,11 @@ export default {
       return this.toolbarState.updateBrush;
     },
   },
-  watch: {},
+  watch: {
+    yOffset(val) {
+      this.$refs.toolbardrag.top =  Number.parseInt(this.toolbarState.y + val);
+    },
+  },
   methods: {
     updateMirror() {
       this.$store.commit("updateMirror", this.mirror);
