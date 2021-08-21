@@ -81,6 +81,7 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
   * ASCII right click
 * Image overlay for trace mode
 * Review encodings check on file import - UTF8 vs Latin something
+* Revise the blocks system to only store what's changed
 
 ## User Feedback Requests
 

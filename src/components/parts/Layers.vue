@@ -148,7 +148,7 @@ export default {
             this.$toasted.show("You must enter a layer name!", {
               type: "error",
             });
-
+            window.stopKeyEvents = false
             return;
           }
 
