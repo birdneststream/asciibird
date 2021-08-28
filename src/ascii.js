@@ -759,15 +759,6 @@ export const mergeLayers = function (blocks = null) {
         ...emptyBlock
       };
 
-      let visibleLayerCount = 0;
-
-      for (z = store.getters.currentAsciiLayers.length - 1; z >= 0; z--) {
-        if (store.getters.currentAsciiLayers[z].visible === true) {
-          visibleLayerCount += 1;
-        }
-      }
-
-
       // Loop layers
       for (z = store.getters.currentAsciiLayers.length - 1; z >= 0; z--) {
 
@@ -779,55 +770,31 @@ export const mergeLayers = function (blocks = null) {
           store.getters.currentAsciiLayers[z] &&
           store.getters.currentAsciiLayers[z].data &&
           store.getters.currentAsciiLayers[z].data[y] &&
-          store.getters.currentAsciiLayers[z].data[y][x] &&
-          (store.getters.currentAsciiLayers[z].data[y][x].bg ===
-            null)
-        ) {
-
-          // if (curBlock.char === null) {
-          curBlock.char = store.getters.currentAsciiLayers[z].data[y][x].char;
-          // }
-
-          // if (curBlock.fg === null) {
-          curBlock.fg = store.getters.currentAsciiLayers[z].data[y][x].fg;
-          // }
-
-          // if (!curBlock.bg) {
-            curBlock.bg = null;
-          // }
-
-          if (visibleLayerCount > 1) {
-            continue;
-          }
-          
-        } else if (
-          // Otherwise if we are on the very first layer we need to render it
-          store.getters.currentAsciiLayers[z] &&
-          store.getters.currentAsciiLayers[z].data &&
-          store.getters.currentAsciiLayers[z].data[y] &&
           store.getters.currentAsciiLayers[z].data[y][x]
         ) {
 
-          // if (!curBlock.char) {
-          curBlock.char = store.getters.currentAsciiLayers[z].data[y][x].char;
-          // }
+          if (curBlock.char === null) {
+            curBlock.char = store.getters.currentAsciiLayers[z].data[y][x].char;
+          }
 
-          // if (!curBlock.fg) {
-          curBlock.fg = store.getters.currentAsciiLayers[z].data[y][x].fg;
-          // }
+          if (curBlock.fg === null) {
+            curBlock.fg = store.getters.currentAsciiLayers[z].data[y][x].fg;
+          }
 
-          // if (!curBlock.bg) {
-          curBlock.bg = store.getters.currentAsciiLayers[z].data[y][x].bg;
-          // }
+          if (curBlock.bg === null) {
+            curBlock.bg = store.getters.currentAsciiLayers[z].data[y][x].bg;
+          }
 
-        }
-
-        mergedLayers[y][x] = {
-          ...curBlock
+          continue;
         }
 
         break;
       }
+
+      mergedLayers[y][x] = {
+        ...curBlock
+      }
+
     }
   }
 
