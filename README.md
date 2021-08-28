@@ -68,11 +68,12 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 * Importer could be re-written with regex
 * Exporter will default transparent bg to black by default, which wont for some asciis
 * Having more than a few layers depending on ascii size will slow things down, until the `fillNullBlocks` is refactored.
-* The code that hides blocks off screen wont work if you scroll down, however it will work if you drag the canvas upward
-* Some work around layers and transparent blocks, skip drawing transparent bg block on top layers. Or get bg from lowest layer if bg is null on higher layers.
 * Select cannot select entire ASCII, is off by one at the end
   * We could add a special clause for the select tool when mouse leaves canvas to select all blocks
-## Focusing on Now
+* z indexing for toolbars and stuff is ANNOYING
+* Messing with deleting layers, if you somehow have a layer that isn't selected, it'll be buggy\
+* If you have three or more layers, transparent blocks wont work from top layer if hidden
+## Focusing on Now / Roadmap
 
 * Modals to add
   * Asciibird options / Options modal from skgs PR
@@ -95,6 +96,8 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 * Toolbars and panels follow when scrolling down
 * Experimental code to only render blocks visible on screen
 * Rename Layers
+* Some work around layers and transparent blocks, skip drawing transparent bg block on top layers. Or get bg from lowest layer if bg is null on higher layers.
+* The code that hides blocks off screen wont work if you scroll down, however it will work if you drag the canvas upward
 
 # Keyboard Shortcuts
 

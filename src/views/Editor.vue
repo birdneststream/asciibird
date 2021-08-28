@@ -48,9 +48,9 @@ import {
   blockHeight,
   maxBrushSize,
   fillNullBlocks,
-  emptyBlock,
   getBlocksWidth,
   checkVisible,
+  mergeLayers,
 } from "../ascii";
 
 export default {
@@ -121,7 +121,7 @@ export default {
       return this.$store.getters.currentAsciiLayers;
     },
     selectedLayerIndex() {
-      return this.currentAscii.selectedLayer || 0
+      return this.currentAscii.selectedLayer || 0;
     },
     currentSelectedLayer() {
       return this.currentAsciiLayers[this.selectedLayerIndex];
@@ -314,8 +314,8 @@ export default {
       this.$emit("selecting", val);
     },
     yOffset() {
-      this.delayRedrawCanvas()
-    }
+      this.delayRedrawCanvas();
+    },
   },
   methods: {
     warnInvisibleLayer() {
@@ -369,6 +369,9 @@ export default {
         );
       }
     },
+    mergeLayers() {
+      return mergeLayers();
+    },
     redrawCanvas() {
       if (this.currentAsciiLayers.length) {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -376,8 +379,6 @@ export default {
         // Position of the meta array
         let x = 0;
         let y = 0;
-
-        let i = 0;
 
         // Draws the actual rectangle
         let canvasX = 0;
@@ -387,16 +388,23 @@ export default {
         // hack font for ascii shout outs 2 beenz
         this.ctx.font = "13px Hack";
 
+        let mergeLayers = this.mergeLayers();
+
         for (y = 0; y < this.currentAsciiHeight + 1; y++) {
           canvasY = blockHeight * y;
 
           // Experimental code to not rows blocks off screen
-          if (this.top !== false && !this.checkVisible(this.top + canvasY - this.yOffset)) {
+          if (
+            this.top !== false &&
+            !this.checkVisible(this.top + canvasY - this.yOffset)
+          ) {
             continue;
           }
 
           for (x = 0; x < this.currentAsciiWidth + 1; x++) {
             canvasX = blockWidth * x;
+
+            curBlock = { ...mergeLayers[y][x] };
 
             if (this.gridView) {
               this.ctx.setLineDash([1]);
@@ -404,56 +412,24 @@ export default {
               this.ctx.strokeRect(canvasX, canvasY, blockWidth, blockHeight);
             }
 
-            // Loop layers
-            for (i = this.currentAsciiLayers.length - 1; i >= 0; i--) {
-              // for (i = 0; i >= this.currentAsciiLayers.length - 1; i++) {
-              // If this layer is invisble, skip it
-              if (this.currentAsciiLayers[i].visible === true) {
-                // If this block on this layer has no data, skip to next row
-                if (
-                  this.currentAsciiLayers[i] &&
-                  this.currentAsciiLayers[i].data &&
-                  this.currentAsciiLayers[i].data[y] &&
-                  this.currentAsciiLayers[i].data[y][x] &&
-                  i > 0 &&
-                  JSON.stringify(this.currentAsciiLayers[i].data[y][x]) ===
-                    JSON.stringify(emptyBlock)
-                ) {
-                  continue;
-                } else if (
-                  // Otherwise if we are on the very first layer we need to render it
-                  this.currentAsciiLayers[i] &&
-                  this.currentAsciiLayers[i].data &&
-                  this.currentAsciiLayers[i].data[y] &&
-                  this.currentAsciiLayers[i].data[y][x]
-                ) {
-                  curBlock = { ...this.currentAsciiLayers[i].data[y][x] };
+            // Background block
+            if (curBlock.bg !== null) {
+              this.ctx.fillStyle = this.mircColours[curBlock.bg];
+              this.ctx.fillRect(canvasX, canvasY, blockWidth, blockHeight);
+            }
 
-                  // break;
-                }
-
-                // Background block
-                if (curBlock.bg !== null) {
-                  this.ctx.fillStyle = this.mircColours[curBlock.bg];
-                  this.ctx.fillRect(canvasX, canvasY, blockWidth, blockHeight);
-                }
-
-                if (curBlock.char) {
-                  if (curBlock.fg !== null) {
-                    this.ctx.fillStyle = this.mircColours[curBlock.fg];
-                  } else {
-                    this.ctx.fillStyle = "#000000";
-                  }
-
-                  this.ctx.fillText(
-                    curBlock.char,
-                    canvasX,
-                    canvasY + blockHeight - 3
-                  );
-                }
-
-                break;
+            if (curBlock.char) {
+              if (curBlock.fg !== null) {
+                this.ctx.fillStyle = this.mircColours[curBlock.fg];
+              } else {
+                this.ctx.fillStyle = "#000000";
               }
+
+              this.ctx.fillText(
+                curBlock.char,
+                canvasX,
+                canvasY + blockHeight - 3
+              );
             }
           }
         }
@@ -1102,7 +1078,10 @@ export default {
           const arrayY = brushY / blockHeight;
           const arrayX = brushX / blockWidth;
 
-          if (this.currentAsciiLayerBlocks[arrayY] && this.currentAsciiLayerBlocks[arrayY][arrayX]) {
+          if (
+            this.currentAsciiLayerBlocks[arrayY] &&
+            this.currentAsciiLayerBlocks[arrayY][arrayX]
+          ) {
             if (!plain) {
               if (this.canBg) {
                 this.drawBrushBlocks(brushX, brushY, brushBlock, "bg");
@@ -1258,7 +1237,7 @@ export default {
       );
     },
     fillTool(fillBlocks, y, x, current, eraser) {
-      if(fillBlocks[y] === undefined || fillBlocks[y][x] === undefined) {
+      if (fillBlocks[y] === undefined || fillBlocks[y][x] === undefined) {
         return;
       }
 

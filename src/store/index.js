@@ -10,7 +10,8 @@ import {
   create2DArray,
   emptyBlock,
   maxBrushHistory,
-  maxUndoHistory
+  maxUndoHistory,
+  mergeLayers
 } from "../ascii";
 
 Vue.use(Vuex);
@@ -239,6 +240,26 @@ export default new Vuex.Store({
 
       state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
         tempLayers));
+    },
+    mergeAllLayers(state) {
+      let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
+        .blocks))
+
+      let width = tempLayers[0].width;
+      let height = tempLayers[0].height;
+      let label = tempLayers[0].label;
+
+      let mergedLayers = [{
+        visible: true,
+        width: width,
+        height: height,
+        label: label,
+        data: mergeLayers()
+      }];
+
+      state.asciibirdMeta[state.tab].selectedLayer = 0;
+      state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
+        mergedLayers));
     },
     changeLayer(state, payload) {
       state.asciibirdMeta[state.tab].selectedLayer = payload

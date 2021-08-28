@@ -1,12 +1,22 @@
 <template>
   <div>
-    <t-button
-      type="button"
-      class="block w-full border-gray-200 bg-gray-500"
-      @click="addLayer()"
-    >
-      Add Layer
-    </t-button>
+    <div class="flex">
+      <t-button
+        type="button"
+        class="block w-1/2 border-gray-200 bg-gray-500"
+        @click="addLayer()"
+      >
+        Add Layer
+      </t-button>
+
+      <t-button
+        type="button"
+        class="block w-1/2 border-gray-200 bg-gray-500"
+        @click="mergeLayers()"
+      >
+        Merge Layers
+      </t-button>
+    </div>
 
     <hr />
 
@@ -44,7 +54,9 @@
               <div class="flex text-right">
                 <div class="w-full">
                   <t-card class="w-full">
-                    <span @dblclick="showLayerRename(key, layer.label)">{{ layer.label }}</span>
+                    <span @dblclick="showLayerRename(key, layer.label)">{{
+                      layer.label
+                    }}</span>
                   </t-card>
                 </div>
 
@@ -134,7 +146,7 @@ export default {
       return "bg-gray-200";
     },
     showLayerRename(key, label) {
-      window.stopKeyEvents = true
+      window.stopKeyEvents = true;
       this.$dialog
         .prompt({
           title: "Rename Layer",
@@ -148,7 +160,7 @@ export default {
             this.$toasted.show("You must enter a layer name!", {
               type: "error",
             });
-            window.stopKeyEvents = false
+            window.stopKeyEvents = false;
             return;
           }
 
@@ -156,7 +168,7 @@ export default {
             this.updateLayerName(key, result.input);
           }
 
-          window.stopKeyEvents = false
+          window.stopKeyEvents = false;
         });
     },
     updateLayerName(key, label) {
@@ -167,6 +179,9 @@ export default {
     },
     addLayer() {
       this.$store.commit("addLayer");
+    },
+    mergeLayers() {
+      this.$store.commit("mergeAllLayers");
     },
     changeLayer(key) {
       this.$store.commit("changeLayer", key);
