@@ -247,7 +247,7 @@ export default new Vuex.Store({
 
       let width = tempLayers[0].width;
       let height = tempLayers[0].height;
-      let label = tempLayers[0].label;
+      let label = tempLayers[state.asciibirdMeta[state.tab].selectedLayer].label;
 
       let mergedLayers = [{
         visible: true,
@@ -529,6 +529,15 @@ export default new Vuex.Store({
         state.tab].blocks));
 
       return blocks
+    },
+    currentAsciiLayersWidthHeight: (state) => {
+      let blocks = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[
+        state.tab].blocks));
+
+      return {
+        width: blocks[0].width,
+        height: blocks[0].height,
+      }
     },
     selectedLayer: (state) => state.asciibirdMeta[state.tab].selectedLayer,
     asciibirdMeta: (state) => state.asciibirdMeta,

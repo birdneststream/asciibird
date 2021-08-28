@@ -411,8 +411,7 @@ export default {
               this.ctx.strokeStyle = "rgba(0, 0, 0, 1)";
               this.ctx.strokeRect(canvasX, canvasY, blockWidth, blockHeight);
             }
-
-            // Background block
+            
             if (curBlock.bg !== null) {
               this.ctx.fillStyle = this.mircColours[curBlock.bg];
               this.ctx.fillRect(canvasX, canvasY, blockWidth, blockHeight);

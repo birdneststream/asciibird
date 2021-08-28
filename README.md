@@ -71,8 +71,7 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 * Select cannot select entire ASCII, is off by one at the end
   * We could add a special clause for the select tool when mouse leaves canvas to select all blocks
 * z indexing for toolbars and stuff is ANNOYING
-* Messing with deleting layers, if you somehow have a layer that isn't selected, it'll be buggy\
-* If you have three or more layers, transparent blocks wont work from top layer if hidden
+* Messing with deleting layers, if you somehow have a layer that isn't selected, it'll be buggy. This is hard to do.
 ## Focusing on Now / Roadmap
 
 * Modals to add

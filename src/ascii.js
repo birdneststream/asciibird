@@ -476,68 +476,52 @@ export const exportMirc = () => {
   const {
     currentAscii
   } = store.getters;
-  const blocks = [...store.getters.currentAsciiLayers];
+
+  const {
+    currentAsciiLayersWidthHeight
+  } = store.getters;
+
+  const blocks = mergeLayers();
   const output = [];
   let curBlock = false;
-  let currentLayer = 0;
+
   let prevBlock = {
     bg: -1,
     fg: -1
   };
 
-  for (let y = 0; y <= blocks[0].data.length - 1; y++) {
-    if (y >= currentAscii.height) {
-      continue;
-    }
 
-    for (let x = 0; x <= blocks[0].data[y].length - 1; x++) {
-      if (x >= currentAscii.width) {
-        continue;
-      }
+  for (let y = 0; y <= currentAsciiLayersWidthHeight.height; y++) {
 
-      for (let i = blocks.length - 1; i >= 0; i--) {
-        if (blocks[i].visible !== true) {
-          continue;
-        }
-        currentLayer = i;
-        if (
-          !blocks[i].data ||
-          !blocks[i].data[y] ||
-          !blocks[i].data[y][x]
-        ) {
-          continue;
-        }
-        if (
-          i > 0 &&
-          JSON.stringify(blocks[i].data[y][x]) ===
-          JSON.stringify(emptyBlock)
-        ) {
-          continue;
-        }
-        curBlock = {
-          ...blocks[i].data[y][x]
-        };
-        break;
-      }
+    for (let x = 0; x <= currentAsciiLayersWidthHeight.width; x++) {
+      curBlock = {
+        ...blocks[y][x]
+      };
 
       // If we have a difference between our previous block
       // we'll put a colour codes and continue as normal
       if (curBlock.bg !== prevBlock.bg || curBlock.fg !== prevBlock.fg) {
         curBlock = {
-          ...blocks[currentLayer].data[y][x]
+          ...blocks[y][x]
         };
         const zeroPad = (num, places) => String(num).padStart(places, '0');
-        output.push(
-          `\u0003${zeroPad(
-                curBlock.fg ?? store.getters.options.defaultFg,
-                2,
-              )},${zeroPad(curBlock.bg ?? store.getters.options.defaultBg, 2)}`,
-        );
+
+        if (curBlock.fg === null && curBlock.bg === null) {
+          output.push(" ");
+        } else {
+          output.push(
+            `\u0003${zeroPad(
+                  curBlock.fg,
+                  2,
+                )},${zeroPad(curBlock.bg, 2)}`,
+          );
+        }
+        
       }
 
       // null .chars will end up as space
       output.push(curBlock.char ?? ' ');
-      prevBlock = blocks[currentLayer].data[y][x];
+      prevBlock = blocks[y][x];
     }
 
     // We can never have a -1 colour code so we'll always
@@ -548,7 +532,7 @@ export const exportMirc = () => {
     };
 
     // New line except for the very last line
-    if (y < blocks[currentLayer].data[y].length - 1) {
+    if (blocks[y] && y < blocks[y].length - 1) {
       output.push('\n');
     }
   }
