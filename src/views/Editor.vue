@@ -1266,17 +1266,21 @@ export default {
       // }
 
       // If the current pixel is not which needs to be replaced
-      if (this.canBg && fillBlocks[y][x].bg !== current.bg) {
+      if (this.canText && fillBlocks[y][x].char !== current.char) {
+        fillBlocks[y][x].bg = eraser ? null : this.currentBg;
+        fillBlocks[y][x].fg = eraser ? null : this.currentFg;
+        fillBlocks[y][x].char = eraser ? null : this.currentChar;
         return;
       }
 
       if (this.canFg && fillBlocks[y][x].fg !== current.fg) {
+        fillBlocks[y][x].fg = eraser ? null : this.currentFg;
         return;
       }
 
-      // if (this.canText && fillBlocks[y][x].char !== current.char) {
-      //   return;
-      // }
+      if (this.canBg && fillBlocks[y][x].bg !== current.bg) {
+        return;
+      }
 
       // We can eraser or fill
       if (this.canBg) {
