@@ -19,11 +19,6 @@ export default {
     window.removeEventListener("keydown", this.keyListener.bind(this));
   },
   created() {
-    // window.stopKeyEvents = true
-    if (!window.stopKeyEvents) {
-      window.stopKeyEvents = false
-    }
-    
     this.keyListener = function (e) {
       // Stop blocking input when modals are open
       // Whatever this char "'\0'" is it'd occur even without pressing any keys

@@ -1261,11 +1261,6 @@ export default {
       }
 
       // If the current pixel is not which needs to be replaced
-      // if (cyrb53(JSON.stringify(fillBlocks[y][x]) !== cyrb53(JSON.stringify(current)))) {
-      //   return;
-      // }
-
-      // If the current pixel is not which needs to be replaced
       if (this.canText && fillBlocks[y][x].char !== current.char) {
         fillBlocks[y][x].bg = eraser ? null : this.currentBg;
         fillBlocks[y][x].fg = eraser ? null : this.currentFg;

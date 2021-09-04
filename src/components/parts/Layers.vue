@@ -146,7 +146,7 @@ export default {
       return "bg-gray-200";
     },
     showLayerRename(key, label) {
-      window.stopKeyEvents = true;
+      this.$store.commit("toggleDisableKeyboard", true);
       this.$dialog
         .prompt({
           title: "Rename Layer",
@@ -160,7 +160,7 @@ export default {
             this.$toasted.show("You must enter a layer name!", {
               type: "error",
             });
-            window.stopKeyEvents = false;
+            this.$store.commit("toggleDisableKeyboard", false);
             return;
           }
 
@@ -168,7 +168,7 @@ export default {
             this.updateLayerName(key, result.input);
           }
 
-          window.stopKeyEvents = false;
+          this.$store.commit("toggleDisableKeyboard", false);
         });
     },
     updateLayerName(key, label) {
