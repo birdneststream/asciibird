@@ -22,6 +22,7 @@
           class="canvas"
           :width="currentAsciiWidth * blockWidth"
           :height="currentAsciiHeight * blockHeight"
+
         />
 
         <canvas
@@ -33,6 +34,9 @@
           @mousemove="canvasMouseMove"
           @mousedown="canvasMouseDown"
           @mouseup="canvasMouseUp"
+          @touchmove="canvasMouseMove"
+          @touchend="canvasMouseDown"
+          @touchstart="canvasMouseUp"
         />
       </vue-draggable-resizable>
     </div>
@@ -51,6 +55,7 @@ import {
   getBlocksWidth,
   checkVisible,
   mergeLayers,
+  cyrb53
 } from "../ascii";
 
 export default {
@@ -1218,25 +1223,27 @@ export default {
     },
     // Fill tool
     fill(eraser = false) {
-      const newColor = this.currentBg;
+      const newColor = {};
+      const current = {};
 
-      // We can eraser or fill
-      // if (this.canBg) {
-        const current = this.asciiBlockAtXy.bg;
-      // }
+      if (this.canBg) {
+          newColor.bg = this.currentBg;
+          current.bg = this.asciiBlockAtXy.bg;
+      }
 
-      // if (this.canFg) {
-      //   const current = this.asciiBlockAtXy.bg;
-      // }
+      if (this.canFg) {
+          newColor.fg = this.currentFg;
+          current.fg = this.asciiBlockAtXy.fg;
+      }
 
-      // if (this.canText) {
-      //   const current = this.asciiBlockAtXy.bg;
-      // }
-      
-
+      if (this.canText) {
+          newColor.char = this.currentChar;
+          current.char = this.asciiBlockAtXy.char;
+      }
+   
       // If the newColor is same as the existing
       // Then return the original image.
-      if (current === newColor && !eraser) {
+      if (JSON.stringify(current) === JSON.stringify(newColor) && !eraser) {
         return;
       }
 
@@ -1254,9 +1261,22 @@ export default {
       }
 
       // If the current pixel is not which needs to be replaced
-      if (fillBlocks[y][x].bg !== current) {
+      // if (cyrb53(JSON.stringify(fillBlocks[y][x]) !== cyrb53(JSON.stringify(current)))) {
+      //   return;
+      // }
+
+      // If the current pixel is not which needs to be replaced
+      if (this.canBg && fillBlocks[y][x].bg !== current.bg) {
         return;
       }
+
+      if (this.canFg && fillBlocks[y][x].fg !== current.fg) {
+        return;
+      }
+
+      // if (this.canText && fillBlocks[y][x].char !== current.char) {
+      //   return;
+      // }
 
       // We can eraser or fill
       if (this.canBg) {
