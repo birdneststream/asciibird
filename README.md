@@ -72,6 +72,8 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
   * We could add a special clause for the select tool when mouse leaves canvas to select all blocks
 * z indexing for toolbars and stuff is ANNOYING
 * Messing with deleting layers, if you somehow have a layer that isn't selected, it'll be buggy. This is hard to do.
+* Review escape and enter keys on dialogs and modals
+* Fill tool use fg or char as bounds
 ## Focusing on Now / Roadmap
 
 * Modals to add

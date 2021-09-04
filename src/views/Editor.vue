@@ -1219,7 +1219,20 @@ export default {
     // Fill tool
     fill(eraser = false) {
       const newColor = this.currentBg;
-      const current = this.asciiBlockAtXy.bg;
+
+      // We can eraser or fill
+      // if (this.canBg) {
+      //   const current = this.asciiBlockAtXy.bg;
+      // }
+
+      // if (this.canFg) {
+      //   const current = this.asciiBlockAtXy.bg;
+      // }
+
+      // if (this.canText) {
+      //   const current = this.asciiBlockAtXy.bg;
+      // }
+      
 
       // If the newColor is same as the existing
       // Then return the original image.

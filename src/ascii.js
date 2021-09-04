@@ -484,6 +484,7 @@ export const exportMirc = () => {
   const blocks = mergeLayers();
   const output = [];
   let curBlock = false;
+  let pushString = '';
 
   let prevBlock = {
     bg: -1,
@@ -507,21 +508,31 @@ export const exportMirc = () => {
         const zeroPad = (num, places) => String(num).padStart(places, '0');
 
         if (curBlock.fg === null && curBlock.bg === null) {
-          output.push(" ");
+          output.push('\u0003');
         } else {
-          output.push(
-            `\u0003${zeroPad(
-                  curBlock.fg,
-                  2,
-                )},${zeroPad(curBlock.bg, 2)}`,
-          );
+
+          if (curBlock.bg === null && curBlock.fg !== null) {
+            pushString = `\u0003\u0003${zeroPad(curBlock.fg,2,)}`;
+          }
+
+          // if (curBlock.bg !== null && curBlock.fg === null) {
+          //   pushString = `\u0003,${zeroPad(curBlock.bg, 2)}`;
+          // }
+
+          if (curBlock.bg !== null && curBlock.fg !== null) {
+            pushString = `\u0003${zeroPad(curBlock.fg,2,)},${zeroPad(curBlock.bg, 2)}`;
+          }
+
+          output.push(pushString);
         }
-        
+
       }
 
       // null .chars will end up as space
       output.push(curBlock.char ?? ' ');
-      prevBlock = blocks[y][x];
+      prevBlock = {
+        ...blocks[y][x]
+      };
     }
 
     // We can never have a -1 colour code so we'll always
