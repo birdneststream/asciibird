@@ -606,8 +606,8 @@ export default {
 
           case "select":
             if (this.selecting.canSelect) {
-              this.selecting.endX = this.canvasX;
-              this.selecting.endY = this.canvasY;
+              this.selecting.endX = (this.canvasX + blockWidth);
+              this.selecting.endY = (this.canvasY + blockHeight);
 
               this.redrawSelect();
             }

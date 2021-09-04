@@ -101,7 +101,7 @@
 
     <template v-if="asciibirdMeta.length">
       <div
-        class="bg-gray-500 z-50 relative"
+        class="bg-gray-500 z-40 relative"
         ref="tabbar"
         :style="toolbarString"
       >
@@ -112,28 +112,20 @@
         <span
           v-for="(value, key) in asciibirdMeta"
           :key="key"
-          class="mr-2 z-50"
+          class="mr-2 z-40"
         >
           <t-button
-            class="p-1 z-50"
+            class="p-1 z-40"
             :class="buttonStyle(key)"
             @click="changeTab(key, value)"
           >
             {{ value.title }}
 
-            <t-button class="z-50" @click="closeTab(key)"> X </t-button>
+            <t-button class="z-40" @click="closeTab(key)"> X </t-button>
           </t-button>
         </span>
       </div>
 
-      <Toolbar class="z-10" :y-offset="scrollOffset" />
-      <DebugPanel
-        :canvas-x="canvasX"
-        :canvas-y="canvasY"
-        v-if="debugPanelState.visible"
-        class="z-10"
-        :y-offset="scrollOffset"
-      />
 
       <Editor
         @coordsupdate="updateCoords"
@@ -142,31 +134,40 @@
         :update-canvas="updateCanvas"
         @selecting="updateSelecting"
         :y-offset="scrollOffset"
-        class="z-10"
       />
 
-      <CharPicker
-        v-if="toolbarState.isChoosingChar"
-        class="z-10"
-        :y-offset="scrollOffset"
-      />
-      <ColourPicker
-        v-if="toolbarState.isChoosingFg || toolbarState.isChoosingBg"
-        class="z-10"
+
+      <Toolbar :y-offset="scrollOffset" />
+      <DebugPanel
+        :canvas-x="canvasX"
+        :canvas-y="canvasY"
+        v-if="debugPanelState.visible"
         :y-offset="scrollOffset"
       />
 
       <BrushLibrary
         v-if="brushLibraryState.visible"
-        class="z-10"
         :y-offset="scrollOffset"
       />
+
       <BrushPreview
-        class="z-10"
         @inputtingbrush="inputtingbrush"
         :y-offset="scrollOffset"
       />
-      <LayersLibrary class="z-10" :y-offset="scrollOffset" />
+
+      <LayersLibrary :y-offset="scrollOffset" />
+
+
+      <CharPicker
+        v-if="toolbarState.isChoosingChar"
+        class="z-50"
+        :y-offset="scrollOffset"
+      />
+      <ColourPicker
+        v-if="toolbarState.isChoosingFg || toolbarState.isChoosingBg"
+        class="z-50"
+        :y-offset="scrollOffset"
+      />
     </template>
     <template v-else>
       <div
@@ -321,10 +322,10 @@ export default {
     },
   },
   watch: {
-    scrollOffset(val) {
-      this.$refs.tabbar.style.top = val;
-      this.toolbarString = `top: ${val}px`;
-    },
+    // scrollOffset(val) {
+    //   this.$refs.tabbar.style.top = val;
+    //   this.toolbarString = `top: ${val}px`;
+    // },
   },
   methods: {
     inputtingbrush(val) {

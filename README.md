@@ -34,7 +34,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
   * Saves layers, brushes data also to same file
 * Can import from clipboard, load from irc.watch/ascii, load from file
 * Can export mirc ascii to clipboard, file or HTTP POST
-* 99 Colour support, flip colours
+* 99 Colour support, swap colours with button click
 * Mirror X and Y
 * Grid mode with alt + g
 * Undo and redo with ctrl + z and ctrl + y, undos are set to a limit of 50 at the moment.
@@ -47,7 +47,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
   * Brush mode
   * Block picker (grab fg, bg and char of a block)
   * Eraser - remove blocks
-  * Fill Eraser - Fill remove blocks by bg
+  * Fill Eraser - Fill remove blocks by bg, fg or char
 * Brush Library and History
   * Make circle, square and cross brushes by sizes
   * Brush history, can save or re-use old brushes
@@ -67,11 +67,7 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 * Circle brush (works okay for odd width and height numbers)
 * Importer could be re-written with regex
 * Having more than a few layers depending on ascii size will slow things down, until the `fillNullBlocks` is refactored.
-* Select cannot select entire ASCII, is off by one at the end
-  * We could add a special clause for the select tool when mouse leaves canvas to select all blocks
-* z indexing for toolbars and stuff is ANNOYING
 * Messing with deleting layers, if you somehow have a layer that isn't selected, it'll be buggy. This is hard to do.
-* Fill tool use fg or char as bounds
 ## Focusing on Now / Roadmap
 
 * Modals to add
@@ -99,7 +95,9 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 * The code that hides blocks off screen wont work if you scroll down, however it will work if you drag the canvas upward
 * Exporter will default transparent bg to black by default, which wont for some asciis
 * Review escape and enter keys on dialogs and modals
-
+* Select cannot select entire ASCII, is off by one at the end
+* Fill tool use fg or char as bounds
+* z indexing for toolbars and stuff is ANNOYING
 # Keyboard Shortcuts
 
 ## ASCII Editing

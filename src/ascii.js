@@ -491,10 +491,9 @@ export const exportMirc = () => {
     fg: -1
   };
 
+  for (let y = 0; y <= currentAsciiLayersWidthHeight.height - 1; y++) {
 
-  for (let y = 0; y <= currentAsciiLayersWidthHeight.height; y++) {
-
-    for (let x = 0; x <= currentAsciiLayersWidthHeight.width; x++) {
+    for (let x = 0; x <= currentAsciiLayersWidthHeight.width - 1; x++) {
       curBlock = {
         ...blocks[y][x]
       };
@@ -514,10 +513,6 @@ export const exportMirc = () => {
           if (curBlock.bg === null && curBlock.fg !== null) {
             pushString = `\u0003\u0003${zeroPad(curBlock.fg,2,)}`;
           }
-
-          // if (curBlock.bg !== null && curBlock.fg === null) {
-          //   pushString = `\u0003,${zeroPad(curBlock.bg, 2)}`;
-          // }
 
           if (curBlock.bg !== null && curBlock.fg !== null) {
             pushString = `\u0003${zeroPad(curBlock.fg,2,)},${zeroPad(curBlock.bg, 2)}`;
