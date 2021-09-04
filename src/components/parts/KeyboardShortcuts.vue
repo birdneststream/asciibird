@@ -28,7 +28,13 @@ export default {
       // Stop blocking input when modals are open
       // Whatever this char "'\0'" is it'd occur even without pressing any keys
       // This fixes it
-      if (this.isModalOpen || e.key === "\0" || this.isInputtingBrushSize || this.showingPostUrl || window.stopKeyEvents) {
+      if (e.key === "\0" || this.isInputtingBrushSize || this.isKeyboardDisabled || this.isShowingDialog || this.isModalOpen) {
+
+        if (e.key === "Enter" && this.isShowingDialog) {
+          this.$dialog.hide('dialog-posthttp');
+          return;
+        }
+
         return;
       }
 
@@ -398,7 +404,7 @@ export default {
   data: () => ({
     isPressed: false,
   }),
-  props: ["selectedBlocks", "textEditing", "selecting", "isInputtingBrushSize", "showingPostUrl"],
+  props: ["selectedBlocks", "textEditing", "selecting", "isInputtingBrushSize", "showingPostUrl", "isShowingDialog"],
   computed: {
     isModalOpen() {
       return this.$store.getters.isModalOpen;
@@ -500,6 +506,9 @@ export default {
     },
     gridView() {
       return this.toolbarState.gridView;
+    },
+    isKeyboardDisabled() {
+      return this.$store.getters.isKeyboardDisabled;
     }
   },
   methods: {

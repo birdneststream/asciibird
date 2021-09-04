@@ -66,13 +66,11 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 * Keyboard shortcuts can be pressed at the same time which makes bugs for undo and redo if you aren't careful!
 * Circle brush (works okay for odd width and height numbers)
 * Importer could be re-written with regex
-* Exporter will default transparent bg to black by default, which wont for some asciis
 * Having more than a few layers depending on ascii size will slow things down, until the `fillNullBlocks` is refactored.
 * Select cannot select entire ASCII, is off by one at the end
   * We could add a special clause for the select tool when mouse leaves canvas to select all blocks
 * z indexing for toolbars and stuff is ANNOYING
 * Messing with deleting layers, if you somehow have a layer that isn't selected, it'll be buggy. This is hard to do.
-* Review escape and enter keys on dialogs and modals
 * Fill tool use fg or char as bounds
 ## Focusing on Now / Roadmap
 
@@ -99,6 +97,8 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 * Rename Layers
 * Some work around layers and transparent blocks, skip drawing transparent bg block on top layers. Or get bg from lowest layer if bg is null on higher layers.
 * The code that hides blocks off screen wont work if you scroll down, however it will work if you drag the canvas upward
+* Exporter will default transparent bg to black by default, which wont for some asciis
+* Review escape and enter keys on dialogs and modals
 
 # Keyboard Shortcuts
 

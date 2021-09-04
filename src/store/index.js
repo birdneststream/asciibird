@@ -27,6 +27,7 @@ export default new Vuex.Store({
       editAscii: false,
       pasteAscii: false,
     },
+    isKeyboardDisabled: false,
     // The various options of ASCIIBIRD will eventually
     // end up in its own modal I guess
     options: {
@@ -455,20 +456,25 @@ export default new Vuex.Store({
         return item.hash !== hashValue
       });
     },
-
+    toggleDisableKeyboard(state, payload = null) {
+      state.isKeyboardDisabled = (payload === null ? !state.isKeyboardDisabled : payload);
+    },
     // Modals / Tabs
     openModal(state, type) {
       switch (type) {
         case 'new-ascii':
           state.modalState.newAscii = true;
+          state.isKeyboardDiasbled = true;
           break;
 
         case 'edit-ascii':
           state.modalState.editAscii = true;
+          state.isKeyboardDisabled = true;
           break;
 
         case 'paste-ascii':
           state.modalState.pasteAscii = true;
+          state.isKeyboardDisabled = true;
           break;
       }
     },
@@ -476,14 +482,17 @@ export default new Vuex.Store({
       switch (type) {
         case 'new-ascii':
           state.modalState.newAscii = false;
+          state.isKeyboardDisabled = false;
           break;
 
         case 'edit-ascii':
           state.modalState.editAscii = false;
+          state.isKeyboardDisabled = false;
           break;
 
         case 'paste-ascii':
           state.modalState.pasteAscii = false;
+          state.isKeyboardDisabled = false;
           break;
       }
     },
@@ -551,6 +560,7 @@ export default new Vuex.Store({
     brushLibraryState: (state) => state.brushLibraryState,
     brushPreviewState: (state) => state.brushPreviewState,
     layersLibraryState: (state) => state.layersLibraryState,
+    isKeyboardDisabled: (state) => state.isKeyboardDisabled,
     brushBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.brushBlocks)) || [],
     selectBlocks: (state) => JSON.parse(LZString.decompressFromUTF16(state.selectBlocks)) || [],
     isModalOpen: (state) => {

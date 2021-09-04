@@ -1222,7 +1222,7 @@ export default {
 
       // We can eraser or fill
       // if (this.canBg) {
-      //   const current = this.asciiBlockAtXy.bg;
+        const current = this.asciiBlockAtXy.bg;
       // }
 
       // if (this.canFg) {

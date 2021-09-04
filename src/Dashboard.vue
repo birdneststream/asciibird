@@ -8,10 +8,23 @@
       :selected-blocks="selectedBlocks"
       :text-editing="textEditing"
       :selecting="selecting"
-      :showing-post-url="showingPostUrl"
+      :is-showing-dialog="isShowingDialog"
       @updatecanvas="updatecanvas"
       :is-inputting-brush-size="this.isInputtingBrushSize"
     />
+
+    <t-dialog
+      name="dialog-posthttp"
+      title="Enter URL"
+      text="Enter URL for POST command"
+      icon="question"
+      :clickToClose=false
+      :showCloseButton=true
+      :disableBodyScroll=true
+      @closed="postHttp()"
+    >
+      <t-input v-model="lastPostURL" />
+    </t-dialog>
 
     <context-menu :display="showContextMenu" ref="menu" class="z-50">
       <ul>
@@ -87,7 +100,11 @@
     />
 
     <template v-if="asciibirdMeta.length">
-      <div class="bg-gray-500 z-50 relative" ref="tabbar" :style="toolbarString">
+      <div
+        class="bg-gray-500 z-50 relative"
+        ref="tabbar"
+        :style="toolbarString"
+      >
         <t-button class="p-1 rounded-xl" @click="openContextMenu">
           :::
         </t-button>
@@ -128,15 +145,27 @@
         class="z-10"
       />
 
-      <CharPicker v-if="toolbarState.isChoosingChar" class="z-10" :y-offset="scrollOffset" />
+      <CharPicker
+        v-if="toolbarState.isChoosingChar"
+        class="z-10"
+        :y-offset="scrollOffset"
+      />
       <ColourPicker
         v-if="toolbarState.isChoosingFg || toolbarState.isChoosingBg"
         class="z-10"
         :y-offset="scrollOffset"
       />
 
-      <BrushLibrary v-if="brushLibraryState.visible" class="z-10" :y-offset="scrollOffset" />
-      <BrushPreview class="z-10" @inputtingbrush="inputtingbrush" :y-offset="scrollOffset" />
+      <BrushLibrary
+        v-if="brushLibraryState.visible"
+        class="z-10"
+        :y-offset="scrollOffset"
+      />
+      <BrushPreview
+        class="z-10"
+        @inputtingbrush="inputtingbrush"
+        :y-offset="scrollOffset"
+      />
       <LayersLibrary class="z-10" :y-offset="scrollOffset" />
     </template>
     <template v-else>
@@ -233,9 +262,10 @@ export default {
     updateCanvas: false,
     selecting: null,
     isInputtingBrushSize: false,
-    showingPostUrl: false,
     scrollOffset: 0,
-    toolbarString: 'top: 0px;'
+    toolbarString: "top: 0px;",
+    lastPostURL: "",
+    isShowingDialog: false,
   }),
   computed: {
     splashAscii() {
@@ -292,9 +322,9 @@ export default {
   },
   watch: {
     scrollOffset(val) {
-      this.$refs.tabbar.style.top = val
-      this.toolbarString = `top: ${val}px`
-    }
+      this.$refs.tabbar.style.top = val;
+      this.toolbarString = `top: ${val}px`;
+    },
   },
   methods: {
     inputtingbrush(val) {
@@ -412,33 +442,31 @@ export default {
           downloadFile(ascii.output.join(""), ascii.filename, "text/plain");
           break;
         case "post":
-          this.showingPostUrl = true;
-          this.$dialog
-            .prompt({
-              title: "Enter URL",
-              text: "Enter URL for POST command",
-              icon: "question",
-              inputValue: this.lastPostURL,
-              clickToClose: false,
-            })
-            .then((result) => {
-              if (result.isOk) {
-                this.lastPostURL = result.input;
-                const requestOptions = {
-                  method: "POST",
-                  headers: { "Content-Type": "application/octet-stream" },
-                  body: ascii.output.join(""),
-                };
-                fetch(this.lastPostURL, requestOptions)
-                  .then((response) => this.$toasted.show("POSTed ascii!"))
-                  .catch((error) => this.$toasted.show("Error POSTing"));
-              }
-
-              this.showingPostUrl = false;
-            });
-
+          this.$store.commit("toggleDisableKeyboard", true);
+          this.$dialog.show('dialog-posthttp');
+          this.isShowingDialog = true;
           break;
       }
+    },
+    postHttp() {
+      let ascii = exportMirc();
+
+      // this.lastPostURL = result.input;
+      const requestOptions = {
+        method: "POST",
+        headers: { "Content-Type": "application/octet-stream" },
+        body: ascii.output.join(""),
+      };
+      fetch(this.lastPostURL, requestOptions)
+        .then((response) => {
+          this.$toasted.show("POSTed ascii!");
+        })
+        .catch((error) => {
+          this.$toasted.show("Error POSTing");
+        });
+
+      this.$store.commit("toggleDisableKeyboard", false);
+      this.isShowingDialog = false;
     },
     changeTab(key) {
       // Update the tab index in vuex store
