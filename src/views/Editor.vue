@@ -548,15 +548,15 @@ export default {
 
           case "dropper":
             if (this.canFg) {
-              this.$store.commit("changeColourFg", targetBlock.fg);
+              this.$store.commit("changeColourFg", (targetBlock.fg === null) ? this.currentFg : targetBlock.fg );
             }
 
             if (this.canBg) {
-              this.$store.commit("changeColourBg", targetBlock.bg);
+              this.$store.commit("changeColourBg", (targetBlock.bg === null) ? this.currentBg : targetBlock.bg );
             }
 
             if (this.canText) {
-              this.$store.commit("changeChar", targetBlock.char);
+              this.$store.commit("changeChar", (targetBlock.char === null) ? this.currentChar : targetBlock.char );
             }
 
             this.$store.commit("changeTool", 0);
@@ -1074,6 +1074,13 @@ export default {
             continue;
           }
 
+          // if (
+          //   this.top !== false &&
+          //   !this.checkVisible(this.top + (y * blockHeight) - this.yOffset)
+          // ) {
+          //   continue;
+          // }
+
           const brushBlock = this.brushBlocks[y][x];
 
           const brushX = this.x * blockWidth + x * blockWidth - brushDiffX;
@@ -1236,11 +1243,6 @@ export default {
           current.fg = this.asciiBlockAtXy.fg;
       }
 
-      if (this.canText) {
-          newColor.char = this.currentChar;
-          current.char = this.asciiBlockAtXy.char;
-      }
-   
       // If the newColor is same as the existing
       // Then return the original image.
       if (JSON.stringify(current) === JSON.stringify(newColor) && !eraser) {
@@ -1260,16 +1262,7 @@ export default {
         return;
       }
 
-      // If the current pixel is not which needs to be replaced
-      if (this.canText && fillBlocks[y][x].char !== current.char) {
-        fillBlocks[y][x].bg = eraser ? null : this.currentBg;
-        fillBlocks[y][x].fg = eraser ? null : this.currentFg;
-        fillBlocks[y][x].char = eraser ? null : this.currentChar;
-        return;
-      }
-
       if (this.canFg && fillBlocks[y][x].fg !== current.fg) {
-        fillBlocks[y][x].fg = eraser ? null : this.currentFg;
         return;
       }
 
