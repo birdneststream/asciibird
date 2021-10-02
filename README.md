@@ -71,7 +71,7 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
  * CHUNKED DIFF ENGINE
 
 * Messing with deleting layers, if you somehow have a layer that isn't selected, it'll be buggy. This is hard to do.
-* Make grid faster (gonna do that later, maybe never)
+
 ## Focusing on Now / Roadmap
 
 * Modals to add
@@ -102,6 +102,7 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 * Select cannot select entire ASCII, is off by one at the end
 * Fill tool use fg or char as bounds
 * z indexing for toolbars and stuff is ANNOYING
+* Make grid faster (gonna do that later, maybe never)
 # Keyboard Shortcuts
 
 ## ASCII Editing

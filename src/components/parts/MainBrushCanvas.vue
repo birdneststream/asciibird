@@ -163,7 +163,6 @@ export default {
     filterNullBlocks(blocks) {
       return filterNullBlocks(blocks);
     },
-
     drawPreview() {
       this.ctx.clearRect(0, 0, this.canvasRef.width, this.canvasRef.height);
       this.ctx.fillStyle = this.mircColours[1];
@@ -213,11 +212,13 @@ export default {
     delayRedrawCanvas() {
       if (this.redraw) {
         this.redraw = false;
-
-        requestAnimationFrame(() => {
-          this.redraw = true;
-          this.drawPreview();
-        });
+        var _this = this;
+        setTimeout(function(){
+          requestAnimationFrame(() => {
+            _this.drawPreview();
+            _this.redraw = true;
+          });
+        }, 1000/this.options.fps)
       }
     },
     // Basic block editing

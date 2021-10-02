@@ -206,11 +206,13 @@ export default {
     delayRedrawCanvas() {
       if (this.redraw) {
         this.redraw = false;
-
-        requestAnimationFrame(() => {
-          this.redraw = true;
-          this.drawPreview();
-        });
+        var _this = this;
+        setTimeout(function(){
+          requestAnimationFrame(() => {
+            _this.drawPreview();
+            _this.redraw = true;
+          });
+        }, 1000/this.options.fps)
       }
     },
   },

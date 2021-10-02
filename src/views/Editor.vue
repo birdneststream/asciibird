@@ -22,7 +22,6 @@
           class="canvas"
           :width="currentAsciiWidth * blockWidth"
           :height="currentAsciiHeight * blockHeight"
-
         />
 
         <canvas
@@ -55,7 +54,7 @@ import {
   getBlocksWidth,
   checkVisible,
   mergeLayers,
-  cyrb53
+  cyrb53,
 } from "../ascii";
 
 export default {
@@ -161,7 +160,7 @@ export default {
       return this.$store.getters.currentChar;
     },
     isTextEditing() {
-      return this.currentTool.name === "text";
+      return this.currentTool.name === "text" || false;
     },
     isTextEditingValues() {
       return (
@@ -169,13 +168,13 @@ export default {
       );
     },
     isSelecting() {
-      return this.currentTool.name === "select";
+      return this.currentTool.name === "select" || false;
     },
     isDefault() {
       return this.currentTool.name === "default" || false;
     },
     isBrushing() {
-      return this.currentTool.name === "brush";
+      return this.currentTool.name === "brush" || false;
     },
     isSelected() {
       return (
@@ -245,8 +244,6 @@ export default {
       if (val !== old) {
         this.canvas.width = this.currentAsciiWidth * blockWidth;
         this.canvas.height = this.currentAsciiHeight * blockHeight;
-
-        // this.delayRedrawCanvas();
       }
     },
     currentAsciiLayerBlocks() {
@@ -291,9 +288,10 @@ export default {
         this.drawBrush();
       }
     },
-    blockSizeMultiplier() {
-      // this.delayRedrawCanvas();
-    },
+    // For when we do zook, ctrl + or ctrl -
+    // blockSizeMultiplier() {
+    //   // this.delayRedrawCanvas();
+    // },
     // Save text to store when finished
     isTextEditing(val, old) {
       if (val !== old && val === false) {
@@ -310,7 +308,7 @@ export default {
         this.drawTextIndicator();
         this.drawIndicator();
 
-        // this.delayRedrawCanvas();
+        this.delayRedrawCanvas();
       }
     },
     selecting(val) {
@@ -319,34 +317,31 @@ export default {
     yOffset() {
       // this.delayRedrawCanvas();
     },
-    asciiBlockAtXy(val, old) {
+    // asciiBlockAtXy(val, old) {
 
-        // Keep track of what blocks have changed
+    // Keep track of what blocks have changed
 
-        
-        // if (this.canTool) {
+    // if (this.canTool) {
 
+    //   this.tempBlocks.new = this.tempBlocks.new.filter(obj => obj.x !== this.x);
+    //   this.tempBlocks.new = this.tempBlocks.new.filter(obj => obj.y !== this.y);
 
-        //   this.tempBlocks.new = this.tempBlocks.new.filter(obj => obj.x !== this.x);
-        //   this.tempBlocks.new = this.tempBlocks.new.filter(obj => obj.y !== this.y);
+    //   this.tempBlocks.new.push({
+    //     x: this.x,
+    //     y: this.y,
+    //     block: {... val } })
 
-        //   this.tempBlocks.new.push({
-        //     x: this.x,
-        //     y: this.y,
-        //     block: {... val } })
+    //   this.tempBlocks.old = this.tempBlocks.old.filter(obj => obj.x !== this.x);
+    //   this.tempBlocks.old = this.tempBlocks.old.filter(obj => obj.y !== this.y);
 
+    //   this.tempBlocks.old.push({
+    //     x: this.x,
+    //     y: this.y,
+    //     block: {... old } })
 
-        //   this.tempBlocks.old = this.tempBlocks.old.filter(obj => obj.x !== this.x);
-        //   this.tempBlocks.old = this.tempBlocks.old.filter(obj => obj.y !== this.y);
+    // }
 
-        //   this.tempBlocks.old.push({
-        //     x: this.x,
-        //     y: this.y,
-        //     block: {... old } })
-            
-        // }
-
-    },
+    // },
   },
   methods: {
     warnInvisibleLayer() {
@@ -363,11 +358,9 @@ export default {
     },
     undo() {
       this.$store.commit("undoBlocks");
-      // this.delayRedrawCanvas();
     },
     redo() {
       this.$store.commit("redoBlocks");
-      // this.delayRedrawCanvas();
     },
     resetSelect() {
       this.selecting = {
@@ -403,6 +396,32 @@ export default {
     mergeLayers() {
       return mergeLayers();
     },
+    drawGrid() {
+      let ctx = this.ctx;
+      let w = this.canvas.width;
+      let h = this.canvas.height;
+
+      ctx.beginPath();
+
+      for (var x = 0; x <= w; x += blockWidth) {
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+      }
+      
+      ctx.strokeStyle = "rgba(0, 0, 0, 1)";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([1]);
+      
+      ctx.stroke();
+      
+      ctx.beginPath();
+      for (var y = 0; y <= h; y += blockHeight) {
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+      }
+      
+      ctx.stroke();
+    },
     redrawCanvas() {
       if (this.currentAsciiLayers.length) {
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -437,12 +456,6 @@ export default {
 
             curBlock = { ...mergeLayers[y][x] };
 
-            if (this.gridView) {
-              this.ctx.setLineDash([1]);
-              this.ctx.strokeStyle = "rgba(0, 0, 0, 1)";
-              this.ctx.strokeRect(canvasX, canvasY, blockWidth, blockHeight);
-            }
-            
             if (curBlock.bg !== null) {
               this.ctx.fillStyle = this.mircColours[curBlock.bg];
               this.ctx.fillRect(canvasX, canvasY, blockWidth, blockHeight);
@@ -462,6 +475,10 @@ export default {
               );
             }
           }
+        }
+
+        if (this.gridView) {
+          this.drawGrid();
         }
       }
     },
@@ -483,17 +500,14 @@ export default {
       this.$refs.canvasdrag.width = width;
       this.$refs.canvasdrag.height = height;
 
-      // this.delayRedrawCanvas();
     },
     onCavasDragStop(x, y) {
       // Update left and top in panel
       this.top = y;
       this.$store.commit("changeAsciiCanvasState", { x, y });
-      // this.delayRedrawCanvas();
     },
     onCanvasDrag(x, y) {
       this.top = y;
-      // this.delayRedrawCanvas();
     },
     // Mouse Up, Down and Move
     canvasMouseUp() {
@@ -528,13 +542,10 @@ export default {
           break;
       }
 
-
       // this.tempBlocks = {
       //   new: [],
       //   old: [],
       // }
-
-      
     },
     canvasMouseDown() {
       if (this.isDefault) return;
@@ -580,15 +591,24 @@ export default {
 
           case "dropper":
             if (this.canFg) {
-              this.$store.commit("changeColourFg", (targetBlock.fg === null) ? this.currentFg : targetBlock.fg );
+              this.$store.commit(
+                "changeColourFg",
+                targetBlock.fg === null ? this.currentFg : targetBlock.fg
+              );
             }
 
             if (this.canBg) {
-              this.$store.commit("changeColourBg", (targetBlock.bg === null) ? this.currentBg : targetBlock.bg );
+              this.$store.commit(
+                "changeColourBg",
+                targetBlock.bg === null ? this.currentBg : targetBlock.bg
+              );
             }
 
             if (this.canText) {
-              this.$store.commit("changeChar", (targetBlock.char === null) ? this.currentChar : targetBlock.char );
+              this.$store.commit(
+                "changeChar",
+                targetBlock.char === null ? this.currentChar : targetBlock.char
+              );
             }
 
             this.$store.commit("changeTool", 0);
@@ -638,8 +658,8 @@ export default {
 
           case "select":
             if (this.selecting.canSelect) {
-              this.selecting.endX = (this.canvasX + blockWidth);
-              this.selecting.endY = (this.canvasY + blockHeight);
+              this.selecting.endX = this.canvasX + blockWidth;
+              this.selecting.endY = this.canvasY + blockHeight;
 
               this.redrawSelect();
             }
@@ -682,10 +702,13 @@ export default {
     delayRedrawCanvas() {
       if (this.redraw) {
         this.redraw = false;
-        requestAnimationFrame(() => {
-          this.redrawCanvas();
-          this.redraw = true;
-        });
+        var _this = this;
+        setTimeout(function(){
+          requestAnimationFrame(() => {
+            _this.redrawCanvas();
+            _this.redraw = true;
+          });
+        }, 1000/this.options.fps)
       }
     },
     getBlocksWidth(blocks) {
@@ -1266,13 +1289,13 @@ export default {
       const current = {};
 
       if (this.canBg) {
-          newColor.bg = this.currentBg;
-          current.bg = this.asciiBlockAtXy.bg;
+        newColor.bg = this.currentBg;
+        current.bg = this.asciiBlockAtXy.bg;
       }
 
       if (this.canFg) {
-          newColor.fg = this.currentFg;
-          current.fg = this.asciiBlockAtXy.fg;
+        newColor.fg = this.currentFg;
+        current.fg = this.asciiBlockAtXy.fg;
       }
 
       // If the newColor is same as the existing
