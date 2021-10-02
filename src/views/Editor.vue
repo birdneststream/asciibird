@@ -104,6 +104,11 @@ export default {
     },
     isMouseOnCanvas: false,
     selectedBlocks: [],
+
+    tempBlocks: {
+      new: [],
+      old: [],
+    },
   }),
   props: ["updateCanvas", "yOffset"],
   computed: {
@@ -241,20 +246,13 @@ export default {
         this.canvas.width = this.currentAsciiWidth * blockWidth;
         this.canvas.height = this.currentAsciiHeight * blockHeight;
 
-        this.delayRedrawCanvas();
-
-        document.title = `asciibird - ${this.currentAscii.title}`;
+        // this.delayRedrawCanvas();
       }
     },
     currentAsciiLayerBlocks() {
       this.delayRedrawCanvas();
     },
-    currentAsciiLayers() {
-      this.delayRedrawCanvas();
-    },
     currentSelectedLayer(val, old) {
-      this.delayRedrawCanvas();
-
       if (old.visible) {
         this.warnInvisibleLayer();
       }
@@ -294,7 +292,7 @@ export default {
       }
     },
     blockSizeMultiplier() {
-      this.delayRedrawCanvas();
+      // this.delayRedrawCanvas();
     },
     // Save text to store when finished
     isTextEditing(val, old) {
@@ -312,14 +310,42 @@ export default {
         this.drawTextIndicator();
         this.drawIndicator();
 
-        this.delayRedrawCanvas();
+        // this.delayRedrawCanvas();
       }
     },
     selecting(val) {
       this.$emit("selecting", val);
     },
     yOffset() {
-      this.delayRedrawCanvas();
+      // this.delayRedrawCanvas();
+    },
+    asciiBlockAtXy(val, old) {
+
+        // Keep track of what blocks have changed
+
+        
+        // if (this.canTool) {
+
+
+        //   this.tempBlocks.new = this.tempBlocks.new.filter(obj => obj.x !== this.x);
+        //   this.tempBlocks.new = this.tempBlocks.new.filter(obj => obj.y !== this.y);
+
+        //   this.tempBlocks.new.push({
+        //     x: this.x,
+        //     y: this.y,
+        //     block: {... val } })
+
+
+        //   this.tempBlocks.old = this.tempBlocks.old.filter(obj => obj.x !== this.x);
+        //   this.tempBlocks.old = this.tempBlocks.old.filter(obj => obj.y !== this.y);
+
+        //   this.tempBlocks.old.push({
+        //     x: this.x,
+        //     y: this.y,
+        //     block: {... old } })
+            
+        // }
+
     },
   },
   methods: {
@@ -337,11 +363,11 @@ export default {
     },
     undo() {
       this.$store.commit("undoBlocks");
-      this.delayRedrawCanvas();
+      // this.delayRedrawCanvas();
     },
     redo() {
       this.$store.commit("redoBlocks");
-      this.delayRedrawCanvas();
+      // this.delayRedrawCanvas();
     },
     resetSelect() {
       this.selecting = {
@@ -457,17 +483,17 @@ export default {
       this.$refs.canvasdrag.width = width;
       this.$refs.canvasdrag.height = height;
 
-      this.delayRedrawCanvas();
+      // this.delayRedrawCanvas();
     },
     onCavasDragStop(x, y) {
       // Update left and top in panel
       this.top = y;
       this.$store.commit("changeAsciiCanvasState", { x, y });
-      this.delayRedrawCanvas();
+      // this.delayRedrawCanvas();
     },
     onCanvasDrag(x, y) {
       this.top = y;
-      this.delayRedrawCanvas();
+      // this.delayRedrawCanvas();
     },
     // Mouse Up, Down and Move
     canvasMouseUp() {
@@ -502,7 +528,13 @@ export default {
           break;
       }
 
-      this.delayRedrawCanvas();
+
+      // this.tempBlocks = {
+      //   new: [],
+      //   old: [],
+      // }
+
+      
     },
     canvasMouseDown() {
       if (this.isDefault) return;
@@ -651,8 +683,8 @@ export default {
       if (this.redraw) {
         this.redraw = false;
         requestAnimationFrame(() => {
-          this.redraw = true;
           this.redrawCanvas();
+          this.redraw = true;
         });
       }
     },

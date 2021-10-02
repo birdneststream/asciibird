@@ -1,6 +1,7 @@
 <template>
   <div id="app">
     <NewAscii />
+    <Options />
     <EditAscii v-if="asciibirdMeta.length" />
     <PasteAscii />
 
@@ -49,6 +50,13 @@
         >
           Close Ascii
         </li>
+        <li
+          @click="$store.commit('openModal', 'options')"
+          class="ml-1 border-b"
+        >
+          Options
+        </li>
+
         <li @click="startImport('mirc')" class="ml-1">Import mIRC from File</li>
         <li
           @click="startExport('file')"
@@ -82,7 +90,6 @@
           Save Asciibird State
         </li>
         <li @click="startImport('asb')" class="ml-1">Load Asciibird State</li>
-        <li @click="clearCache()" class="ml-1">Reset State</li>
       </ul>
     </context-menu>
 
@@ -204,6 +211,7 @@ import ColourPicker from "./components/parts/ColourPicker.vue";
 import ContextMenu from "./components/parts/ContextMenu.vue";
 
 import NewAscii from "./components/modals/NewAscii.vue";
+import Options from "./components/modals/Options.vue";
 import EditAscii from "./components/modals/EditAscii.vue";
 import PasteAscii from "./components/modals/PasteAscii.vue";
 
@@ -249,6 +257,7 @@ export default {
     BrushPreview,
     KeyboardShortcuts,
     LayersLibrary,
+    Options
   },
   name: "Dashboard",
   data: () => ({
@@ -281,9 +290,9 @@ export default {
         this.currentTool.icon ?? "mouse-pointer",
       ];
     },
-    options() {
-      return this.$store.getters.options;
-    },
+    // options() {
+    //   return this.$store.getters.options;
+    // },
     canFg() {
       return this.$store.getters.isTargettingFg;
     },
@@ -485,10 +494,6 @@ export default {
             this.$store.commit("closeTab", key);
           }
         });
-    },
-    clearCache() {
-      localStorage.clear();
-      window.location.href = "/";
     },
     captureMouse(event) {
       this.dashboardX = event.pageX;

@@ -26,6 +26,7 @@ export default new Vuex.Store({
       newAscii: false,
       editAscii: false,
       pasteAscii: false,
+      options: false,
     },
     isKeyboardDisabled: false,
     // The various options of ASCIIBIRD will eventually
@@ -33,6 +34,10 @@ export default new Vuex.Store({
     options: {
       defaultBg: 1,
       defaultFg: 0,
+      renderOffScreen: true,
+      undoLimit: 50,
+      tabLimit: 12,
+      
     },
     // Current tab user is viewing
     tab: 0,
@@ -476,6 +481,11 @@ export default new Vuex.Store({
           state.modalState.pasteAscii = true;
           state.isKeyboardDisabled = true;
           break;
+
+        case 'options':
+          state.modalState.options = true;
+          state.isKeyboardDisabled = true;
+          break;
       }
     },
     closeModal(state, type) {
@@ -492,6 +502,11 @@ export default new Vuex.Store({
 
         case 'paste-ascii':
           state.modalState.pasteAscii = false;
+          state.isKeyboardDisabled = false;
+          break;
+
+        case 'options':
+          state.modalState.options = false;
           state.isKeyboardDisabled = false;
           break;
       }
