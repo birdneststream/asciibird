@@ -66,6 +66,8 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 * Keyboard shortcuts can be pressed at the same time which makes bugs for undo and redo if you aren't careful!
 * Circle brush (works okay for odd width and height numbers)
 * Importer could be re-written with regex
+* Drag ascii canvas then right click and it gets stuck
+* That inverted black / white bug when exporting, happens if fg or bg is null
 
 * Having more than a few layers depending on ascii size will slow things down, until the `fillNullBlocks` is refactored.
  * CHUNKED DIFF ENGINE

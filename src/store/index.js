@@ -37,7 +37,7 @@ export default new Vuex.Store({
       renderOffScreen: true,
       undoLimit: 50,
       tabLimit: 12,
-      fps: 30,
+      fps: 50,
     },
     // Current tab user is viewing
     tab: 0,

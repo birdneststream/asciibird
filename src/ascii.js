@@ -511,11 +511,11 @@ export const exportMirc = () => {
         } else {
 
           if (curBlock.bg === null && curBlock.fg !== null) {
-            pushString = `\u0003\u0003${zeroPad(curBlock.fg,2,)}`;
+            pushString = `\u0003\u0003${zeroPad(curBlock.fg, 2)}`;
           }
 
           if (curBlock.bg !== null && curBlock.fg !== null) {
-            pushString = `\u0003${zeroPad(curBlock.fg,2,)},${zeroPad(curBlock.bg, 2)}`;
+            pushString = `\u0003${zeroPad(curBlock.fg, 2)},${zeroPad(curBlock.bg, 2)}`;
           }
 
           output.push(pushString);
@@ -788,9 +788,7 @@ export const mergeLayers = function (blocks = null) {
     }
   }
 
-  return {
-    ...mergedLayers
-  };
+  return mergedLayers;
 }
 
 

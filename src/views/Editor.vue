@@ -30,9 +30,9 @@
           class="canvastools"
           :width="currentAsciiWidth * blockWidth"
           :height="currentAsciiHeight * blockHeight"
-          @mousemove="canvasMouseMove"
-          @mousedown="canvasMouseDown"
-          @mouseup="canvasMouseUp"
+          @mousemove.left="canvasMouseMove"
+          @mousedown.left="canvasMouseDown"
+          @mouseup.left="canvasMouseUp"
           @touchmove="canvasMouseMove"
           @touchend="canvasMouseDown"
           @touchstart="canvasMouseUp"
@@ -160,7 +160,7 @@ export default {
       return this.$store.getters.currentChar;
     },
     isTextEditing() {
-      return this.currentTool.name === "text" || false;
+      return this.currentTool.name === "text";
     },
     isTextEditingValues() {
       return (
@@ -168,13 +168,13 @@ export default {
       );
     },
     isSelecting() {
-      return this.currentTool.name === "select" || false;
+      return this.currentTool.name === "select";
     },
     isDefault() {
-      return this.currentTool.name === "default" || false;
+      return this.currentTool.name === "default";
     },
     isBrushing() {
-      return this.currentTool.name === "brush" || false;
+      return this.currentTool.name === "brush";
     },
     isSelected() {
       return (
@@ -315,7 +315,7 @@ export default {
       this.$emit("selecting", val);
     },
     yOffset() {
-      // this.delayRedrawCanvas();
+      this.delayRedrawCanvas();
     },
     // asciiBlockAtXy(val, old) {
 
@@ -445,6 +445,7 @@ export default {
 
           // Experimental code to not rows blocks off screen
           if (
+            this.options.renderOffScreen &&
             this.top !== false &&
             !this.checkVisible(this.top + canvasY - this.yOffset)
           ) {
@@ -505,6 +506,8 @@ export default {
       // Update left and top in panel
       this.top = y;
       this.$store.commit("changeAsciiCanvasState", { x, y });
+
+      this.delayRedrawCanvas()
     },
     onCanvasDrag(x, y) {
       this.top = y;
