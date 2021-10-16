@@ -5,5 +5,5 @@ module.exports = {
     extract: false
   },
 
-  publicPath: ''
+  publicPath: '/~jewbird/'
 };

@@ -27,6 +27,7 @@ export default new Vuex.Store({
       editAscii: false,
       pasteAscii: false,
       options: false,
+      overlay: false,
     },
     isKeyboardDisabled: false,
     // The various options of ASCIIBIRD will eventually
@@ -113,6 +114,9 @@ export default new Vuex.Store({
     changeTab(state, payload) {
       state.tab = payload;
       document.title = `asciibird - ${state.asciibirdMeta[payload].title}`;
+    },
+    updateImageOverlay(state, payload) {
+      state.asciibirdMeta[state.tab].imageOverlay = payload;
     },
     changeDebugPanelState(state, payload) {
       state.debugPanelState = payload;
@@ -486,6 +490,11 @@ export default new Vuex.Store({
           state.modalState.options = true;
           state.isKeyboardDisabled = true;
           break;
+
+        case 'overlay':
+          state.modalState.overlay = true;
+          state.isKeyboardDisabled = true;
+          break;
       }
     },
     closeModal(state, type) {
@@ -507,6 +516,11 @@ export default new Vuex.Store({
 
         case 'options':
           state.modalState.options = false;
+          state.isKeyboardDisabled = false;
+          break;
+
+        case 'overlay':
+          state.modalState.overlay = false;
           state.isKeyboardDisabled = false;
           break;
       }
@@ -564,6 +578,7 @@ export default new Vuex.Store({
       }
     },
     selectedLayer: (state) => state.asciibirdMeta[state.tab].selectedLayer,
+    imageOverlay: (state) => state.asciibirdMeta[state.tab].imageOverlay,
     asciibirdMeta: (state) => state.asciibirdMeta,
     nextTabValue: (state) => state.asciibirdMeta.length,
     brushSizeHeight: (state) => state.toolbarState.brushSizeHeight,

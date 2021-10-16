@@ -71,7 +71,7 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 
 * Having more than a few layers depending on ascii size will slow things down, until the `fillNullBlocks` is refactored.
  * CHUNKED DIFF ENGINE
-
+ 
 * Messing with deleting layers, if you somehow have a layer that isn't selected, it'll be buggy. This is hard to do.
 
 ## Focusing on Now / Roadmap

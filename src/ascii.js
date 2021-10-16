@@ -251,6 +251,15 @@ export const parseMircAscii = async (content, title) => {
     }],
     history: [],
     redo: [],
+    imageOverlay: {
+      url: null,
+      opacity: 95,
+      position: 'centered',
+      size: 100,
+      repeatx: true,
+      repeaty: true,
+      visible: false,
+    },
     x: blockWidth * 35, // the dragable ascii canvas x
     y: blockHeight * 2, // the dragable ascii canvas y
     selectedLayer: 0,
@@ -451,6 +460,15 @@ export const createNewAscii = (forms) => {
       width: forms.createAscii.width,
       height: forms.createAscii.height,
     }],
+    imageOverlay: {
+      url: null,
+      opacity: 95,
+      position: 'centered',
+      size: 100,
+      repeatx: true,
+      repeaty: true,
+      visible: false,
+    },
     selectedLayer: 0,
   };
 

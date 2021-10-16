@@ -1,9 +1,10 @@
 <template>
   <div id="app">
     <NewAscii />
-    <Options />
+    <Options v-if="asciibirdMeta.length" />
     <EditAscii v-if="asciibirdMeta.length" />
     <PasteAscii />
+    <ImageOverlay v-if="asciibirdMeta.length" />
 
     <KeyboardShortcuts
       :selected-blocks="selectedBlocks"
@@ -212,6 +213,7 @@ import ContextMenu from "./components/parts/ContextMenu.vue";
 
 import NewAscii from "./components/modals/NewAscii.vue";
 import Options from "./components/modals/Options.vue";
+import ImageOverlay from "./components/modals/ImageOverlay.vue";
 import EditAscii from "./components/modals/EditAscii.vue";
 import PasteAscii from "./components/modals/PasteAscii.vue";
 
@@ -257,7 +259,8 @@ export default {
     BrushPreview,
     KeyboardShortcuts,
     LayersLibrary,
-    Options
+    Options,
+    ImageOverlay
   },
   name: "Dashboard",
   data: () => ({

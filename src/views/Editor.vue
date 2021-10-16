@@ -15,11 +15,15 @@
         @dragstop="onCavasDragStop"
         :x="currentAscii.x"
         :y="currentAscii.y"
+        
       >
+        <canvas id="overlay-image" :style="imageOverlayStyle" :width="currentAsciiWidth * blockWidth" :height="currentAsciiHeight * blockHeight"></canvas>
+      
         <canvas
           ref="canvas"
           id="canvas"
           class="canvas"
+          :style="canvasTransparent"
           :width="currentAsciiWidth * blockWidth"
           :height="currentAsciiHeight * blockHeight"
         />
@@ -37,6 +41,8 @@
           @touchend="canvasMouseDown"
           @touchstart="canvasMouseUp"
         />
+
+        
       </vue-draggable-resizable>
     </div>
   </div>
@@ -54,7 +60,6 @@ import {
   getBlocksWidth,
   checkVisible,
   mergeLayers,
-  cyrb53,
 } from "../ascii";
 
 export default {
@@ -238,6 +243,15 @@ export default {
     currentAsciiHeight() {
       return this.currentSelectedLayer.height;
     },
+    imageOverlay() {
+      return this.$store.getters.imageOverlay;
+    },
+    imageOverlayStyle() {
+      return this.imageOverlay.visible ? `background-image: url('${this.imageOverlay.url}'); background-position: center; background-size: 100%; opacity: ${this.imageOverlay.opacity/100}; z-index: -1; position: absolute;` : 'position: absolute;'
+    },
+    canvasTransparent() {
+      return this.imageOverlay.visible ? 'opacity: 0.6;' : 'opacity: 1;'
+    }
   },
   watch: {
     currentAscii(val, old) {
@@ -500,7 +514,6 @@ export default {
 
       this.$refs.canvasdrag.width = width;
       this.$refs.canvasdrag.height = height;
-
     },
     onCavasDragStop(x, y) {
       // Update left and top in panel

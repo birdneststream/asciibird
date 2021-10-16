@@ -21,6 +21,44 @@
     <hr />
 
     <div class="w-full bg-white rounded-lg shadow">
+      <ul class="divide-y-2 divide-gray-100 mb-2">
+          <div class="flex p-1">
+            
+              <t-button
+                type="button"
+                class="rounded-xl"
+                @click="updateImageOverlay"
+              >
+                <font-awesome-icon
+                  :icon="['fas', imageOverlay.visible ? 'eye' : 'eye-slash']"
+                /> </t-button
+              >
+                <div class="w-full" @dblclick="showOverlayModal">
+                  <div class="flex text-right" >
+                    <div class="w-full">
+                      <t-card class="w-full pl-2">
+                        <span>{{
+                          imageOverlayUrl ||  'Image Overlay'
+                          
+                        }}</span>
+                      </t-card>
+                    </div>
+
+                  </div>
+                </div>
+            
+
+
+          </div>
+
+      </ul>
+
+      <ul class="mt-1 mb-2">
+        <li></li>
+      </ul>
+
+      
+
       <ul class="divide-y-2 divide-gray-100 reverseorder">
         <li
           :class="`p-1 ${selectedLayerClass(key)}`"
@@ -110,6 +148,12 @@ export default {
     toolbarState() {
       return this.$tore.getters.toolbarState;
     },
+    imageOverlay() {
+      return this.$store.getters.imageOverlay || false;
+    },
+    imageOverlayUrl() {
+      return this.imageOverlay.url ? this.imageOverlay.url.split("/").pop() : '';
+    }
   },
   watch: {
     selectedLayer() {
@@ -198,6 +242,18 @@ export default {
     removeLayer(key) {
       this.$store.commit("removeLayer", key);
     },
+    showOverlayModal() {
+      console.log("Test")
+      this.$store.commit('openModal', 'overlay');
+    },
+    // Image overlay
+    updateImageOverlay() {      
+      let overlay = { ... this.imageOverlay }
+      overlay.visible = ! overlay.visible
+      this.$store.commit("updateImageOverlay", overlay);
+    },
+
+
   },
 };
 </script>
