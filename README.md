@@ -40,6 +40,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
 * Undo and redo with ctrl + z and ctrl + y, undos are set to a limit of 50 at the moment.
 * Fg, Bg and Char boxes to filter when using certain tools
   * For example filling with Char unchecked will ignore characters when filling
+* Image overlay to trace images  
 * Toolbar containing
   * Select
   * Text mode
@@ -81,7 +82,6 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 * More Context Menus (right click menu)
   * Brushes Canvas right click
   * ASCII right click
-* Image overlay for trace mode
 * Review encodings check on file import - UTF8 vs Latin something
 * Revise the blocks system to only store what's changed
 
@@ -92,6 +92,7 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 
 # Fixed / Finished
 
+* Image overlay for trace mode
 * Cannot manually input brush sizes because keyboard shortcuts is stealing focus
 * If you open a modal and refresh the page it's stuck as opened inside the state, and you cannot open it again
 * Toolbars and panels follow when scrolling down

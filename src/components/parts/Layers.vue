@@ -33,10 +33,10 @@
                   :icon="['fas', imageOverlay.visible ? 'eye' : 'eye-slash']"
                 /> </t-button
               >
-                <div class="w-full" @dblclick="showOverlayModal">
+                <div class="w-full p-1" @click="showOverlayModal">
                   <div class="flex text-right" >
                     <div class="w-full">
-                      <t-card class="w-full pl-2">
+                      <t-card class="w-full pl-2 hover:bg-gray-300 cursor-pointer">
                         <span>{{
                           imageOverlayUrl ||  'Image Overlay'
                           
@@ -91,8 +91,8 @@
             <div class="w-full" @click="changeLayer(key)">
               <div class="flex text-right">
                 <div class="w-full">
-                  <t-card class="w-full">
-                    <span @dblclick="showLayerRename(key, layer.label)">{{
+                  <t-card class="w-full hover:bg-gray-300 cursor-pointer">
+                    <span @click="showLayerRename(key, layer.label)">{{
                       layer.label
                     }}</span>
                   </t-card>

@@ -259,6 +259,7 @@ export const parseMircAscii = async (content, title) => {
       repeatx: true,
       repeaty: true,
       visible: false,
+      stretched: false,
     },
     x: blockWidth * 35, // the dragable ascii canvas x
     y: blockHeight * 2, // the dragable ascii canvas y
@@ -468,6 +469,7 @@ export const createNewAscii = (forms) => {
       repeatx: true,
       repeaty: true,
       visible: false,
+      stretched: false,
     },
     selectedLayer: 0,
   };

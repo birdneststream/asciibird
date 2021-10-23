@@ -7,9 +7,9 @@
     @closed="$store.commit('closeModal', 'overlay')"
   >
     <template v-slot:default>
-    <div class="flex">
-
-        <span class="text-sm">URL</span>
+    <div >
+        <span class="text-sm">URL <br><small>Note: ASCIIBIRD only supports URL images</small></span>
+        
         <t-input
             type="text"
             name="url"
@@ -19,6 +19,44 @@
     </div>
       
       
+      <div class="flex">
+        <label class="ml-1 w-1/3">
+          <t-checkbox
+            class="form-checkbox m-1"
+            name="visible"
+            v-model="imageOverlay.visible"
+          />
+          <span class="text-sm">Visible</span>
+        </label>
+
+        <label class="ml-1 w-1/3">
+          <span class="text-sm">Transparency</span>
+          <t-input
+            type="number"
+            name="width"
+            v-model="imageOverlay.opacity"
+            min="1"
+            max="100"
+            class="m-1"
+          />
+          </label>
+
+
+          <div class="flex">
+            <label class="flex items-center">
+              <t-radio name="options" :value="true" v-model="imageOverlay.stretched"  />
+              <span class="ml-2 text-sm">Fit to ASCII</span>
+            </label>
+            <label class="flex items-center ml-2">
+              <t-radio name="options" :value="false" v-model="imageOverlay.stretched" />
+              <span class="ml-2 text-sm">Original Size</span>
+            </label>
+          </div>
+
+          
+        
+      </div>
+
       <div class="flex">
         <label class="ml-1 w-1/3">
           <t-checkbox
@@ -38,28 +76,7 @@
           <span class="text-sm">Repeat Y</span>
         </label>
 
-        <label class="ml-1 w-1/3">
-          <t-checkbox
-            class="form-checkbox m-1"
-            name="visible"
-            v-model="imageOverlay.visible"
-          />
-          <span class="text-sm">Visible</span>
-        </label>
 
-        <label class="ml-1 w-1/3">
-            <span class="text-sm">Transparency</span>
-          <t-input
-            type="number"
-            name="width"
-            v-model="imageOverlay.opacity"
-            min="1"
-            max="100"
-            class="m-1"
-          />
-
-          
-        </label>
       </div>
     </template>
 

@@ -247,7 +247,28 @@ export default {
       return this.$store.getters.imageOverlay;
     },
     imageOverlayStyle() {
-      return this.imageOverlay.visible ? `background-image: url('${this.imageOverlay.url}'); background-position: center; background-size: 100%; opacity: ${this.imageOverlay.opacity/100}; z-index: -1; position: absolute;` : 'position: absolute;'
+      let repeat = 'background-repeat: no-repeat;'
+      let stretched = 'background-size: 100%;'
+
+      if (this.imageOverlay.repeatx && this.imageOverlay.repeaty) {
+        repeat = 'background-repeat: repeat;'
+      }
+
+      if (this.imageOverlay.repeatx && !this.imageOverlay.repeaty) {
+        repeat = 'background-repeat: repeat-x;'
+      }
+
+      if (!this.imageOverlay.repeatx && this.imageOverlay.repeaty) {
+        repeat = 'background-repeat: repeat-y;'
+      }
+
+      if (this.imageOverlay.stretched) {
+        stretched = 'background-size: 100%;';
+      } else {
+        stretched = ''
+      }
+
+      return this.imageOverlay.visible ? `background-image: url('${this.imageOverlay.url}'); ${stretched} ${repeat} opacity: ${this.imageOverlay.opacity/100}; z-index: -1; position: absolute;` : 'position: absolute;'
     },
     canvasTransparent() {
       return this.imageOverlay.visible ? 'opacity: 0.6;' : 'opacity: 1;'
