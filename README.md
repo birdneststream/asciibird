@@ -65,6 +65,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
 ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. Refreshing the page seems to fix most strange things.
 
 * Keyboard shortcuts can be pressed at the same time which makes bugs for undo and redo if you aren't careful!
+* Some BS on the layers rename stops shit working sometimes ?!!?!?!?!
 * Circle brush (works okay for odd width and height numbers)
 * Importer could be re-written with regex
 * Drag ascii canvas then right click and it gets stuck
@@ -73,8 +74,6 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 * Having more than a few layers depending on ascii size will slow things down, until the `fillNullBlocks` is refactored.
  * CHUNKED DIFF ENGINE
  
-* Messing with deleting layers, if you somehow have a layer that isn't selected, it'll be buggy. This is hard to do.
-
 ## Focusing on Now / Roadmap
 
 * Modals to add

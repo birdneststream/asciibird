@@ -92,7 +92,7 @@
               <div class="flex text-right">
                 <div class="w-full">
                   <t-card class="w-full hover:bg-gray-300 cursor-pointer">
-                    <span @click="showLayerRename(key, layer.label)">{{
+                    <span @dblclick="showLayerRename(key, layer.label)">{{
                       layer.label
                     }}</span>
                   </t-card>
