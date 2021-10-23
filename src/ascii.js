@@ -538,6 +538,10 @@ export const exportMirc = () => {
             pushString = `\u0003${zeroPad(curBlock.fg, 2)},${zeroPad(curBlock.bg, 2)}`;
           }
 
+          if (curBlock.bg !== null && curBlock.fg === null) {
+            pushString = `\u000300,${zeroPad(curBlock.bg, 2)}`;
+          }
+
           output.push(pushString);
         }
 
