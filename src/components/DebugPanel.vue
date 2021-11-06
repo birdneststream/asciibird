@@ -53,12 +53,21 @@
         <span class="ml-5"> Size: {{ asciiStats.sizeCompressed }} ({{ asciiStats.sizeUncompressed }} / {{ asciiStats.sizePercentage }}%) </span> <br>
 
         <span class="ml-5"> State Size: {{ asciiStats.stateSize }}</span> <br>
+
+
+        <div class="mb-4 border-t-2">
+            <div class="mt-1 p-2 bg-red-300 rounded-md cursor-pointer" @click="copyUriToClipboard()">Copy URI Encoded String</div>
+        </div>
+
+
+
       </t-card>
     </vue-draggable-resizable>
   </div>
 </template>
 <script>
-import { toolbarIcons, mircColours99, blockWidth, blockHeight } from '../ascii';
+import { toolbarIcons, mircColours99, blockWidth, blockHeight, exportMirc } from '../ascii';
+import LZString from "lz-string";
 
 export default {
   created() {
@@ -171,6 +180,22 @@ export default {
   },
   watch: {},
   methods: {
+    copyUriToClipboard() {
+        let ascii = LZString.compressToEncodedURIComponent(JSON.stringify(this.currentAsciiBlocks));
+
+        this.$copyText(ascii).then(
+          (e) => {
+            this.$toasted.show("Copied URI encoded ASCII for Splash Ascii!", {
+              type: "success",
+            });
+          },
+          (e) => {
+            this.$toasted.show("Error when copying URI encoded ASCII!", {
+              type: "error",
+            });
+          }
+        );
+    },
     onResize(x, y, w, h) {
       this.panel.x = x;
       this.panel.y = y;

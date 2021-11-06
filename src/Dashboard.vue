@@ -57,6 +57,7 @@
         <li
           @click="$store.commit('openModal', 'options')"
           class="ml-1 border-b"
+          v-if="asciibirdMeta.length"
         >
           Options
         </li>
@@ -193,8 +194,8 @@
         @mouseup.right="openContextMenu"
         @contextmenu.prevent
       >
-        <h1 class="text-4xl">ASCIIBIRD</h1>
-        <h3>Right click to start</h3>
+        <!-- <h1 class="text-4xl">ASCIIBIRD</h1>
+        <h3>Right click to start</h3> -->
 
         <BrushCanvas :blocks="splashAscii" />
       </div>
