@@ -113,8 +113,10 @@ export default {
       new: [],
       old: [],
     },
+
+    isUsingKeyboard: false,
   }),
-  props: ["updateCanvas", "yOffset"],
+  props: ["updateCanvas", "yOffset", "canvasxy", "brush"],
   computed: {
     canvasRef() {
       return this.$refs.canvas;
@@ -180,6 +182,9 @@ export default {
     },
     isBrushing() {
       return this.currentTool.name === "brush";
+    },
+    isErasing() {
+      return this.currentTool.name === "eraser";
     },
     isSelected() {
       return (
@@ -377,6 +382,22 @@ export default {
     // }
 
     // },
+    // canvasxy(val,old) {
+    //   if ((this.isBrushing || this.isErasing) && isUsingKeyboard) {
+    //     this.x = val.x;
+    //     this.y = val.y;
+
+    //     let e = {offsetX: (this.x), offsetY: (this.y)}
+    //     this.canvasMouseMove(e)
+    //   }
+    // },
+    // brush(val, old) {
+    //   console.log({triggerbrush: val})
+    //   if (val !== old) {
+    //     this.canvasMouseDown()
+    //     this.canvasMouseUp()
+    //   }
+    // }
   },
   methods: {
     warnInvisibleLayer() {
@@ -1350,6 +1371,14 @@ export default {
       );
     },
     fillTool(fillBlocks, y, x, current, eraser) {
+      if (y >= Math.floor(this.canvas.height / blockHeight)) {
+        return;
+      }
+
+      if (x >= Math.floor(this.canvas.width / blockWidth)) {
+        return;
+      }
+
       if (fillBlocks[y] === undefined || fillBlocks[y][x] === undefined) {
         return;
       }

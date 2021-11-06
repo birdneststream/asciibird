@@ -9,8 +9,6 @@ import {
   getBlocksWidth,
   create2DArray,
   emptyBlock,
-  maxBrushHistory,
-  maxUndoHistory,
   mergeLayers
 } from "../ascii";
 
@@ -37,6 +35,7 @@ export default new Vuex.Store({
       defaultFg: 0,
       renderOffScreen: true,
       undoLimit: 50,
+      brushLimit: 50,
       tabLimit: 12,
       fps: 50,
     },
@@ -110,6 +109,9 @@ export default new Vuex.Store({
   mutations: {
     changeState(state, payload) {
       Object.assign(state, payload);
+    },
+    updateOptions(state, payload) {
+      state.options = { ... payload};
     },
     changeTab(state, payload) {
       state.tab = payload;
@@ -202,7 +204,7 @@ export default new Vuex.Store({
       state.toolbarState.mirrorY = payload.y;
     },
     updateAsciiBlocks(state, payload, skipUndo = false) {
-      if (state.asciibirdMeta[state.tab].history.length >= maxUndoHistory) {
+      if (state.asciibirdMeta[state.tab].history.length >= state.options.undoLimit) {
         state.asciibirdMeta[state.tab].history.shift()
       }
 
@@ -428,8 +430,7 @@ export default new Vuex.Store({
     // Brush Library
     pushBrushHistory(state, payload) {
       // Check and remove duplicate brushes based on hash value  
-      console.log(state.brushHistory.length, maxBrushHistory)
-      if (state.brushHistory.length >= maxBrushHistory) {
+      if (state.brushHistory.length >= state.options.brushLimit) {
         state.brushHistory.pop();
       }
 

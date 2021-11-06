@@ -64,8 +64,8 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. Refreshing the page seems to fix most strange things.
 
+* Redo ctrl Y is COOKED (not working)
 * Keyboard shortcuts can be pressed at the same time which makes bugs for undo and redo if you aren't careful!
-* Some BS on the layers rename stops shit working sometimes ?!!?!?!?!
 * Circle brush (works okay for odd width and height numbers)
 * Importer could be re-written with regex
 * Drag ascii canvas then right click and it gets stuck
@@ -73,38 +73,17 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 
 * Having more than a few layers depending on ascii size will slow things down, until the `fillNullBlocks` is refactored.
  * CHUNKED DIFF ENGINE
- 
+
 ## Focusing on Now / Roadmap
 
-* Modals to add
-  * Asciibird options / Options modal from skgs PR
+* Arrow keys and space to use brush, eraser, 
 * More Context Menus (right click menu)
   * Brushes Canvas right click
   * ASCII right click
+* Improve the char window to have a close button and border/bg
 * Review encodings check on file import - UTF8 vs Latin something
 * Revise the blocks system to only store what's changed
 
-## User Feedback Requests
-
-* Move brush with keys and space to paint
-* Improve the character panel, group chars
-
-# Fixed / Finished
-
-* Image overlay for trace mode
-* Cannot manually input brush sizes because keyboard shortcuts is stealing focus
-* If you open a modal and refresh the page it's stuck as opened inside the state, and you cannot open it again
-* Toolbars and panels follow when scrolling down
-* Experimental code to only render blocks visible on screen
-* Rename Layers
-* Some work around layers and transparent blocks, skip drawing transparent bg block on top layers. Or get bg from lowest layer if bg is null on higher layers.
-* The code that hides blocks off screen wont work if you scroll down, however it will work if you drag the canvas upward
-* Exporter will default transparent bg to black by default, which wont for some asciis
-* Review escape and enter keys on dialogs and modals
-* Select cannot select entire ASCII, is off by one at the end
-* Fill tool use fg or char as bounds
-* z indexing for toolbars and stuff is ANNOYING
-* Make grid faster (gonna do that later, maybe never)
 # Keyboard Shortcuts
 
 ## ASCII Editing

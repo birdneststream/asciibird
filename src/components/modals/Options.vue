@@ -10,17 +10,55 @@
 
     <template v-slot:default>
 
-        <div>
+        <div class="mt-6 lg:mt-0 rounded shadow bg-white">
 
-            <ul>
-                <li> Redraw canvas speed? </li>
-                <li>Render blocks off screen</li>
+          <div class="mb-4">
+            <label class="ml-1">
+            <span class="text-sm">FPS</span>
+              <vue-slider v-model="options.fps" @dragend="updateOptions" :min="1" :max="200"></vue-slider>
+            </label>
+          </div>
 
-                <li>Undo history?</li>
+          <div class="mb-4">
+            <label class="ml-1">
+            <span class="text-lg">Render Offscreen Blocks</span><br />
+              <t-checkbox
+                class="form-checkbox m-1"
+                name="renderOffScreen"
+                v-model="options.renderOffScreen"
+                @change="updateOptions"
+              />
+            <small>ASCIIBIRD will avoid rendering blocks off screen to speed things up. </small>
+
+            </label>
+          </div>
 
 
-                <div class="mt-3 p-2 bg-red-300 rounded-md cursor-pointer" @click="clearCache()">Clear and Reset ASCIIBIRD</div>
-            </ul>
+          <div class="mb-4">
+            <label class="ml-1">
+            <span class="text-sm">Brush Histroy Limit</span>
+              <vue-slider v-model="options.brushLimit" @dragend="updateOptions" :min="1" :max="maxBrushHistory"></vue-slider>
+            </label>
+          </div>
+
+
+          <div class="mb-4">
+            <label class="ml-1">
+            <span class="text-sm">Undo/Redo Histroy Limit</span>
+              <vue-slider v-model="options.undoLimit" @dragend="updateOptions" :min="1" :max="maxUndoHistory"></vue-slider>
+            </label>
+          </div>
+
+
+          <div class="mb-4 border-t-2">
+            <label class="ml-1">
+            <span class="text-lg">Reset ASCIIBIRD state</span><br />
+            <small>This will clear all data and start asciibird from a fresh state.</small><br />
+              <div class="mt-1 p-2 bg-red-300 rounded-md cursor-pointer" @click="clearCache()">Clear and Reset ASCIIBIRD</div>
+            </label>
+          </div>
+                
+
         </div>
 
     </template>
@@ -41,7 +79,6 @@
         <t-button
           type="button"
           class="p-2"
-          @click="initiateNewAscii()"
         >
           Ok
         </t-button>
@@ -51,9 +88,16 @@
 </template>
 
 <script>
+import vueSlider from 'vue-slider-component'
+import { maxBrushHistory,
+          maxUndoHistory,
+          tabLimit } from './../../ascii.js'
 
 export default {
   name: "Options",
+  components: {
+    vueSlider,
+  },
   created() {},
   mounted() {
     if (this.showOptionsModal) {
@@ -63,17 +107,38 @@ export default {
     }
   },  
   data: () => ({
-    forms: {
-      createAscii: {
-        width: 80,
-        height: 30,
-        title: "ascii",
-      },
-    },
+
+    // options: {
+    //   defaultBg: 1,
+    //   defaultFg: 0,
+    //   renderOffScreen: true,
+    //   undoLimit: 50,
+    //   tabLimit: 12,
+    //   fps: 50,
+    // },
+
+    // forms: {
+    //   fps: this.options.fps,
+    //   renderOffScreen: true,
+    //   undoLimit: this.options.undoLimit,
+    //   tabLimit: this.options.tabLimit
+    // },
   }),
   computed: {
     showOptionsModal() {
       return this.$store.getters.modalState.options;
+    },
+    options() {
+      return this.$store.getters.options;
+    },
+    maxBrushHistory() {
+      return maxBrushHistory;
+    },
+    maxUndoHistory() {
+      return maxUndoHistory;
+    },
+    tabLimit() {
+      return tabLimit;
     },
   },
   watch: {
@@ -86,24 +151,27 @@ export default {
         this.close();
       }
     },
+    // options:{
+    //     handler: function(val, old) {
+    //         this.$store.commit(updateOptions, val)
+    //     },
+    //     deep: true
+    // }
   },
   methods: {
     open() {
       this.$modal.show("options-modal");
-      this.forms.createAscii.title = `New ASCII ${
-        this.$store.getters.asciibirdMeta.length + 1
-      }`;
     },
     close() {
       this.$modal.hide("options-modal");
-      this.forms.createAscii.width = 80;
-      this.forms.createAscii.height = 30;
-      this.forms.createAscii.title = "New ASCII";
     },
     clearCache() {
       localStorage.clear();
       window.location.reload()
     },
+    updateOptions() {
+      this.$store.commit("updateOptions", { ...this.options})
+    }
   },
 };
 </script>

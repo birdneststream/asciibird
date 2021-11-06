@@ -19,14 +19,20 @@ export default {
     window.removeEventListener("keydown", this.keyListener.bind(this));
   },
   created() {
+    console.log(this.canvasX);
     this.keyListener = function (e) {
       // Stop blocking input when modals are open
       // Whatever this char "'\0'" is it'd occur even without pressing any keys
       // This fixes it
-      if (e.key === "\0" || this.isInputtingBrushSize || this.isKeyboardDisabled || this.isShowingDialog || this.isModalOpen) {
-
+      if (
+        e.key === "\0" ||
+        this.isInputtingBrushSize ||
+        this.isKeyboardDisabled ||
+        this.isShowingDialog ||
+        this.isModalOpen
+      ) {
         if (e.key === "Enter" && this.isShowingDialog) {
-          this.$dialog.hide('dialog-posthttp');
+          this.$dialog.hide("dialog-posthttp");
           return;
         }
 
@@ -68,7 +74,10 @@ export default {
       const altKey = e.altKey;
 
       // Used for text typing
-      if (this.isTextEditing && this.haveOpenTabs) {
+      if (
+        (this.isTextEditing) &&
+        this.haveOpenTabs
+      ) {
         this.canvasKeyDown(e.key);
         return;
       }
@@ -399,8 +408,20 @@ export default {
   data: () => ({
     isPressed: false,
   }),
-  props: ["selectedBlocks", "textEditing", "selecting", "isInputtingBrushSize", "showingPostUrl", "isShowingDialog"],
+  props: [
+    "selectedBlocks",
+    "textEditing",
+    "selecting",
+    "isInputtingBrushSize",
+    "showingPostUrl",
+    "isShowingDialog",
+    "canvasX",
+    "canvasY",
+  ],
   computed: {
+    canvasXy() {
+      return {x: this.canvasX, y: this.canvasY};
+    },
     isModalOpen() {
       return this.$store.getters.isModalOpen;
     },
@@ -448,6 +469,9 @@ export default {
     },
     isBrushing() {
       return this.currentTool.name === "brush";
+    },
+    isEraser() {
+      return this.currentTool.name === "eraser";
     },
     isSelected() {
       return (
@@ -504,7 +528,7 @@ export default {
     },
     isKeyboardDisabled() {
       return this.$store.getters.isKeyboardDisabled;
-    }
+    },
   },
   methods: {
     undo() {
@@ -514,6 +538,43 @@ export default {
       this.$store.commit("redoBlocks");
     },
     canvasKeyDown(char) {
+      // if (this.isBrushing || this.isEraser) {
+      //   switch (char) {
+      //     // Move the text indicator around with the arrow keys
+      //     case "ArrowUp":
+      //       if (this.currentAsciiLayerBlocks[this.canvasXy.y - 1][this.canvasXy.x]) {
+      //         this.canvasXy.y -= 1;
+      //       }
+      //       break;
+
+      //     case "ArrowDown":
+      //       if (this.currentAsciiLayerBlocks[this.canvasXy.y + 1][this.canvasXy.x]) {
+      //         this.canvasXy.y += 1;
+      //       }
+      //       break;
+
+      //     case "ArrowLeft":
+      //       if (this.currentAsciiLayerBlocks[this.canvasXy.y][this.canvasXy.x - 1]) {
+      //         this.canvasXy.x -= 1;
+      //       }
+      //       break;
+
+      //     case "ArrowRight":
+      //       if (this.currentAsciiLayerBlocks[this.canvasXy.y][this.canvasXy.x + 1]) {
+      //         this.canvasXy.x += 1;
+      //       }
+      //       break;
+
+      //     case " ":
+      //       this.$emit("triggerbrush");
+      //       return;
+      //       break;
+      //   }
+
+      //   this.$emit("arrowkeys", this.canvasXy);
+
+      // }
+      
       if (this.isTextEditing) {
         if (
           this.currentAsciiLayerBlocks[this.textEditing.startY] &&

@@ -13,6 +13,9 @@
       :is-showing-dialog="isShowingDialog"
       @updatecanvas="updatecanvas"
       :is-inputting-brush-size="this.isInputtingBrushSize"
+      :canvas-x="canvasX"
+      :canvas-y="canvasY"
+      @triggerbrush="triggerbrush"
     />
 
     <t-dialog
@@ -142,6 +145,7 @@
         :update-canvas="updateCanvas"
         @selecting="updateSelecting"
         :y-offset="scrollOffset"
+        :brush="drawBrush"
       />
 
 
@@ -164,7 +168,6 @@
       />
 
       <LayersLibrary :y-offset="scrollOffset" />
-
 
       <CharPicker
         v-if="toolbarState.isChoosingChar"
@@ -279,6 +282,7 @@ export default {
     toolbarString: "top: 0px;",
     lastPostURL: "",
     isShowingDialog: false,
+    drawBrush: false,
   }),
   computed: {
     splashAscii() {
@@ -340,6 +344,9 @@ export default {
     // },
   },
   methods: {
+    triggerbrush() {
+      this.drawBrush = ! this.drawBrush
+    },
     inputtingbrush(val) {
       this.isInputtingBrushSize = val;
     },
