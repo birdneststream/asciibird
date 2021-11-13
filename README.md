@@ -64,26 +64,28 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. Refreshing the page seems to fix most strange things.
 
-* Redo ctrl Y is COOKED (not working)
-* Keyboard shortcuts can be pressed at the same time which makes bugs for undo and redo if you aren't careful!
-* Circle brush (works okay for odd width and height numbers)
 * Importer could be re-written with regex
-* Drag ascii canvas then right click and it gets stuck
 * That inverted black / white bug when exporting, happens if fg or bg is null
 
 * Having more than a few layers depending on ascii size will slow things down, until the `fillNullBlocks` is refactored.
  * CHUNKED DIFF ENGINE
+ * Redo ctrl Y is COOKED (not working) - redo the undo and redo with this new system
 
+* If we add in a toolbar menu this bug maybe fixed,
+ * Keyboard shortcuts can be pressed at the same time which makes bugs for undo and redo if you aren't careful!
+ * https://github.com/motla/vue-file-toolbar-menu
+
+* Drag ascii canvas then right click and it gets stuck - related to vue draggable
 ## Focusing on Now / Roadmap
+
+* Improve the char window to have a close button and border/bg
 
 * Arrow keys and space to use brush, eraser, 
 * More Context Menus (right click menu)
   * Brushes Canvas right click
   * ASCII right click
-* Improve the char window to have a close button and border/bg
-* Review encodings check on file import - UTF8 vs Latin something
-* Revise the blocks system to only store what's changed
 
+* Review encodings check on file import - UTF8 vs Latin something
 # Keyboard Shortcuts
 
 ## ASCII Editing

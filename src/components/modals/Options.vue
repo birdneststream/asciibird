@@ -15,7 +15,7 @@
           <div class="mb-4">
             <label class="ml-1">
             <span class="text-sm">FPS</span>
-              <vue-slider v-model="options.fps" @dragend="updateOptions" :min="1" :max="200"></vue-slider>
+              <vue-slider class="mt-10" v-model="options.fps" @dragend="updateOptions" :min="1" :max="200"></vue-slider>
             </label>
           </div>
 
@@ -37,7 +37,7 @@
           <div class="mb-4">
             <label class="ml-1">
             <span class="text-sm">Brush Histroy Limit</span>
-              <vue-slider v-model="options.brushLimit" @dragend="updateOptions" :min="1" :max="maxBrushHistory"></vue-slider>
+              <vue-slider class="mt-10" v-model="options.brushLimit" @dragend="updateOptions" :min="1" :max="maxBrushHistory"></vue-slider>
             </label>
           </div>
 
@@ -45,7 +45,7 @@
           <div class="mb-4">
             <label class="ml-1">
             <span class="text-sm">Undo/Redo Histroy Limit</span>
-              <vue-slider v-model="options.undoLimit" @dragend="updateOptions" :min="1" :max="maxUndoHistory"></vue-slider>
+              <vue-slider class="mt-10" v-model="options.undoLimit" @dragend="updateOptions" :min="1" :max="maxUndoHistory"></vue-slider>
             </label>
           </div>
 
