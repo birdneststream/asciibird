@@ -23,6 +23,7 @@
     "vue": "^2.6.11",
     "vue-clipboard2": "^0.3.1",
     "vue-draggable-resizable": "^2.3.0",
+    "vue-file-toolbar-menu": "https://github.com/motla/vue-file-toolbar-menu#vue2",
     "vue-slider-component": "^2.8.16",
     "vue-tailwind": "^2.0.0",
     "vue-toasted": "^1.1.28",

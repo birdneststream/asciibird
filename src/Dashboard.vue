@@ -1,5 +1,8 @@
 <template>
   <div id="app">
+    <div> <vue-file-toolbar-menu :content="myMenu" /> </div>
+
+
     <NewAscii />
     <Options v-if="asciibirdMeta.length" />
     <EditAscii v-if="asciibirdMeta.length" />
@@ -113,14 +116,10 @@
 
     <template v-if="asciibirdMeta.length">
       <div
-        class="bg-gray-500 z-40 relative"
+        class="bg-gray-500 relative z-auto"
         ref="tabbar"
         :style="toolbarString"
       >
-        <t-button class="p-1 rounded-xl" @click="openContextMenu">
-          :::
-        </t-button>
-
         <span
           v-for="(value, key) in asciibirdMeta"
           :key="key"
@@ -203,6 +202,12 @@
   </div>
 </template>
 
+<style>
+.bar {
+    background-color: rgba(107, 114, 128) !important;
+}
+</style>
+
 <script>
 import LZString from "lz-string";
 import Toolbar from "./components/Toolbar.vue";
@@ -234,6 +239,8 @@ import {
   splashAscii,
 } from "./ascii";
 
+import VueFileToolbarMenu from 'vue-file-toolbar-menu'
+
 export default {
   async created() {
     // Load from irc watch if present in the URL bar
@@ -264,7 +271,8 @@ export default {
     KeyboardShortcuts,
     LayersLibrary,
     Options,
-    ImageOverlay
+    ImageOverlay,
+    VueFileToolbarMenu
   },
   name: "Dashboard",
   data: () => ({
@@ -284,6 +292,7 @@ export default {
     lastPostURL: "",
     isShowingDialog: false,
     drawBrush: false,
+    happy: false
   }),
   computed: {
     splashAscii() {
@@ -337,6 +346,38 @@ export default {
     currentTab() {
       return this.$store.getters.currentTab;
     },
+
+    myMenu () {
+      return [
+        { 
+          
+        text: "File", menu: [
+          { text: "New ASCII", click: () => this.$store.commit('openModal', 'new-ascii') },
+          { text: "Edit ASCII", click: () => this.$store.commit('openModal', 'edit-ascii') },
+          { text: "Close ASCII", click: () => this.closeTab(this.currentTab) }
+        ],
+
+        },{
+        text: "Options", menu: [
+          { text: "Show Options", click: () => this.$store.commit('openModal', 'options') },
+        ],
+        },{
+        text: "Import", menu: [
+          { text: "mIRC File", click: () => startImport('mirc') },
+          { text: "mIRC Clipboard", click: () => this.$store.commit('openModal', 'paste-ascii') },
+          { text: "ASCIIBIRD State", click: () => this.startImport('asb') },
+        ],
+        },{  
+        text: "Export", menu: [
+          { text: "mIRC File", click: () => this.startExport('file') },
+          { text: "mIRC Clipboard", click: () => this.startExport('clipboard') },
+          { text: "HTTP POST", click: () => this.startExport('post') },
+          { text: "ASCIIBIRD State", click: () => this.exportAsciibirdState() },
+        ],
+
+        }
+      ]
+    }
   },
   watch: {
     // scrollOffset(val) {
