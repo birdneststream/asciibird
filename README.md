@@ -78,9 +78,8 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 * Drag ascii canvas then right click and it gets stuck - related to vue draggable
 ## Focusing on Now / Roadmap
 
-* Improve the char window to have a close button and border/bg
-
 * Arrow keys and space to use brush, eraser, 
+
 * More Context Menus (right click menu)
   * Brushes Canvas right click
   * ASCII right click
@@ -92,7 +91,7 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 
 * Ctrl + Z - Undo
 * Ctrl + Y - Redo
-
+`
 * Ctrl + Shift + C - Save to clipboard
 * Ctrl + Shift + F - Save to txt file
 

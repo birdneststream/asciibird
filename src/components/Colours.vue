@@ -5,7 +5,7 @@
       :style="`background-color: ${mircColours[currentFg]} !important;`"
       class="border-gray-200 w-12 h-12 text-2xl"
       id="currentColourFg"
-      @click="$store.commit('changeIsUpdatingFg', true)"
+      @click="$store.commit('changeIsUpdatingFg', ! toolbarState.isChoosingFg )"
     >
       FG
     </t-button>
@@ -15,7 +15,7 @@
       :style="`background-color: ${mircColours[currentBg]} !important;`"
       class="border-gray-200 w-12 h-12 text-2xl ml-2"
       id="currentColourBg"
-      @click="$store.commit('changeIsUpdatingBg', true)"
+      @click="$store.commit('changeIsUpdatingBg', ! toolbarState.isChoosingBg )"
     >
       BG
     </t-button>
@@ -35,7 +35,7 @@
       :style="`background-color: ${mircColours[currentBg]} !important;color: ${mircColours[currentFg]};`"
       class="border-gray-200 w-12 h-12 text-2xl ml-2"
       id="currentChar"
-      @click="$store.commit('changeIsUpdatingChar', true)"
+      @click="$store.commit('changeIsUpdatingChar', ! toolbarState.isChoosingChar )"
     >
       {{ toolbarState.selectedChar === " " ? "SP" : toolbarState.selectedChar }}
     </t-button>

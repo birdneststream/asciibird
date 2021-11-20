@@ -5,15 +5,7 @@
     :w="400"
     :h="278"
   >
-    <t-card>
-      <t-button
-        type="button"
-        class="border-gray-200 p-1"
-        @click="close()"
-      >
-        X
-      </t-button><br>
-
+    <t-card class="w-full h-full">
       <span
         v-for="(value, keyColours) in mircColours"
         :key="keyColours"

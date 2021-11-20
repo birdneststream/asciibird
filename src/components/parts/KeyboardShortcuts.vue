@@ -48,6 +48,14 @@ export default {
         return;
       }
 
+      // Escape to leave colour or char picker
+      if (e.key === "Escape" && (this.toolbarState.isChoosingChar || this.toolbarState.isChoosingBg || this.toolbarState.isChoosingFg)) {
+          this.$store.commit('changeIsUpdatingFg', false )
+          this.$store.commit('changeIsUpdatingBg', false )
+          this.$store.commit('changeIsUpdatingChar', false )
+        return;
+      }
+
       // Change char when car picker is open
       if (
         this.toolbarState.isChoosingChar &&

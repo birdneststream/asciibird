@@ -119,7 +119,10 @@ export default {
     },
     canvasRef() {
       return this.$refs.brushcanvas;
-    }
+    },
+    gridView() {
+      return this.toolbarState.gridView;
+    },
   },
   watch: {
     brushBlocks() {
@@ -155,6 +158,11 @@ export default {
     blockSizeMultiplier() {
       this.delayRedrawCanvas();
     },
+    gridView(val, old) {
+      if (val !== old) {
+        this.delayRedrawCanvas();
+      }
+    },
   },
   methods: {
     getBlocksWidth(blocks) {
@@ -163,6 +171,33 @@ export default {
     filterNullBlocks(blocks) {
       return filterNullBlocks(blocks);
     },
+    drawGrid() {
+      let ctx = this.ctx;
+      let w = this.canvasRef.width;
+      let h = this.canvasRef.height;
+
+      ctx.beginPath();
+
+      for (var x = 0; x <= w; x += blockWidth) {
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+      }
+      
+      ctx.strokeStyle = "rgba(0, 0, 0, 1)";
+      ctx.lineWidth = 1;
+      ctx.setLineDash([1]);
+      
+      ctx.stroke();
+      
+      ctx.beginPath();
+      for (var y = 0; y <= h; y += blockHeight) {
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+      }
+      
+      ctx.stroke();
+    },
+
     drawPreview() {
       this.ctx.clearRect(0, 0, this.canvasRef.width, this.canvasRef.height);
       this.ctx.fillStyle = this.mircColours[1];
@@ -207,6 +242,13 @@ export default {
             }
           }
         }
+
+
+        if (this.gridView) {
+          this.drawGrid();
+        }
+
+
       }
     },
     delayRedrawCanvas() {
