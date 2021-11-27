@@ -193,12 +193,6 @@
   </div>
 </template>
 
-<style>
-.bar {
-  background-color: rgba(107, 114, 128) !important;
-}
-</style>
-
 <script>
 import LZString from "lz-string";
 import Toolbar from "./components/Toolbar.vue";
