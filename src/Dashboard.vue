@@ -1,7 +1,6 @@
 <template>
   <div id="app">
-    <div> <vue-file-toolbar-menu :content="myMenu" /> </div>
-
+    <div><vue-file-toolbar-menu :content="myMenu" /></div>
 
     <NewAscii />
     <Options v-if="asciibirdMeta.length" />
@@ -26,9 +25,9 @@
       title="Enter URL"
       text="Enter URL for POST command"
       icon="question"
-      :clickToClose=false
-      :showCloseButton=true
-      :disableBodyScroll=true
+      :clickToClose="false"
+      :showCloseButton="true"
+      :disableBodyScroll="true"
       @closed="postHttp()"
     >
       <t-input v-model="lastPostURL" />
@@ -137,7 +136,6 @@
         </span>
       </div>
 
-
       <Editor
         @coordsupdate="updateCoords"
         @selectedblocks="selectedblocks"
@@ -148,7 +146,6 @@
         :brush="drawBrush"
       />
 
-
       <Toolbar :y-offset="scrollOffset" />
       <DebugPanel
         :canvas-x="canvasX"
@@ -157,15 +154,9 @@
         :y-offset="scrollOffset"
       />
 
-      <BrushLibrary
-        v-if="brushLibraryState.visible"
-        :y-offset="scrollOffset"
-      />
+      <BrushLibrary v-if="brushLibraryState.visible" :y-offset="scrollOffset" />
 
-      <BrushPreview
-        @inputtingbrush="inputtingbrush"
-        :y-offset="scrollOffset"
-      />
+      <BrushPreview @inputtingbrush="inputtingbrush" :y-offset="scrollOffset" />
 
       <LayersLibrary :y-offset="scrollOffset" />
 
@@ -204,7 +195,7 @@
 
 <style>
 .bar {
-    background-color: rgba(107, 114, 128) !important;
+  background-color: rgba(107, 114, 128) !important;
 }
 </style>
 
@@ -239,7 +230,7 @@ import {
   splashAscii,
 } from "./ascii";
 
-import VueFileToolbarMenu from 'vue-file-toolbar-menu'
+import VueFileToolbarMenu from "vue-file-toolbar-menu";
 
 export default {
   async created() {
@@ -272,7 +263,7 @@ export default {
     LayersLibrary,
     Options,
     ImageOverlay,
-    VueFileToolbarMenu
+    VueFileToolbarMenu,
   },
   name: "Dashboard",
   data: () => ({
@@ -292,7 +283,7 @@ export default {
     lastPostURL: "",
     isShowingDialog: false,
     drawBrush: false,
-    happy: false
+    happy: false,
   }),
   computed: {
     splashAscii() {
@@ -347,37 +338,74 @@ export default {
       return this.$store.getters.currentTab;
     },
 
-    myMenu () {
-      return [
-        { 
-          
-        text: "File", menu: [
-          { text: "New ASCII", click: () => this.$store.commit('openModal', 'new-ascii') },
-          { text: "Edit ASCII", click: () => this.$store.commit('openModal', 'edit-ascii') },
-          { text: "Close ASCII", click: () => this.closeTab(this.currentTab) }
-        ],
+    myMenu() {
+      let menu = [];
 
-        },{
-        text: "Options", menu: [
-          { text: "Show Options", click: () => this.$store.commit('openModal', 'options') },
+      menu.push({
+        text: "File",
+        menu: [
+          {
+            text: "New ASCII",
+            click: () => this.$store.commit("openModal", "new-ascii"),
+          },
         ],
-        },{
-        text: "Import", menu: [
-          { text: "mIRC File", click: () => startImport('mirc') },
-          { text: "mIRC Clipboard", click: () => this.$store.commit('openModal', 'paste-ascii') },
-          { text: "ASCIIBIRD State", click: () => this.startImport('asb') },
-        ],
-        },{  
-        text: "Export", menu: [
-          { text: "mIRC File", click: () => this.startExport('file') },
-          { text: "mIRC Clipboard", click: () => this.startExport('clipboard') },
-          { text: "HTTP POST", click: () => this.startExport('post') },
-          { text: "ASCIIBIRD State", click: () => this.exportAsciibirdState() },
-        ],
+      });
 
-        }
-      ]
-    }
+      if (this.asciibirdMeta.length) {
+        menu[0].menu.push(
+          {
+            text: "Edit ASCII",
+            click: () => this.$store.commit("openModal", "edit-ascii"),
+          },
+          {
+            text: "Close ASCII",
+            click: () => this.closeTab(this.currentTab),
+          }
+        );
+
+        menu.push({
+          text: "Options",
+          menu: [
+            {
+              text: "Show Options",
+              click: () => this.$store.commit("openModal", "options"),
+            },
+          ],
+        });
+      }
+
+      menu.push({
+        text: "Import",
+        menu: [
+          { text: "mIRC File", click: () => this.startImport("mirc") },
+          {
+            text: "mIRC Clipboard",
+            click: () => this.$store.commit("openModal", "paste-ascii"),
+          },
+          { text: "ASCIIBIRD State", click: () => this.startImport("asb") },
+        ],
+      });
+
+      if (this.asciibirdMeta.length) {
+        menu.push({
+          text: "Export",
+          menu: [
+            { text: "mIRC File", click: () => this.startExport("file") },
+            {
+              text: "mIRC Clipboard",
+              click: () => this.startExport("clipboard"),
+            },
+            { text: "HTTP POST", click: () => this.startExport("post") },
+            {
+              text: "ASCIIBIRD State",
+              click: () => this.exportAsciibirdState(),
+            },
+          ],
+        });
+      }
+
+      return menu;
+    },
   },
   watch: {
     // scrollOffset(val) {
@@ -387,7 +415,7 @@ export default {
   },
   methods: {
     triggerbrush() {
-      this.drawBrush = ! this.drawBrush
+      this.drawBrush = !this.drawBrush;
     },
     inputtingbrush(val) {
       this.isInputtingBrushSize = val;
@@ -505,7 +533,7 @@ export default {
           break;
         case "post":
           this.$store.commit("toggleDisableKeyboard", true);
-          this.$dialog.show('dialog-posthttp');
+          this.$dialog.show("dialog-posthttp");
           this.isShowingDialog = true;
           break;
       }

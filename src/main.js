@@ -12,7 +12,7 @@ import Toasted from 'vue-toasted';
 Vue.config.productionTip = false;
 
 import {
-  FontAwesomeIcon,
+FontAwesomeIcon,
 } from '@fortawesome/vue-fontawesome';
 import './fontAwesome';
 

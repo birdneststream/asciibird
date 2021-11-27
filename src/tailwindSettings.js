@@ -6,6 +6,7 @@ import TButton from 'vue-tailwind/dist/t-button';
 import TCard from 'vue-tailwind/dist/t-card';
 import TModal from 'vue-tailwind/dist/t-modal';
 import TDialog from 'vue-tailwind/dist/t-dialog';
+import TSelect from 'vue-tailwind/dist/t-select';
 
 export const tailwindCss = {
   't-input': {
@@ -133,6 +134,19 @@ export const tailwindCss = {
         }
       }
     }
+  },
+  't-select': {
+    component: TSelect,
+    props: {
+      wrapped: true,
+      classes: {
+        wrapper: 'relative',
+        input: 'block w-full py-2 pl-3 pr-10 text-black placeholder-gray-400 transition duration-100 ease-in-out bg-white border border-gray-300 rounded shadow-sm bg-none focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed focus:border-blue-500',
+        arrowWrapper: 'pointer-events-none absolute inset-y-0 right-0 flex items-center px-2',
+        arrow: 'fill-current h-4 w-4'
+      }
+    },
+    // Variants and fixed classes in the same `object` format ...
   },
   't-dialog': {
     component: TDialog,

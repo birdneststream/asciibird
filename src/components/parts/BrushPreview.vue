@@ -43,7 +43,10 @@
         </div>
 
         <div class="w-full">
-          <label class="block">
+
+            <t-select :options="brushOptions" v-model="brushSizeTypeInput" />
+
+          <!-- <label class="block">
             <t-radio
               name="options"
               value="square"
@@ -96,7 +99,7 @@
               v-model="brushSizeTypeInput"
             />
             <span class="text-sm">Lines</span>
-          </label>
+          </label> -->
         </div>
 
         <div
@@ -149,6 +152,17 @@ export default {
     isInputtingBrushSize: false,
   }),
   computed: {
+    brushOptions() {
+      return [
+        'Square',
+        'Circle',
+        'Cross',
+        'Grid',
+        'Inverted Grid',
+        'H lines',
+        'V lines',
+      ]
+    },
     blockWidth() {
       return blockWidth * this.blockSizeMultiplier;
     },
@@ -307,7 +321,7 @@ export default {
       for (y = 0; y < brushHeight; y++) {
         this.blocks[y] = [];
         for (x = 0; x < brushWidth; x++) {
-          switch (this.brushSizeType) {
+          switch (this.brushSizeType.toLowerCase() ) {
             case "cross":
               // If we are 1x1 force fill 1 block, to avoid an empty 1x1
               if (x === 0 && y === 0) {
@@ -330,7 +344,7 @@ export default {
 
               break;
 
-            case "inverted-grid":
+            case "inverted grid":
               if (x === 0 && y === 0) {
                 this.blocks[y][x] = { ...block };
                 continue;
@@ -371,7 +385,7 @@ export default {
 
               break;
 
-            case "lines":
+            case "h lines":
               if (x === 0 && y === 0) {
                 this.blocks[y][x] = { ...block };
                 continue;
@@ -399,6 +413,34 @@ export default {
 
               break;
 
+            case "v lines":
+              if (x === 0 && y === 0) {
+                this.blocks[y][x] = { ...block };
+                continue;
+              }
+
+              if (x === brushWidth) {
+                this.blocks[y][x] = { ...emptyBlock };
+              } else {
+                this.blocks[y][x] = { ...block };
+              }
+
+              let targetY = y;
+
+              if (screenY % 2 === 0) {
+                screenY -= 1;
+              } 
+
+              if (this.blocks[targetY] && this.blocks[targetY][x]) {
+                if (x % 2 === 0) {
+                  if (x % 2 === 0) { this.blocks[targetY][x] = { ...block }; }
+                } else {
+                  this.blocks[targetY][x] = { ...emptyBlock };
+                }
+              }
+
+              break;
+
             // default:
             case "square":
               this.blocks[y][x] = { ...block };
@@ -411,7 +453,7 @@ export default {
         }
       }
 
-      switch(this.brushSizeType) {
+      switch(this.brushSizeType.toLowerCase()) {
           case "circle":
   
               let x1 = 0;
