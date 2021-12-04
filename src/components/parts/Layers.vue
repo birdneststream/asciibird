@@ -243,7 +243,6 @@ export default {
       this.$store.commit("removeLayer", key);
     },
     showOverlayModal() {
-      console.log("Test")
       this.$store.commit('openModal', 'overlay');
     },
     // Image overlay

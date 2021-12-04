@@ -85,6 +85,11 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
   * ASCII right click
 
 * Review encodings check on file import - UTF8 vs Latin something
+
+## AFTER the above stuff is done
+
+* Warning to the user for width and clipping
+ * Optimise the export code to use less chars
 # Keyboard Shortcuts
 
 ## ASCII Editing

@@ -290,7 +290,7 @@ export default {
       this.delayRedrawCanvas();
     },
     currentSelectedLayer(val, old) {
-      if (old.visible) {
+      if (old && old.visible) {
         this.warnInvisibleLayer();
       }
     },
@@ -401,7 +401,7 @@ export default {
   },
   methods: {
     warnInvisibleLayer() {
-      if (!this.currentSelectedLayer.visible) {
+      if (!this.currentSelectedLayer && this.currentSelectedLayer.visible) {
         this.$toasted.show("You are trying to edit an invisible layer!!", {
           type: "error",
           icon: "fa-check-cross",

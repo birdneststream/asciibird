@@ -68,12 +68,18 @@ body {
     cursor: crosshair;
 }
 
-/* Toolbar menu */
-.bar {
-    background-color: rgba(107, 114, 128) !important;
-}
 
-.bar-button:hover {
-    color: var(--bar-button-open-color, rgb(65, 184, 131));
-    background: var(--bar-button-open-bkg, rgb(234, 247, 244));
+@layer base {
+    .bar {
+        @apply bg-gray-500;
+    }
+
+    .bar-button {
+        @apply text-white;
+    }
+
+    .bar-button:hover {
+        @apply bg-gray-800;
+    }
+
 }

@@ -331,7 +331,37 @@ export default {
     currentTab() {
       return this.$store.getters.currentTab;
     },
+    currentAsciiLayers() {
+      return this.$store.getters.currentAsciiLayers;
+    },
+    selectedLayer() {
+      return this.$store.getters.selectedLayer;
+    },
+    canToggleLayer() {
+      return this.currentAsciiLayers.length !== 1;
+      // We want to avoid hiding all the layers, so if there's only one
+      // visible left, we have to disable the buttons
+    },
+    imageOverlay() {
+      return this.$store.getters.imageOverlay || false;
+    },
+    imageOverlayUrl() {
+      return this.imageOverlay.url
+        ? this.imageOverlay.url.split("/").pop()
+        : "";
+    },
+    asciiLayersMenu() {
+      let menu = [];
 
+      for (let i in [ ... this.currentAsciiLayers]) {
+        menu.push({
+          text: this.currentAsciiLayers[i].label,
+          click: () => this.$store.commit("changeLayer", this.currentAsciiLayers.length - i)
+        });
+      }
+
+      return menu.reverse();
+    },
     myMenu() {
       let menu = [];
 
@@ -381,21 +411,43 @@ export default {
       });
 
       if (this.asciibirdMeta.length) {
-        menu.push({
-          text: "Export",
-          menu: [
-            { text: "mIRC File", click: () => this.startExport("file") },
-            {
-              text: "mIRC Clipboard",
-              click: () => this.startExport("clipboard"),
-            },
-            { text: "HTTP POST", click: () => this.startExport("post") },
-            {
-              text: "ASCIIBIRD State",
-              click: () => this.exportAsciibirdState(),
-            },
-          ],
-        });
+        menu.push(
+          {
+            text: "Export",
+            menu: [
+              { text: "mIRC File", click: () => this.startExport("file") },
+              {
+                text: "mIRC Clipboard",
+                click: () => this.startExport("clipboard"),
+              },
+              { text: "HTTP POST", click: () => this.startExport("post") },
+              {
+                text: "ASCIIBIRD State",
+                click: () => this.exportAsciibirdState(),
+              },
+            ],
+          },
+          {
+            text: "Layers",
+            menu: [
+              // {
+              //   text: "Change Layers",
+              //   menu: this.asciiLayersMenu,
+              // },
+              {
+                text: "Show/Hide Layer",
+                click: () => this.$store.commit("toggleLayer", this.selectedLayer),
+              },
+              { text: "Rename Layer", click: () => this.showLayerRename(this.selectedLayer, this.currentAsciiLayers[this.selectedLayer].label) },
+              { text: "Add Layer", click: () => this.$store.commit("addLayer") },
+              { text: "Delete Layer", click: () => this.$store.commit("removeLayer", this.selectedLayer) },
+              { text: "Move Layer Down", click: () => this.$store.commit("upLayer", this.selectedLayer) },
+              { text: "Move Layer Up", click: () => this.$store.commit("downLayer", this.selectedLayer) },
+              { text: "Merge All Layers", click: () => this.$store.commit("mergeAllLayers") },
+
+            ],
+          }
+        );
       }
 
       return menu;
@@ -408,6 +460,38 @@ export default {
     // },
   },
   methods: {
+    showLayerRename(key, label) {
+      this.$store.commit("toggleDisableKeyboard", true);
+      this.$dialog
+        .prompt({
+          title: "Rename Layer",
+          text: "Please input your new layer name",
+          icon: "question",
+          inputValue: label,
+          clickToClose: false,
+        })
+        .then((result) => {
+          if (!result.input.length) {
+            this.$toasted.show("You must enter a layer name!", {
+              type: "error",
+            });
+            this.$store.commit("toggleDisableKeyboard", false);
+            return;
+          }
+
+          if (result.isOk) {
+            this.updateLayerName(key, result.input);
+          }
+
+          this.$store.commit("toggleDisableKeyboard", false);
+        });
+    },
+    updateLayerName(key, label) {
+      this.$store.commit("updateLayerName", {
+        key: key,
+        label: label,
+      });
+    },
     triggerbrush() {
       this.drawBrush = !this.drawBrush;
     },
