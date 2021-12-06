@@ -45,9 +45,9 @@ A most latest production build to use is available at https://asciibird.jewbird.
   * Select
   * Text mode
   * Fill background blocks
-  * Brush mode
+  * Brush mode, can be controlled with keyboard and mouse
   * Block picker (grab fg, bg and char of a block)
-  * Eraser - remove blocks
+  * Eraser - remove blocks, can be controlled with keyboard and mouse
   * Fill Eraser - Fill remove blocks by bg, fg or char
 * Brush Library and History
   * Make circle, square and cross brushes by sizes
@@ -127,8 +127,15 @@ The toolbar keyboard shorts are used with the ALT key.
 * Ctrl + v - Paste blocks as brush
 * Delete - Delete selected blocks
 
+### Eraser Mode Only
+
+* Four arrow keys control text cursor
+* Space - apply brush
+
 ### Brush Mode Only
 
+* Four arrow keys control text cursor
+* Space - apply brush
 * e - rotate brush
 * q - flip brush
 
