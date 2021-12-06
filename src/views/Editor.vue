@@ -81,40 +81,52 @@ export default {
     hotkeys("*", function (event, handler) {
       event.preventDefault();
 
-      if (_this.isBrushing) {
+      if (_this.isBrushing || _this.isErasing) {
         switch (event.key) {
           case "ArrowUp":
             _this.y--;
-            _this.drawBrush();
+            _this.drawBrush(_this.isErasing);
             _this.delayRedrawCanvas();
             break;
 
           case "ArrowDown":
             _this.y++;
-            _this.drawBrush();
+            _this.drawBrush(_this.isErasing);
             _this.delayRedrawCanvas();
             break;
 
           case "ArrowLeft":
             _this.x--;
-            _this.drawBrush();
+            _this.drawBrush(_this.isErasing);
             _this.delayRedrawCanvas();
             break;
 
           case "ArrowRight":
             _this.x++;
-            _this.drawBrush();
+            _this.drawBrush(_this.isErasing);
             _this.delayRedrawCanvas();
             break;
 
           case " ":
-            _this.canTool = true;
-            _this.drawBrush();
-            _this.canTool = false;
-            _this.$store.commit(
-              "updateAsciiBlocks",
-              _this.currentAsciiLayerBlocks
-            );
+            if (_this.isBrushing) {
+              _this.canTool = true;
+              _this.drawBrush();
+              _this.canTool = false;
+              _this.$store.commit(
+                "updateAsciiBlocks",
+                _this.currentAsciiLayerBlocks
+              );
+            }
+
+            if (_this.isErasing) {
+              _this.canTool = true;
+              _this.eraser();
+              _this.canTool = false;
+              _this.$store.commit(
+                "updateAsciiBlocks",
+                _this.currentAsciiLayerBlocks
+              );
+            }
             break;
         }
       }
