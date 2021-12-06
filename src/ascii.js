@@ -121,7 +121,8 @@ export const mircColours99 = [
 ];
 
 // How big the brush size can get
-export const maxBrushSize = 15;
+// Although you can type in the input a bigger number than this anyway
+export const maxBrushSize = 50;
 
 // Chars that end up in the toolbar
 export const charCodes = [' ', '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-',

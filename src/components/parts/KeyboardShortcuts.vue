@@ -15,407 +15,409 @@ import {
 
 export default {
   name: "KeyboardShortcuts",
-  destroyed() {
-    window.removeEventListener("keydown", this.keyListener.bind(this));
-  },
   created() {
-    console.log(this.canvasX);
-    this.keyListener = function (e) {
-      // Stop blocking input when modals are open
-      // Whatever this char "'\0'" is it'd occur even without pressing any keys
-      // This fixes it
-      if (
-        e.key === "\0" ||
-        this.isInputtingBrushSize ||
-        this.isKeyboardDisabled ||
-        this.isShowingDialog ||
-        this.isModalOpen
-      ) {
-        if (e.key === "Enter" && this.isShowingDialog) {
-          this.$dialog.hide("dialog-posthttp");
-          return;
-        }
+    var _this = this;
+
+    // New ASCII
+    // Ctrl N doesn't seem to work in chrome? https://github.com/liftoff/GateOne/issues/290
+    hotkeys("n", function (event, handler) {
+      event.preventDefault();
+      if (_this.isDefault && !_this.isTextEditing) {
+        _this.$store.commit("openModal", "new-ascii");
 
         return;
       }
+    });
 
-      e.preventDefault();
-
-      // When press escape go back to default took
-      if (e.key === "Escape" && !this.isDefault && this.haveOpenTabs) {
-        this.$emit("updatecanvas");
-        this.$store.commit("changeTool", 0);
+    // Paste ASCII
+    hotkeys("p", function (event, handler) {
+      event.preventDefault();
+      if (_this.isDefault && !_this.isTextEditing) {
+        _this.$store.commit("openModal", "paste-ascii");
         return;
       }
+    });
 
-      // Escape to leave colour or char picker
-      if (e.key === "Escape" && this.haveOpenTabs && !this.textEditing (this.toolbarState.isChoosingChar || this.toolbarState.isChoosingBg || this.toolbarState.isChoosingFg)) {
-          this.$store.commit('changeIsUpdatingFg', false )
-          this.$store.commit('changeIsUpdatingBg', false )
-          this.$store.commit('changeIsUpdatingChar', false )
-        return;
-      }
-
-      // Change char when car picker is open
-      if (
-        this.toolbarState.isChoosingChar &&
-        e.key.length === 1 &&
-        this.haveOpenTabs
-      ) {
-        this.$store.commit("changeChar", e.key);
-        return;
-      }
-
-      // Keys without any ctrl, shift or alt are also integrated
-      // and are available only in their toolbar context
-      // for example pressing E in default mode will toggle edit ascii
-      // E in text mode will type the character E
-      // E in brush mode will flip the brush
-
-      // Copy and paste,
-      const ctrlKey = e.ctrlKey || e.metaKey;
-
-      // Files / system related
-      const shiftKey = e.shiftKey;
-
-      // Alt key functions are toolbar related
-      const altKey = e.altKey;
-
-      // Used for text typing
-      if (
-        (this.isTextEditing) &&
-        this.haveOpenTabs
-      ) {
-        this.canvasKeyDown(e.key);
-        return;
-      }
-
-      // Show / hide grid view
-      if (e.key === "g" && altKey && this.haveOpenTabs) {
-        this.$store.commit("toggleGridView", !this.gridView);
-        return;
-      }
-
-      // Ctrl Z here
-      // skg - thanks for mac key suggestion, bro
-      if (e.key === "z" && ctrlKey && this.haveOpenTabs) {
-        this.undo();
-        return;
-      }
-
-      // Ctrl Y here
-      if (e.key === "y" && ctrlKey && this.haveOpenTabs) {
-        this.redo();
-        return;
-      }
-
-      // Change toolbar icon
-      if (
-        Number.parseInt(e.key) >= 1 &&
-        Number.parseInt(e.key) <= 8 &&
-        !this.toolbarState.isChoosingFg &&
-        !this.toolbarState.isChoosingBg &&
-        altKey &&
-        this.haveOpenTabs
-      ) {
-        this.$store.commit("changeTool", Number.parseInt(e.key - 1));
-        this.$emit("updatecanvas");
-        return;
-      }
-
-      // Swap colours
-      if (e.key === "r" && altKey && this.haveOpenTabs) {
-        let bg = this.currentBg;
-        let fg = this.currentFg;
-
-        this.$store.commit("changeColourFg", bg);
-        this.$store.commit("changeColourBg", fg);
-        return;
-      }
-
-      // Show FG
-      if (e.key === "f" && altKey && !ctrlKey && this.haveOpenTabs) {
-        this.$store.commit(
-          "changeIsUpdatingFg",
-          !this.toolbarState.isChoosingFg
-        );
-        return;
-      }
-
-      // Show BG
-      if (e.key === "b" && altKey && !ctrlKey && this.haveOpenTabs) {
-        this.$store.commit(
-          "changeIsUpdatingBg",
-          !this.toolbarState.isChoosingBg
-        );
-        return;
-      }
-
-      // Show Character select
-      if (e.key === "c" && altKey && !ctrlKey && this.haveOpenTabs) {
-        this.$store.commit(
-          "changeIsUpdatingChar",
-          !this.toolbarState.isChoosingChar
-        );
-        return;
-      }
-
-      // Choose FG or BG with Keyboard
-      if (
-        Number.parseInt(e.key) >= 0 &&
-        Number.parseInt(e.key) <= 9 &&
-        (this.toolbarState.isChoosingFg || this.toolbarState.isChoosingBg) &&
-        this.haveOpenTabs
-      ) {
-        if (this.toolbarState.isChoosingFg) {
-          this.$store.commit("changeColourFg", Number.parseInt(e.key));
-          return;
-        }
-
-        if (this.toolbarState.isChoosingBg) {
-          this.$store.commit("changeColourBg", Number.parseInt(e.key));
-          return;
-        }
-      }
-
-      // Ctrl C - copy blocks
-      if (
-        e.key === "c" &&
-        ctrlKey &&
-        !shiftKey &&
-        this.haveOpenTabs &&
-        this.isSelected &&
-        this.isSelecting
-      ) {
-        if (this.selectedBlocks.length) {
-          this.$store.commit(
-            "selectBlocks",
-            filterNullBlocks(this.selectedBlocks)
+    if (this.haveOpenTabs) {
+      // Show / hide brush library
+      hotkeys("l", function (event, handler) {
+        event.preventDefault();
+        if (_this.isDefault) {
+          _this.$store.commit(
+            "toggleBrushLibrary",
+            !_this.brushLibraryState.visible
           );
 
-          this.$toasted.show("Copied blocks!", {
-            type: "success",
-            icon: "fa-check-circle",
-          });
+          return;
+        }
+      });
+
+      hotkeys("ctrl+v", function (event, handler) {
+        event.preventDefault();
+        if (_this.haveSelectBlocks) {
+          _this.$store.commit("pushBrushHistory", _this.brushBlocks);
+          _this.$store.commit("brushBlocks", _this.selectBlocks);
+          _this.$store.commit("changeTool", 4);
         }
 
         return;
-      }
-
-      // Delte blocks but do not save them when pressing Delete when selected
-      if (
-        e.key === "Delete" &&
-        this.haveOpenTabs &&
-        this.isSelected &&
-        this.isSelecting
-      ) {
-        console.log(getBlocksWidth(this.selectedBlocks));
-        if (this.selectedBlocks.length) {
-          for (let y = 0; y < this.selectedBlocks.length + 1; y++) {
-            for (let x = 0; x < getBlocksWidth(this.selectedBlocks) + 1; x++) {
-              if (this.selectedBlocks[y] && this.selectedBlocks[y][x]) {
-                this.currentAsciiLayerBlocks[y][x] = { ...emptyBlock };
-              }
-            }
-          }
-
-          // Reset and hide the select after successful copy
-          this.$store.commit("updateAsciiBlocks", this.currentAsciiLayerBlocks);
-          this.$emit("updatecanvas");
-
-          this.$toasted.show("Deleted blocks!", {
-            type: "success",
-            icon: "fa-check-circle",
-          });
-        }
-
-        return;
-      }
-
-      // Ctrl X - cut blocks
-      if (
-        e.key === "x" &&
-        ctrlKey &&
-        !shiftKey &&
-        this.haveOpenTabs &&
-        this.isSelected &&
-        this.isSelecting
-      ) {
-        if (this.selectedBlocks.length) {
-          for (let y = 0; y < this.selectedBlocks.length + 1; y++) {
-            for (let x = 0; x < getBlocksWidth(this.selectedBlocks) + 1; x++) {
-              if (this.selectedBlocks[y] && this.selectedBlocks[y][x]) {
-                this.currentAsciiLayerBlocks[y][x] = { ...emptyBlock };
-              }
-            }
-          }
-
-          this.$store.commit(
-            "selectBlocks",
-            filterNullBlocks(this.selectedBlocks)
-          );
-
-          this.selectedBlocks = [];
-
-          // Reset and hide the select after successful copy
-
-          this.$store.commit("updateAsciiBlocks", this.currentAsciiLayerBlocks);
-          this.$emit("updatecanvas");
-
-          this.$toasted.show("Cut blocks!", {
-            type: "success",
-            icon: "fa-check-circle",
-          });
-        }
-
-        return;
-      }
-
-      // Ctrl V - paste blocks
-      if (e.key === "v" && ctrlKey && this.haveOpenTabs) {
-        if (this.haveSelectBlocks) {
-          this.$store.commit("pushBrushHistory", this.brushBlocks);
-          this.$store.commit("brushBlocks", this.selectBlocks);
-          this.$store.commit("changeTool", 4);
-        }
-
-        return;
-      }
+      });
 
       // Show / hide debug panel
-      if (e.key === "d" && this.isDefault && this.haveOpenTabs) {
-        this.$store.commit("toggleDebugPanel", !this.debugPanelState.visible);
+      hotkeys("d", function (event, handler) {
+        event.preventDefault();
+        if (_this.isDefault) {
+          _this.$store.commit(
+            "toggleDebugPanel",
+            !_this.debugPanelState.visible
+          );
 
-        return;
-      }
-
-      // Show / hide brush library
-      if (e.key === "l" && this.isDefault && this.haveOpenTabs) {
-        this.$store.commit(
-          "toggleBrushLibrary",
-          !this.brushLibraryState.visible
-        );
-
-        return;
-      }
-
-      // New ASCII
-      // Ctrl N doesn't seem to work in chrome? https://github.com/liftoff/GateOne/issues/290
-      if (e.key === "n" && this.isDefault && !this.isTextEditing) {
-        this.$store.commit("openModal", "new-ascii");
-
-        return;
-      }
+          return;
+        }
+      });
 
       // Edit ASCII
-      if (
-        e.key === "e" &&
-        this.isDefault &&
-        !this.isTextEditing &&
-        this.haveOpenTabs
-      ) {
-        this.$store.commit("openModal", "edit-ascii");
+      hotkeys("e", function (event, handler) {
+        event.preventDefault();
+        if (_this.isDefault && !_this.isTextEditing) {
+          _this.$store.commit("openModal", "edit-ascii");
 
-        return;
-      }
+          return;
+        }
+      });
 
-      // Paste ASCII
-      if (e.key === "p" && this.isDefault && !this.isTextEditing) {
-        this.$store.commit("openModal", "paste-ascii");
-
-        return;
-      }
-
-      // Export to clipboard
-      if (e.key === "C" && ctrlKey && shiftKey && this.haveOpenTabs) {
+      hotkeys("ctrl+shift+c", function (event, handler) {
+        event.preventDefault();
         let ascii = exportMirc();
-        this.$copyText(ascii.output.join("")).then(
+        _this.$copyText(ascii.output.join("")).then(
           (e) => {
-            this.$toasted.show("Copied mIRC to clipboard!", {
+            _this.$toasted.show("Copied mIRC to clipboard!", {
               type: "success",
             });
           },
           (e) => {
-            this.$toasted.show("Error when copying mIRC to clipboard!", {
+            _this.$toasted.show("Error when copying mIRC to clipboard!", {
               type: "error",
             });
           }
         );
 
         return;
-      }
+      });
 
-      // Export to txt
-      if (e.key === "F" && ctrlKey && shiftKey && this.haveOpenTabs) {
+      hotkeys("ctrl+shift+f", function (event, handler) {
+        event.preventDefault();
         let ascii = exportMirc();
         downloadFile(ascii.output.join(""), ascii.filename, "text/plain");
-
         return;
-      }
+      });
 
-      if (
-        e.key === "]" &&
-        ctrlKey &&
-        this.brushSizeHeight < maxBrushSize &&
-        this.brushSizeHeight >= 1 &&
-        this.brushSizeWidth < maxBrushSize &&
-        this.brushSizeWidth >= 1 &&
-        this.haveOpenTabs
-      ) {
-        this.$store.commit("updateBrushSize", {
-          brushSizeHeight: parseInt(this.brushSizeHeight) + 1,
-          brushSizeWidth: parseInt(this.brushSizeWidth) + 1,
-          brushSizeType: this.brushSizeType,
-        });
+      hotkeys("ctrl+]", function (event, handler) {
+        event.preventDefault();
+        if (
+          _this.brushSizeHeight < maxBrushSize &&
+          _this.brushSizeHeight >= 1 &&
+          _this.brushSizeWidth < maxBrushSize &&
+          _this.brushSizeWidth >= 1 &&
+          _this.haveOpenTabs
+        ) {
+          _this.$store.commit("updateBrushSize", {
+            brushSizeHeight: parseInt(_this.brushSizeHeight) + 1,
+            brushSizeWidth: parseInt(_this.brushSizeWidth) + 1,
+            brushSizeType: _this.brushSizeType,
+          });
 
-        return;
-      }
+          return;
+        }
+      });
 
-      if (
-        e.key === "[" &&
-        ctrlKey &&
-        this.brushSizeHeight <= maxBrushSize &&
-        this.brushSizeHeight > 1 &&
-        this.brushSizeWidth <= maxBrushSize &&
-        this.brushSizeWidth > 1 &&
-        this.haveOpenTabs
-      ) {
-        this.$store.commit("updateBrushSize", {
-          brushSizeHeight: parseInt(this.brushSizeHeight) - 1,
-          brushSizeWidth: parseInt(this.brushSizeWidth) - 1,
-          brushSizeType: this.brushSizeType,
-        });
+      hotkeys("ctrl+[", function (event, handler) {
+        event.preventDefault();
+        if (
+          _this.brushSizeHeight <= maxBrushSize &&
+          _this.brushSizeHeight > 1 &&
+          _this.brushSizeWidth <= maxBrushSize &&
+          _this.brushSizeWidth > 1 &&
+          _this.haveOpenTabs
+        ) {
+          _this.$store.commit("updateBrushSize", {
+            brushSizeHeight: parseInt(_this.brushSizeHeight) - 1,
+            brushSizeWidth: parseInt(_this.brushSizeWidth) - 1,
+            brushSizeType: _this.brushSizeType,
+          });
 
-        return;
-      }
+          return;
+        }
+      });
 
       // Hopefully we can still pick up the previous inputs
       // while in brush mode
-      if (this.isBrushing && this.haveOpenTabs) {
-        if (e.key === "e") {
-          this.$store.commit("flipRotateBlocks", {
+
+      hotkeys("e", function (event, handler) {
+        if (_this.isBrushing) {
+          event.preventDefault();
+          _this.$store.commit("flipRotateBlocks", {
             type: "flip",
           });
-        }
 
-        if (e.key === "q") {
-          this.$store.commit("flipRotateBlocks", {
+          return;
+        }
+      });
+
+      hotkeys("q", function (event, handler) {
+        if (_this.isBrushing) {
+          event.preventDefault();
+          _this.$store.commit("flipRotateBlocks", {
             type: "rotate",
           });
+
+          return;
         }
+      });
+
+      hotkeys("ctrl+y", function (event, handler) {
+        event.preventDefault();
+        _this.redo();
         return;
-      }
-    };
+      });
 
-    document.addEventListener("keydown", this.keyListener.bind(this));
+      hotkeys("ctrl+z", function (event, handler) {
+        event.preventDefault();
+        _this.undo();
+        return;
+      });
 
-    document.body.addEventListener("keyup", function (e) {
-      this.isPressed = false;
-    });
+      hotkeys("ctrl+c", function (event, handler) {
+        event.preventDefault();
+        if (
+          _this.selectedBlocks.length &&
+          _this.isSelected &&
+          _this.isSelecting
+        ) {
+          _this.$store.commit(
+            "selectBlocks",
+            filterNullBlocks(_this.selectedBlocks)
+          );
+
+          _this.$toasted.show("Copied blocks!", {
+            type: "success",
+            icon: "fa-check-circle",
+          });
+        }
+
+        return;
+      });
+
+      hotkeys("ctrl+x", function (event, handler) {
+        event.preventDefault();
+        if (_this.isSelected && _this.isSelecting) {
+          if (_this.selectedBlocks.length) {
+            for (let y = 0; y < _this.selectedBlocks.length + 1; y++) {
+              for (
+                let x = 0;
+                x < getBlocksWidth(_this.selectedBlocks) + 1;
+                x++
+              ) {
+                if (_this.selectedBlocks[y] && _this.selectedBlocks[y][x]) {
+                  _this.currentAsciiLayerBlocks[y][x] = { ...emptyBlock };
+                }
+              }
+            }
+
+            _this.$store.commit(
+              "selectBlocks",
+              filterNullBlocks(_this.selectedBlocks)
+            );
+
+            _this.selectedBlocks = [];
+
+            // Reset and hide the select after successful copy
+
+            _this.$store.commit(
+              "updateAsciiBlocks",
+              _this.currentAsciiLayerBlocks
+            );
+            _this.$emit("updatecanvas");
+
+            _this.$toasted.show("Cut blocks!", {
+              type: "success",
+              icon: "fa-check-circle",
+            });
+          }
+
+          return;
+        }
+      });
+
+      hotkeys("alt+g", function (event, handler) {
+        event.preventDefault();
+        _this.$store.commit("toggleGridView", !_this.gridView);
+        return;
+      });
+
+      hotkeys("alt+r", function (event, handler) {
+        event.preventDefault();
+        let bg = _this.currentBg;
+        let fg = _this.currentFg;
+
+        _this.$store.commit("changeColourFg", bg);
+        _this.$store.commit("changeColourBg", fg);
+        return;
+      });
+
+      hotkeys("alt+f", function (event, handler) {
+        event.preventDefault();
+        _this.$store.commit(
+          "changeIsUpdatingFg",
+          !_this.toolbarState.isChoosingFg
+        );
+        return;
+      });
+
+      hotkeys("alt+b", function (event, handler) {
+        event.preventDefault();
+        _this.$store.commit(
+          "changeIsUpdatingBg",
+          !_this.toolbarState.isChoosingBg
+        );
+        return;
+      });
+
+      hotkeys("alt+c", function (event, handler) {
+        event.preventDefault();
+        _this.$store.commit(
+          "changeIsUpdatingChar",
+          !_this.toolbarState.isChoosingChar
+        );
+        return;
+      });
+
+      hotkeys("Delete", function (event, handler) {
+        event.preventDefault();
+        if (_this.isSelected && _this.isSelecting) {
+          if (_this.selectedBlocks.length) {
+            for (let y = 0; y < _this.selectedBlocks.length + 1; y++) {
+              for (
+                let x = 0;
+                x < getBlocksWidth(_this.selectedBlocks) + 1;
+                x++
+              ) {
+                if (_this.selectedBlocks[y] && _this.selectedBlocks[y][x]) {
+                  _this.currentAsciiLayerBlocks[y][x] = { ...emptyBlock };
+                }
+              }
+            }
+
+            // Reset and hide the select after successful copy
+            _this.$store.commit(
+              "updateAsciiBlocks",
+              _this.currentAsciiLayerBlocks
+            );
+            _this.$emit("updatecanvas");
+
+            _this.$toasted.show("Deleted blocks!", {
+              type: "success",
+              icon: "fa-check-circle",
+            });
+          }
+
+          return;
+        }
+      });
+
+      hotkeys("Escape", function (event, handler) {
+        event.preventDefault();
+        console.log({ event, handler });
+
+        switch (event.code) {
+          case "Escape":
+            if (
+              !_this.textEditing &&
+              (_this.toolbarState.isChoosingChar ||
+                _this.toolbarState.isChoosingBg ||
+                _this.toolbarState.isChoosingFg)
+            ) {
+              _this.$store.commit("changeIsUpdatingFg", false);
+              _this.$store.commit("changeIsUpdatingBg", false);
+              _this.$store.commit("changeIsUpdatingChar", false);
+              return;
+            }
+
+            if (!_this.isDefault) {
+              _this.$emit("updatecanvas");
+              _this.$store.commit("changeTool", 0);
+              return;
+            }
+
+            break;
+        }
+
+        return;
+      });
+
+      hotkeys("*", function (event, handler) {
+        event.preventDefault();
+        if (_this.isTextEditing) {
+          _this.canvasKeyDown(event.key);
+          return;
+        }
+
+        if (_this.toolbarState.isChoosingChar) {
+          _this.$store.commit("changeChar", event.key);
+          return;
+        }
+
+        // Change toolbar icon
+        if (
+          Number.parseInt(event.key) >= 1 &&
+          Number.parseInt(event.key) <= 8 &&
+          !_this.toolbarState.isChoosingFg &&
+          !_this.toolbarState.isChoosingBg &&
+          event.altKey &&
+          _this.haveOpenTabs
+        ) {
+          _this.$store.commit("changeTool", Number.parseInt(event.key - 1));
+          _this.$emit("updatecanvas");
+          return;
+        }
+
+        // Choose FG or BG with Keyboard
+        if (
+          Number.parseInt(event.key) >= 0 &&
+          Number.parseInt(event.key) <= 9 &&
+          (_this.toolbarState.isChoosingFg ||
+            _this.toolbarState.isChoosingBg) &&
+          _this.haveOpenTabs
+        ) {
+          if (_this.toolbarState.isChoosingFg) {
+            _this.$store.commit("changeColourFg", Number.parseInt(event.key));
+            return;
+          }
+
+          if (_this.toolbarState.isChoosingBg) {
+            _this.$store.commit("changeColourBg", Number.parseInt(event.key));
+            return;
+          }
+        }
+
+        if (
+          event.key === "\0" ||
+          _this.isInputtingBrushSize ||
+          _this.isKeyboardDisabled ||
+          _this.isShowingDialog ||
+          _this.isModalOpen
+        ) {
+          if (event.key === "Enter" && _this.isShowingDialog) {
+            _this.$dialog.hide("dialog-posthttp");
+            return;
+          }
+
+          return;
+        }
+      });
+    }
   },
-  data: () => ({
-    isPressed: false,
-  }),
+  data: () => ({}),
   props: [
     "selectedBlocks",
     "textEditing",
@@ -428,7 +430,7 @@ export default {
   ],
   computed: {
     canvasXy() {
-      return {x: this.canvasX, y: this.canvasY};
+      return { x: this.canvasX, y: this.canvasY };
     },
     isModalOpen() {
       return this.$store.getters.isModalOpen;
@@ -582,7 +584,7 @@ export default {
       //   this.$emit("arrowkeys", this.canvasXy);
 
       // }
-      
+
       if (this.isTextEditing) {
         if (
           this.currentAsciiLayerBlocks[this.textEditing.startY] &&

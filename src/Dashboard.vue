@@ -234,6 +234,8 @@ export default {
     window.addEventListener("scroll", function (event) {
       isThis.scrollOffset = this.scrollY;
     });
+
+
   },
   destroyed() {
     window.removeEventListener("scroll", function (event) {

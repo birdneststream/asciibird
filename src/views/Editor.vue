@@ -15,10 +15,14 @@
         @dragstop="onCavasDragStop"
         :x="currentAscii.x"
         :y="currentAscii.y"
-        
       >
-        <canvas id="overlay-image" :style="imageOverlayStyle" :width="currentAsciiWidth * blockWidth" :height="currentAsciiHeight * blockHeight"></canvas>
-      
+        <canvas
+          id="overlay-image"
+          :style="imageOverlayStyle"
+          :width="currentAsciiWidth * blockWidth"
+          :height="currentAsciiHeight * blockHeight"
+        ></canvas>
+
         <canvas
           ref="canvas"
           id="canvas"
@@ -41,8 +45,6 @@
           @touchend="canvasMouseDown"
           @touchstart="canvasMouseUp"
         />
-
-        
       </vue-draggable-resizable>
     </div>
   </div>
@@ -73,6 +75,49 @@ export default {
     window.addEventListener("load", () => {
       // Fixes the font on load issue
       this.delayRedrawCanvas();
+    });
+
+    var _this = this;
+    hotkeys("*", function (event, handler) {
+      event.preventDefault();
+
+      if (_this.isBrushing) {
+        switch (event.key) {
+          case "ArrowUp":
+            _this.y--;
+            _this.drawBrush();
+            _this.delayRedrawCanvas();
+            break;
+
+          case "ArrowDown":
+            _this.y++;
+            _this.drawBrush();
+            _this.delayRedrawCanvas();
+            break;
+
+          case "ArrowLeft":
+            _this.x--;
+            _this.drawBrush();
+            _this.delayRedrawCanvas();
+            break;
+
+          case "ArrowRight":
+            _this.x++;
+            _this.drawBrush();
+            _this.delayRedrawCanvas();
+            break;
+
+          case " ":
+            _this.canTool = true;
+            _this.drawBrush();
+            _this.canTool = false;
+            _this.$store.commit(
+              "updateAsciiBlocks",
+              _this.currentAsciiLayerBlocks
+            );
+            break;
+        }
+      }
     });
 
     if (this.currentAsciiLayerBlocks) {
@@ -252,32 +297,38 @@ export default {
       return this.$store.getters.imageOverlay;
     },
     imageOverlayStyle() {
-      let repeat = 'background-repeat: no-repeat;'
-      let stretched = 'background-size: 100%;'
+      let repeat = "background-repeat: no-repeat;";
+      let stretched = "background-size: 100%;";
 
       if (this.imageOverlay.repeatx && this.imageOverlay.repeaty) {
-        repeat = 'background-repeat: repeat;'
+        repeat = "background-repeat: repeat;";
       }
 
       if (this.imageOverlay.repeatx && !this.imageOverlay.repeaty) {
-        repeat = 'background-repeat: repeat-x;'
+        repeat = "background-repeat: repeat-x;";
       }
 
       if (!this.imageOverlay.repeatx && this.imageOverlay.repeaty) {
-        repeat = 'background-repeat: repeat-y;'
+        repeat = "background-repeat: repeat-y;";
       }
 
       if (this.imageOverlay.stretched) {
-        stretched = 'background-size: 100%;';
+        stretched = "background-size: 100%;";
       } else {
-        stretched = ''
+        stretched = "";
       }
 
-      return this.imageOverlay.visible ? `background-image: url('${this.imageOverlay.url}'); ${stretched} ${repeat} opacity: ${this.imageOverlay.opacity/100}; z-index: -1; position: absolute;` : 'position: absolute;'
+      return this.imageOverlay.visible
+        ? `background-image: url('${
+            this.imageOverlay.url
+          }'); ${stretched} ${repeat} opacity: ${
+            this.imageOverlay.opacity / 100
+          }; z-index: -1; position: absolute;`
+        : "position: absolute;";
     },
     canvasTransparent() {
-      return this.imageOverlay.visible ? 'opacity: 0.6;' : 'opacity: 1;'
-    }
+      return this.imageOverlay.visible ? "opacity: 0.6;" : "opacity: 1;";
+    },
   },
   watch: {
     currentAscii(val, old) {
@@ -357,6 +408,7 @@ export default {
     yOffset() {
       this.delayRedrawCanvas();
     },
+
     // asciiBlockAtXy(val, old) {
 
     // Keep track of what blocks have changed
@@ -463,19 +515,19 @@ export default {
         ctx.moveTo(x, 0);
         ctx.lineTo(x, h);
       }
-      
+
       ctx.strokeStyle = "rgba(0, 0, 0, 1)";
       ctx.lineWidth = 1;
       ctx.setLineDash([1]);
-      
+
       ctx.stroke();
-      
+
       ctx.beginPath();
       for (var y = 0; y <= h; y += blockHeight) {
         ctx.moveTo(0, y);
         ctx.lineTo(w, y);
       }
-      
+
       ctx.stroke();
     },
     redrawCanvas() {
@@ -562,7 +614,7 @@ export default {
       this.top = y;
       this.$store.commit("changeAsciiCanvasState", { x, y });
 
-      this.delayRedrawCanvas()
+      this.delayRedrawCanvas();
     },
     onCanvasDrag(x, y) {
       this.top = y;
@@ -761,12 +813,12 @@ export default {
       if (this.redraw) {
         this.redraw = false;
         var _this = this;
-        setTimeout(function(){
+        setTimeout(function () {
           requestAnimationFrame(() => {
             _this.redrawCanvas();
             _this.redraw = true;
           });
-        }, 1000/this.options.fps)
+        }, 1000 / this.options.fps);
       }
     },
     getBlocksWidth(blocks) {
@@ -1346,15 +1398,15 @@ export default {
       const newColor = {};
       const current = {};
 
-      if (this.canBg) {
-        newColor.bg = this.currentBg;
-        current.bg = this.asciiBlockAtXy.bg;
-      }
+      // if (this.canBg) {
+      newColor.bg = this.currentBg;
+      current.bg = this.asciiBlockAtXy.bg;
+      // }
 
-      if (this.canFg) {
-        newColor.fg = this.currentFg;
-        current.fg = this.asciiBlockAtXy.fg;
-      }
+      // if (this.canFg) {
+      //   newColor.fg = this.currentFg;
+      //   current.fg = this.asciiBlockAtXy.fg;
+      // }
 
       // If the newColor is same as the existing
       // Then return the original image.
