@@ -1410,15 +1410,15 @@ export default {
       const newColor = {};
       const current = {};
 
-      // if (this.canBg) {
-      newColor.bg = this.currentBg;
-      current.bg = this.asciiBlockAtXy.bg;
-      // }
-
-      // if (this.canFg) {
-      //   newColor.fg = this.currentFg;
-      //   current.fg = this.asciiBlockAtXy.fg;
-      // }
+      if (this.canBg) {
+        newColor.bg = this.currentBg;
+        current.bg = this.asciiBlockAtXy.bg;
+      }
+// 
+      if (this.canFg) {
+        newColor.fg = this.currentFg;
+        current.fg = this.asciiBlockAtXy.fg;
+      }
 
       // If the newColor is same as the existing
       // Then return the original image.
