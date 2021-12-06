@@ -38,11 +38,11 @@ export default {
       }
     });
 
-    if (this.haveOpenTabs) {
+    // if (this.haveOpenTabs) {
       // Show / hide brush library
       hotkeys("l", function (event, handler) {
         event.preventDefault();
-        if (_this.isDefault) {
+        if (_this.isDefault && _this.haveOpenTabs) {
           _this.$store.commit(
             "toggleBrushLibrary",
             !_this.brushLibraryState.visible
@@ -54,7 +54,7 @@ export default {
 
       hotkeys("ctrl+v", function (event, handler) {
         event.preventDefault();
-        if (_this.haveSelectBlocks) {
+        if (_this.haveSelectBlocks && _this.haveOpenTabs) {
           _this.$store.commit("pushBrushHistory", _this.brushBlocks);
           _this.$store.commit("brushBlocks", _this.selectBlocks);
           _this.$store.commit("changeTool", 4);
@@ -66,7 +66,7 @@ export default {
       // Show / hide debug panel
       hotkeys("d", function (event, handler) {
         event.preventDefault();
-        if (_this.isDefault) {
+        if (_this.isDefault && _this.haveOpenTabs) {
           _this.$store.commit(
             "toggleDebugPanel",
             !_this.debugPanelState.visible
@@ -79,7 +79,7 @@ export default {
       // Edit ASCII
       hotkeys("e", function (event, handler) {
         event.preventDefault();
-        if (_this.isDefault && !_this.isTextEditing) {
+        if (_this.isDefault && !_this.isTextEditing && _this.haveOpenTabs) {
           _this.$store.commit("openModal", "edit-ascii");
 
           return;
@@ -119,7 +119,7 @@ export default {
           _this.brushSizeHeight >= 1 &&
           _this.brushSizeWidth < maxBrushSize &&
           _this.brushSizeWidth >= 1 &&
-          _this.haveOpenTabs
+          _this.haveOpenTabs && _this.haveOpenTabs
         ) {
           _this.$store.commit("updateBrushSize", {
             brushSizeHeight: parseInt(_this.brushSizeHeight) + 1,
@@ -138,7 +138,7 @@ export default {
           _this.brushSizeHeight > 1 &&
           _this.brushSizeWidth <= maxBrushSize &&
           _this.brushSizeWidth > 1 &&
-          _this.haveOpenTabs
+          _this.haveOpenTabs && _this.haveOpenTabs
         ) {
           _this.$store.commit("updateBrushSize", {
             brushSizeHeight: parseInt(_this.brushSizeHeight) - 1,
@@ -154,7 +154,7 @@ export default {
       // while in brush mode
 
       hotkeys("e", function (event, handler) {
-        if (_this.isBrushing) {
+        if (_this.isBrushing && _this.haveOpenTabs) {
           event.preventDefault();
           _this.$store.commit("flipRotateBlocks", {
             type: "flip",
@@ -165,7 +165,7 @@ export default {
       });
 
       hotkeys("q", function (event, handler) {
-        if (_this.isBrushing) {
+        if (_this.isBrushing && _this.haveOpenTabs) {
           event.preventDefault();
           _this.$store.commit("flipRotateBlocks", {
             type: "rotate",
@@ -192,7 +192,7 @@ export default {
         if (
           _this.selectedBlocks.length &&
           _this.isSelected &&
-          _this.isSelecting
+          _this.isSelecting && _this.haveOpenTabs
         ) {
           _this.$store.commit(
             "selectBlocks",
@@ -210,7 +210,7 @@ export default {
 
       hotkeys("ctrl+x", function (event, handler) {
         event.preventDefault();
-        if (_this.isSelected && _this.isSelecting) {
+        if (_this.isSelected && _this.isSelecting && _this.haveOpenTabs) {
           if (_this.selectedBlocks.length) {
             for (let y = 0; y < _this.selectedBlocks.length + 1; y++) {
               for (
@@ -294,7 +294,7 @@ export default {
 
       hotkeys("Delete", function (event, handler) {
         event.preventDefault();
-        if (_this.isSelected && _this.isSelecting) {
+        if (_this.isSelected && _this.isSelecting && _this.haveOpenTabs) {
           if (_this.selectedBlocks.length) {
             for (let y = 0; y < _this.selectedBlocks.length + 1; y++) {
               for (
@@ -335,7 +335,7 @@ export default {
               !_this.textEditing &&
               (_this.toolbarState.isChoosingChar ||
                 _this.toolbarState.isChoosingBg ||
-                _this.toolbarState.isChoosingFg)
+                _this.toolbarState.isChoosingFg && _this.haveOpenTabs)
             ) {
               _this.$store.commit("changeIsUpdatingFg", false);
               _this.$store.commit("changeIsUpdatingBg", false);
@@ -357,7 +357,7 @@ export default {
 
       hotkeys("*", function (event, handler) {
         event.preventDefault();
-        if (_this.isTextEditing) {
+        if (_this.isTextEditing && _this.haveOpenTabs) {
           _this.canvasKeyDown(event.key);
           return;
         }
@@ -374,7 +374,7 @@ export default {
           !_this.toolbarState.isChoosingFg &&
           !_this.toolbarState.isChoosingBg &&
           event.altKey &&
-          _this.haveOpenTabs
+          _this.haveOpenTabs && _this.haveOpenTabs
         ) {
           _this.$store.commit("changeTool", Number.parseInt(event.key - 1));
           _this.$emit("updatecanvas");
@@ -387,7 +387,7 @@ export default {
           Number.parseInt(event.key) <= 9 &&
           (_this.toolbarState.isChoosingFg ||
             _this.toolbarState.isChoosingBg) &&
-          _this.haveOpenTabs
+          _this.haveOpenTabs && _this.haveOpenTabs
         ) {
           if (_this.toolbarState.isChoosingFg) {
             _this.$store.commit("changeColourFg", Number.parseInt(event.key));
@@ -405,7 +405,7 @@ export default {
           _this.isInputtingBrushSize ||
           _this.isKeyboardDisabled ||
           _this.isShowingDialog ||
-          _this.isModalOpen
+          _this.isModalOpen && _this.haveOpenTabs
         ) {
           if (event.key === "Enter" && _this.isShowingDialog) {
             _this.$dialog.hide("dialog-posthttp");
@@ -415,7 +415,7 @@ export default {
           return;
         }
       });
-    }
+
   },
   data: () => ({}),
   props: [
