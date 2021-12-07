@@ -108,25 +108,14 @@ export default {
             break;
 
           case " ":
-            if (_this.isBrushing) {
-              _this.canTool = true;
-              _this.drawBrush();
-              _this.canTool = false;
-              _this.$store.commit(
-                "updateAsciiBlocks",
-                _this.currentAsciiLayerBlocks
-              );
-            }
+            _this.canTool = true;
+            _this.isBrushing ? _this.drawBrush() : _this.eraser();
+            _this.canTool = false;
+            _this.$store.commit(
+              "updateAsciiBlocks",
+              _this.currentAsciiLayerBlocks
+            );
 
-            if (_this.isErasing) {
-              _this.canTool = true;
-              _this.eraser();
-              _this.canTool = false;
-              _this.$store.commit(
-                "updateAsciiBlocks",
-                _this.currentAsciiLayerBlocks
-              );
-            }
             break;
         }
       }
@@ -369,6 +358,11 @@ export default {
           };
 
           this.resetSelect();
+          break;
+
+        case "text":
+          this.textEditing.startX = this.x;
+          this.textEditing.startY = this.y;
           break;
       }
     },
