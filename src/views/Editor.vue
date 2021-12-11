@@ -78,10 +78,12 @@ export default {
     });
 
     var _this = this;
-    hotkeys("*", function (event, handler) {
-      event.preventDefault();
+    hotkeys("*", "editor", function (event, handler) {
+      
 
       if (_this.isBrushing || _this.isErasing) {
+        event.preventDefault();
+        
         switch (event.key) {
           case "ArrowUp":
             _this.y--;

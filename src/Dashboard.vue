@@ -373,6 +373,7 @@ export default {
           {
             text: "New ASCII",
             click: () => this.$store.commit("openModal", "new-ascii"),
+            icon: "fiber_new"
           },
         ],
       });
@@ -382,10 +383,12 @@ export default {
           {
             text: "Edit ASCII",
             click: () => this.$store.commit("openModal", "edit-ascii"),
+            icon: "edit"
           },
           {
             text: "Close ASCII",
             click: () => this.closeTab(this.currentTab),
+            icon: "close"
           }
         );
 
@@ -395,6 +398,7 @@ export default {
             {
               text: "Show Options",
               click: () => this.$store.commit("openModal", "options"),
+              icon: "settings",
             },
           ],
         });
@@ -403,12 +407,13 @@ export default {
       menu.push({
         text: "Import",
         menu: [
-          { text: "mIRC File", click: () => this.startImport("mirc") },
+          { text: "mIRC File", click: () => this.startImport("mirc"), icon: 'upload_file' },
           {
             text: "mIRC Clipboard",
             click: () => this.$store.commit("openModal", "paste-ascii"),
+            icon: 'copy_all',
           },
-          { text: "ASCIIBIRD State", click: () => this.startImport("asb") },
+          { text: "ASCIIBIRD State", click: () => this.startImport("asb"), icon: 'save_alt' },
         ],
       });
 
@@ -417,15 +422,17 @@ export default {
           {
             text: "Export",
             menu: [
-              { text: "mIRC File", click: () => this.startExport("file") },
+              { text: "mIRC File", click: () => this.startExport("file"), icon: 'download_file' },
               {
                 text: "mIRC Clipboard",
                 click: () => this.startExport("clipboard"),
+                icon: 'copy_all',
               },
-              { text: "HTTP POST", click: () => this.startExport("post") },
+              { text: "HTTP POST", click: () => this.startExport("post"), icon: 'post_add' },
               {
                 text: "ASCIIBIRD State",
                 click: () => this.exportAsciibirdState(),
+                icon: 'save_alt'
               },
             ],
           },
@@ -439,13 +446,14 @@ export default {
               {
                 text: "Show/Hide Layer",
                 click: () => this.$store.commit("toggleLayer", this.selectedLayer),
+                icon: 'panorama_fish_eye',
               },
-              { text: "Rename Layer", click: () => this.showLayerRename(this.selectedLayer, this.currentAsciiLayers[this.selectedLayer].label) },
-              { text: "Add Layer", click: () => this.$store.commit("addLayer") },
-              { text: "Delete Layer", click: () => this.$store.commit("removeLayer", this.selectedLayer) },
-              { text: "Move Layer Down", click: () => this.$store.commit("upLayer", this.selectedLayer) },
-              { text: "Move Layer Up", click: () => this.$store.commit("downLayer", this.selectedLayer) },
-              { text: "Merge All Layers", click: () => this.$store.commit("mergeAllLayers") },
+              { text: "Rename Layer", click: () => this.showLayerRename(this.selectedLayer, this.currentAsciiLayers[this.selectedLayer].label), icon: 'text_rotation_none' },
+              { text: "Add Layer", click: () => this.$store.commit("addLayer"), icon: 'playlist_add' },
+              { text: "Delete Layer", click: () => this.$store.commit("removeLayer", this.selectedLayer), icon: 'delete_sweep' },
+              { text: "Move Layer Down", click: () => this.$store.commit("upLayer", this.selectedLayer), icon: 'arrow_downward' },
+              { text: "Move Layer Up", click: () => this.$store.commit("downLayer", this.selectedLayer), icon: 'arrow_upward' },
+              { text: "Merge All Layers", click: () => this.$store.commit("mergeAllLayers"), icon: 'playlist_add_circle' },
 
             ],
           }
