@@ -110,7 +110,9 @@ export default {
     });
 
     hotkeys("ctrl+v", function (event, handler) {
-      if (_this.haveSelectBlocks && _this.haveOpenTabs) {
+      if (_this.haveSelectBlocks && _this.haveOpenTabs &&
+        !_this.isShowingDialog &&
+        !_this.isModalOpen) {
         event.preventDefault();
         _this.$store.commit("pushBrushHistory", _this.brushBlocks);
         _this.$store.commit("brushBlocks", _this.selectBlocks);
@@ -132,8 +134,9 @@ export default {
 
     // Edit ASCII
     hotkeys("e", "editor", function (event, handler) {
-      event.preventDefault();
+      
       if (_this.isDefault && !_this.isTextEditing && _this.haveOpenTabs) {
+        event.preventDefault();
         _this.$store.commit("openModal", "edit-ascii");
 
         return;
@@ -174,7 +177,8 @@ export default {
         _this.brushSizeWidth < maxBrushSize &&
         _this.brushSizeWidth >= 1 &&
         _this.haveOpenTabs &&
-        _this.haveOpenTabs
+        !_this.isShowingDialog &&
+        !_this.isModalOpen
       ) {
         _this.$store.commit("updateBrushSize", {
           brushSizeHeight: parseInt(_this.brushSizeHeight) + 1,
@@ -194,7 +198,8 @@ export default {
         _this.brushSizeWidth <= maxBrushSize &&
         _this.brushSizeWidth > 1 &&
         _this.haveOpenTabs &&
-        _this.haveOpenTabs
+        !_this.isShowingDialog &&
+        !_this.isModalOpen
       ) {
         _this.$store.commit("updateBrushSize", {
           brushSizeHeight: parseInt(_this.brushSizeHeight) - 1,
@@ -248,7 +253,9 @@ export default {
         _this.selectedBlocks.length &&
         _this.isSelected &&
         _this.isSelecting &&
-        _this.haveOpenTabs
+        _this.haveOpenTabs &&
+        !_this.isShowingDialog &&
+        !_this.isModalOpen
       ) {
         event.preventDefault();
 
@@ -267,7 +274,9 @@ export default {
     });
 
     hotkeys("ctrl+x", function (event, handler) {
-      if (_this.isSelected && _this.isSelecting && _this.haveOpenTabs) {
+      if (_this.isSelected && _this.isSelecting && _this.haveOpenTabs &&
+        !_this.isShowingDialog &&
+        !_this.isModalOpen) {
         event.preventDefault();
 
         if (_this.selectedBlocks.length) {
