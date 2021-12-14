@@ -19,21 +19,23 @@ export default {
     var _this = this;
 
     hotkeys("Enter", function (event, handler) {
+      event.preventDefault();
       // Enter events to confirm and close dialogs and modals
       if (_this.isShowingDialog) {
-        event.preventDefault();
         _this.$dialog.hide("dialog-posthttp");
         return;
       }
     });
 
     hotkeys("*", "editor", function (event, handler) {
-      if (_this.isTextEditing && _this.haveOpenTabs) {
+      event.preventDefault();
+
+      if (_this.isTextEditing && _this.haveOpenTabs ) {
         _this.canvasKeyDown(event.key);
         return;
       }
 
-      if (_this.toolbarState.isChoosingChar) {
+      if (_this.toolbarState.isChoosingChar && event.key.length === 1) {
         _this.$store.commit("changeChar", event.key);
         return;
       }
@@ -47,7 +49,6 @@ export default {
         event.altKey &&
         _this.haveOpenTabs
       ) {
-        event.preventDefault();
 
         _this.$store.commit("changeTool", Number.parseInt(event.key - 1));
         _this.$emit("updatecanvas");
@@ -61,7 +62,6 @@ export default {
         (_this.toolbarState.isChoosingFg || _this.toolbarState.isChoosingBg) &&
         _this.haveOpenTabs
       ) {
-        event.preventDefault();
 
         if (_this.toolbarState.isChoosingFg) {
           _this.$store.commit("changeColourFg", Number.parseInt(event.key));
@@ -78,8 +78,8 @@ export default {
     // New ASCII
     // Ctrl N doesn't seem to work in chrome? https://github.com/liftoff/GateOne/issues/290
     hotkeys("n", "editor", function (event, handler) {
+      event.preventDefault();
       if (_this.isDefault && !_this.isTextEditing) {
-        event.preventDefault();
         _this.$store.commit("openModal", "new-ascii");
 
         return;
@@ -88,8 +88,8 @@ export default {
 
     // Paste ASCII
     hotkeys("p", "editor", function (event, handler) {
+      event.preventDefault();
       if (_this.isDefault && !_this.isTextEditing) {
-        event.preventDefault();
         _this.$store.commit("openModal", "paste-ascii");
         return;
       }
@@ -98,8 +98,8 @@ export default {
     // if (this.haveOpenTabs) {
     // Show / hide brush library
     hotkeys("l", "editor", function (event, handler) {
+      event.preventDefault();
       if (_this.isDefault && _this.haveOpenTabs) {
-        event.preventDefault();
         _this.$store.commit(
           "toggleBrushLibrary",
           !_this.brushLibraryState.visible
@@ -110,10 +110,13 @@ export default {
     });
 
     hotkeys("ctrl+v", function (event, handler) {
-      if (_this.haveSelectBlocks && _this.haveOpenTabs &&
+      event.preventDefault();
+      if (
+        _this.haveSelectBlocks &&
+        _this.haveOpenTabs &&
         !_this.isShowingDialog &&
-        !_this.isModalOpen) {
-        event.preventDefault();
+        !_this.isModalOpen
+      ) {
         _this.$store.commit("pushBrushHistory", _this.brushBlocks);
         _this.$store.commit("brushBlocks", _this.selectBlocks);
         _this.$store.commit("changeTool", 4);
@@ -124,8 +127,8 @@ export default {
 
     // Show / hide debug panel
     hotkeys("d", "editor", function (event, handler) {
+      event.preventDefault();
       if (_this.isDefault && _this.haveOpenTabs) {
-        event.preventDefault();
         _this.$store.commit("toggleDebugPanel", !_this.debugPanelState.visible);
 
         return;
@@ -134,9 +137,8 @@ export default {
 
     // Edit ASCII
     hotkeys("e", "editor", function (event, handler) {
-      
+      event.preventDefault();
       if (_this.isDefault && !_this.isTextEditing && _this.haveOpenTabs) {
-        event.preventDefault();
         _this.$store.commit("openModal", "edit-ascii");
 
         return;
@@ -274,9 +276,13 @@ export default {
     });
 
     hotkeys("ctrl+x", function (event, handler) {
-      if (_this.isSelected && _this.isSelecting && _this.haveOpenTabs &&
+      if (
+        _this.isSelected &&
+        _this.isSelecting &&
+        _this.haveOpenTabs &&
         !_this.isShowingDialog &&
-        !_this.isModalOpen) {
+        !_this.isModalOpen
+      ) {
         event.preventDefault();
 
         if (_this.selectedBlocks.length) {
@@ -562,43 +568,6 @@ export default {
       this.$store.commit("redoBlocks");
     },
     canvasKeyDown(char) {
-      // if (this.isBrushing || this.isEraser) {
-      //   switch (char) {
-      //     // Move the text indicator around with the arrow keys
-      //     case "ArrowUp":
-      //       if (this.currentAsciiLayerBlocks[this.canvasXy.y - 1][this.canvasXy.x]) {
-      //         this.canvasXy.y -= 1;
-      //       }
-      //       break;
-
-      //     case "ArrowDown":
-      //       if (this.currentAsciiLayerBlocks[this.canvasXy.y + 1][this.canvasXy.x]) {
-      //         this.canvasXy.y += 1;
-      //       }
-      //       break;
-
-      //     case "ArrowLeft":
-      //       if (this.currentAsciiLayerBlocks[this.canvasXy.y][this.canvasXy.x - 1]) {
-      //         this.canvasXy.x -= 1;
-      //       }
-      //       break;
-
-      //     case "ArrowRight":
-      //       if (this.currentAsciiLayerBlocks[this.canvasXy.y][this.canvasXy.x + 1]) {
-      //         this.canvasXy.x += 1;
-      //       }
-      //       break;
-
-      //     case " ":
-      //       this.$emit("triggerbrush");
-      //       return;
-      //       break;
-      //   }
-
-      //   this.$emit("arrowkeys", this.canvasXy);
-
-      // }
-
       if (this.isTextEditing) {
         console.log(char);
         if (

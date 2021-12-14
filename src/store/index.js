@@ -471,6 +471,7 @@ export default new Vuex.Store({
     },
     // Modals / Tabs
     openModal(state, type) {
+      
       switch (type) {
         case 'new-ascii':
           state.modalState.newAscii = true;
@@ -499,6 +500,7 @@ export default new Vuex.Store({
       }
     },
     closeModal(state, type) {
+      
       switch (type) {
         case 'new-ascii':
           state.modalState.newAscii = false;
