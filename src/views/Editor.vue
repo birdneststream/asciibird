@@ -62,6 +62,7 @@ import {
   getBlocksWidth,
   checkVisible,
   mergeLayers,
+  cyrb53,
 } from "../ascii";
 
 export default {
@@ -79,11 +80,9 @@ export default {
 
     var _this = this;
     hotkeys("*", "editor", function (event, handler) {
-      
-
       if (_this.isBrushing || _this.isErasing) {
         event.preventDefault();
-        
+
         switch (event.key) {
           case "ArrowUp":
             _this.y--;
@@ -113,10 +112,10 @@ export default {
             _this.canTool = true;
             _this.isBrushing ? _this.drawBrush() : _this.eraser();
             _this.canTool = false;
-            _this.$store.commit(
-              "updateAsciiBlocks",
-              _this.currentAsciiLayerBlocks
-            );
+            _this.$store.commit("updateAsciiBlocks", {
+              current: _this.currentAsciiLayerBlocks,
+              diff: {},
+            });
 
             break;
         }
@@ -158,8 +157,8 @@ export default {
     selectedBlocks: [],
 
     tempBlocks: {
-      new: [],
       old: [],
+      new: [],
     },
 
     isUsingKeyboard: false,
@@ -332,6 +331,9 @@ export default {
     canvasTransparent() {
       return this.imageOverlay.visible ? "opacity: 0.6;" : "opacity: 1;";
     },
+    currentAsciiBlocks() {
+      return this.$store.getters.currentAsciiBlocks;
+    },
   },
   watch: {
     currentAscii(val, old) {
@@ -394,7 +396,10 @@ export default {
     // Save text to store when finished
     isTextEditing(val, old) {
       if (val !== old && val === false) {
-        this.$store.commit("updateAsciiBlocks", this.currentAsciiLayerBlocks);
+        this.$store.commit("updateAsciiBlocks", {
+          blocks: this.currentAsciiLayerBlocks,
+          diff: {},
+        });
       }
     },
     textEditing(val, old) {
@@ -416,48 +421,6 @@ export default {
     yOffset() {
       this.delayRedrawCanvas();
     },
-
-    // asciiBlockAtXy(val, old) {
-
-    // Keep track of what blocks have changed
-
-    // if (this.canTool) {
-
-    //   this.tempBlocks.new = this.tempBlocks.new.filter(obj => obj.x !== this.x);
-    //   this.tempBlocks.new = this.tempBlocks.new.filter(obj => obj.y !== this.y);
-
-    //   this.tempBlocks.new.push({
-    //     x: this.x,
-    //     y: this.y,
-    //     block: {... val } })
-
-    //   this.tempBlocks.old = this.tempBlocks.old.filter(obj => obj.x !== this.x);
-    //   this.tempBlocks.old = this.tempBlocks.old.filter(obj => obj.y !== this.y);
-
-    //   this.tempBlocks.old.push({
-    //     x: this.x,
-    //     y: this.y,
-    //     block: {... old } })
-
-    // }
-
-    // },
-    // canvasxy(val,old) {
-    //   if ((this.isBrushing || this.isErasing) && isUsingKeyboard) {
-    //     this.x = val.x;
-    //     this.y = val.y;
-
-    //     let e = {offsetX: (this.x), offsetY: (this.y)}
-    //     this.canvasMouseMove(e)
-    //   }
-    // },
-    // brush(val, old) {
-    //   console.log({triggerbrush: val})
-    //   if (val !== old) {
-    //     this.canvasMouseDown()
-    //     this.canvasMouseUp()
-    //   }
-    // }
   },
   methods: {
     warnInvisibleLayer() {
@@ -573,13 +536,13 @@ export default {
 
             curBlock = { ...mergeLayers[y][x] };
 
-            if (curBlock.bg !== null) {
+            if (curBlock.bg !== undefined) {
               this.ctx.fillStyle = this.mircColours[curBlock.bg];
               this.ctx.fillRect(canvasX, canvasY, blockWidth, blockHeight);
             }
 
-            if (curBlock.char) {
-              if (curBlock.fg !== null) {
+            if (curBlock.char !== undefined) {
+              if (curBlock.fg !== undefined) {
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
               } else {
                 this.ctx.fillStyle = "#000000";
@@ -635,13 +598,29 @@ export default {
         case "brush":
           this.canTool = false;
 
-          this.$store.commit("updateAsciiBlocks", this.currentAsciiLayerBlocks);
+          this.tempBlocks.old = this.tempBlocks.old.flat();
+          this.tempBlocks.new = this.tempBlocks.new.flat();
+
+          console.log(JSON.stringify(this.tempBlocks));
+
+          this.$store.commit("updateAsciiBlocks", {
+            blocks: this.currentAsciiLayerBlocks,
+            diff: { ...this.tempBlocks },
+          });
+
+          this.tempBlocks = {
+            new: [],
+            old: [],
+          };
 
           break;
 
         case "eraser":
           this.canTool = false;
-          this.$store.commit("updateAsciiBlocks", this.currentAsciiLayerBlocks);
+          this.$store.commit("updateAsciiBlocks", {
+            blocks: this.currentAsciiLayerBlocks,
+            diff: {},
+          });
           break;
 
         case "fill-eraser":
@@ -659,14 +638,22 @@ export default {
           this.textEditing.startY = this.y;
           break;
       }
-
-      // this.tempBlocks = {
-      //   new: [],
-      //   old: [],
-      // }
     },
     canvasMouseDown() {
       if (this.isDefault) return;
+
+      if (
+        cyrb53(JSON.stringify(this.asciiBlockAtXy)) ===
+        cyrb53(
+          JSON.stringify({
+            bg: this.currentBg,
+            fg: this.currentFg,
+            char: this.currentChar,
+          })
+        )
+      ) {
+        return;
+      }
 
       if (this.asciiBlockAtXy && this.currentTool) {
         const targetBlock = this.asciiBlockAtXy;
@@ -681,19 +668,19 @@ export default {
 
           case "fill":
             this.fill();
-            this.$store.commit(
-              "updateAsciiBlocks",
-              this.currentAsciiLayerBlocks
-            );
+            this.$store.commit("updateAsciiBlocks", {
+              blocks: this.currentAsciiLayerBlocks,
+              diff: {},
+            });
             this.canTool = false;
             break;
 
           case "fill-eraser":
             this.fill(true);
-            this.$store.commit(
-              "updateAsciiBlocks",
-              this.currentAsciiLayerBlocks
-            );
+            this.$store.commit("updateAsciiBlocks", {
+              blocks: this.currentAsciiLayerBlocks,
+              diff: {},
+            });
             this.canTool = false;
             break;
 
@@ -1214,6 +1201,8 @@ export default {
           ][target] = brushBlock[target];
         }
       }
+
+      return brushBlock;
     },
     //
     // drawBrush
@@ -1266,6 +1255,25 @@ export default {
             this.currentAsciiLayerBlocks[arrayY] &&
             this.currentAsciiLayerBlocks[arrayY][arrayX]
           ) {
+            if (this.canTool) {
+              if (!this.tempBlocks.old[arrayY]) {
+                this.tempBlocks.old[arrayY] = [];
+              }
+
+              if (!this.tempBlocks.old[arrayY][arrayX]) {
+                this.tempBlocks.old[arrayY][arrayX] = [];
+              }
+
+              this.tempBlocks.old[arrayY][arrayX] = {
+                l: this.selectedLayerIndex,
+                d: {
+                  x: arrayX,
+                  y: arrayY,
+                  b: { ...this.currentAsciiLayerBlocks[arrayY][arrayX] },
+                },
+              };
+            }
+
             if (!plain) {
               if (this.canBg) {
                 this.drawBrushBlocks(brushX, brushY, brushBlock, "bg");
@@ -1278,6 +1286,25 @@ export default {
               this.drawBrushBlocks(brushX, brushY, brushBlock, null);
             } else {
               this.drawBrushBlocks(brushX, brushY, brushBlock, null, true);
+            }
+
+            if (this.canTool) {
+              if (!this.tempBlocks.new[arrayY]) {
+                this.tempBlocks.new[arrayY] = [];
+              }
+
+              if (!this.tempBlocks.new[arrayY][arrayX]) {
+                this.tempBlocks.new[arrayY][arrayX] = [];
+              }
+
+              this.tempBlocks.new[arrayY][arrayX] = {
+                l: this.selectedLayerIndex,
+                d: {
+                  x: arrayX,
+                  y: arrayY,
+                  b: { ... this.currentAsciiLayerBlocks[arrayY][arrayX] },
+                },
+              };
             }
           }
         }
@@ -1410,7 +1437,7 @@ export default {
         newColor.bg = this.currentBg;
         current.bg = this.asciiBlockAtXy.bg;
       }
-// 
+      //
       if (this.canFg) {
         newColor.fg = this.currentFg;
         current.fg = this.asciiBlockAtXy.fg;

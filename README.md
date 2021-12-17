@@ -28,7 +28,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
   * Show and hide layers
   * Change layer order
   * Double click to rename layer
-* Copy and paste between tabs
+* Copy and paste ASCII blocks between tabs
 * Remembers state on refresh and when the browser loads, can also export the state to a file and load elsewhere.
   * So you never lose your ascii art!
   * Saves layers, brushes data also to same file
@@ -65,23 +65,20 @@ A most latest production build to use is available at https://asciibird.jewbird.
 ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. Refreshing the page seems to fix most strange things.
 
 * Importer could be re-written with regex
-* That inverted black / white bug when exporting, happens if fg or bg is null
+* That inverted black / white bug when exporting, happens if fg or bg is null (this maybe fixed with the recent work)
 
-* Having more than a few layers depending on ascii size will slow things down, until the `fillNullBlocks` is refactored.
- * CHUNKED DIFF ENGINE
- * Redo ctrl Y is COOKED (not working) - redo the undo and redo with this new system
 ## Focusing on Now / Roadmap
+
+* We can store chunked editing differences! Just need to fix up undo and redo with this new system.
+
+* Warning to the user for width and clipping, on export
+ * Optimise the export code to use less chars
 
 * More Context Menus (right click menu)
   * Brushes Canvas right click
   * ASCII right click
 
 * Review encodings check on file import - UTF8 vs Latin something
-
-## AFTER the above stuff is done
-
-* Warning to the user for width and clipping
- * Optimise the export code to use less chars
 # Keyboard Shortcuts
 
 ## ASCII Editing

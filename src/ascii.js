@@ -192,9 +192,9 @@ export const toolbarIcons = [{
 ];
 
 export const emptyBlock = {
-  bg: null,
-  fg: null,
-  char: null,
+  // bg: null,
+  // fg: null,
+  // char: null,
 };
 
 export const create2DArray = (rows) => {
@@ -241,10 +241,8 @@ export const parseMircAscii = async (content, title) => {
   // This will end up in the asciibirdMeta
   const finalAscii = {
     title: filename,
-    // key: store.getters.nextTabValue,
-    // blockWidth: blockWidth * store.getters.blockSizeMultiplier,
-    // blockHeight: blockHeight * store.getters.blockSizeMultiplier,
-    blocks: [{
+    current: [],
+    layers: [{
       label: filename,
       visible: true,
       data: create2DArray(asciiImport.split('\n').length),
@@ -252,7 +250,8 @@ export const parseMircAscii = async (content, title) => {
       height: asciiImport.split('\n').length,
     }],
     history: [],
-    redo: [],
+    // redo: [],
+    historyIndex: 0,
     imageOverlay: {
       url: null,
       opacity: 95,
@@ -317,13 +316,13 @@ export const parseMircAscii = async (content, title) => {
         asciiY++;
 
         // Calculate widths mirc asciis vs plain text
-        if (!finalAscii.blocks[0].width && widthOfColCodes > 0) {
-          finalAscii.blocks[0].width = maxWidthLoop - widthOfColCodes;
+        if (!finalAscii.layers[0].width && widthOfColCodes > 0) {
+          finalAscii.layers[0].width = maxWidthLoop - widthOfColCodes;
         }
 
-        if (!finalAscii.blocks[0].width && widthOfColCodes === 0) {
+        if (!finalAscii.layers[0].width && widthOfColCodes === 0) {
           // Plain text
-          finalAscii.blocks[0].width = maxWidthFound;
+          finalAscii.layers[0].width = maxWidthFound;
         }
 
         // Resets the X value
@@ -425,22 +424,26 @@ export const parseMircAscii = async (content, title) => {
         asciiStringArray.shift();
         asciiX++;
 
-        finalAscii.blocks[0].data[asciiY][asciiX - 1] = {
+        finalAscii.layers[0].data[asciiY][asciiX - 1] = {
           ...curBlock,
         };
         break;
     } // End Switch
   } // End loop charPos
 
-  finalAscii.blocks = [...fillNullBlocks(finalAscii.blocks[0].height, finalAscii.blocks[0]
-    .width, finalAscii.blocks)];
+  // First layer data generation
+  finalAscii.layers = [...fillNullBlocks(finalAscii.layers[0].height, finalAscii.layers[0]
+    .width, finalAscii.layers)];
   // Store the ASCII and ensure we have no null blocks
-  finalAscii.blocks = LZString.compressToUTF16(
-    JSON.stringify(finalAscii.blocks),
+  finalAscii.layers = LZString.compressToUTF16(
+    JSON.stringify(finalAscii.layers),
   );
 
+  // What we will see on the canvas
+  finalAscii.current = LZString.compressToUTF16(JSON.stringify(finalAscii.layers[0].data));
+
   // We need to also store in the first undo history the original state
-  finalAscii.history.push(finalAscii.blocks);
+  // finalAscii.history.push(finalAscii.layers);
 
   // Save ASCII to storage
   store.commit('newAsciibirdMeta', finalAscii);
@@ -453,10 +456,12 @@ export const createNewAscii = (forms) => {
   const newAscii = {
     title: forms.createAscii.title,
     history: [],
-    redo: [],
+    // redo: [],
+    historyIndex: 0,
     x: 247, // the dragable ascii canvas x
     y: 24, // the dragable ascii canvas y
-    blocks: [{
+    current: [],
+    layers: [{
       label: forms.createAscii.title,
       visible: true,
       data: create2DArray(forms.createAscii.height),
@@ -477,16 +482,17 @@ export const createNewAscii = (forms) => {
   };
 
   // Push all the default ASCII blocks
-  for (let x = 0; x < newAscii.blocks[0].width; x++) {
-    for (let y = 0; y < newAscii.blocks[0].height; y++) {
-      newAscii.blocks[0].data[y].push({
+  for (let x = 0; x < newAscii.layers[0].width; x++) {
+    for (let y = 0; y < newAscii.layers[0].height; y++) {
+      newAscii.layers[0].data[y].push({
         ...emptyBlock,
       });
     }
   }
 
-  newAscii.blocks = LZString.compressToUTF16(JSON.stringify(newAscii.blocks));
-  newAscii.history.push(newAscii.blocks);
+  newAscii.layers = LZString.compressToUTF16(JSON.stringify(newAscii.layers));
+  newAscii.current = LZString.compressToUTF16(JSON.stringify(newAscii.layers[0].data));
+  // newAscii.history.push(newAscii.layers);
   store.commit('newAsciibirdMeta', newAscii);
   store.commit('closeModal', 'new-ascii');
 
@@ -528,19 +534,19 @@ export const exportMirc = () => {
         };
         const zeroPad = (num, places) => String(num).padStart(places, '0');
 
-        if (curBlock.fg === null && curBlock.bg === null) {
+        if (curBlock.fg === undefined && curBlock.bg === undefined) {
           output.push('\u0003');
         } else {
 
-          if (curBlock.bg === null && curBlock.fg !== null) {
+          if (curBlock.bg === undefined && curBlock.fg !== undefined) {
             pushString = `\u0003\u0003${zeroPad(curBlock.fg, 2)}`;
           }
 
-          if (curBlock.bg !== null && curBlock.fg !== null) {
+          if (curBlock.bg !== undefined && curBlock.fg !== undefined) {
             pushString = `\u0003${zeroPad(curBlock.fg, 2)},${zeroPad(curBlock.bg, 2)}`;
           }
 
-          if (curBlock.bg !== null && curBlock.fg === null) {
+          if (curBlock.bg !== undefined && curBlock.fg === undefined) {
             pushString = `\u000300,${zeroPad(curBlock.bg, 2)}`;
           }
 
@@ -733,6 +739,7 @@ export const filterNullBlocks = function (blocks) {
     newBlocks[y] = (blocks[y].filter(function (item) {
       return item !== null
     }))
+
   }
 
   return newBlocks
@@ -786,18 +793,18 @@ export const mergeLayers = function (blocks = null) {
           store.getters.currentAsciiLayers[z] &&
           store.getters.currentAsciiLayers[z].data &&
           store.getters.currentAsciiLayers[z].data[y] &&
-          store.getters.currentAsciiLayers[z].data[y][x]
+          store.getters.currentAsciiLayers[z].data[y][x]           
         ) {
 
-          if (curBlock.char === null) {
+          if (curBlock.char === undefined) {
             curBlock.char = store.getters.currentAsciiLayers[z].data[y][x].char;
           }
 
-          if (curBlock.fg === null) {
+          if (curBlock.fg === undefined) {
             curBlock.fg = store.getters.currentAsciiLayers[z].data[y][x].fg;
           }
 
-          if (curBlock.bg === null) {
+          if (curBlock.bg === undefined) {
             curBlock.bg = store.getters.currentAsciiLayers[z].data[y][x].bg;
           }
 

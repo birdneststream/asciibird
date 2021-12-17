@@ -9,7 +9,8 @@ import {
   getBlocksWidth,
   create2DArray,
   emptyBlock,
-  mergeLayers
+  mergeLayers,
+  exportMirc
 } from "../ascii";
 
 Vue.use(Vuex);
@@ -20,6 +21,7 @@ const vuexLocal = new VuexPersistence({
 export default new Vuex.Store({
 
   state: {
+    ver: 1,
     modalState: {
       newAscii: false,
       editAscii: false,
@@ -111,7 +113,9 @@ export default new Vuex.Store({
       Object.assign(state, payload);
     },
     updateOptions(state, payload) {
-      state.options = { ... payload};
+      state.options = {
+        ...payload
+      };
     },
     changeTab(state, payload) {
       state.tab = payload;
@@ -148,7 +152,7 @@ export default new Vuex.Store({
       state.layersLibraryState = payload;
     },
     changeAsciiWidthHeight(state, payload) {
-      state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
+      state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
         payload.layers));
     },
     changeAsciiCanvasState(state, payload) {
@@ -208,17 +212,23 @@ export default new Vuex.Store({
         state.asciibirdMeta[state.tab].history.shift()
       }
 
-      if (!skipUndo) {
-        state.asciibirdMeta[state.tab].history.push(state.asciibirdMeta[state.tab].blocks);
+      // if (!skipUndo) {
+      //   state.asciibirdMeta[state.tab].history.push(state.asciibirdMeta[state.tab].layers);
+      // }
+
+      let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab].layers))
+
+      tempLayers[state.asciibirdMeta[state.tab].selectedLayer].data = payload.blocks
+
+      state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
+        tempLayers));
+
+      state.asciibirdMeta[state.tab].current = LZString.compressToUTF16(JSON.stringify(mergeLayers()));
+      
+      if (payload.diff && payload.diff.new && payload.diff.new.length) {
+        state.asciibirdMeta[state.tab].history.push(LZString.compressToUTF16(JSON.stringify(payload.diff)))
       }
 
-      let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
-        .blocks))
-      tempLayers[state.asciibirdMeta[state.tab].selectedLayer].data = payload
-
-      state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
-        tempLayers));
-      state.asciibirdMeta[state.tab].redo = [];
     },
 
     //
@@ -226,7 +236,7 @@ export default new Vuex.Store({
     //
     addLayer(state) {
       let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
-        .blocks))
+        .layers))
 
       let width = tempLayers[0].width;
       let height = tempLayers[0].height;
@@ -250,12 +260,12 @@ export default new Vuex.Store({
         height: height
       })
 
-      state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
+      state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
         tempLayers));
     },
     mergeAllLayers(state) {
       let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
-        .blocks))
+        .layers))
 
       let width = tempLayers[0].width;
       let height = tempLayers[0].height;
@@ -270,7 +280,7 @@ export default new Vuex.Store({
       }];
 
       state.asciibirdMeta[state.tab].selectedLayer = 0;
-      state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
+      state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
         mergedLayers));
     },
     changeLayer(state, payload) {
@@ -278,16 +288,16 @@ export default new Vuex.Store({
     },
     toggleLayer(state, payload) {
       let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
-        .blocks))
+        .layers))
 
       tempLayers[payload].visible = !tempLayers[payload].visible
 
-      state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
+      state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
         tempLayers));
     },
     removeLayer(state, payload) {
       let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
-        .blocks))
+        .layers))
 
       if (tempLayers.length > 1) {
         tempLayers.splice(payload, 1)
@@ -301,14 +311,14 @@ export default new Vuex.Store({
           state.asciibirdMeta[state.tab].selectedLayer = 0
         }
 
-        state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
+        state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
           tempLayers));
       }
 
     },
     downLayer(state, payload) {
       let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
-        .blocks))
+        .layers))
 
       if (tempLayers[payload + 1]) {
         let swap1 = tempLayers[payload + 1];
@@ -317,14 +327,14 @@ export default new Vuex.Store({
         tempLayers[payload + 1] = swap
         tempLayers[payload] = swap1
 
-        state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
+        state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
           tempLayers));
       }
 
     },
     upLayer(state, payload) {
       let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
-        .blocks))
+        .layers))
 
       if (tempLayers[payload - 1]) {
         let swap1 = tempLayers[payload - 1];
@@ -333,18 +343,18 @@ export default new Vuex.Store({
         tempLayers[payload - 1] = swap
         tempLayers[payload] = swap1
 
-        state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
+        state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
           tempLayers));
       }
 
     },
     updateLayerName(state, payload) {
       let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
-        .blocks))
+        .layers))
 
       if (tempLayers[payload.key]) {
         tempLayers[payload.key].label = payload.label;
-        state.asciibirdMeta[state.tab].blocks = LZString.compressToUTF16(JSON.stringify(
+        state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
           tempLayers));
       }
 
@@ -357,19 +367,19 @@ export default new Vuex.Store({
 
     // BLOCKS
     undoBlocks(state) {
-      if (state.asciibirdMeta[state.tab].history.length > 1) {
+      // if (state.asciibirdMeta[state.tab].history.length > 1) {
 
-        state.asciibirdMeta[state.tab].blocks = state.asciibirdMeta[state.tab].history.pop();
-        state.asciibirdMeta[state.tab].redo.push(state.asciibirdMeta[state.tab].blocks);
+      // state.asciibirdMeta[state.tab].layers = state.asciibirdMeta[state.tab].history.pop();
+      // state.asciibirdMeta[state.tab].redo.push(state.asciibirdMeta[state.tab].layers);
 
-      }
+      // }
     },
     redoBlocks(state) {
-      if (state.asciibirdMeta[state.tab].redo.length) {
-        const next = state.asciibirdMeta[state.tab].redo.pop();
-        state.asciibirdMeta[state.tab].blocks = next;
-        state.asciibirdMeta[state.tab].history.push(next);
-      }
+      // if (state.asciibirdMeta[state.tab].redo.length) {
+      //   const next = state.asciibirdMeta[state.tab].redo.pop();
+      //   state.asciibirdMeta[state.tab].layers = next;
+      //   state.asciibirdMeta[state.tab].history.push(next);
+      // }
     },
 
     //
@@ -471,7 +481,7 @@ export default new Vuex.Store({
     },
     // Modals / Tabs
     openModal(state, type) {
-      
+
       switch (type) {
         case 'new-ascii':
           state.modalState.newAscii = true;
@@ -500,7 +510,7 @@ export default new Vuex.Store({
       }
     },
     closeModal(state, type) {
-      
+
       switch (type) {
         case 'new-ascii':
           state.modalState.newAscii = false;
@@ -560,20 +570,19 @@ export default new Vuex.Store({
     currentTab: (state) => state.tab,
     currentAscii: (state) => state.asciibirdMeta[state.tab] ?? false,
     currentAsciiBlocks: (state) => {
-      let blocks = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[
-        state.tab].blocks)) || [];
+      let blocks = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab].current)) || [];
 
-      return blocks[state.asciibirdMeta[state.tab].selectedLayer].data || []
+      return blocks;
     },
     currentAsciiLayers: (state) => {
-      let blocks = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[
-        state.tab].blocks));
+      let layers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[
+        state.tab].layers));
 
-      return blocks
+      return layers
     },
     currentAsciiLayersWidthHeight: (state) => {
       let blocks = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[
-        state.tab].blocks));
+        state.tab].layers));
 
       return {
         width: blocks[0].width,
