@@ -50,10 +50,7 @@
         
         <br>
 
-        <span class="ml-5"> Size: {{ asciiStats.sizeCompressed }} ({{ asciiStats.sizeUncompressed }} / {{ asciiStats.sizePercentage }}%) </span> <br>
-
-        <span class="ml-5"> State Size: {{ asciiStats.stateSize }}</span> <br>
-
+        <span class="ml-5">ASCII Internal Size: {{ asciiStats.sizeUncompressed }} </span> <br>
 
         <div class="mb-4 border-t-2">
             <div class="mt-1 p-2 bg-red-300 rounded-md cursor-pointer" @click="copyUriToClipboard()">Copy URI Encoded String</div>
@@ -111,15 +108,12 @@ export default {
       return this.$store.getters.currentAsciiBlocks;
     },
     asciiStats() {
-      const compressed = (this.currentAscii.blocks.length / 1024).toFixed(2);
-      const uncompressed = (JSON.stringify(this.currentAsciiBlocks).length / 1024).toFixed(2);
+      // const compressed = ( JSON.stringify(this.currentAscii) / 1024).toFixed(2);
+      const uncompressed = (JSON.stringify(this.currentAscii).length / 1024).toFixed(2);
 
-      const stateSize = (JSON.stringify(this.state).length / 1024).toFixed(2);
+      // const stateSize = (JSON.stringify(this.state).length / 1024).toFixed(2);
       return {
-        sizeCompressed: `${compressed}kb`,
         sizeUncompressed: `${uncompressed}kb`,
-        stateSize: `${stateSize}kb`,
-        sizePercentage: (100 - (uncompressed / compressed)).toFixed(2),
       };
     },
     currentTool() {

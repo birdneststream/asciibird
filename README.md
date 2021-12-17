@@ -64,17 +64,18 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. Refreshing the page seems to fix most strange things.
 
-* Importer could be re-written with regex
 * That inverted black / white bug when exporting, happens if fg or bg is null (this maybe fixed with the recent work)
 
-## Focusing on Now / Roadmap
+## Focusing on Now 
 
-* Warning to the user for width and clipping, on export
-
+* Importer could be re-written with regex
 * More Context Menus (right click menu)
   * Brushes Canvas right click
   * ASCII right click
 
+## Roadmap
+
+* Warning on mirc export if ascii exceeds IRCs 512 per chat line limit.
 * Review encodings check on file import - UTF8 vs Latin something
 # Keyboard Shortcuts
 

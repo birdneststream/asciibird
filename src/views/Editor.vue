@@ -110,12 +110,22 @@ export default {
 
           case " ":
             _this.canTool = true;
+            // let oldBlock = { ... _this.currentAsciiLayerBlocks[_this.y][_this.x] }
             _this.isBrushing ? _this.drawBrush() : _this.eraser();
+            // let newBlock = { ... _this.currentAsciiLayerBlocks[_this.y][_this.x] }
             _this.canTool = false;
-            _this.$store.commit("updateAsciiBlocks", {
+            _this.diffBlocks.old = _this.diffBlocks.old.flat();
+            _this.diffBlocks.new = _this.diffBlocks.new.flat();
+
+            _this.$store.commit("updateAsciiBlocksAsync", {
               current: _this.currentAsciiLayerBlocks,
-              diff: {},
+              diff: { ..._this.diffBlocks },
             });
+
+            _this.diffBlocks = {
+              new: [],
+              old: [],
+            };
 
             break;
         }
@@ -156,7 +166,7 @@ export default {
     isMouseOnCanvas: false,
     selectedBlocks: [],
 
-    tempBlocks: {
+    diffBlocks: {
       old: [],
       new: [],
     },
@@ -396,10 +406,18 @@ export default {
     // Save text to store when finished
     isTextEditing(val, old) {
       if (val !== old && val === false) {
-        this.$store.commit("updateAsciiBlocks", {
+        this.diffBlocks.old = this.diffBlocks.old.flat();
+        this.diffBlocks.new = this.diffBlocks.new.flat();
+
+        this.$store.dispatch("updateAsciiBlocksAsync", {
           blocks: this.currentAsciiLayerBlocks,
-          diff: {},
+          diff: { ...this.diffBlocks },
         });
+
+        this.diffBlocks = {
+          new: [],
+          old: [],
+        };
       }
     },
     textEditing(val, old) {
@@ -598,17 +616,15 @@ export default {
         case "brush":
           this.canTool = false;
 
-          this.tempBlocks.old = this.tempBlocks.old.flat();
-          this.tempBlocks.new = this.tempBlocks.new.flat();
+          this.diffBlocks.old = this.diffBlocks.old.flat();
+          this.diffBlocks.new = this.diffBlocks.new.flat();
 
-          console.log(JSON.stringify(this.tempBlocks));
-
-          this.$store.commit("updateAsciiBlocks", {
+          this.$store.dispatch("updateAsciiBlocksAsync", {
             blocks: this.currentAsciiLayerBlocks,
-            diff: { ...this.tempBlocks },
+            diff: { ...this.diffBlocks },
           });
-
-          this.tempBlocks = {
+          console.log(JSON.stringify(this.diffBlocks));
+          this.diffBlocks = {
             new: [],
             old: [],
           };
@@ -617,10 +633,19 @@ export default {
 
         case "eraser":
           this.canTool = false;
-          this.$store.commit("updateAsciiBlocks", {
+
+          this.diffBlocks.old = this.diffBlocks.old.flat();
+          this.diffBlocks.new = this.diffBlocks.new.flat();
+
+          this.$store.dispatch("updateAsciiBlocksAsync", {
             blocks: this.currentAsciiLayerBlocks,
-            diff: {},
+            diff: { ...this.diffBlocks },
           });
+
+          this.diffBlocks = {
+            new: [],
+            old: [],
+          };
           break;
 
         case "fill-eraser":
@@ -642,19 +667,6 @@ export default {
     canvasMouseDown() {
       if (this.isDefault) return;
 
-      if (
-        cyrb53(JSON.stringify(this.asciiBlockAtXy)) ===
-        cyrb53(
-          JSON.stringify({
-            bg: this.currentBg,
-            fg: this.currentFg,
-            char: this.currentChar,
-          })
-        )
-      ) {
-        return;
-      }
-
       if (this.asciiBlockAtXy && this.currentTool) {
         const targetBlock = this.asciiBlockAtXy;
 
@@ -668,20 +680,37 @@ export default {
 
           case "fill":
             this.fill();
-            this.$store.commit("updateAsciiBlocks", {
-              blocks: this.currentAsciiLayerBlocks,
-              diff: {},
-            });
             this.canTool = false;
+
+            this.diffBlocks.old = this.diffBlocks.old.flat();
+            this.diffBlocks.new = this.diffBlocks.new.flat();
+
+            this.$store.dispatch("updateAsciiBlocksAsync", {
+              blocks: this.currentAsciiLayerBlocks,
+              diff: { ...this.diffBlocks },
+            });
+
+            this.diffBlocks = {
+              new: [],
+              old: [],
+            };
             break;
 
           case "fill-eraser":
             this.fill(true);
-            this.$store.commit("updateAsciiBlocks", {
+            
+            this.diffBlocks.old = this.diffBlocks.old.flat();
+            this.diffBlocks.new = this.diffBlocks.new.flat();
+
+            this.$store.dispatch("updateAsciiBlocksAsync", {
               blocks: this.currentAsciiLayerBlocks,
-              diff: {},
+              diff: { ...this.diffBlocks },
             });
-            this.canTool = false;
+
+            this.diffBlocks = {
+              new: [],
+              old: [],
+            };
             break;
 
           case "brush":
@@ -698,21 +727,23 @@ export default {
             if (this.canFg) {
               this.$store.commit(
                 "changeColourFg",
-                targetBlock.fg === null ? this.currentFg : targetBlock.fg
+                targetBlock.fg === undefined ? this.currentFg : targetBlock.fg
               );
             }
 
             if (this.canBg) {
               this.$store.commit(
                 "changeColourBg",
-                targetBlock.bg === null ? this.currentBg : targetBlock.bg
+                targetBlock.bg === undefined ? this.currentBg : targetBlock.bg
               );
             }
 
             if (this.canText) {
               this.$store.commit(
                 "changeChar",
-                targetBlock.char === null ? this.currentChar : targetBlock.char
+                targetBlock.char === undefined
+                  ? this.currentChar
+                  : targetBlock.char
               );
             }
 
@@ -741,6 +772,7 @@ export default {
       if (this.x === lastX && this.y === lastY) {
         return;
       }
+     
       this.$emit("coordsupdate", { x: this.x, y: this.y });
 
       if (this.asciiBlockAtXy) {
@@ -1018,14 +1050,14 @@ export default {
       switch (target) {
         case "bg":
           this.toolCtx.fillStyle =
-            brushBlock.bg !== null
+            brushBlock.bg !== undefined
               ? this.mircColours[brushBlock.bg]
               : "rgba(255,255,255,0.4)";
 
           break;
         case "fg":
           this.toolCtx.fillStyle =
-            brushBlock.fg !== null
+            brushBlock.fg !== undefined
               ? this.mircColours[brushBlock.fg]
               : "#000000";
 
@@ -1033,7 +1065,7 @@ export default {
 
         // If no target is specified we assume we are rendering the text
         default:
-          if (this.canText && brushBlock.char !== null) {
+          if (this.canText && brushBlock.char !== undefined) {
             this.toolCtx.font = "Hack 13px";
 
             this.toolCtx.fillStyle = this.canFg
@@ -1167,7 +1199,7 @@ export default {
       }
 
       // Apply the actual brush block to the ascii block
-      if (this.canTool && brushBlock[target] !== null) {
+      if (this.canTool && brushBlock[target] !== undefined) {
         targetBlock[target] = brushBlock[target];
 
         if (
@@ -1202,7 +1234,7 @@ export default {
         }
       }
 
-      return brushBlock;
+      return;
     },
     //
     // drawBrush
@@ -1255,65 +1287,71 @@ export default {
             this.currentAsciiLayerBlocks[arrayY] &&
             this.currentAsciiLayerBlocks[arrayY][arrayX]
           ) {
-            if (this.canTool) {
-              if (!this.tempBlocks.old[arrayY]) {
-                this.tempBlocks.old[arrayY] = [];
-              }
-
-              if (!this.tempBlocks.old[arrayY][arrayX]) {
-                this.tempBlocks.old[arrayY][arrayX] = [];
-              }
-
-              this.tempBlocks.old[arrayY][arrayX] = {
-                l: this.selectedLayerIndex,
-                d: {
-                  x: arrayX,
-                  y: arrayY,
-                  b: { ...this.currentAsciiLayerBlocks[arrayY][arrayX] },
-                },
+            
+              let oldBlock = {
+                ...this.currentAsciiLayerBlocks[arrayY][arrayX],
               };
-            }
 
-            if (!plain) {
-              if (this.canBg) {
-                this.drawBrushBlocks(brushX, brushY, brushBlock, "bg");
+              if (!plain) {
+                if (this.canBg) {
+                  this.drawBrushBlocks(brushX, brushY, brushBlock, "bg");
+                }
+
+                if (this.canFg) {
+                  this.drawBrushBlocks(brushX, brushY, brushBlock, "fg");
+                }
+
+                this.drawBrushBlocks(brushX, brushY, brushBlock, null);
+              } else {
+                this.drawBrushBlocks(brushX, brushY, brushBlock, null, true);
               }
 
-              if (this.canFg) {
-                this.drawBrushBlocks(brushX, brushY, brushBlock, "fg");
-              }
-
-              this.drawBrushBlocks(brushX, brushY, brushBlock, null);
-            } else {
-              this.drawBrushBlocks(brushX, brushY, brushBlock, null, true);
-            }
-
-            if (this.canTool) {
-              if (!this.tempBlocks.new[arrayY]) {
-                this.tempBlocks.new[arrayY] = [];
-              }
-
-              if (!this.tempBlocks.new[arrayY][arrayX]) {
-                this.tempBlocks.new[arrayY][arrayX] = [];
-              }
-
-              this.tempBlocks.new[arrayY][arrayX] = {
-                l: this.selectedLayerIndex,
-                d: {
-                  x: arrayX,
-                  y: arrayY,
-                  b: { ... this.currentAsciiLayerBlocks[arrayY][arrayX] },
-                },
-              };
+              if (this.canTool) {
+              this.storeDiffBlocks(
+                arrayX,
+                arrayY,
+                oldBlock,
+                this.currentAsciiLayerBlocks[arrayY][arrayX]
+              );
             }
           }
         }
       }
     },
+    storeDiffBlocks(x, y, oldBlock, newBlock) {
+      // For undo
+      if (!this.diffBlocks.old[y]) {
+        this.diffBlocks.old[y] = [];
+      }
+
+      if (!this.diffBlocks.old[y][x]) {
+        this.diffBlocks.old[y][x] = {
+          l: this.selectedLayerIndex,
+          d: {
+            x: x,
+            y: y,
+            b: { ...oldBlock },
+          },
+        };
+      }
+
+      if (!this.diffBlocks.new[y]) {
+        this.diffBlocks.new[y] = [];
+      }
+
+      if (!this.diffBlocks.new[y][x] || this.isTextEditing) {
+        this.diffBlocks.new[y][x] = {
+          l: this.selectedLayerIndex,
+          d: {
+            x: x,
+            y: y,
+            b: { ...newBlock },
+          },
+        };
+      }
+    },
     eraser() {
       if (this.canTool) {
-        let targetBlock = this.asciiBlockAtXy;
-
         const brushDiffX =
           Math.floor(this.brushBlocks[0].length / 2) * blockWidth;
         const brushDiffY =
@@ -1327,101 +1365,94 @@ export default {
             const arrayY = brushY / blockHeight;
             const arrayX = brushX / blockWidth;
 
-            if (this.asciiBlockAtXy) {
-              targetBlock = this.currentAsciiLayerBlocks[arrayY][arrayX];
+            let targetBlock = this.currentAsciiLayerBlocks[arrayY][arrayX];
+            let oldBlock = { ...this.currentAsciiLayerBlocks[arrayY][arrayX] };
 
-              if (this.canFg) {
-                targetBlock.fg = null;
-              }
-
-              if (this.canBg) {
-                targetBlock.bg = null;
-              }
-
-              if (this.canText) {
-                targetBlock.char = null;
-              }
+            if (this.canFg && targetBlock.fg !== undefined) {
+              delete targetBlock["fg"];
             }
 
+            if (this.canBg && targetBlock.bg !== undefined) {
+              delete targetBlock["bg"];
+            }
+
+            if (this.canText && targetBlock.char !== undefined) {
+              delete targetBlock["char"];
+            }
+
+            this.storeDiffBlocks(arrayX, arrayY, oldBlock, targetBlock);
+
+            let theX = this.currentAsciiWidth - arrayX;
             if (this.mirrorX) {
               if (
                 this.currentAsciiLayerBlocks[arrayY] &&
-                this.currentAsciiLayerBlocks[arrayY][
-                  this.currentAsciiWidth - arrayX
-                ]
+                this.currentAsciiLayerBlocks[arrayY][theX]
               ) {
-                targetBlock =
-                  this.currentAsciiLayerBlocks[arrayY][
-                    this.currentAsciiWidth - arrayX
-                  ];
+                targetBlock = this.currentAsciiLayerBlocks[arrayY][theX];
+                oldBlock = { ...this.currentAsciiLayerBlocks[arrayY][theX] };
 
-                if (this.canFg) {
-                  targetBlock.fg = null;
+                if (this.canFg && targetBlock.fg !== undefined) {
+                  delete targetBlock["fg"];
                 }
 
-                if (this.canBg) {
-                  targetBlock.bg = null;
+                if (this.canBg && targetBlock.bg !== undefined) {
+                  delete targetBlock["bg"];
                 }
 
-                if (this.canText) {
-                  targetBlock.char = null;
+                if (this.canText && targetBlock.char !== undefined) {
+                  delete targetBlock["char"];
                 }
+
+                this.storeDiffBlocks(theX, arrayY, oldBlock, targetBlock);
               }
             }
 
+            let theY = this.currentAsciiHeight - arrayY;
             if (this.mirrorY) {
               if (
-                this.currentAsciiLayerBlocks[
-                  this.currentAsciiHeight - arrayY
-                ] &&
-                this.currentAsciiLayerBlocks[this.currentAsciiHeight - arrayY][
-                  arrayX
-                ]
+                this.currentAsciiLayerBlocks[theY] &&
+                this.currentAsciiLayerBlocks[theY][arrayX]
               ) {
-                targetBlock =
-                  this.currentAsciiLayerBlocks[
-                    this.currentAsciiHeight - arrayY
-                  ][arrayX];
+                targetBlock = this.currentAsciiLayerBlocks[theY][arrayX];
+                oldBlock = { ...this.currentAsciiLayerBlocks[theY][arrayX] };
 
-                if (this.canFg) {
-                  targetBlock.fg = null;
+                if (this.canFg && targetBlock.fg !== undefined) {
+                  delete targetBlock["fg"];
                 }
 
-                if (this.canBg) {
-                  targetBlock.bg = null;
+                if (this.canBg && targetBlock.bg !== undefined) {
+                  delete targetBlock["bg"];
                 }
 
-                if (this.canText) {
-                  targetBlock.char = null;
+                if (this.canText && targetBlock.char !== undefined) {
+                  delete targetBlock["char"];
                 }
+
+                this.storeDiffBlocks(arrayX, theY, oldBlock, targetBlock);
               }
             }
 
             if (this.mirrorY && this.mirrorX) {
               if (
-                this.currentAsciiLayerBlocks[
-                  this.currentAsciiHeight - arrayY
-                ] &&
-                this.currentAsciiLayerBlocks[this.currentAsciiHeight - arrayY][
-                  this.currentAsciiWidth - arrayX
-                ]
+                this.currentAsciiLayerBlocks[theY] &&
+                this.currentAsciiLayerBlocks[theY][theX]
               ) {
-                targetBlock =
-                  this.currentAsciiLayerBlocks[
-                    this.currentAsciiHeight - arrayY
-                  ][this.currentAsciiWidth - arrayX];
+                targetBlock = this.currentAsciiLayerBlocks[theY][theX];
+                oldBlock = { ...this.currentAsciiLayerBlocks[theY][theX] };
 
-                if (this.canFg) {
-                  targetBlock.fg = null;
+                if (this.canFg && targetBlock.fg !== undefined) {
+                  delete targetBlock["fg"];
                 }
 
-                if (this.canBg) {
-                  targetBlock.bg = null;
+                if (this.canBg && targetBlock.bg !== undefined) {
+                  delete targetBlock["bg"];
                 }
 
-                if (this.canText) {
-                  targetBlock.char = null;
+                if (this.canText && targetBlock.char !== undefined) {
+                  delete targetBlock["char"];
                 }
+
+                this.storeDiffBlocks(theX, theY, oldBlock, targetBlock);
               }
             }
           }
@@ -1480,16 +1511,23 @@ export default {
 
       // We can eraser or fill
       if (this.canBg) {
-        fillBlocks[y][x].bg = eraser ? null : this.currentBg;
+        fillBlocks[y][x].bg = eraser ? undefined : this.currentBg;
       }
 
       if (this.canFg) {
-        fillBlocks[y][x].fg = eraser ? null : this.currentFg;
+        fillBlocks[y][x].fg = eraser ? undefined : this.currentFg;
       }
 
       if (this.canText) {
-        fillBlocks[y][x].char = eraser ? null : this.currentChar;
+        fillBlocks[y][x].char = eraser ? undefined : this.currentChar;
       }
+
+      this.storeDiffBlocks(
+        x,
+        y,
+        this.currentAsciiLayerBlocks[y][x],
+        fillBlocks[y][x]
+      );
 
       // Fill in all four directions
       // Fill Prev row

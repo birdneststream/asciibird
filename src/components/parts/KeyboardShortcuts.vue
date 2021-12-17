@@ -569,7 +569,7 @@ export default {
     },
     canvasKeyDown(char) {
       if (this.isTextEditing) {
-        console.log(char);
+
         if (
           this.currentAsciiLayerBlocks[this.textEditing.startY] &&
           this.currentAsciiLayerBlocks[this.textEditing.startY][

@@ -236,6 +236,7 @@ export default new Vuex.Store({
         state.asciibirdMeta[state.tab].historyIndex = state.asciibirdMeta[state.tab].history.length;
       }
 
+      return;
     },
 
     //
@@ -651,7 +652,16 @@ export default new Vuex.Store({
       return false
     },
   },
-  actions: {},
+  actions: {
+    updateAsciiBlocksAsync({
+      commit
+    }, data) {
+      return new Promise((resolve, reject) => {
+          commit('updateAsciiBlocks', data);
+          resolve();
+      })
+    }
+  },
   modules: {},
   plugins: [vuexLocal.plugin],
 });

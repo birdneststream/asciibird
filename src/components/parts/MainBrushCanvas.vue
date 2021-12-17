@@ -216,7 +216,7 @@ export default {
             if (this.brushBlocks[y] && this.brushBlocks[y][x]) {
               const curBlock = this.brushBlocks[y][x];
 
-              if (curBlock.bg !== null && this.isTargettingBg) {
+              if (curBlock.bg !== undefined && this.isTargettingBg) {
                 this.ctx.fillStyle = this.mircColours[curBlock.bg];
 
                 this.ctx.fillRect(
@@ -227,11 +227,11 @@ export default {
                 );
               }
 
-              if (curBlock.fg !== null && this.isTargettingFg) {
+              if (curBlock.fg !== undefined && this.isTargettingFg) {
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
               }
 
-              if (curBlock.char !== null && this.isTargettingChar) {
+              if (curBlock.char !== undefined && this.isTargettingChar) {
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
                 this.ctx.fillText(
                   curBlock.char,
