@@ -1483,7 +1483,7 @@ export default {
       this.storeDiffBlocks(
         x,
         y,
-        this.currentAsciiLayerBlocks[y][x],
+        current,
         fillBlocks[y][x]
       );
 

@@ -175,7 +175,7 @@ export default {
             if (this.getBlocks[y] && this.getBlocks[y][x]) {
               const curBlock = this.getBlocks[y][x];
 
-              if (curBlock.bg !== null) {
+              if (curBlock.bg !== undefined) {
                 this.ctx.fillStyle = this.mircColours[curBlock.bg];
 
                 this.ctx.fillRect(
@@ -186,11 +186,11 @@ export default {
                 );
               }
 
-              if (curBlock.fg !== null) {
+              if (curBlock.fg !== undefined) {
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
               }
 
-              if (curBlock.char !== null) {
+              if (curBlock.char !== undefined) {
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
                 this.ctx.fillText(
                   curBlock.char,
