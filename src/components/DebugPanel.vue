@@ -50,7 +50,7 @@
         
         <br>
 
-        <span class="ml-5">ASCII Internal Size: {{ asciiStats.sizeUncompressed }} </span> <br>
+        <span class="ml-5">State Internal Size: {{ asciiStats.stateSize }} </span> <br>
 
         <div class="mb-4 border-t-2">
             <div class="mt-1 p-2 bg-red-300 rounded-md cursor-pointer" @click="copyUriToClipboard()">Copy URI Encoded String</div>
@@ -109,11 +109,11 @@ export default {
     },
     asciiStats() {
       // const compressed = ( JSON.stringify(this.currentAscii) / 1024).toFixed(2);
-      const uncompressed = (JSON.stringify(this.currentAscii).length / 1024).toFixed(2);
-
-      // const stateSize = (JSON.stringify(this.state).length / 1024).toFixed(2);
+      // const uncompressed = (JSON.stringify(this.currentAscii).length / 1024).toFixed(2);
+      const stateSize = (JSON.stringify(this.state).length / 1024).toFixed(2);
       return {
-        sizeUncompressed: `${uncompressed}kb`,
+        stateSize: `${stateSize}kb`,
+        
       };
     },
     currentTool() {
@@ -204,6 +204,9 @@ export default {
 
       this.$store.commit('changeDebugPanelState', this.panel);
     },
+    exportMirc() {
+      return exportMirc()
+    }
   },
 };
 </script>

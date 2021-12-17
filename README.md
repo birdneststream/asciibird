@@ -77,6 +77,7 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 
 * Warning on mirc export if ascii exceeds IRCs 512 per chat line limit.
 * Review encodings check on file import - UTF8 vs Latin something
+
 # Keyboard Shortcuts
 
 ## ASCII Editing

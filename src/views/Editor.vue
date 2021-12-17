@@ -83,9 +83,8 @@ export default {
       event.preventDefault();
 
       if (_this.isTextEditing) {
-        console.log("text edit");
         _this.canvasKeyDown(event.key);
-        // return;
+        return;
       }
 
       if (_this.isBrushing || _this.isErasing) {
@@ -425,7 +424,7 @@ export default {
   methods: {
     canvasKeyDown(char) {
       // if (this.isTextEditing) {
-      console.log(char);
+      console.log(char);  
       if (
         this.currentAsciiLayerBlocks[this.textEditing.startY] &&
         this.currentAsciiLayerBlocks[this.textEditing.startY][
@@ -453,14 +452,12 @@ export default {
                 ];
 
               oldBlock = {
-                ...this.currentAsciiLayerBlocks[this.textEditing.startY][
-                  this.textEditing.startX - 1
-                ],
+                ... targetBlock
               };
 
-              this.currentAsciiLayerBlocks[this.textEditing.startY][
+              delete this.currentAsciiLayerBlocks[this.textEditing.startY][
                 this.textEditing.startX - 1
-              ].char = null;
+              ]['char'];
 
               this.storeDiffBlocks(
                 this.textEditing.startX,
@@ -489,9 +486,9 @@ export default {
 
               oldBlock = { ...targetBlock };
 
-              this.currentAsciiLayerBlocks[this.textEditing.startY][
+              delete this.currentAsciiLayerBlocks[this.textEditing.startY][
                 this.textEditing.startX
-              ].char = null;
+              ]['char'];
 
               this.storeDiffBlocks(
                 this.textEditing.startX,
@@ -508,7 +505,7 @@ export default {
                   this.currentAsciiWidth - this.textEditing.startX
                 ];
               oldBlock = { ...targetBlock };
-              targetBlock.char = null;
+              delete targetBlock['char'];
               this.storeDiffBlocks(
                 this.textEditing.startX,
                 this.textEditing.startY,
@@ -518,11 +515,19 @@ export default {
             }
 
             if (this.mirrorY) {
+
               targetBlock =
                 this.currentAsciiLayerBlocks[
                   this.currentAsciiHeight - this.textEditing.startY
                 ][this.textEditing.startX];
-              targetBlock.char = null;
+                oldBlock = { ...targetBlock };
+              delete targetBlock['char'];
+              this.storeDiffBlocks(
+                this.textEditing.startX,
+                this.textEditing.startY,
+                oldBlock,
+                targetBlock);
+
             }
 
             if (this.mirrorY && this.mirrorX) {
@@ -531,7 +536,7 @@ export default {
                   this.currentAsciiHeight - this.textEditing.startY
                 ][this.currentAsciiWidth - this.textEditing.startX];
               oldBlock = { ...targetBlock };
-              targetBlock.char = null;
+              delete targetBlock['char'];
               this.storeDiffBlocks(
                 this.textEditing.startX,
                 this.textEditing.startY,
@@ -683,15 +688,11 @@ export default {
         }
       }
 
-      // Emit back to dashboard then to editor that we need to redraw the canvas
-      // this.$emit("updatecanvas");
-
       this.clearToolCanvas();
       this.drawTextIndicator();
       this.drawIndicator();
 
       this.delayRedrawCanvas();
-      // }
     },
     warnInvisibleLayer() {
       if (!this.currentSelectedLayer && this.currentSelectedLayer.visible) {
@@ -1761,9 +1762,6 @@ export default {
       // Fill next col
       this.fillTool(fillBlocks, y + 1, x, current, eraser);
     },
-    // async updateFillBlocksAsync(x, y, oldBlock, newBlock) {
-    //   return await this.storeDiffBlocks(x, y, oldBlock, newBlock)
-    // }
   },
 };
 </script>

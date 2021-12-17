@@ -207,14 +207,10 @@ export default new Vuex.Store({
       state.toolbarState.mirrorX = payload.x;
       state.toolbarState.mirrorY = payload.y;
     },
-    updateAsciiBlocks(state, payload, skipUndo = false) {
+    updateAsciiBlocks(state, payload) {
       if (state.asciibirdMeta[state.tab].history.length >= state.options.undoLimit) {
         state.asciibirdMeta[state.tab].history.shift()
       }
-
-      // if (!skipUndo) {
-      //   state.asciibirdMeta[state.tab].history.push(state.asciibirdMeta[state.tab].layers);
-      // }
 
       let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab].layers))
 
