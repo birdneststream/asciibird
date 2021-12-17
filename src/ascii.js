@@ -543,11 +543,15 @@ export const exportMirc = () => {
           }
 
           if (curBlock.bg !== undefined && curBlock.fg !== undefined) {
-            pushString = `\u0003${zeroPad(curBlock.fg, 2)},${zeroPad(curBlock.bg, 2)}`;
+            // if (blocks[y][x + 1].char && Number.parseInt(blocks[y][x + 1].char)) {
+              pushString = `\u0003${curBlock.fg},${zeroPad(curBlock.bg, 2)}`;
+            // } else {
+            //   pushString = `\u0003${curBlock.fg},${curBlock.bg}`;
+            // }
           }
 
           if (curBlock.bg !== undefined && curBlock.fg === undefined) {
-            pushString = `\u000300,${zeroPad(curBlock.bg, 2)}`;
+            pushString = `\u0003,${zeroPad(curBlock.bg, 2)}`;
           }
 
           output.push(pushString);
