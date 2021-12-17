@@ -110,22 +110,9 @@ export default {
 
           case " ":
             _this.canTool = true;
-            // let oldBlock = { ... _this.currentAsciiLayerBlocks[_this.y][_this.x] }
-            _this.isBrushing ? _this.drawBrush() : _this.eraser();
-            // let newBlock = { ... _this.currentAsciiLayerBlocks[_this.y][_this.x] }
+            _this.isBrushing ? _this.drawBrush(false) : _this.eraser();
             _this.canTool = false;
-            _this.diffBlocks.old = _this.diffBlocks.old.flat();
-            _this.diffBlocks.new = _this.diffBlocks.new.flat();
-
-            _this.$store.commit("updateAsciiBlocksAsync", {
-              current: _this.currentAsciiLayerBlocks,
-              diff: { ..._this.diffBlocks },
-            });
-
-            _this.diffBlocks = {
-              new: [],
-              old: [],
-            };
+            _this.dispatchBlocks();
 
             break;
         }
@@ -608,6 +595,20 @@ export default {
     onCanvasDrag(x, y) {
       this.top = y;
     },
+    dispatchBlocks() {
+      this.diffBlocks.old = this.diffBlocks.old.flat();
+      this.diffBlocks.new = this.diffBlocks.new.flat();
+
+      this.$store.dispatch("updateAsciiBlocksAsync", {
+        blocks: this.currentAsciiLayerBlocks,
+        diff: { ...this.diffBlocks },
+      });
+
+      this.diffBlocks = {
+        new: [],
+        old: [],
+      };
+    },
     // Mouse Up, Down and Move
     canvasMouseUp() {
       if (this.isDefault) return;
@@ -616,36 +617,15 @@ export default {
         case "brush":
           this.canTool = false;
 
-          this.diffBlocks.old = this.diffBlocks.old.flat();
-          this.diffBlocks.new = this.diffBlocks.new.flat();
-
-          this.$store.dispatch("updateAsciiBlocksAsync", {
-            blocks: this.currentAsciiLayerBlocks,
-            diff: { ...this.diffBlocks },
-          });
-          console.log(JSON.stringify(this.diffBlocks));
-          this.diffBlocks = {
-            new: [],
-            old: [],
-          };
+          this.dispatchBlocks();
 
           break;
 
         case "eraser":
           this.canTool = false;
 
-          this.diffBlocks.old = this.diffBlocks.old.flat();
-          this.diffBlocks.new = this.diffBlocks.new.flat();
+          this.dispatchBlocks();
 
-          this.$store.dispatch("updateAsciiBlocksAsync", {
-            blocks: this.currentAsciiLayerBlocks,
-            diff: { ...this.diffBlocks },
-          });
-
-          this.diffBlocks = {
-            new: [],
-            old: [],
-          };
           break;
 
         case "fill-eraser":
@@ -682,35 +662,13 @@ export default {
             this.fill();
             this.canTool = false;
 
-            this.diffBlocks.old = this.diffBlocks.old.flat();
-            this.diffBlocks.new = this.diffBlocks.new.flat();
-
-            this.$store.dispatch("updateAsciiBlocksAsync", {
-              blocks: this.currentAsciiLayerBlocks,
-              diff: { ...this.diffBlocks },
-            });
-
-            this.diffBlocks = {
-              new: [],
-              old: [],
-            };
+            this.dispatchBlocks();
             break;
 
           case "fill-eraser":
             this.fill(true);
             
-            this.diffBlocks.old = this.diffBlocks.old.flat();
-            this.diffBlocks.new = this.diffBlocks.new.flat();
-
-            this.$store.dispatch("updateAsciiBlocksAsync", {
-              blocks: this.currentAsciiLayerBlocks,
-              diff: { ...this.diffBlocks },
-            });
-
-            this.diffBlocks = {
-              new: [],
-              old: [],
-            };
+            this.dispatchBlocks();
             break;
 
           case "brush":
@@ -1311,7 +1269,7 @@ export default {
                 arrayX,
                 arrayY,
                 oldBlock,
-                this.currentAsciiLayerBlocks[arrayY][arrayX]
+                brushBlock
               );
             }
           }
@@ -1339,7 +1297,7 @@ export default {
         this.diffBlocks.new[y] = [];
       }
 
-      if (!this.diffBlocks.new[y][x] || this.isTextEditing) {
+      if (!this.diffBlocks.new[y][x]) {
         this.diffBlocks.new[y][x] = {
           l: this.selectedLayerIndex,
           d: {
