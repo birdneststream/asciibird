@@ -69,10 +69,7 @@ ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. R
 
 ## Focusing on Now / Roadmap
 
-* We can store chunked editing differences! Just need to fix up undo and redo with this new system.
-
 * Warning to the user for width and clipping, on export
- * Optimise the export code to use less chars
 
 * More Context Menus (right click menu)
   * Brushes Canvas right click

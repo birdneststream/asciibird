@@ -225,8 +225,15 @@ export default new Vuex.Store({
 
       state.asciibirdMeta[state.tab].current = LZString.compressToUTF16(JSON.stringify(mergeLayers()));
       
+      let historyIndex = state.asciibirdMeta[state.tab].historyIndex;
+
       if (payload.diff && payload.diff.new && payload.diff.new.length) {
-        state.asciibirdMeta[state.tab].history.push(LZString.compressToUTF16(JSON.stringify(payload.diff)))
+        if (state.asciibirdMeta[state.tab].history.length !== historyIndex) {
+          state.asciibirdMeta[state.tab].history.splice(historyIndex,state.asciibirdMeta[state.tab].history.length);
+        }
+
+        state.asciibirdMeta[state.tab].history.push(LZString.compressToUTF16(JSON.stringify(payload.diff)))       
+        state.asciibirdMeta[state.tab].historyIndex = state.asciibirdMeta[state.tab].history.length;
       }
 
     },
@@ -367,19 +374,50 @@ export default new Vuex.Store({
 
     // BLOCKS
     undoBlocks(state) {
-      // if (state.asciibirdMeta[state.tab].history.length > 1) {
+      let historyIndex = state.asciibirdMeta[state.tab].historyIndex;
 
-      // state.asciibirdMeta[state.tab].layers = state.asciibirdMeta[state.tab].history.pop();
-      // state.asciibirdMeta[state.tab].redo.push(state.asciibirdMeta[state.tab].layers);
+      if (state.asciibirdMeta[state.tab].history[historyIndex-1]) {
+        let prev = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab].history[
+                historyIndex - 1]));
 
-      // }
+      let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
+        .layers))
+
+        if (prev.old) {
+          for(let change in prev.old) {           
+            let data = prev.old[change];
+            tempLayers[data.l].data[data.d.y][data.d.x] = data.d.b;
+          }
+        }
+           
+        state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
+          tempLayers));
+
+        state.asciibirdMeta[state.tab].historyIndex--;
+      }
     },
     redoBlocks(state) {
-      // if (state.asciibirdMeta[state.tab].redo.length) {
-      //   const next = state.asciibirdMeta[state.tab].redo.pop();
-      //   state.asciibirdMeta[state.tab].layers = next;
-      //   state.asciibirdMeta[state.tab].history.push(next);
-      // }
+      let historyIndex = state.asciibirdMeta[state.tab].historyIndex;
+
+      if (state.asciibirdMeta[state.tab].history[historyIndex]) {
+        let prev = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab].history[
+          historyIndex]));
+
+        let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
+          .layers))
+
+        if (prev.new) {
+          for (let change in prev.new) {
+            let data = prev.new[change];
+            tempLayers[data.l].data[data.d.y][data.d.x] = data.d.b;
+          }
+        }
+
+        state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
+          tempLayers));
+
+        state.asciibirdMeta[state.tab].historyIndex++;
+      }
     },
 
     //

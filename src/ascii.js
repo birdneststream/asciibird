@@ -539,12 +539,14 @@ export const exportMirc = () => {
         } else {
 
           if (curBlock.bg === undefined && curBlock.fg !== undefined) {
-            pushString = `\u0003\u0003${zeroPad(curBlock.fg, 2)}`;
+            pushString = `\u0003${zeroPad(curBlock.fg, 2)}`;
           }
 
           if (curBlock.bg !== undefined && curBlock.fg !== undefined) {
+            // Asciiblaster export will check if the next char is a number and add 0 padding
+            // to the ,bg value, if we get that we can save some bytes on the bg char.
             // if (blocks[y][x + 1].char && Number.parseInt(blocks[y][x + 1].char)) {
-              pushString = `\u0003${curBlock.fg},${zeroPad(curBlock.bg, 2)}`;
+            pushString = `\u0003${curBlock.fg},${zeroPad(curBlock.bg, 2)}`;
             // } else {
             //   pushString = `\u0003${curBlock.fg},${curBlock.bg}`;
             // }
@@ -797,7 +799,7 @@ export const mergeLayers = function (blocks = null) {
           store.getters.currentAsciiLayers[z] &&
           store.getters.currentAsciiLayers[z].data &&
           store.getters.currentAsciiLayers[z].data[y] &&
-          store.getters.currentAsciiLayers[z].data[y][x]           
+          store.getters.currentAsciiLayers[z].data[y][x]
         ) {
 
           if (curBlock.char === undefined) {
