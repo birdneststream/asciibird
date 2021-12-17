@@ -80,9 +80,15 @@ export default {
 
     var _this = this;
     hotkeys("*", "editor", function (event, handler) {
-      if (_this.isBrushing || _this.isErasing) {
-        event.preventDefault();
+      event.preventDefault();
 
+      if (_this.isTextEditing) {
+        console.log("text edit");
+        _this.canvasKeyDown(event.key);
+        // return;
+      }
+
+      if (_this.isBrushing || _this.isErasing) {
         switch (event.key) {
           case "ArrowUp":
             _this.y--;
@@ -393,18 +399,7 @@ export default {
     // Save text to store when finished
     isTextEditing(val, old) {
       if (val !== old && val === false) {
-        this.diffBlocks.old = this.diffBlocks.old.flat();
-        this.diffBlocks.new = this.diffBlocks.new.flat();
-
-        this.$store.dispatch("updateAsciiBlocksAsync", {
-          blocks: this.currentAsciiLayerBlocks,
-          diff: { ...this.diffBlocks },
-        });
-
-        this.diffBlocks = {
-          new: [],
-          old: [],
-        };
+        this.dispatchBlocks();
       }
     },
     textEditing(val, old) {
@@ -428,6 +423,276 @@ export default {
     },
   },
   methods: {
+    canvasKeyDown(char) {
+      // if (this.isTextEditing) {
+      console.log(char);
+      if (
+        this.currentAsciiLayerBlocks[this.textEditing.startY] &&
+        this.currentAsciiLayerBlocks[this.textEditing.startY][
+          this.textEditing.startX
+        ]
+      ) {
+        let targetBlock =
+          this.currentAsciiLayerBlocks[this.textEditing.startY][
+            this.textEditing.startX
+          ];
+
+        let oldBlock = {};
+
+        switch (char) {
+          // Remove a character
+          case "Backspace":
+            if (
+              this.currentAsciiLayerBlocks[this.textEditing.startY][
+                this.textEditing.startX - 1
+              ]
+            ) {
+              targetBlock =
+                this.currentAsciiLayerBlocks[this.textEditing.startY][
+                  this.textEditing.startX - 1
+                ];
+
+              oldBlock = {
+                ...this.currentAsciiLayerBlocks[this.textEditing.startY][
+                  this.textEditing.startX - 1
+                ],
+              };
+
+              this.currentAsciiLayerBlocks[this.textEditing.startY][
+                this.textEditing.startX - 1
+              ].char = null;
+
+              this.storeDiffBlocks(
+                this.textEditing.startX,
+                this.textEditing.startY,
+                oldBlock,
+                this.currentAsciiLayerBlocks[this.textEditing.startY][
+                  this.textEditing.startX - 1
+                ]
+              );
+
+              // Move back one block
+              this.textEditing.startX -= 1;
+            }
+
+          // Remove char as current position, but don't change position after
+          case "Delete":
+            if (
+              this.currentAsciiLayerBlocks[this.textEditing.startY][
+                this.textEditing.startX
+              ]
+            ) {
+              targetBlock =
+                this.currentAsciiLayerBlocks[this.textEditing.startY][
+                  this.textEditing.startX
+                ];
+
+              oldBlock = { ...targetBlock };
+
+              this.currentAsciiLayerBlocks[this.textEditing.startY][
+                this.textEditing.startX
+              ].char = null;
+
+              this.storeDiffBlocks(
+                this.textEditing.startX,
+                this.textEditing.startY,
+                oldBlock,
+                targetBlock
+              );
+            }
+
+            // Also remove in mirror mode the other chars
+            if (this.mirrorX) {
+              targetBlock =
+                this.currentAsciiLayerBlocks[this.textEditing.startY][
+                  this.currentAsciiWidth - this.textEditing.startX
+                ];
+              oldBlock = { ...targetBlock };
+              targetBlock.char = null;
+              this.storeDiffBlocks(
+                this.textEditing.startX,
+                this.textEditing.startY,
+                oldBlock,
+                targetBlock
+              );
+            }
+
+            if (this.mirrorY) {
+              targetBlock =
+                this.currentAsciiLayerBlocks[
+                  this.currentAsciiHeight - this.textEditing.startY
+                ][this.textEditing.startX];
+              targetBlock.char = null;
+            }
+
+            if (this.mirrorY && this.mirrorX) {
+              targetBlock =
+                this.currentAsciiLayerBlocks[
+                  this.currentAsciiHeight - this.textEditing.startY
+                ][this.currentAsciiWidth - this.textEditing.startX];
+              oldBlock = { ...targetBlock };
+              targetBlock.char = null;
+              this.storeDiffBlocks(
+                this.textEditing.startX,
+                this.textEditing.startY,
+                oldBlock,
+                targetBlock
+              );
+            }
+
+            break;
+
+          // Jump to next line at the 0 X position
+          case "Enter":
+            if (this.currentAsciiLayerBlocks[this.textEditing.startY + 1][0]) {
+              this.textEditing.startX = 0;
+              this.textEditing.startY += 1;
+            }
+            break;
+
+          // Move the text indicator around with the arrow keys
+          case "ArrowUp":
+            if (
+              this.currentAsciiLayerBlocks[this.textEditing.startY - 1][
+                this.textEditing.startX
+              ]
+            ) {
+              this.textEditing.startY -= 1;
+            }
+            break;
+
+          case "ArrowDown":
+            if (
+              this.currentAsciiLayerBlocks[this.textEditing.startY + 1][
+                this.textEditing.startX
+              ]
+            ) {
+              this.textEditing.startY += 1;
+            }
+            break;
+
+          case "ArrowLeft":
+            if (
+              this.currentAsciiLayerBlocks[this.textEditing.startY][
+                this.textEditing.startX - 1
+              ]
+            ) {
+              this.textEditing.startX -= 1;
+            }
+            break;
+
+          case "ArrowRight":
+            if (
+              this.currentAsciiLayerBlocks[this.textEditing.startY][
+                this.textEditing.startX + 1
+              ]
+            ) {
+              this.textEditing.startX += 1;
+            }
+            break;
+
+          // Normal typing
+          default:
+            if (char.length === 1) {
+              if (this.canFg) {
+                targetBlock.fg = this.currentFg;
+              }
+
+              oldBlock = { ...targetBlock };
+              targetBlock.char = char;
+
+              this.storeDiffBlocks(
+                this.textEditing.startX,
+                this.textEditing.startY,
+                oldBlock,
+                targetBlock
+              );
+
+              let theX = this.currentAsciiWidth - this.textEditing.startX;
+              if (this.mirrorX) {
+                targetBlock =
+                  this.currentAsciiLayerBlocks[this.textEditing.startY][theX];
+
+                oldBlock = { ...targetBlock };
+
+                if (this.canFg) {
+                  targetBlock.fg = this.currentFg;
+                }
+
+                targetBlock.char = char;
+
+                this.storeDiffBlocks(
+                  theX,
+                  this.textEditing.startY,
+                  oldBlock,
+                  targetBlock
+                );
+              }
+
+              let theY = this.currentAsciiHeight - this.textEditing.startY;
+              if (this.mirrorY) {
+                targetBlock =
+                  this.currentAsciiLayerBlocks[theY][this.textEditing.startX];
+
+                oldBlock = { ...targetBlock };
+
+                if (this.canFg) {
+                  targetBlock.fg = this.currentFg;
+                }
+
+                targetBlock.char = char;
+
+                this.storeDiffBlocks(
+                  this.textEditing.startX,
+                  theY,
+                  oldBlock,
+                  targetBlock
+                );
+              }
+
+              if (this.mirrorY && this.mirrorX) {
+                targetBlock = this.currentAsciiLayerBlocks[theY][theX];
+
+                oldBlock = { ...targetBlock };
+
+                if (this.canFg) {
+                  targetBlock.fg = this.currentFg;
+                }
+
+                targetBlock.char = char;
+
+                this.storeDiffBlocks(theX, theY, oldBlock, targetBlock);
+              }
+
+              if (
+                this.currentAsciiLayerBlocks[this.textEditing.startY][
+                  this.textEditing.startX + 1
+                ]
+              ) {
+                this.textEditing.startX++;
+              } else {
+                this.textEditing.startX = 0;
+
+                if (this.textEditing.startY < this.currentAsciiHeight) {
+                  this.textEditing.startY++;
+                }
+              }
+            }
+
+            break;
+        }
+      }
+
+      // Emit back to dashboard then to editor that we need to redraw the canvas
+      // this.$emit("updatecanvas");
+
+      this.clearToolCanvas();
+      this.drawTextIndicator();
+      this.drawIndicator();
+
+      this.delayRedrawCanvas();
+      // }
+    },
     warnInvisibleLayer() {
       if (!this.currentSelectedLayer && this.currentSelectedLayer.visible) {
         this.$toasted.show("You are trying to edit an invisible layer!!", {
@@ -667,7 +932,7 @@ export default {
 
           case "fill-eraser":
             this.fill(true);
-            
+
             this.dispatchBlocks();
             break;
 
@@ -730,7 +995,7 @@ export default {
       if (this.x === lastX && this.y === lastY) {
         return;
       }
-     
+
       this.$emit("coordsupdate", { x: this.x, y: this.y });
 
       if (this.asciiBlockAtXy) {
@@ -1160,35 +1425,42 @@ export default {
       if (this.canTool && brushBlock[target] !== undefined) {
         targetBlock[target] = brushBlock[target];
 
+        let theX = asciiWidth - arrayX;
+        let theY = asciiHeight - arrayY;
+        let oldBlock = {};
+
         if (
           this.mirrorX &&
           this.currentAsciiLayerBlocks[arrayY] &&
-          this.currentAsciiLayerBlocks[arrayY][asciiWidth - arrayX]
+          this.currentAsciiLayerBlocks[arrayY][theX]
         ) {
-          this.currentAsciiLayerBlocks[arrayY][asciiWidth - arrayX][target] =
-            brushBlock[target];
+          oldBlock = { ... this.currentAsciiLayerBlocks[arrayY][theX] }
+          this.currentAsciiLayerBlocks[arrayY][theX][target] = brushBlock[target];
+
+          this.storeDiffBlocks(theX, arrayY, oldBlock, brushBlock);
         }
 
         if (
           this.mirrorY &&
-          this.currentAsciiLayerBlocks[asciiHeight - arrayY] &&
-          this.currentAsciiLayerBlocks[asciiHeight - arrayY][arrayX]
+          this.currentAsciiLayerBlocks[theY] &&
+          this.currentAsciiLayerBlocks[theY][arrayX]
         ) {
-          this.currentAsciiLayerBlocks[asciiHeight - arrayY][arrayX][target] =
-            brushBlock[target];
+          oldBlock = { ... this.currentAsciiLayerBlocks[theY][arrayX] }
+          this.currentAsciiLayerBlocks[theY][arrayX][target] = brushBlock[target];
+
+          this.storeDiffBlocks(arrayX, theY, oldBlock, brushBlock);
         }
 
         if (
           this.mirrorY &&
           this.mirrorX &&
-          this.currentAsciiLayerBlocks[asciiHeight - arrayY] &&
-          this.currentAsciiLayerBlocks[asciiHeight - arrayY][
-            asciiWidth - arrayX
-          ]
+          this.currentAsciiLayerBlocks[theY] &&
+          this.currentAsciiLayerBlocks[theY][theX]
         ) {
-          this.currentAsciiLayerBlocks[asciiHeight - arrayY][
-            asciiWidth - arrayX
-          ][target] = brushBlock[target];
+          oldBlock = { ... this.currentAsciiLayerBlocks[theY][theX] }
+          this.currentAsciiLayerBlocks[theY][theX][target] = brushBlock[target];
+
+          this.storeDiffBlocks(theX, theY, oldBlock, brushBlock);
         }
       }
 
@@ -1245,38 +1517,32 @@ export default {
             this.currentAsciiLayerBlocks[arrayY] &&
             this.currentAsciiLayerBlocks[arrayY][arrayX]
           ) {
-            
-              let oldBlock = {
-                ...this.currentAsciiLayerBlocks[arrayY][arrayX],
-              };
+            let oldBlock = {
+              ...this.currentAsciiLayerBlocks[arrayY][arrayX],
+            };
 
-              if (!plain) {
-                if (this.canBg) {
-                  this.drawBrushBlocks(brushX, brushY, brushBlock, "bg");
-                }
-
-                if (this.canFg) {
-                  this.drawBrushBlocks(brushX, brushY, brushBlock, "fg");
-                }
-
-                this.drawBrushBlocks(brushX, brushY, brushBlock, null);
-              } else {
-                this.drawBrushBlocks(brushX, brushY, brushBlock, null, true);
+            if (!plain) {
+              if (this.canBg) {
+                this.drawBrushBlocks(brushX, brushY, brushBlock, "bg");
               }
 
-              if (this.canTool) {
-              this.storeDiffBlocks(
-                arrayX,
-                arrayY,
-                oldBlock,
-                brushBlock
-              );
+              if (this.canFg) {
+                this.drawBrushBlocks(brushX, brushY, brushBlock, "fg");
+              }
+
+              this.drawBrushBlocks(brushX, brushY, brushBlock, null);
+            } else {
+              this.drawBrushBlocks(brushX, brushY, brushBlock, null, true);
+            }
+
+            if (this.canTool) {
+              this.storeDiffBlocks(arrayX, arrayY, oldBlock, brushBlock);
             }
           }
         }
       }
     },
-    storeDiffBlocks(x, y, oldBlock, newBlock) {
+    async storeDiffBlocks(x, y, oldBlock, newBlock) {
       // For undo
       if (!this.diffBlocks.old[y]) {
         this.diffBlocks.old[y] = [];
@@ -1480,12 +1746,7 @@ export default {
         fillBlocks[y][x].char = eraser ? undefined : this.currentChar;
       }
 
-      this.storeDiffBlocks(
-        x,
-        y,
-        current,
-        fillBlocks[y][x]
-      );
+      this.storeDiffBlocks(x, y, current, fillBlocks[y][x]);
 
       // Fill in all four directions
       // Fill Prev row
@@ -1500,6 +1761,9 @@ export default {
       // Fill next col
       this.fillTool(fillBlocks, y + 1, x, current, eraser);
     },
+    // async updateFillBlocksAsync(x, y, oldBlock, newBlock) {
+    //   return await this.storeDiffBlocks(x, y, oldBlock, newBlock)
+    // }
   },
 };
 </script>

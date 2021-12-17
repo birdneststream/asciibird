@@ -214,7 +214,7 @@ export const blockHeight = 15;
 
 // Limits for undo and brush histories
 export const maxBrushHistory = 200;
-export const maxUndoHistory = 200;
+export const maxUndoHistory = 500;
 export const tabLimit = 20;
 
 export const parseMircAscii = async (content, title) => {
