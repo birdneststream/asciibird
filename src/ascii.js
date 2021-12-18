@@ -219,7 +219,7 @@ export const tabLimit = 20;
 
 export const parseMircAscii = async (contents, filename) => {
   const MIRC_MAX_COLOURS = mircColours99.length;
-  const regexp = new RegExp(/\u0003\d{1,2},\d{1,2}/, 'gu');
+  const mIrcColourRegex = new RegExp(/\u0003(\d{0,2})?[,]?(\d{0,2})?/, 'gu');
 
   // The current state of the Colours
   let curBlock = {
@@ -244,7 +244,7 @@ export const parseMircAscii = async (contents, filename) => {
       label: filename,
       visible: true,
       data: create2DArray(contents.split('\n').length),
-      width: asciiLines[0].replace(regexp, '').length,
+      width: asciiLines[0].replace(mIrcColourRegex, '').length,
       height: contents.split('\n').length,
     }],
     history: [],
@@ -283,81 +283,98 @@ export const parseMircAscii = async (contents, filename) => {
   // The foreground color is the first <COLOR>, and the background color is the second <COLOR> (if sent).
   for (let y in asciiLines) {
     let line = asciiLines[y];
-    let cleanLine = line.replace(regexp, '');
+    let cleanLines = line.replace(mIrcColourRegex, '').split("");
 
-    let parsedLine = [...line.matchAll(regexp)];
+    let parsedLine = [...line.matchAll(mIrcColourRegex)];
     let colourData = [];
 
     curBlock = {
       ...emptyBlock,
     };
 
+    let newData = [];
+
     if (!isPlainText) {
       for (let x in parsedLine) {
         let codeData = parsedLine[x];
         let colourArray = codeData[0].split("\u0003").join("").split(",");
 
-        if (colourArray.length) {
-          if (colourArray[0] !== undefined) {
+        if (colourArray.length === 2) {
+          if (colourArray[0] > -1) {
             curBlock.fg = Number.parseInt(colourArray[0]);
           }
 
-          if (colourArray[1] !== undefined) {
+          if (colourArray[1] > -1) {
             curBlock.bg = Number.parseInt(colourArray[1]);
           }
 
-          colourData.push({
-            code: codeData,
-            b: {
-              ...curBlock
-            }
-          });
-
-        } else {
-          colourData.push({
-            code: codeData,
-            b: { ... emptyBlock }
-          });
+        } else if (colourArray.length === 1) {
+          if (colourArray[0] > -1) {
+            curBlock.fg = Number.parseInt(colourArray[0]);
+            delete curBlock['bg'];
+          }
         }
+
+        if (Number.isNaN(curBlock.bg)) {
+          delete curBlock['bg'];
+        }
+
+        if (Number.isNaN(curBlock.fg)) {
+          delete curBlock['fg'];
+        }
+
+        colourData.push({
+          code: codeData,
+          b: {
+            ...curBlock
+          }
+        });
       }
+
     }
 
     // Readjust the indexes
     let buildString = "";
-    let newData = [];
+
     for (let index in colourData) {
       if (index === 0) {
         continue;
       }
-      
+
       colourData[index].code.index = colourData[index].code.index - buildString.length;
-      buildString = `${buildString}${colourData[index].code[0]}`     
+      buildString = `${buildString}${colourData[index].code[0]}`
       newData[colourData[index].code.index] = colourData[index].b;
     }
 
-    line = line.split("");
-    cleanLine = cleanLine.split("");
 
-    for (let i in cleanLine) {
-      let char = cleanLine[i];
+    // Construct the ascii blocks
+    for (let i in cleanLines) {
+      let char = cleanLines[i];
 
-      if (newData[i]) {
-        if (newData[i].bg !== undefined) { 
+      // If there is a colour change present at this index
+      // we will keep track of it
+      if (!isPlainText && newData[i]) {
+        // console.log(newData[i]);
+        if (newData[i].bg !== undefined && newData[i].bg !== NaN) {
           curBlock.bg = newData[i].bg;
         }
 
-        if (newData[i].fg !== undefined) { 
+        if (newData[i].fg !== undefined && newData[i].fg !== NaN) {
           curBlock.fg = newData[i].fg;
         }
 
-        if (newData[i].fg === undefined && newData[i].bg === undefined) { 
-          delete curBlock['bg']
-          delete curBlock['fg']
+        if (newData[i].fg === undefined && newData[i].bg === undefined) {
+          curBlock = {
+            ...emptyBlock
+          };
         }
-      } 
+
+      }
 
       curBlock.char = char;
-      
+
+
+
       finalAscii.layers[0].data[y][i] = {
         ...curBlock
       };
@@ -367,6 +384,7 @@ export const parseMircAscii = async (contents, filename) => {
   // First layer data generation
   finalAscii.layers = [...fillNullBlocks(finalAscii.layers[0].height, finalAscii.layers[0]
     .width, finalAscii.layers)];
+
   // Store the ASCII and ensure we have no null blocks
   finalAscii.layers = LZString.compressToUTF16(
     JSON.stringify(finalAscii.layers),
@@ -374,9 +392,6 @@ export const parseMircAscii = async (contents, filename) => {
 
   // What we will see on the canvas
   finalAscii.current = LZString.compressToUTF16(JSON.stringify(finalAscii.layers[0].data));
-
-  // We need to also store in the first undo history the original state
-  // finalAscii.history.push(finalAscii.layers);
 
   // Save ASCII to storage
   store.commit('newAsciibirdMeta', finalAscii);
