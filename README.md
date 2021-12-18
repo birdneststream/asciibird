@@ -64,7 +64,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. Refreshing the page seems to fix most strange things.
 
-* That inverted black / white bug when exporting, happens if fg or bg is null (this maybe fixed with the recent work)
+* Layers manipulation and undo / redo is buggy
 
 ## Focusing on Now 
 

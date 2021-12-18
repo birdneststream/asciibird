@@ -216,7 +216,7 @@ export default {
             if (this.brushBlocks[y] && this.brushBlocks[y][x]) {
               const curBlock = this.brushBlocks[y][x];
 
-              if (curBlock.bg !== undefined && this.isTargettingBg) {
+              if ((curBlock.bg !== undefined || curBlock.bg !== null) && this.isTargettingBg) {
                 this.ctx.fillStyle = this.mircColours[curBlock.bg];
 
                 this.ctx.fillRect(

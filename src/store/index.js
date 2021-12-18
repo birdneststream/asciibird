@@ -286,6 +286,17 @@ export default new Vuex.Store({
       state.asciibirdMeta[state.tab].selectedLayer = 0;
       state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
         mergedLayers));
+
+        // Remove our undos here for the layer
+        let history = state.asciibirdMeta[state.tab].history;
+
+        for (let i in history) {
+          let data = JSON.parse(LZString.decompressFromUTF16(history[i]));
+          data.l = 0;
+          history[i] = LZString.compressToUTF16(JSON.stringify(data));
+        }
+
+        state.asciibirdMeta[state.tab].historyIndex = history.length - 1;
     },
     changeLayer(state, payload) {
       state.asciibirdMeta[state.tab].selectedLayer = payload
@@ -305,6 +316,20 @@ export default new Vuex.Store({
 
       if (tempLayers.length > 1) {
         tempLayers.splice(payload, 1)
+
+        // Remove our undos here for the layer
+        let history = state.asciibirdMeta[state.tab].history;
+
+        for (let i in history) {
+          let data = JSON.parse(LZString.decompressFromUTF16(history[i]));
+
+          if (data.l === payload) {
+            history.splice(i, 1);
+          }
+
+        }
+
+        state.asciibirdMeta[state.tab].historyIndex = history.length-1;
 
         // Automatically select the next best layer to avoid bugs
         if (tempLayers[payload + 1]) {
@@ -331,8 +356,23 @@ export default new Vuex.Store({
         tempLayers[payload + 1] = swap
         tempLayers[payload] = swap1
 
+        // Remove our undos here for the layer
+        let history = state.asciibirdMeta[state.tab].history;
+
+        for (let i in history) {
+          let data = JSON.parse(LZString.decompressFromUTF16(history[i]));
+
+          if (data.l === payload) {
+            data.l === payload + 1;
+            history[i] = LZString.compressToUTF16(JSON.stringify(data));
+          }
+        }
+
+        state.asciibirdMeta[state.tab].historyIndex = history.length - 1;
+
         state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
           tempLayers));
+
       }
 
     },
@@ -346,6 +386,22 @@ export default new Vuex.Store({
 
         tempLayers[payload - 1] = swap
         tempLayers[payload] = swap1
+
+
+        // Remove our undos here for the layer
+        let history = state.asciibirdMeta[state.tab].history;
+
+        for (let i in history) {
+          let data = JSON.parse(LZString.decompressFromUTF16(history[i]));
+
+          if (data.l === payload) {
+            data.l === payload - 1;
+            history[i] = LZString.compressToUTF16(JSON.stringify(data));
+          }
+        }
+
+        state.asciibirdMeta[state.tab].historyIndex = history.length - 1;
+
 
         state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
           tempLayers));
@@ -383,7 +439,7 @@ export default new Vuex.Store({
         if (prev.old) {
           for(let change in prev.old) {           
             let data = prev.old[change];
-            tempLayers[data.l].data[data.d.y][data.d.x] = data.d.b;
+            tempLayers[prev.l].data[data.y][data.x] = data.b;
           }
         }
            
@@ -406,7 +462,7 @@ export default new Vuex.Store({
         if (prev.new) {
           for (let change in prev.new) {
             let data = prev.new[change];
-            tempLayers[data.l].data[data.d.y][data.d.x] = data.d.b;
+            tempLayers[prev.l].data[data.y][data.x] = data.b;
           }
         }
 

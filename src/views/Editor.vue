@@ -158,7 +158,9 @@ export default {
     isMouseOnCanvas: false,
     selectedBlocks: [],
 
+    // Used to store the difference when editing blocks then commits them
     diffBlocks: {
+      l: 0,
       old: [],
       new: [],
     },
@@ -420,6 +422,11 @@ export default {
     yOffset() {
       this.delayRedrawCanvas();
     },
+    selectedLayerIndex(val, old) {
+      if (val !== old) {
+        this.diffBlocks.l = val;
+      }
+    }
   },
   methods: {
     canvasKeyDown(char) {
@@ -807,16 +814,16 @@ export default {
 
             curBlock = { ...mergeLayers[y][x] };
 
-            if (curBlock.bg !== undefined) {
+            if (curBlock.bg !== undefined && curBlock.bg !== null) {
               this.ctx.fillStyle = this.mircColours[curBlock.bg];
               this.ctx.fillRect(canvasX, canvasY, blockWidth, blockHeight);
             }
 
-            if (curBlock.char !== undefined) {
-              if (curBlock.fg !== undefined) {
+            if (curBlock.char !== undefined && curBlock.char !== null) {
+              if (curBlock.fg !== undefined && curBlock.fg !== null) {
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
               } else {
-                this.ctx.fillStyle = "#000000";
+                this.ctx.fillStyle = "#FFFFFF";
               }
 
               this.ctx.fillText(
@@ -871,6 +878,7 @@ export default {
       });
 
       this.diffBlocks = {
+        l: this.selectedLayerIndex,
         new: [],
         old: [],
       };
@@ -1551,12 +1559,9 @@ export default {
 
       if (!this.diffBlocks.old[y][x]) {
         this.diffBlocks.old[y][x] = {
-          l: this.selectedLayerIndex,
-          d: {
             x: x,
             y: y,
             b: { ...oldBlock },
-          },
         };
       }
 
@@ -1566,12 +1571,9 @@ export default {
 
       if (!this.diffBlocks.new[y][x]) {
         this.diffBlocks.new[y][x] = {
-          l: this.selectedLayerIndex,
-          d: {
             x: x,
             y: y,
             b: { ...newBlock },
-          },
         };
       }
     },
