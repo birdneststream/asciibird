@@ -217,7 +217,175 @@ export const maxBrushHistory = 200;
 export const maxUndoHistory = 500;
 export const tabLimit = 20;
 
-export const parseMircAscii = async (content, title) => {
+export const parseMircAscii = async (contents, filename) => {
+  const MIRC_MAX_COLOURS = mircColours99.length;
+  const regexp = new RegExp(/\u0003\d{1,2},\d{1,2}/, 'gu');
+
+  // The current state of the Colours
+  let curBlock = {
+    ...emptyBlock,
+  };
+
+  contents = contents
+    .split('\u0003\u0003')
+    .join('\u0003')
+    .split('\u000F').join('')
+    .split('\u0003\n')
+    .join('\n')
+    .split('\u0002\u0003')
+    .join('\u0003');
+
+  let asciiLines = contents.split("\n");
+
+  const finalAscii = {
+    title: filename,
+    current: [],
+    layers: [{
+      label: filename,
+      visible: true,
+      data: create2DArray(contents.split('\n').length),
+      width: asciiLines[0].replace(regexp, '').length,
+      height: contents.split('\n').length,
+    }],
+    history: [],
+    // redo: [],
+    historyIndex: 0,
+    imageOverlay: {
+      url: null,
+      opacity: 95,
+      position: 'centered',
+      size: 100,
+      repeatx: true,
+      repeaty: true,
+      visible: false,
+      stretched: false,
+    },
+    x: blockWidth * 35, // the dragable ascii canvas x
+    y: blockHeight * 2, // the dragable ascii canvas y
+    selectedLayer: 0,
+  };
+
+  // Determine if we have a plain text ascii
+  const colourCodeRegex = new RegExp(/\u0003/, 'g');
+  let isPlainText = !colourCodeRegex.test(contents);
+
+  // https://modern.ircdocs.horse/formatting.html#color
+  // In the following list, <CODE> represents the color formatting character (0x03), <COLOR> represents one or two ASCII digits (either 0-9 or 00-99).
+
+  // The use of this code can take on the following forms:
+
+  //     <CODE> - Reset foreground and background colors.
+  //     <CODE>, - Reset foreground and background colors and display the , character as text.
+  //     <CODE><COLOR> - Set the foreground color.
+  //     <CODE><COLOR>, - Set the foreground color and display the , character as text.
+  //     <CODE><COLOR>,<COLOR> - Set the foreground and background color.
+
+  // The foreground color is the first <COLOR>, and the background color is the second <COLOR> (if sent).
+  for (let y in asciiLines) {
+    let line = asciiLines[y];
+    let cleanLine = line.replace(regexp, '');
+
+    let parsedLine = [...line.matchAll(regexp)];
+    let colourData = [];
+
+    curBlock = {
+      ...emptyBlock,
+    };
+
+    if (!isPlainText) {
+      for (let x in parsedLine) {
+        let codeData = parsedLine[x];
+        let colourArray = codeData[0].split("\u0003").join("").split(",");
+
+        if (colourArray.length) {
+          if (colourArray[0] !== undefined) {
+            curBlock.fg = Number.parseInt(colourArray[0]);
+          }
+
+          if (colourArray[1] !== undefined) {
+            curBlock.bg = Number.parseInt(colourArray[1]);
+          }
+
+          colourData.push({
+            code: codeData,
+            b: {
+              ...curBlock
+            }
+          });
+
+        } else {
+          colourData.push({
+            code: codeData,
+            b: { ... emptyBlock }
+          });
+        }
+      }
+    }
+
+    // Readjust the indexes
+    let buildString = "";
+    let newData = [];
+    for (let index in colourData) {
+      if (index === 0) {
+        continue;
+      }
+      
+      colourData[index].code.index = colourData[index].code.index - buildString.length;
+      buildString = `${buildString}${colourData[index].code[0]}`     
+      newData[colourData[index].code.index] = colourData[index].b;
+    }
+
+    line = line.split("");
+    cleanLine = cleanLine.split("");
+
+    for (let i in cleanLine) {
+      let char = cleanLine[i];
+
+      if (newData[i]) {
+        if (newData[i].bg !== undefined) { 
+          curBlock.bg = newData[i].bg;
+        }
+
+        if (newData[i].fg !== undefined) { 
+          curBlock.fg = newData[i].fg;
+        }
+
+        if (newData[i].fg === undefined && newData[i].bg === undefined) { 
+          delete curBlock['bg']
+          delete curBlock['fg']
+        }
+      } 
+
+      curBlock.char = char;
+      
+      finalAscii.layers[0].data[y][i] = {
+        ...curBlock
+      };
+    }
+
+  }
+  // First layer data generation
+  finalAscii.layers = [...fillNullBlocks(finalAscii.layers[0].height, finalAscii.layers[0]
+    .width, finalAscii.layers)];
+  // Store the ASCII and ensure we have no null blocks
+  finalAscii.layers = LZString.compressToUTF16(
+    JSON.stringify(finalAscii.layers),
+  );
+
+  // What we will see on the canvas
+  finalAscii.current = LZString.compressToUTF16(JSON.stringify(finalAscii.layers[0].data));
+
+  // We need to also store in the first undo history the original state
+  // finalAscii.history.push(finalAscii.layers);
+
+  // Save ASCII to storage
+  store.commit('newAsciibirdMeta', finalAscii);
+
+  return true;
+};
+
+
+export const parseMircAsciiV2 = async (content, title) => {
   const MIRC_MAX_COLOURS = mircColours99.length;
 
   // The current state of the Colours

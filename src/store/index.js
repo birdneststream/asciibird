@@ -296,7 +296,7 @@ export default new Vuex.Store({
           history[i] = LZString.compressToUTF16(JSON.stringify(data));
         }
 
-        state.asciibirdMeta[state.tab].historyIndex = history.length - 1;
+        state.asciibirdMeta[state.tab].historyIndex = history.length;
     },
     changeLayer(state, payload) {
       state.asciibirdMeta[state.tab].selectedLayer = payload
