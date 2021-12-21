@@ -8,8 +8,33 @@
           class="previewcanvas"
           :width="blocksWidthHeight.w"
           :height="blocksWidthHeight.h"
+          @mouseup.right="openContextMenu"
+          @contextmenu.prevent
         />
       </div>
+
+      <context-menu  :ref="`block-menu-${hash}`" class="z-50" >
+        <ul>
+          <li
+            @click="true"
+            class="ml-1 text-sm hover:bg-gray-400"
+          >
+            Save as PNG
+          </li>
+          <li
+            @click="true"
+            class="ml-1 text-sm hover:bg-gray-400"
+          >
+            Export ASCII to mIRC Clipboard
+          </li>
+          <li
+            @click="true"
+            class="ml-1 text-sm hover:bg-gray-400"
+          >
+            Export ASCII to mIRC File
+          </li>
+        </ul>
+      </context-menu>
     </t-card>
   </div>
 </template>
@@ -17,7 +42,7 @@
 
 <script>
 import { mircColours99, blockWidth, blockHeight, cyrb53, getBlocksWidth, filterNullBlocks  } from "../../ascii";
-
+import ContextMenu from "./ContextMenu.vue";
 export default {
   name: "BrushCanvas",
   created() {
@@ -36,6 +61,9 @@ export default {
       required: false,
       default: false,
     },
+  },
+  components: {
+    ContextMenu,
   },
   data: () => ({
     ctx: null,
@@ -87,9 +115,11 @@ export default {
     options() {
       return this.$store.getters.options;
     },
+    hash() {
+      return cyrb53(JSON.stringify(this.getBlocks));
+    },
     canvasName() {
-      let hash = cyrb53(JSON.stringify(this.getBlocks))
-      return `${hash}-brush-canvas`;
+      return `${this.hash}-brush-canvas`;
     },
     getBlocks() {
       return this.blocks === false
@@ -156,6 +186,14 @@ export default {
     },
     filterNullBlocks(blocks) {
       return filterNullBlocks(blocks)
+    },
+    openContextMenu(e) {
+      e.preventDefault();
+      // These are the correct X and Y when inside the floating panel
+      this.$refs[`block-menu-${this.hash}`].open({
+        pageX: e.layerX,
+        pageY: e.layerY,
+      });
     },
     drawPreview() {
       this.ctx.clearRect(0, 0, this.canvasRef.width, this.canvasRef.height);

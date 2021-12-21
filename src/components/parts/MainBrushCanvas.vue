@@ -1,42 +1,84 @@
 <template>
   <div>
-    <t-card class="overflow-x-scroll h-full">
-      <div :style="`height: ${blocksWidthHeight.h}px;width: ${blocksWidthHeight.w}px;`">
+    <t-card class="overflow-x-scroll overflow-y-scroll h-full" :h="blocksWidthHeight.h">
+
+      <div
+        :style="`height: ${blocksWidthHeight.h}px;width: ${blocksWidthHeight.w}px;`"
+        @mouseup.right="openContextMenu"
+      >
+
         <canvas
           ref="brushcanvas"
           id="brushcanvas"
           class="brushcanvas"
           @mousemove="canvasMouseMove"
-          @mouseup="disable"
-          @mousedown.left="addBlock"
-          @mousedown.right="eraseBlock"
+          @mousedown.left="processClick"
+          
+          @mouseup.left="canTool = false"
           @contextmenu.prevent
           :width="blocksWidthHeight.w"
           :height="blocksWidthHeight.h"
           @mouseenter="disableToolbarMoving"
           @mouseleave="enableToolbarMoving"
         />
+
+        <context-menu ref="main-brush-menu" class="z-50" @contextmenu.prevent>
+          <ul>
+            <li
+              @click="true"
+              class="ml-1 text-sm hover:bg-gray-400"
+            >
+              Save as PNG
+            </li>
+            <li
+              @click="true"
+              class="ml-1 text-sm hover:bg-gray-400"
+            >
+              Export Brush to mIRC Clipboard
+            </li>
+            <li
+              @click="true"
+              class="ml-1 text-sm hover:bg-gray-400"
+            >
+              Export Brush to mIRC File
+            </li>
+            <li
+              @click="true"
+              class="ml-1 text-sm hover:bg-gray-400"
+            >
+              Save to Library
+            </li>
+          </ul>
+        </context-menu>
       </div>
     </t-card>
+
+
   </div>
 </template>
 
 <script>
+import ContextMenu from "./ContextMenu.vue";
 import {
   mircColours99,
   blockWidth,
   blockHeight,
   getBlocksWidth,
   filterNullBlocks,
+  toolbarIcons,
+  emptyBlock,
 } from "../../ascii";
 
 export default {
   name: "MainBrushCanvas",
+  components: {
+    ContextMenu,
+  },
   created() {
-    window.addEventListener('load', () => {
-         // Fixes the font on load issue
-         this.delayRedrawCanvas();
-    })
+    window.addEventListener("load", () => {
+      // Fixes the font on load issue
+      this.delayRedrawCanvas();
+    });
   },
   mounted() {
     this.ctx = this.canvasRef.getContext("2d");
@@ -45,8 +87,8 @@ export default {
   data: () => ({
     ctx: null,
     redraw: true,
-    erasing: false,
-    drawing: false,
+    canTool: false,
+    showContextMenu: true,
     x: 0,
     y: 0,
   }),
@@ -58,7 +100,7 @@ export default {
       return blockHeight * this.blockSizeMultiplier;
     },
     blockSizeMultiplier() {
-      return this.$store.getters.blockSizeMultiplier
+      return this.$store.getters.blockSizeMultiplier;
     },
     currentAscii() {
       return this.$store.getters.currentAscii;
@@ -123,6 +165,18 @@ export default {
     gridView() {
       return this.toolbarState.gridView;
     },
+    currentTool() {
+      return toolbarIcons[this.$store.getters.currentTool] ?? null;
+    },
+    isDefault() {
+      return this.currentTool.name === "default";
+    },
+    isBrushing() {
+      return this.currentTool.name === "brush";
+    },
+    isErasing() {
+      return this.currentTool.name === "eraser";
+    },
   },
   watch: {
     brushBlocks() {
@@ -165,6 +219,36 @@ export default {
     },
   },
   methods: {
+    openContextMenu(e) {
+      e.preventDefault();
+      // These are the correct X and Y when inside the floating panel
+      this.$refs['main-brush-menu'].open({
+        pageX: e.layerX,
+        pageY: e.layerY,
+      });
+    },
+    processClick(e) {
+      this.canTool = true;
+
+      if (e.offsetX >= 0) {
+        this.x = e.offsetX;
+      }
+
+      if (e.offsetY >= 0) {
+        this.y = e.offsetY;
+      }
+
+      this.x = Math.floor(this.x / blockWidth);
+      this.y = Math.floor(this.y / blockHeight);
+
+      if (this.isErasing) {
+        this.eraseBlock();
+      }
+
+      if (this.isBrushing) {
+        this.addBlock();
+      }
+    },
     getBlocksWidth(blocks) {
       return getBlocksWidth(blocks);
     },
@@ -182,19 +266,19 @@ export default {
         ctx.moveTo(x, 0);
         ctx.lineTo(x, h);
       }
-      
+
       ctx.strokeStyle = "rgba(0, 0, 0, 1)";
       ctx.lineWidth = 1;
       ctx.setLineDash([1]);
-      
+
       ctx.stroke();
-      
+
       ctx.beginPath();
       for (var y = 0; y <= h; y += blockHeight) {
         ctx.moveTo(0, y);
         ctx.lineTo(w, y);
       }
-      
+
       ctx.stroke();
     },
 
@@ -216,7 +300,7 @@ export default {
             if (this.brushBlocks[y] && this.brushBlocks[y][x]) {
               const curBlock = this.brushBlocks[y][x];
 
-              if ((curBlock.bg !== undefined || curBlock.bg !== null) && this.isTargettingBg) {
+              if (curBlock.bg !== undefined) { // we had used to hide or show depending on canFg, etc && this.isTargettingBg
                 this.ctx.fillStyle = this.mircColours[curBlock.bg];
 
                 this.ctx.fillRect(
@@ -227,11 +311,11 @@ export default {
                 );
               }
 
-              if (curBlock.fg !== undefined && this.isTargettingFg) {
+              if (curBlock.fg !== undefined) { // we had used to hide or show depending on canFg, etc && this.isTargettingFg
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
               }
 
-              if (curBlock.char !== undefined && this.isTargettingChar) {
+              if (curBlock.char !== undefined) { // we had used to hide or show depending on canFg, etc && this.isTargettingChar
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
                 this.ctx.fillText(
                   curBlock.char,
@@ -243,76 +327,61 @@ export default {
           }
         }
 
-
         if (this.gridView) {
           this.drawGrid();
         }
-
-
       }
     },
     delayRedrawCanvas() {
       if (this.redraw) {
         this.redraw = false;
         var _this = this;
-        setTimeout(function(){
+        setTimeout(function () {
           requestAnimationFrame(() => {
             _this.drawPreview();
             _this.redraw = true;
           });
-        }, 1000/this.options.fps)
+        }, 1000 / this.options.fps);
       }
     },
     // Basic block editing
     canvasMouseMove(e) {
-      if (e.offsetX >= 0) {
-        this.x = e.offsetX;
+      if (this.canTool) {
+        this.processClick(e);
+      }
+    },
+    addBlock() {
+      let block = { ...emptyBlock };
+
+      if (this.canBg) {
+        block["bg"] = this.currentBg;
       }
 
-      if (e.offsetY >= 0) {
-        this.y = e.offsetY;
+      if (this.canFg) {
+        block["fg"] = this.currentFg;
       }
 
-      this.x = Math.floor(this.x / blockWidth);
-      this.y = Math.floor(this.y / blockHeight);
-
-      if (this.erasing) {
-        this.brushBlocks[this.y][this.x] = {
-          bg: this.canBg ? null : this.currentFg,
-          fg: this.canFg ? null : this.currentBg,
-          char: this.canText ? null : this.currentChar,
-        };
+      if (this.canText) {
+        block["char"] = this.currentChar;
       }
 
-      if (this.drawing) {
-        this.brushBlocks[this.y][this.x] = {
-          bg: this.canBg ? this.currentBg : null,
-          fg: this.canFg ? this.currentFg : null,
-          char: this.canText ? this.currentChar : null,
-        };
+      this.brushBlocks[this.y][this.x] = block;
+      this.delayRedrawCanvas();
+    },
+    eraseBlock() {
+      if (this.canBg) {
+        delete this.brushBlocks[this.y][this.x]["bg"];
+      }
+
+      if (this.canFg) {
+        delete this.brushBlocks[this.y][this.x]["fg"];
+      }
+
+      if (this.canText) {
+        delete this.brushBlocks[this.y][this.x]["char"];
       }
 
       this.delayRedrawCanvas();
-    },
-    disable() {
-      this.erasing = false;
-      this.drawing = false;
-    },
-    addBlock() {
-      this.drawing = true;
-      this.brushBlocks[this.y][this.x] = {
-        bg: this.canBg ? this.currentBg : null,
-        fg: this.canFg ? this.currentFg : null,
-        char: this.canText ? this.currentChar : null,
-      };
-    },
-    eraseBlock(e) {
-      this.erasing = true;
-      this.brushBlocks[this.y][this.x] = {
-        bg: this.canBg ? null : this.currentFg,
-        fg: this.canFg ? null : this.currentBg,
-        char: this.canText ? null : this.currentChar,
-      };
     },
     disableToolbarMoving() {
       this.$store.commit("changeToolBarDraggable", false);
@@ -320,7 +389,6 @@ export default {
     enableToolbarMoving() {
       // Save the blocks when the mouse leaves the canvas area
       // To avoid one block history changes
-      this.disable()
       this.$store.commit("brushBlocks", this.brushBlocks);
       this.$store.commit("changeToolBarDraggable", true);
     },

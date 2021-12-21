@@ -219,7 +219,7 @@ export default new Vuex.Store({
       state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
         tempLayers));
 
-      state.asciibirdMeta[state.tab].current = LZString.compressToUTF16(JSON.stringify(mergeLayers()));
+      // state.asciibirdMeta[state.tab].current = LZString.compressToUTF16(JSON.stringify(mergeLayers()));
       
       let historyIndex = state.asciibirdMeta[state.tab].historyIndex;
 
@@ -683,7 +683,6 @@ export default new Vuex.Store({
     selectedLayer: (state) => state.asciibirdMeta[state.tab].selectedLayer,
     imageOverlay: (state) => state.asciibirdMeta[state.tab].imageOverlay,
     asciibirdMeta: (state) => state.asciibirdMeta,
-    nextTabValue: (state) => state.asciibirdMeta.length,
     brushSizeHeight: (state) => state.toolbarState.brushSizeHeight,
     brushSizeWidth: (state) => state.toolbarState.brushSizeWidth,
     brushSizeType: (state) => state.toolbarState.brushSizeType,

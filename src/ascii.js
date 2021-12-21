@@ -151,43 +151,35 @@ export const charCodes = [' ', '!', '"', '#', '$', '%', '&', '\'', '(', ')', '*'
 // Toolbar icons
 export const toolbarIcons = [{
     name: 'default',
-    icon: 'mouse-pointer',
-    fa: 'fas',
+    icon: 'edit_off',
   },
   {
     name: 'select',
-    icon: 'square',
-    fa: 'far',
+    icon: 'photo_size_select_small',
   },
   {
     name: 'text',
-    icon: 'font',
-    fa: 'fas',
+    icon: 'text_rotation_none',
   },
   {
     name: 'fill',
-    icon: 'fill-drip',
-    fa: 'fas',
+    icon: 'format_color_fill',
   },
   {
     name: 'brush',
-    icon: 'paint-brush',
-    fa: 'fas',
+    icon: 'brush',
   },
   {
     name: 'dropper',
-    icon: 'eye-dropper',
-    fa: 'fas',
+    icon: 'colorize',
   },
   {
     name: 'eraser',
-    icon: 'eraser',
-    fa: 'fas',
+    icon: 'remove_circle_outline',
   },
   {
     name: 'fill-eraser',
-    icon: 'fill',
-    fa: 'fas',
+    icon: 'auto_fix_off',
   },
 ];
 
@@ -218,7 +210,6 @@ export const maxUndoHistory = 500;
 export const tabLimit = 20;
 
 export const parseMircAscii = async (contents, filename) => {
-  const MIRC_MAX_COLOURS = mircColours99.length;
   const mIrcColourRegex = new RegExp(/\u0003(\d{0,2})?[,]?(\d{0,2})?/, 'gu');
 
   // The current state of the Colours
@@ -239,7 +230,6 @@ export const parseMircAscii = async (contents, filename) => {
 
   const finalAscii = {
     title: filename,
-    current: [],
     layers: [{
       label: filename,
       visible: true,
@@ -248,7 +238,6 @@ export const parseMircAscii = async (contents, filename) => {
       height: contents.split('\n').length,
     }],
     history: [],
-    // redo: [],
     historyIndex: 0,
     imageOverlay: {
       url: null,
@@ -315,14 +304,6 @@ export const parseMircAscii = async (contents, filename) => {
           }
         }
 
-        if (Number.isNaN(curBlock.bg)) {
-          delete curBlock['bg'];
-        }
-
-        if (Number.isNaN(curBlock.fg)) {
-          delete curBlock['fg'];
-        }
-
         colourData.push({
           code: codeData,
           b: {
@@ -331,19 +312,19 @@ export const parseMircAscii = async (contents, filename) => {
         });
       }
 
-    }
+      // Readjust the indexes
+      let indexAdjustment = 0;
 
-    // Readjust the indexes
-    let buildString = "";
+      for (let index in colourData) {
+        if (index === 0) {
+          continue;
+        }
 
-    for (let index in colourData) {
-      if (index === 0) {
-        continue;
+        colourData[index].code.index = colourData[index].code.index - indexAdjustment;
+        indexAdjustment = indexAdjustment + colourData[index].code[0].length;
+        newData[colourData[index].code.index] = colourData[index].b;
       }
 
-      colourData[index].code.index = colourData[index].code.index - buildString.length;
-      buildString = `${buildString}${colourData[index].code[0]}`
-      newData[colourData[index].code.index] = colourData[index].b;
     }
 
 
@@ -354,12 +335,11 @@ export const parseMircAscii = async (contents, filename) => {
       // If there is a colour change present at this index
       // we will keep track of it
       if (!isPlainText && newData[i]) {
-        // console.log(newData[i]);
-        if (newData[i].bg !== undefined && newData[i].bg !== NaN) {
+        if (newData[i].bg !== undefined) {
           curBlock.bg = newData[i].bg;
         }
 
-        if (newData[i].fg !== undefined && newData[i].fg !== NaN) {
+        if (newData[i].fg !== undefined) {
           curBlock.fg = newData[i].fg;
         }
 
@@ -372,8 +352,6 @@ export const parseMircAscii = async (contents, filename) => {
       }
 
       curBlock.char = char;
-
-
 
       finalAscii.layers[0].data[y][i] = {
         ...curBlock
@@ -390,244 +368,6 @@ export const parseMircAscii = async (contents, filename) => {
     JSON.stringify(finalAscii.layers),
   );
 
-  // What we will see on the canvas
-  finalAscii.current = LZString.compressToUTF16(JSON.stringify(finalAscii.layers[0].data));
-
-  // Save ASCII to storage
-  store.commit('newAsciibirdMeta', finalAscii);
-
-  return true;
-};
-
-
-export const parseMircAsciiV2 = async (content, title) => {
-  const MIRC_MAX_COLOURS = mircColours99.length;
-
-  // The current state of the Colours
-  let curBlock = {
-    ...emptyBlock,
-  };
-
-  const contents = content;
-  const filename = title;
-
-  // set asciiImport as the entire file contents as a string
-  const asciiImport = contents
-    .split('\u0003\u0003')
-    .join('\u0003')
-    .split('\u000F').join('')
-    .split('\u0003\n')
-    .join('\n')
-    .split('\u0002\u0003')
-    .join('\u0003');
-
-  // This will end up in the asciibirdMeta
-  const finalAscii = {
-    title: filename,
-    current: [],
-    layers: [{
-      label: filename,
-      visible: true,
-      data: create2DArray(asciiImport.split('\n').length),
-      width: false, // defined in: switch (curChar) case "\n":
-      height: asciiImport.split('\n').length,
-    }],
-    history: [],
-    // redo: [],
-    historyIndex: 0,
-    imageOverlay: {
-      url: null,
-      opacity: 95,
-      position: 'centered',
-      size: 100,
-      repeatx: true,
-      repeaty: true,
-      visible: false,
-      stretched: false,
-    },
-    x: blockWidth * 35, // the dragable ascii canvas x
-    y: blockHeight * 2, // the dragable ascii canvas y
-    selectedLayer: 0,
-  };
-
-  // Turn the entire ascii string into an array
-  let asciiStringArray = asciiImport.split('');
-  const linesArray = asciiImport.split('\n');
-
-  // The proper X and Y value of the block inside the ASCII
-  let asciiX = 0;
-  let asciiY = 0;
-
-  // used to determine colours
-  let colourChar1 = null;
-  let colourChar2 = null;
-  let parsedColour = null;
-
-  // This variable just counts the amount of colour and char codes to minus
-  // to get the real width
-  let widthOfColCodes = 0;
-
-  // Better for colourful asciis
-  let maxWidthLoop = 0;
-
-  // Used before the loop, better for plain text
-  let maxWidthFound = 0;
-
-  for (let i = 0; i < linesArray.length; i++) {
-    if (linesArray[i].length > maxWidthFound) {
-      maxWidthFound = linesArray[i].length;
-    }
-  }
-
-  while (asciiStringArray.length) {
-    const curChar = asciiStringArray[0];
-
-    // Defining a small finite state machine
-    // to detect the colour code
-    switch (curChar) {
-      case '\n':
-        // Reset the colours here on a new line
-        curBlock = {
-          ...emptyBlock,
-        };
-
-        if (linesArray[asciiY] && linesArray[asciiY].length > maxWidthLoop) {
-          maxWidthLoop = linesArray[asciiY].length;
-        }
-
-        // the Y value of the ascii
-        asciiY++;
-
-        // Calculate widths mirc asciis vs plain text
-        if (!finalAscii.layers[0].width && widthOfColCodes > 0) {
-          finalAscii.layers[0].width = maxWidthLoop - widthOfColCodes;
-        }
-
-        if (!finalAscii.layers[0].width && widthOfColCodes === 0) {
-          // Plain text
-          finalAscii.layers[0].width = maxWidthFound;
-        }
-
-        // Resets the X value
-        asciiX = 0;
-
-        asciiStringArray.shift();
-        widthOfColCodes = 0;
-        break;
-
-      case '\u0003':
-        // Remove the colour char
-        asciiStringArray.shift();
-        widthOfColCodes++;
-
-        // Attempt to work out bg
-        colourChar1 = `${asciiStringArray[0]}`;
-        colourChar2 = `${asciiStringArray[1]}`;
-        parsedColour = parseInt(`${colourChar1}${colourChar2}`);
-
-        // Work out the 01, 02 double digit codes
-        if (parseInt(colourChar1) === 0 && parseInt(colourChar2) >= 0) {
-          asciiStringArray.shift();
-        }
-
-        if (Number.isNaN(parsedColour)) {
-          curBlock.bg = parseInt(colourChar1);
-          widthOfColCodes += 1;
-          asciiStringArray.shift();
-        } else if (parsedColour <= MIRC_MAX_COLOURS && parsedColour >= 0) {
-          curBlock.fg = parseInt(parsedColour);
-          widthOfColCodes += parsedColour.toString().length;
-
-          asciiStringArray = asciiStringArray.slice(
-            parsedColour.toString().length,
-            asciiStringArray.length,
-          );
-        }
-
-        // No background colour
-        if (asciiStringArray[0] !== ',') {
-          break;
-        } else {
-          // Remove , from array
-          widthOfColCodes += 1;
-          asciiStringArray.shift();
-        }
-
-        // Attempt to work out bg
-        colourChar1 = `${asciiStringArray[0]}`;
-        colourChar2 = `${asciiStringArray[1]}`;
-        parsedColour = parseInt(`${colourChar1}${colourChar2}`);
-
-        if (
-          !Number.isNaN(colourChar1) &&
-          !Number.isNaN(colourChar2) &&
-          parseInt(colourChar2) > parseInt(colourChar1) &&
-          !Number.isNaN(parsedColour) &&
-          parseInt(parsedColour) < 10
-        ) {
-          parsedColour = parseInt(colourChar2);
-          widthOfColCodes += 1;
-          asciiStringArray.shift();
-        }
-
-        if (
-          parseInt(colourChar2) === parseInt(colourChar1) &&
-          parseInt(parsedColour) < 10
-        ) {
-          parsedColour = parseInt(colourChar1);
-          asciiStringArray.shift();
-          asciiStringArray.shift();
-          widthOfColCodes += 2;
-
-          curBlock.bg = parseInt(colourChar1);
-
-          break;
-        }
-
-        if (Number.isNaN(parsedColour)) {
-          curBlock.bg = parseInt(colourChar1);
-          widthOfColCodes += 1;
-          asciiStringArray.shift();
-        } else if (parsedColour <= MIRC_MAX_COLOURS && parsedColour >= 0) {
-          curBlock.bg = parseInt(parsedColour);
-          widthOfColCodes += parsedColour.toString().length;
-
-          asciiStringArray = asciiStringArray.slice(
-            parsedColour.toString().length,
-            asciiStringArray.length,
-          );
-
-          break;
-        }
-
-        break;
-
-      default:
-        curBlock.char = curChar;
-        asciiStringArray.shift();
-        asciiX++;
-
-        finalAscii.layers[0].data[asciiY][asciiX - 1] = {
-          ...curBlock,
-        };
-        break;
-    } // End Switch
-  } // End loop charPos
-
-  // First layer data generation
-  finalAscii.layers = [...fillNullBlocks(finalAscii.layers[0].height, finalAscii.layers[0]
-    .width, finalAscii.layers)];
-  // Store the ASCII and ensure we have no null blocks
-  finalAscii.layers = LZString.compressToUTF16(
-    JSON.stringify(finalAscii.layers),
-  );
-
-  // What we will see on the canvas
-  finalAscii.current = LZString.compressToUTF16(JSON.stringify(finalAscii.layers[0].data));
-
-  // We need to also store in the first undo history the original state
-  // finalAscii.history.push(finalAscii.layers);
-
   // Save ASCII to storage
   store.commit('newAsciibirdMeta', finalAscii);
 
@@ -639,11 +379,9 @@ export const createNewAscii = (forms) => {
   const newAscii = {
     title: forms.createAscii.title,
     history: [],
-    // redo: [],
     historyIndex: 0,
     x: 247, // the dragable ascii canvas x
     y: 24, // the dragable ascii canvas y
-    current: [],
     layers: [{
       label: forms.createAscii.title,
       visible: true,
@@ -674,8 +412,7 @@ export const createNewAscii = (forms) => {
   }
 
   newAscii.layers = LZString.compressToUTF16(JSON.stringify(newAscii.layers));
-  newAscii.current = LZString.compressToUTF16(JSON.stringify(newAscii.layers[0].data));
-  // newAscii.history.push(newAscii.layers);
+
   store.commit('newAsciibirdMeta', newAscii);
   store.commit('closeModal', 'new-ascii');
 
@@ -683,7 +420,7 @@ export const createNewAscii = (forms) => {
 };
 
 // Converts ASCIIBIRD blocks to mIRC colours
-export const exportMirc = () => {
+export const exportMirc = (blocks = null) => {
   const {
     currentAscii
   } = store.getters;
@@ -692,7 +429,10 @@ export const exportMirc = () => {
     currentAsciiLayersWidthHeight
   } = store.getters;
 
-  const blocks = mergeLayers();
+  if (blocks === null) {
+    blocks = mergeLayers();
+  }
+
   const output = [];
   let curBlock = false;
   let pushString = '';

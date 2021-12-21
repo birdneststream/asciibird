@@ -49,34 +49,26 @@
 
                 <t-button
                   type="button"
+                  class="rounded-3xl h-7 ml-1 mt-1"
                   @click="saveToLibrary(decompressBlock(brush.blocks))"
                 >
-                  <font-awesome-icon
-                    :icon="['fas', 'save']"
-                    size="lg"
-                    class="p-1 mx-1"
-                  />
+                <span class="material-icons">save</span>
+
                 </t-button>
                 <t-button
                   type="button"
-                  @click="reuseBlocks(decompressBlock(brush.blocks))"
-                >
-                  <font-awesome-icon
-                    :icon="['fas', 'paint-brush']"
-                    size="lg"
-                    class="p-1 mx-1"
-                  />
-                </t-button>
+                  class="rounded-3xl h-7 ml-1 mt-1"
+                  @click="reuseBlocks(decompressBlock(brush.blocks))">
+                <span class="material-icons">brush</span>
+                </t-button> 
 
                 <t-button
                   type="button"
+                  class="rounded-3xl h-7 ml-1 mt-1"
                   @click="removeFromHistory(decompressBlock(brush.blocks))"
                 >
-                  <font-awesome-icon
-                    :icon="['fas', 'trash']"
-                    size="lg"
-                    class="p-1 mx-1 right-auto"
-                  />
+                <span class="material-icons">delete</span>
+
                 </t-button>
               </t-card>
             </div>
@@ -91,23 +83,19 @@
 
                 <t-button
                   type="button"
+                  class="rounded-3xl h-7 ml-1 mt-1"
                   @click="removeFromLibrary(decompressBlock(brush.blocks))"
                 >
-                  <font-awesome-icon
-                    :icon="['fas', 'trash']"
-                    size="lg"
-                    class="p-1 mx-1"
-                  />
+                 <span class="material-icons">trash</span>
+
                 </t-button>
                 <t-button
                   type="button"
+                  class="rounded-3xl h-7 ml-1 mt-1"
                   @click="reuseBlocks(decompressBlock(brush.blocks))"
                 >
-                  <font-awesome-icon
-                    :icon="['fas', 'paint-brush']"
-                    size="lg"
-                    class="p-1 mx-1"
-                  />
+                 <span class="material-icons">brush</span>
+
                 </t-button>
               </t-card>
             </div>

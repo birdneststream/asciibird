@@ -10,14 +10,8 @@ import Dashboard from './Dashboard.vue';
 import Toasted from 'vue-toasted';
 
 Vue.config.productionTip = false;
-
-import {
-FontAwesomeIcon,
-} from '@fortawesome/vue-fontawesome';
-import './fontAwesome';
-
 Vue.use(VueTailwind, tailwindCss);
-Vue.component('font-awesome-icon', FontAwesomeIcon);
+
 Vue.component('vue-draggable-resizable', VueDraggableResizable);
 Vue.use(VueClipboard);
 Vue.use(Toasted, {

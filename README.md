@@ -28,29 +28,34 @@ A most latest production build to use is available at https://asciibird.jewbird.
   * Show and hide layers
   * Change layer order
   * Double click to rename layer
-* Copy and paste ASCII blocks between tabs
+  * Context menu for layers
+* Copy and paste ASCII blocks between tabs with the select tool
 * Remembers state on refresh and when the browser loads, can also export the state to a file and load elsewhere.
   * So you never lose your ascii art!
   * Saves layers, brushes data also to same file
 * Can import from clipboard, load from irc.watch/ascii, load from file
 * Can export mirc ascii to clipboard, file or HTTP POST
-* 99 Colour support, swap colours with button click
+* 99 Colour support
+* Swap fg and bg colours with button click or alt + k
 * Mirror X and Y
 * Grid mode with alt + g
-* Undo and redo with ctrl + z and ctrl + y, undos are set to a limit of 50 at the moment.
+* Undo and redo with ctrl + z and ctrl + y, undos are set to a limit of 200 at the moment.
 * Fg, Bg and Char boxes to filter when using certain tools
   * For example filling with Char unchecked will ignore characters when filling
-* Image overlay to trace images  
+  * If you want to remove the background but keep the text, unchek FG and Char and eraser the bg only.
+* Image overlay to trace images
+ * Accepts URLs only at the moment
+ * Can adjust the size and properties
 * Toolbar containing
-  * Select
-  * Text mode
+  * Select, to copy and paste blocks as brushes
+  * Text mode, with arrow key support
   * Fill background blocks
   * Brush mode, can be controlled with keyboard and mouse
   * Block picker (grab fg, bg and char of a block)
   * Eraser - remove blocks, can be controlled with keyboard and mouse
   * Fill Eraser - Fill remove blocks by bg, fg or char
 * Brush Library and History
-  * Make circle, square and cross brushes by sizes
+  * Make circle, square, cross and other brushes by sizes
   * Brush history, can save or re-use old brushes
   * Library - Save most used brushes to library
   * Brush history is set to a limit of 50
@@ -59,24 +64,27 @@ A most latest production build to use is available at https://asciibird.jewbird.
   * Clicking updates block
   * Right clicking removes block
   * Hovering outside brush area will save brush to history
+* Context menu available on all brushes preview areas
+ * Export any brush to PNG, mIRC clipboard or file by right clicking the brush preview
+# Roadmap and Bug To Fixes
 
-## Noted Bugs to Fix
+## Features to Add
 
-ASCIIBIRD is mostly usable. There are some bugs however to note at the moment. Refreshing the page seems to fix most strange things.
-
-* Layers manipulation and undo / redo is buggy
-
-## Focusing on Now 
-
-* Importer could be re-written with regex
-* More Context Menus (right click menu)
-  * Brushes Canvas right click
-  * ASCII right click
-
-## Roadmap
-
+* Layers undo and redo could be implemented, at the moment there isn't any.
 * Warning on mirc export if ascii exceeds IRCs 512 per chat line limit.
 * Review encodings check on file import - UTF8 vs Latin something
+* More Context Menus (right click menu)
+  * ASCII right click
+
+## Bugs to fix
+
+* If you apply an empty block from a brush, it will remove the char when it is supposed to leave the block alone.
+ * A bigger circle brush is a good example for this one.
+* Can't type in dialogs
+* Still cannot change width in edit ascii modal
+## Mobile / Touch Screen support
+
+Doesn't exist at the moment. While the underlying functions and code is compatible with mobile browsers from *babel*, the touch canvas events and text will need to be reviewed to work better with touch screens. For example while you can brush once, you cannot move the brush around.
 
 # Keyboard Shortcuts
 
@@ -126,7 +134,7 @@ The toolbar keyboard shorts are used with the ALT key.
 ### Eraser Mode Only
 
 * Four arrow keys control text cursor
-* Space - apply brush
+* Space - apply eraser
 
 ### Brush Mode Only
 

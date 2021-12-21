@@ -10,7 +10,6 @@
 
     <KeyboardShortcuts
       :selected-blocks="selectedBlocks"
-      :text-editing="textEditing"
       :selecting="selecting"
       :is-showing-dialog="isShowingDialog"
       @updatecanvas="updatecanvas"
@@ -33,7 +32,7 @@
       <t-input v-model="lastPostURL" />
     </t-dialog>
 
-    <context-menu :display="showContextMenu" ref="menu" class="z-50">
+    <context-menu ref="menu" class="z-50">
       <ul>
         <li
           @click="$store.commit('openModal', 'new-ascii')"
@@ -147,6 +146,7 @@
       />
 
       <Toolbar :y-offset="scrollOffset" />
+
       <DebugPanel
         :canvas-x="canvasX"
         :canvas-y="canvasY"
@@ -154,7 +154,7 @@
         :y-offset="scrollOffset"
       />
 
-      <BrushLibrary v-if="brushLibraryState.visible" :y-offset="scrollOffset" />
+      <BrushLibrary v-show="brushLibraryState.visible" :y-offset="scrollOffset" />
 
       <BrushPreview @inputtingbrush="inputtingbrush" :y-offset="scrollOffset" />
 
@@ -184,9 +184,6 @@
         @mouseup.right="openContextMenu"
         @contextmenu.prevent
       >
-        <!-- <h1 class="text-4xl">ASCIIBIRD</h1>
-        <h3>Right click to start</h3> -->
-
         <BrushCanvas :blocks="splashAscii" />
       </div>
     </template>

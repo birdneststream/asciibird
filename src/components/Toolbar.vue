@@ -22,75 +22,77 @@
         <div class="flex">
           <label class="ml-1 w-1/3">
             <t-checkbox
-              class="form-checkbox m-1"
+              class="form-checkbox h-5 w-5 text-blue-600"
               name="targetingFg"
               v-model="toolbarState.targetingFg"
               :disabled="!canBg && !canText"
             />
-            <span class="text-sm">FG</span>
+            <span class="ab-checkbox-label">FG</span>
+
+
           </label>
 
           <label class="ml-1 w-1/3">
             <t-checkbox
-              class="form-checkbox m-1"
+              class="ab-checkbox"
               name="targetingBg"
               v-model="toolbarState.targetingBg"
               :disabled="!canFg && !canText"
               checked
             />
-            <span class="text-sm">BG</span>
+            <span class="ab-checkbox-label">BG</span>
           </label>
 
           <label class="ml-1 w-1/3">
             <t-checkbox
-              class="form-checkbox m-1"
+              class="ab-checkbox"
               name="targetingChar"
               v-model="toolbarState.targetingChar"
               :disabled="!canFg && !canBg"
             />
-            <span class="text-sm">Text</span>
+            <span class="ab-checkbox-label">Text</span>
           </label>
         </div>
 
         <div class="flex">
           <label class="ml-1 w-1/2">
             <t-checkbox
-              class="form-checkbox m-1"
+              class="ab-checkbox"
               name="mirror-x"
               v-model="mirror.x"
               @change="updateMirror()"
             />
-            <span class="text-sm">Mirror X</span>
+            <span class="ab-checkbox-label">Mirror X</span>
           </label>
           <label class="ml-1 w-1/2">
             <t-checkbox
-              class="form-checkbox m-1"
+              class="ab-checkbox"
               name="mirror-y"
               v-model="mirror.y"
               @change="updateMirror()"
             />
-            <span class="text-sm">Mirror Y</span>
+            <span class="ab-checkbox-label">Mirror Y</span>
           </label>
         </div>
 
         <div class="flex">
           <label class="ml-1 w-1/2">
             <t-checkbox
-              class="form-checkbox m-1"
+              class="ab-checkbox"
               name="update-brush"
               v-model="toolbarState.updateBrush"
               @change="$store.commit('toggleUpdateBrush', updateBrush)"
             />
-            <span class="text-sm">Update Brush</span>
+            <span class="ab-checkbox-label">Update Brush</span>
           </label>
           <label class="ml-1 w-1/2">
             <t-checkbox
-              class="form-checkbox m-1"
+              class="ab-checkbox"
               name="grid"
               v-model="toolbarState.gridView"
               @change="$store.commit('toggleGridView', gridView)"
             />
-            <span class="text-sm">Grid</span>
+            <span class="ab-checkbox-label">Grid</span>
           </label>
         </div>
 
@@ -107,7 +109,7 @@
           }`"
           @click="$store.commit('changeTool', keyToolbar)"
         >
-          <font-awesome-icon :icon="[value.fa, value.icon]" size="lg" />
+          <span class="material-icons">{{ value.icon }}</span>
         </t-button>
       </t-card>
     </vue-draggable-resizable>

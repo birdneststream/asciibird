@@ -110,7 +110,9 @@ export default {
     asciiStats() {
       // const compressed = ( JSON.stringify(this.currentAscii) / 1024).toFixed(2);
       // const uncompressed = (JSON.stringify(this.currentAscii).length / 1024).toFixed(2);
-      const stateSize = (JSON.stringify(this.state).length / 1024).toFixed(2);
+      const byteSize = str => new Blob([str]).size;
+
+      const stateSize = (byteSize(JSON.stringify(this.state)) / 1024).toFixed(2);
       return {
         stateSize: `${stateSize}kb`,
         

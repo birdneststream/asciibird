@@ -5,6 +5,30 @@
       @mouseleave="isMouseOnCanvas = false"
       @mouseenter="isMouseOnCanvas = true"
     >
+
+      <context-menu ref="editor-menu" class="z-50" >
+        <ul>
+          <li
+            @click="true"
+            class="ml-1 text-sm hover:bg-gray-400"
+          >
+            Save as PNG
+          </li>
+          <li
+            @click="true"
+            class="ml-1 text-sm hover:bg-gray-400"
+          >
+            Export ASCII to mIRC Clipboard
+          </li>
+          <li
+            @click="true"
+            class="ml-1 text-sm hover:bg-gray-400"
+          >
+            Export ASCII to mIRC File
+          </li>
+        </ul>
+      </context-menu>
+
       <vue-draggable-resizable
         ref="canvasdrag"
         :grid="[blockWidth, blockHeight]"
@@ -41,6 +65,8 @@
           @mousemove.left="canvasMouseMove"
           @mousedown.left="canvasMouseDown"
           @mouseup.left="canvasMouseUp"
+          @mouseup.right="openContextMenu"
+          @contextmenu.prevent
           @touchmove="canvasMouseMove"
           @touchend="canvasMouseDown"
           @touchstart="canvasMouseUp"
@@ -51,6 +77,7 @@
 </template>
 
 <script>
+import ContextMenu from "./../components/parts/ContextMenu.vue";
 import {
   toolbarIcons,
   mircColours99,
@@ -62,11 +89,13 @@ import {
   getBlocksWidth,
   checkVisible,
   mergeLayers,
-  cyrb53,
 } from "../ascii";
 
 export default {
   name: "Editor",
+  components: {
+    ContextMenu,
+  },
   mounted() {
     this.ctx = this.canvasRef.getContext("2d");
     this.toolCtx = this.$refs.canvastools.getContext("2d");
@@ -297,7 +326,9 @@ export default {
       return this.currentSelectedLayer.width;
     },
     currentAsciiHeight() {
-      return this.currentSelectedLayer.height;
+      // Tested with wtf.txt and the max rows before the canvas
+      // stops working seems to be 2184
+      return (this.currentSelectedLayer.height > 2184 ? 2184 : this.currentSelectedLayer.height);
     },
     imageOverlay() {
       return this.$store.getters.imageOverlay;
@@ -429,6 +460,11 @@ export default {
     }
   },
   methods: {
+    openContextMenu(e) {
+      e.preventDefault();
+      // These are the correct X and Y when inside the floating panel
+      this.$refs['editor-menu'].open(e);
+    },
     canvasKeyDown(char) {
       // if (this.isTextEditing) {
       console.log(char);  
@@ -754,34 +790,37 @@ export default {
       return mergeLayers();
     },
     drawGrid() {
-      let ctx = this.ctx;
       let w = this.canvas.width;
       let h = this.canvas.height;
 
-      ctx.beginPath();
+      this.ctx.beginPath();
 
       for (var x = 0; x <= w; x += blockWidth) {
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, h);
+        this.ctx.moveTo(x, 0);
+        this.ctx.lineTo(x, h);
       }
 
-      ctx.strokeStyle = "rgba(0, 0, 0, 1)";
-      ctx.lineWidth = 1;
-      ctx.setLineDash([1]);
+      this.ctx.strokeStyle = "rgba(0, 0, 0, 1)";
+      this.ctx.lineWidth = 1;
+      this.ctx.setLineDash([1]);
 
-      ctx.stroke();
+      this.ctx.stroke();
 
-      ctx.beginPath();
+      this.ctx.beginPath();
       for (var y = 0; y <= h; y += blockHeight) {
-        ctx.moveTo(0, y);
-        ctx.lineTo(w, y);
+        this.ctx.moveTo(0, y);
+        this.ctx.lineTo(w, y);
       }
 
-      ctx.stroke();
+      this.ctx.stroke();
     },
     redrawCanvas() {
       if (this.currentAsciiLayers.length) {
+        // https://stackoverflow.com/questions/28390358/high-cpu-usage-with-canvas-and-requestanimationframe
+        this.ctx.save();
+        this.canvasRef.width = this.canvasRef.width;
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
 
         // Position of the meta array
         let x = 0;
@@ -838,6 +877,8 @@ export default {
         if (this.gridView) {
           this.drawGrid();
         }
+
+        this.ctx.restore();
       }
     },
     onCanvasResize(left, top, width, height) {
@@ -1066,6 +1107,8 @@ export default {
     clearToolCanvas() {
       if (this.toolCtx) {
         this.toolCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        this.toolCtx.save();
+        this.$refs.canvastools.width = this.$refs.canvastools.width;
       }
     },
     delayRedrawCanvas() {
@@ -1335,8 +1378,8 @@ export default {
           }
 
           // Apply text to ascii blocks
-          if (this.canText && this.canTool && brushBlock.char !== null) {
-            targetBlock.char = brushBlock.char;
+          if (this.canText && this.canTool) {
+            targetBlock['char'] = brushBlock['char'];
 
             if (
               this.mirrorX &&
@@ -1433,6 +1476,7 @@ export default {
       // Apply the actual brush block to the ascii block
       if (this.canTool && brushBlock[target] !== undefined) {
         targetBlock[target] = brushBlock[target];
+        // targetBlock['char'] = brushBlock['char'];
 
         let theX = asciiWidth - arrayX;
         let theY = asciiHeight - arrayY;
@@ -1473,6 +1517,7 @@ export default {
         }
       }
 
+      this.toolCtx.restore();
       return;
     },
     //
@@ -1483,12 +1528,12 @@ export default {
     drawBrush(plain = false) {
       this.clearToolCanvas();
       let brushDiffX = 0;
-      let xLength = 0;
+      let xLength = false;
 
       // If the first row isn't selected then we cannot get the width
       // with the 0 index
       for (let i = 0; i <= this.brushBlocks.length; i++) {
-        if (this.brushBlocks[i]) {
+        if (this.brushBlocks[i] && xLength === false) {
           brushDiffX = Math.floor(this.brushBlocks[i].length / 2) * blockWidth;
           xLength = this.brushBlocks[i].length;
           break;
@@ -1506,6 +1551,7 @@ export default {
           if (!this.brushBlocks[y][x]) {
             continue;
           }
+
 
           // if (
           //   this.top !== false &&
@@ -1540,7 +1586,9 @@ export default {
               }
 
               this.drawBrushBlocks(brushX, brushY, brushBlock, null);
-            } else {
+
+            } 
+            else if (this.isErasing) {
               this.drawBrushBlocks(brushX, brushY, brushBlock, null, true);
             }
 

@@ -22,42 +22,31 @@
 
     <div class="w-full bg-white rounded-lg shadow">
       <ul class="divide-y-2 divide-gray-100 mb-2">
-          <div class="flex p-1">
-            
-              <t-button
-                type="button"
-                class="rounded-xl"
-                @click="updateImageOverlay"
-              >
-                <font-awesome-icon
-                  :icon="['fas', imageOverlay.visible ? 'eye' : 'eye-slash']"
-                /> </t-button
-              >
-                <div class="w-full p-1" @click="showOverlayModal">
-                  <div class="flex text-right" >
-                    <div class="w-full">
-                      <t-card class="w-full pl-2 hover:bg-gray-300 cursor-pointer">
-                        <span>{{
-                          imageOverlayUrl ||  'Image Overlay'
-                          
-                        }}</span>
-                      </t-card>
-                    </div>
-
-                  </div>
-                </div>
-            
-
-
+        <div class="flex p-1">
+          <t-button
+            type="button"
+            class="rounded-xl"
+            @click="updateImageOverlay"
+          >
+            <span class="material-icons">{{
+              imageOverlay.visible ? "remove_red_eye" : "panorama_fish_eye"
+            }}</span>
+          </t-button>
+          <div class="w-full p-1" @click="showOverlayModal">
+            <div class="flex text-right">
+              <div class="w-full">
+                <t-card class="w-full pl-2 hover:bg-gray-300 cursor-pointer">
+                  <span>{{ imageOverlayUrl || "Image Overlay" }}</span>
+                </t-card>
+              </div>
+            </div>
           </div>
-
+        </div>
       </ul>
 
       <ul class="mt-1 mb-2">
         <li></li>
       </ul>
-
-      
 
       <ul class="divide-y-2 divide-gray-100 reverseorder">
         <li
@@ -69,22 +58,22 @@
             <div class="w-12">
               <t-button
                 type="button"
-                class="rounded-xl"
+                class="rounded-3xl h-7"
                 @click="toggleLayer(key)"
                 :disabled="!canToggleLayer"
               >
-                <font-awesome-icon
-                  :icon="['fas', layer.visible ? 'eye' : 'eye-slash']"
-                /> </t-button
+              <span class="material-icons">{{ layer.visible ? "remove_red_eye" : "panorama_fish_eye" }}</span>
+              
+                </t-button
               ><br />
 
               <t-button
                 type="button"
-                class="rounded-xl"
+                class="rounded-3xl h-7"
                 @click="removeLayer(key)"
                 :disabled="!canToggleLayer"
               >
-                <font-awesome-icon :icon="['fas', 'trash']" />
+              <span class="material-icons">delete</span>
               </t-button>
             </div>
 
@@ -101,22 +90,22 @@
                 <div class="w-5">
                   <t-button
                     type="button"
-                    class="rounded-xl"
+                    class="rounded-3xl h-7"
                     @click="downLayer(key)"
                     :disabled="!canToggleLayer"
                   >
-                    <font-awesome-icon
-                      :icon="['fas', 'chevron-circle-up']"
-                    /> </t-button
+
+                    <span class="material-icons">arrow_upward</span>
+                    </t-button
                   ><br />
 
                   <t-button
                     type="button"
-                    class="rounded-xl"
+                    class="rounded-3xl h-7"
                     @click="upLayer(key)"
                     :disabled="!canToggleLayer"
                   >
-                    <font-awesome-icon :icon="['fas', 'chevron-circle-down']" />
+                    <span class="material-icons">arrow_downward</span>
                   </t-button>
                 </div>
               </div>
@@ -152,8 +141,10 @@ export default {
       return this.$store.getters.imageOverlay || false;
     },
     imageOverlayUrl() {
-      return this.imageOverlay.url ? this.imageOverlay.url.split("/").pop() : '';
-    }
+      return this.imageOverlay.url
+        ? this.imageOverlay.url.split("/").pop()
+        : "";
+    },
   },
   watch: {
     selectedLayer() {
@@ -243,16 +234,14 @@ export default {
       this.$store.commit("removeLayer", key);
     },
     showOverlayModal() {
-      this.$store.commit('openModal', 'overlay');
+      this.$store.commit("openModal", "overlay");
     },
     // Image overlay
-    updateImageOverlay() {      
-      let overlay = { ... this.imageOverlay }
-      overlay.visible = ! overlay.visible
+    updateImageOverlay() {
+      let overlay = { ...this.imageOverlay };
+      overlay.visible = !overlay.visible;
       this.$store.commit("updateImageOverlay", overlay);
     },
-
-
   },
 };
 </script>
