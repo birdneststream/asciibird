@@ -25,7 +25,7 @@
         <div class="flex p-1">
           <t-button
             type="button"
-            class="rounded-xl"
+            class="ab-rounded-button"
             @click="updateImageOverlay"
           >
             <span class="material-icons">{{
@@ -58,7 +58,7 @@
             <div class="w-12">
               <t-button
                 type="button"
-                class="rounded-3xl h-7"
+                class="ab-rounded-button"
                 @click="toggleLayer(key)"
                 :disabled="!canToggleLayer"
               >
@@ -69,7 +69,7 @@
 
               <t-button
                 type="button"
-                class="rounded-3xl h-7"
+                class="ab-rounded-button"
                 @click="removeLayer(key)"
                 :disabled="!canToggleLayer"
               >
@@ -90,7 +90,7 @@
                 <div class="w-5">
                   <t-button
                     type="button"
-                    class="rounded-3xl h-7"
+                    class="ab-rounded-button"
                     @click="downLayer(key)"
                     :disabled="!canToggleLayer"
                   >
@@ -101,7 +101,7 @@
 
                   <t-button
                     type="button"
-                    class="rounded-3xl h-7"
+                    class="ab-rounded-button"
                     @click="upLayer(key)"
                     :disabled="!canToggleLayer"
                   >
@@ -130,7 +130,7 @@ export default {
       return this.$store.getters.selectedLayer;
     },
     canToggleLayer() {
-      return this.currentAsciiLayers.length !== 1;
+      return this.currentAsciiLayers.length > 1;
       // We want to avoid hiding all the layers, so if there's only one
       // visible left, we have to disable the buttons
     },
@@ -214,9 +214,15 @@ export default {
     },
     addLayer() {
       this.$store.commit("addLayer");
+      this.$toasted.show(`Added a new layer.`, {
+        type: "success",
+      });
     },
     mergeLayers() {
       this.$store.commit("mergeAllLayers");
+      this.$toasted.show(`All layers have been merged.`, {
+        type: "success",
+      });
     },
     changeLayer(key) {
       this.$store.commit("changeLayer", key);
@@ -232,6 +238,9 @@ export default {
     },
     removeLayer(key) {
       this.$store.commit("removeLayer", key);
+      this.$toasted.show(`Removed layer.`, {
+        type: "success",
+      });
     },
     showOverlayModal() {
       this.$store.commit("openModal", "overlay");

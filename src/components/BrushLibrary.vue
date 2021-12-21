@@ -49,7 +49,7 @@
 
                 <t-button
                   type="button"
-                  class="rounded-3xl h-7 ml-1 mt-1"
+                  class="ab-rounded-button ml-1 mt-1"
                   @click="saveToLibrary(decompressBlock(brush.blocks))"
                 >
                 <span class="material-icons">save</span>
@@ -57,14 +57,14 @@
                 </t-button>
                 <t-button
                   type="button"
-                  class="rounded-3xl h-7 ml-1 mt-1"
+                  class="ab-rounded-button ml-1 mt-1"
                   @click="reuseBlocks(decompressBlock(brush.blocks))">
                 <span class="material-icons">brush</span>
                 </t-button> 
 
                 <t-button
                   type="button"
-                  class="rounded-3xl h-7 ml-1 mt-1"
+                  class="ab-rounded-button ml-1 mt-1"
                   @click="removeFromHistory(decompressBlock(brush.blocks))"
                 >
                 <span class="material-icons">delete</span>
@@ -83,7 +83,7 @@
 
                 <t-button
                   type="button"
-                  class="rounded-3xl h-7 ml-1 mt-1"
+                  class="ab-rounded-button ml-1 mt-1"
                   @click="removeFromLibrary(decompressBlock(brush.blocks))"
                 >
                  <span class="material-icons">trash</span>
@@ -91,7 +91,7 @@
                 </t-button>
                 <t-button
                   type="button"
-                  class="rounded-3xl h-7 ml-1 mt-1"
+                  class="ab-rounded-button ml-1 mt-1"
                   @click="reuseBlocks(decompressBlock(brush.blocks))"
                 >
                  <span class="material-icons">brush</span>
@@ -190,15 +190,23 @@ export default {
     reuseBlocks(value) {
       this.$store.commit("brushBlocks", value);
       this.$store.commit("changeTool", 4);
+      this.$toasted.show(`Applied brush from Library`, {
+            type: "success",
+          });
     },
     saveToLibrary(value) {
       this.$store.commit("pushBrushLibrary", value);
+      this.$toasted.show(`Saved brush to Library`, {
+            type: "success",
+          });
     },
     removeFromLibrary(value) {
       this.$store.commit("removeBrushLibrary", value);
+      this.$toasted.show(`Removed brush from Library`);
     },
     removeFromHistory(value) {
       this.$store.commit("removeBrushHistory", value);
+      this.$toasted.show(`Removed brush from History`);
     },
     onResize(x, y, w, h) {
       this.panel.x = x;

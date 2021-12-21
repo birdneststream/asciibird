@@ -68,32 +68,32 @@ body {
 }
 
 
-@layer base {
-    .bar {
-        @apply bg-gray-500;
-    }
-
-    .bar-button {
-        @apply text-white;
-    }
-
-    .bar-button:hover {
-        @apply bg-gray-800;
-    }
-
-    .ab-toolbar-button {
-        @apply w-10 h-10 mt-1 ml-1 border-gray-200 bg-gray-500;
-    }
-
-    .ab-toolbar-button-active {
-        @apply w-10 h-10 mt-1 ml-1 border-gray-900 bg-blue-500;
-    }
-
-    .ab-checkbox {
-        @apply h-4 w-4 text-blue-600;
-    }
-
-    .ab-checkbox-label {
-        @apply ml-2 text-gray-700;
-    }
+/* @layer base { */
+.bar {
+    @apply bg-gray-500;
 }
+
+.bar-button {
+    @apply text-white;
+}
+
+.bar-button:hover {
+    @apply bg-gray-800;
+}
+
+.ab-checkbox {
+    @apply h-4 w-4 text-blue-600;
+}
+
+.ab-checkbox-label {
+    @apply ml-2 text-gray-700;
+}
+
+.ab-rounded-button {
+    @apply rounded-3xl h-7;
+}
+
+.ab-checkbox-hover {
+    @apply ml-1 w-1/3 mb-2 hover:bg-gray-500;
+}
+/* } */

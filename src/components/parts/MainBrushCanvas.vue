@@ -1,19 +1,19 @@
 <template>
   <div>
-    <t-card class="overflow-x-scroll overflow-y-scroll h-full" :h="blocksWidthHeight.h">
-
+    <t-card
+      class="overflow-x-scroll overflow-y-scroll h-full"
+      :h="blocksWidthHeight.h"
+    >
       <div
         :style="`height: ${blocksWidthHeight.h}px;width: ${blocksWidthHeight.w}px;`"
         @mouseup.right="openContextMenu"
       >
-
         <canvas
           ref="brushcanvas"
           id="brushcanvas"
           class="brushcanvas"
           @mousemove="canvasMouseMove"
           @mousedown.left="processClick"
-          
           @mouseup.left="canTool = false"
           @contextmenu.prevent
           :width="blocksWidthHeight.w"
@@ -24,36 +24,22 @@
 
         <context-menu ref="main-brush-menu" class="z-50" @contextmenu.prevent>
           <ul>
-            <li
-              @click="true"
-              class="ml-1 text-sm hover:bg-gray-400"
-            >
+            <li @click="true" class="ml-1 text-sm hover:bg-gray-400">
               Save as PNG
             </li>
-            <li
-              @click="true"
-              class="ml-1 text-sm hover:bg-gray-400"
-            >
+            <li @click="true" class="ml-1 text-sm hover:bg-gray-400">
               Export Brush to mIRC Clipboard
             </li>
-            <li
-              @click="true"
-              class="ml-1 text-sm hover:bg-gray-400"
-            >
+            <li @click="true" class="ml-1 text-sm hover:bg-gray-400">
               Export Brush to mIRC File
             </li>
-            <li
-              @click="true"
-              class="ml-1 text-sm hover:bg-gray-400"
-            >
+            <li @click="true" class="ml-1 text-sm hover:bg-gray-400">
               Save to Library
             </li>
           </ul>
         </context-menu>
       </div>
     </t-card>
-
-
   </div>
 </template>
 
@@ -222,7 +208,7 @@ export default {
     openContextMenu(e) {
       e.preventDefault();
       // These are the correct X and Y when inside the floating panel
-      this.$refs['main-brush-menu'].open({
+      this.$refs["main-brush-menu"].open({
         pageX: e.layerX,
         pageY: e.layerY,
       });
@@ -300,7 +286,8 @@ export default {
             if (this.brushBlocks[y] && this.brushBlocks[y][x]) {
               const curBlock = this.brushBlocks[y][x];
 
-              if (curBlock.bg !== undefined) { // we had used to hide or show depending on canFg, etc && this.isTargettingBg
+              if (curBlock.bg !== undefined) {
+                // we had used to hide or show depending on canFg, etc && this.isTargettingBg
                 this.ctx.fillStyle = this.mircColours[curBlock.bg];
 
                 this.ctx.fillRect(
@@ -311,11 +298,13 @@ export default {
                 );
               }
 
-              if (curBlock.fg !== undefined) { // we had used to hide or show depending on canFg, etc && this.isTargettingFg
+              if (curBlock.fg !== undefined) {
+                // we had used to hide or show depending on canFg, etc && this.isTargettingFg
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
               }
 
-              if (curBlock.char !== undefined) { // we had used to hide or show depending on canFg, etc && this.isTargettingChar
+              if (curBlock.char !== undefined) {
+                // we had used to hide or show depending on canFg, etc && this.isTargettingChar
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
                 this.ctx.fillText(
                   curBlock.char,
@@ -391,6 +380,9 @@ export default {
       // To avoid one block history changes
       this.$store.commit("brushBlocks", this.brushBlocks);
       this.$store.commit("changeToolBarDraggable", true);
+      this.$toasted.show(`Saved brush to Library`, {
+        type: "success",
+      });
     },
   },
 };

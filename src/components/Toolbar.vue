@@ -20,7 +20,7 @@
         </div>
 
         <div class="flex">
-          <label class="ml-1 w-1/3">
+          <label class="ab-checkbox-hover">
             <t-checkbox
               class="form-checkbox h-5 w-5 text-blue-600"
               name="targetingFg"
@@ -28,11 +28,9 @@
               :disabled="!canBg && !canText"
             />
             <span class="ab-checkbox-label">FG</span>
-
-
           </label>
 
-          <label class="ml-1 w-1/3">
+          <label class="ab-checkbox-hover">
             <t-checkbox
               class="ab-checkbox"
               name="targetingBg"
@@ -43,7 +41,7 @@
             <span class="ab-checkbox-label">BG</span>
           </label>
 
-          <label class="ml-1 w-1/3">
+          <label class="ab-checkbox-hover">
             <t-checkbox
               class="ab-checkbox"
               name="targetingChar"
@@ -54,55 +52,81 @@
           </label>
         </div>
 
-        <div class="flex">
-          <label class="ml-1 w-1/2">
-            <t-checkbox
-              class="ab-checkbox"
-              name="mirror-x"
-              v-model="mirror.x"
-              @change="updateMirror()"
-            />
-            <span class="ab-checkbox-label">Mirror X</span>
-          </label>
-          <label class="ml-1 w-1/2">
-            <t-checkbox
-              class="ab-checkbox"
-              name="mirror-y"
-              v-model="mirror.y"
-              @change="updateMirror()"
-            />
-            <span class="ab-checkbox-label">Mirror Y</span>
-          </label>
-        </div>
+        <div class="flex mb-3">
+          <t-button
+            type="button"
+            :class="`rounded-3xl w-10 h-10 mt-1 ml-1 ${
+              mirror.x
+                ? 'border-gray-900 bg-blue-800'
+                : 'border-gray-200 bg-gray-500'
+            }`"
+            @click="
+              mirror.x = !mirror.x;
+              updateMirror();
+              $toasted.show(`Mirror X ${mirror.x ? 'enabled' : 'disabled'}`);
+            "
+          >
+            <span class="material-icons">more_vert</span>
+          </t-button>
 
-        <div class="flex">
-          <label class="ml-1 w-1/2">
-            <t-checkbox
-              class="ab-checkbox"
-              name="update-brush"
-              v-model="toolbarState.updateBrush"
-              @change="$store.commit('toggleUpdateBrush', updateBrush)"
-            />
-            <span class="ab-checkbox-label">Update Brush</span>
-          </label>
-          <label class="ml-1 w-1/2">
-            <t-checkbox
-              class="ab-checkbox"
-              name="grid"
-              v-model="toolbarState.gridView"
-              @change="$store.commit('toggleGridView', gridView)"
-            />
-            <span class="ab-checkbox-label">Grid</span>
-          </label>
-        </div>
 
-        <hr class="m-3" />
+          <t-button
+            type="button"
+            :class="`rounded-3xl w-10 h-10 mt-1 ml-1 ${
+              mirror.y
+                ? 'border-gray-900 bg-blue-800'
+                : 'border-gray-200 bg-gray-500'
+            }`"
+            @click="
+              mirror.y = !mirror.y;
+              updateMirror();
+              $toasted.show(`Mirror Y ${mirror.y ? 'enabled' : 'disabled'}`);
+            "
+          >
+            <span class="material-icons">more_horiz</span>
+          </t-button>
+
+
+          <t-button
+            type="button"
+            :class="`rounded-3xl w-10 h-10 mt-1 ml-1 ${
+              toolbarState.updateBrush
+                ? 'border-gray-900 bg-blue-800'
+                : 'border-gray-200 bg-gray-500'
+            }`"
+            @click="
+              $store.commit('toggleUpdateBrush', updateBrush);
+              toolbarState.updateBrush = !toolbarState.updateBrush;
+              $toasted.show(`Update Brush when colours or char changes ${toolbarState.updateBrush ? 'enabled' : 'disabled'}`);
+            "
+          >
+            <span class="material-icons">color_lens</span>
+          </t-button>
+
+          <t-button
+            type="button"
+            :class="`rounded-3xl w-10 h-10 mt-1 ml-1 ${
+              toolbarState.gridView
+                ? 'border-gray-900 bg-blue-800'
+                : 'border-gray-200 bg-gray-500'
+            }`"
+            @click="
+              $store.commit('toggleGridView', gridView);
+              toolbarState.gridView = !toolbarState.gridView;
+              $toasted.show(`Grid view ${toolbarState.gridView ? 'enabled' : 'disabled'}`);
+            "
+          >
+            <span class="material-icons">{{
+              !this.gridView ? "grid_on" : "grid_off"
+            }}</span>
+          </t-button>
+        </div>
 
         <t-button
           type="button"
           v-for="(value, keyToolbar) in toolbarIcons"
           :key="keyToolbar + 50"
-          :class="`w-10 h-10 mt-1 ml-1 ${
+          :class="`rounded-3xl w-10 h-10 mt-1 ml-1 ${
             currentTool.name === value.name
               ? 'border-gray-900 bg-blue-500'
               : 'border-gray-200 bg-gray-500'
@@ -197,7 +221,7 @@ export default {
   },
   watch: {
     yOffset(val) {
-      this.$refs.toolbardrag.top =  Number.parseInt(this.toolbarState.y + val);
+      this.$refs.toolbardrag.top = Number.parseInt(this.toolbarState.y + val);
     },
   },
   methods: {
