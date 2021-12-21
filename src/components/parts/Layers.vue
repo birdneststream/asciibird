@@ -3,18 +3,18 @@
     <div class="flex">
       <t-button
         type="button"
-        class="block w-1/2 border-gray-200 bg-gray-500"
+        class="block w-1/2 border-gray-200 bg-gray-500 text-sm"
         @click="addLayer()"
       >
-        Add Layer
+        <span class="material-icons relative top-2 pb-4">playlist_add</span> Add Layer
       </t-button>
 
       <t-button
         type="button"
-        class="block w-1/2 border-gray-200 bg-gray-500"
+        class="block w-1/2 border-gray-200 bg-gray-500 text-sm"
         @click="mergeLayers()"
       >
-        Merge Layers
+        <span class="material-icons relative top-2 pb-4">playlist_play</span> Merge Layers
       </t-button>
     </div>
 
@@ -29,7 +29,7 @@
             @click="updateImageOverlay"
           >
             <span class="material-icons">{{
-              imageOverlay.visible ? "remove_red_eye" : "panorama_fish_eye"
+              !imageOverlay.visible ? "remove_red_eye" : "panorama_fish_eye"
             }}</span>
           </t-button>
           <div class="w-full p-1" @click="showOverlayModal">

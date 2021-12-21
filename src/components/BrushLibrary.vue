@@ -15,29 +15,33 @@
       ref="brushlibrarypanel"
     >
       <t-card class="h-full overflow-y-auto overflow-x-auto">
-        <t-button
-          type="button"
-          :class="`block w-full ${
-            panel.tab === 1
-              ? 'border-gray-900 bg-blue-500'
-              : 'border-gray-200 bg-gray-500'
-          }`"
-          @click="changeTab(1)"
-        >
-          Library
-        </t-button>
 
         <t-button
           type="button"
-          :class="`block w-full ${
+          :class="`w-1/2 border-gray-200 bg-gray-500 text-sm ${
             panel.tab === 0
               ? 'border-gray-900 bg-blue-500'
               : 'border-gray-200 bg-gray-500'
           }`"
           @click="changeTab(0)"
         >
-          History
+          <span class="material-icons relative top-2 pb-4">history</span> History
         </t-button>
+
+
+        <t-button
+          type="button"
+          :class="`w-1/2 border-gray-200 bg-gray-500 text-sm ${
+            panel.tab === 1
+              ? 'border-gray-900 bg-blue-500'
+              : 'border-gray-200 bg-gray-500'
+          }`"
+          @click="changeTab(1)"
+        >
+          <span class="material-icons relative top-2 pb-4">library_books</span> Library {{ libraryCount }}
+        </t-button>
+
+
 
         <div class="flex">
           <div v-if="panel.tab === 0">
@@ -86,7 +90,7 @@
                   class="ab-rounded-button ml-1 mt-1"
                   @click="removeFromLibrary(decompressBlock(brush.blocks))"
                 >
-                 <span class="material-icons">trash</span>
+                 <span class="material-icons">delete</span>
 
                 </t-button>
                 <t-button
@@ -173,6 +177,9 @@ export default {
     brushLibraryState() {
       return this.$store.getters.brushLibraryState;
     },
+    libraryCount() {
+      return this.brushLibrary.length > 0 ? `(${this.brushLibrary.length})` : '';
+    }
   },
   watch: {
     yOffset(val) {

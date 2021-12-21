@@ -128,9 +128,11 @@
             :class="buttonStyle(key)"
             @click="changeTab(key, value)"
           >
-            {{ value.title }}
-
-            <t-button class="z-40" @click="closeTab(key)"> X </t-button>
+            <span>
+              <span class="material-icons relative">insert_drive_file</span>
+              <span class="bottom-1 relative pl-1 pr-1">{{ value.title }}</span>
+              <t-button class="relative bottom-1 z-40 rounded-3xl h-5" @click="closeTab(key)"><span class="material-icons" style="font-size:16px">close</span></t-button>
+            </span>
           </t-button>
         </span>
       </div>
