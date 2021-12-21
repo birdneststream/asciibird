@@ -24,16 +24,16 @@
 
         <context-menu ref="main-brush-menu" class="z-50" @contextmenu.prevent>
           <ul>
-            <li @click="true" class="ml-1 text-sm hover:bg-gray-400">
+            <li @click="true" class="ab-context-menu-item">
               Save as PNG
             </li>
-            <li @click="true" class="ml-1 text-sm hover:bg-gray-400">
+            <li @click="true" class="ab-context-menu-item">
               Export Brush to mIRC Clipboard
             </li>
-            <li @click="true" class="ml-1 text-sm hover:bg-gray-400">
+            <li @click="true" class="ab-context-menu-item">
               Export Brush to mIRC File
             </li>
-            <li @click="true" class="ml-1 text-sm hover:bg-gray-400">
+            <li @click="true" class="ab-context-menu-item">
               Save to Library
             </li>
           </ul>
@@ -75,6 +75,7 @@ export default {
     redraw: true,
     canTool: false,
     showContextMenu: true,
+    hasChanged: false,
     x: 0,
     y: 0,
   }),
@@ -228,10 +229,12 @@ export default {
       this.y = Math.floor(this.y / blockHeight);
 
       if (this.isErasing) {
+        this.hasChanged = true;
         this.eraseBlock();
       }
 
       if (this.isBrushing) {
+        this.hasChanged = true;
         this.addBlock();
       }
     },
@@ -335,7 +338,7 @@ export default {
     },
     // Basic block editing
     canvasMouseMove(e) {
-      if (this.canTool) {
+      if (this.canTool && (this.isErasing || this.isBrushing)) {
         this.processClick(e);
       }
     },
@@ -378,11 +381,14 @@ export default {
     enableToolbarMoving() {
       // Save the blocks when the mouse leaves the canvas area
       // To avoid one block history changes
-      this.$store.commit("brushBlocks", this.brushBlocks);
-      this.$store.commit("changeToolBarDraggable", true);
-      this.$toasted.show(`Saved brush to Library`, {
-        type: "success",
-      });
+      if ( (this.isErasing || this.isBrushing) && this.hasChanged) {
+        this.$store.commit("brushBlocks", this.brushBlocks);
+        this.$store.commit("changeToolBarDraggable", true);
+        this.hasChanged = false;
+        this.$toasted.show(`Saved brush to Library`, {
+          type: "success",
+        });
+      }
     },
   },
 };

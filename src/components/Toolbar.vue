@@ -52,7 +52,7 @@
           </label>
         </div>
 
-        <div class="flex mb-3">
+        <div class="flex mb-3 border-t border-black border-opacity-10 pt-2">
           <t-button
             type="button"
             :class="`rounded-3xl w-10 h-10 mt-1 ml-1 ${
@@ -122,6 +122,7 @@
           </t-button>
         </div>
 
+        <div class="border-t border-black border-opacity-10 pt-2">
         <t-button
           type="button"
           v-for="(value, keyToolbar) in toolbarIcons"
@@ -135,6 +136,8 @@
         >
           <span class="material-icons">{{ value.icon }}</span>
         </t-button>
+        </div>
+          
       </t-card>
     </vue-draggable-resizable>
   </div>

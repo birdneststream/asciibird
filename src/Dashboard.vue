@@ -36,53 +36,53 @@
       <ul>
         <li
           @click="$store.commit('openModal', 'new-ascii')"
-          class="ml-1"
+          class="ab-context-menu-item"
           @contextmenu.prevent
         >
           New ASCII
         </li>
         <li
           @click="$store.commit('openModal', 'edit-ascii')"
-          class="ml-1"
+          class="ab-context-menu-item"
           v-if="asciibirdMeta.length"
         >
           Edit Ascii
         </li>
         <li
           @click="closeTab(currentTab)"
-          class="ml-1 border-b"
+          class="ab-context-menu-item border-b"
           v-if="asciibirdMeta.length"
         >
           Close Ascii
         </li>
         <li
           @click="$store.commit('openModal', 'options')"
-          class="ml-1 border-b"
+          class="ab-context-menu-item border-b"
           v-if="asciibirdMeta.length"
         >
           Options
         </li>
 
-        <li @click="startImport('mirc')" class="ml-1">Import mIRC from File</li>
+        <li @click="startImport('mirc')" class="ab-context-menu-item">Import mIRC from File</li>
         <li
           @click="startExport('file')"
-          class="ml-1 border-b"
+          class="ab-context-menu-item border-b"
           v-if="asciibirdMeta.length"
         >
           Export mIRC to File
         </li>
-        <li class="ml-1" @click="$store.commit('openModal', 'paste-ascii')">
+        <li class="ab-context-menu-item" @click="$store.commit('openModal', 'paste-ascii')">
           Import mIRC from Clipboard
         </li>
         <li
-          class="ml-1"
+          class="ab-context-menu-item"
           @click="startExport('clipboard')"
           v-if="asciibirdMeta.length"
         >
           Export mIRC to Clipboard
         </li>
         <li
-          class="ml-1 border-b"
+          class="ab-context-menu-item border-b"
           @click="startExport('post')"
           v-if="asciibirdMeta.length"
         >
@@ -90,12 +90,12 @@
         </li>
         <li
           @click="exportAsciibirdState()"
-          class="ml-1"
+          class="ab-context-menu-item"
           v-if="asciibirdMeta.length"
         >
           Save Asciibird State
         </li>
-        <li @click="startImport('asb')" class="ml-1">Load Asciibird State</li>
+        <li @click="startImport('asb')" class="ab-context-menu-item">Load Asciibird State</li>
       </ul>
     </context-menu>
 
@@ -368,6 +368,7 @@ export default {
 
       menu.push({
         text: "File",
+        icon: "insert_drive_file",
         menu: [
           {
             text: "New ASCII",
@@ -393,6 +394,7 @@ export default {
 
         menu.push({
           text: "Options",
+          icon: "settings",
           menu: [
             {
               text: "Show Options",
@@ -405,6 +407,7 @@ export default {
 
       menu.push({
         text: "Import",
+        icon: "upload_file",
         menu: [
           { text: "mIRC File", click: () => this.startImport("mirc"), icon: 'upload_file' },
           {
@@ -420,6 +423,7 @@ export default {
         menu.push(
           {
             text: "Export",
+            icon: "save_alt",
             menu: [
               { text: "mIRC File", click: () => this.startExport("file"), icon: 'download_file' },
               {
@@ -437,6 +441,7 @@ export default {
           },
           {
             text: "Layers",
+            icon: "layers",
             menu: [
               // {
               //   text: "Change Layers",

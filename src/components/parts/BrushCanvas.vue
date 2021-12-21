@@ -17,19 +17,19 @@
         <ul>
           <li
             @click="true"
-            class="ml-1 text-sm hover:bg-gray-400"
+            class="ab-context-menu-item"
           >
             Save as PNG
           </li>
           <li
             @click="true"
-            class="ml-1 text-sm hover:bg-gray-400"
+            class="ab-context-menu-item"
           >
             Export ASCII to mIRC Clipboard
           </li>
           <li
             @click="true"
-            class="ml-1 text-sm hover:bg-gray-400"
+            class="ab-context-menu-item"
           >
             Export ASCII to mIRC File
           </li>
