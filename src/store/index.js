@@ -43,6 +43,10 @@ export default new Vuex.Store({
     },
     // Current tab user is viewing
     tab: 0,
+    desktopState: {
+      menuBarVisible: true,
+      tabsVisible: true,
+    },
     // asciibirdMeta holds all of the ASCII information for all the tabs
     asciibirdMeta: [],
     toolbarState: {

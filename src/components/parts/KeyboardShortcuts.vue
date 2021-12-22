@@ -9,8 +9,6 @@ import {
   filterNullBlocks,
   getBlocksWidth,
   emptyBlock,
-  exportMirc,
-  downloadFile,
 } from "../../ascii";
 
 export default {
@@ -70,27 +68,6 @@ export default {
       }
     });
 
-    // New ASCII
-    // Ctrl N doesn't seem to work in chrome? https://github.com/liftoff/GateOne/issues/290
-    hotkeys("n", "editor", function (event, handler) {
-      event.preventDefault();
-      if (_this.isDefault && !_this.isTextEditing) {
-        _this.$store.commit("openModal", "new-ascii");
-
-        return;
-      }
-    });
-
-    // Paste ASCII
-    hotkeys("p", "editor", function (event, handler) {
-      event.preventDefault();
-      if (_this.isDefault && !_this.isTextEditing) {
-        _this.$store.commit("openModal", "paste-ascii");
-        return;
-      }
-    });
-
-    // if (this.haveOpenTabs) {
     // Show / hide brush library
     hotkeys("l", "editor", function (event, handler) {
       event.preventDefault();
@@ -128,42 +105,6 @@ export default {
 
         return;
       }
-    });
-
-    // Edit ASCII
-    hotkeys("e", "editor", function (event, handler) {
-      event.preventDefault();
-      if (_this.isDefault && !_this.isTextEditing && _this.haveOpenTabs) {
-        _this.$store.commit("openModal", "edit-ascii");
-
-        return;
-      }
-    });
-
-    hotkeys("ctrl+shift+c", "editor", function (event, handler) {
-      event.preventDefault();
-      let ascii = exportMirc();
-      _this.$copyText(ascii.output.join("")).then(
-        (e) => {
-          _this.$toasted.show("Copied mIRC to clipboard!", {
-            type: "success",
-          });
-        },
-        (e) => {
-          _this.$toasted.show("Error when copying mIRC to clipboard!", {
-            type: "error",
-          });
-        }
-      );
-
-      return;
-    });
-
-    hotkeys("ctrl+shift+f", "editor", function (event, handler) {
-      event.preventDefault();
-      let ascii = exportMirc();
-      downloadFile(ascii.output.join(""), ascii.filename, "text/plain");
-      return;
     });
 
     hotkeys("ctrl+]", "editor", function (event, handler) {

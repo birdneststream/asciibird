@@ -4,26 +4,17 @@
       id="canvas-area"
       @mouseleave="isMouseOnCanvas = false"
       @mouseenter="isMouseOnCanvas = true"
+      
     >
-
-      <context-menu ref="editor-menu" class="z-50" >
+      <context-menu ref="editor-menu" class="z-50">
         <ul>
-          <li
-            @click="true"
-            class="ml-1 text-sm hover:bg-gray-400"
-          >
+          <li @click="true" class="ml-1 text-sm hover:bg-gray-400">
             Save as PNG
           </li>
-          <li
-            @click="true"
-            class="ml-1 text-sm hover:bg-gray-400"
-          >
+          <li @click="true" class="ml-1 text-sm hover:bg-gray-400">
             Export ASCII to mIRC Clipboard
           </li>
-          <li
-            @click="true"
-            class="ml-1 text-sm hover:bg-gray-400"
-          >
+          <li @click="true" class="ml-1 text-sm hover:bg-gray-400">
             Export ASCII to mIRC File
           </li>
         </ul>
@@ -328,7 +319,9 @@ export default {
     currentAsciiHeight() {
       // Tested with wtf.txt and the max rows before the canvas
       // stops working seems to be 2184
-      return (this.currentSelectedLayer.height > 2184 ? 2184 : this.currentSelectedLayer.height);
+      return this.currentSelectedLayer.height > 2184
+        ? 2184
+        : this.currentSelectedLayer.height;
     },
     imageOverlay() {
       return this.$store.getters.imageOverlay;
@@ -375,10 +368,8 @@ export default {
       if (val !== old) {
         this.canvas.width = this.currentAsciiWidth * blockWidth;
         this.canvas.height = this.currentAsciiHeight * blockHeight;
+        this.delayRedrawCanvas();
       }
-    },
-    currentAsciiLayerBlocks() {
-      this.delayRedrawCanvas();
     },
     currentSelectedLayer(val, old) {
       if (old && old.visible) {
@@ -437,16 +428,16 @@ export default {
     textEditing(val, old) {
       this.$emit("textediting", val);
     },
-    updateCanvas(val, old) {
-      if (val !== old) {
-        // This comes from KeyboardShortcuts.vue
-        this.clearToolCanvas();
-        this.drawTextIndicator();
-        this.drawIndicator();
+    // updateCanvas(val, old) {
+    //   if (val !== old) {
+    //     // This comes from KeyboardShortcuts.vue
+    //     this.clearToolCanvas();
+    //     this.drawTextIndicator();
+    //     this.drawIndicator();
 
-        this.delayRedrawCanvas();
-      }
-    },
+    //     this.delayRedrawCanvas();
+    //   }
+    // },
     selecting(val) {
       this.$emit("selecting", val);
     },
@@ -457,17 +448,17 @@ export default {
       if (val !== old) {
         this.diffBlocks.l = val;
       }
-    }
+    },
   },
   methods: {
     openContextMenu(e) {
       e.preventDefault();
       // These are the correct X and Y when inside the floating panel
-      this.$refs['editor-menu'].open(e);
+      this.$refs["editor-menu"].open(e);
     },
     canvasKeyDown(char) {
       // if (this.isTextEditing) {
-      console.log(char);  
+      console.log(char);
       if (
         this.currentAsciiLayerBlocks[this.textEditing.startY] &&
         this.currentAsciiLayerBlocks[this.textEditing.startY][
@@ -495,12 +486,12 @@ export default {
                 ];
 
               oldBlock = {
-                ... targetBlock
+                ...targetBlock,
               };
 
               delete this.currentAsciiLayerBlocks[this.textEditing.startY][
                 this.textEditing.startX - 1
-              ]['char'];
+              ]["char"];
 
               this.storeDiffBlocks(
                 this.textEditing.startX,
@@ -531,7 +522,7 @@ export default {
 
               delete this.currentAsciiLayerBlocks[this.textEditing.startY][
                 this.textEditing.startX
-              ]['char'];
+              ]["char"];
 
               this.storeDiffBlocks(
                 this.textEditing.startX,
@@ -548,7 +539,7 @@ export default {
                   this.currentAsciiWidth - this.textEditing.startX
                 ];
               oldBlock = { ...targetBlock };
-              delete targetBlock['char'];
+              delete targetBlock["char"];
               this.storeDiffBlocks(
                 this.textEditing.startX,
                 this.textEditing.startY,
@@ -558,19 +549,18 @@ export default {
             }
 
             if (this.mirrorY) {
-
               targetBlock =
                 this.currentAsciiLayerBlocks[
                   this.currentAsciiHeight - this.textEditing.startY
                 ][this.textEditing.startX];
-                oldBlock = { ...targetBlock };
-              delete targetBlock['char'];
+              oldBlock = { ...targetBlock };
+              delete targetBlock["char"];
               this.storeDiffBlocks(
                 this.textEditing.startX,
                 this.textEditing.startY,
                 oldBlock,
-                targetBlock);
-
+                targetBlock
+              );
             }
 
             if (this.mirrorY && this.mirrorX) {
@@ -579,7 +569,7 @@ export default {
                   this.currentAsciiHeight - this.textEditing.startY
                 ][this.currentAsciiWidth - this.textEditing.startX];
               oldBlock = { ...targetBlock };
-              delete targetBlock['char'];
+              delete targetBlock["char"];
               this.storeDiffBlocks(
                 this.textEditing.startX,
                 this.textEditing.startY,
@@ -817,9 +807,6 @@ export default {
     redrawCanvas() {
       if (this.currentAsciiLayers.length) {
         // https://stackoverflow.com/questions/28390358/high-cpu-usage-with-canvas-and-requestanimationframe
-        this.ctx.save();
-        this.canvasRef.width = this.canvasRef.width;
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
 
         // Position of the meta array
@@ -832,26 +819,23 @@ export default {
         let curBlock = {};
 
         // hack font for ascii shout outs 2 beenz
-        this.ctx.font = "13px Hack";
+        
 
-        let mergeLayers = this.mergeLayers();
+        if (this.diffBlocks.new.length && !this.canTool) {
 
-        for (y = 0; y < this.currentAsciiHeight + 1; y++) {
-          canvasY = blockHeight * y;
+          
+          console.log("redrawing canvas from cache");
+          // If we have a difference stored, just render the difference only instead
+          // of the entire ascii again
 
-          // Experimental code to not rows blocks off screen
-          if (
-            this.options.renderOffScreen &&
-            this.top !== false &&
-            !this.checkVisible(this.top + canvasY - this.yOffset)
-          ) {
-            continue;
-          }
+          for (let i in this.diffBlocks.new) {
+            let entry = this.diffBlocks.new[i];
+            canvasX = blockWidth * entry.x;
+            canvasY = blockHeight * entry.y;
 
-          for (x = 0; x < this.currentAsciiWidth + 1; x++) {
-            canvasX = blockWidth * x;
+            curBlock = { ...entry.b };
 
-            curBlock = { ...mergeLayers[y][x] };
+            // this.ctx.clearRect(canvasX,canvasY,blockWidth, blockHeight);
 
             if (curBlock.bg !== undefined && curBlock.bg !== null) {
               this.ctx.fillStyle = this.mircColours[curBlock.bg];
@@ -870,6 +854,61 @@ export default {
                 canvasX,
                 canvasY + blockHeight - 3
               );
+            }
+          }
+
+          this.diffBlocks = {
+            l: this.selectedLayerIndex,
+            new: [],
+            old: [],
+          };
+
+        } else {
+          console.log("redrawing canvas");
+
+          this.ctx.save();
+          this.canvasRef.width = this.canvasRef.width;
+          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+          this.ctx.font = "13px Hack";
+
+          let mergeLayers = this.mergeLayers();
+
+          for (y = 0; y < this.currentAsciiHeight + 1; y++) {
+            canvasY = blockHeight * y;
+
+            // Experimental code to not rows blocks off screen
+            if (
+              this.options.renderOffScreen &&
+              this.top !== false &&
+              !this.checkVisible(this.top + canvasY - this.yOffset)
+            ) {
+              continue;
+            }
+
+            for (x = 0; x < this.currentAsciiWidth + 1; x++) {
+              canvasX = blockWidth * x;
+
+              curBlock = { ...mergeLayers[y][x] };
+
+              if (curBlock.bg !== undefined && curBlock.bg !== null) {
+                this.ctx.fillStyle = this.mircColours[curBlock.bg];
+                this.ctx.fillRect(canvasX, canvasY, blockWidth, blockHeight);
+              }
+
+              if (curBlock.char !== undefined && curBlock.char !== null) {
+                if (curBlock.fg !== undefined && curBlock.fg !== null) {
+                  this.ctx.fillStyle = this.mircColours[curBlock.fg];
+                } else {
+                  this.ctx.fillStyle = "#FFFFFF";
+                }
+
+                this.ctx.fillText(
+                  curBlock.char,
+                  canvasX,
+                  canvasY + blockHeight - 3
+                );
+              }
             }
           }
         }
@@ -918,11 +957,11 @@ export default {
         diff: { ...this.diffBlocks },
       });
 
-      this.diffBlocks = {
-        l: this.selectedLayerIndex,
-        new: [],
-        old: [],
-      };
+      // this.diffBlocks = {
+      //   l: this.selectedLayerIndex,
+      //   new: [],
+      //   old: [],
+      // };
     },
     // Mouse Up, Down and Move
     canvasMouseUp() {
@@ -1054,6 +1093,7 @@ export default {
             if (this.isMouseOnCanvas) {
               this.clearToolCanvas();
               this.drawBrush();
+              this.delayRedrawCanvas();
             }
             break;
 
@@ -1062,8 +1102,10 @@ export default {
 
             if (this.isMouseOnCanvas) {
               this.drawBrush(true);
+              this.delayRedrawCanvas();
+              this.eraser();
             }
-            this.eraser();
+            
             break;
 
           case "select":
@@ -1102,7 +1144,7 @@ export default {
         }
       }
 
-      this.delayRedrawCanvas();
+      // this.delayRedrawCanvas();
     },
     clearToolCanvas() {
       if (this.toolCtx) {
@@ -1119,6 +1161,7 @@ export default {
           requestAnimationFrame(() => {
             _this.redrawCanvas();
             _this.redraw = true;
+           
           });
         }, 1000 / this.options.fps);
       }
@@ -1379,7 +1422,7 @@ export default {
 
           // Apply text to ascii blocks
           if (this.canText && this.canTool) {
-            targetBlock['char'] = brushBlock['char'];
+            targetBlock["char"] = brushBlock["char"];
 
             if (
               this.mirrorX &&
@@ -1487,8 +1530,9 @@ export default {
           this.currentAsciiLayerBlocks[arrayY] &&
           this.currentAsciiLayerBlocks[arrayY][theX]
         ) {
-          oldBlock = { ... this.currentAsciiLayerBlocks[arrayY][theX] }
-          this.currentAsciiLayerBlocks[arrayY][theX][target] = brushBlock[target];
+          oldBlock = { ...this.currentAsciiLayerBlocks[arrayY][theX] };
+          this.currentAsciiLayerBlocks[arrayY][theX][target] =
+            brushBlock[target];
 
           this.storeDiffBlocks(theX, arrayY, oldBlock, brushBlock);
         }
@@ -1498,8 +1542,9 @@ export default {
           this.currentAsciiLayerBlocks[theY] &&
           this.currentAsciiLayerBlocks[theY][arrayX]
         ) {
-          oldBlock = { ... this.currentAsciiLayerBlocks[theY][arrayX] }
-          this.currentAsciiLayerBlocks[theY][arrayX][target] = brushBlock[target];
+          oldBlock = { ...this.currentAsciiLayerBlocks[theY][arrayX] };
+          this.currentAsciiLayerBlocks[theY][arrayX][target] =
+            brushBlock[target];
 
           this.storeDiffBlocks(arrayX, theY, oldBlock, brushBlock);
         }
@@ -1510,7 +1555,7 @@ export default {
           this.currentAsciiLayerBlocks[theY] &&
           this.currentAsciiLayerBlocks[theY][theX]
         ) {
-          oldBlock = { ... this.currentAsciiLayerBlocks[theY][theX] }
+          oldBlock = { ...this.currentAsciiLayerBlocks[theY][theX] };
           this.currentAsciiLayerBlocks[theY][theX][target] = brushBlock[target];
 
           this.storeDiffBlocks(theX, theY, oldBlock, brushBlock);
@@ -1552,7 +1597,6 @@ export default {
             continue;
           }
 
-
           // if (
           //   this.top !== false &&
           //   !this.checkVisible(this.top + (y * blockHeight) - this.yOffset)
@@ -1586,9 +1630,7 @@ export default {
               }
 
               this.drawBrushBlocks(brushX, brushY, brushBlock, null);
-
-            } 
-            else if (this.isErasing) {
+            } else if (this.isErasing) {
               this.drawBrushBlocks(brushX, brushY, brushBlock, null, true);
             }
 
@@ -1607,9 +1649,9 @@ export default {
 
       if (!this.diffBlocks.old[y][x]) {
         this.diffBlocks.old[y][x] = {
-            x: x,
-            y: y,
-            b: { ...oldBlock },
+          x: x,
+          y: y,
+          b: { ...oldBlock },
         };
       }
 
@@ -1619,9 +1661,9 @@ export default {
 
       if (!this.diffBlocks.new[y][x]) {
         this.diffBlocks.new[y][x] = {
-            x: x,
-            y: y,
-            b: { ...newBlock },
+          x: x,
+          y: y,
+          b: { ...newBlock },
         };
       }
     },

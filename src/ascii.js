@@ -296,14 +296,19 @@ export const parseMircAscii = async (contents, filename) => {
           if (colourArray[1] > -1) {
             curBlock.bg = Number.parseInt(colourArray[1]);
           }
-
         } else if (colourArray.length === 1) {
-          if (colourArray[0] > -1) {
+          if (colourArray[0] == "") {
+            delete curBlock['bg'];
+            delete curBlock['fg'];
+            delete curBlock['char'];
+          }
+
+          if (colourArray[0] > 0) {
             curBlock.fg = Number.parseInt(colourArray[0]);
             delete curBlock['bg'];
           }
-        }
-
+        } 
+      
         colourData.push({
           code: codeData,
           b: {

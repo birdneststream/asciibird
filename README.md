@@ -70,6 +70,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 ## Features to Add
 
+* Save to PNG
 * Layers undo and redo could be implemented, at the moment there isn't any.
 * Warning on mirc export if ascii exceeds IRCs 512 per chat line limit.
 * Review encodings check on file import - UTF8 vs Latin something
@@ -120,7 +121,8 @@ The toolbar keyboard shorts are used with the ALT key.
 
 * l - Show / hide brushes library
 * d - Show and Hide debug bar
-* e - Edit ASCII
+* ctrl + e - Edit ASCII
+* ctrl + c - Close ASCII
 * p - Paste ASCII from Clipboard
 * n - New ASCII
 
@@ -149,6 +151,15 @@ The toolbar keyboard shorts are used with the ALT key.
 * Delete - Remove text from highlighted block
 * Backspace - Remove current character and move to previous block
 * Enter - Go to next line and reset X position to 0
+
+### Layers Related
+
+* Ctrl + Shift + r - Rename Layer 
+* Ctrl + Shift + a - Add Layer 
+* Ctrl + Shift + d - Delete Layer 
+* Ctrl + Shift + s - Move Layer Down 
+* Ctrl + Shift + w - Move Layer Up 
+* Ctrl + Shift + m - Merge All Layers 
 
 # References
 

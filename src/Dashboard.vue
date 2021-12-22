@@ -63,7 +63,9 @@
           Options
         </li>
 
-        <li @click="startImport('mirc')" class="ab-context-menu-item">Import mIRC from File</li>
+        <li @click="startImport('mirc')" class="ab-context-menu-item">
+          Import mIRC from File
+        </li>
         <li
           @click="startExport('file')"
           class="ab-context-menu-item border-b"
@@ -71,7 +73,10 @@
         >
           Export mIRC to File
         </li>
-        <li class="ab-context-menu-item" @click="$store.commit('openModal', 'paste-ascii')">
+        <li
+          class="ab-context-menu-item"
+          @click="$store.commit('openModal', 'paste-ascii')"
+        >
           Import mIRC from Clipboard
         </li>
         <li
@@ -95,7 +100,9 @@
         >
           Save Asciibird State
         </li>
-        <li @click="startImport('asb')" class="ab-context-menu-item">Load Asciibird State</li>
+        <li @click="startImport('asb')" class="ab-context-menu-item">
+          Load Asciibird State
+        </li>
       </ul>
     </context-menu>
 
@@ -131,7 +138,13 @@
             <span>
               <span class="material-icons relative">insert_drive_file</span>
               <span class="bottom-1 relative pl-1 pr-1">{{ value.title }}</span>
-              <t-button class="relative bottom-1 z-40 rounded-3xl h-5" @click="closeTab(key)"><span class="material-icons" style="font-size:16px">close</span></t-button>
+              <t-button
+                class="relative bottom-1 z-40 rounded-3xl h-5"
+                @click="closeTab(key)"
+                ><span class="material-icons" style="font-size: 16px"
+                  >close</span
+                ></t-button
+              >
             </span>
           </t-button>
         </span>
@@ -156,7 +169,10 @@
         :y-offset="scrollOffset"
       />
 
-      <BrushLibrary v-show="brushLibraryState.visible" :y-offset="scrollOffset" />
+      <BrushLibrary
+        v-show="brushLibraryState.visible"
+        :y-offset="scrollOffset"
+      />
 
       <BrushPreview @inputtingbrush="inputtingbrush" :y-offset="scrollOffset" />
 
@@ -233,8 +249,6 @@ export default {
     window.addEventListener("scroll", function (event) {
       isThis.scrollOffset = this.scrollY;
     });
-
-
   },
   destroyed() {
     window.removeEventListener("scroll", function (event) {
@@ -281,6 +295,9 @@ export default {
     happy: false,
   }),
   computed: {
+    isDefault() {
+      return this.currentTool.name === "default";
+    },
     splashAscii() {
       return splashAscii;
     },
@@ -339,7 +356,7 @@ export default {
       return this.$store.getters.selectedLayer;
     },
     canToggleLayer() {
-      return this.currentAsciiLayers.length !== 1;
+      return this.currentAsciiLayers.length > 1;
       // We want to avoid hiding all the layers, so if there's only one
       // visible left, we have to disable the buttons
     },
@@ -354,10 +371,14 @@ export default {
     asciiLayersMenu() {
       let menu = [];
 
-      for (let i in [ ... this.currentAsciiLayers]) {
+      for (let i in [...this.currentAsciiLayers]) {
         menu.push({
           text: this.currentAsciiLayers[i].label,
-          click: () => this.$store.commit("changeLayer", this.currentAsciiLayers.length - i)
+          click: () =>
+            this.$store.commit(
+              "changeLayer",
+              this.currentAsciiLayers.length - i
+            ),
         });
       }
 
@@ -368,12 +389,15 @@ export default {
 
       menu.push({
         text: "File",
+        hotkey: "0",
         icon: "insert_drive_file",
         menu: [
           {
             text: "New ASCII",
             click: () => this.$store.commit("openModal", "new-ascii"),
-            icon: "fiber_new"
+            icon: "fiber_new",
+            disabled: !this.isDefault,
+            hotkey: "n",
           },
         ],
       });
@@ -383,39 +407,105 @@ export default {
           {
             text: "Edit ASCII",
             click: () => this.$store.commit("openModal", "edit-ascii"),
-            icon: "edit"
+            icon: "edit",
+            disabled: !this.isDefault,
+            hotkey: "ctrl+e",
           },
           {
             text: "Close ASCII",
             click: () => this.closeTab(this.currentTab),
-            icon: "close"
+            icon: "close",
+            disabled: !this.isDefault,
+            hotkey: "ctrl+c",
           }
         );
 
         menu.push({
-          text: "Options",
-          icon: "settings",
+          text: "View",
+          icon: "preview",
           menu: [
             {
-              text: "Show Options",
-              click: () => this.$store.commit("openModal", "options"),
+              text: "Windows",
+              icon: "desktop",
+              disabled: !this.isDefault,
+              menu: [
+                {
+                  text: "Show Menu Bar",
+                  icon: this.check2 ? "check_box" : "check_box_outline_blank",
+                  click: (e) => {
+                    e.stopPropagation(); // prevent menu close when clicking
+                    this.check2 = !this.check2;
+                  },
+                },
+                {
+                  text: "Show Tabs",
+                  icon: "tab",
+                },
+              ],
+            },
+            {
+              text: "Toggle Grid",
+              icon: this.check2 ? "check_box" : "check_box_outline_blank",
+              click: (e) => {},
+            },
+            {
+              text: "Mirror X",
+              icon: this.check2 ? "check_box" : "check_box_outline_blank",
+              click: (e) => {},
+            },
+            {
+              text: "Mirror Y",
+              icon: this.check2 ? "check_box" : "check_box_outline_blank",
+              click: (e) => {},
+            },
+            {
+              text: "Update Brush",
+              icon: this.check2 ? "check_box" : "check_box_outline_blank",
+              click: (e) => {},
+            },
+            {
+              is: "separator",
+            },
+            {
+              text: "Options",
               icon: "settings",
+              click: () => this.$store.commit("openModal", "options"),
+              disabled: !this.isDefault,
+              hotkey: "ctrl+o",
+              // menu: [
+              //   {
+              //     text: "Show Options",
+              //     click: () => this.$store.commit("openModal", "options"),
+              //     icon: "settings",
+              //   },
+              // ],
             },
           ],
         });
+
       }
 
       menu.push({
         text: "Import",
         icon: "upload_file",
         menu: [
-          { text: "mIRC File", click: () => this.startImport("mirc"), icon: 'upload_file' },
+          {
+            text: "mIRC File",
+            click: () => this.startImport("mirc"),
+            icon: "upload_file",
+            hotkey: "ctrl+shift+o",
+          },
           {
             text: "mIRC Clipboard",
             click: () => this.$store.commit("openModal", "paste-ascii"),
-            icon: 'copy_all',
+            hotkey: "ctrl+shift+v",
+            icon: "copy_all",
           },
-          { text: "ASCIIBIRD State", click: () => this.startImport("asb"), icon: 'save_alt' },
+          {
+            text: "ASCIIBIRD State",
+            click: () => this.startImport("asb"),
+            icon: "save_alt",
+          },
         ],
       });
 
@@ -425,17 +515,28 @@ export default {
             text: "Export",
             icon: "save_alt",
             menu: [
-              { text: "mIRC File", click: () => this.startExport("file"), icon: 'download_file' },
+              {
+                text: "mIRC File",
+                click: () => this.startExport("file"),
+                icon: "download_file",
+                hotkey: "ctrl+shift+f",
+              },
               {
                 text: "mIRC Clipboard",
+                hotkey: "ctrl+shift+c",
                 click: () => this.startExport("clipboard"),
-                icon: 'copy_all',
+                icon: "copy_all",
               },
-              { text: "HTTP POST", click: () => this.startExport("post"), icon: 'post_add' },
+              { text: "PNG Image", click: () => true, icon: "image" },
+              {
+                text: "HTTP POST",
+                click: () => this.startExport("post"),
+                icon: "post_add",
+              },
               {
                 text: "ASCIIBIRD State",
                 click: () => this.exportAsciibirdState(),
-                icon: 'save_alt'
+                icon: "save_alt",
               },
             ],
           },
@@ -449,16 +550,58 @@ export default {
               // },
               {
                 text: "Show/Hide Layer",
-                click: () => this.$store.commit("toggleLayer", this.selectedLayer),
-                icon: 'panorama_fish_eye',
+                click: () =>
+                  this.$store.commit("toggleLayer", this.selectedLayer),
+                icon: "panorama_fish_eye",
+                hotkey: "ctrl+shift+v",
+                disabled: !this.canToggleLayer,
               },
-              { text: "Rename Layer", click: () => this.showLayerRename(this.selectedLayer, this.currentAsciiLayers[this.selectedLayer].label), icon: 'text_rotation_none' },
-              { text: "Add Layer", click: () => this.$store.commit("addLayer"), icon: 'playlist_add' },
-              { text: "Delete Layer", click: () => this.$store.commit("removeLayer", this.selectedLayer), icon: 'delete_sweep' },
-              { text: "Move Layer Down", click: () => this.$store.commit("upLayer", this.selectedLayer), icon: 'arrow_downward' },
-              { text: "Move Layer Up", click: () => this.$store.commit("downLayer", this.selectedLayer), icon: 'arrow_upward' },
-              { text: "Merge All Layers", click: () => this.$store.commit("mergeAllLayers"), icon: 'playlist_add_circle' },
-
+              {
+                text: "Rename Layer",
+                hotkey: "ctrl+shift+r",
+                click: () =>
+                  this.showLayerRename(
+                    this.selectedLayer,
+                    this.currentAsciiLayers[this.selectedLayer].label
+                  ),
+                icon: "text_rotation_none",
+              },
+              {
+                text: "Add Layer",
+                hotkey: "ctrl+shift+a",
+                click: () => this.$store.commit("addLayer"),
+                icon: "playlist_add",
+              },
+              {
+                text: "Delete Layer",
+                hotkey: "ctrl+shift+d",
+                click: () =>
+                  this.$store.commit("removeLayer", this.selectedLayer),
+                icon: "delete_sweep",
+                disabled: !this.canToggleLayer,
+              },
+              {
+                text: "Move Layer Down",
+                hotkey: "ctrl+shift+s",
+                click: () => this.$store.commit("upLayer", this.selectedLayer),
+                icon: "arrow_downward",
+                disabled: !this.canToggleLayer,
+              },
+              {
+                text: "Move Layer Up",
+                hotkey: "ctrl+shift+w",
+                click: () =>
+                  this.$store.commit("downLayer", this.selectedLayer),
+                icon: "arrow_upward",
+                disabled: !this.canToggleLayer,
+              },
+              {
+                text: "Merge All Layers",
+                hotkey: "ctrl+shift+m",
+                click: () => this.$store.commit("mergeAllLayers"),
+                icon: "playlist_play",
+                disabled: !this.canToggleLayer,
+              },
             ],
           }
         );
