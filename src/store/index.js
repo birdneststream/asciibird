@@ -76,6 +76,7 @@ export default new Vuex.Store({
       draggable: true,
       updateBrush: true,
       gridView: false,
+      visible: true,
     },
     debugPanelState: {
       x: blockWidth * 40,
@@ -148,6 +149,7 @@ export default new Vuex.Store({
       state.toolbarState.y = payload.y;
       state.toolbarState.w = payload.w;
       state.toolbarState.h = payload.h;
+      state.toolbarState.visible = payload.visible;
     },
     changeToolBarDraggable(state, payload) {
       state.toolbarState.draggable = payload;
@@ -199,6 +201,14 @@ export default new Vuex.Store({
     changeTargetingChar(state, payload) {
       state.toolbarState.targetingChar = payload;
     },
+
+    changeMenuBarVisible(state, payload) {
+      state.desktopState.menuBarVisible = payload;
+    },
+    changeTabsVisible(state, payload) {
+      state.desktopState.tabsVisible = payload;
+    },
+
     newAsciibirdMeta(state, payload) {
       state.asciibirdMeta.push(payload);
       state.tab = state.asciibirdMeta.length - 1;
@@ -216,7 +226,8 @@ export default new Vuex.Store({
         state.asciibirdMeta[state.tab].history.shift()
       }
 
-      let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab].layers))
+      let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
+        .layers))
 
       tempLayers[state.asciibirdMeta[state.tab].selectedLayer].data = payload.blocks
 
@@ -224,16 +235,19 @@ export default new Vuex.Store({
         tempLayers));
 
       // state.asciibirdMeta[state.tab].current = LZString.compressToUTF16(JSON.stringify(mergeLayers()));
-      
+
       let historyIndex = state.asciibirdMeta[state.tab].historyIndex;
 
       if (payload.diff && payload.diff.new && payload.diff.new.length) {
         if (state.asciibirdMeta[state.tab].history.length !== historyIndex) {
-          state.asciibirdMeta[state.tab].history.splice(historyIndex,state.asciibirdMeta[state.tab].history.length);
+          state.asciibirdMeta[state.tab].history.splice(historyIndex, state.asciibirdMeta[state
+            .tab].history.length);
         }
 
-        state.asciibirdMeta[state.tab].history.push(LZString.compressToUTF16(JSON.stringify(payload.diff)))       
-        state.asciibirdMeta[state.tab].historyIndex = state.asciibirdMeta[state.tab].history.length;
+        state.asciibirdMeta[state.tab].history.push(LZString.compressToUTF16(JSON.stringify(
+          payload.diff)))
+        state.asciibirdMeta[state.tab].historyIndex = state.asciibirdMeta[state.tab].history
+          .length;
       }
 
       return;
@@ -291,16 +305,16 @@ export default new Vuex.Store({
       state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
         mergedLayers));
 
-        // Remove our undos here for the layer
-        let history = state.asciibirdMeta[state.tab].history;
+      // Remove our undos here for the layer
+      let history = state.asciibirdMeta[state.tab].history;
 
-        for (let i in history) {
-          let data = JSON.parse(LZString.decompressFromUTF16(history[i]));
-          data.l = 0;
-          history[i] = LZString.compressToUTF16(JSON.stringify(data));
-        }
+      for (let i in history) {
+        let data = JSON.parse(LZString.decompressFromUTF16(history[i]));
+        data.l = 0;
+        history[i] = LZString.compressToUTF16(JSON.stringify(data));
+      }
 
-        state.asciibirdMeta[state.tab].historyIndex = history.length;
+      state.asciibirdMeta[state.tab].historyIndex = history.length;
     },
     changeLayer(state, payload) {
       state.asciibirdMeta[state.tab].selectedLayer = payload
@@ -333,7 +347,7 @@ export default new Vuex.Store({
 
         }
 
-        state.asciibirdMeta[state.tab].historyIndex = history.length-1;
+        state.asciibirdMeta[state.tab].historyIndex = history.length - 1;
 
         // Automatically select the next best layer to avoid bugs
         if (tempLayers[payload + 1]) {
@@ -433,20 +447,23 @@ export default new Vuex.Store({
     undoBlocks(state) {
       let historyIndex = state.asciibirdMeta[state.tab].historyIndex;
 
-      if (state.asciibirdMeta[state.tab].history[historyIndex-1]) {
-        let prev = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab].history[
-                historyIndex - 1]));
+      if (state.asciibirdMeta[state.tab].history[historyIndex - 1]) {
+        let prev = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
+          .history[
+            historyIndex - 1]));
 
-      let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
-        .layers))
+        let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
+          .layers))
 
         if (prev.old) {
-          for(let change in prev.old) {           
+          for (let change in prev.old) {
             let data = prev.old[change];
-            tempLayers[prev.l].data[data.y][data.x] = { ... data.b };
+            tempLayers[prev.l].data[data.y][data.x] = {
+              ...data.b
+            };
           }
         }
-           
+
         state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
           tempLayers));
 
@@ -457,8 +474,9 @@ export default new Vuex.Store({
       let historyIndex = state.asciibirdMeta[state.tab].historyIndex;
 
       if (state.asciibirdMeta[state.tab].history[historyIndex]) {
-        let prev = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab].history[
-          historyIndex]));
+        let prev = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
+          .history[
+            historyIndex]));
 
         let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
           .layers))
@@ -655,6 +673,8 @@ export default new Vuex.Store({
     options: (state) => state.options,
     toolbarState: (state) => state.toolbarState,
     debugPanel: (state) => state.debugPanelState,
+    tabsVisible: (state) => state.desktopState.tabsVisible,
+    menuBarVisible: (state) => state.desktopState.menuBarVisible,
     currentTool: (state) => state.toolbarState.currentTool,
     isTargettingBg: (state) => state.toolbarState.targetingBg,
     isTargettingFg: (state) => state.toolbarState.targetingFg,
@@ -707,8 +727,8 @@ export default new Vuex.Store({
       commit
     }, data) {
       return new Promise((resolve, reject) => {
-          commit('updateAsciiBlocks', data);
-          resolve();
+        commit('updateAsciiBlocks', data);
+        resolve();
       })
     }
   },

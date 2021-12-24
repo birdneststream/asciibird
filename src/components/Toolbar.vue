@@ -69,7 +69,6 @@
             <span class="material-icons">more_vert</span>
           </t-button>
 
-
           <t-button
             type="button"
             :class="`rounded-3xl w-10 h-10 mt-1 ml-1 ${
@@ -86,7 +85,6 @@
             <span class="material-icons">more_horiz</span>
           </t-button>
 
-
           <t-button
             type="button"
             :class="`rounded-3xl w-10 h-10 mt-1 ml-1 ${
@@ -97,7 +95,11 @@
             @click="
               $store.commit('toggleUpdateBrush', updateBrush);
               toolbarState.updateBrush = !toolbarState.updateBrush;
-              $toasted.show(`Update Brush when colours or char changes ${toolbarState.updateBrush ? 'enabled' : 'disabled'}`);
+              $toasted.show(
+                `Update Brush when colours or char changes ${
+                  toolbarState.updateBrush ? 'enabled' : 'disabled'
+                }`
+              );
             "
           >
             <span class="material-icons">color_lens</span>
@@ -113,7 +115,9 @@
             @click="
               $store.commit('toggleGridView', gridView);
               toolbarState.gridView = !toolbarState.gridView;
-              $toasted.show(`Grid view ${toolbarState.gridView ? 'enabled' : 'disabled'}`);
+              $toasted.show(
+                `Grid view ${toolbarState.gridView ? 'enabled' : 'disabled'}`
+              );
             "
           >
             <span class="material-icons">{{
@@ -123,21 +127,20 @@
         </div>
 
         <div class="border-t border-black border-opacity-10 pt-2">
-        <t-button
-          type="button"
-          v-for="(value, keyToolbar) in toolbarIcons"
-          :key="keyToolbar + 50"
-          :class="`rounded-3xl w-10 h-10 mt-1 ml-1 ${
-            currentTool.name === value.name
-              ? 'border-gray-900 bg-blue-500'
-              : 'border-gray-200 bg-gray-500'
-          }`"
-          @click="$store.commit('changeTool', keyToolbar)"
-        >
-          <span class="material-icons">{{ value.icon }}</span>
-        </t-button>
+          <t-button
+            type="button"
+            v-for="(value, keyToolbar) in toolbarIcons"
+            :key="keyToolbar + 50"
+            :class="`rounded-3xl w-10 h-10 mt-1 ml-1 ${
+              currentTool.name === value.name
+                ? 'border-gray-900 bg-blue-500'
+                : 'border-gray-200 bg-gray-500'
+            }`"
+            @click="$store.commit('changeTool', keyToolbar)"
+          >
+            <span class="material-icons">{{ value.icon }}</span>
+          </t-button>
         </div>
-          
       </t-card>
     </vue-draggable-resizable>
   </div>
@@ -153,6 +156,7 @@ export default {
     this.toolbar.y = this.toolbarState.y;
     this.toolbar.w = this.toolbarState.w;
     this.toolbar.h = this.toolbarState.h;
+    this.toolbar.visible = this.toolbarState.visible;
 
     this.mirror.x = this.mirrorX;
     this.mirror.y = this.mirrorY;
@@ -254,6 +258,7 @@ export default {
         y,
         w: this.toolbar.w,
         h: this.toolbar.h,
+        visible: true,
       });
     },
     onDragStop(x, y) {
@@ -265,6 +270,7 @@ export default {
         y,
         w: this.toolbar.w,
         h: this.toolbar.h,
+        visible: true,
       });
     },
   },

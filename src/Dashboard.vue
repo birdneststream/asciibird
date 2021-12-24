@@ -1,6 +1,8 @@
 <template>
   <div id="app">
-    <div><vue-file-toolbar-menu :content="myMenu" /></div>
+    <div v-show="menuBarVisible">
+      <vue-file-toolbar-menu :content="myMenu" />
+    </div>
 
     <NewAscii />
     <Options v-if="asciibirdMeta.length" />
@@ -124,6 +126,7 @@
         class="bg-gray-500 relative z-auto"
         ref="tabbar"
         :style="toolbarString"
+        v-if="tabsVisible"
       >
         <span
           v-for="(value, key) in asciibirdMeta"
@@ -160,7 +163,7 @@
         :brush="drawBrush"
       />
 
-      <Toolbar :y-offset="scrollOffset" />
+      <Toolbar v-show="toolbarState.visible" :y-offset="scrollOffset" />
 
       <DebugPanel
         :canvas-x="canvasX"
@@ -174,9 +177,16 @@
         :y-offset="scrollOffset"
       />
 
-      <BrushPreview @inputtingbrush="inputtingbrush" :y-offset="scrollOffset" />
+      <BrushPreview
+        @inputtingbrush="inputtingbrush"
+        :y-offset="scrollOffset"
+        v-show="brushPreviewState.visible"
+      />
 
-      <LayersLibrary :y-offset="scrollOffset" />
+      <LayersLibrary
+        v-show="layersLibraryState.visible"
+        :y-offset="scrollOffset"
+      />
 
       <CharPicker
         v-if="toolbarState.isChoosingChar"
@@ -335,9 +345,6 @@ export default {
     debugPanelState() {
       return this.$store.getters.debugPanel;
     },
-    brushLibraryState() {
-      return this.$store.getters.brushLibraryState;
-    },
     currentAscii() {
       return this.$store.getters.currentAscii;
     },
@@ -372,9 +379,6 @@ export default {
       }
 
       return menu.reverse();
-    },
-    currentAsciiLayers() {
-      return this.$store.getters.currentAsciiLayers;
     },
     selectedLayer() {
       return this.$store.getters.selectedLayer;
@@ -413,11 +417,26 @@ export default {
     brushBlocks() {
       return this.$store.getters.brushBlocks;
     },
+    tabsVisible() {
+      return this.$store.getters.tabsVisible;
+    },
+    menuBarVisible() {
+      return this.$store.getters.menuBarVisible;
+    },
     currentAsciiLayerBlocks() {
       return this.currentSelectedLayer.data;
     },
     currentAsciiLayers() {
       return this.$store.getters.currentAsciiLayers;
+    },
+    brushLibraryState() {
+      return this.$store.getters.brushLibraryState;
+    },
+    brushPreviewState() {
+      return this.$store.getters.brushPreviewState;
+    },
+    layersLibraryState() {
+      return this.$store.getters.layersLibraryState;
     },
     currentSelectedLayer() {
       return this.currentAsciiLayers[this.currentAscii.selectedLayer];
@@ -591,11 +610,11 @@ export default {
                   // Reset and hide the select after successful copy
                   this.$store.dispatch("updateAsciiBlocksAsync", {
                     blocks: this.currentAsciiLayerBlocks,
-                    diff: { ...this.diffBlocks },
+                    diff: {},
                   });
 
                   this.$emit("updatecanvas");
-
+                  this.selectedBlocks = [];
                   this.$toasted.show("Deleted blocks!", {
                     type: "success",
                     icon: "fa-check-circle",
@@ -622,19 +641,30 @@ export default {
               // Show Hide Things
               menu: [
                 {
-                  text: `${
-                    this.brushLibraryState.visible ? "Hide" : "Show"
-                  } Brush Library`,
-                  icon: this.brushLibraryState.visible
+                  text: `${this.tabsVisible ? "Hide" : "Show"} Tabs`,
+                  icon: this.tabsVisible
                     ? "check_box"
                     : "check_box_outline_blank",
-                  hotkey: "ctrl+alt+l",
+                  hotkey: "ctrl+alt+t",
+                  click: (e) => {
+                    this.$store.commit("changeTabsVisible", !this.tabsVisible);
+                  },
+                },
+                {
+                  text: `${this.menuBarVisible ? "Hide" : "Show"} Toolbar Menu`,
+                  icon: this.menuBarVisible
+                    ? "check_box"
+                    : "check_box_outline_blank",
+                  hotkey: "ctrl+alt+m",
                   click: (e) => {
                     this.$store.commit(
-                      "toggleBrushLibrary",
-                      !this.brushLibraryState.visible
+                      "changeMenuBarVisible",
+                      !this.menuBarVisible
                     );
                   },
+                },
+                {
+                  is: "separator",
                 },
                 {
                   text: `${
@@ -648,6 +678,68 @@ export default {
                     this.$store.commit(
                       "toggleDebugPanel",
                       !this.debugPanelState.visible
+                    );
+                  },
+                },
+                {
+                  text: `${
+                    this.brushLibraryState.visible ? "Hide" : "Show"
+                  } Brush Library`,
+                  icon: this.brushLibraryState.visible
+                    ? "check_box"
+                    : "check_box_outline_blank",
+                  hotkey: "ctrl+alt+b",
+                  click: (e) => {
+                    this.$store.commit(
+                      "toggleBrushLibrary",
+                      !this.brushLibraryState.visible
+                    );
+                  },
+                },
+                {
+                  text: `${
+                    this.layersLibraryState.visible ? "Hide" : "Show"
+                  } Layers`,
+                  icon: this.layersLibraryState.visible
+                    ? "check_box"
+                    : "check_box_outline_blank",
+                  hotkey: "ctrl+alt+l",
+                  click: (e) => {
+                    this.layersLibraryState.visible =
+                      !this.layersLibraryState.visible;
+                    this.$store.commit(
+                      "changeLayersLibraryState",
+                      this.layersLibraryState
+                    );
+                  },
+                },
+                {
+                  text: `${
+                    this.toolbarState.visible ? "Hide" : "Show"
+                  } Toolbar`,
+                  icon: this.toolbarState.visible
+                    ? "check_box"
+                    : "check_box_outline_blank",
+                  hotkey: "ctrl+alt+n",
+                  click: (e) => {
+                    this.toolbarState.visible = !this.toolbarState.visible;
+                    this.$store.commit("changeToolBarState", this.toolbarState);
+                  },
+                },
+                {
+                  text: `${
+                    this.brushPreviewState.visible ? "Hide" : "Show"
+                  } Brush Preview`,
+                  icon: this.brushPreviewState.visible
+                    ? "check_box"
+                    : "check_box_outline_blank",
+                  hotkey: "ctrl+alt+e",
+                  click: (e) => {
+                    this.brushPreviewState.visible =
+                      !this.brushPreviewState.visible;
+                    this.$store.commit(
+                      "changeBrushPreviewState",
+                      this.brushPreviewState
                     );
                   },
                 },
