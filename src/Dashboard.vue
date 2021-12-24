@@ -237,6 +237,9 @@ import {
   downloadFile,
   checkForGetRequest,
   splashAscii,
+  filterNullBlocks,
+  getBlocksWidth,
+  emptyBlock
 } from "./ascii";
 
 import VueFileToolbarMenu from "vue-file-toolbar-menu";
@@ -284,7 +287,7 @@ export default {
     dashboardY: 0,
     importType: null,
     showContextMenu: false,
-    selectedBlocks: null,
+    selectedBlocks: [],
     textEditing: null,
     updateCanvas: false,
     selecting: null,
@@ -298,14 +301,14 @@ export default {
     mirror: {
       x: false,
       y: false,
-    }
+    },
   }),
   computed: {
     isDefault() {
       return this.currentTool.name === "default";
     },
-    splashAscii() {
-      return splashAscii;
+    isSelecting() {
+      return this.currentTool.name === "select";
     },
     currentTool() {
       return toolbarIcons[this.$store.getters.currentTool] ?? null;
@@ -343,7 +346,10 @@ export default {
         ? this.imageOverlay.url.split("/").pop()
         : "";
     },
-
+    selectBlocks() {
+      return this.$store.getters.selectBlocks;
+    },
+    
     // Layers
     asciiLayersMenu() {
       let menu = [];
@@ -398,7 +404,18 @@ export default {
     toolbarState() {
       return this.$store.getters.toolbarState;
     },
-
+    brushBlocks() {
+      return this.$store.getters.brushBlocks;
+    },
+    currentAsciiLayerBlocks() {
+      return this.currentSelectedLayer.data;
+    },
+    currentAsciiLayers() {
+      return this.$store.getters.currentAsciiLayers;
+    },
+    currentSelectedLayer() {
+      return this.currentAsciiLayers[this.currentAscii.selectedLayer];
+    },
     // Toolbar menu
     myMenu() {
       let menu = [];
@@ -419,22 +436,148 @@ export default {
       });
 
       if (this.asciibirdMeta.length) {
-        menu[0].menu.push(
-          {
-            text: "Edit ASCII",
-            click: () => this.$store.commit("openModal", "edit-ascii"),
-            icon: "edit",
-            disabled: !this.isDefault,
-            hotkey: "ctrl+e",
-          },
-          {
-            text: "Close ASCII",
-            click: () => this.closeTab(this.currentTab),
-            icon: "close",
-            disabled: !this.isDefault,
-            hotkey: "ctrl+c",
-          }
-        );
+        menu[0].menu.push({
+          text: "Close ASCII",
+          click: () => this.closeTab(this.currentTab),
+          icon: "close",
+          hotkey: "ctrl+q",
+        });
+
+        menu.push({
+          text: "Edit",
+          hotkey: "0",
+          icon: "edit",
+          menu: [
+            {
+              text: "Edit ASCII",
+              click: () => this.$store.commit("openModal", "edit-ascii"),
+              icon: "edit",
+              hotkey: "ctrl+e",
+            },
+            {
+              is: "separator",
+            },
+            {
+              text: "Undo",
+              click: () => this.$store.commit("undoBlocks"),
+              icon: "undo",
+              hotkey: "ctrl+z",
+            },
+            {
+              text: "Redo",
+              click: () => this.$store.commit("redoBlocks"),
+              icon: "redo",
+              hotkey: "ctrl+y",
+            },
+            {
+              is: "separator",
+            },
+            {
+              text: "Copy Selection",
+              click: () => {
+                this.$store.commit(
+                  "selectBlocks",
+                  filterNullBlocks(this.selectedBlocks)
+                );
+                this.selectedBlocks = [];
+                this.$toasted.show("Copied blocks!", {
+                  type: "success",
+                  icon: "fa-check-circle",
+                });
+              },
+              icon: "content_copy",
+              disabled: 
+                !this.selectedBlocks.length && !this.isSelected && !this.isSelecting
+              ,
+              hotkey: "ctrl+c",
+            },
+            {
+              text: "Cut Selection",
+              click: () => {
+                  if (this.selectedBlocks.length) {
+                    for (let y = 0; y < this.selectedBlocks.length + 1; y++) {
+                      for (let x = 0; x < getBlocksWidth(this.selectedBlocks) + 1; x++) {
+                        if (this.selectedBlocks[y] && this.selectedBlocks[y][x]) {
+                          this.currentAsciiLayerBlocks[y][x] = { ...emptyBlock };
+                        }
+                      }
+                    }
+
+                    this.$store.commit(
+                      "selectBlocks",
+                      filterNullBlocks(this.selectedBlocks)
+                    );
+
+                    this.selectedBlocks = [];
+
+                    // Reset and hide the select after successful copy
+                    this.$store.dispatch("updateAsciiBlocksAsync", {
+                      blocks: this.currentAsciiLayerBlocks,
+                      diff: {},
+                    });
+
+                    // this.$store.commit(
+                    //   "updateAsciiBlocks",
+                    //   this.currentAsciiLayerBlocks
+                    // );
+
+
+                    this.$emit("updatecanvas");
+
+                    this.$toasted.show("Cut blocks!", {
+                      type: "success",
+                      icon: "fa-check-circle",
+                    });
+                  }
+
+              },
+              icon: "content_cut",
+              disabled: !this.selectedBlocks.length && !this.isSelected && !this.isSelecting,
+              hotkey: "ctrl+x",
+            },
+            {
+              text: "Paste Select as Brush",
+              click: () => {
+                this.$store.commit("pushBrushHistory", this.brushBlocks);
+                this.$store.commit("brushBlocks", this.selectBlocks);
+                this.$store.commit("changeTool", 4);
+              },
+              icon: "content_paste",
+              disabled: !this.selectedBlocks.length,
+              hotkey: "ctrl+v",
+            },
+            {
+              text: "Delete Selected Blocks",
+              click: () => {
+                if (this.selectedBlocks.length) {
+                  for (let y = 0; y < this.selectedBlocks.length + 1; y++) {
+                    for (let x = 0; x < getBlocksWidth(this.selectedBlocks) + 1; x++) {
+                      if (this.selectedBlocks[y] && this.selectedBlocks[y][x]) {
+                        this.currentAsciiLayerBlocks[y][x] = { ...emptyBlock };
+                      }
+                    }
+                  }
+
+                  // Reset and hide the select after successful copy
+                  this.$store.dispatch("updateAsciiBlocksAsync", {
+                    blocks: this.currentAsciiLayerBlocks,
+                    diff: { ... this.diffBlocks },
+                  });
+
+                  this.$emit("updatecanvas");
+
+                  this.$toasted.show("Deleted blocks!", {
+                    type: "success",
+                    icon: "fa-check-circle",
+                  });
+                }
+              },
+              icon: "delete_sweep",
+              disabled: !this.selectedBlocks.length && !this.isSelected && !this.isSelecting,
+              hotkey: "Delete",
+            },
+          ],
+        });
 
         menu.push({
           text: "View",
@@ -443,19 +586,37 @@ export default {
             {
               text: "Windows",
               icon: "desktop",
-              disabled: !this.isDefault,
+              // Show Hide Things
               menu: [
                 {
-                  text: "Show Menu Bar",
-                  icon: this.check2 ? "check_box" : "check_box_outline_blank",
+                  text: `${
+                    this.brushLibraryState.visible ? "Hide" : "Show"
+                  } Brush Library`,
+                  icon: this.brushLibraryState.visible
+                    ? "check_box"
+                    : "check_box_outline_blank",
+                  hotkey: "ctrl+alt+l",
                   click: (e) => {
-                    e.stopPropagation(); // prevent menu close when clicking
-                    this.check2 = !this.check2;
+                    this.$store.commit(
+                      "toggleBrushLibrary",
+                      !this.brushLibraryState.visible
+                    );
                   },
                 },
                 {
-                  text: "Show Tabs",
-                  icon: "tab",
+                  text: `${
+                    this.debugPanelState.visible ? "Hide" : "Show"
+                  } Debug Panel`,
+                  icon: this.debugPanelState.visible
+                    ? "check_box"
+                    : "check_box_outline_blank",
+                  hotkey: "ctrl+alt+d",
+                  click: (e) => {
+                    this.$store.commit(
+                      "toggleDebugPanel",
+                      !this.debugPanelState.visible
+                    );
+                  },
                 },
               ],
             },
@@ -463,35 +624,78 @@ export default {
               text: "Toggle Grid",
               icon: this.gridView ? "check_box" : "check_box_outline_blank",
               hotkey: "alt+g",
-              click: (e) => {this.$store.commit("toggleGridView", !this.gridView)},
+              click: (e) => {
+                this.$store.commit("toggleGridView", !this.gridView);
+                this.$toasted.show(
+                  `Grid view ${toolbarState.gridView ? "enabled" : "disabled"}`
+                );
+              },
             },
             {
               text: "Mirror X",
               hotkey: "alt+x",
-              icon: this.toolbarState.mirrorX ? "check_box" : "check_box_outline_blank",
+              icon: this.toolbarState.mirrorX
+                ? "check_box"
+                : "check_box_outline_blank",
               click: (e) => {
                 this.mirror.x = !this.toolbarState.mirrorX;
                 this.$store.commit("updateMirror", this.mirror);
-                this.$toasted.show(`Mirror Y ${this.mirror.y ? 'enabled' : 'disabled'}`);
+                this.$toasted.show(
+                  `Mirror Y ${this.mirror.y ? "enabled" : "disabled"}`
+                );
               },
             },
             {
               text: "Mirror Y",
-              icon: this.toolbarState.mirrorY ? "check_box" : "check_box_outline_blank",
+              icon: this.toolbarState.mirrorY
+                ? "check_box"
+                : "check_box_outline_blank",
               hotkey: "alt+y",
               click: (e) => {
                 this.mirror.y = !this.toolbarState.mirrorY;
                 this.$store.commit("updateMirror", this.mirror);
-                this.$toasted.show(`Mirror Y ${this.mirror.y ? 'enabled' : 'disabled'}`);
+                this.$toasted.show(
+                  `Mirror Y ${this.mirror.y ? "enabled" : "disabled"}`
+                );
               },
             },
             {
               text: "Update Brush",
               hotkey: "alt+u",
-              icon: this.toolbarState.updateBrush ? "check_box" : "check_box_outline_blank",
+              icon: this.toolbarState.updateBrush
+                ? "check_box"
+                : "check_box_outline_blank",
               click: (e) => {
-                this.$store.commit('toggleUpdateBrush', !this.toolbarState.updateBrush);
-                this.$toasted.show(`Update Brush when colours or char changes ${this.toolbarState.updateBrush ? 'enabled' : 'disabled'}`);
+                this.$store.commit(
+                  "toggleUpdateBrush",
+                  !this.toolbarState.updateBrush
+                );
+                this.$toasted.show(
+                  `Update Brush when colours or char changes ${
+                    this.toolbarState.updateBrush ? "enabled" : "disabled"
+                  }`
+                );
+              },
+            },
+            {
+              is: "separator",
+            },
+            {
+              text: "Flip Horizontal Brush",
+              hotkey: "e",
+              disabled: !this.isBrushing,
+              icon: "swap_horiz",
+              click: (e) => {
+                this.$store.commit("flipRotateBlocks", {type: "flip"})
+              },
+            },
+            {
+              text: "Flip Vertical Brush",
+              hotkey: "q",
+              disabled: !this.isBrushing,
+              icon: "swap_horiz",
+              click: (e) => {
+                this.$store.commit("flipRotateBlocks", {type: "rotate"})
               },
             },
             {
@@ -561,7 +765,6 @@ export default {
             },
           ],
         });
-
       }
 
       menu.push({

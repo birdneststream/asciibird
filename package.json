@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@tailwindcss/forms": "^0.3.3",
-    "@tailwindcss/postcss7-compat": "^2.2.7",
+    "@tailwindcss/postcss7-compat": "npm:@tailwindcss/postcss7-compat",
     "autoprefixer": "^9",
     "hack-font": "source-foundry/Hack",
     "lz-string": "^1.4.4",

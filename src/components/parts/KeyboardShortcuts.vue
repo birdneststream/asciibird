@@ -68,19 +68,6 @@ export default {
       }
     });
 
-    // Show / hide brush library
-    hotkeys("l", "editor", function (event, handler) {
-      event.preventDefault();
-      if (_this.isDefault && _this.haveOpenTabs) {
-        _this.$store.commit(
-          "toggleBrushLibrary",
-          !_this.brushLibraryState.visible
-        );
-
-        return;
-      }
-    });
-
     hotkeys("ctrl+v", function (event, handler) {
       event.preventDefault();
       if (
@@ -97,17 +84,7 @@ export default {
       return;
     });
 
-    // Show / hide debug panel
-    hotkeys("d", "editor", function (event, handler) {
-      event.preventDefault();
-      if (_this.isDefault && _this.haveOpenTabs) {
-        _this.$store.commit("toggleDebugPanel", !_this.debugPanelState.visible);
-
-        return;
-      }
-    });
-
-    hotkeys("ctrl+]", "editor", function (event, handler) {
+hotkeys("ctrl+]", "editor", function (event, handler) {
       event.preventDefault();
       if (
         _this.brushSizeHeight < maxBrushSize &&
@@ -152,146 +129,27 @@ export default {
     // Hopefully we can still pick up the previous inputs
     // while in brush mode
 
-    hotkeys("e", "editor", function (event, handler) {
-      if (_this.isBrushing && _this.haveOpenTabs) {
-        event.preventDefault();
-        _this.$store.commit("flipRotateBlocks", {
-          type: "flip",
-        });
+    // hotkeys("e", "editor", function (event, handler) {
+    //   if (_this.isBrushing && _this.haveOpenTabs) {
+    //     event.preventDefault();
+    //     _this.$store.commit("flipRotateBlocks", {
+    //       type: "flip",
+    //     });
 
-        return;
-      }
-    });
+    //     return;
+    //   }
+    // });
 
-    hotkeys("q", "editor", function (event, handler) {
-      if (_this.isBrushing && _this.haveOpenTabs) {
-        event.preventDefault();
-        _this.$store.commit("flipRotateBlocks", {
-          type: "rotate",
-        });
+    // hotkeys("q", "editor", function (event, handler) {
+    //   if (_this.isBrushing && _this.haveOpenTabs) {
+    //     event.preventDefault();
+    //     _this.$store.commit("flipRotateBlocks", {
+    //       type: "rotate",
+    //     });
 
-        return;
-      }
-    });
-
-    hotkeys("ctrl+y", function (event, handler) {
-      event.preventDefault();
-      _this.redo();
-      return;
-    });
-
-    hotkeys("ctrl+z", function (event, handler) {
-      event.preventDefault();
-      _this.undo();
-      return;
-    });
-
-    hotkeys("ctrl+c", function (event, handler) {
-      if (
-        _this.selectedBlocks.length &&
-        _this.isSelected &&
-        _this.isSelecting &&
-        _this.haveOpenTabs &&
-        !_this.isShowingDialog &&
-        !_this.isModalOpen
-      ) {
-        event.preventDefault();
-
-        _this.$store.commit(
-          "selectBlocks",
-          filterNullBlocks(_this.selectedBlocks)
-        );
-
-        _this.$toasted.show("Copied blocks!", {
-          type: "success",
-          icon: "fa-check-circle",
-        });
-      }
-
-      return;
-    });
-
-    hotkeys("ctrl+x", function (event, handler) {
-      if (
-        _this.isSelected &&
-        _this.isSelecting &&
-        _this.haveOpenTabs &&
-        !_this.isShowingDialog &&
-        !_this.isModalOpen
-      ) {
-        event.preventDefault();
-
-        if (_this.selectedBlocks.length) {
-          for (let y = 0; y < _this.selectedBlocks.length + 1; y++) {
-            for (let x = 0; x < getBlocksWidth(_this.selectedBlocks) + 1; x++) {
-              if (_this.selectedBlocks[y] && _this.selectedBlocks[y][x]) {
-                _this.currentAsciiLayerBlocks[y][x] = { ...emptyBlock };
-              }
-            }
-          }
-
-          _this.$store.commit(
-            "selectBlocks",
-            filterNullBlocks(_this.selectedBlocks)
-          );
-
-          _this.selectedBlocks = [];
-
-          // Reset and hide the select after successful copy
-
-          _this.$store.commit(
-            "updateAsciiBlocks",
-            _this.currentAsciiLayerBlocks
-          );
-          _this.$emit("updatecanvas");
-
-          _this.$toasted.show("Cut blocks!", {
-            type: "success",
-            icon: "fa-check-circle",
-          });
-        }
-
-        return;
-      }
-    });
-
-
-    hotkeys("Delete", "editor", function (event, handler) {
-      if (
-        _this.isSelected &&
-        _this.isSelecting &&
-        _this.haveOpenTabs &&
-        !_this.isShowingDialog &&
-        !_this.isModalOpen
-      ) {
-        event.preventDefault();
-
-        if (_this.selectedBlocks.length) {
-          for (let y = 0; y < _this.selectedBlocks.length + 1; y++) {
-            for (let x = 0; x < getBlocksWidth(_this.selectedBlocks) + 1; x++) {
-              if (_this.selectedBlocks[y] && _this.selectedBlocks[y][x]) {
-                _this.currentAsciiLayerBlocks[y][x] = { ...emptyBlock };
-              }
-            }
-          }
-
-          // Reset and hide the select after successful copy
-          _this.$store.dispatch("updateAsciiBlocksAsync", {
-            blocks: _this.currentAsciiLayerBlocks,
-            diff: { ... _this.diffBlocks },
-          });
-
-          _this.$emit("updatecanvas");
-
-          _this.$toasted.show("Deleted blocks!", {
-            type: "success",
-            icon: "fa-check-circle",
-          });
-        }
-
-        return;
-      }
-    });
+    //     return;
+    //   }
+    // });
 
     hotkeys("Escape", function (event, handler) {
       if (
