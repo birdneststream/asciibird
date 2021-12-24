@@ -239,7 +239,7 @@ import {
   splashAscii,
   filterNullBlocks,
   getBlocksWidth,
-  emptyBlock
+  emptyBlock,
 } from "./ascii";
 
 import VueFileToolbarMenu from "vue-file-toolbar-menu";
@@ -290,7 +290,13 @@ export default {
     selectedBlocks: [],
     textEditing: null,
     updateCanvas: false,
-    selecting: null,
+    selecting: {
+      startX: null,
+      startY: null,
+      endX: null,
+      endY: null,
+      canSelect: false,
+    },
     isInputtingBrushSize: false,
     scrollOffset: 0,
     toolbarString: "top: 0px;",
@@ -349,7 +355,7 @@ export default {
     selectBlocks() {
       return this.$store.getters.selectBlocks;
     },
-    
+
     // Layers
     asciiLayersMenu() {
       let menu = [];
@@ -415,6 +421,20 @@ export default {
     },
     currentSelectedLayer() {
       return this.currentAsciiLayers[this.currentAscii.selectedLayer];
+    },
+    isBrushing() {
+      return this.currentTool.name === "brush";
+    },
+    isErasing() {
+      return this.currentTool.name === "eraser";
+    },
+    isSelected() {
+      return (
+        this.selecting.startX !== null &&
+        this.selecting.startY !== null &&
+        this.selecting.endX !== null &&
+        this.selecting.endY !== null
+      );
     },
     // Toolbar menu
     myMenu() {
@@ -486,53 +506,59 @@ export default {
                 });
               },
               icon: "content_copy",
-              disabled: 
-                !this.selectedBlocks.length && !this.isSelected && !this.isSelecting
-              ,
+              disabled:
+                !this.selectedBlocks.length &&
+                !this.isSelected &&
+                !this.isSelecting,
               hotkey: "ctrl+c",
             },
             {
               text: "Cut Selection",
               click: () => {
-                  if (this.selectedBlocks.length) {
-                    for (let y = 0; y < this.selectedBlocks.length + 1; y++) {
-                      for (let x = 0; x < getBlocksWidth(this.selectedBlocks) + 1; x++) {
-                        if (this.selectedBlocks[y] && this.selectedBlocks[y][x]) {
-                          this.currentAsciiLayerBlocks[y][x] = { ...emptyBlock };
-                        }
+                if (this.selectedBlocks.length) {
+                  for (let y = 0; y < this.selectedBlocks.length + 1; y++) {
+                    for (
+                      let x = 0;
+                      x < getBlocksWidth(this.selectedBlocks) + 1;
+                      x++
+                    ) {
+                      if (this.selectedBlocks[y] && this.selectedBlocks[y][x]) {
+                        this.currentAsciiLayerBlocks[y][x] = { ...emptyBlock };
                       }
                     }
-
-                    this.$store.commit(
-                      "selectBlocks",
-                      filterNullBlocks(this.selectedBlocks)
-                    );
-
-                    this.selectedBlocks = [];
-
-                    // Reset and hide the select after successful copy
-                    this.$store.dispatch("updateAsciiBlocksAsync", {
-                      blocks: this.currentAsciiLayerBlocks,
-                      diff: {},
-                    });
-
-                    // this.$store.commit(
-                    //   "updateAsciiBlocks",
-                    //   this.currentAsciiLayerBlocks
-                    // );
-
-
-                    this.$emit("updatecanvas");
-
-                    this.$toasted.show("Cut blocks!", {
-                      type: "success",
-                      icon: "fa-check-circle",
-                    });
                   }
 
+                  this.$store.commit(
+                    "selectBlocks",
+                    filterNullBlocks(this.selectedBlocks)
+                  );
+
+                  this.selectedBlocks = [];
+
+                  // Reset and hide the select after successful copy
+                  this.$store.dispatch("updateAsciiBlocksAsync", {
+                    blocks: this.currentAsciiLayerBlocks,
+                    diff: {},
+                  });
+
+                  // this.$store.commit(
+                  //   "updateAsciiBlocks",
+                  //   this.currentAsciiLayerBlocks
+                  // );
+
+                  this.$emit("updatecanvas");
+
+                  this.$toasted.show("Cut blocks!", {
+                    type: "success",
+                    icon: "fa-check-circle",
+                  });
+                }
               },
               icon: "content_cut",
-              disabled: !this.selectedBlocks.length && !this.isSelected && !this.isSelecting,
+              disabled:
+                !this.selectedBlocks.length &&
+                !this.isSelected &&
+                !this.isSelecting,
               hotkey: "ctrl+x",
             },
             {
@@ -551,7 +577,11 @@ export default {
               click: () => {
                 if (this.selectedBlocks.length) {
                   for (let y = 0; y < this.selectedBlocks.length + 1; y++) {
-                    for (let x = 0; x < getBlocksWidth(this.selectedBlocks) + 1; x++) {
+                    for (
+                      let x = 0;
+                      x < getBlocksWidth(this.selectedBlocks) + 1;
+                      x++
+                    ) {
                       if (this.selectedBlocks[y] && this.selectedBlocks[y][x]) {
                         this.currentAsciiLayerBlocks[y][x] = { ...emptyBlock };
                       }
@@ -561,7 +591,7 @@ export default {
                   // Reset and hide the select after successful copy
                   this.$store.dispatch("updateAsciiBlocksAsync", {
                     blocks: this.currentAsciiLayerBlocks,
-                    diff: { ... this.diffBlocks },
+                    diff: { ...this.diffBlocks },
                   });
 
                   this.$emit("updatecanvas");
@@ -573,7 +603,10 @@ export default {
                 }
               },
               icon: "delete_sweep",
-              disabled: !this.selectedBlocks.length && !this.isSelected && !this.isSelecting,
+              disabled:
+                !this.selectedBlocks.length &&
+                !this.isSelected &&
+                !this.isSelecting,
               hotkey: "Delete",
             },
           ],
@@ -627,7 +660,7 @@ export default {
               click: (e) => {
                 this.$store.commit("toggleGridView", !this.gridView);
                 this.$toasted.show(
-                  `Grid view ${toolbarState.gridView ? "enabled" : "disabled"}`
+                  `Grid view ${this.gridView ? "enabled" : "disabled"}`
                 );
               },
             },
@@ -686,7 +719,7 @@ export default {
               disabled: !this.isBrushing,
               icon: "swap_horiz",
               click: (e) => {
-                this.$store.commit("flipRotateBlocks", {type: "flip"})
+                this.$store.commit("flipRotateBlocks", { type: "flip" });
               },
             },
             {
@@ -695,7 +728,7 @@ export default {
               disabled: !this.isBrushing,
               icon: "swap_horiz",
               click: (e) => {
-                this.$store.commit("flipRotateBlocks", {type: "rotate"})
+                this.$store.commit("flipRotateBlocks", { type: "rotate" });
               },
             },
             {

@@ -6,9 +6,6 @@
 import {
   toolbarIcons,
   maxBrushSize,
-  filterNullBlocks,
-  getBlocksWidth,
-  emptyBlock,
 } from "../../ascii";
 
 export default {
@@ -68,21 +65,7 @@ export default {
       }
     });
 
-    hotkeys("ctrl+v", function (event, handler) {
-      event.preventDefault();
-      if (
-        _this.haveSelectBlocks &&
-        _this.haveOpenTabs &&
-        !_this.isShowingDialog &&
-        !_this.isModalOpen
-      ) {
-        _this.$store.commit("pushBrushHistory", _this.brushBlocks);
-        _this.$store.commit("brushBlocks", _this.selectBlocks);
-        _this.$store.commit("changeTool", 4);
-      }
 
-      return;
-    });
 
 hotkeys("ctrl+]", "editor", function (event, handler) {
       event.preventDefault();
@@ -125,31 +108,6 @@ hotkeys("ctrl+]", "editor", function (event, handler) {
         return;
       }
     });
-
-    // Hopefully we can still pick up the previous inputs
-    // while in brush mode
-
-    // hotkeys("e", "editor", function (event, handler) {
-    //   if (_this.isBrushing && _this.haveOpenTabs) {
-    //     event.preventDefault();
-    //     _this.$store.commit("flipRotateBlocks", {
-    //       type: "flip",
-    //     });
-
-    //     return;
-    //   }
-    // });
-
-    // hotkeys("q", "editor", function (event, handler) {
-    //   if (_this.isBrushing && _this.haveOpenTabs) {
-    //     event.preventDefault();
-    //     _this.$store.commit("flipRotateBlocks", {
-    //       type: "rotate",
-    //     });
-
-    //     return;
-    //   }
-    // });
 
     hotkeys("Escape", function (event, handler) {
       if (
