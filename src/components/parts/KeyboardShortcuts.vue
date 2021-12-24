@@ -255,48 +255,6 @@ export default {
       }
     });
 
-    hotkeys("alt+g", function (event, handler) {
-      event.preventDefault();
-      _this.$store.commit("toggleGridView", !_this.gridView);
-      return;
-    });
-
-    hotkeys("alt+r", function (event, handler) {
-      event.preventDefault();
-      let bg = _this.currentBg;
-      let fg = _this.currentFg;
-
-      _this.$store.commit("changeColourFg", bg);
-      _this.$store.commit("changeColourBg", fg);
-      return;
-    });
-
-    hotkeys("alt+f", function (event, handler) {
-      event.preventDefault();
-      _this.$store.commit(
-        "changeIsUpdatingFg",
-        !_this.toolbarState.isChoosingFg
-      );
-      return;
-    });
-
-    hotkeys("alt+b", function (event, handler) {
-      event.preventDefault();
-      _this.$store.commit(
-        "changeIsUpdatingBg",
-        !_this.toolbarState.isChoosingBg
-      );
-      return;
-    });
-
-    hotkeys("alt+c", function (event, handler) {
-      event.preventDefault();
-      _this.$store.commit(
-        "changeIsUpdatingChar",
-        !_this.toolbarState.isChoosingChar
-      );
-      return;
-    });
 
     hotkeys("Delete", "editor", function (event, handler) {
       if (
@@ -318,10 +276,11 @@ export default {
           }
 
           // Reset and hide the select after successful copy
-          _this.$store.commit(
-            "updateAsciiBlocks",
-            _this.currentAsciiLayerBlocks
-          );
+          _this.$store.dispatch("updateAsciiBlocksAsync", {
+            blocks: _this.currentAsciiLayerBlocks,
+            diff: { ... _this.diffBlocks },
+          });
+
           _this.$emit("updatecanvas");
 
           _this.$toasted.show("Deleted blocks!", {

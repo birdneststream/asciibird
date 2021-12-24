@@ -202,9 +202,6 @@ export default {
     brushSizeType() {
       return this.$store.getters.brushSizeType;
     },
-    currentAsciiBlocks() {
-      return this.$store.getters.currentAsciiBlocks;
-    },
     brushBlocks() {
       return this.$store.getters.brushBlocks;
     },

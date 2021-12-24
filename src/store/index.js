@@ -443,7 +443,7 @@ export default new Vuex.Store({
         if (prev.old) {
           for(let change in prev.old) {           
             let data = prev.old[change];
-            tempLayers[prev.l].data[data.y][data.x] = data.b;
+            tempLayers[prev.l].data[data.y][data.x] = { ... data.b };
           }
         }
            
@@ -664,11 +664,6 @@ export default new Vuex.Store({
     currentChar: (state) => state.toolbarState.selectedChar,
     currentTab: (state) => state.tab,
     currentAscii: (state) => state.asciibirdMeta[state.tab] ?? false,
-    currentAsciiBlocks: (state) => {
-      let blocks = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab].current)) || [];
-
-      return blocks;
-    },
     currentAsciiLayers: (state) => {
       let layers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[
         state.tab].layers));

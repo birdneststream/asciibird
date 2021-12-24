@@ -63,7 +63,7 @@
   </div>
 </template>
 <script>
-import { toolbarIcons, mircColours99, blockWidth, blockHeight, exportMirc } from '../ascii';
+import { toolbarIcons, mircColours99, blockWidth, blockHeight, exportMirc, mergeLayers } from '../ascii';
 import LZString from "lz-string";
 
 export default {
@@ -103,9 +103,6 @@ export default {
     },
     currentAscii() {
       return this.$store.getters.currentAscii;
-    },
-    currentAsciiBlocks() {
-      return this.$store.getters.currentAsciiBlocks;
     },
     asciiStats() {
       // const compressed = ( JSON.stringify(this.currentAscii) / 1024).toFixed(2);
@@ -177,7 +174,7 @@ export default {
   watch: {},
   methods: {
     copyUriToClipboard() {
-        let ascii = LZString.compressToEncodedURIComponent(JSON.stringify(this.currentAsciiBlocks));
+        let ascii = LZString.compressToEncodedURIComponent(JSON.stringify(mergeLayers()));
 
         this.$copyText(ascii).then(
           (e) => {

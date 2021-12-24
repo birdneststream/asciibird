@@ -4,7 +4,6 @@
       id="canvas-area"
       @mouseleave="isMouseOnCanvas = false"
       @mouseenter="isMouseOnCanvas = true"
-      
     >
       <context-menu ref="editor-menu" class="z-50">
         <ul>
@@ -112,25 +111,25 @@ export default {
           case "ArrowUp":
             _this.y--;
             _this.drawBrush(_this.isErasing);
-            _this.delayRedrawCanvas();
+            // _this.delayRedrawCanvas();
             break;
 
           case "ArrowDown":
             _this.y++;
             _this.drawBrush(_this.isErasing);
-            _this.delayRedrawCanvas();
+            // _this.delayRedrawCanvas();
             break;
 
           case "ArrowLeft":
             _this.x--;
             _this.drawBrush(_this.isErasing);
-            _this.delayRedrawCanvas();
+            // _this.delayRedrawCanvas();
             break;
 
           case "ArrowRight":
             _this.x++;
             _this.drawBrush(_this.isErasing);
-            _this.delayRedrawCanvas();
+            // _this.delayRedrawCanvas();
             break;
 
           case " ":
@@ -139,6 +138,11 @@ export default {
             _this.canTool = false;
             _this.dispatchBlocks();
 
+            this.diffBlocks = {
+              l: this.selectedLayerIndex,
+              new: [],
+              old: [],
+            };
             break;
         }
       }
@@ -239,6 +243,12 @@ export default {
     },
     isTextEditing() {
       return this.currentTool.name === "text";
+    },
+    isEraserFill() {
+      return this.currentTool.name === "fill-eraser";
+    },
+    isFill() {
+      return this.currentTool.name === "fill";
     },
     isTextEditingValues() {
       return (
@@ -359,9 +369,6 @@ export default {
     canvasTransparent() {
       return this.imageOverlay.visible ? "opacity: 0.6;" : "opacity: 1;";
     },
-    currentAsciiBlocks() {
-      return this.$store.getters.currentAsciiBlocks;
-    },
   },
   watch: {
     currentAscii(val, old) {
@@ -375,6 +382,9 @@ export default {
       if (old && old.visible) {
         this.warnInvisibleLayer();
       }
+    },
+    currentAsciiLayerBlocks() {
+      this.delayRedrawCanvas();
     },
     currentTool() {
       this.warnInvisibleLayer();
@@ -428,16 +438,16 @@ export default {
     textEditing(val, old) {
       this.$emit("textediting", val);
     },
-    // updateCanvas(val, old) {
-    //   if (val !== old) {
-    //     // This comes from KeyboardShortcuts.vue
-    //     this.clearToolCanvas();
-    //     this.drawTextIndicator();
-    //     this.drawIndicator();
+    updateCanvas(val, old) {
+      if (val !== old) {
+        // This comes from KeyboardShortcuts.vue
+        this.clearToolCanvas();
+        this.drawTextIndicator();
+        this.drawIndicator();
 
-    //     this.delayRedrawCanvas();
-    //   }
-    // },
+        this.delayRedrawCanvas();
+      }
+    },
     selecting(val) {
       this.$emit("selecting", val);
     },
@@ -458,7 +468,7 @@ export default {
     },
     canvasKeyDown(char) {
       // if (this.isTextEditing) {
-      console.log(char);
+      // console.log(char);
       if (
         this.currentAsciiLayerBlocks[this.textEditing.startY] &&
         this.currentAsciiLayerBlocks[this.textEditing.startY][
@@ -808,7 +818,6 @@ export default {
       if (this.currentAsciiLayers.length) {
         // https://stackoverflow.com/questions/28390358/high-cpu-usage-with-canvas-and-requestanimationframe
 
-
         // Position of the meta array
         let x = 0;
         let y = 0;
@@ -819,12 +828,17 @@ export default {
         let curBlock = {};
 
         // hack font for ascii shout outs 2 beenz
-        
 
-        if (this.diffBlocks.new.length && !this.canTool) {
-
-          
-          console.log("redrawing canvas from cache");
+        if (
+          this.diffBlocks.new.length &&
+          !this.canTool &&
+          !this.isTextEditing &&
+          !this.isErasing &&
+          !this.isEraserFill &&
+          !this.isFill
+          // Ignore redrawing from diffBlocks the above until they are refactored to work better
+        ) {
+          // console.log("redrawing canvas from cache");
           // If we have a difference stored, just render the difference only instead
           // of the entire ascii again
 
@@ -862,9 +876,8 @@ export default {
             new: [],
             old: [],
           };
-
         } else {
-          console.log("redrawing canvas");
+          // console.log("redrawing canvas");
 
           this.ctx.save();
           this.canvasRef.width = this.canvasRef.width;
@@ -948,7 +961,7 @@ export default {
     onCanvasDrag(x, y) {
       this.top = y;
     },
-    dispatchBlocks() {
+    dispatchBlocks(clearDiff = false) {
       this.diffBlocks.old = this.diffBlocks.old.flat();
       this.diffBlocks.new = this.diffBlocks.new.flat();
 
@@ -957,11 +970,14 @@ export default {
         diff: { ...this.diffBlocks },
       });
 
-      // this.diffBlocks = {
-      //   l: this.selectedLayerIndex,
-      //   new: [],
-      //   old: [],
-      // };
+      if (clearDiff) {
+        this.diffBlocks = {
+          l: this.selectedLayerIndex,
+          new: [],
+          old: [],
+        };
+      }
+
     },
     // Mouse Up, Down and Move
     canvasMouseUp() {
@@ -1015,14 +1031,12 @@ export default {
           case "fill":
             this.fill();
             this.canTool = false;
-
-            this.dispatchBlocks();
+            this.dispatchBlocks(true);
             break;
 
           case "fill-eraser":
             this.fill(true);
-
-            this.dispatchBlocks();
+            this.dispatchBlocks(true);
             break;
 
           case "brush":
@@ -1105,7 +1119,7 @@ export default {
               this.delayRedrawCanvas();
               this.eraser();
             }
-            
+
             break;
 
           case "select":
@@ -1149,8 +1163,8 @@ export default {
     clearToolCanvas() {
       if (this.toolCtx) {
         this.toolCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        this.toolCtx.save();
-        this.$refs.canvastools.width = this.$refs.canvastools.width;
+        // this.toolCtx.save();
+        this.toolCtx.width = this.toolCtx.width;
       }
     },
     delayRedrawCanvas() {
@@ -1161,7 +1175,6 @@ export default {
           requestAnimationFrame(() => {
             _this.redrawCanvas();
             _this.redraw = true;
-           
           });
         }, 1000 / this.options.fps);
       }
@@ -1641,7 +1654,7 @@ export default {
         }
       }
     },
-    async storeDiffBlocks(x, y, oldBlock, newBlock) {
+    storeDiffBlocks(x, y, oldBlock, newBlock) {
       // For undo
       if (!this.diffBlocks.old[y]) {
         this.diffBlocks.old[y] = [];
@@ -1784,11 +1797,20 @@ export default {
       if (this.canBg) {
         newColor.bg = this.currentBg;
         current.bg = this.asciiBlockAtXy.bg;
+
+        if (newColor.bg === undefined) {
+          delete current['bg'];
+        }
       }
+      
       //
       if (this.canFg) {
         newColor.fg = this.currentFg;
         current.fg = this.asciiBlockAtXy.fg;
+
+        if (newColor.fg === undefined) {
+          delete current['fg'];
+        }        
       }
 
       // If the newColor is same as the existing
@@ -1804,8 +1826,12 @@ export default {
         current,
         eraser
       );
+
+      if (eraser) {
+        this.delayRedrawCanvas();
+      }
     },
-    fillTool(fillBlocks, y, x, current, eraser) {
+    fillTool(currentLayerBlocks, y, x, current, eraser) {
       if (y >= Math.floor(this.canvas.height / blockHeight)) {
         return;
       }
@@ -1814,45 +1840,62 @@ export default {
         return;
       }
 
-      if (fillBlocks[y] === undefined || fillBlocks[y][x] === undefined) {
+      if (currentLayerBlocks[y] === undefined || currentLayerBlocks[y][x] === undefined) {
         return;
       }
 
-      if (this.canFg && fillBlocks[y][x].fg !== current.fg) {
-        return;
-      }
+      let targetBlock = currentLayerBlocks[y][x];
 
-      if (this.canBg && fillBlocks[y][x].bg !== current.bg) {
+      // if (this.canFg && currentLayerBlocks[y][x].fg !== current.fg) {
+      //   return;
+      // }
+
+      if (this.canBg && targetBlock.bg !== current.bg) {
         return;
       }
 
       // We can eraser or fill
-      if (this.canBg) {
-        fillBlocks[y][x].bg = eraser ? undefined : this.currentBg;
+      if (!eraser) {
+        if (this.canBg) {
+          targetBlock.bg = this.currentBg;
+        }
+
+        if (this.canFg) {
+          targetBlock.fg = this.currentFg;
+        }
+
+        if (this.canText) {
+          targetBlock.char = this.currentChar;
+        }
+      } else {
+        if (this.canBg) {
+          delete targetBlock["bg"];
+        }
+
+        if (this.canFg) {
+          delete targetBlock["fg"];
+        }
+
+        if (this.canText) {
+          delete targetBlock["char"];
+        }
       }
 
-      if (this.canFg) {
-        fillBlocks[y][x].fg = eraser ? undefined : this.currentFg;
-      }
-
-      if (this.canText) {
-        fillBlocks[y][x].char = eraser ? undefined : this.currentChar;
-      }
-
-      this.storeDiffBlocks(x, y, current, fillBlocks[y][x]);
+      // console.log({e:eraser,  o: current, n: targetBlock });
+      this.storeDiffBlocks(x, y, current, targetBlock);
 
       // Fill in all four directions
       // Fill Prev row
-      this.fillTool(fillBlocks, y, x - 1, current, eraser);
+      this.fillTool(currentLayerBlocks, y, x - 1, current, eraser);
 
       // Fill Next row
-      this.fillTool(fillBlocks, y, x + 1, current, eraser);
+      this.fillTool(currentLayerBlocks, y, x + 1, current, eraser);
 
       // Fill Prev col
-      this.fillTool(fillBlocks, y - 1, x, current, eraser);
+      this.fillTool(currentLayerBlocks, y - 1, x, current, eraser);
 
       // Fill next col
-      this.fillTool(fillBlocks, y + 1, x, current, eraser);
+      this.fillTool(currentLayerBlocks, y + 1, x, current, eraser);
     },
   },
 };

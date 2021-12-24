@@ -249,6 +249,8 @@ export default {
     window.addEventListener("scroll", function (event) {
       isThis.scrollOffset = this.scrollY;
     });
+    this.mirror.x = this.toolbarState.mirrorX;
+    this.mirror.y = this.toolbarState.mirrorY;
   },
   destroyed() {
     window.removeEventListener("scroll", function (event) {
@@ -293,6 +295,10 @@ export default {
     isShowingDialog: false,
     drawBrush: false,
     happy: false,
+    mirror: {
+      x: false,
+      y: false,
+    }
   }),
   computed: {
     isDefault() {
@@ -313,6 +319,64 @@ export default {
     // options() {
     //   return this.$store.getters.options;
     // },
+
+    asciibirdMeta() {
+      return this.$store.getters.asciibirdMeta;
+    },
+    debugPanelState() {
+      return this.$store.getters.debugPanel;
+    },
+    brushLibraryState() {
+      return this.$store.getters.brushLibraryState;
+    },
+    currentAscii() {
+      return this.$store.getters.currentAscii;
+    },
+    currentTab() {
+      return this.$store.getters.currentTab;
+    },
+    imageOverlay() {
+      return this.$store.getters.imageOverlay || false;
+    },
+    imageOverlayUrl() {
+      return this.imageOverlay.url
+        ? this.imageOverlay.url.split("/").pop()
+        : "";
+    },
+
+    // Layers
+    asciiLayersMenu() {
+      let menu = [];
+
+      for (let i in [...this.currentAsciiLayers]) {
+        menu.push({
+          text: this.currentAsciiLayers[i].label,
+          click: () =>
+            this.$store.commit(
+              "changeLayer",
+              this.currentAsciiLayers.length - i
+            ),
+        });
+      }
+
+      return menu.reverse();
+    },
+    currentAsciiLayers() {
+      return this.$store.getters.currentAsciiLayers;
+    },
+    selectedLayer() {
+      return this.$store.getters.selectedLayer;
+    },
+    canToggleLayer() {
+      return this.currentAsciiLayers.length > 1;
+      // We want to avoid hiding all the layers, so if there's only one
+      // visible left, we have to disable the buttons
+    },
+
+    // Toolbar related
+    gridView() {
+      return this.toolbarState.gridView;
+    },
     canFg() {
       return this.$store.getters.isTargettingFg;
     },
@@ -334,56 +398,8 @@ export default {
     toolbarState() {
       return this.$store.getters.toolbarState;
     },
-    asciibirdMeta() {
-      return this.$store.getters.asciibirdMeta;
-    },
-    debugPanelState() {
-      return this.$store.getters.debugPanel;
-    },
-    brushLibraryState() {
-      return this.$store.getters.brushLibraryState;
-    },
-    currentAscii() {
-      return this.$store.getters.currentAscii;
-    },
-    currentTab() {
-      return this.$store.getters.currentTab;
-    },
-    currentAsciiLayers() {
-      return this.$store.getters.currentAsciiLayers;
-    },
-    selectedLayer() {
-      return this.$store.getters.selectedLayer;
-    },
-    canToggleLayer() {
-      return this.currentAsciiLayers.length > 1;
-      // We want to avoid hiding all the layers, so if there's only one
-      // visible left, we have to disable the buttons
-    },
-    imageOverlay() {
-      return this.$store.getters.imageOverlay || false;
-    },
-    imageOverlayUrl() {
-      return this.imageOverlay.url
-        ? this.imageOverlay.url.split("/").pop()
-        : "";
-    },
-    asciiLayersMenu() {
-      let menu = [];
 
-      for (let i in [...this.currentAsciiLayers]) {
-        menu.push({
-          text: this.currentAsciiLayers[i].label,
-          click: () =>
-            this.$store.commit(
-              "changeLayer",
-              this.currentAsciiLayers.length - i
-            ),
-        });
-      }
-
-      return menu.reverse();
-    },
+    // Toolbar menu
     myMenu() {
       let menu = [];
 
@@ -445,23 +461,86 @@ export default {
             },
             {
               text: "Toggle Grid",
-              icon: this.check2 ? "check_box" : "check_box_outline_blank",
-              click: (e) => {},
+              icon: this.gridView ? "check_box" : "check_box_outline_blank",
+              hotkey: "alt+g",
+              click: (e) => {this.$store.commit("toggleGridView", !this.gridView)},
             },
             {
               text: "Mirror X",
-              icon: this.check2 ? "check_box" : "check_box_outline_blank",
-              click: (e) => {},
+              hotkey: "alt+x",
+              icon: this.toolbarState.mirrorX ? "check_box" : "check_box_outline_blank",
+              click: (e) => {
+                this.mirror.x = !this.toolbarState.mirrorX;
+                this.$store.commit("updateMirror", this.mirror);
+                this.$toasted.show(`Mirror Y ${this.mirror.y ? 'enabled' : 'disabled'}`);
+              },
             },
             {
               text: "Mirror Y",
-              icon: this.check2 ? "check_box" : "check_box_outline_blank",
-              click: (e) => {},
+              icon: this.toolbarState.mirrorY ? "check_box" : "check_box_outline_blank",
+              hotkey: "alt+y",
+              click: (e) => {
+                this.mirror.y = !this.toolbarState.mirrorY;
+                this.$store.commit("updateMirror", this.mirror);
+                this.$toasted.show(`Mirror Y ${this.mirror.y ? 'enabled' : 'disabled'}`);
+              },
             },
             {
               text: "Update Brush",
-              icon: this.check2 ? "check_box" : "check_box_outline_blank",
-              click: (e) => {},
+              hotkey: "alt+u",
+              icon: this.toolbarState.updateBrush ? "check_box" : "check_box_outline_blank",
+              click: (e) => {
+                this.$store.commit('toggleUpdateBrush', !this.toolbarState.updateBrush);
+                this.$toasted.show(`Update Brush when colours or char changes ${this.toolbarState.updateBrush ? 'enabled' : 'disabled'}`);
+              },
+            },
+            {
+              is: "separator",
+            },
+            {
+              text: "Swap FG and BG",
+              hotkey: "alt+r",
+              icon: "swap_horiz",
+              click: (e) => {
+                let bg = this.currentBg;
+                let fg = this.currentFg;
+
+                this.$store.commit("changeColourFg", bg);
+                this.$store.commit("changeColourBg", fg);
+              },
+            },
+            {
+              text: "Change FG",
+              hotkey: "alt+f",
+              icon: "flip_to_front",
+              click: (e) => {
+                this.$store.commit(
+                  "changeIsUpdatingFg",
+                  !this.toolbarState.isChoosingFg
+                );
+              },
+            },
+            {
+              text: "Change BG",
+              hotkey: "alt+b",
+              icon: "flip_to_back",
+              click: (e) => {
+                this.$store.commit(
+                  "changeIsUpdatingBg",
+                  !this.toolbarState.isChoosingBg
+                );
+              },
+            },
+            {
+              text: "Change Char",
+              hotkey: "alt+c",
+              icon: "atm",
+              click: (e) => {
+                this.$store.commit(
+                  "changeIsUpdatingChar",
+                  !this.toolbarState.isChoosingChar
+                );
+              },
             },
             {
               is: "separator",
@@ -531,6 +610,7 @@ export default {
               {
                 text: "HTTP POST",
                 click: () => this.startExport("post"),
+                hotkey: "ctrl+shift+h",
                 icon: "post_add",
               },
               {
@@ -553,7 +633,7 @@ export default {
                 click: () =>
                   this.$store.commit("toggleLayer", this.selectedLayer),
                 icon: "panorama_fish_eye",
-                hotkey: "ctrl+shift+v",
+                hotkey: "ctrl+shift+t",
                 disabled: !this.canToggleLayer,
               },
               {

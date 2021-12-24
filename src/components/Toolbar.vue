@@ -154,8 +154,8 @@ export default {
     this.toolbar.w = this.toolbarState.w;
     this.toolbar.h = this.toolbarState.h;
 
-    this.mirror.x = this.toolbarState.mirrorX;
-    this.mirror.y = this.toolbarState.mirrorY;
+    this.mirror.x = this.mirrorX;
+    this.mirror.y = this.mirrorY;
   },
   name: "Toolbar",
   components: { Colours },
@@ -221,10 +221,22 @@ export default {
     updateBrush() {
       return this.toolbarState.updateBrush;
     },
+    mirrorX() {
+      return this.toolbarState.mirrorX;
+    },
+    mirrorY() {
+      return this.toolbarState.mirrorY;
+    },
   },
   watch: {
     yOffset(val) {
       this.$refs.toolbardrag.top = Number.parseInt(this.toolbarState.y + val);
+    },
+    mirrorX(val) {
+      this.mirror.x = val;
+    },
+    mirrorY(val) {
+      this.mirror.y = val;
     },
   },
   methods: {
