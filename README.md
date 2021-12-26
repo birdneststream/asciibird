@@ -77,7 +77,6 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 ## Bugs to fix
 
-* Export to HTTP post shows success even if cancel
 * If you brush off canvas you cannot undo the changed blocks
 * If you apply an empty block from a brush, it will remove the char when it is supposed to leave the block alone.
  * A bigger circle brush is a good example for this one.

@@ -21,7 +21,7 @@
       @triggerbrush="triggerbrush"
     />
 
-    <t-dialog
+    <!-- <t-dialog
       name="dialog-posthttp"
       title="Enter URL"
       text="Enter URL for POST command"
@@ -30,9 +30,9 @@
       :showCloseButton="true"
       :disableBodyScroll="true"
       @closed="postHttp()"
-    >
+    > 
       <t-input v-model="lastPostURL" />
-    </t-dialog>
+    </t-dialog> -->
 
     <context-menu ref="menu" class="z-50">
       <ul>
@@ -626,7 +626,6 @@ export default {
                     type: "success",
                     icon: "fa-check-circle",
                   });
-
                 }
               },
               icon: "delete_sweep",
@@ -1238,30 +1237,61 @@ export default {
           break;
         case "post":
           this.$store.commit("toggleDisableKeyboard", true);
-          this.$dialog.show("dialog-posthttp");
+          this.$dialog
+            .prompt({
+              title: "HTTP Post your Ascii",
+              text: "Please input the URL for the HTTP Post sir",
+              icon: "question",
+              inputValue: this.lastPostURL,
+              clickToClose: false,
+            })
+            .then((result) => {
+              if (result.input === undefined) {
+                this.$toasted.show("Come on bro. Get it together.", {
+                  type: "error",
+                });
+                this.$store.commit("toggleDisableKeyboard", false);
+                return;
+              }
+
+              if (result.isOk) {
+                let ascii = exportMirc();
+                this.lastPostURL = result.input;
+                const requestOptions = {
+                  method: "POST",
+                  headers: { "Content-Type": "application/octet-stream" },
+                  body: ascii.output.join(""),
+                };
+                fetch(this.lastPostURL, requestOptions)
+                  .then((response) => {
+                    console.log(response);
+                    if (response.status === 200 || response.status === 201) {
+                      this.$toasted.show("POSTed ascii!", {
+                        type: "success",
+                      });
+                    } else {
+                      this.$toasted.show(
+                        `Error: ${response.status} ${response.statusText}`,
+                        {
+                          type: "error",
+                        }
+                      );
+                    }
+                  })
+                  .catch((error) => {
+                    this.$toasted.show(`Error: ${JSON.stringify(error)}`, {
+                      type: "error",
+                    });
+                  });
+              }
+
+              this.$store.commit("toggleDisableKeyboard", false);
+              this.isShowingDialog = false;
+            });
+
           this.isShowingDialog = true;
           break;
       }
-    },
-    postHttp() {
-      let ascii = exportMirc();
-
-      // this.lastPostURL = result.input;
-      const requestOptions = {
-        method: "POST",
-        headers: { "Content-Type": "application/octet-stream" },
-        body: ascii.output.join(""),
-      };
-      fetch(this.lastPostURL, requestOptions)
-        .then((response) => {
-          this.$toasted.show("POSTed ascii!");
-        })
-        .catch((error) => {
-          this.$toasted.show("Error POSTing");
-        });
-
-      this.$store.commit("toggleDisableKeyboard", false);
-      this.isShowingDialog = false;
     },
     changeTab(key) {
       // Update the tab index in vuex store
