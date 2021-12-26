@@ -91,6 +91,7 @@ export default {
   },
   mounted() {
     this.ctx = this.canvasRef.getContext("2d");
+    this.ctx.font = "13px Hack";
     this.toolCtx = this.$refs.canvastools.getContext("2d");
     this.delayRedrawCanvas();
   },

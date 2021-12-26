@@ -50,6 +50,7 @@ export default {
   },
   mounted() {
     this.ctx = this.$refs[this.canvasName].getContext("2d");
+    this.ctx.font = "13px Hack";
     this.delayRedrawCanvas();
   },
   props: {

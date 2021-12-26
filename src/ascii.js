@@ -234,7 +234,7 @@ export const parseMircAscii = async (contents, filename) => {
       label: filename,
       visible: true,
       data: create2DArray(contents.split('\n').length),
-      width: asciiLines[0].replace(mIrcColourRegex, '').length,
+      width: 0, // calculated down bellow
       height: contents.split('\n').length,
     }],
     history: [],
@@ -257,6 +257,15 @@ export const parseMircAscii = async (contents, filename) => {
   // Determine if we have a plain text ascii
   const colourCodeRegex = new RegExp(/\u0003/, 'g');
   let isPlainText = !colourCodeRegex.test(contents);
+
+  // Get the max line width, as some lines can be trimmed by spaces
+  // we cannot always rely on the first line for the width
+  for (let i = 0; i < asciiLines.length; i++) {
+    let cleanedWidth = asciiLines[i].replace(mIrcColourRegex, '').length;
+    if (cleanedWidth > finalAscii.layers[0].width) {
+      finalAscii.layers[0].width = cleanedWidth;
+    }
+  }
 
   // https://modern.ircdocs.horse/formatting.html#color
   // In the following list, <CODE> represents the color formatting character (0x03), <COLOR> represents one or two ASCII digits (either 0-9 or 00-99).
