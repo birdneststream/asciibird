@@ -426,16 +426,26 @@ export const createNewAscii = (forms) => {
 
 // Converts ASCIIBIRD blocks to mIRC colours
 export const exportMirc = (blocks = null) => {
-  const {
-    currentAscii
-  } = store.getters;
-
-  const {
-    currentAsciiLayersWidthHeight
-  } = store.getters;
-
+  var isPng = false;
+  
   if (blocks === null) {
+    var {
+      currentAscii
+    } = store.getters;
+
+    var {
+      currentAsciiLayersWidthHeight
+    } = store.getters;
+
     blocks = mergeLayers();
+  } else {
+    var currentAscii = {};
+    currentAscii.title = `brush-${cyrb53(JSON.stringify(blocks))}.png`
+    isPng = true;
+    var currentAsciiLayersWidthHeight = {
+      height: blocks.length,
+      width: blocks[0].length
+    }
   }
 
   const output = [];
@@ -511,9 +521,16 @@ export const exportMirc = (blocks = null) => {
 
   // Download to a txt file
   // Check if txt already exists and append it
-  const filename = currentAscii.title.slice(currentAscii.title.length - 3) === 'txt' ?
-    currentAscii.title :
-    `${currentAscii.title}.txt`;
+  if (isPng) { 
+    var filename = currentAscii.title.slice(currentAscii.title.length - 3) === 'png' ?
+      currentAscii.title :
+      `${currentAscii.title}.png`;
+  } else {
+    var filename = currentAscii.title.slice(currentAscii.title.length - 3) === 'txt' ?
+      currentAscii.title :
+      `${currentAscii.title}.txt`;
+  }
+
 
   return {
     filename,
@@ -534,6 +551,16 @@ export const downloadFile = (content, filename, contentType) => {
 
   URL.revokeObjectURL(a.href);
 };
+
+export function canvasToPng(canvas, filename) {
+  let downloadLink = document.createElement('a');
+  downloadLink.setAttribute('download', filename);
+  canvas.toBlob(function (blob) {
+    let url = URL.createObjectURL(blob);
+    downloadLink.setAttribute('href', url);
+    downloadLink.click();
+  });
+}
 
 export const checkForGetRequest = async () => {
   const asciiUrlCdn = new URL(location.href).searchParams.get('ascii');

@@ -24,16 +24,16 @@
 
         <context-menu ref="main-brush-menu" class="z-50" @contextmenu.prevent>
           <ul>
-            <li @click="true" class="ab-context-menu-item">
+            <li @click="canvasToPng()" class="ab-context-menu-item">
               Save as PNG
             </li>
-            <li @click="true" class="ab-context-menu-item">
+            <li @click="startExport('clipboard')" class="ab-context-menu-item">
               Export Brush to mIRC Clipboard
             </li>
-            <li @click="true" class="ab-context-menu-item">
+            <li @click="startExport('file')" class="ab-context-menu-item">
               Export Brush to mIRC File
             </li>
-            <li @click="true" class="ab-context-menu-item">
+            <li @click="saveToLibrary()" class="ab-context-menu-item">
               Save to Library
             </li>
           </ul>
@@ -53,6 +53,10 @@ import {
   filterNullBlocks,
   toolbarIcons,
   emptyBlock,
+  canvasToPng,
+  cyrb53,
+  exportMirc,
+  downloadFile
 } from "../../ascii";
 
 export default {
@@ -164,6 +168,9 @@ export default {
     isErasing() {
       return this.currentTool.name === "eraser";
     },
+    hash() {
+      return cyrb53(JSON.stringify(this.brushBlocks));
+    }
   },
   watch: {
     brushBlocks() {
@@ -213,6 +220,44 @@ export default {
         pageX: e.layerX,
         pageY: e.layerY,
       });
+    },
+    startExport(type) {
+      let ascii = exportMirc(this.brushBlocks);
+      console.log(ascii);
+      switch (type) {
+        case "clipboard":
+          this.$copyText(ascii.output.join("")).then(
+            (e) => {
+              this.$toasted.show("Copied mIRC brush to clipboard!", {
+                type: "success",
+              });
+            },
+            (e) => {
+              this.$toasted.show("Error when copying mIRC to clipboard!", {
+                type: "error",
+              });
+            }
+          );
+          this.$refs[`main-brush-menu`].close();
+          break;
+
+        default:
+        case "file":
+          downloadFile(ascii.output.join(""), ascii.filename, "text/plain");
+          this.$refs[`main-brush-menu`].close();
+          break;
+      }
+    },
+    saveToLibrary() {
+      this.$store.commit("pushBrushLibrary", this.brushBlocks);
+      this.$toasted.show(`Saved brush to Library`, {
+            type: "success",
+          });
+      this.$refs[`main-brush-menu`].close();
+    },
+    canvasToPng() {
+      canvasToPng(this.canvasRef, `brush-${this.hash}.png`)
+      this.$refs[`main-brush-menu`].close();
     },
     processClick(e) {
       this.canTool = true;

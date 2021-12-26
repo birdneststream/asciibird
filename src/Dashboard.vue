@@ -250,6 +250,7 @@ import {
   filterNullBlocks,
   getBlocksWidth,
   emptyBlock,
+  canvasToPng,
 } from "./ascii";
 
 import VueFileToolbarMenu from "vue-file-toolbar-menu";
@@ -934,7 +935,17 @@ export default {
                 click: () => this.startExport("clipboard"),
                 icon: "copy_all",
               },
-              { text: "PNG Image", click: () => true, icon: "image" },
+              {
+                text: "PNG Image",
+                hotkey: "ctrl+shift+g",
+                click: () => {
+                  canvasToPng(
+                    document.getElementById("canvas"),
+                    this.currentAscii.title
+                  );
+                },
+                icon: "image",
+              },
               {
                 text: "HTTP POST",
                 click: () => this.startExport("post"),

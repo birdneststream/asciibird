@@ -14,26 +14,20 @@
       </div>
 
       <context-menu  :ref="`block-menu-${hash}`" class="z-50" >
-        <ul>
-          <li
-            @click="true"
-            class="ab-context-menu-item"
-          >
-            Save as PNG
-          </li>
-          <li
-            @click="true"
-            class="ab-context-menu-item"
-          >
-            Export ASCII to mIRC Clipboard
-          </li>
-          <li
-            @click="true"
-            class="ab-context-menu-item"
-          >
-            Export ASCII to mIRC File
-          </li>
-        </ul>
+          <ul>
+            <li @click="canvasToPng()" class="ab-context-menu-item">
+              Save as PNG
+            </li>
+            <li @click="startExport('clipboard')" class="ab-context-menu-item">
+              Export Brush to mIRC Clipboard
+            </li>
+            <li @click="startExport('file')" class="ab-context-menu-item">
+              Export Brush to mIRC File
+            </li>
+            <li @click="saveToLibrary()" class="ab-context-menu-item">
+              Save to Library
+            </li>
+          </ul>
       </context-menu>
     </t-card>
   </div>
@@ -41,7 +35,10 @@
 
 
 <script>
-import { mircColours99, blockWidth, blockHeight, cyrb53, getBlocksWidth, filterNullBlocks  } from "../../ascii";
+import { mircColours99, blockWidth, blockHeight, cyrb53, getBlocksWidth, filterNullBlocks,
+  canvasToPng,
+  exportMirc,
+  downloadFile  } from "../../ascii";
 import ContextMenu from "./ContextMenu.vue";
 export default {
   name: "BrushCanvas",
@@ -140,7 +137,7 @@ export default {
     },
     canvasRef() {
       return this.$refs[this.canvasName];
-    }
+    },
   },
   watch: {
     blockSizeMultiplier() {
@@ -181,6 +178,44 @@ export default {
     },
   },
   methods: {
+    startExport(type) {
+      let ascii = exportMirc(this.getBlocks);
+      console.log(ascii);
+      switch (type) {
+        case "clipboard":
+          this.$copyText(ascii.output.join("")).then(
+            (e) => {
+              this.$toasted.show("Copied mIRC brush to clipboard!", {
+                type: "success",
+              });
+            },
+            (e) => {
+              this.$toasted.show("Error when copying mIRC to clipboard!", {
+                type: "error",
+              });
+            }
+          );
+          this.$refs[`block-menu-${this.hash}`].close();
+          break;
+
+        default:
+        case "file":
+          downloadFile(ascii.output.join(""), ascii.filename, "text/plain");
+          this.$refs[`block-menu-${this.hash}`].close();
+          break;
+      }
+    },
+    saveToLibrary() {
+      this.$store.commit("pushBrushLibrary", this.getBlocks);
+      this.$toasted.show(`Saved brush to Library`, {
+            type: "success",
+          });
+          this.$refs[`block-menu-${this.hash}`].close();
+    },
+    canvasToPng() {
+      canvasToPng(this.canvasRef, `brush-${this.hash}.png`)
+      this.$refs[`block-menu-${this.hash}`].close();
+    },
     getBlocksWidth(blocks) {
       return getBlocksWidth(blocks)
     },

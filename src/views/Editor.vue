@@ -7,13 +7,13 @@
     >
       <context-menu ref="editor-menu" class="z-50">
         <ul>
-          <li @click="true" class="ml-1 text-sm hover:bg-gray-400">
+          <li @click="canvasToPng()" class="ml-1 text-sm hover:bg-gray-400">
             Save as PNG
           </li>
-          <li @click="true" class="ml-1 text-sm hover:bg-gray-400">
+          <li @click="startExport('clipboard')" class="ml-1 text-sm hover:bg-gray-400">
             Export ASCII to mIRC Clipboard
           </li>
-          <li @click="true" class="ml-1 text-sm hover:bg-gray-400">
+          <li @click="startExport('file')" class="ml-1 text-sm hover:bg-gray-400">
             Export ASCII to mIRC File
           </li>
         </ul>
@@ -79,6 +79,9 @@ import {
   getBlocksWidth,
   checkVisible,
   mergeLayers,
+  canvasToPng,
+  exportMirc,
+  downloadFile
 } from "../ascii";
 
 export default {
@@ -461,6 +464,34 @@ export default {
     },
   },
   methods: {
+    startExport(type) {
+      let ascii = exportMirc();
+
+      switch (type) {
+        case "clipboard":
+          this.$copyText(ascii.output.join("")).then(
+            (e) => {
+              this.$toasted.show("Copied mIRC to clipboard!", {
+                type: "success",
+              });
+            },
+            (e) => {
+              this.$toasted.show("Error when copying mIRC to clipboard!", {
+                type: "error",
+              });
+            }
+          );
+          break;
+
+        default:
+        case "file":
+          downloadFile(ascii.output.join(""), ascii.filename, "text/plain");
+          break;
+      }
+    },
+    canvasToPng() {
+      canvasToPng(this.canvasRef, this.currentAscii.title);
+    },
     openContextMenu(e) {
       e.preventDefault();
       // These are the correct X and Y when inside the floating panel
