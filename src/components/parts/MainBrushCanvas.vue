@@ -242,7 +242,7 @@ export default {
 
         default:
         case "file":
-          downloadFile(ascii.output.join(""), ascii.filename, "text/plain");
+          downloadFile(ascii.output.join(""), `brush-${this.hash}.txt`, "text/plain");
           this.$refs[`main-brush-menu`].close();
           break;
       }

@@ -530,15 +530,9 @@ export const exportMirc = (blocks = null) => {
 
   // Download to a txt file
   // Check if txt already exists and append it
-  if (isPng) { 
-    var filename = currentAscii.title.slice(currentAscii.title.length - 3) === 'png' ?
-      currentAscii.title :
-      `${currentAscii.title}.png`;
-  } else {
-    var filename = currentAscii.title.slice(currentAscii.title.length - 3) === 'txt' ?
-      currentAscii.title :
-      `${currentAscii.title}.txt`;
-  }
+  var filename = currentAscii.title.slice(currentAscii.title.length - 3) === 'txt' ?
+    currentAscii.title :
+    `${currentAscii.title}.txt`;
 
 
   return {

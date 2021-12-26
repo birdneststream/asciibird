@@ -434,7 +434,7 @@ export default {
     },
     gridView(val, old) {
       if (val !== old) {
-        this.delayRedrawCanvas();
+        this.clearToolCanvas();
       }
     },
     brushBlocks() {
@@ -866,28 +866,28 @@ export default {
       let w = this.canvas.width;
       let h = this.canvas.height;
 
-      this.ctx.beginPath();
+      this.toolCtx.beginPath();
 
       for (var x = 0; x <= w; x += blockWidth) {
-        this.ctx.moveTo(x, 0);
-        this.ctx.lineTo(x, h);
+        this.toolCtx.moveTo(x, 0);
+        this.toolCtx.lineTo(x, h);
       }
 
-      this.ctx.strokeStyle = "rgba(0, 0, 0, 1)";
-      this.ctx.lineWidth = 1;
-      this.ctx.setLineDash([1]);
+      this.toolCtx.strokeStyle = "rgba(0, 0, 0, 1)";
+      this.toolCtx.lineWidth = 1;
+      this.toolCtx.setLineDash([1]);
 
-      this.ctx.stroke();
+      this.toolCtx.stroke();
 
-      this.ctx.beginPath();
+      this.toolCtx.beginPath();
       for (var y = 0; y <= h; y += blockHeight) {
-        this.ctx.moveTo(0, y);
-        this.ctx.lineTo(w, y);
+        this.toolCtx.moveTo(0, y);
+        this.toolCtx.lineTo(w, y);
       }
 
-      this.ctx.stroke();
+      this.toolCtx.stroke();
     },
-    redrawCanvas() {
+    redrawCanvas(force = false) {
       if (this.currentAsciiLayers.length) {
         // https://stackoverflow.com/questions/28390358/high-cpu-usage-with-canvas-and-requestanimationframe
 
@@ -968,7 +968,7 @@ export default {
           let mergeLayers = this.mergeLayers();
           let tempHash = cyrb53(JSON.stringify(mergeLayers));
 
-          if (tempHash === this.canvasHash) {
+          if (tempHash === this.canvasHash && !force) {
             // Avoid redrawing the entire canvas to same some CPU
             // if we have no new changes
             return;
@@ -1020,9 +1020,6 @@ export default {
           }
         }
 
-        if (this.gridView) {
-          this.drawGrid();
-        }
 
         this.ctx.restore();
       }
@@ -1258,6 +1255,9 @@ export default {
         this.toolCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         // this.toolCtx.save();
         this.toolCtx.width = this.toolCtx.width;
+        if (this.gridView) {
+          this.drawGrid();
+        }
       }
     },
     delayRedrawCanvas() {
