@@ -868,19 +868,19 @@ export default {
 
       this.toolCtx.beginPath();
 
-      for (var x = 0; x <= w; x += blockWidth) {
+      for (var x = 1; x <= w; x += blockWidth) {
         this.toolCtx.moveTo(x, 0);
         this.toolCtx.lineTo(x, h);
       }
 
-      this.toolCtx.strokeStyle = "rgba(0, 0, 0, 1)";
-      this.toolCtx.lineWidth = 1;
+      this.toolCtx.strokeStyle = "rgba(40, 40, 40, 1)";
+      this.toolCtx.lineWidth = 2;
       this.toolCtx.setLineDash([1]);
 
       this.toolCtx.stroke();
 
       this.toolCtx.beginPath();
-      for (var y = 0; y <= h; y += blockHeight) {
+      for (var y = 1; y <= h; y += blockHeight) {
         this.toolCtx.moveTo(0, y);
         this.toolCtx.lineTo(w, y);
       }
