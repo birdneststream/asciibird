@@ -765,23 +765,26 @@ export const mergeLayers = function (blocks = null) {
           store.getters.currentAsciiLayers[z].data[y] &&
           store.getters.currentAsciiLayers[z].data[y][x]
         ) {
+          if (curBlock.bg === undefined) {
+            curBlock.bg = store.getters.currentAsciiLayers[z].data[y][x].bg;
+          }
+
+          if (curBlock.fg === undefined) {
+            curBlock.fg = store.getters.currentAsciiLayers[z].data[y][x].fg;
+          } else {
+            curBlock.fg = 0;
+          }
 
           if (curBlock.char === undefined) {
             curBlock.char = store.getters.currentAsciiLayers[z].data[y][x].char;
           }
 
-          if (curBlock.fg === undefined) {
-            curBlock.fg = store.getters.currentAsciiLayers[z].data[y][x].fg;
-          }
 
-          if (curBlock.bg === undefined) {
-            curBlock.bg = store.getters.currentAsciiLayers[z].data[y][x].bg;
-          }
 
           continue;
         }
 
-        break;
+        // break;
       }
 
       mergedLayers[y][x] = {

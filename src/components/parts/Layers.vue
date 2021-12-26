@@ -1,5 +1,7 @@
 <template>
   <div>
+
+
     <div class="flex">
       <t-button
         type="button"
@@ -48,13 +50,41 @@
         <li></li>
       </ul>
 
-      <ul class="divide-y-2 divide-gray-100 reverseorder">
+      <context-menu ref="layers-menu" class="z-50" @contextmenu.prevent>
+        <ul>
+          <li @click="addLayer()" class="ab-context-menu-item">
+            Add New Layer
+          </li>
+          <li @click="removeLayer(selectedLayer)" class="ab-context-menu-item">
+            Remove Selected Layer
+          </li>
+          <li @click="downLayer(selectedLayer)" class="ab-context-menu-item">
+            Move Selected Layer Up
+          </li>
+          <li @click="upLayer(selectedLayer)" class="ab-context-menu-item">
+            Move Selected Layer Down
+          </li>
+          <li @click="toggleLayer(selectedLayer)" class="ab-context-menu-item">
+            Show/Hide Layer
+          </li>
+          <li @click="showLayerRename(selectedLayer, currentLayer.label)" class="ab-context-menu-item">
+            Rename Layer
+          </li>
+          <li @click="mergeLayers()" class="ab-context-menu-item">
+            Merge All Layers
+          </li>
+        </ul>
+      </context-menu>
+
+      <ul class="divide-y-2 divide-gray-100 reverseorder" @mouseup.right="openContextMenu" @contextmenu.prevent>
         <li
           :class="`p-1 ${selectedLayerClass(key)}`"
           v-for="(layer, key) in currentAsciiLayers"
           :key="key"
+          @click.right="changeLayer(key)"
+          @click="changeLayer(key)"
         >
-          <div class="flex">
+          <div class="flex" @mouseup.right="openContextMenu" @contextmenu.prevent>
             <div class="w-12">
               <t-button
                 type="button"
@@ -77,8 +107,8 @@
               </t-button>
             </div>
 
-            <div class="w-full" @click="changeLayer(key)">
-              <div class="flex text-right">
+            <div class="w-full"  >
+              <div class="flex text-right" >
                 <div class="w-full">
                   <t-card class="w-full hover:bg-gray-300 cursor-pointer">
                     <span @dblclick="showLayerRename(key, layer.label)">{{
@@ -118,8 +148,13 @@
 </template>
 
 <script>
-export default {
+import ContextMenu from "./ContextMenu.vue";
+
+export default {  
   name: "Layers",
+  components: {
+    ContextMenu
+  },
   created() {},
   data: () => ({}),
   computed: {
@@ -128,6 +163,9 @@ export default {
     },
     selectedLayer() {
       return this.$store.getters.selectedLayer;
+    },
+    currentLayer() {
+      return this.currentAsciiLayers[this.selectedLayer];
     },
     canToggleLayer() {
       return this.currentAsciiLayers.length > 1;
@@ -152,6 +190,14 @@ export default {
     },
   },
   methods: {
+    openContextMenu(e) {
+      e.preventDefault();
+      // These are the correct X and Y when inside the floating panel
+      this.$refs["layers-menu"].open({
+        pageX: e.layerX,
+        pageY: e.layerY,
+      });
+    },
     selectBestLayer() {
       let found = false;
       this.currentAsciiLayers.map((item) => {
@@ -205,42 +251,51 @@ export default {
 
           this.$store.commit("toggleDisableKeyboard", false);
         });
+
+      this.closeMenu()
     },
     updateLayerName(key, label) {
       this.$store.commit("updateLayerName", {
         key: key,
         label: label,
       });
+      this.closeMenu()
     },
     addLayer() {
       this.$store.commit("addLayer");
       this.$toasted.show(`Added a new layer.`, {
         type: "success",
       });
+      this.closeMenu()
     },
     mergeLayers() {
       this.$store.commit("mergeAllLayers");
       this.$toasted.show(`All layers have been merged.`, {
         type: "success",
       });
+      this.closeMenu()
     },
     changeLayer(key) {
       this.$store.commit("changeLayer", key);
     },
     toggleLayer(key) {
       this.$store.commit("toggleLayer", key);
+      this.closeMenu()
     },
     upLayer(key) {
       this.$store.commit("upLayer", key);
+      this.closeMenu()
     },
     downLayer(key) {
       this.$store.commit("downLayer", key);
+      this.closeMenu()
     },
     removeLayer(key) {
       this.$store.commit("removeLayer", key);
       this.$toasted.show(`Removed layer.`, {
         type: "success",
       });
+      this.closeMenu()
     },
     showOverlayModal() {
       this.$store.commit("openModal", "overlay");
@@ -251,6 +306,9 @@ export default {
       overlay.visible = !overlay.visible;
       this.$store.commit("updateImageOverlay", overlay);
     },
+    closeMenu() {
+      this.$refs["layers-menu"].close();
+    }
   },
 };
 </script>

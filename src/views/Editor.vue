@@ -10,10 +10,16 @@
           <li @click="canvasToPng()" class="ml-1 text-sm hover:bg-gray-400">
             Save as PNG
           </li>
-          <li @click="startExport('clipboard')" class="ml-1 text-sm hover:bg-gray-400">
+          <li
+            @click="startExport('clipboard')"
+            class="ml-1 text-sm hover:bg-gray-400"
+          >
             Export ASCII to mIRC Clipboard
           </li>
-          <li @click="startExport('file')" class="ml-1 text-sm hover:bg-gray-400">
+          <li
+            @click="startExport('file')"
+            class="ml-1 text-sm hover:bg-gray-400"
+          >
             Export ASCII to mIRC File
           </li>
         </ul>
@@ -28,7 +34,9 @@
         @resizestop="onCanvasResize"
         @dragstop="onCavasDragStop"
         :x="currentAscii.x"
+        :handles="['bm', 'br', 'mr']"
         :y="currentAscii.y"
+        style="z-index: -1;"
       >
         <canvas
           id="overlay-image"
@@ -82,7 +90,7 @@ import {
   canvasToPng,
   exportMirc,
   downloadFile,
-  cyrb53
+  cyrb53,
 } from "../ascii";
 
 export default {
@@ -421,7 +429,7 @@ export default {
           this.dispatchBlocks(true);
           this.canTool = false;
           this.delayRedrawCanvas();
-        } 
+        }
       }
     },
     gridView(val, old) {
@@ -472,8 +480,7 @@ export default {
       }
     },
     updateascii(val, old) {
-      if ( (val.width !== old.width) || (val.height !== old.height) ) {
-
+      if (val.width !== old.width || val.height !== old.height) {
         let layers = fillNullBlocks(val.height, val.width);
 
         this.canvas.width = val.width * blockWidth;
@@ -491,7 +498,6 @@ export default {
         this.clearToolCanvas();
         this.delayRedrawCanvas();
       }
-
     },
     // Layers undo
     // currentAsciiLayers(val, old) {
@@ -899,37 +905,57 @@ export default {
         if (
           this.diffBlocks.new.length &&
           !this.canTool &&
-          !this.isTextEditing 
+          !this.isTextEditing
         ) {
           // If we have a difference stored, just render the difference only instead
           // of the entire ascii again
 
-          for (let i in this.diffBlocks.new) {
+          // We also have to take into account layers, if there is a block on top
+          // we will not do anything
+          outer: for (let i in this.diffBlocks.new) {
             let entry = this.diffBlocks.new[i];
             canvasX = blockWidth * entry.x;
             canvasY = blockHeight * entry.y;
             curBlock = { ...entry.b };
 
-            if (curBlock.bg !== undefined && curBlock.bg !== null) {
+            for (let j = this.currentAsciiLayers.length-1; j >= this.diffBlocks.l; j--) {
+              let layer = this.currentAsciiLayers[j];
+              if (layer.data[entry.y][entry.x] && j !== this.diffBlocks.l) {
+                continue outer;
+              }
+            }
+
+            // Start to draw the actual block on the canvas
+            if (curBlock.bg !== undefined && curBlock.bg !== null && this.canBg) {
               this.ctx.fillStyle = this.mircColours[curBlock.bg];
               this.ctx.fillRect(canvasX, canvasY, blockWidth, blockHeight);
             }
 
             if (curBlock.char !== undefined && curBlock.char !== null) {
-              if (curBlock.fg !== undefined && curBlock.fg !== null) {
+              if (curBlock.fg !== undefined && curBlock.fg !== null && this.canFg) {
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
               } else {
-                this.ctx.fillStyle = "#FFFFFF";
+                this.ctx.fillStyle = this.mircColours[0];
               }
 
-              this.ctx.fillText(
-                curBlock.char,
-                canvasX,
-                canvasY + blockHeight - 3
-              );
+              // Draw character
+              if (this.canText) {
+                this.ctx.fillText(
+                  curBlock.char,
+                  canvasX,
+                  canvasY + blockHeight - 3
+                );
+              } else {
+                this.ctx.fillText(
+                  this.currentAsciiLayerBlocks[entry.y][entry.x].char || " ",
+                  canvasX,
+                  canvasY + blockHeight - 3
+                );
+              }
             }
           }
 
+          // Reset diff blocks now that they have been drawn
           this.diffBlocks = {
             l: this.selectedLayerIndex,
             new: [],
@@ -948,7 +974,7 @@ export default {
             return;
           }
 
-          this.canvasHash = tempHash
+          this.canvasHash = tempHash;
           this.ctx.save();
           this.canvasRef.width = this.canvasRef.width;
           this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -1045,7 +1071,6 @@ export default {
           old: [],
         };
       }
-
     },
     // Mouse Up, Down and Move
     canvasMouseUp() {
@@ -1674,7 +1699,10 @@ export default {
         }
 
         for (let x = 0; x < xLength; x++) {
-          if (!this.brushBlocks[y][x] || JSON.stringify(this.brushBlocks[y][x]) === '{}') {
+          if (
+            !this.brushBlocks[y][x] ||
+            JSON.stringify(this.brushBlocks[y][x]) === "{}"
+          ) {
             continue;
           }
 
@@ -1870,15 +1898,15 @@ export default {
       const newColor = {
         fg: this.currentFg,
         bg: this.currentBg,
-        char: this.currentChar
+        char: this.currentChar,
       };
 
-      const current = { ... this.asciiBlockAtXy };
+      const current = { ...this.asciiBlockAtXy };
 
       if (!this.canBg) {
-        delete newColor['bg'];
+        delete newColor["bg"];
       }
-      
+
       // If the newColor is same as the existing
       // Then return the original image.
       if (JSON.stringify(current) === JSON.stringify(newColor) && !eraser) {
@@ -1902,7 +1930,10 @@ export default {
         return;
       }
 
-      if (currentLayerBlocks[y] === undefined || currentLayerBlocks[y][x] === undefined) {
+      if (
+        currentLayerBlocks[y] === undefined ||
+        currentLayerBlocks[y][x] === undefined
+      ) {
         return;
       }
 
@@ -1913,7 +1944,7 @@ export default {
       }
 
       // We can eraser or fill
-      let oldBlock = { ... targetBlock };
+      let oldBlock = { ...targetBlock };
       if (!eraser) {
         if (this.canBg) {
           targetBlock.bg = this.currentBg;
@@ -1939,7 +1970,7 @@ export default {
         if (this.canText) {
           delete targetBlock["char"];
         }
-      };
+      }
 
       this.storeDiffBlocks(x, y, oldBlock, targetBlock);
 
