@@ -368,7 +368,10 @@ export default new Vuex.Store({
       let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
         .layers))
 
+        
+
       if (tempLayers[payload + 1]) {
+        
         let swap1 = tempLayers[payload + 1];
         let swap = tempLayers[payload];
 
@@ -391,7 +394,8 @@ export default new Vuex.Store({
 
         state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
           tempLayers));
-
+        
+        state.asciibirdMeta[state.tab].selectedLayer = payload + 1
       }
 
     },
@@ -424,6 +428,9 @@ export default new Vuex.Store({
 
         state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
           tempLayers));
+
+        
+        state.asciibirdMeta[state.tab].selectedLayer = payload - 1
       }
 
     },

@@ -1,14 +1,13 @@
 <template>
   <div>
-
-
     <div class="flex">
       <t-button
         type="button"
         class="block w-1/2 border-gray-200 bg-gray-500 text-sm"
         @click="addLayer()"
       >
-        <span class="material-icons relative top-2 pb-4">playlist_add</span> Add Layer
+        <span class="material-icons relative top-2 pb-4">playlist_add</span> Add
+        Layer
       </t-button>
 
       <t-button
@@ -16,7 +15,8 @@
         class="block w-1/2 border-gray-200 bg-gray-500 text-sm"
         @click="mergeLayers()"
       >
-        <span class="material-icons relative top-2 pb-4">playlist_play</span> Merge Layers
+        <span class="material-icons relative top-2 pb-4">playlist_play</span>
+        Merge Layers
       </t-button>
     </div>
 
@@ -67,7 +67,10 @@
           <li @click="toggleLayer(selectedLayer)" class="ab-context-menu-item">
             Show/Hide Layer
           </li>
-          <li @click="showLayerRename(selectedLayer, currentLayer.label)" class="ab-context-menu-item">
+          <li
+            @click="showLayerRename(selectedLayer, currentLayer.label)"
+            class="ab-context-menu-item"
+          >
             Rename Layer
           </li>
           <li @click="mergeLayers()" class="ab-context-menu-item">
@@ -76,25 +79,33 @@
         </ul>
       </context-menu>
 
-      <ul class="divide-y-2 divide-gray-100 reverseorder" @mouseup.right="openContextMenu" @contextmenu.prevent>
+      <ul
+        class="divide-y-2 divide-gray-100 reverseorder"
+        @mouseup.right="openContextMenu"
+        @contextmenu.prevent
+      >
         <li
           :class="`p-1 ${selectedLayerClass(key)}`"
           v-for="(layer, key) in currentAsciiLayers"
           :key="key"
           @click.right="changeLayer(key)"
-          @click="changeLayer(key)"
+          
         >
-          <div class="flex" @mouseup.right="openContextMenu" @contextmenu.prevent>
-            <div class="w-12">
+          <div
+            class="flex"
+            @mouseup.right="openContextMenu"
+            @contextmenu.prevent
+          >
+            <div class="w-12" @click="changeLayer(key)">
               <t-button
                 type="button"
                 class="ab-rounded-button"
                 @click="toggleLayer(key)"
                 :disabled="!canToggleLayer"
               >
-              <span class="material-icons">{{ layer.visible ? "remove_red_eye" : "panorama_fish_eye" }}</span>
-              
-                </t-button
+                <span class="material-icons">{{
+                  layer.visible ? "remove_red_eye" : "panorama_fish_eye"
+                }}</span> </t-button
               ><br />
 
               <t-button
@@ -103,13 +114,13 @@
                 @click="removeLayer(key)"
                 :disabled="!canToggleLayer"
               >
-              <span class="material-icons">delete</span>
+                <span class="material-icons">delete</span>
               </t-button>
             </div>
 
-            <div class="w-full"  >
-              <div class="flex text-right" >
-                <div class="w-full">
+            <div class="w-full">
+              <div class="flex text-right">
+                <div class="w-full" @click="changeLayer(key)">
                   <t-card class="w-full hover:bg-gray-300 cursor-pointer">
                     <span @dblclick="showLayerRename(key, layer.label)">{{
                       layer.label
@@ -124,9 +135,7 @@
                     @click="downLayer(key)"
                     :disabled="!canToggleLayer"
                   >
-
-                    <span class="material-icons">arrow_upward</span>
-                    </t-button
+                    <span class="material-icons">arrow_upward</span> </t-button
                   ><br />
 
                   <t-button
@@ -150,10 +159,10 @@
 <script>
 import ContextMenu from "./ContextMenu.vue";
 
-export default {  
+export default {
   name: "Layers",
   components: {
-    ContextMenu
+    ContextMenu,
   },
   created() {},
   data: () => ({}),
@@ -252,50 +261,50 @@ export default {
           this.$store.commit("toggleDisableKeyboard", false);
         });
 
-      this.closeMenu()
+      this.closeMenu();
     },
     updateLayerName(key, label) {
       this.$store.commit("updateLayerName", {
         key: key,
         label: label,
       });
-      this.closeMenu()
+      this.closeMenu();
     },
     addLayer() {
       this.$store.commit("addLayer");
       this.$toasted.show(`Added a new layer.`, {
         type: "success",
       });
-      this.closeMenu()
+      this.closeMenu();
     },
     mergeLayers() {
       this.$store.commit("mergeAllLayers");
       this.$toasted.show(`All layers have been merged.`, {
         type: "success",
       });
-      this.closeMenu()
+      this.closeMenu();
     },
     changeLayer(key) {
       this.$store.commit("changeLayer", key);
     },
     toggleLayer(key) {
       this.$store.commit("toggleLayer", key);
-      this.closeMenu()
+      this.closeMenu();
     },
     upLayer(key) {
       this.$store.commit("upLayer", key);
-      this.closeMenu()
+      this.closeMenu();
     },
     downLayer(key) {
       this.$store.commit("downLayer", key);
-      this.closeMenu()
+      this.closeMenu();
     },
     removeLayer(key) {
       this.$store.commit("removeLayer", key);
       this.$toasted.show(`Removed layer.`, {
         type: "success",
       });
-      this.closeMenu()
+      this.closeMenu();
     },
     showOverlayModal() {
       this.$store.commit("openModal", "overlay");
@@ -308,7 +317,7 @@ export default {
     },
     closeMenu() {
       this.$refs["layers-menu"].close();
-    }
+    },
   },
 };
 </script>
