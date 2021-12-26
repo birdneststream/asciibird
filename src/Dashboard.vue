@@ -489,7 +489,7 @@ export default {
             click: () => this.$store.commit("openModal", "new-ascii"),
             icon: "fiber_new",
             disabled: !this.isDefault,
-            hotkey: "n",
+            hotkey: "ctrl+m",
           },
         ],
       });
@@ -845,7 +845,7 @@ export default {
             {
               text: "Increase Brush Size",
               hotkey: "ctrl+]",
-              disabled: !this.isBrushing && this.brushSizeHeight < maxBrushSize && this.brushSizeHeight >= 1 && this.brushSizeWidth < maxBrushSize && this.brushSizeWidth >= 1,
+              disabled: (!this.isBrushing && !this.isErasing) && (this.brushSizeHeight < maxBrushSize && this.brushSizeHeight >= 1 && this.brushSizeWidth < maxBrushSize && this.brushSizeWidth >= 1),
               icon: "add",
               click: (e) => {
                 this.$store.commit("updateBrushSize", {
@@ -858,7 +858,7 @@ export default {
             {
               text: "Decrease Brush Size",
               hotkey: "ctrl+[",
-              disabled: !this.isBrushing && this.brushSizeHeight <= maxBrushSize && this.brushSizeHeight > 1 && this.brushSizeWidth <= maxBrushSize && this.brushSizeWidth > 1,
+              disabled: (!this.isBrushing && !this.isErasing) && (this.brushSizeHeight <= maxBrushSize && this.brushSizeHeight > 1 && this.brushSizeWidth <= maxBrushSize && this.brushSizeWidth > 1),
               icon: "remove",
               click: (e) => {
                 this.$store.commit("updateBrushSize", {

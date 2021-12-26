@@ -81,7 +81,8 @@ import {
   mergeLayers,
   canvasToPng,
   exportMirc,
-  downloadFile
+  downloadFile,
+  cyrb53
 } from "../ascii";
 
 export default {
@@ -194,6 +195,7 @@ export default {
     },
 
     isUsingKeyboard: false,
+    canvasHash: null,
   }),
   props: ["updateCanvas", "yOffset", "canvasxy", "brush", "updateascii"],
   computed: {
@@ -402,6 +404,8 @@ export default {
           };
 
           this.resetSelect();
+
+          this.clearToolCanvas();
           break;
 
         case "text":
@@ -895,13 +899,8 @@ export default {
         if (
           this.diffBlocks.new.length &&
           !this.canTool &&
-          !this.isTextEditing &&
-          !this.isErasing &&
-          !this.isEraserFill &&
-          !this.isFill
-          // Ignore redrawing from diffBlocks the above until they are refactored to work better
+          !this.isTextEditing 
         ) {
-          // console.log("redrawing canvas from cache");
           // If we have a difference stored, just render the difference only instead
           // of the entire ascii again
 
@@ -909,10 +908,7 @@ export default {
             let entry = this.diffBlocks.new[i];
             canvasX = blockWidth * entry.x;
             canvasY = blockHeight * entry.y;
-
             curBlock = { ...entry.b };
-
-            // this.ctx.clearRect(canvasX,canvasY,blockWidth, blockHeight);
 
             if (curBlock.bg !== undefined && curBlock.bg !== null) {
               this.ctx.fillStyle = this.mircColours[curBlock.bg];
@@ -939,16 +935,25 @@ export default {
             new: [],
             old: [],
           };
-        } else {
-          // console.log("redrawing canvas");
 
+          // Store canvas hash
+          this.canvasHash = cyrb53(JSON.stringify(this.mergeLayers()));
+        } else {
+          let mergeLayers = this.mergeLayers();
+          let tempHash = cyrb53(JSON.stringify(mergeLayers));
+
+          if (tempHash === this.canvasHash) {
+            // Avoid redrawing the entire canvas to same some CPU
+            // if we have no new changes
+            return;
+          }
+
+          this.canvasHash = tempHash
           this.ctx.save();
           this.canvasRef.width = this.canvasRef.width;
           this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
           this.ctx.font = "13px Hack";
-
-          let mergeLayers = this.mergeLayers();
 
           for (y = 0; y < this.currentAsciiHeight + 1; y++) {
             canvasY = blockHeight * y;
