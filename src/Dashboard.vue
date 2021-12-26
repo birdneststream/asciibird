@@ -212,7 +212,7 @@
         @mouseup.right="openContextMenu"
         @contextmenu.prevent
       >
-        <BrushCanvas :blocks="splashAscii" />
+        <BrushCanvas :blocks="this.splashAscii()" />
       </div>
     </template>
   </div>
@@ -1025,6 +1025,9 @@ export default {
     // },
   },
   methods: {
+    splashAscii() {
+      return splashAscii;
+    },
     showLayerRename(key, label) {
       this.$store.commit("toggleDisableKeyboard", true);
       this.$dialog

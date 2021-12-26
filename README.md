@@ -66,6 +66,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
   * Hovering outside brush area will save brush to history
 * Context menu available on all brushes preview areas
  * Export any brush to PNG, mIRC clipboard or file by right clicking the brush preview
+
 # Roadmap and Bug To Fixes
 
 ## Features to Add
@@ -87,6 +88,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
  * A bigger circle brush is a good example for this one.
 * Can't type in dialogs
 * Still cannot change width in edit ascii modal
+
 ## Mobile / Touch Screen support
 
 Doesn't exist at the moment. While the underlying functions and code is compatible with mobile browsers from *babel*, the touch canvas events and text will need to be reviewed to work better with touch screens. For example while you can brush once, you cannot move the brush around.
@@ -97,7 +99,7 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 
 * Ctrl + Z - Undo
 * Ctrl + Y - Redo
-`
+
 * Ctrl + Shift + C - Save to clipboard
 * Ctrl + Shift + F - Save to txt file
 
