@@ -673,7 +673,7 @@ export const fillNullBlocks = function (height, width, layerData = null) {
     layers[i].height = height
   }
 
-  return layers
+  return [ ... layers]
 }
 
 // Sometimes if we copy blocks the initial Y values will be null

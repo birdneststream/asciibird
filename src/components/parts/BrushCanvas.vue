@@ -181,7 +181,6 @@ export default {
   methods: {
     startExport(type) {
       let ascii = exportMirc(this.getBlocks);
-      console.log(ascii);
       switch (type) {
         case "clipboard":
           this.$copyText(ascii.output.join("")).then(

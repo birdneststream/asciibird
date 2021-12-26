@@ -10,7 +10,8 @@ import {
   create2DArray,
   emptyBlock,
   mergeLayers,
-  exportMirc
+  exportMirc,
+  fillNullBlocks
 } from "../ascii";
 
 Vue.use(Vuex);
@@ -439,8 +440,8 @@ export default new Vuex.Store({
     },
 
     // ASCII
-    updateAscii(state, payload) {
-      state.asciibirdMeta[state.tab] = payload;
+    updateAsciiTitle(state, payload) {
+      state.asciibirdMeta[state.tab].title = payload;
     },
 
     // BLOCKS
@@ -461,6 +462,10 @@ export default new Vuex.Store({
             tempLayers[prev.l].data[data.y][data.x] = {
               ...data.b
             };
+
+            if (tempLayers[prev.l].data[data.y][data.x]['char'] === undefined) {
+              tempLayers[prev.l].data[data.y][data.x]['char'] = " ";
+            }
           }
         }
 
@@ -484,7 +489,11 @@ export default new Vuex.Store({
         if (prev.new) {
           for (let change in prev.new) {
             let data = prev.new[change];
-            tempLayers[prev.l].data[data.y][data.x] = data.b;
+            tempLayers[prev.l].data[data.y][data.x] = { ... data.b };
+
+            if (tempLayers[prev.l].data[data.y][data.x]['char'] === undefined) {
+              tempLayers[prev.l].data[data.y][data.x]['char'] = " ";
+            }
           }
         }
 

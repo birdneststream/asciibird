@@ -195,7 +195,7 @@ export default {
 
     isUsingKeyboard: false,
   }),
-  props: ["updateCanvas", "yOffset", "canvasxy", "brush"],
+  props: ["updateCanvas", "yOffset", "canvasxy", "brush", "updateascii"],
   computed: {
     canvasRef() {
       return this.$refs.canvas;
@@ -411,12 +411,13 @@ export default {
       }
     },
     isMouseOnCanvas(val, old) {
-      if (!this.isSelecting) {
-        this.clearToolCanvas();
-        this.canTool = false;
-        // if (!this.isBrushing) {
-          this.dispatchBlocks()
-        // }
+      if (val !== old) {
+        if (!this.isSelecting) {
+          this.clearToolCanvas();
+          this.dispatchBlocks(true);
+          this.canTool = false;
+          this.delayRedrawCanvas();
+        } 
       }
     },
     gridView(val, old) {
@@ -466,6 +467,28 @@ export default {
         this.diffBlocks.l = val;
       }
     },
+    updateascii(val, old) {
+      if ( (val.width !== old.width) || (val.height !== old.height) ) {
+
+        let layers = fillNullBlocks(val.height, val.width);
+
+        this.canvas.width = val.width * blockWidth;
+        this.canvas.height = val.height * blockHeight;
+
+        this.$store.commit("changeAsciiWidthHeight", {
+          width: val.width,
+          height: val.height,
+          layers: [...layers],
+        });
+
+        this.$refs.canvasdrag.width = val.width * blockWidth;
+        this.$refs.canvasdrag.height = val.height * blockHeight;
+
+        this.clearToolCanvas();
+        this.delayRedrawCanvas();
+      }
+
+    }
   },
   methods: {
     startExport(type) {
@@ -502,8 +525,6 @@ export default {
       this.$refs["editor-menu"].open(e);
     },
     canvasKeyDown(char) {
-      // if (this.isTextEditing) {
-      // console.log(char);
       if (
         this.currentAsciiLayerBlocks[this.textEditing.startY] &&
         this.currentAsciiLayerBlocks[this.textEditing.startY][
@@ -1029,7 +1050,7 @@ export default {
         case "eraser":
           this.canTool = false;
 
-          this.dispatchBlocks();
+          this.dispatchBlocks(true);
 
           break;
 
@@ -1730,6 +1751,14 @@ export default {
             const arrayY = brushY / blockHeight;
             const arrayX = brushX / blockWidth;
 
+            if (this.currentAsciiLayerBlocks[arrayY] === undefined) {
+              continue;
+            }
+
+            if (this.currentAsciiLayerBlocks[arrayY][arrayX] === undefined) {
+              continue;
+            }
+
             let targetBlock = this.currentAsciiLayerBlocks[arrayY][arrayX];
             let oldBlock = { ...this.currentAsciiLayerBlocks[arrayY][arrayX] };
 
@@ -1826,28 +1855,18 @@ export default {
     },
     // Fill tool
     fill(eraser = false) {
-      const newColor = {};
-      const current = {};
+      const newColor = {
+        fg: this.currentFg,
+        bg: this.currentBg,
+        char: this.currentChar
+      };
 
-      if (this.canBg) {
-        newColor.bg = this.currentBg;
-        current.bg = this.asciiBlockAtXy.bg;
+      const current = { ... this.asciiBlockAtXy };
 
-        if (newColor.bg === undefined) {
-          delete current['bg'];
-        }
+      if (!this.canBg) {
+        delete newColor['bg'];
       }
       
-      //
-      if (this.canFg) {
-        newColor.fg = this.currentFg;
-        current.fg = this.asciiBlockAtXy.fg;
-
-        if (newColor.fg === undefined) {
-          delete current['fg'];
-        }        
-      }
-
       // If the newColor is same as the existing
       // Then return the original image.
       if (JSON.stringify(current) === JSON.stringify(newColor) && !eraser) {
@@ -1861,10 +1880,6 @@ export default {
         current,
         eraser
       );
-
-      if (eraser) {
-        this.delayRedrawCanvas();
-      }
     },
     fillTool(currentLayerBlocks, y, x, current, eraser) {
       if (y >= Math.floor(this.canvas.height / blockHeight)) {
@@ -1881,15 +1896,12 @@ export default {
 
       let targetBlock = currentLayerBlocks[y][x];
 
-      // if (this.canFg && currentLayerBlocks[y][x].fg !== current.fg) {
-      //   return;
-      // }
-
       if (this.canBg && targetBlock.bg !== current.bg) {
         return;
       }
 
       // We can eraser or fill
+      let oldBlock = { ... targetBlock };
       if (!eraser) {
         if (this.canBg) {
           targetBlock.bg = this.currentBg;
@@ -1903,6 +1915,7 @@ export default {
           targetBlock.char = this.currentChar;
         }
       } else {
+        // If we are fill erasing
         if (this.canBg) {
           delete targetBlock["bg"];
         }
@@ -1914,10 +1927,9 @@ export default {
         if (this.canText) {
           delete targetBlock["char"];
         }
-      }
+      };
 
-      // console.log({e:eraser,  o: current, n: targetBlock });
-      this.storeDiffBlocks(x, y, current, targetBlock);
+      this.storeDiffBlocks(x, y, oldBlock, targetBlock);
 
       // Fill in all four directions
       // Fill Prev row

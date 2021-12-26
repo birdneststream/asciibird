@@ -10,7 +10,7 @@
     <t-input
       type="number"
       name="width"
-      v-model="currentAsciiWidth"
+      v-model="layer.width"
       min="1"
     />
 
@@ -18,7 +18,7 @@
     <t-input
       type="number"
       name="height"
-      v-model="currentAsciiHeight"
+      v-model="layer.height"
       min="1"
     />
 
@@ -26,7 +26,7 @@
     <t-input
       type="text"
       name="title"
-      v-model="forms.editAscii.title"
+      v-model="layer.title"
       max="128"
     />
 
@@ -56,10 +56,11 @@
 </template>
 
 <script>
+
 export default {
   name: "EditAsciiModal",
   created() {
-    this.forms.editAscii = this.currentAscii;
+
   },
   mounted() {
     if (this.showEditAsciiModal) {
@@ -69,13 +70,7 @@ export default {
     }
   },
   data: () => ({
-    forms: {
-      editAscii: {
-        width: 80,
-        height: 30,
-        title: "ascii",
-      },
-    },
+    layer: {},
   }),
   computed: {
     showEditAsciiModal() {
@@ -97,10 +92,10 @@ export default {
       return this.currentAsciiLayers[this.selectedLayerIndex];
     },
     currentAsciiWidth() {
-      return this.currentSelectedLayer.width || 0;
+      return this.layer.width || 0;
     },
     currentAsciiHeight() {
-      return this.currentSelectedLayer.height || 0;
+      return this.layer.height || 0;
     },
   },
   watch: {
@@ -116,15 +111,24 @@ export default {
   },
   methods: {
     updateAscii() {
-      this.$store.commit("updateAscii", this.forms.editAscii);
+      this.$store.commit("updateAsciiTitle", this.layer.title);
+      this.$emit("updateAscii", {
+        width: this.layer.width,
+        height: this.layer.height,
+      });      
       this.close();
     },
     open() {
-      this.forms.editAscii = this.currentAscii;
+      this.layer = {
+        width: this.currentSelectedLayer.width,
+        height: this.currentSelectedLayer.height,
+        title: this.currentAscii.title
+      }
       this.$modal.show("edit-ascii-modal");
     },
     close() {
       this.$modal.hide("edit-ascii-modal");
+      this.layer = {}
     },
   },
 };

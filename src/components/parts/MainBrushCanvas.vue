@@ -223,7 +223,6 @@ export default {
     },
     startExport(type) {
       let ascii = exportMirc(this.brushBlocks);
-      console.log(ascii);
       switch (type) {
         case "clipboard":
           this.$copyText(ascii.output.join("")).then(

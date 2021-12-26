@@ -6,7 +6,7 @@
 
     <NewAscii />
     <Options v-if="asciibirdMeta.length" />
-    <EditAscii v-if="asciibirdMeta.length" />
+    <EditAscii v-if="asciibirdMeta.length" @updateAscii="updateAsciiDetails" />
     <PasteAscii />
     <ImageOverlay v-if="asciibirdMeta.length" />
 
@@ -161,6 +161,7 @@
         @selecting="updateSelecting"
         :y-offset="scrollOffset"
         :brush="drawBrush"
+        :updateascii="updateAscii"
       />
 
       <Toolbar v-show="toolbarState.visible" :y-offset="scrollOffset" />
@@ -324,6 +325,7 @@ export default {
       old: [],
       new: [],
     },
+    updateAscii: false,
   }),
   computed: {
     isDefault() {
@@ -1042,7 +1044,12 @@ export default {
     // },
   },
   methods: {
-    dispatchBlocks(blocks) {
+    updateAsciiDetails(widthHeight) {
+      // From edit ascii modal to editor
+      this.updateAscii = widthHeight
+      
+    },
+    dispatchBlocks() {
       this.diffBlocks.old = this.diffBlocks.old.flat();
       this.diffBlocks.new = this.diffBlocks.new.flat();
 
@@ -1175,7 +1182,6 @@ export default {
       // For ANSI we'll need to add back in the
       // type cariable here
       this.importType = type;
-      // console.log(this.importType);
       this.$refs.asciiInput.click();
     },
     importAsciibirdState(fileContents) {
@@ -1265,7 +1271,6 @@ export default {
                 };
                 fetch(this.lastPostURL, requestOptions)
                   .then((response) => {
-                    console.log(response);
                     if (response.status === 200 || response.status === 201) {
                       this.$toasted.show("POSTed ascii!", {
                         type: "success",
