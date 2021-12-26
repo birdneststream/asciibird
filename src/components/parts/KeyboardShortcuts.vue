@@ -65,50 +65,6 @@ export default {
       }
     });
 
-
-
-hotkeys("ctrl+]", "editor", function (event, handler) {
-      event.preventDefault();
-      if (
-        _this.brushSizeHeight < maxBrushSize &&
-        _this.brushSizeHeight >= 1 &&
-        _this.brushSizeWidth < maxBrushSize &&
-        _this.brushSizeWidth >= 1 &&
-        _this.haveOpenTabs &&
-        !_this.isShowingDialog &&
-        !_this.isModalOpen
-      ) {
-        _this.$store.commit("updateBrushSize", {
-          brushSizeHeight: parseInt(_this.brushSizeHeight) + 1,
-          brushSizeWidth: parseInt(_this.brushSizeWidth) + 1,
-          brushSizeType: _this.brushSizeType,
-        });
-
-        return;
-      }
-    });
-
-    hotkeys("ctrl+[", "editor", function (event, handler) {
-      event.preventDefault();
-      if (
-        _this.brushSizeHeight <= maxBrushSize &&
-        _this.brushSizeHeight > 1 &&
-        _this.brushSizeWidth <= maxBrushSize &&
-        _this.brushSizeWidth > 1 &&
-        _this.haveOpenTabs &&
-        !_this.isShowingDialog &&
-        !_this.isModalOpen
-      ) {
-        _this.$store.commit("updateBrushSize", {
-          brushSizeHeight: parseInt(_this.brushSizeHeight) - 1,
-          brushSizeWidth: parseInt(_this.brushSizeWidth) - 1,
-          brushSizeType: _this.brushSizeType,
-        });
-
-        return;
-      }
-    });
-
     hotkeys("Escape", function (event, handler) {
       if (
         !_this.textEditing &&

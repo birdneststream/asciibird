@@ -488,7 +488,14 @@ export default {
         this.delayRedrawCanvas();
       }
 
-    }
+    },
+    // Layers undo
+    // currentAsciiLayers(val, old) {
+    //   this.$store.commit("pushLayerHistory", {
+    //     old: old,
+    //     new: val,
+    //   });
+    // }
   },
   methods: {
     startExport(type) {

@@ -252,6 +252,7 @@ import {
   getBlocksWidth,
   emptyBlock,
   canvasToPng,
+  maxBrushSize
 } from "./ascii";
 
 import VueFileToolbarMenu from "vue-file-toolbar-menu";
@@ -396,7 +397,15 @@ export default {
       // We want to avoid hiding all the layers, so if there's only one
       // visible left, we have to disable the buttons
     },
-
+    brushSizeHeight() {
+      return this.$store.getters.brushSizeHeight;
+    },
+    brushSizeWidth() {
+      return this.$store.getters.brushSizeWidth;
+    },
+    brushSizeType() {
+      return this.$store.getters.brushSizeType;
+    },
     // Toolbar related
     gridView() {
       return this.toolbarState.gridView;
@@ -832,6 +841,33 @@ export default {
                 this.$store.commit("flipRotateBlocks", { type: "rotate" });
               },
             },
+
+            {
+              text: "Increase Brush Size",
+              hotkey: "ctrl+]",
+              disabled: !this.isBrushing && this.brushSizeHeight < maxBrushSize && this.brushSizeHeight >= 1 && this.brushSizeWidth < maxBrushSize && this.brushSizeWidth >= 1,
+              icon: "add",
+              click: (e) => {
+                this.$store.commit("updateBrushSize", {
+                  brushSizeHeight: parseInt(this.brushSizeHeight) + 1,
+                  brushSizeWidth: parseInt(this.brushSizeWidth) + 1,
+                  brushSizeType: this.brushSizeType,
+                });
+              },
+            },
+            {
+              text: "Decrease Brush Size",
+              hotkey: "ctrl+[",
+              disabled: !this.isBrushing && this.brushSizeHeight <= maxBrushSize && this.brushSizeHeight > 1 && this.brushSizeWidth <= maxBrushSize && this.brushSizeWidth > 1,
+              icon: "remove",
+              click: (e) => {
+                this.$store.commit("updateBrushSize", {
+                  brushSizeHeight: parseInt(this.brushSizeHeight) - 1,
+                  brushSizeWidth: parseInt(this.brushSizeWidth) - 1,
+                  brushSizeType: this.brushSizeType,
+                });
+              },
+            },
             {
               is: "separator",
             },
@@ -1046,8 +1082,7 @@ export default {
   methods: {
     updateAsciiDetails(widthHeight) {
       // From edit ascii modal to editor
-      this.updateAscii = widthHeight
-      
+      this.updateAscii = widthHeight;
     },
     dispatchBlocks() {
       this.diffBlocks.old = this.diffBlocks.old.flat();
@@ -1295,7 +1330,6 @@ export default {
               this.isShowingDialog = false;
             });
 
-          
           break;
       }
     },

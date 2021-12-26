@@ -432,6 +432,8 @@ export default new Vuex.Store({
         .layers))
 
       if (tempLayers[payload.key]) {
+
+
         tempLayers[payload.key].label = payload.label;
         state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
           tempLayers));
@@ -444,6 +446,24 @@ export default new Vuex.Store({
       state.asciibirdMeta[state.tab].title = payload;
     },
 
+
+    // pushLayerHistory(state, payload) {
+    //   let historyIndex = state.asciibirdMeta[state.tab].historyIndex;
+
+    //   payload = payload.map(function(item) {
+    //     delete item['data']
+    //     return item;
+    //   });
+
+    //     let layerHistory = LZString.compressToUTF16(JSON.stringify({
+    //       t: 'l',
+    //       o: payload.old,
+    //       n: payload.new
+    //     }));
+
+    //     state.asciibirdMeta[state.tab].history.push(layerHistory)
+    // },
+    
     // BLOCKS
     undoBlocks(state) {
       let historyIndex = state.asciibirdMeta[state.tab].historyIndex;
@@ -463,9 +483,9 @@ export default new Vuex.Store({
               ...data.b
             };
 
-            if (tempLayers[prev.l].data[data.y][data.x]['char'] === undefined) {
-              tempLayers[prev.l].data[data.y][data.x]['char'] = " ";
-            }
+            // if (tempLayers[prev.l].data[data.y][data.x]['char'] === undefined) {
+            //   tempLayers[prev.l].data[data.y][data.x]['char'] = " ";
+            // }
           }
         }
 
@@ -491,9 +511,9 @@ export default new Vuex.Store({
             let data = prev.new[change];
             tempLayers[prev.l].data[data.y][data.x] = { ... data.b };
 
-            if (tempLayers[prev.l].data[data.y][data.x]['char'] === undefined) {
-              tempLayers[prev.l].data[data.y][data.x]['char'] = " ";
-            }
+            // if (tempLayers[prev.l].data[data.y][data.x]['char'] === undefined) {
+            //   tempLayers[prev.l].data[data.y][data.x]['char'] = " ";
+            // }
           }
         }
 
