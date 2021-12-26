@@ -77,8 +77,6 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 ## Bugs to fix
 
-* If you apply an empty block from a brush, it will remove the char when it is supposed to leave the block alone.
- * A bigger circle brush is a good example for this one.
 * The edit dialog, even when code to save new data is commented out, will slow down everything if you open and save the modal a few times
 
 ## Mobile / Touch Screen support

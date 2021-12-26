@@ -1662,7 +1662,7 @@ export default {
         }
 
         for (let x = 0; x < xLength; x++) {
-          if (!this.brushBlocks[y][x]) {
+          if (!this.brushBlocks[y][x] || JSON.stringify(this.brushBlocks[y][x]) === '{}') {
             continue;
           }
 
