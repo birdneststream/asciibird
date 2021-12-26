@@ -1237,6 +1237,7 @@ export default {
           break;
         case "post":
           this.$store.commit("toggleDisableKeyboard", true);
+          this.isShowingDialog = true;
           this.$dialog
             .prompt({
               title: "HTTP Post your Ascii",
@@ -1289,7 +1290,7 @@ export default {
               this.isShowingDialog = false;
             });
 
-          this.isShowingDialog = true;
+          
           break;
       }
     },

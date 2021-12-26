@@ -410,10 +410,13 @@ export default {
           break;
       }
     },
-    isMouseOnCanvas() {
+    isMouseOnCanvas(val, old) {
       if (!this.isSelecting) {
         this.clearToolCanvas();
         this.canTool = false;
+        // if (!this.isBrushing) {
+          this.dispatchBlocks()
+        // }
       }
     },
     gridView(val, old) {
