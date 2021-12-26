@@ -319,6 +319,11 @@ export default {
       x: false,
       y: false,
     },
+    diffBlocks: {
+      l: 0,
+      old: [],
+      new: [],
+    },
   }),
   computed: {
     isDefault() {
@@ -429,6 +434,9 @@ export default {
     },
     currentAsciiLayers() {
       return this.$store.getters.currentAsciiLayers;
+    },
+    selectedLayerIndex() {
+      return this.currentAscii.selectedLayer || 0;
     },
     brushLibraryState() {
       return this.$store.getters.brushLibraryState;
@@ -543,7 +551,9 @@ export default {
                       x++
                     ) {
                       if (this.selectedBlocks[y] && this.selectedBlocks[y][x]) {
+                        let oldBlock = this.currentAsciiLayerBlocks[y][x];
                         this.currentAsciiLayerBlocks[y][x] = { ...emptyBlock };
+                        this.storeDiffBlocks(x, y, oldBlock, { ...emptyBlock });
                       }
                     }
                   }
@@ -556,10 +566,7 @@ export default {
                   this.selectedBlocks = [];
 
                   // Reset and hide the select after successful copy
-                  this.$store.dispatch("updateAsciiBlocksAsync", {
-                    blocks: this.currentAsciiLayerBlocks,
-                    diff: {},
-                  });
+                  this.dispatchBlocks();
 
                   // this.$store.commit(
                   //   "updateAsciiBlocks",
@@ -603,16 +610,15 @@ export default {
                       x++
                     ) {
                       if (this.selectedBlocks[y] && this.selectedBlocks[y][x]) {
+                        let oldBlock = this.currentAsciiLayerBlocks[y][x];
                         this.currentAsciiLayerBlocks[y][x] = { ...emptyBlock };
+                        this.storeDiffBlocks(x, y, oldBlock, { ...emptyBlock });
                       }
                     }
                   }
 
                   // Reset and hide the select after successful copy
-                  this.$store.dispatch("updateAsciiBlocksAsync", {
-                    blocks: this.currentAsciiLayerBlocks,
-                    diff: {},
-                  });
+                  this.dispatchBlocks();
 
                   this.$emit("updatecanvas");
                   this.selectedBlocks = [];
@@ -620,6 +626,7 @@ export default {
                     type: "success",
                     icon: "fa-check-circle",
                   });
+
                 }
               },
               icon: "delete_sweep",
@@ -1036,6 +1043,47 @@ export default {
     // },
   },
   methods: {
+    dispatchBlocks(blocks) {
+      this.diffBlocks.old = this.diffBlocks.old.flat();
+      this.diffBlocks.new = this.diffBlocks.new.flat();
+
+      this.$store.dispatch("updateAsciiBlocksAsync", {
+        blocks: this.currentAsciiLayerBlocks,
+        diff: { ...this.diffBlocks },
+      });
+
+      this.diffBlocks = {
+        l: this.selectedLayerIndex,
+        new: [],
+        old: [],
+      };
+    },
+    storeDiffBlocks(x, y, oldBlock, newBlock) {
+      // For undo
+      if (!this.diffBlocks.old[y]) {
+        this.diffBlocks.old[y] = [];
+      }
+
+      if (!this.diffBlocks.old[y][x]) {
+        this.diffBlocks.old[y][x] = {
+          x: x,
+          y: y,
+          b: { ...oldBlock },
+        };
+      }
+
+      if (!this.diffBlocks.new[y]) {
+        this.diffBlocks.new[y] = [];
+      }
+
+      if (!this.diffBlocks.new[y][x]) {
+        this.diffBlocks.new[y][x] = {
+          x: x,
+          y: y,
+          b: { ...newBlock },
+        };
+      }
+    },
     splashAscii() {
       return splashAscii;
     },

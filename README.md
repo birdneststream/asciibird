@@ -71,7 +71,6 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 ## Features to Add
 
-* Delete blocks with Delete when selecting key needs undo/redo
 * Layers undo and redo could be implemented, at the moment there isn't any.
 * Warning on mirc export if ascii exceeds IRCs 512 per chat line limit.
 * Review encodings check on file import - UTF8 vs Latin something
