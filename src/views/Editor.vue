@@ -141,7 +141,7 @@ export default {
 
           case "ArrowRight":
             _this.x++;
-            _this.drawBrush(_this.isErasing);
+            _this.drawBrush(_this.isErasing); 
             // _this.delayRedrawCanvas();
             break;
 
@@ -149,13 +149,7 @@ export default {
             _this.canTool = true;
             _this.isBrushing ? _this.drawBrush(false) : _this.eraser();
             _this.canTool = false;
-            _this.dispatchBlocks();
-
-            this.diffBlocks = {
-              l: this.selectedLayerIndex,
-              new: [],
-              old: [],
-            };
+            _this.dispatchBlocks(true);
             break;
         }
       }
@@ -452,7 +446,7 @@ export default {
     // Save text to store when finished
     isTextEditing(val, old) {
       if (val !== old && val === false) {
-        this.dispatchBlocks();
+        this.dispatchBlocks(true);
       }
     },
     textEditing(val, old) {
@@ -472,7 +466,7 @@ export default {
       this.$emit("selecting", val);
     },
     yOffset() {
-      this.delayRedrawCanvas();
+      this.delayRedrawCanvas(true);
     },
     selectedLayerIndex(val, old) {
       if (val !== old) {
@@ -1053,8 +1047,8 @@ export default {
       this.top = y;
     },
     dispatchBlocks(clearDiff = false) {
-      this.diffBlocks.old = this.diffBlocks.old.flat();
-      this.diffBlocks.new = this.diffBlocks.new.flat();
+      this.diffBlocks.old = this.diffBlocks.old.flat().reverse();
+      this.diffBlocks.new = this.diffBlocks.new.flat().reverse();
 
       this.$store.dispatch("updateAsciiBlocksAsync", {
         blocks: this.currentAsciiLayerBlocks,
@@ -1260,13 +1254,14 @@ export default {
         }
       }
     },
-    delayRedrawCanvas() {
+    delayRedrawCanvas(force = false) {
+      // Force will skip hash checking and redraw everything anyway
       if (this.redraw) {
         this.redraw = false;
         var _this = this;
         setTimeout(function () {
           requestAnimationFrame(() => {
-            _this.redrawCanvas();
+            _this.redrawCanvas(force);
             _this.redraw = true;
           });
         }, 1000 / this.options.fps);
@@ -1483,7 +1478,7 @@ export default {
           this.toolCtx.fillStyle =
             brushBlock.fg !== undefined
               ? this.mircColours[brushBlock.fg]
-              : "#000000";
+              : "#FFFFFF";
 
           break;
 
@@ -1494,7 +1489,7 @@ export default {
 
             this.toolCtx.fillStyle = this.canFg
               ? this.mircColours[brushBlock.fg]
-              : "#000000";
+              : "#FFFFFF";
 
             this.toolCtx.fillText(
               brushBlock.char,
@@ -1715,6 +1710,13 @@ export default {
 
           const brushBlock = this.brushBlocks[y][x];
 
+          // If we have no fg or bg, and just a space - this has to be an empty block
+          if (brushBlock.char !== undefined && brushBlock.char === " " &&
+              brushBlock.bg === undefined &&
+              brushBlock.fg === undefined) {
+                continue;
+              }
+
           const brushX = this.x * blockWidth + x * blockWidth - brushDiffX;
           const brushY = this.y * blockHeight + y * blockHeight - brushDiffY;
 
@@ -1795,7 +1797,7 @@ export default {
               continue;
             }
 
-            if (this.currentAsciiLayerBlocks[arrayY][arrayX] === undefined) {
+            if (this.currentAsciiLayerBlocks[arrayY][arrayX] === undefined || JSON.stringify(this.brushBlocks[y][x]) === '{}') {
               continue;
             }
 

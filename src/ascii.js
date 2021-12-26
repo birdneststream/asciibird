@@ -765,15 +765,11 @@ export const mergeLayers = function (blocks = null) {
 
           if (curBlock.fg === undefined) {
             curBlock.fg = store.getters.currentAsciiLayers[z].data[y][x].fg;
-          } else {
-            curBlock.fg = 0;
-          }
+          } 
 
           if (curBlock.char === undefined) {
             curBlock.char = store.getters.currentAsciiLayers[z].data[y][x].char;
           }
-
-
 
           continue;
         }
