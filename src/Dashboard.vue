@@ -252,7 +252,7 @@ import {
   getBlocksWidth,
   emptyBlock,
   canvasToPng,
-  maxBrushSize
+  maxBrushSize,
 } from "./ascii";
 
 import VueFileToolbarMenu from "vue-file-toolbar-menu";
@@ -477,7 +477,7 @@ export default {
     },
     changeAsciiMenu() {
       let menu = [];
-      
+
       if (this.asciibirdMeta.length) {
         for (let i in this.asciibirdMeta) {
           let ascii = this.asciibirdMeta[i];
@@ -514,17 +514,18 @@ export default {
       });
 
       if (this.asciibirdMeta.length) {
-        menu[0].menu.push({
-          text: "Close ASCII",
-          click: () => this.closeTab(this.currentTab),
-          icon: "close",
-          hotkey: "ctrl+q",
-        },
-        {
-          text: "Change ASCII",
-          icon: "tab",
-          menu: this.changeAsciiMenu
-        }
+        menu[0].menu.push(
+          {
+            text: "Close ASCII",
+            click: () => this.closeTab(this.currentTab),
+            icon: "close",
+            hotkey: "ctrl+q",
+          },
+          {
+            text: "Change ASCII",
+            icon: "tab",
+            menu: this.changeAsciiMenu,
+          }
         );
 
         menu.push({
@@ -870,27 +871,41 @@ export default {
             {
               text: "Increase Brush Size",
               hotkey: "ctrl+]",
-              disabled: (!this.isBrushing && !this.isErasing) && (this.brushSizeHeight < maxBrushSize && this.brushSizeHeight >= 1 && this.brushSizeWidth < maxBrushSize && this.brushSizeWidth >= 1),
+              disabled: !this.isBrushing && !this.isErasing,
               icon: "add",
               click: (e) => {
-                this.$store.commit("updateBrushSize", {
-                  brushSizeHeight: parseInt(this.brushSizeHeight) + 1,
-                  brushSizeWidth: parseInt(this.brushSizeWidth) + 1,
-                  brushSizeType: this.brushSizeType,
-                });
+                if (
+                  this.brushSizeHeight < maxBrushSize &&
+                  this.brushSizeHeight >= 1 &&
+                  this.brushSizeWidth < maxBrushSize &&
+                  this.brushSizeWidth >= 1
+                ) {
+                  this.$store.commit("updateBrushSize", {
+                    brushSizeHeight: parseInt(this.brushSizeHeight) + 1,
+                    brushSizeWidth: parseInt(this.brushSizeWidth) + 1,
+                    brushSizeType: this.brushSizeType,
+                  });
+                }
               },
             },
             {
               text: "Decrease Brush Size",
               hotkey: "ctrl+[",
-              disabled: (!this.isBrushing && !this.isErasing) && (this.brushSizeHeight <= maxBrushSize && this.brushSizeHeight > 1 && this.brushSizeWidth <= maxBrushSize && this.brushSizeWidth > 1),
+              disabled: !this.isBrushing && !this.isErasing,
               icon: "remove",
               click: (e) => {
-                this.$store.commit("updateBrushSize", {
-                  brushSizeHeight: parseInt(this.brushSizeHeight) - 1,
-                  brushSizeWidth: parseInt(this.brushSizeWidth) - 1,
-                  brushSizeType: this.brushSizeType,
-                });
+                if (
+                  this.brushSizeHeight <= maxBrushSize &&
+                  this.brushSizeHeight > 1 &&
+                  this.brushSizeWidth <= maxBrushSize &&
+                  this.brushSizeWidth > 1
+                ) {
+                  this.$store.commit("updateBrushSize", {
+                    brushSizeHeight: parseInt(this.brushSizeHeight) - 1,
+                    brushSizeWidth: parseInt(this.brushSizeWidth) - 1,
+                    brushSizeType: this.brushSizeType,
+                  });
+                }
               },
             },
             {
