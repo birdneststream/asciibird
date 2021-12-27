@@ -337,7 +337,7 @@ export default new Vuex.Store({
         }))
       });
       state.asciibirdMeta[state.tab].historyIndex = state.asciibirdMeta[state.tab].history
-        .length-1;
+        .length;
     },
     changeLayer(state, payload) {
       state.asciibirdMeta[state.tab].selectedLayer = payload
@@ -353,15 +353,15 @@ export default new Vuex.Store({
       state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
         tempLayers));
 
-        state.asciibirdMeta[state.tab].history.push({
-          t: 'l',
-          d: LZString.compressToUTF16(JSON.stringify({
-            new: tempLayers,
-            old: oldLayer
-          }))
-        });
-        state.asciibirdMeta[state.tab].historyIndex = state.asciibirdMeta[state.tab].history
-          .length;
+      state.asciibirdMeta[state.tab].history.push({
+        t: 'l',
+        d: LZString.compressToUTF16(JSON.stringify({
+          new: tempLayers,
+          old: oldLayer
+        }))
+      });
+      state.asciibirdMeta[state.tab].historyIndex = state.asciibirdMeta[state.tab].history
+        .length;
     },
     removeLayer(state, payload) {
       let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
@@ -389,13 +389,13 @@ export default new Vuex.Store({
         // }
 
         // Automatically select the next best layer to avoid bugs
-        state.asciibirdMeta[state.tab].selectedLayer = 0
+        let selectedLayer = state.asciibirdMeta[state.tab].selectedLayer
 
-        // if (tempLayers[payload + 1]) {
-        //   state.asciibirdMeta[state.tab].selectedLayer = payload + 1
-        // } else if (tempLayers[payload - 1]) {
-        //   state.asciibirdMeta[state.tab].selectedLayer = payload - 1
-        // } 
+        while (tempLayers[selectedLayer] === undefined && selectedLayer >= 0) {
+          selectedLayer--;
+        }
+
+        state.asciibirdMeta[state.tab].selectedLayer = selectedLayer
 
         state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
           tempLayers));
@@ -575,6 +575,18 @@ export default new Vuex.Store({
             .old));
 
           state.asciibirdMeta[state.tab].historyIndex--;
+
+
+          // Automatically select the next best layer to avoid bugs
+          let selectedLayer = state.asciibirdMeta[state.tab].selectedLayer
+
+          if (data.old[selectedLayer + 1]) {
+            state.asciibirdMeta[state.tab].selectedLayer = selectedLayer + 1
+          } else if (data.old[selectedLayer - 1]) {
+            state.asciibirdMeta[state.tab].selectedLayer = selectedLayer - 1
+          } else {
+            state.asciibirdMeta[state.tab].selectedLayer = selectedLayer
+          }
           return;
         }
 
@@ -585,7 +597,7 @@ export default new Vuex.Store({
 
         let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
           .layers))
-       
+
 
         // Process block chunks
         if (prev.old) {
@@ -611,22 +623,22 @@ export default new Vuex.Store({
 
       if (state.asciibirdMeta[state.tab].history[historyIndex]) {
 
-       prev = state.asciibirdMeta[state.tab].history[historyIndex];
+        prev = state.asciibirdMeta[state.tab].history[historyIndex];
 
-       // Process layer chunks
-       if (state.asciibirdMeta[state.tab].history[historyIndex].t !== undefined && state
-         .asciibirdMeta[state.tab].history[historyIndex].t === 'l') {
+        // Process layer chunks
+        if (state.asciibirdMeta[state.tab].history[historyIndex].t !== undefined && state
+          .asciibirdMeta[state.tab].history[historyIndex].t === 'l') {
 
-         let data = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
-           .history[historyIndex].d));
-         console.log(data)
+          let data = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
+            .history[historyIndex].d));
+          console.log(data)
 
-         state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(data
-           .old));
+          state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(data
+            .old));
 
-         state.asciibirdMeta[state.tab].historyIndex++;
-         return;
-       }
+          state.asciibirdMeta[state.tab].historyIndex++;
+          return;
+        }
 
         prev = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
           .history[
@@ -637,7 +649,7 @@ export default new Vuex.Store({
           .layers))
 
         // Process block chunks
-        if (prev.new) {
+        if (prev.new && prev.l !== undefined) {
           for (let change in prev.new) {
             let data = prev.new[change];
             tempLayers[prev.l].data[data.y][data.x] = {
