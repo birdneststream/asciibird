@@ -183,6 +183,9 @@ export default {
     selectBlocks() {
       return this.$store.getters.selectBlocks;
     },
+    asciibirdMeta() {
+      return this.$store.getters.asciibirdMeta;
+    },
     haveSelectBlocks() {
       return !!this.selectBlocks.length;
     },

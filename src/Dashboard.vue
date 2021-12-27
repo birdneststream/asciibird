@@ -475,6 +475,25 @@ export default {
         this.selecting.endY !== null
       );
     },
+    changeAsciiMenu() {
+      let menu = [];
+      
+      if (this.asciibirdMeta.length) {
+        for (let i in this.asciibirdMeta) {
+          let ascii = this.asciibirdMeta[i];
+
+          // let shortcutKey = Number.parseInt(1 + i);
+          menu.push({
+            text: ascii.title,
+            click: () => this.changeTab(i),
+            icon: "insert_drive_file",
+            hotkey: `ctrl+${i}`,
+          });
+        }
+      }
+
+      return menu;
+    },
     // Toolbar menu
     myMenu() {
       let menu = [];
@@ -500,7 +519,13 @@ export default {
           click: () => this.closeTab(this.currentTab),
           icon: "close",
           hotkey: "ctrl+q",
-        });
+        },
+        {
+          text: "Change ASCII",
+          icon: "tab",
+          menu: this.changeAsciiMenu
+        }
+        );
 
         menu.push({
           text: "Edit",
@@ -1336,6 +1361,7 @@ export default {
     changeTab(key) {
       // Update the tab index in vuex store
       this.$store.commit("changeTab", key);
+      this.currentTab = key;
     },
     closeTab(key) {
       this.$dialog

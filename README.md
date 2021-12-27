@@ -83,7 +83,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
 ## Bugs to fix
 
 * The edit dialog, even when code to save new data is commented out, will slow down everything if you open and save the modal a few times
-
+* The current mIRC importer will fail on C5, type blocks by discarding the `,` character when it should preserve it. `art.txt` ascii is a good example of this. 98% of txt ascii imported should be fine.
 ## Mobile / Touch Screen support
 
 Doesn't exist at the moment. While the underlying functions and code is compatible with mobile browsers from *babel*, the touch canvas events and text will need to be reviewed to work better with touch screens. For example while you can brush once, you cannot move the brush around.
@@ -99,14 +99,13 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 
 * Alt 1 to 8 - Will toggle the corresponding toolbar icon
 
+* Ctrl 1 to 0 - Change ASCII tab if possible
+
 * Alt + c - Opens character Panel (You can then press on the keyboard your desired character or select from the list)
 * Alt + f - Opens foreground panel (can then press 0 to 9 for the colour)
 * Alt + b - Opens background panel (can then press 0 to 9 for the colour)
 
 * Alt + g - Toggle grid mode
-
-* Ctrl + ] - Increase both brush sizes by 1 (brush or eraser mode only)
-* Ctrl + [ - Decrease both brush sizes by 1 (brush or eraser mode only)
 
 * Alt + x - Toggle Mirror X
 * Alt + y - Toggle Mirror Y
@@ -117,6 +116,7 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 * Ctrl + q - Close ASCII
 * Ctrl + m - New ASCII (can't use ctrl + n)
 * Ctrl + o - Toggle Asciibird Options
+
 ### Importing
 
 * Ctrl + Shift + o - Open mIRC TXT File as new Ascii
@@ -154,6 +154,8 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 
 * Four arrow keys control text cursor
 * Space - apply brush
+* Ctrl + ] - Increase both brush sizes by 1
+* Ctrl + [ - Decrease both brush sizes by 1
 * e - rotate brush
 * q - flip brush
 
@@ -174,6 +176,12 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 * Ctrl + Shift + w - Move Layer Up 
 * Ctrl + Shift + m - Merge All Layers 
 
+# Context Menus (right click menus)
+
+* Right clicking on any brush preview in the main area or library will allow you to export to PNG, txt or clipboard just the brush itself.
+* The main ascii has a few export options if you right click on the ascii
+* The dashboard area (outside the ascii) was actually the very first menu in asciibird! and has some basic shortcuts
+* Layers can also be right clicked to preview their functions
 # References
 
 * http://anti.teamidiot.de/static/nei/*/extended_mirc_color_proposal.html - Good for 99 colours info
