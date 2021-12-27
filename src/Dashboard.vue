@@ -567,7 +567,7 @@ export default {
                 this.selectedBlocks = [];
                 this.$toasted.show("Copied blocks!", {
                   type: "success",
-                  icon: "fa-check-circle",
+                  icon: "content_copy",
                 });
               },
               icon: "content_copy",
@@ -614,7 +614,7 @@ export default {
 
                   this.$toasted.show("Cut blocks!", {
                     type: "success",
-                    icon: "fa-check-circle",
+                    icon: "content_cut",
                   });
                 }
               },
@@ -661,7 +661,7 @@ export default {
                   this.selectedBlocks = [];
                   this.$toasted.show("Deleted blocks!", {
                     type: "success",
-                    icon: "fa-check-circle",
+                    icon: "delete_sweep",
                   });
                 }
               },
@@ -1376,7 +1376,6 @@ export default {
     changeTab(key) {
       // Update the tab index in vuex store
       this.$store.commit("changeTab", key);
-      this.currentTab = key;
     },
     closeTab(key) {
       this.$dialog

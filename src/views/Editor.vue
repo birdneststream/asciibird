@@ -223,7 +223,7 @@ export default {
       return this.currentAscii.selectedLayer || 0;
     },
     currentSelectedLayer() {
-      return this.currentAsciiLayers[this.selectedLayerIndex];
+      return this.currentAsciiLayers[this.selectedLayerIndex] || [];
     },
     currentAsciiLayerBlocks() {
       return this.currentSelectedLayer.data;
@@ -387,9 +387,9 @@ export default {
       }
     },
     currentSelectedLayer(val, old) {
-      if (old && old.visible) {
-        this.warnInvisibleLayer();
-      }
+      // if (val && val.visible) {
+      //   this.warnInvisibleLayer();
+      // }
     },
     currentAsciiLayerBlocks() {
       this.delayRedrawCanvas();
@@ -494,12 +494,9 @@ export default {
       }
     },
     // Layers undo
-    // currentAsciiLayers(val, old) {
-    //   this.$store.commit("pushLayerHistory", {
-    //     old: old,
-    //     new: val,
-    //   });
-    // }
+    currentAsciiLayers(val, old) {
+      this.delayRedrawCanvas(true);
+    }
   },
   methods: {
     startExport(type) {
@@ -805,10 +802,10 @@ export default {
       this.delayRedrawCanvas();
     },
     warnInvisibleLayer() {
-      if (!this.currentSelectedLayer && this.currentSelectedLayer.visible) {
+      if (!this.currentSelectedLayer.visible) {
         this.$toasted.show("You are trying to edit an invisible layer!!", {
           type: "error",
-          icon: "fa-check-cross",
+          icon: "warning_amber",
           singleton: true,
         });
       }
@@ -1762,13 +1759,15 @@ export default {
               }
 
               this.drawBrushBlocks(brushX, brushY, brushBlock, null);
+
+              if (this.canTool) {
+                this.storeDiffBlocks(arrayX, arrayY, oldBlock, brushBlock);
+              }
             } else if (this.isErasing) {
               this.drawBrushBlocks(brushX, brushY, brushBlock, null, true);
             }
 
-            if (this.canTool) {
-              this.storeDiffBlocks(arrayX, arrayY, oldBlock, brushBlock);
-            }
+
           }
         }
       }

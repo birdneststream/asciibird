@@ -171,10 +171,10 @@ export default {
       return this.$store.getters.currentAsciiLayers;
     },
     selectedLayer() {
-      return this.$store.getters.selectedLayer;
+      return this.$store.getters.selectedLayer || 0;
     },
     currentLayer() {
-      return this.currentAsciiLayers[this.selectedLayer];
+      return this.currentAsciiLayers[this.selectedLayer] || this.currentAsciiLayers[0];
     },
     canToggleLayer() {
       return this.currentAsciiLayers.length > 1;

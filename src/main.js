@@ -16,9 +16,9 @@ Vue.component('vue-draggable-resizable', VueDraggableResizable);
 Vue.use(VueClipboard);
 Vue.use(Toasted, {
   position: 'bottom-center',
-  iconPack: 'fontawesome',
+  iconPack: 'material',
   type: 'info',
-  duration: 1000,
+  duration: 1200,
 });
 
 new Vue({
