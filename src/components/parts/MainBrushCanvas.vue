@@ -348,6 +348,8 @@ export default {
               if (curBlock.fg !== undefined) {
                 // we had used to hide or show depending on canFg, etc && this.isTargettingFg
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
+              } else {
+                this.ctx.fillStyle = "#FFFFFF";
               }
 
               if (curBlock.char !== undefined) {

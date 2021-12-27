@@ -21,6 +21,10 @@ You can view and load ASCII art from https://irc.watch/ascii into asciibird.
 
 A most latest production build to use is available at https://asciibird.jewbird.live/
 
+# Big Shout outs to Patrons
+
+> beenz, xartet, OfMonsters&Crime, mouse, funkpower, Charles, PP4L, octopus, addct, hotline, dingopride, skg, eraser, aaa, chz, L0j1k
+
 # Current Features
 
 * Tabbed ASCII editing
@@ -36,10 +40,10 @@ A most latest production build to use is available at https://asciibird.jewbird.
 * Can import from clipboard, load from irc.watch/ascii, load from file
 * Can export mirc ascii to clipboard, file or HTTP POST
 * 99 Colour support
-* Swap fg and bg colours with button click or alt + k
+* Swap fg and bg colours with button click or Alt + r
 * Mirror X and Y
-* Grid mode with alt + g
-* Undo and redo with ctrl + z and ctrl + y, undos are set to a limit of 200 at the moment.
+* Grid mode with Alt + g
+* Undo and redo with Ctrl + z and Ctrl + y, undos are set to a limit of 200 at the moment.
 * Fg, Bg and Char boxes to filter when using certain tools
   * For example filling with Char unchecked will ignore characters when filling
   * If you want to remove the background but keep the text, unchek FG and Char and eraser the bg only.
@@ -71,6 +75,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 ## Features to Add
 
+* While select works fine, it could be improved.
 * Layers undo and redo could be implemented, at the moment there isn't any.
 * Warning on mirc export if ascii exceeds IRCs 512 per chat line limit.
 * Review encodings check on file import - UTF8 vs Latin something
@@ -90,17 +95,7 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 * Ctrl + Z - Undo
 * Ctrl + Y - Redo
 
-* Ctrl + Shift + C - Save to clipboard
-* Ctrl + Shift + F - Save to txt file
-
-* Escape - Return to default mode / stop using any tool
-
-* When the colour picker is open, the first 0 to 9 colours can be chosen with the keyboards number.
-* When the character picker is open, you can also press any key on your keyboard to set the character.
-
-## Toolbar Keyboard Shortcuts
-
-The toolbar keyboard shorts are used with the ALT key.
+* Escape - Return to default mode, stop using any tool and close fg, bg and char panels.
 
 * Alt 1 to 8 - Will toggle the corresponding toolbar icon
 
@@ -110,38 +105,59 @@ The toolbar keyboard shorts are used with the ALT key.
 
 * Alt + g - Toggle grid mode
 
-* Ctrl + ] - Increase both brush sizes by 1
-* Ctrl + [ - Decrease both brush sizes by 1
+* Ctrl + ] - Increase both brush sizes by 1 (brush or eraser mode only)
+* Ctrl + [ - Decrease both brush sizes by 1 (brush or eraser mode only)
 
-### Default Mode Only
+* Alt + x - Toggle Mirror X
+* Alt + y - Toggle Mirror Y
+* Alt + u - Toggle Update Brush (change brush preview if fg, bg or char changes)
+* Alt + r - Flip FG and BG colours
 
-* l - Show / hide brushes library
-* d - Show and Hide debug bar
-* ctrl + e - Edit ASCII
-* ctrl + c - Close ASCII
-* p - Paste ASCII from Clipboard
-* n - New ASCII
+* Ctrl + e - Edit ASCII
+* Ctrl + q - Close ASCII
+* Ctrl + m - New ASCII (can't use ctrl + n)
+* Ctrl + o - Toggle Asciibird Options
+### Importing
 
-### Select Mode Only
+* Ctrl + Shift + o - Open mIRC TXT File as new Ascii
+* Ctrl + Shift + v - Paste New Ascii
+
+### Exporting
+
+* Ctrl + Shift + C - Copy to clipboard
+* Ctrl + Shift + F - Save to TXT file
+* Ctrl + Shift + G - Save to PNG file
+* Ctrl + Shift + H - Save to HTTP Post
+
+## Showing / Hiding menus, tabs and panels
+
+* Ctrl + Alt + t - Hide / Show Tabs
+* Ctrl + Alt + m - Hide / Show Menu
+* Ctrl + Alt + d - Hide / Show Debug Panel
+* Ctrl + Alt + b - Hide / Show Brush Library
+* Ctrl + Alt + l - Hide / Show Layers
+* Ctrl + Alt + n - Hide / Show Toolbar
+* Ctrl + Alt + e - Hide / Show Brush Preview
+## Select Mode
 
 * Ctrl + c - Copy blocks to clipboard
 * Ctrl + x - Cut blocks to clipboard
 * Ctrl + v - Paste blocks as brush
 * Delete - Delete selected blocks
 
-### Eraser Mode Only
+## Eraser Mode
 
 * Four arrow keys control text cursor
 * Space - apply eraser
 
-### Brush Mode Only
+## Brush Mode
 
 * Four arrow keys control text cursor
 * Space - apply brush
 * e - rotate brush
 * q - flip brush
 
-### Text mode
+## Text mode
 
 * Four arrow keys control text cursor
 * Delete - Remove text from highlighted block
@@ -150,6 +166,7 @@ The toolbar keyboard shorts are used with the ALT key.
 
 ### Layers Related
 
+* Ctrl + Shift + t - Show / Hide Layer
 * Ctrl + Shift + r - Rename Layer 
 * Ctrl + Shift + a - Add Layer 
 * Ctrl + Shift + d - Delete Layer 

@@ -36,7 +36,7 @@
         :x="currentAscii.x"
         :handles="['bm', 'br', 'mr']"
         :y="currentAscii.y"
-        style="z-index: -1;"
+        style="z-index: -1"
       >
         <canvas
           id="overlay-image"
@@ -141,7 +141,7 @@ export default {
 
           case "ArrowRight":
             _this.x++;
-            _this.drawBrush(_this.isErasing); 
+            _this.drawBrush(_this.isErasing);
             // _this.delayRedrawCanvas();
             break;
 
@@ -899,7 +899,11 @@ export default {
         if (
           this.diffBlocks.new.length &&
           !this.canTool &&
-          !this.isTextEditing
+          !this.isTextEditing &&
+          // The main point of this was to use with brushing, but there is a redraw bug
+          // where it draws the cached blocks the wrong way around, for now it's simpler
+          // to have this.
+          !this.isBrushing
         ) {
           // If we have a difference stored, just render the difference only instead
           // of the entire ascii again
@@ -912,7 +916,11 @@ export default {
             canvasY = blockHeight * entry.y;
             curBlock = { ...entry.b };
 
-            for (let j = this.currentAsciiLayers.length-1; j >= this.diffBlocks.l; j--) {
+            for (
+              let j = this.currentAsciiLayers.length - 1;
+              j >= this.diffBlocks.l;
+              j--
+            ) {
               let layer = this.currentAsciiLayers[j];
               if (layer.data[entry.y][entry.x] && j !== this.diffBlocks.l) {
                 continue outer;
@@ -920,13 +928,21 @@ export default {
             }
 
             // Start to draw the actual block on the canvas
-            if (curBlock.bg !== undefined && curBlock.bg !== null && this.canBg) {
+            if (
+              curBlock.bg !== undefined &&
+              curBlock.bg !== null &&
+              this.canBg
+            ) {
               this.ctx.fillStyle = this.mircColours[curBlock.bg];
               this.ctx.fillRect(canvasX, canvasY, blockWidth, blockHeight);
             }
 
             if (curBlock.char !== undefined && curBlock.char !== null) {
-              if (curBlock.fg !== undefined && curBlock.fg !== null && this.canFg) {
+              if (
+                curBlock.fg !== undefined &&
+                curBlock.fg !== null &&
+                this.canFg
+              ) {
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
               } else {
                 this.ctx.fillStyle = this.mircColours[0];
@@ -1012,8 +1028,8 @@ export default {
               }
             }
           }
+         
         }
-
 
         this.ctx.restore();
       }
@@ -1071,7 +1087,9 @@ export default {
         case "brush":
           this.canTool = false;
 
-          this.dispatchBlocks();
+          // Once the diff Blocks can render in the correct way we can
+          // remove true from here
+          this.dispatchBlocks(true);
 
           break;
 
@@ -1711,11 +1729,14 @@ export default {
           const brushBlock = this.brushBlocks[y][x];
 
           // If we have no fg or bg, and just a space - this has to be an empty block
-          if (brushBlock.char !== undefined && brushBlock.char === " " &&
-              brushBlock.bg === undefined &&
-              brushBlock.fg === undefined) {
-                continue;
-              }
+          if (
+            brushBlock.char !== undefined &&
+            brushBlock.char === " " &&
+            brushBlock.bg === undefined &&
+            brushBlock.fg === undefined
+          ) {
+            continue;
+          }
 
           const brushX = this.x * blockWidth + x * blockWidth - brushDiffX;
           const brushY = this.y * blockHeight + y * blockHeight - brushDiffY;
@@ -1797,7 +1818,10 @@ export default {
               continue;
             }
 
-            if (this.currentAsciiLayerBlocks[arrayY][arrayX] === undefined || JSON.stringify(this.brushBlocks[y][x]) === '{}') {
+            if (
+              this.currentAsciiLayerBlocks[arrayY][arrayX] === undefined ||
+              JSON.stringify(this.brushBlocks[y][x]) === "{}"
+            ) {
               continue;
             }
 

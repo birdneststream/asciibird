@@ -261,6 +261,8 @@ export default {
 
               if (curBlock.fg !== undefined) {
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
+              } else {
+                this.ctx.fillStyle = "#FFFFFF";
               }
 
               if (curBlock.char !== undefined) {
