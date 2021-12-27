@@ -231,6 +231,10 @@ export default {
       });
     },
     drawPreview() {
+      if (!this.canvasRef) {
+        return;
+      }
+
       this.ctx.clearRect(0, 0, this.canvasRef.width, this.canvasRef.height);
       this.ctx.fillStyle = this.mircColours[1];
 

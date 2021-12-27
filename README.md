@@ -76,12 +76,14 @@ A most latest production build to use is available at https://asciibird.jewbird.
 ## Features to Add
 
 * While select works fine, it could be improved.
-* Layers undo and redo could be implemented, at the moment there isn't any.
 * Warning on mirc export if ascii exceeds IRCs 512 per chat line limit.
 * Review encodings check on file import - UTF8 vs Latin something
 
 ## Bugs to fix
 
+* One of the mirror brushes might be bugged sometimes and leave undoable blocks
+* Strange sort of bug with remove layer and selecting layer after, scroll up and down to redraw the canvas if it goes blank
+* Redo will cause errors on layers sometimes
 * The edit dialog, even when code to save new data is commented out, will slow down everything if you open and save the modal a few times
 * The current mIRC importer will fail on C5, type blocks by discarding the `,` character when it should preserve it. `art.txt` ascii is a good example of this. 98% of txt ascii imported should be fine.
 ## Mobile / Touch Screen support

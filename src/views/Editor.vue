@@ -865,7 +865,7 @@ export default {
       }
 
       this.toolCtx.strokeStyle = "rgba(40, 40, 40, 1)";
-      this.toolCtx.lineWidth = 2;
+      this.toolCtx.lineWidth = 1;
       this.toolCtx.setLineDash([1]);
 
       this.toolCtx.stroke();
@@ -1048,6 +1048,8 @@ export default {
 
       this.$refs.canvasdrag.width = width;
       this.$refs.canvasdrag.height = height;
+
+      this.$toasted.show(`${canvasBlockWidth} x ${canvasBlockHeight}`)
     },
     onCavasDragStop(x, y) {
       // Update left and top in panel

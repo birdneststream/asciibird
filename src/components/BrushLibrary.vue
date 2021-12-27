@@ -79,6 +79,10 @@
           </div>
 
           <div v-if="panel.tab === 1">
+            <div v-if="!brushLibrary.length">
+              <p class="text-sm text-center p-5">Save brushes to your library to use them here.</p>
+            </div>
+
             <div v-for="(brush, key) in brushLibrary" :key="key">
               <t-card
                 :class="`hover:border-blue-900 border-gray-300 bg-gray-200 mt-2`"

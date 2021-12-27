@@ -267,6 +267,7 @@ export default {
     });
     this.mirror.x = this.toolbarState.mirrorX;
     this.mirror.y = this.toolbarState.mirrorY;
+ 
   },
   destroyed() {
     window.removeEventListener("scroll", function (event) {

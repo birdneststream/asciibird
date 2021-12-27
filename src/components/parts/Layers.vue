@@ -172,12 +172,15 @@ export default {
     },
     selectedLayer() {
       let selectedLayer = this.$store.getters.selectedLayer;
+      
+      if (this.currentAsciiLayers[selectedLayer] === undefined) {
+        while (this.currentAsciiLayers[selectedLayer] === undefined && selectedLayer >= 0) {
+          selectedLayer--;
+        }
 
-      while (this.currentAsciiLayers[selectedLayer] === undefined && selectedLayer >= 0) {
-        selectedLayer--;
+        this.$store.commit("changeLayer", selectedLayer);
       }
 
-      this.$store.commit("changeLayer", selectedLayer);
       return selectedLayer
     },
     currentLayer() {
