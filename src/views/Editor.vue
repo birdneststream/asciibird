@@ -64,7 +64,6 @@
           @mousedown.left="canvasMouseDown"
           @mouseup.left="canvasMouseUp"
           @mouseup.right="openContextMenu"
-          @contextmenu.prevent
           @touchmove="canvasMouseMove"
           @touchend="canvasMouseDown"
           @touchstart="canvasMouseUp"
@@ -496,7 +495,7 @@ export default {
     // Layers undo
     currentAsciiLayers(val, old) {
       this.delayRedrawCanvas(true);
-    }
+    },
   },
   methods: {
     startExport(type) {
@@ -1025,7 +1024,6 @@ export default {
               }
             }
           }
-         
         }
 
         this.ctx.restore();
@@ -1049,7 +1047,7 @@ export default {
       this.$refs.canvasdrag.width = width;
       this.$refs.canvasdrag.height = height;
 
-      this.$toasted.show(`${canvasBlockWidth} x ${canvasBlockHeight}`)
+      this.$toasted.show(`${canvasBlockWidth} x ${canvasBlockHeight}`);
     },
     onCavasDragStop(x, y) {
       // Update left and top in panel
@@ -1768,8 +1766,6 @@ export default {
             } else if (this.isErasing) {
               this.drawBrushBlocks(brushX, brushY, brushBlock, null, true);
             }
-
-
           }
         }
       }

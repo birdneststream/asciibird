@@ -15,14 +15,13 @@
           @mousemove="canvasMouseMove"
           @mousedown.left="processClick"
           @mouseup.left="canTool = false"
-          @contextmenu.prevent
           :width="blocksWidthHeight.w"
           :height="blocksWidthHeight.h"
           @mouseenter="disableToolbarMoving"
           @mouseleave="enableToolbarMoving"
         />
 
-        <context-menu ref="main-brush-menu" class="z-50" @contextmenu.prevent>
+        <context-menu ref="main-brush-menu" class="z-50">
           <ul>
             <li @click="canvasToPng()" class="ab-context-menu-item">
               Save as PNG
@@ -56,7 +55,7 @@ import {
   canvasToPng,
   cyrb53,
   exportMirc,
-  downloadFile
+  downloadFile,
 } from "../../ascii";
 
 export default {
@@ -170,7 +169,7 @@ export default {
     },
     hash() {
       return cyrb53(JSON.stringify(this.brushBlocks));
-    }
+    },
   },
   watch: {
     brushBlocks() {
@@ -242,7 +241,11 @@ export default {
 
         default:
         case "file":
-          downloadFile(ascii.output.join(""), `brush-${this.hash}.txt`, "text/plain");
+          downloadFile(
+            ascii.output.join(""),
+            `brush-${this.hash}.txt`,
+            "text/plain"
+          );
           this.$refs[`main-brush-menu`].close();
           break;
       }
@@ -250,12 +253,12 @@ export default {
     saveToLibrary() {
       this.$store.commit("pushBrushLibrary", this.brushBlocks);
       this.$toasted.show(`Saved brush to Library`, {
-            type: "success",
-          });
+        type: "success",
+      });
       this.$refs[`main-brush-menu`].close();
     },
     canvasToPng() {
-      canvasToPng(this.canvasRef, `brush-${this.hash}.png`)
+      canvasToPng(this.canvasRef, `brush-${this.hash}.png`);
       this.$refs[`main-brush-menu`].close();
     },
     processClick(e) {
@@ -427,7 +430,7 @@ export default {
     enableToolbarMoving() {
       // Save the blocks when the mouse leaves the canvas area
       // To avoid one block history changes
-      if ( (this.isErasing || this.isBrushing) && this.hasChanged) {
+      if ((this.isErasing || this.isBrushing) && this.hasChanged) {
         this.$store.commit("brushBlocks", this.brushBlocks);
         this.$store.commit("changeToolBarDraggable", true);
         this.hasChanged = false;

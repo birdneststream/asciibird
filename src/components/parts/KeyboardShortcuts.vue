@@ -3,10 +3,7 @@
 </template>
 
 <script>
-import {
-  toolbarIcons,
-  maxBrushSize,
-} from "../../ascii";
+import { toolbarIcons, maxBrushSize } from "../../ascii";
 
 export default {
   name: "KeyboardShortcuts",
@@ -39,7 +36,6 @@ export default {
         event.altKey &&
         _this.haveOpenTabs
       ) {
-
         _this.$store.commit("changeTool", Number.parseInt(event.key - 1));
         _this.$emit("updatecanvas");
         return;
@@ -52,7 +48,6 @@ export default {
         (_this.toolbarState.isChoosingFg || _this.toolbarState.isChoosingBg) &&
         _this.haveOpenTabs
       ) {
-
         if (_this.toolbarState.isChoosingFg) {
           _this.$store.commit("changeColourFg", Number.parseInt(event.key));
           return;

@@ -23,7 +23,7 @@
               name="width"
               v-model="brushSizeWidthInput"
               min="1"
-              :max="maxBrushSize"             
+              :max="maxBrushSize"
               @focus="isInputtingBrushSize = true"
               @blur="isInputtingBrushSize = false"
             />
@@ -35,7 +35,7 @@
               name="height"
               v-model="brushSizeHeightInput"
               min="1"
-              :max="maxBrushSize"              
+              :max="maxBrushSize"
               @focus="isInputtingBrushSize = true"
               @blur="isInputtingBrushSize = false"
             />
@@ -43,69 +43,10 @@
         </div>
 
         <div class="w-full">
-
-            <t-select :options="brushOptions" v-model="brushSizeTypeInput" />
-
-          <!-- <label class="block">
-            <t-radio
-              name="options"
-              value="square"
-              checked
-              v-model="brushSizeTypeInput"
-            />
-            <span class="text-sm">Square</span>
-          </label>
-
-          <label class="block">
-            <t-radio
-              name="options"
-              value="circle"
-              v-model="brushSizeTypeInput"
-            />
-            <span class="text-sm">Circle</span>
-          </label>
-
-          <label class="block">
-            <t-radio
-              name="options"
-              value="cross"
-              v-model="brushSizeTypeInput"
-            />
-            <span class="text-sm">Cross</span>
-          </label>
-
-          <label class="block">
-            <t-radio
-              name="options"
-              value="grid"
-              v-model="brushSizeTypeInput"
-            />
-            <span class="text-sm">Grid</span>
-          </label>
-
-          <label class="block">
-            <t-radio
-              name="options"
-              value="inverted-grid"
-              v-model="brushSizeTypeInput"
-            />
-            <span class="text-sm">Inverted Grid</span>
-          </label>
-
-          <label class="block">
-            <t-radio
-              name="options"
-              value="lines"
-              v-model="brushSizeTypeInput"
-            />
-            <span class="text-sm">Lines</span>
-          </label> -->
+          <t-select :options="brushOptions" v-model="brushSizeTypeInput" />
         </div>
 
-        <div
-          @mouseenter="canDrag = false"
-          @mouseleave="canDrag = true"
-        >
+        <div @mouseenter="canDrag = false" @mouseleave="canDrag = true">
           <MainBrushCanvas />
         </div>
       </t-card>
@@ -135,7 +76,7 @@ export default {
     this.panel.w = this.brushPreviewState.w;
     this.panel.h = this.brushPreviewState.h;
   },
-  props: ['yOffset'],
+  props: ["yOffset"],
   data: () => ({
     canDrag: true,
     blocks: [],
@@ -154,14 +95,14 @@ export default {
   computed: {
     brushOptions() {
       return [
-        'Square',
-        'Circle',
-        'Cross',
-        'Grid',
-        'Inverted Grid',
-        'H lines',
-        'V lines',
-      ]
+        "Square",
+        "Circle",
+        "Cross",
+        "Grid",
+        "Inverted Grid",
+        "H lines",
+        "V lines",
+      ];
     },
     blockWidth() {
       return blockWidth * this.blockSizeMultiplier;
@@ -216,17 +157,17 @@ export default {
     },
     updateBrush() {
       return this.toolbarState.updateBrush;
-    },   
+    },
     middleY() {
       return Math.floor(this.brushSizeHeight / 2);
     },
     middleX() {
       return Math.floor(this.brushSizeWidth / 2);
-    }
+    },
   },
   watch: {
     isInputtingBrushSize(val) {
-      this.$emit("inputtingbrush", val)
+      this.$emit("inputtingbrush", val);
     },
     brushSizeWidth() {
       this.brushSizeWidthInput = this.brushSizeWidth;
@@ -286,8 +227,10 @@ export default {
       this.$store.commit("pushBrushHistory", this.brushBlocks);
     },
     yOffset(val) {
-     this.$refs.previewpaneldrag.top = Number.parseInt(this.brushPreviewState.y+val)
-    }
+      this.$refs.previewpaneldrag.top = Number.parseInt(
+        this.brushPreviewState.y + val
+      );
+    },
   },
   methods: {
     updateBrushSize() {
@@ -318,7 +261,7 @@ export default {
       for (y = 0; y < brushHeight; y++) {
         this.blocks[y] = [];
         for (x = 0; x < brushWidth; x++) {
-          switch (this.brushSizeType.toLowerCase() ) {
+          switch (this.brushSizeType.toLowerCase()) {
             case "cross":
               // If we are 1x1 force fill 1 block, to avoid an empty 1x1
               if (x === 0 && y === 0) {
@@ -329,11 +272,10 @@ export default {
               this.blocks[y][x] = { ...emptyBlock };
 
               if (this.blocks[y] && this.blocks[y][x]) {
-
                 if (x % 2 === 0 && y % 2 === 0) {
                   this.blocks[y][x] = { ...block };
-                } 
-                
+                }
+
                 if (x % 2 === 1 && y % 2 === 1) {
                   this.blocks[y][x] = { ...block };
                 }
@@ -353,7 +295,6 @@ export default {
               }
               break;
 
-
             case "grid":
               if (x === 0 && y === 0) {
                 this.blocks[y][x] = { ...block };
@@ -370,7 +311,7 @@ export default {
 
               if (y % 2 === 0) {
                 targetX -= 1;
-              } 
+              }
 
               if (this.blocks[y] && this.blocks[y][targetX]) {
                 if (y % 2 === 0 && x % 2 !== 0) {
@@ -398,11 +339,13 @@ export default {
 
               if (y % 2 === 0) {
                 targetX -= 1;
-              } 
+              }
 
               if (this.blocks[y] && this.blocks[y][targetX]) {
                 if (y % 2 === 0) {
-                  if (targetX % 2 === 0) { this.blocks[y][targetX] = { ...block }; }
+                  if (targetX % 2 === 0) {
+                    this.blocks[y][targetX] = { ...block };
+                  }
                 } else {
                   this.blocks[y][targetX] = { ...emptyBlock };
                 }
@@ -426,11 +369,13 @@ export default {
 
               if (screenY % 2 === 0) {
                 screenY -= 1;
-              } 
+              }
 
               if (this.blocks[targetY] && this.blocks[targetY][x]) {
                 if (x % 2 === 0) {
-                  if (x % 2 === 0) { this.blocks[targetY][x] = { ...block }; }
+                  if (x % 2 === 0) {
+                    this.blocks[targetY][x] = { ...block };
+                  }
                 } else {
                   this.blocks[targetY][x] = { ...emptyBlock };
                 }
@@ -444,31 +389,34 @@ export default {
               break;
 
             case "circle":
-              this.blocks[y][x] = { ... emptyBlock };
+              this.blocks[y][x] = { ...emptyBlock };
               break;
           }
         }
       }
 
-      switch(this.brushSizeType.toLowerCase()) {
-          case "circle":
-  
-              let x1 = 0;
-              let y1 = 0;
+      switch (this.brushSizeType.toLowerCase()) {
+        case "circle":
+          let x1 = 0;
+          let y1 = 0;
 
-              for (let angle = 0; angle <= 360; angle += 1) {
-                  let radian = angle * (Math.PI*2/360);
-                  x1 = Math.round( (brushWidth - 1) * ( (Math.cos(radian) + 1.0) / 2.0));
-                  y1 = Math.round( (brushHeight - 1) * ((Math.sin(radian) + 1.0) / 2.0));
+          for (let angle = 0; angle <= 360; angle += 1) {
+            let radian = angle * ((Math.PI * 2) / 360);
+            x1 = Math.round(
+              (brushWidth - 1) * ((Math.cos(radian) + 1.0) / 2.0)
+            );
+            y1 = Math.round(
+              (brushHeight - 1) * ((Math.sin(radian) + 1.0) / 2.0)
+            );
 
-                  if (this.blocks[y1] && this.blocks[y1][x1]) {
-                    this.blocks[y1][x1] = { ...block };
-                  } 
-              }
+            if (this.blocks[y1] && this.blocks[y1][x1]) {
+              this.blocks[y1][x1] = { ...block };
+            }
+          }
 
-              this.fill();
-            break;
-        }
+          this.fill();
+          break;
+      }
 
       this.$store.commit("brushBlocks", this.blocks);
     },
@@ -476,10 +424,7 @@ export default {
       const current = {};
       current.bg = null;
 
-      this.fillTool(
-        this.middleY,
-        this.middleX,
-      );
+      this.fillTool(this.middleY, this.middleX);
     },
     fillTool(y, x) {
       if (y >= this.brushSizeHeight) {

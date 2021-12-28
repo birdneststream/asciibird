@@ -46,7 +46,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
 * Undo and redo with Ctrl + z and Ctrl + y, undos are set to a limit of 200 at the moment.
 * Fg, Bg and Char boxes to filter when using certain tools
   * For example filling with Char unchecked will ignore characters when filling
-  * If you want to remove the background but keep the text, unchek FG and Char and eraser the bg only.
+  * If you want to remove the background but keep the text, uncheck FG and Char and eraser the bg only.
 * Image overlay to trace images
  * Accepts URLs only at the moment
  * Can adjust the size and properties
@@ -81,6 +81,10 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 ## Bugs to fix
 
+* Can't move toolbar, maybe related to after dialog or modal is open
+* Brush edit if scroll out wont register mouse down and keep applying brush on scroll over without clicking
+* Colors / chars panels wont open where toolbar is, if you scroll down a lot then try open them they will be at the top
+* Fill tool has too much recursion sometimes
 * One of the mirror brushes might be bugged sometimes and leave undoable blocks
 * Strange sort of bug with remove layer and selecting layer after, scroll up and down to redraw the canvas if it goes blank
 * Redo will cause errors on layers sometimes

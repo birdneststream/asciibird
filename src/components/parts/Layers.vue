@@ -50,7 +50,7 @@
         <li></li>
       </ul>
 
-      <context-menu ref="layers-menu" class="z-50" @contextmenu.prevent>
+      <context-menu ref="layers-menu" class="z-50">
         <ul>
           <li @click="addLayer()" class="ab-context-menu-item">
             Add New Layer
@@ -82,20 +82,14 @@
       <ul
         class="divide-y-2 divide-gray-100 reverseorder"
         @mouseup.right="openContextMenu"
-        @contextmenu.prevent
       >
         <li
           :class="`p-1 ${selectedLayerClass(key)}`"
           v-for="(layer, key) in currentAsciiLayers"
           :key="key"
           @click.right="changeLayer(key)"
-          
         >
-          <div
-            class="flex"
-            @mouseup.right="openContextMenu"
-            @contextmenu.prevent
-          >
+          <div class="flex" @mouseup.right="openContextMenu">
             <div class="w-12" @click="changeLayer(key)">
               <t-button
                 type="button"
@@ -172,16 +166,19 @@ export default {
     },
     selectedLayer() {
       let selectedLayer = this.$store.getters.selectedLayer;
-      
+
       if (this.currentAsciiLayers[selectedLayer] === undefined) {
-        while (this.currentAsciiLayers[selectedLayer] === undefined && selectedLayer >= 0) {
+        while (
+          this.currentAsciiLayers[selectedLayer] === undefined &&
+          selectedLayer >= 0
+        ) {
           selectedLayer--;
         }
 
         this.$store.commit("changeLayer", selectedLayer);
       }
 
-      return selectedLayer
+      return selectedLayer;
     },
     currentLayer() {
       return this.currentAsciiLayers[this.selectedLayer];

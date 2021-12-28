@@ -1,4 +1,4 @@
-<template @contextmenu.prevent>
+<template>
   <div
     class="context-menu"
     v-show="show"
@@ -6,16 +6,15 @@
     ref="context"
     tabindex="0"
     @blur="close"
-    @contextmenu.prevent
   >
     <slot />
   </div>
 </template>
 <script>
-import Vue from 'vue';
+import Vue from "vue";
 
 export default {
-  name: 'ContextMenu',
+  name: "ContextMenu",
   props: {
     display: Boolean, // prop detect if we should show context menu
   },

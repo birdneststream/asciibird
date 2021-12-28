@@ -35,17 +35,8 @@
         class="flex justify-between"
         @click="$store.commit('closeModal', 'new-ascii')"
       >
-        <t-button
-          type="button"
-          class="p-2"
-        >
-          Cancel
-        </t-button>
-        <t-button
-          type="button"
-          class="p-2"
-          @click="initiateNewAscii()"
-        >
+        <t-button type="button" class="p-2"> Cancel </t-button>
+        <t-button type="button" class="p-2" @click="initiateNewAscii()">
           Ok
         </t-button>
       </div>
@@ -61,11 +52,11 @@ export default {
   created() {},
   mounted() {
     if (this.showNewAsciiModal) {
-      this.open()
+      this.open();
     } else {
-      this.close()
+      this.close();
     }
-  },  
+  },
   data: () => ({
     forms: {
       createAscii: {

@@ -1,5 +1,5 @@
 <template>
-  <div id="app">
+  <div id="app" @contextmenu.prevent>
     <div v-show="menuBarVisible">
       <vue-file-toolbar-menu :content="myMenu" />
     </div>
@@ -39,7 +39,6 @@
         <li
           @click="$store.commit('openModal', 'new-ascii')"
           class="ab-context-menu-item"
-          @contextmenu.prevent
         >
           New ASCII
         </li>
@@ -110,7 +109,6 @@
 
     <span
       @mouseup.right="openContextMenu"
-      @contextmenu.prevent
       style="width: 100%; height: 100%; position: absolute; z-index: -1"
     />
 
@@ -202,16 +200,8 @@
     </template>
     <template v-else>
       <div
-        class="
-          absolute
-          top-1/2
-          left-1/2
-          transform
-          -translate-x-1/2 -translate-y-1/2
-          text-center
-        "
+        class="absolute left-1/2 transform -translate-x-1/2 text-center"
         @mouseup.right="openContextMenu"
-        @contextmenu.prevent
       >
         <BrushCanvas :blocks="this.splashAscii()" />
       </div>
@@ -220,6 +210,10 @@
 </template>
 
 <script>
+// top-1/2
+// -translate-y-1/2
+// these css classes can put back to center smaller asciis
+
 import LZString from "lz-string";
 import Toolbar from "./components/Toolbar.vue";
 import DebugPanel from "./components/DebugPanel.vue";
@@ -267,7 +261,6 @@ export default {
     });
     this.mirror.x = this.toolbarState.mirrorX;
     this.mirror.y = this.toolbarState.mirrorY;
- 
   },
   destroyed() {
     window.removeEventListener("scroll", function (event) {

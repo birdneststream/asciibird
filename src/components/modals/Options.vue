@@ -6,92 +6,96 @@
     :esc-to-close="true"
     @closed="$store.commit('closeModal', 'options')"
   >
-
-
     <template v-slot:default>
-
-        <div class="mt-6 lg:mt-0 rounded shadow bg-white">
-
-          <div class="mb-4">
-            <label class="ml-1">
+      <div class="mt-6 lg:mt-0 rounded shadow bg-white">
+        <div class="mb-4">
+          <label class="ml-1">
             <span class="text-sm">FPS</span>
-              <vue-slider class="mt-10" v-model="options.fps" @dragend="updateOptions" :min="1" :max="200"></vue-slider>
-            </label>
-          </div>
-
-          <div class="mb-4">
-            <label class="ml-1">
-            <span class="text-lg">Render Offscreen Blocks</span><br />
-              <t-checkbox
-                class="form-checkbox m-1"
-                name="renderOffScreen"
-                v-model="options.renderOffScreen"
-                @change="updateOptions"
-              />
-            <small>ASCIIBIRD will avoid rendering blocks off screen to speed things up. </small>
-
-            </label>
-          </div>
-
-
-          <div class="mb-4">
-            <label class="ml-1">
-            <span class="text-sm">Brush Histroy Limit</span>
-              <vue-slider class="mt-10" v-model="options.brushLimit" @dragend="updateOptions" :min="1" :max="maxBrushHistory"></vue-slider>
-            </label>
-          </div>
-
-
-          <div class="mb-4">
-            <label class="ml-1">
-            <span class="text-sm">Undo/Redo Histroy Limit</span>
-              <vue-slider class="mt-10" v-model="options.undoLimit" @dragend="updateOptions" :min="1" :max="maxUndoHistory"></vue-slider>
-            </label>
-          </div>
-
-
-          <div class="mb-4 border-t-2">
-            <label class="ml-1">
-            <span class="text-lg">Reset ASCIIBIRD state</span><br />
-            <small>This will clear all data and start asciibird from a fresh state.</small><br />
-              <div class="mt-1 p-2 bg-red-300 rounded-md cursor-pointer" @click="clearCache()">Clear and Reset ASCIIBIRD</div>
-            </label>
-          </div>
-                
-
+            <vue-slider
+              class="mt-10"
+              v-model="options.fps"
+              @dragend="updateOptions"
+              :min="1"
+              :max="200"
+            ></vue-slider>
+          </label>
         </div>
 
+        <div class="mb-4">
+          <label class="ml-1">
+            <span class="text-lg">Render Offscreen Blocks</span><br />
+            <t-checkbox
+              class="form-checkbox m-1"
+              name="renderOffScreen"
+              v-model="options.renderOffScreen"
+              @change="updateOptions"
+            />
+            <small
+              >ASCIIBIRD will avoid rendering blocks off screen to speed things
+              up.
+            </small>
+          </label>
+        </div>
+
+        <div class="mb-4">
+          <label class="ml-1">
+            <span class="text-sm">Brush Histroy Limit</span>
+            <vue-slider
+              class="mt-10"
+              v-model="options.brushLimit"
+              @dragend="updateOptions"
+              :min="1"
+              :max="maxBrushHistory"
+            ></vue-slider>
+          </label>
+        </div>
+
+        <div class="mb-4">
+          <label class="ml-1">
+            <span class="text-sm">Undo/Redo Histroy Limit</span>
+            <vue-slider
+              class="mt-10"
+              v-model="options.undoLimit"
+              @dragend="updateOptions"
+              :min="1"
+              :max="maxUndoHistory"
+            ></vue-slider>
+          </label>
+        </div>
+
+        <div class="mb-4 border-t-2">
+          <label class="ml-1">
+            <span class="text-lg">Reset ASCIIBIRD state</span><br />
+            <small
+              >This will clear all data and start asciibird from a fresh
+              state.</small
+            ><br />
+            <div
+              class="mt-1 p-2 bg-red-300 rounded-md cursor-pointer"
+              @click="clearCache()"
+            >
+              Clear and Reset ASCIIBIRD
+            </div>
+          </label>
+        </div>
+      </div>
     </template>
-
-
 
     <template v-slot:footer>
       <div
         class="flex justify-between"
         @click="$store.commit('closeModal', 'options')"
       >
-        <t-button
-          type="button"
-          class="p-2"
-        >
-          Cancel
-        </t-button>
-        <t-button
-          type="button"
-          class="p-2"
-        >
-          Ok
-        </t-button>
+        <t-button type="button" class="p-2"> Cancel </t-button>
+        <t-button type="button" class="p-2"> Ok </t-button>
       </div>
     </template>
   </t-modal>
 </template>
 
 <script>
-import vueSlider from 'vue-slider-component'
-import { maxBrushHistory,
-          maxUndoHistory,
-          tabLimit } from './../../ascii.js'
+import vueSlider from "vue-slider-component";
+import { maxBrushHistory, maxUndoHistory, tabLimit } from "./../../ascii.js";
 
 export default {
   name: "Options",
@@ -101,29 +105,12 @@ export default {
   created() {},
   mounted() {
     if (this.showOptionsModal) {
-      this.open()
+      this.open();
     } else {
-      this.close()
+      this.close();
     }
-  },  
-  data: () => ({
-
-    // options: {
-    //   defaultBg: 1,
-    //   defaultFg: 0,
-    //   renderOffScreen: true,
-    //   undoLimit: 50,
-    //   tabLimit: 12,
-    //   fps: 50,
-    // },
-
-    // forms: {
-    //   fps: this.options.fps,
-    //   renderOffScreen: true,
-    //   undoLimit: this.options.undoLimit,
-    //   tabLimit: this.options.tabLimit
-    // },
-  }),
+  },
+  data: () => ({}),
   computed: {
     showOptionsModal() {
       return this.$store.getters.modalState.options;
@@ -151,12 +138,6 @@ export default {
         this.close();
       }
     },
-    // options:{
-    //     handler: function(val, old) {
-    //         this.$store.commit(updateOptions, val)
-    //     },
-    //     deep: true
-    // }
   },
   methods: {
     open() {
@@ -167,11 +148,11 @@ export default {
     },
     clearCache() {
       localStorage.clear();
-      window.location.reload()
+      window.location.reload();
     },
     updateOptions() {
-      this.$store.commit("updateOptions", { ...this.options})
-    }
+      this.$store.commit("updateOptions", { ...this.options });
+    },
   },
 };
 </script>

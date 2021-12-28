@@ -15,7 +15,6 @@
       ref="brushlibrarypanel"
     >
       <t-card class="h-full overflow-y-auto overflow-x-auto">
-
         <t-button
           type="button"
           :class="`w-1/2 border-gray-200 bg-gray-500 text-sm ${
@@ -25,9 +24,9 @@
           }`"
           @click="changeTab(0)"
         >
-          <span class="material-icons relative top-2 pb-4">history</span> History
+          <span class="material-icons relative top-2 pb-4">history</span>
+          History
         </t-button>
-
 
         <t-button
           type="button"
@@ -38,10 +37,9 @@
           }`"
           @click="changeTab(1)"
         >
-          <span class="material-icons relative top-2 pb-4">library_books</span> Library {{ libraryCount }}
+          <span class="material-icons relative top-2 pb-4">library_books</span>
+          Library {{ libraryCount }}
         </t-button>
-
-
 
         <div class="flex">
           <div v-if="panel.tab === 0">
@@ -56,23 +54,22 @@
                   class="ab-rounded-button ml-1 mt-1"
                   @click="saveToLibrary(decompressBlock(brush.blocks))"
                 >
-                <span class="material-icons">save</span>
-
+                  <span class="material-icons">save</span>
                 </t-button>
                 <t-button
                   type="button"
                   class="ab-rounded-button ml-1 mt-1"
-                  @click="reuseBlocks(decompressBlock(brush.blocks))">
-                <span class="material-icons">brush</span>
-                </t-button> 
+                  @click="reuseBlocks(decompressBlock(brush.blocks))"
+                >
+                  <span class="material-icons">brush</span>
+                </t-button>
 
                 <t-button
                   type="button"
                   class="ab-rounded-button ml-1 mt-1"
                   @click="removeFromHistory(decompressBlock(brush.blocks))"
                 >
-                <span class="material-icons">delete</span>
-
+                  <span class="material-icons">delete</span>
                 </t-button>
               </t-card>
             </div>
@@ -80,7 +77,9 @@
 
           <div v-if="panel.tab === 1">
             <div v-if="!brushLibrary.length">
-              <p class="text-sm text-center p-5">Save brushes to your library to use them here.</p>
+              <p class="text-sm text-center p-5">
+                Save brushes to your library to use them here.
+              </p>
             </div>
 
             <div v-for="(brush, key) in brushLibrary" :key="key">
@@ -94,16 +93,14 @@
                   class="ab-rounded-button ml-1 mt-1"
                   @click="removeFromLibrary(decompressBlock(brush.blocks))"
                 >
-                 <span class="material-icons">delete</span>
-
+                  <span class="material-icons">delete</span>
                 </t-button>
                 <t-button
                   type="button"
                   class="ab-rounded-button ml-1 mt-1"
                   @click="reuseBlocks(decompressBlock(brush.blocks))"
                 >
-                 <span class="material-icons">brush</span>
-
+                  <span class="material-icons">brush</span>
                 </t-button>
               </t-card>
             </div>
@@ -152,7 +149,7 @@ export default {
   components: {
     BrushCanvas,
   },
-  props: ['yOffset'],
+  props: ["yOffset"],
   computed: {
     blockWidth() {
       return blockWidth * this.blockSizeMultiplier;
@@ -182,13 +179,17 @@ export default {
       return this.$store.getters.brushLibraryState;
     },
     libraryCount() {
-      return this.brushLibrary.length > 0 ? `(${this.brushLibrary.length})` : '';
-    }
+      return this.brushLibrary.length > 0
+        ? `(${this.brushLibrary.length})`
+        : "";
+    },
   },
   watch: {
     yOffset(val) {
-      this.$refs.brushlibrarypanel.top = Number.parseInt(this.brushLibraryState.y+val)
-    }
+      this.$refs.brushlibrarypanel.top = Number.parseInt(
+        this.brushLibraryState.y + val
+      );
+    },
   },
   methods: {
     changeTab(tab) {
@@ -202,14 +203,14 @@ export default {
       this.$store.commit("brushBlocks", value);
       this.$store.commit("changeTool", 4);
       this.$toasted.show(`Applied brush from Library`, {
-            type: "success",
-          });
+        type: "success",
+      });
     },
     saveToLibrary(value) {
       this.$store.commit("pushBrushLibrary", value);
       this.$toasted.show(`Saved brush to Library`, {
-            type: "success",
-          });
+        type: "success",
+      });
     },
     removeFromLibrary(value) {
       this.$store.commit("removeBrushLibrary", value);

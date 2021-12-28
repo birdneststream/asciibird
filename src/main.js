@@ -1,13 +1,15 @@
 import Vue from 'vue';
-import './style.css';
 import VueTailwind from 'vue-tailwind';
 import VueDraggableResizable from 'vue-draggable-resizable';
 import VueClipboard from 'vue-clipboard2';
-import { tailwindCss } from './tailwindSettings';
+import {
+  tailwindCss
+} from './tailwindSettings';
 import 'vue-draggable-resizable/dist/VueDraggableResizable.css';
 import store from './store';
 import Dashboard from './Dashboard.vue';
 import Toasted from 'vue-toasted';
+import './style.scss';
 
 Vue.config.productionTip = false;
 Vue.use(VueTailwind, tailwindCss);

@@ -7,47 +7,23 @@
     @closed="$store.commit('closeModal', 'edit-ascii')"
   >
     Width
-    <t-input
-      type="number"
-      name="width"
-      v-model="layer.width"
-      min="1"
-    />
+    <t-input type="number" name="width" v-model="layer.width" min="1" />
 
     Height
-    <t-input
-      type="number"
-      name="height"
-      v-model="layer.height"
-      min="1"
-    />
+    <t-input type="number" name="height" v-model="layer.height" min="1" />
 
     Title
-    <t-input
-      type="text"
-      name="title"
-      v-model="layer.title"
-      max="128"
-    />
+    <t-input type="text" name="title" v-model="layer.title" max="128" />
 
-    <hr class="mt-5 mb-5">
+    <hr class="mt-5 mb-5" />
 
     <template v-slot:footer>
       <div
         class="flex justify-between"
         @click="$store.commit('closeModal', 'edit-ascii')"
       >
-        <t-button
-          type="button"
-          class="p-2"
-        >
-          Cancel
-        </t-button>
-        <t-button
-          type="button"
-          @click="updateAscii()"
-          class="p-2"
-        >
+        <t-button type="button" class="p-2"> Cancel </t-button>
+        <t-button type="button" @click="updateAscii()" class="p-2">
           Update
         </t-button>
       </div>
@@ -56,17 +32,14 @@
 </template>
 
 <script>
-
 export default {
   name: "EditAsciiModal",
-  created() {
-
-  },
+  created() {},
   mounted() {
     if (this.showEditAsciiModal) {
-      this.open()
+      this.open();
     } else {
-      this.close()
+      this.close();
     }
   },
   data: () => ({
@@ -80,7 +53,7 @@ export default {
       return this.$store.getters.currentAscii;
     },
     selectedLayerIndex() {
-      return this.currentAscii.selectedLayer
+      return this.currentAscii.selectedLayer;
     },
     currentAsciiEditingTitle() {
       return `Editing ASCII ${this.currentAscii.title}`;
@@ -115,20 +88,20 @@ export default {
       this.$emit("updateAscii", {
         width: this.layer.width,
         height: this.layer.height,
-      });      
+      });
       this.close();
     },
     open() {
       this.layer = {
         width: this.currentSelectedLayer.width,
         height: this.currentSelectedLayer.height,
-        title: this.currentAscii.title
-      }
+        title: this.currentAscii.title,
+      };
       this.$modal.show("edit-ascii-modal");
     },
     close() {
       this.$modal.hide("edit-ascii-modal");
-      this.layer = {}
+      this.layer = {};
     },
   },
 };

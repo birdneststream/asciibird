@@ -7,18 +7,9 @@
     @closed="$store.commit('closeModal', 'paste-ascii')"
   >
     Title
-    <t-input
-      type="text"
-      name="title"
-      v-model="title"
-      max="128"
-    />
+    <t-input type="text" name="title" v-model="title" max="128" />
 
-    <t-textarea
-      v-model="pasteContent"
-      name="paste-ascii"
-      rows="10"
-    />
+    <t-textarea v-model="pasteContent" name="paste-ascii" rows="10" />
 
     <template v-slot:footer>
       <div class="flex justify-between">
@@ -49,11 +40,11 @@ export default {
   created() {},
   mounted() {
     if (this.showPasteAscii) {
-      this.open()
+      this.open();
     } else {
-      this.close()
+      this.close();
     }
-  },  
+  },
   data: () => ({
     pasteContent: "",
     title: "clipboard.txt",

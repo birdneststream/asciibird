@@ -14,9 +14,7 @@
       :y="layersLibraryState.y"
       ref="layerspanel"
     >
-      <t-card
-        class="h-full overflow-y-auto overflow-x-hidden"
-      >
+      <t-card class="h-full overflow-y-auto overflow-x-hidden">
         <Layers />
       </t-card>
     </vue-draggable-resizable>
@@ -52,7 +50,7 @@ export default {
   components: {
     Layers,
   },
-  props: ['yOffset'],
+  props: ["yOffset"],
   computed: {
     blockWidth() {
       return blockWidth * this.blockSizeMultiplier;
@@ -69,8 +67,10 @@ export default {
   },
   watch: {
     yOffset(val) {
-      this.$refs.layerspanel.top = Number.parseInt(this.layersLibraryState.y+val)
-    }
+      this.$refs.layerspanel.top = Number.parseInt(
+        this.layersLibraryState.y + val
+      );
+    },
   },
   methods: {
     onResize(x, y, w, h) {

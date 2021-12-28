@@ -1,7 +1,9 @@
 <template>
   <div>
     <t-card class="overflow-x-scroll h-full">
-      <div :style="`height: ${blocksWidthHeight.h}px;width: ${blocksWidthHeight.w}px;`">
+      <div
+        :style="`height: ${blocksWidthHeight.h}px;width: ${blocksWidthHeight.w}px;`"
+      >
         <canvas
           :ref="canvasName"
           :id="canvasName"
@@ -9,25 +11,24 @@
           :width="blocksWidthHeight.w"
           :height="blocksWidthHeight.h"
           @mouseup.right="openContextMenu"
-          @contextmenu.prevent
         />
       </div>
 
-      <context-menu  :ref="`block-menu-${hash}`" class="z-50" >
-          <ul>
-            <li @click="canvasToPng()" class="ab-context-menu-item">
-              Save as PNG
-            </li>
-            <li @click="startExport('clipboard')" class="ab-context-menu-item">
-              Export Brush to mIRC Clipboard
-            </li>
-            <li @click="startExport('file')" class="ab-context-menu-item">
-              Export Brush to mIRC File
-            </li>
-            <li @click="saveToLibrary()" class="ab-context-menu-item">
-              Save to Library
-            </li>
-          </ul>
+      <context-menu :ref="`block-menu-${hash}`" class="z-50">
+        <ul>
+          <li @click="canvasToPng()" class="ab-context-menu-item">
+            Save as PNG
+          </li>
+          <li @click="startExport('clipboard')" class="ab-context-menu-item">
+            Export Brush to mIRC Clipboard
+          </li>
+          <li @click="startExport('file')" class="ab-context-menu-item">
+            Export Brush to mIRC File
+          </li>
+          <li @click="saveToLibrary()" class="ab-context-menu-item">
+            Save to Library
+          </li>
+        </ul>
       </context-menu>
     </t-card>
   </div>
@@ -35,18 +36,25 @@
 
 
 <script>
-import { mircColours99, blockWidth, blockHeight, cyrb53, getBlocksWidth, filterNullBlocks,
+import {
+  mircColours99,
+  blockWidth,
+  blockHeight,
+  cyrb53,
+  getBlocksWidth,
+  filterNullBlocks,
   canvasToPng,
   exportMirc,
-  downloadFile  } from "../../ascii";
+  downloadFile,
+} from "../../ascii";
 import ContextMenu from "./ContextMenu.vue";
 export default {
   name: "BrushCanvas",
   created() {
-    window.addEventListener('load', () => {
-         // Fixes the font on load issue
-         this.delayRedrawCanvas();
-    })
+    window.addEventListener("load", () => {
+      // Fixes the font on load issue
+      this.delayRedrawCanvas();
+    });
   },
   mounted() {
     this.ctx = this.$refs[this.canvasName].getContext("2d");
@@ -75,7 +83,7 @@ export default {
       return blockHeight * this.blockSizeMultiplier;
     },
     blockSizeMultiplier() {
-      return this.$store.getters.blockSizeMultiplier
+      return this.$store.getters.blockSizeMultiplier;
     },
     currentAscii() {
       return this.$store.getters.currentAscii;
@@ -129,9 +137,9 @@ export default {
     },
     blocksWidthHeight() {
       return {
-          w: getBlocksWidth(this.getBlocks) * this.blockWidth,
-          h: this.getBlocks.length * this.blockHeight
-        }
+        w: getBlocksWidth(this.getBlocks) * this.blockWidth,
+        h: this.getBlocks.length * this.blockHeight,
+      };
     },
     mircColours() {
       return mircColours99;
@@ -200,7 +208,11 @@ export default {
 
         default:
         case "file":
-          downloadFile(ascii.output.join(""), `brush-${this.hash}.txt`, "text/plain");
+          downloadFile(
+            ascii.output.join(""),
+            `brush-${this.hash}.txt`,
+            "text/plain"
+          );
           this.$refs[`block-menu-${this.hash}`].close();
           break;
       }
@@ -208,19 +220,19 @@ export default {
     saveToLibrary() {
       this.$store.commit("pushBrushLibrary", this.getBlocks);
       this.$toasted.show(`Saved brush to Library`, {
-            type: "success",
-          });
-          this.$refs[`block-menu-${this.hash}`].close();
+        type: "success",
+      });
+      this.$refs[`block-menu-${this.hash}`].close();
     },
     canvasToPng() {
-      canvasToPng(this.canvasRef, `brush-${this.hash}.png`)
+      canvasToPng(this.canvasRef, `brush-${this.hash}.png`);
       this.$refs[`block-menu-${this.hash}`].close();
     },
     getBlocksWidth(blocks) {
-      return getBlocksWidth(blocks)
+      return getBlocksWidth(blocks);
     },
     filterNullBlocks(blocks) {
-      return filterNullBlocks(blocks)
+      return filterNullBlocks(blocks);
     },
     openContextMenu(e) {
       e.preventDefault();
@@ -246,7 +258,7 @@ export default {
 
       // Get middle block
       if (this.getBlocks) {
-        let blocksWidth = this.getBlocksWidth(this.getBlocks)
+        let blocksWidth = this.getBlocksWidth(this.getBlocks);
         for (y = 0; y < this.getBlocks.length; y++) {
           for (x = 0; x < blocksWidth; x++) {
             if (this.getBlocks[y] && this.getBlocks[y][x]) {
@@ -286,12 +298,12 @@ export default {
       if (this.redraw) {
         this.redraw = false;
         var _this = this;
-        setTimeout(function(){
+        setTimeout(function () {
           requestAnimationFrame(() => {
             _this.drawPreview();
             _this.redraw = true;
           });
-        }, 1000/this.options.fps)
+        }, 1000 / this.options.fps);
       }
     },
   },

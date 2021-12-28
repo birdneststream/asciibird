@@ -7,18 +7,16 @@
     @closed="$store.commit('closeModal', 'overlay')"
   >
     <template v-slot:default>
-    <div >
-        <span class="text-sm">URL <br><small>Note: ASCIIBIRD only supports URL images</small></span>
-        
-        <t-input
-            type="text"
-            name="url"
-            v-model="imageOverlay.url"
-        />
+      <div>
+        <span class="text-sm"
+          >URL <br /><small
+            >Note: ASCIIBIRD only supports URL images</small
+          ></span
+        >
 
-    </div>
-      
-      
+        <t-input type="text" name="url" v-model="imageOverlay.url" />
+      </div>
+
       <div class="flex">
         <label class="ml-1 w-1/3">
           <t-checkbox
@@ -39,22 +37,26 @@
             max="100"
             class="m-1"
           />
+        </label>
+
+        <div class="flex">
+          <label class="flex items-center">
+            <t-radio
+              name="options"
+              :value="true"
+              v-model="imageOverlay.stretched"
+            />
+            <span class="ml-2 text-sm">Fit to ASCII</span>
           </label>
-
-
-          <div class="flex">
-            <label class="flex items-center">
-              <t-radio name="options" :value="true" v-model="imageOverlay.stretched"  />
-              <span class="ml-2 text-sm">Fit to ASCII</span>
-            </label>
-            <label class="flex items-center ml-2">
-              <t-radio name="options" :value="false" v-model="imageOverlay.stretched" />
-              <span class="ml-2 text-sm">Original Size</span>
-            </label>
-          </div>
-
-          
-        
+          <label class="flex items-center ml-2">
+            <t-radio
+              name="options"
+              :value="false"
+              v-model="imageOverlay.stretched"
+            />
+            <span class="ml-2 text-sm">Original Size</span>
+          </label>
+        </div>
       </div>
 
       <div class="flex">
@@ -75,8 +77,6 @@
           />
           <span class="text-sm">Repeat Y</span>
         </label>
-
-
       </div>
     </template>
 
@@ -86,9 +86,7 @@
         @click="$store.commit('closeModal', 'overlay')"
       >
         <t-button type="button" class="p-2"> Cancel </t-button>
-        <t-button type="button" class="p-2">
-          Ok
-        </t-button>
+        <t-button type="button" class="p-2"> Ok </t-button>
       </div>
     </template>
   </t-modal>
@@ -105,15 +103,14 @@ export default {
       this.close();
     }
   },
-  data: () => ({
-  }),
+  data: () => ({}),
   computed: {
     showOverlayModal() {
       return this.$store.getters.modalState.overlay;
     },
     imageOverlay() {
       return this.$store.getters.imageOverlay || {};
-    }
+    },
   },
   watch: {
     showOverlayModal(val) {
@@ -125,12 +122,12 @@ export default {
         this.close();
       }
     },
-    imageOverlay:{
-        handler: function(val, old) {
-            this.$store.commit("updateImageOverlay", this.imageOverlay);
-        },
-        deep: true
-    }
+    imageOverlay: {
+      handler: function (val, old) {
+        this.$store.commit("updateImageOverlay", this.imageOverlay);
+      },
+      deep: true,
+    },
   },
   methods: {
     open() {

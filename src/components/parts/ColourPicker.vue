@@ -1,16 +1,8 @@
 <template>
-  <vue-draggable-resizable
-    :x="100"
-    :y="100"
-    :w="400"
-    :h="278"
-  >
+  <vue-draggable-resizable :x="100" :y="100" :w="400" :h="278">
     <t-card class="w-full h-full">
-      <span
-        v-for="(value, keyColours) in mircColours"
-        :key="keyColours"
-      >
-        <hr v-if="keyColours === 16">
+      <span v-for="(value, keyColours) in mircColours" :key="keyColours">
+        <hr v-if="keyColours === 16" />
 
         <t-button
           type="button"
@@ -24,10 +16,10 @@
 </template>
 
 <script>
-import { mircColours99 } from '../../ascii';
+import { mircColours99 } from "../../ascii";
 
 export default {
-  name: 'ColourPicker',
+  name: "ColourPicker",
   created() {},
   computed: {
     mircColours() {
@@ -39,16 +31,16 @@ export default {
   },
   methods: {
     close() {
-      this.$store.commit('changeIsUpdatingFg', false);
-      this.$store.commit('changeIsUpdatingBg', false);
+      this.$store.commit("changeIsUpdatingFg", false);
+      this.$store.commit("changeIsUpdatingBg", false);
     },
     onColourChange(colour) {
       if (this.toolbarState.isChoosingFg) {
-        this.$store.commit('changeColourFg', colour);
+        this.$store.commit("changeColourFg", colour);
       }
 
       if (this.toolbarState.isChoosingBg) {
-        this.$store.commit('changeColourBg', colour);
+        this.$store.commit("changeColourBg", colour);
       }
     },
   },

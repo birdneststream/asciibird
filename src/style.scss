@@ -100,7 +100,6 @@ body {
     --bar-sub-menu-border-radius: 6px;
 }
 
-/* @layer base { */
 .bar {
     @apply bg-gray-500;
 }
@@ -137,4 +136,3 @@ body {
 .ab-context-menu-item {
     @apply ml-1 hover:bg-gray-800 hover:text-white;
 }
-/* } */
