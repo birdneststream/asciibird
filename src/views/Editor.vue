@@ -198,7 +198,7 @@ export default {
     isUsingKeyboard: false,
     canvasHash: null,
   }),
-  props: ["updateCanvas", "yOffset", "canvasxy", "brush", "updateascii"],
+  props: ["updateCanvas", "yOffset", "canvasxy", "brush", "updateascii", "resetSelect"],
   computed: {
     canvasRef() {
       return this.$refs.canvas;
@@ -385,6 +385,10 @@ export default {
         this.delayRedrawCanvas();
       }
     },
+    resetSelect(val, old) {
+      console.log(val)
+      this.resetSelectTool();
+    },
     currentSelectedLayer(val, old) {
       // if (val && val.visible) {
       //   this.warnInvisibleLayer();
@@ -404,7 +408,7 @@ export default {
             startY: null,
           };
 
-          this.resetSelect();
+          this.resetSelectTool();
 
           this.clearToolCanvas();
           break;
@@ -818,7 +822,7 @@ export default {
     redo() {
       this.$store.commit("redoBlocks");
     },
-    resetSelect() {
+    resetSelectTool() {
       this.selecting = {
         startX: null,
         startY: null,
@@ -826,10 +830,14 @@ export default {
         endY: null,
         canSelect: false,
       };
+
+      this.selectedBlocks = [];
+      this.clearToolCanvas();
+      this.delayRedrawCanvas();
       this.$emit("selecting", this.selecting);
     },
     redrawSelect() {
-      if (this.currentAsciiLayerBlocks.length) {
+      if (this.currentAsciiLayerBlocks.length && this.isSelected) {
         this.clearToolCanvas();
         this.toolCtx.fillStyle = this.mircColours[0];
 
@@ -1930,6 +1938,14 @@ export default {
         delete newColor["bg"];
       }
 
+      if (!this.canFg) {
+        delete newColor["fg"];
+      }
+
+      if (!this.canText) {
+        delete newColor["char"];
+      }
+
       // If the newColor is same as the existing
       // Then return the original image.
       if (JSON.stringify(current) === JSON.stringify(newColor) && !eraser) {
@@ -1960,9 +1976,24 @@ export default {
         return;
       }
 
+      if (
+        this.diffBlocks[y] !== undefined &&
+        this.diffBlocks[y][x] !== undefined
+      ) {
+        return;
+      }
+
       let targetBlock = currentLayerBlocks[y][x];
 
       if (this.canBg && targetBlock.bg !== current.bg) {
+        return;
+      }
+
+      if (this.canFg && targetBlock.fg !== current.fg) {
+        return;
+      }
+
+      if (this.canText && targetBlock.char !== current.char) {
         return;
       }
 

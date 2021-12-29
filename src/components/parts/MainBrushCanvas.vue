@@ -14,7 +14,7 @@
           class="brushcanvas"
           @mousemove="canvasMouseMove"
           @mousedown.left="processClick"
-          @mouseup.left="canTool = false"
+          @mouseup="canTool = false"
           :width="blocksWidthHeight.w"
           :height="blocksWidthHeight.h"
           @mouseenter="disableToolbarMoving"
@@ -262,8 +262,6 @@ export default {
       this.$refs[`main-brush-menu`].close();
     },
     processClick(e) {
-      this.canTool = true;
-
       if (e.offsetX >= 0) {
         this.x = e.offsetX;
       }
@@ -276,13 +274,17 @@ export default {
       this.y = Math.floor(this.y / blockHeight);
 
       if (this.isErasing) {
+        this.canTool = true;
         this.hasChanged = true;
         this.eraseBlock();
+        // this.canTool = false;
       }
 
       if (this.isBrushing) {
+        this.canTool = true;
         this.hasChanged = true;
         this.addBlock();
+        // this.canTool = false;
       }
     },
     getBlocksWidth(blocks) {
@@ -410,26 +412,29 @@ export default {
       this.delayRedrawCanvas();
     },
     eraseBlock() {
-      if (this.canBg) {
+      if (this.canBg && this.brushBlocks[this.y][this.x]["bg"] !== undefined) {
         delete this.brushBlocks[this.y][this.x]["bg"];
       }
 
-      if (this.canFg) {
+      if (this.canFg && this.brushBlocks[this.y][this.x]["fg"] !== undefined) {
         delete this.brushBlocks[this.y][this.x]["fg"];
       }
 
-      if (this.canText) {
+      if (this.canText && this.brushBlocks[this.y][this.x]["char"] !== undefined) {
         delete this.brushBlocks[this.y][this.x]["char"];
       }
 
       this.delayRedrawCanvas();
     },
     disableToolbarMoving() {
+      this.canTool = false;
       this.$store.commit("changeToolBarDraggable", false);
     },
     enableToolbarMoving() {
       // Save the blocks when the mouse leaves the canvas area
       // To avoid one block history changes
+      this.canTool = false;
+
       if ((this.isErasing || this.isBrushing) && this.hasChanged) {
         this.$store.commit("brushBlocks", this.brushBlocks);
         this.$store.commit("changeToolBarDraggable", true);

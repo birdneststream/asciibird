@@ -160,6 +160,7 @@
         :y-offset="scrollOffset"
         :brush="drawBrush"
         :updateascii="updateAscii"
+        :reset-select="resetSelect"
       />
 
       <Toolbar v-show="toolbarState.visible" :y-offset="scrollOffset" />
@@ -311,6 +312,7 @@ export default {
     isShowingDialog: false,
     drawBrush: false,
     happy: false,
+    resetSelect: false,
     mirror: {
       x: false,
       y: false,
@@ -382,6 +384,9 @@ export default {
       }
 
       return menu.reverse();
+    },
+    isKeyboardDisabled() {
+      return this.$store.getters.isKeyboardDisabled;
     },
     selectedLayer() {
       return this.$store.getters.selectedLayer;
@@ -501,7 +506,6 @@ export default {
             text: "New ASCII",
             click: () => this.$store.commit("openModal", "new-ascii"),
             icon: "fiber_new",
-            disabled: !this.isDefault,
             hotkey: "ctrl+m",
           },
         ],
@@ -558,6 +562,7 @@ export default {
                   "selectBlocks",
                   filterNullBlocks(this.selectedBlocks)
                 );
+                this.resetSelect = !this.resetSelect;
                 this.selectedBlocks = [];
                 this.$toasted.show("Copied blocks!", {
                   type: "success",
@@ -565,10 +570,7 @@ export default {
                 });
               },
               icon: "content_copy",
-              disabled:
-                !this.selectedBlocks.length &&
-                !this.isSelected &&
-                !this.isSelecting,
+              disabled: !this.isSelecting || !this.selectedBlocks.length,
               hotkey: "ctrl+c",
             },
             {
@@ -594,16 +596,11 @@ export default {
                     filterNullBlocks(this.selectedBlocks)
                   );
 
+                  this.resetSelect = !this.resetSelect;
                   this.selectedBlocks = [];
 
                   // Reset and hide the select after successful copy
                   this.dispatchBlocks();
-
-                  // this.$store.commit(
-                  //   "updateAsciiBlocks",
-                  //   this.currentAsciiLayerBlocks
-                  // );
-
                   this.$emit("updatecanvas");
 
                   this.$toasted.show("Cut blocks!", {
@@ -613,10 +610,7 @@ export default {
                 }
               },
               icon: "content_cut",
-              disabled:
-                !this.selectedBlocks.length &&
-                !this.isSelected &&
-                !this.isSelecting,
+              disabled: !this.isSelecting || !this.selectedBlocks.length,
               hotkey: "ctrl+x",
             },
             {
@@ -625,9 +619,13 @@ export default {
                 this.$store.commit("pushBrushHistory", this.brushBlocks);
                 this.$store.commit("brushBlocks", this.selectBlocks);
                 this.$store.commit("changeTool", 4);
+
+                this.resetSelect = !this.resetSelect;
+                this.selectedBlocks = [];
+                this.$store.commit("selectBlocks", []);
               },
               icon: "content_paste",
-              disabled: !this.selectedBlocks.length,
+              disabled: !this.selectBlocks.length,
               hotkey: "ctrl+v",
             },
             {
@@ -652,7 +650,9 @@ export default {
                   this.dispatchBlocks();
 
                   this.$emit("updatecanvas");
+                  this.resetSelect = !this.resetSelect;
                   this.selectedBlocks = [];
+                  this.$store.commit("selectBlocks", []);
                   this.$toasted.show("Deleted blocks!", {
                     type: "success",
                     icon: "delete_sweep",
@@ -660,10 +660,7 @@ export default {
                 }
               },
               icon: "delete_sweep",
-              disabled:
-                !this.selectedBlocks.length &&
-                !this.isSelected &&
-                !this.isSelecting,
+              disabled: !this.isSelected && !this.selectedBlocks.length,
               hotkey: "Delete",
             },
           ],
@@ -1311,6 +1308,9 @@ export default {
           downloadFile(ascii.output.join(""), ascii.filename, "text/plain");
           break;
         case "post":
+          console.log(hotkeys.getScope());
+          // hotkeys.deleteScope("all");
+
           this.$store.commit("toggleDisableKeyboard", true);
           this.isShowingDialog = true;
           this.$dialog
@@ -1327,8 +1327,10 @@ export default {
                   type: "error",
                 });
                 this.$store.commit("toggleDisableKeyboard", false);
+                // hotkeys.setScope("all");
                 return;
               }
+              
 
               if (result.isOk) {
                 let ascii = exportMirc();
@@ -1361,6 +1363,7 @@ export default {
               }
 
               this.$store.commit("toggleDisableKeyboard", false);
+              // hotkeys.setScope("all");
               this.isShowingDialog = false;
             });
 

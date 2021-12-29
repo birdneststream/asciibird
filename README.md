@@ -48,8 +48,8 @@ A most latest production build to use is available at https://asciibird.jewbird.
   * For example filling with Char unchecked will ignore characters when filling
   * If you want to remove the background but keep the text, uncheck FG and Char and eraser the bg only.
 * Image overlay to trace images
- * Accepts URLs only at the moment
- * Can adjust the size and properties
+  * Accepts URLs only at the moment
+  * Can adjust the size and properties
 * Toolbar containing
   * Select, to copy and paste blocks as brushes
   * Text mode, with arrow key support
@@ -69,27 +69,28 @@ A most latest production build to use is available at https://asciibird.jewbird.
   * Right clicking removes block
   * Hovering outside brush area will save brush to history
 * Context menu available on all brushes preview areas
- * Export any brush to PNG, mIRC clipboard or file by right clicking the brush preview
+  * Export any brush to PNG, mIRC clipboard or file by right clicking the brush preview
 
 # Roadmap and Bug To Fixes
 
 ## Features to Add
 
-* While select works fine, it could be improved.
+* Add about asciibird modal
 * Warning on mirc export if ascii exceeds IRCs 512 per chat line limit.
 * Review encodings check on file import - UTF8 vs Latin something
 
 ## Bugs to fix
 
 * Can't move toolbar, maybe related to after dialog or modal is open
-* Brush edit if scroll out wont register mouse down and keep applying brush on scroll over without clicking
 * Colors / chars panels wont open where toolbar is, if you scroll down a lot then try open them they will be at the top
-* Fill tool has too much recursion sometimes
-* One of the mirror brushes might be bugged sometimes and leave undoable blocks
+* Fill tool has too much recursion sometimes, mostly it is okay
+* One of the mirror brushes might be bugged sometimes and leave undoable blocks, if the mirror paths cross over it seems to do this
+
 * Strange sort of bug with remove layer and selecting layer after, scroll up and down to redraw the canvas if it goes blank
-* Redo will cause errors on layers sometimes
+  * Redo will cause errors on layers sometimes, mostly okay
+
 * The edit dialog, even when code to save new data is commented out, will slow down everything if you open and save the modal a few times
-* The current mIRC importer will fail on C5, type blocks by discarding the `,` character when it should preserve it. `art.txt` ascii is a good example of this. 98% of txt ascii imported should be fine.
+* The current mIRC importer will fail on `C5,` type blocks by discarding the `,` character when it should preserve it. `art.txt` ascii is a good example of this. 98% of txt ascii imported should be fine.
 ## Mobile / Touch Screen support
 
 Doesn't exist at the moment. While the underlying functions and code is compatible with mobile browsers from *babel*, the touch canvas events and text will need to be reviewed to work better with touch screens. For example while you can brush once, you cannot move the brush around.
