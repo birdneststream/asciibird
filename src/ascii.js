@@ -485,22 +485,21 @@ export const exportMirc = (blocks = null) => {
           output.push('\u0003');
         } else {
 
-          if (curBlock.bg === undefined && curBlock.fg !== undefined) {
-            pushString = `\u0003${zeroPad(curBlock.fg, 2)}`;
+          if (curBlock.bg === undefined && (curBlock.fg !== undefined || curBlock.fg !== null)) {
+            pushString = `\u0003${zeroPad(curBlock.fg ?? 0, 2)}`;
           }
 
-          if (curBlock.bg !== undefined && curBlock.fg !== undefined) {
-            // Asciiblaster export will check if the next char is a number and add 0 padding
-            // to the ,bg value, if we get that we can save some bytes on the bg char.
-            // if (blocks[y][x + 1].char && Number.parseInt(blocks[y][x + 1].char)) {
-            pushString = `\u0003${curBlock.fg},${zeroPad(curBlock.bg, 2)}`;
-            // } else {
-            //   pushString = `\u0003${curBlock.fg},${curBlock.bg}`;
-            // }
+          if ((curBlock.bg !== undefined || curBlock.bg !== null) && (curBlock.fg !== undefined || curBlock.fg !== null)) {
+            // export will check if the next char is a number and add 0 padding to prevent clients eating characters
+            if (blocks[y][x + 1].char !== undefined && (Number.parseInt(blocks[y][x + 1].char) >= 0 && Number.parseInt(blocks[y][x + 1].char) <= 9)) {
+              pushString = `\u0003${curBlock.fg ?? 0},${zeroPad(curBlock.bg ?? 1, 2)}`;
+            } else {
+              pushString = `\u0003${curBlock.fg},${curBlock.bg}`;
+            }
           }
 
-          if (curBlock.bg !== undefined && curBlock.fg === undefined) {
-            pushString = `\u0003,${zeroPad(curBlock.bg, 2)}`;
+          if ((curBlock.bg !== undefined && curBlock.bg !== null) && curBlock.fg === undefined) {
+            pushString = `\u0003,${zeroPad(curBlock.bg ?? 1, 2)}`;
           }
 
           output.push(pushString);
@@ -523,9 +522,9 @@ export const exportMirc = (blocks = null) => {
     };
 
     // New line except for the very last line
-    if (blocks[y] && y < blocks[y].length - 1) {
+    // if (blocks[y] && y < blocks[y].length - 1) {
       output.push('\n');
-    }
+    // }
   }
 
   // Download to a txt file
