@@ -1383,18 +1383,6 @@ export default {
     drawIndicator() {
       this.drawRectangleBlock(this.x, this.y);
 
-      // We can draw icons on the tool canvas with the font awesome CSS
-      // it needs more work though to not conflict with the brush preview chars
-      // if (this.isTextEditing) {
-      //   this.toolCtx.font = '600 22px "Font Awesome 5 Free"';
-      //   this.toolCtx.fillText(
-      //     "\uf031",
-      //     this.x * blockWidth,
-      //     this.y * blockHeight + blockHeight * 2
-      //   );
-      //   // this.toolCtx.font = "13px Hack";
-      // }
-
       if (this.isTextEditing) {
         if (this.mirrorX) {
           this.drawRectangleBlock(this.currentAsciiWidth - this.x, this.y);
