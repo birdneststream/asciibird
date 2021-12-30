@@ -27,7 +27,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 ## Greetz to Chat Pals
 
-> darkmage, l0de, bex, blarf, sludg, shart, chode, corn, ralph, jrra, kuntz, moony, scd, aztec, astro, anji, b-rex, bengt, butth0le, canada420, clamkin, deakin, dumbguy, ElBurro, interdome, syn, darkness, vae, gowce, moneytree, Retarded, spoon, sylar, zen, bj0rn, stovepipe, morthrane, chrono, acidvegas, again, hgc, durendal, knio, mavericks, pyrex, sh, irie, seirdy, sq, stratum, WeEatnKid, dieforirc, tater, buttvomit, luldangs, MichealK, AnalMan, poccri, vap0r, kakama, fregyXin
+> darkmage, l0de, bex, blarf, sludg, shart, chode, corn, ralph, jrra, kuntz, moony, scd, aztec, astro, anji, b-rex, bengt, butth0le, canada420, clamkin, deakin, dumbguy, ElBurro, interdome, syn, darkness, vae, gowce, moneytree, Retarded, spoon, sylar, zen, bj0rn, stovepipe, morthrane, chrono, acidvegas, again, hgc, durendal, knio, mavericks, pyrex, sh, irie, seirdy, sq, stratum, WeEatnKid, dieforirc, tater, buttvomit, luldangs, MichealK, AnalMan, poccri, vap0r, kakama, fregyXin, stovepipe
 
 # Current Features
 
@@ -77,19 +77,16 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 # Roadmap and Bug To Fixes
 
-## Features to Add
-
 * Warning on mirc export if ascii exceeds IRCs 512 per chat line limit.
 * Review encodings check on file import - UTF8 vs Latin something
 * Colors / chars panels wont open where toolbar is, if you scroll down a lot then try open them they will be at the top
 * One of the mirror brushes might be bugged sometimes and leave undoable blocks, if the mirror paths cross over it seems to do this
 * The layers and undo sometimes may have bugs, but seems hard to replicate.
-
-## Bugs to fix
-
-* The edit dialog, even when code to save new data is commented out, will slow down everything if you open and save the modal a few times
+* The width and height of the ascii cannot be changed from edit modal, still to do
+* Improve image overlay modal
 * The current mIRC importer will fail on `C5,` type blocks by discarding the `,` character when it should preserve it. `art.txt` ascii is a good example of this. 98% of txt ascii imported should be fine.
-`## Mobile / Touch Screen support
+
+## Mobile / Touch Screen support
 
 Doesn't exist at the moment. While the underlying functions and code is compatible with mobile browsers from *babel*, the touch canvas events and text will need to be reviewed to work better with touch screens. For example while you can brush once, you cannot move the brush around.
 
