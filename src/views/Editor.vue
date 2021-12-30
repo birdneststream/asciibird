@@ -110,7 +110,7 @@ export default {
     });
 
     var _this = this;
-    hotkeys("*", "editor", function (event, handler) {
+    hotkeys("*", "editor" , function (event, handler) {
       event.preventDefault();
 
       if (_this.isTextEditing) {
@@ -386,7 +386,6 @@ export default {
       }
     },
     resetSelect(val, old) {
-      console.log(val)
       this.resetSelectTool();
     },
     currentSelectedLayer(val, old) {
@@ -476,26 +475,26 @@ export default {
         this.diffBlocks.l = val;
       }
     },
-    updateascii(val, old) {
-      if (val.width !== old.width || val.height !== old.height) {
-        let layers = fillNullBlocks(val.height, val.width);
+    // updateascii(val, old) {
+    //   if (val.width !== old.width || val.height !== old.height) {
+    //     let layers = fillNullBlocks(val.height, val.width);
 
-        this.canvas.width = val.width * blockWidth;
-        this.canvas.height = val.height * blockHeight;
+    //     this.canvas.width = val.width * blockWidth;
+    //     this.canvas.height = val.height * blockHeight;
 
-        this.$store.commit("changeAsciiWidthHeight", {
-          width: val.width,
-          height: val.height,
-          layers: [...layers],
-        });
+    //     this.$store.commit("changeAsciiWidthHeight", {
+    //       width: val.width,
+    //       height: val.height,
+    //       layers: [...layers],
+    //     });
 
-        this.$refs.canvasdrag.width = val.width * blockWidth;
-        this.$refs.canvasdrag.height = val.height * blockHeight;
+    //     this.$refs.canvasdrag.width = val.width * blockWidth;
+    //     this.$refs.canvasdrag.height = val.height * blockHeight;
 
-        this.clearToolCanvas();
-        this.delayRedrawCanvas();
-      }
-    },
+    //     this.clearToolCanvas();
+    //     this.delayRedrawCanvas();
+    //   }
+    // },
     // Layers undo
     currentAsciiLayers(val, old) {
       this.delayRedrawCanvas(true);
@@ -1942,9 +1941,9 @@ export default {
         delete newColor["fg"];
       }
 
-      if (!this.canText) {
-        delete newColor["char"];
-      }
+      // if (!this.canText) {
+      //   delete newColor["char"];
+      // }
 
       // If the newColor is same as the existing
       // Then return the original image.
@@ -1993,9 +1992,9 @@ export default {
         return;
       }
 
-      if (this.canText && targetBlock.char !== current.char) {
-        return;
-      }
+      // if (this.canText && targetBlock.char !== current.char) {
+      //   return;
+      // }
 
       // We can eraser or fill
       let oldBlock = { ...targetBlock };

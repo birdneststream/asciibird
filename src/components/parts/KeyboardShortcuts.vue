@@ -10,19 +10,20 @@ export default {
   created() {
     var _this = this;
 
-    hotkeys("Enter", function (event, handler) {
-      event.preventDefault();
-      // Enter events to confirm and close dialogs and modals
-      if (_this.isShowingDialog) {
-        _this.$dialog.hide("dialog-posthttp");
-        return;
-      }
-    });
+    // hotkeys("Enter", "editor", function (event, handler) {
+    //   event.preventDefault();
+    //   // Enter events to confirm and close dialogs and modals
+    //   if (_this.isShowingDialog) {
+    //     _this.$dialog.hide("dialog-posthttp");
+    //     return;
+    //   }
+    // });
 
     hotkeys("*", "editor", function (event, handler) {
+
       event.preventDefault();
 
-      if (_this.toolbarState.isChoosingChar && event.key.length === 1) {
+      if (_this.toolbarState.isChoosingChar && event.key.length === 1 && !_this.disableKeyboard) {
         _this.$store.commit("changeChar", event.key);
         return;
       }
@@ -60,7 +61,7 @@ export default {
       }
     });
 
-    hotkeys("Escape", function (event, handler) {
+    hotkeys("Escape", "editor", function (event, handler) {
       if (
         !_this.textEditing &&
         (_this.toolbarState.isChoosingChar ||

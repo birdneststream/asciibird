@@ -267,8 +267,6 @@ export default {
 
           this.$store.commit("toggleDisableKeyboard", false);
         });
-
-      this.closeMenu();
     },
     updateLayerName(key, label) {
       this.$store.commit("updateLayerName", {

@@ -29,6 +29,7 @@ export default new Vuex.Store({
       pasteAscii: false,
       options: false,
       overlay: false,
+      about: false,
     },
     isKeyboardDisabled: false,
     // The various options of ASCIIBIRD will eventually
@@ -36,7 +37,7 @@ export default new Vuex.Store({
     options: {
       defaultBg: 1,
       defaultFg: 0,
-      renderOffScreen: true,
+      renderOffScreen: false,
       undoLimit: 50,
       brushLimit: 50,
       tabLimit: 12,
@@ -569,9 +570,8 @@ export default new Vuex.Store({
 
           let data = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
             .history[historyIndex - 1].d));
-          console.log(data)
 
-          state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(data
+            state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(data
             .old));
 
           state.asciibirdMeta[state.tab].historyIndex--;
@@ -631,7 +631,6 @@ export default new Vuex.Store({
 
           let data = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
             .history[historyIndex].d));
-          console.log(data)
 
           state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(data
             .old));
@@ -794,6 +793,11 @@ export default new Vuex.Store({
           state.modalState.overlay = true;
           state.isKeyboardDisabled = true;
           break;
+
+        case 'about':
+          state.modalState.about = true;
+          state.isKeyboardDisabled = true;
+          break;
       }
     },
     closeModal(state, type) {
@@ -821,6 +825,11 @@ export default new Vuex.Store({
 
         case 'overlay':
           state.modalState.overlay = false;
+          state.isKeyboardDisabled = false;
+          break;
+
+        case 'about':
+          state.modalState.about = false;
           state.isKeyboardDisabled = false;
           break;
       }

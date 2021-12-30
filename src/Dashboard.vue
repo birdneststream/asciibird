@@ -1,38 +1,28 @@
 <template>
   <div id="app" @contextmenu.prevent>
     <div v-show="menuBarVisible">
-      <vue-file-toolbar-menu :content="myMenu" />
+      <vue-file-toolbar-menu
+        :content="myMenu"
+        v-if="!(isModalOpen || isKeyboardDisabled)"
+      />
     </div>
 
-    <NewAscii />
-    <Options v-if="asciibirdMeta.length" />
-    <EditAscii v-if="asciibirdMeta.length" @updateAscii="updateAsciiDetails" />
-    <PasteAscii />
-    <ImageOverlay v-if="asciibirdMeta.length" />
+    <NewAscii v-if="modalState.newAscii" />
+    <Options v-if="asciibirdMeta.length && modalState.options" />
+
+    <About v-if="modalState.about" />
+    <EditAscii v-if="asciibirdMeta.length  && modalState.editAscii" @updateAscii="updateAsciiDetails" />
+    <PasteAscii v-if="modalState.pasteAscii"  />
+    <ImageOverlay v-if="asciibirdMeta.length && modalState.overlay" />
 
     <KeyboardShortcuts
       :selected-blocks="selectedBlocks"
       :selecting="selecting"
-      :is-showing-dialog="isShowingDialog"
       @updatecanvas="updatecanvas"
       :is-inputting-brush-size="this.isInputtingBrushSize"
       :canvas-x="canvasX"
       :canvas-y="canvasY"
-      @triggerbrush="triggerbrush"
     />
-
-    <!-- <t-dialog
-      name="dialog-posthttp"
-      title="Enter URL"
-      text="Enter URL for POST command"
-      icon="question"
-      :clickToClose="false"
-      :showCloseButton="true"
-      :disableBodyScroll="true"
-      @closed="postHttp()"
-    > 
-      <t-input v-model="lastPostURL" />
-    </t-dialog> -->
 
     <context-menu ref="menu" class="z-50">
       <ul>
@@ -158,7 +148,6 @@
         :update-canvas="updateCanvas"
         @selecting="updateSelecting"
         :y-offset="scrollOffset"
-        :brush="drawBrush"
         :updateascii="updateAscii"
         :reset-select="resetSelect"
       />
@@ -231,6 +220,7 @@ import Options from "./components/modals/Options.vue";
 import ImageOverlay from "./components/modals/ImageOverlay.vue";
 import EditAscii from "./components/modals/EditAscii.vue";
 import PasteAscii from "./components/modals/PasteAscii.vue";
+import About from "./components/modals/About.vue";
 
 import BrushCanvas from "./components/parts/BrushCanvas.vue";
 import BrushPreview from "./components/parts/BrushPreview.vue";
@@ -286,6 +276,7 @@ export default {
     Options,
     ImageOverlay,
     VueFileToolbarMenu,
+    About,
   },
   name: "Dashboard",
   data: () => ({
@@ -309,7 +300,6 @@ export default {
     scrollOffset: 0,
     toolbarString: "top: 0px;",
     lastPostURL: "",
-    isShowingDialog: false,
     drawBrush: false,
     happy: false,
     resetSelect: false,
@@ -367,6 +357,12 @@ export default {
     selectBlocks() {
       return this.$store.getters.selectBlocks;
     },
+    modalState() {
+      return this.$store.getters.modalState;
+    },
+    isModalOpen() {
+      return this.$store.getters.isModalOpen;
+    },
 
     // Layers
     asciiLayersMenu() {
@@ -386,6 +382,7 @@ export default {
       return menu.reverse();
     },
     isKeyboardDisabled() {
+      
       return this.$store.getters.isKeyboardDisabled;
     },
     selectedLayer() {
@@ -481,10 +478,10 @@ export default {
         for (let i in this.asciibirdMeta) {
           let ascii = this.asciibirdMeta[i];
 
-          // let shortcutKey = Number.parseInt(1 + i);
           menu.push({
             text: ascii.title,
             click: () => this.changeTab(i),
+            
             icon: "insert_drive_file",
             hotkey: `ctrl+${i}`,
           });
@@ -517,7 +514,7 @@ export default {
             text: "Close ASCII",
             click: () => this.closeTab(this.currentTab),
             icon: "close",
-            hotkey: "ctrl+q",
+            hotkey: "ctrl+r",
           },
           {
             text: "Change ASCII",
@@ -1097,6 +1094,28 @@ export default {
                 disabled: !this.canToggleLayer,
               },
             ],
+          },
+          {
+            text: "Help",
+            icon: "help",
+            menu: [
+              {
+                text: "ASCIIBIRD on GitHub",
+                click: () => window.open("https://github.com/hughbord/asciibird", "_blank"),
+                icon: "code",
+              },
+              {
+                text: "ASCIIBIRD on tcp.direct Git",
+                click: () => window.open("https://git.tcp.direct/jewbird/asciibird", "_blank"),
+                icon: "code",
+              },
+              {
+                text: "About ASCIIBIRD",
+                click: () => this.$store.commit("openModal", "about"),
+                hotkey: "F1",
+                icon: "help_outline",
+              },
+            ],
           }
         );
       }
@@ -1109,6 +1128,16 @@ export default {
     //   this.$refs.tabbar.style.top = val;
     //   this.toolbarString = `top: ${val}px`;
     // },
+    isModalOpen(val, old) {
+      if (val) {
+        hotkeys.deleteScope("all");
+      } 
+    },
+    isKeyboardDisabled(val, old) {
+      if (val) {
+        hotkeys.deleteScope("all");
+      } 
+    }
   },
   methods: {
     updateAsciiDetails(widthHeight) {
@@ -1308,11 +1337,7 @@ export default {
           downloadFile(ascii.output.join(""), ascii.filename, "text/plain");
           break;
         case "post":
-          console.log(hotkeys.getScope());
-          // hotkeys.deleteScope("all");
-
           this.$store.commit("toggleDisableKeyboard", true);
-          this.isShowingDialog = true;
           this.$dialog
             .prompt({
               title: "HTTP Post your Ascii",
@@ -1327,10 +1352,8 @@ export default {
                   type: "error",
                 });
                 this.$store.commit("toggleDisableKeyboard", false);
-                // hotkeys.setScope("all");
                 return;
               }
-              
 
               if (result.isOk) {
                 let ascii = exportMirc();
@@ -1363,8 +1386,6 @@ export default {
               }
 
               this.$store.commit("toggleDisableKeyboard", false);
-              // hotkeys.setScope("all");
-              this.isShowingDialog = false;
             });
 
           break;

@@ -221,10 +221,10 @@ export const parseMircAscii = async (contents, filename) => {
     .split('\u0003\u0003')
     .join('\u0003')
     .split('\u000F').join('')
-    .split('\u0003\n')
-    .join('\n')
-    .split('\u0002\u0003')
-    .join('\u0003');
+    .split('\u0003\n').join('\n')
+    .split('\u0002\u0003').join('\u0003')
+    .split('\u0002').join('') // bold
+    .split('\u001D').join(''); // italics
 
   let asciiLines = contents.split("\n");
 
@@ -485,11 +485,11 @@ export const exportMirc = (blocks = null) => {
           output.push('\u0003');
         } else {
 
-          if (curBlock.bg === undefined && (curBlock.fg !== undefined || curBlock.fg !== null)) {
+          if (curBlock.bg === undefined && (curBlock.fg !== undefined && curBlock.fg !== null)) {
             pushString = `\u0003${zeroPad(curBlock.fg ?? 0, 2)}`;
           }
 
-          if ((curBlock.bg !== undefined || curBlock.bg !== null) && (curBlock.fg !== undefined || curBlock.fg !== null)) {
+          if ((curBlock.bg !== undefined && curBlock.bg !== null) && (curBlock.fg !== undefined && curBlock.fg !== null)) {
             // export will check if the next char is a number and add 0 padding to prevent clients eating characters
             if (blocks[y][x + 1].char !== undefined && (Number.parseInt(blocks[y][x + 1].char) >= 0 && Number.parseInt(blocks[y][x + 1].char) <= 9)) {
               pushString = `\u0003${curBlock.fg ?? 0},${zeroPad(curBlock.bg ?? 1, 2)}`;

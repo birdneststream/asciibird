@@ -6,11 +6,11 @@
     :esc-to-close="true"
     @closed="$store.commit('closeModal', 'edit-ascii')"
   >
-    Width
+    <!-- Width
     <t-input type="number" name="width" v-model="layer.width" min="1" />
 
     Height
-    <t-input type="number" name="height" v-model="layer.height" min="1" />
+    <t-input type="number" name="height" v-model="layer.height" min="1" /> -->
 
     Title
     <t-input type="text" name="title" v-model="layer.title" max="128" />

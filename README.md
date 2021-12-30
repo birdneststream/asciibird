@@ -1,4 +1,4 @@
-# ASCIIBIRD
+# ASCIIBIRD V1 - PRERELEASE BUILD
 
 ```
                            ┏   ┰╛    ╔═━┉┈┉╼━━╌┈╍┅┉╌┄┉┉━═╾─┈═──┄┈╼╍═┈┄╍═╍╼━┈─┈╼┉╍┅╌╮
@@ -24,6 +24,10 @@ A most latest production build to use is available at https://asciibird.jewbird.
 # Big Shout outs to Patrons
 
 > beenz, xartet, OfMonsters&Crime, mouse, funkpower, Charles, PP4L, octopus, addct, hotline, dingopride, skg, eraser, aaa, chz, L0j1k
+
+## Greetz to Chat Pals
+
+> darkmage, l0de, bex, blarf, sludg, shart, chode, corn, ralph, jrra, kuntz, moony, scd, aztec, astro, anji, b-rex, bengt, butth0le, canada420, clamkin, deakin, dumbguy, ElBurro, interdome, syn, darkness, vae, gowce, moneytree, Retarded, spoon, sylar, zen, bj0rn, stovepipe, morthrane, chrono, acidvegas, again, hgc, durendal, knio, mavericks, pyrex, sh, irie, seirdy, sq, stratum, WeEatnKid, dieforirc, tater, buttvomit, luldangs, MichealK, AnalMan, poccri, vap0r, kakama, fregyXin
 
 # Current Features
 
@@ -65,8 +69,8 @@ A most latest production build to use is available at https://asciibird.jewbird.
   * Brush history is set to a limit of 50
 * Brush Preview
   * Editable brush preview
-  * Clicking updates block
-  * Right clicking removes block
+  * Can use the brush tool inside the brush preview
+  * Can use the eraser tool inside the brush preview
   * Hovering outside brush area will save brush to history
 * Context menu available on all brushes preview areas
   * Export any brush to PNG, mIRC clipboard or file by right clicking the brush preview
@@ -75,23 +79,17 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 ## Features to Add
 
-* Add about asciibird modal
 * Warning on mirc export if ascii exceeds IRCs 512 per chat line limit.
 * Review encodings check on file import - UTF8 vs Latin something
+* Colors / chars panels wont open where toolbar is, if you scroll down a lot then try open them they will be at the top
+* One of the mirror brushes might be bugged sometimes and leave undoable blocks, if the mirror paths cross over it seems to do this
+* The layers and undo sometimes may have bugs, but seems hard to replicate.
 
 ## Bugs to fix
 
-* Can't move toolbar, maybe related to after dialog or modal is open
-* Colors / chars panels wont open where toolbar is, if you scroll down a lot then try open them they will be at the top
-* Fill tool has too much recursion sometimes, mostly it is okay
-* One of the mirror brushes might be bugged sometimes and leave undoable blocks, if the mirror paths cross over it seems to do this
-
-* Strange sort of bug with remove layer and selecting layer after, scroll up and down to redraw the canvas if it goes blank
-  * Redo will cause errors on layers sometimes, mostly okay
-
 * The edit dialog, even when code to save new data is commented out, will slow down everything if you open and save the modal a few times
 * The current mIRC importer will fail on `C5,` type blocks by discarding the `,` character when it should preserve it. `art.txt` ascii is a good example of this. 98% of txt ascii imported should be fine.
-## Mobile / Touch Screen support
+`## Mobile / Touch Screen support
 
 Doesn't exist at the moment. While the underlying functions and code is compatible with mobile browsers from *babel*, the touch canvas events and text will need to be reviewed to work better with touch screens. For example while you can brush once, you cannot move the brush around.
 
@@ -120,7 +118,7 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 * Alt + r - Flip FG and BG colours
 
 * Ctrl + e - Edit ASCII
-* Ctrl + q - Close ASCII
+* Ctrl + r - Close ASCII
 * Ctrl + m - New ASCII (can't use ctrl + n)
 * Ctrl + o - Toggle Asciibird Options
 

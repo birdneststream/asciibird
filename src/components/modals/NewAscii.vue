@@ -84,6 +84,7 @@ export default {
   },
   methods: {
     open() {
+      
       this.$modal.show("new-ascii-modal");
       this.forms.createAscii.title = `New ASCII ${
         this.$store.getters.asciibirdMeta.length + 1
