@@ -28,7 +28,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
 > special thanks to slime aka botmaster slime aka knivey for the wonderful bot integration with asciibird
 ## Greetz to Chat Pals
 
-> darkmage, l0de, bex, blarf, sludg, shart, chode, corn, ralph, jrra, kuntz, moony, scd, aztec, astro, anji, b-rex, bengt, butth0le, canada420, clamkin, deakin, dumbguy, ElBurro, interdome, syn, darkness, vae, gowce, moneytree, Retarded, spoon, sylar, zen, bj0rn, stovepipe, morthrane, chrono, acidvegas, again, hgc, durendal, knio, mavericks, pyrex, sh, irie, seirdy, sq, stratum, WeEatnKid, dieforirc, tater, buttvomit, luldangs, MichealK, AnalMan, poccri, vap0r, kakama, fregyXin, stovepipe, higgs
+> darkmage, l0de, bex, blarf, sludg, shart, chode, corn, ralph, jrra, kuntz, moony, sniff, scd, aztec, astro, anji, b-rex, bengt, butth0le, canada420, clamkin, deakin, dumbguy, ElBurro, interdome, syn, darkness, vae, gowce, moneytree, Retarded, spoon, sylar, zen, bj0rn, stovepipe, morthrane, chrono, acidvegas, again, hgc, durendal, knio, mavericks, pyrex, sh, irie, seirdy, sq, stratum, WeEatnKid, dieforirc, tater, buttvomit, luldangs, MichealK, AnalMan, poccri, vap0r, kakama, fregyXin, kayos, stovepipe, higgs, Audasity, PsyMaster, perplexa, alyosha, Darn, efsenable, EchoShun, dumbguy, HorseCrusherKristian
 
 # Current Features
 
@@ -185,6 +185,17 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 * The main ascii has a few export options if you right click on the ascii
 * The dashboard area (outside the ascii) was actually the very first menu in asciibird! and has some basic shortcuts
 * Layers can also be right clicked to preview their functions
+
+# What Chatters are saying about ASCIIBIRD
+
+```
+<ralph> ascii bird is so easy a drunk LQ chatter like myself can use, and does use it
+<ralph> asciibird is to chatters what the ak-47 is to kids in Sierra Leone
+<ralph> POWERFUL STUF
+```
+
+
+
 # References
 
 * http://anti.teamidiot.de/static/nei/*/extended_mirc_color_proposal.html - Good for 99 colours info

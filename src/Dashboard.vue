@@ -525,7 +525,6 @@ export default {
 
         menu.push({
           text: "Edit",
-          hotkey: "0",
           icon: "edit",
           menu: [
             {
