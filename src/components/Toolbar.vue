@@ -27,7 +27,12 @@
               v-model="toolbarState.targetingFg"
               :disabled="!canBg && !canText"
             />
-            <span class="ab-checkbox-label">FG</span>
+            <t-dropdown toggle-on-hover>
+              <span class="ab-checkbox-label" slot="trigger">FG</span>
+              <template>
+                <div class="bg-gray-500 absolute opacity-0 invisible group-hover:animate-tooltip_show ml-2">Ignore Foreground when Editing</div>
+              </template>
+            </t-dropdown>
           </label>
 
           <label class="ab-checkbox-hover">
@@ -38,7 +43,12 @@
               :disabled="!canFg && !canText"
               checked
             />
-            <span class="ab-checkbox-label">BG</span>
+            <t-dropdown toggle-on-hover>
+              <span class="ab-checkbox-label" slot="trigger">BG</span>
+              <template>
+                <div class="bg-gray-500 absolute opacity-0 invisible group-hover:animate-tooltip_show ml-2">Ignore Background when Editing</div>
+              </template>
+            </t-dropdown>
           </label>
 
           <label class="ab-checkbox-hover">
@@ -48,14 +58,19 @@
               v-model="toolbarState.targetingChar"
               :disabled="!canFg && !canBg"
             />
-            <span class="ab-checkbox-label">Text</span>
+            <t-dropdown toggle-on-hover class="">
+              <span class="ab-checkbox-label" slot="trigger">Text</span>
+              <template>
+                <span class="bg-gray-500 absolute opacity-0 invisible group-hover:animate-tooltip_show ml-2">Ignore Characters when Editing</span>
+              </template>
+            </t-dropdown>
           </label>
         </div>
 
-        <div class="flex mb-3 border-t border-black border-opacity-10 pt-2">
+        <div class="flex mb-3 border-t border-black border-opacity-10 pt-2 ">
           <t-button
             type="button"
-            :class="`rounded-3xl w-10 h-10 mt-1 ml-1 ${
+            :class="`ab-toolbar-button ${
               mirror.x
                 ? 'border-gray-900 bg-blue-800'
                 : 'border-gray-200 bg-gray-500'
@@ -66,12 +81,17 @@
               $toasted.show(`Mirror X ${mirror.x ? 'enabled' : 'disabled'}`);
             "
           >
-            <span class="material-icons">more_vert</span>
+            <t-dropdown toggle-on-hover>
+              <span class="material-icons" slot="trigger">more_horiz</span>
+              <template>
+                <div class="bg-gray-500 absolute opacity-0 invisible group-hover:animate-tooltip_show ml-2">Mirror X axis when Editing</div>
+              </template>
+            </t-dropdown>
           </t-button>
 
           <t-button
             type="button"
-            :class="`rounded-3xl w-10 h-10 mt-1 ml-1 ${
+            :class="`ab-toolbar-button ${
               mirror.y
                 ? 'border-gray-900 bg-blue-800'
                 : 'border-gray-200 bg-gray-500'
@@ -82,12 +102,17 @@
               $toasted.show(`Mirror Y ${mirror.y ? 'enabled' : 'disabled'}`);
             "
           >
-            <span class="material-icons">more_horiz</span>
+            <t-dropdown toggle-on-hover>
+              <span class="material-icons" slot="trigger">more_vert</span>
+              <template>
+                <div class="bg-gray-500 absolute opacity-0 invisible group-hover:animate-tooltip_show ml-2">Mirror Y axis when Editing</div>
+              </template>
+            </t-dropdown>
           </t-button>
 
           <t-button
             type="button"
-            :class="`rounded-3xl w-10 h-10 mt-1 ml-1 ${
+            :class="`ab-toolbar-button ${
               toolbarState.updateBrush
                 ? 'border-gray-900 bg-blue-800'
                 : 'border-gray-200 bg-gray-500'
@@ -102,12 +127,19 @@
               );
             "
           >
-            <span class="material-icons">color_lens</span>
+            <t-dropdown toggle-on-hover>
+              <span class="material-icons" slot="trigger">color_lens</span>
+              <template>
+                <div class="bg-gray-500 absolute opacity-0 invisible group-hover:animate-tooltip_show ml-2">
+                  Update Brush Automatically when Colours or Char Changes
+                </div>
+              </template>
+            </t-dropdown>
           </t-button>
 
           <t-button
             type="button"
-            :class="`rounded-3xl w-10 h-10 mt-1 ml-1 ${
+            :class="`ab-toolbar-button ${
               toolbarState.gridView
                 ? 'border-gray-900 bg-blue-800'
                 : 'border-gray-200 bg-gray-500'
@@ -120,9 +152,20 @@
               );
             "
           >
-            <span class="material-icons">{{
-              !this.gridView ? "grid_on" : "grid_off"
-            }}</span>
+            <t-dropdown toggle-on-hover>
+              <span class="material-icons" slot="trigger">{{
+                !this.gridView ? "grid_on" : "grid_off"
+              }}</span>
+
+              <template>
+                <div class="bg-gray-500 absolute opacity-0 invisible group-hover:animate-tooltip_show ml-2">
+                  <span class="material-icons">{{
+                    !this.gridView ? "grid_on" : "grid_off"
+                  }}</span>
+                  Toggle Grid View
+                </div>
+              </template>
+            </t-dropdown>
           </t-button>
         </div>
 
@@ -131,14 +174,25 @@
             type="button"
             v-for="(value, keyToolbar) in toolbarIcons"
             :key="keyToolbar + 50"
-            :class="`rounded-3xl w-10 h-10 mt-1 ml-1 ${
+            :class="`rounded-3xl w-10 h-10 mt-1 ml-1 transition-all group ${
               currentTool.name === value.name
                 ? 'border-gray-900 bg-blue-500'
                 : 'border-gray-200 bg-gray-500'
             }`"
             @click="$store.commit('changeTool', keyToolbar)"
           >
-            <span class="material-icons">{{ value.icon }}</span>
+            <t-dropdown toggle-on-hover>
+              <span slot="trigger">
+                <span class="material-icons">{{ value.icon }}</span>
+              </span>
+
+              <template>
+                <div class="bg-gray-500 absolute opacity-0 invisible group-hover:animate-tooltip_show ml-2">
+                  <span class="material-icons">{{ value.icon }}</span>
+                  {{ tooltipName(value) }}
+                </div>
+              </template>
+            </t-dropdown>
           </t-button>
         </div>
       </t-card>
@@ -244,6 +298,26 @@ export default {
     },
   },
   methods: {
+    tooltipName(value) {
+      switch (value.name) {
+        case "default":
+          return "Defualt Mode";
+        case "select":
+          return "Select Blocks";
+        case "text":
+          return "Text Editing";
+        case "fill":
+          return "Fill Blocks";
+        case "brush":
+          return "Brush Blocks";
+        case "dropper":
+          return "Block Picker";
+        case "eraser":
+          return "Eraser Blocks";
+        case "fill-eraser":
+          return "Fill Eraser Blocks";
+      }
+    },
     updateMirror() {
       this.$store.commit("updateMirror", this.mirror);
     },

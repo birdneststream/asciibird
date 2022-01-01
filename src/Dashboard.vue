@@ -324,15 +324,6 @@ export default {
     currentTool() {
       return toolbarIcons[this.$store.getters.currentTool] ?? null;
     },
-    icon() {
-      return [
-        this.currentTool.fa ?? "fas",
-        this.currentTool.icon ?? "mouse-pointer",
-      ];
-    },
-    // options() {
-    //   return this.$store.getters.options;
-    // },
 
     asciibirdMeta() {
       return this.$store.getters.asciibirdMeta;
@@ -658,6 +649,23 @@ export default {
               icon: "delete_sweep",
               disabled: !this.isSelected && !this.selectedBlocks.length,
               hotkey: "Delete",
+            },
+            {
+              text: "Save Selection to Library",
+              click: () => {
+                if (this.selectedBlocks.length) {
+                  this.resetSelect = !this.resetSelect;
+                  this.$store.commit("pushBrushLibrary", filterNullBlocks(this.selectedBlocks));
+                  this.selectedBlocks = [];
+                  this.$toasted.show("Saved brush to Library!", {
+                    type: "success",
+                    icon: "brush",
+                  });
+                }
+              },
+              icon: "brush",
+              disabled: !this.isSelected && !this.selectedBlocks.length,
+              hotkey: "ctrl+b",
             },
           ],
         });
@@ -1099,16 +1107,6 @@ export default {
             icon: "help",
             menu: [
               {
-                text: "ASCIIBIRD on GitHub",
-                click: () => window.open("https://github.com/hughbord/asciibird", "_blank"),
-                icon: "code",
-              },
-              {
-                text: "ASCIIBIRD on tcp.direct Git",
-                click: () => window.open("https://git.tcp.direct/jewbird/asciibird", "_blank"),
-                icon: "code",
-              },
-              {
                 text: "About ASCIIBIRD",
                 click: () => this.$store.commit("openModal", "about"),
                 hotkey: "F1",
@@ -1136,6 +1134,11 @@ export default {
       if (val) {
         hotkeys.deleteScope("all");
       } 
+    },
+    currentTool(val,old) {
+      if (old === "select") {
+        this.selectedBlocks = [];
+      }
     }
   },
   methods: {

@@ -130,7 +130,15 @@ body {
 }
 
 .ab-checkbox-hover {
-    @apply ml-1 w-1/3 mb-2 hover:bg-gray-800 hover:text-white;
+    @apply ml-1 w-1/3 mb-2 hover:bg-gray-800 hover:text-white transition-all group;
+}
+
+.ab-tooltip {
+    @apply absolute opacity-0 invisible group-hover:animate-tooltip_show ml-2;
+}
+
+.ab-toolbar-button {
+    @apply rounded-3xl w-10 h-10 mt-1 ml-1 transition-all group 
 }
 
 .ab-context-menu-item {

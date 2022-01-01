@@ -9,6 +9,8 @@
       <div class="mt-6 lg:mt-0 rounded shadow bg-white text-center ">
             <BrushCanvas :blocks="aboutAscii" class="w-32 -right-40 relative" />
 
+            <span class="p-2"><small class="text-blue-400 cursor-pointer"><a href="https://github.com/hughbord/asciibird" target="_blank">Github</a></small> also on <small class="text-blue-400 cursor-pointer"><a href="https://git.tcp.direct/jewbird/asciibird" target="_blank">git.tcp.direct</a></small></span>
+
             <h1 class="p-2 font-extrabold">Big Shout Outs to Patrons</h1>
             <span>beenz, xartet, OfMonsters&Crime, mouse, funkpower, Charles, PP4L, octopus, addct, hotline, dingopride, skg, eraser, aaa, chz, L0j1k</span>
 
@@ -16,7 +18,7 @@
             <span class="text-sm">slime aka botmaster slime aka knivey for the wonderful bot integration with asciibird, sniff</span>
 
             <h5 class="p-2 font-extrabold">Greetz to</h5>
-            <span class="text-xs">darkmage, l0de, bex, blarf, sludg, shart, chode, corn, ralph, jrra, kuntz, moony, sniff, scd, aztec, astro, anji, b-rex, bengt, butth0le, canada420, clamkin, deakin, dumbguy, ElBurro, interdome, syn, darkness, vae, gowce, moneytree, Retarded, spoon, sylar, zen, bj0rn, stovepipe, morthrane, chrono, acidvegas, again, hgc, durendal, knio, mavericks, pyrex, sh, irie, seirdy, sq, stratum, WeEatnKid, dieforirc, tater, buttvomit, luldangs, MichealK, AnalMan, poccri, vap0r, kakama, fregyXin, kayos, stovepipe, higgs, Audasity, PsyMaster, perplexa, alyosha, Darn, efsenable, EchoShun, dumbguy, HorseCrusherKristian</span>
+            <span class="text-xs">darkmage, l0de, bex, blarf, sludg, shart, chode, corn, ralph, jrra, kuntz, moony, sniff, scd, aztec, astro, anji, b-rex, bengt, butth0le, canada420, clamkin, deakin, dumbguy, ElBurro, interdome, syn, darkness, vae, gowce, moneytree, Retarded, spoon, sylar, zen, bj0rn, stovepipe, morthrane, chrono, acidvegas, again, hgc, durendal, knio, mavericks, pyrex, sh, irie, seirdy, sq, stratum, WeEatnKid, dieforirc, tater, buttvomit, luldangs, MichealK, AnalMan, poccri, vap0r, kakama, fregyXin, kayos, stovepipe, higgs, Audasity, PsyMaster, perplexa, alyosha, Darn, efsenable, EchoShun, dumbguy, HorseCrusherKristian, phobos</span>
       </div>
     </template>
 

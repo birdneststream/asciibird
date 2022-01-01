@@ -55,16 +55,32 @@
           <li @click="addLayer()" class="ab-context-menu-item">
             Add New Layer
           </li>
-          <li @click="removeLayer(selectedLayer)" class="ab-context-menu-item">
+          <li
+            v-if="canToggleLayer"
+            @click="removeLayer(selectedLayer)"
+            class="ab-context-menu-item"
+          >
             Remove Selected Layer
           </li>
-          <li @click="downLayer(selectedLayer)" class="ab-context-menu-item">
+          <li
+            v-if="canToggleLayer"
+            @click="downLayer(selectedLayer)"
+            class="ab-context-menu-item"
+          >
             Move Selected Layer Up
           </li>
-          <li @click="upLayer(selectedLayer)" class="ab-context-menu-item">
+          <li
+            v-if="canToggleLayer"
+            @click="upLayer(selectedLayer)"
+            class="ab-context-menu-item"
+          >
             Move Selected Layer Down
           </li>
-          <li @click="toggleLayer(selectedLayer)" class="ab-context-menu-item">
+          <li
+            v-if="canToggleLayer"
+            @click="toggleLayer(selectedLayer)"
+            class="ab-context-menu-item"
+          >
             Show/Hide Layer
           </li>
           <li
@@ -73,7 +89,11 @@
           >
             Rename Layer
           </li>
-          <li @click="mergeLayers()" class="ab-context-menu-item">
+          <li
+            v-if="canToggleLayer"
+            @click="mergeLayers()"
+            class="ab-context-menu-item"
+          >
             Merge All Layers
           </li>
         </ul>
