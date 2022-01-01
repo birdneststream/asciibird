@@ -56,7 +56,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
   * Accepts URLs only at the moment
   * Can adjust the size and properties
 * Toolbar containing
-  * Select, to copy and paste blocks as brushes
+  * Select, to copy, paste and save blocks as brushes
   * Text mode, with arrow key support
   * Fill background blocks
   * Brush mode, can be controlled with keyboard and mouse
@@ -151,7 +151,7 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 
 ## Eraser Mode
 
-* Four arrow keys control text cursor
+* Four arrow keys control eraser cursor
 * Space - apply eraser
 
 ## Brush Mode
@@ -195,27 +195,18 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 <ralph> POWERFUL STUF
 ```
 
-
-
 # References
 
 * http://anti.teamidiot.de/static/nei/*/extended_mirc_color_proposal.html - Good for 99 colours info
-* https://jp.itch.io/playscii / http://vectorpoem.com/playscii/
-* https://mircart.org/
-* https://asdf.us/asciiblaster/
-* https://acid.vegas/asciimaker
-* https://stackoverflow.com/questions/60263401/draw-on-canvas-with-vue
-* https://www.digitalocean.com/community/tutorials/vuejs-vue-html5-canvas
-* https://codereview.stackexchange.com/questions/114702/drawing-a-grid-on-canvas
-* https://github.com/ircart/resources
-* https://gist.github.com/xon52/fb895e33d64a8d322da165d158fa11b2 / https://xon5.medium.com/flexible-canvas-grid-without-blurred-lines-907fcadf5bfc - Grid canvas draw stuff
-* http://wepump.in/ascii/
-* https://irc.watch/ascii/
-* https://modern.ircdocs.horse/formatting.html#color
+* https://modern.ircdocs.horse/formatting.html#color - Also really good
 * https://www.mirc.com/colors.html
-* https://github.com/polygonplanet/encoding.js/
-
-
+## ASCII Resources
+* https://mircart.org/ - IRC ASCII art
+* https://asdf.us/asciiblaster/ - Asciiblaster ASCII editor, ASCIIBIRD is loosely based on this
+* https://acid.vegas/asciimaker - HTML/JS based ASCII Creator from acidvegas
+* https://github.com/ircart/resources - More resources on ASCII and configuring terminals/clients to display ASCII art correctly
+* http://wepump.in/ascii/ - Classic IRC ASCII art
+* https://irc.watch/ascii/ - IRC ASCIIs you can load into ASCIIBIRD
 
 ## Project setup
 ```

@@ -273,11 +273,12 @@ export default {
           clickToClose: false,
         })
         .then((result) => {
+          this.$store.commit("toggleDisableKeyboard", false);
           if (!result.input.length) {
             this.$toasted.show("You must enter a layer name!", {
               type: "error",
             });
-            this.$store.commit("toggleDisableKeyboard", false);
+
             return;
           }
 
@@ -285,7 +286,7 @@ export default {
             this.updateLayerName(key, result.input);
           }
 
-          this.$store.commit("toggleDisableKeyboard", false);
+          return;
         });
     },
     updateLayerName(key, label) {
