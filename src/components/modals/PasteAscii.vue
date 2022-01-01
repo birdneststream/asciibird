@@ -77,8 +77,8 @@ export default {
       this.title = "clipboard.txt";
       this.$modal.hide("paste-ascii-modal");
     },
-    importPasteAscii() {
-      parseMircAscii(this.pasteContent, this.title);
+    async importPasteAscii() {
+      await parseMircAscii(this.pasteContent, this.title);
       this.close();
     },
   },

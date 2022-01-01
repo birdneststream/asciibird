@@ -32,7 +32,7 @@
         :h="currentAsciiHeight * blockHeight"
         :draggable="isDefault"
         @resizestop="onCanvasResize"
-        @dragstop="onCavasDragStop"
+        @dragstop="onCanvasDragStop"
         :x="currentAscii.x"
         :handles="['bm', 'br', 'mr']"
         :y="currentAscii.y"
@@ -97,24 +97,24 @@ export default {
   components: {
     ContextMenu,
   },
-  mounted() {
+  async mounted() {
     this.ctx = this.canvasRef.getContext("2d");
     this.ctx.font = "13px Hack";
     this.toolCtx = this.$refs.canvastools.getContext("2d");
-    this.delayRedrawCanvas();
+    await this.delayRedrawCanvas();
   },
-  created() {
-    window.addEventListener("load", () => {
+  async created() {
+    window.addEventListener("load", async () => {
       // Fixes the font on load issue
-      this.delayRedrawCanvas();
+      await this.delayRedrawCanvas();
     });
 
     var _this = this;
-    hotkeys("*", "editor" , function (event, handler) {
+    hotkeys("*", "editor", async function (event, handler) {
       event.preventDefault();
 
       if (_this.isTextEditing) {
-        _this.canvasKeyDown(event.key);
+        await _this.canvasKeyDown(event.key);
         return;
       }
 
@@ -122,33 +122,29 @@ export default {
         switch (event.key) {
           case "ArrowUp":
             _this.y--;
-            _this.drawBrush(_this.isErasing);
-            // _this.delayRedrawCanvas();
+            await _this.drawBrush(_this.isErasing);
             break;
 
           case "ArrowDown":
             _this.y++;
-            _this.drawBrush(_this.isErasing);
-            // _this.delayRedrawCanvas();
+            await _this.drawBrush(_this.isErasing);
             break;
 
           case "ArrowLeft":
             _this.x--;
-            _this.drawBrush(_this.isErasing);
-            // _this.delayRedrawCanvas();
+            await _this.drawBrush(_this.isErasing);
             break;
 
           case "ArrowRight":
             _this.x++;
-            _this.drawBrush(_this.isErasing);
-            // _this.delayRedrawCanvas();
+            await _this.drawBrush(_this.isErasing);
             break;
 
           case " ":
             _this.canTool = true;
-            _this.isBrushing ? _this.drawBrush(false) : _this.eraser();
+            _this.isBrushing ? await _this.drawBrush(false) : await _this.eraser();
             _this.canTool = false;
-            _this.dispatchBlocks(true);
+            await _this.dispatchBlocks(true);
             break;
         }
       }
@@ -158,7 +154,7 @@ export default {
       this.canvas.width = this.currentAsciiWidth * blockWidth;
       this.canvas.height = this.currentAsciiHeight * blockHeight;
 
-      this.delayRedrawCanvas();
+      await this.delayRedrawCanvas();
       this.$emit("textediting", this.textEditing);
     }
   },
@@ -198,7 +194,14 @@ export default {
     isUsingKeyboard: false,
     canvasHash: null,
   }),
-  props: ["updateCanvas", "yOffset", "canvasxy", "brush", "updateascii", "resetSelect"],
+  props: [
+    "updateCanvas",
+    "yOffset",
+    "canvasxy",
+    "brush",
+    "updateascii",
+    "resetSelect",
+  ],
   computed: {
     canvasRef() {
       return this.$refs.canvas;
@@ -378,11 +381,11 @@ export default {
     },
   },
   watch: {
-    currentAscii(val, old) {
+    async currentAscii(val, old) {
       if (val !== old) {
         this.canvas.width = this.currentAsciiWidth * blockWidth;
         this.canvas.height = this.currentAsciiHeight * blockHeight;
-        this.delayRedrawCanvas();
+        await this.delayRedrawCanvas();
       }
     },
     resetSelect(val, old) {
@@ -393,10 +396,10 @@ export default {
       //   this.warnInvisibleLayer();
       // }
     },
-    currentAsciiLayerBlocks() {
-      this.delayRedrawCanvas();
+    async currentAsciiLayerBlocks() {
+      await this.delayRedrawCanvas();
     },
-    currentTool() {
+    async currentTool() {
       this.warnInvisibleLayer();
 
       switch (this.currentTool.name) {
@@ -409,7 +412,7 @@ export default {
 
           this.resetSelectTool();
 
-          this.clearToolCanvas();
+          await this.clearToolCanvas();
           break;
 
         case "text":
@@ -418,86 +421,62 @@ export default {
           break;
       }
     },
-    isMouseOnCanvas(val, old) {
+    async isMouseOnCanvas(val, old) {
       if (val !== old) {
         if (!this.isSelecting) {
-          this.clearToolCanvas();
-          this.dispatchBlocks(true);
+          await this.clearToolCanvas();
+          await this.dispatchBlocks(true);
           this.canTool = false;
-          this.delayRedrawCanvas();
+          await this.delayRedrawCanvas();
         }
       }
     },
-    gridView(val, old) {
+    async gridView(val, old) {
       if (val !== old) {
-        this.clearToolCanvas();
+        await this.clearToolCanvas();
       }
     },
-    brushBlocks() {
-      this.clearToolCanvas();
+    async brushBlocks() {
+      await this.clearToolCanvas();
 
       // This was supposed to update the brush preview real time
       if (this.isMouseOnCanvas && this.isBrushing) {
-        this.drawBrush();
+        await this.drawBrush();
       }
     },
-    // For when we do zook, ctrl + or ctrl -
-    // blockSizeMultiplier() {
-    //   // this.delayRedrawCanvas();
-    // },
     // Save text to store when finished
-    isTextEditing(val, old) {
+    async isTextEditing(val, old) {
       if (val !== old && val === false) {
-        this.dispatchBlocks(true);
+        await this.dispatchBlocks(true);
       }
     },
     textEditing(val, old) {
       this.$emit("textediting", val);
     },
-    updateCanvas(val, old) {
+    async updateCanvas(val, old) {
       if (val !== old) {
         // This comes from KeyboardShortcuts.vue
-        this.clearToolCanvas();
-        this.drawTextIndicator();
-        this.drawIndicator();
+        await this.clearToolCanvas();
+        await this.drawTextIndicator();
+        await this.drawIndicator();
 
-        this.delayRedrawCanvas();
+        await this.delayRedrawCanvas();
       }
     },
     selecting(val) {
       this.$emit("selecting", val);
     },
-    yOffset() {
-      this.delayRedrawCanvas(true);
+    async yOffset() {
+      await this.delayRedrawCanvas(true);
     },
     selectedLayerIndex(val, old) {
       if (val !== old) {
         this.diffBlocks.l = val;
       }
     },
-    // updateascii(val, old) {
-    //   if (val.width !== old.width || val.height !== old.height) {
-    //     let layers = fillNullBlocks(val.height, val.width);
-
-    //     this.canvas.width = val.width * blockWidth;
-    //     this.canvas.height = val.height * blockHeight;
-
-    //     this.$store.commit("changeAsciiWidthHeight", {
-    //       width: val.width,
-    //       height: val.height,
-    //       layers: [...layers],
-    //     });
-
-    //     this.$refs.canvasdrag.width = val.width * blockWidth;
-    //     this.$refs.canvasdrag.height = val.height * blockHeight;
-
-    //     this.clearToolCanvas();
-    //     this.delayRedrawCanvas();
-    //   }
-    // },
     // Layers undo
-    currentAsciiLayers(val, old) {
-      this.delayRedrawCanvas(true);
+    async currentAsciiLayers(val, old) {
+      await this.delayRedrawCanvas(true);
     },
   },
   methods: {
@@ -534,7 +513,7 @@ export default {
       // These are the correct X and Y when inside the floating panel
       this.$refs["editor-menu"].open(e);
     },
-    canvasKeyDown(char) {
+    async canvasKeyDown(char) {
       if (
         this.currentAsciiLayerBlocks[this.textEditing.startY] &&
         this.currentAsciiLayerBlocks[this.textEditing.startY][
@@ -797,11 +776,11 @@ export default {
         }
       }
 
-      this.clearToolCanvas();
-      this.drawTextIndicator();
-      this.drawIndicator();
+      await this.clearToolCanvas();
+      await this.drawTextIndicator();
+      await this.drawIndicator();
 
-      this.delayRedrawCanvas();
+      await this.delayRedrawCanvas();
     },
     warnInvisibleLayer() {
       if (!this.currentSelectedLayer.visible) {
@@ -821,7 +800,7 @@ export default {
     redo() {
       this.$store.commit("redoBlocks");
     },
-    resetSelectTool() {
+    async resetSelectTool() {
       this.selecting = {
         startX: null,
         startY: null,
@@ -831,13 +810,13 @@ export default {
       };
 
       this.selectedBlocks = [];
-      this.clearToolCanvas();
-      this.delayRedrawCanvas();
+      await this.clearToolCanvas();
+      await this.delayRedrawCanvas();
       this.$emit("selecting", this.selecting);
     },
-    redrawSelect() {
+    async redrawSelect() {
       if (this.currentAsciiLayerBlocks.length && this.isSelected) {
-        this.clearToolCanvas();
+        await this.clearToolCanvas();
         this.toolCtx.fillStyle = this.mircColours[0];
 
         this.toolCtx.fillRect(
@@ -859,7 +838,7 @@ export default {
     mergeLayers() {
       return mergeLayers();
     },
-    drawGrid() {
+    async drawGrid() {
       let w = this.canvas.width;
       let h = this.canvas.height;
 
@@ -884,7 +863,7 @@ export default {
 
       this.toolCtx.stroke();
     },
-    redrawCanvas(force = false) {
+    async redrawCanvas(force = false) {
       if (this.currentAsciiLayers.length) {
         // https://stackoverflow.com/questions/28390358/high-cpu-usage-with-canvas-and-requestanimationframe
 
@@ -1056,21 +1035,21 @@ export default {
 
       this.$toasted.show(`${canvasBlockWidth} x ${canvasBlockHeight}`);
     },
-    onCavasDragStop(x, y) {
+    async onCanvasDragStop(x, y) {
       // Update left and top in panel
       this.top = y;
       this.$store.commit("changeAsciiCanvasState", { x, y });
 
-      this.delayRedrawCanvas();
+      await this.delayRedrawCanvas();
     },
     onCanvasDrag(x, y) {
       this.top = y;
     },
-    dispatchBlocks(clearDiff = false) {
+    async dispatchBlocks(clearDiff = false) {
       this.diffBlocks.old = this.diffBlocks.old.flat().reverse();
       this.diffBlocks.new = this.diffBlocks.new.flat().reverse();
 
-      this.$store.dispatch("updateAsciiBlocksAsync", {
+      await this.$store.dispatch("updateAsciiBlocksAsync", {
         blocks: this.currentAsciiLayerBlocks,
         diff: { ...this.diffBlocks },
       });
@@ -1084,7 +1063,7 @@ export default {
       }
     },
     // Mouse Up, Down and Move
-    canvasMouseUp() {
+    async canvasMouseUp() {
       if (this.isDefault) return;
 
       switch (this.currentTool.name) {
@@ -1093,14 +1072,14 @@ export default {
 
           // Once the diff Blocks can render in the correct way we can
           // remove true from here
-          this.dispatchBlocks(true);
+          await this.dispatchBlocks(true);
 
           break;
 
         case "eraser":
           this.canTool = false;
 
-          this.dispatchBlocks(true);
+          await this.dispatchBlocks(true);
 
           break;
 
@@ -1111,7 +1090,7 @@ export default {
 
         case "select":
           this.selecting.canSelect = false;
-          this.processSelect();
+          await this.processSelect();
           break;
 
         case "text":
@@ -1120,7 +1099,7 @@ export default {
           break;
       }
     },
-    canvasMouseDown() {
+    async canvasMouseDown() {
       if (this.isDefault) return;
 
       if (this.asciiBlockAtXy && this.currentTool) {
@@ -1131,28 +1110,28 @@ export default {
             this.selecting.startX = this.canvasX;
             this.selecting.startY = this.canvasY;
             this.selecting.canSelect = true;
-            this.clearToolCanvas();
+            await this.clearToolCanvas();
             break;
 
           case "fill":
             this.fill();
             this.canTool = false;
-            this.dispatchBlocks(true);
+            await this.dispatchBlocks(true);
             break;
 
           case "fill-eraser":
             this.fill(true);
-            this.dispatchBlocks(true);
+            await this.dispatchBlocks(true);
             break;
 
           case "brush":
             this.canTool = true;
-            this.drawBrush();
+            await this.drawBrush();
             break;
 
           case "eraser":
             this.canTool = true;
-            this.eraser();
+            await this.eraser();
             break;
 
           case "dropper":
@@ -1184,7 +1163,7 @@ export default {
         }
       }
     },
-    canvasMouseMove(e) {
+    async canvasMouseMove(e) {
       if (this.isDefault) return;
 
       let lastX = this.x;
@@ -1211,19 +1190,19 @@ export default {
         switch (this.currentTool.name) {
           case "brush":
             if (this.isMouseOnCanvas) {
-              this.clearToolCanvas();
-              this.drawBrush();
-              this.delayRedrawCanvas();
+              await this.clearToolCanvas();
+              await this.drawBrush();
+              await this.delayRedrawCanvas();
             }
             break;
 
           case "eraser":
-            this.clearToolCanvas();
+            await this.clearToolCanvas();
 
             if (this.isMouseOnCanvas) {
-              this.drawBrush(true);
-              this.delayRedrawCanvas();
-              this.eraser();
+              await this.drawBrush(true);
+              await this.delayRedrawCanvas();
+              await this.eraser();
             }
 
             break;
@@ -1233,57 +1212,55 @@ export default {
               this.selecting.endX = this.canvasX + blockWidth;
               this.selecting.endY = this.canvasY + blockHeight;
 
-              this.redrawSelect();
+              await this.redrawSelect();
             }
 
             if (!this.isSelected) {
-              this.redrawSelect();
+              await this.redrawSelect();
             }
 
             break;
 
           case "text":
-            this.clearToolCanvas();
-            this.drawIndicator();
+            await this.clearToolCanvas();
+            await this.drawIndicator();
 
             if (this.isTextEditingValues) {
-              this.drawTextIndicator();
+              await this.drawTextIndicator();
             }
             break;
 
           case "dropper":
-            this.clearToolCanvas();
-            this.drawIndicator();
+            await this.clearToolCanvas();
+            await this.drawIndicator();
             break;
 
           case "fill":
           case "fill-eraser":
-            this.clearToolCanvas();
-            this.drawIndicator();
+            await this.clearToolCanvas();
+            await this.drawIndicator();
             break;
         }
       }
-
-      // this.delayRedrawCanvas();
     },
-    clearToolCanvas() {
+    async clearToolCanvas() {
       if (this.toolCtx) {
         this.toolCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
         // this.toolCtx.save();
         this.toolCtx.width = this.toolCtx.width;
         if (this.gridView) {
-          this.drawGrid();
+          await this.drawGrid();
         }
       }
     },
-    delayRedrawCanvas(force = false) {
+    async delayRedrawCanvas(force = false) {
       // Force will skip hash checking and redraw everything anyway
       if (this.redraw) {
         this.redraw = false;
         var _this = this;
         setTimeout(function () {
-          requestAnimationFrame(() => {
-            _this.redrawCanvas(force);
+          requestAnimationFrame(async () => {
+            await _this.redrawCanvas(force);
             _this.redraw = true;
           });
         }, 1000 / this.options.fps);
@@ -1298,7 +1275,7 @@ export default {
     //
     // TOOLS
     //
-    processSelect() {
+    async processSelect() {
       //
       let x = 0;
       let y = 0;
@@ -1356,7 +1333,7 @@ export default {
       this.$emit("selectedblocks", this.selectedBlocks);
       this.$emit("selecting", this.selecting);
     },
-    drawRectangleBlock(x, y) {
+    async drawRectangleBlock(x, y) {
       let indicatorColour = this.asciiBlockAtXy.bg === 0 ? 1 : 0;
 
       if (this.asciiBlockAtXy.bg === 8) {
@@ -1380,7 +1357,7 @@ export default {
         blockHeight
       );
     },
-    drawIndicator() {
+    async drawIndicator() {
       this.drawRectangleBlock(this.x, this.y);
 
       if (this.isTextEditing) {
@@ -1400,7 +1377,7 @@ export default {
         }
       }
     },
-    drawTextIndicator() {
+    async drawTextIndicator() {
       this.drawRectangleBlock(this.textEditing.startX, this.textEditing.startY);
 
       if (this.mirrorX) {
@@ -1427,7 +1404,13 @@ export default {
     //
     // Functions related to drawBrush function bellow
     //
-    drawBrushBlocks(brushX, brushY, brushBlock, target = null, plain = false) {
+    async drawBrushBlocks(
+      brushX,
+      brushY,
+      brushBlock,
+      target = null,
+      plain = false
+    ) {
       const arrayY = brushY / blockHeight;
       const arrayX = brushX / blockWidth;
       const asciiWidth = this.currentAsciiWidth;
@@ -1681,8 +1664,8 @@ export default {
     //  - draws brush
     //  - draws preview for all toolbar things that need it
     //  - also works with the copy / paste
-    drawBrush(plain = false) {
-      this.clearToolCanvas();
+    async drawBrush(plain = false) {
+      await this.clearToolCanvas();
       let brushDiffX = 0;
       let xLength = false;
 
@@ -1746,26 +1729,32 @@ export default {
 
             if (!plain) {
               if (this.canBg) {
-                this.drawBrushBlocks(brushX, brushY, brushBlock, "bg");
+                await this.drawBrushBlocks(brushX, brushY, brushBlock, "bg");
               }
 
               if (this.canFg) {
-                this.drawBrushBlocks(brushX, brushY, brushBlock, "fg");
+                await this.drawBrushBlocks(brushX, brushY, brushBlock, "fg");
               }
 
-              this.drawBrushBlocks(brushX, brushY, brushBlock, null);
+              await this.drawBrushBlocks(brushX, brushY, brushBlock, null);
 
               if (this.canTool) {
-                this.storeDiffBlocks(arrayX, arrayY, oldBlock, brushBlock);
+                await this.storeDiffBlocks(arrayX, arrayY, oldBlock, brushBlock);
               }
             } else if (this.isErasing) {
-              this.drawBrushBlocks(brushX, brushY, brushBlock, null, true);
+              await this.drawBrushBlocks(
+                brushX,
+                brushY,
+                brushBlock,
+                null,
+                true
+              );
             }
           }
         }
       }
     },
-    storeDiffBlocks(x, y, oldBlock, newBlock) {
+    async storeDiffBlocks(x, y, oldBlock, newBlock) {
       // For undo
       if (!this.diffBlocks.old[y]) {
         this.diffBlocks.old[y] = [];
@@ -1791,7 +1780,7 @@ export default {
         };
       }
     },
-    eraser() {
+    async eraser() {
       if (this.canTool) {
         const brushDiffX =
           Math.floor(this.brushBlocks[0].length / 2) * blockWidth;

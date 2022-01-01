@@ -28,7 +28,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
 > special thanks to slime aka botmaster slime aka knivey for the wonderful bot integration with asciibird
 ## Greetz to Chat Pals
 
-> darkmage, l0de, bex, blarf, sludg, shart, chode, corn, ralph, jrra, kuntz, moony, sniff, scd, aztec, astro, anji, b-rex, bengt, butth0le, canada420, clamkin, deakin, dumbguy, ElBurro, interdome, syn, darkness, vae, gowce, moneytree, Retarded, spoon, sylar, zen, bj0rn, stovepipe, morthrane, chrono, acidvegas, again, hgc, durendal, knio, mavericks, pyrex, sh, irie, seirdy, sq, stratum, WeEatnKid, dieforirc, tater, buttvomit, luldangs, MichealK, AnalMan, poccri, vap0r, kakama, fregyXin, kayos, stovepipe, higgs, Audasity, PsyMaster, perplexa, alyosha, Darn, efsenable, EchoShun, dumbguy, HorseCrusherKristian, phobos
+> darkmage, l0de, bex, blarf, sludg, shart, chode, corn, ralph, jrra, kuntz, moony, sniff, scd, aztec, astro, anji, b-rex, bengt, butth0le, canada420, clamkin, deakin, dumbguy, ElBurro, interdome, syn, darkness, vae, gowce, moneytree, Retarded, spoon, sylar, zen, bj0rn, stovepipe, morthrane, chrono, acidvegas, again, hgc, durendal, knio, mavericks, pyrex, sh, irie, seirdy, sq, stratum, WeEatnKid, dieforirc, tater, buttvomit, luldangs, MichealK, AnalMan, poccri, vap0r, kakama, fregyXin, kayos, stovepipe, higgs, Audasity, PsyMaster, perplexa, alyosha, Darn, efsenable, EchoShun, dumbguy, HorseCrusherKristian, phobos, COMPUTERS
 
 # Current Features
 
@@ -201,6 +201,7 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 * https://modern.ircdocs.horse/formatting.html#color - Also really good
 * https://www.mirc.com/colors.html
 ## ASCII Resources
+
 * https://mircart.org/ - IRC ASCII art
 * https://asdf.us/asciiblaster/ - Asciiblaster ASCII editor, ASCIIBIRD is loosely based on this
 * https://acid.vegas/asciimaker - HTML/JS based ASCII Creator from acidvegas

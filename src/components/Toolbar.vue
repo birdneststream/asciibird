@@ -30,7 +30,18 @@
             <t-dropdown toggle-on-hover>
               <span class="ab-checkbox-label" slot="trigger">FG</span>
               <template>
-                <div class="bg-gray-500 absolute opacity-0 invisible group-hover:animate-tooltip_show ml-2">Ignore Foreground when Editing</div>
+                <div
+                  class="
+                    bg-gray-500
+                    absolute
+                    opacity-0
+                    invisible
+                    group-hover:animate-tooltip_show
+                    ml-2
+                  "
+                >
+                  Ignore Foreground when Editing
+                </div>
               </template>
             </t-dropdown>
           </label>
@@ -46,7 +57,18 @@
             <t-dropdown toggle-on-hover>
               <span class="ab-checkbox-label" slot="trigger">BG</span>
               <template>
-                <div class="bg-gray-500 absolute opacity-0 invisible group-hover:animate-tooltip_show ml-2">Ignore Background when Editing</div>
+                <div
+                  class="
+                    bg-gray-500
+                    absolute
+                    opacity-0
+                    invisible
+                    group-hover:animate-tooltip_show
+                    ml-2
+                  "
+                >
+                  Ignore Background when Editing
+                </div>
               </template>
             </t-dropdown>
           </label>
@@ -61,13 +83,23 @@
             <t-dropdown toggle-on-hover class="">
               <span class="ab-checkbox-label" slot="trigger">Text</span>
               <template>
-                <span class="bg-gray-500 absolute opacity-0 invisible group-hover:animate-tooltip_show ml-2">Ignore Characters when Editing</span>
+                <span
+                  class="
+                    bg-gray-500
+                    absolute
+                    opacity-0
+                    invisible
+                    group-hover:animate-tooltip_show
+                    ml-2
+                  "
+                  >Ignore Characters when Editing</span
+                >
               </template>
             </t-dropdown>
           </label>
         </div>
 
-        <div class="flex mb-3 border-t border-black border-opacity-10 pt-2 ">
+        <div class="flex mb-3 border-t border-black border-opacity-10 pt-2">
           <t-button
             type="button"
             :class="`ab-toolbar-button ${
@@ -84,7 +116,18 @@
             <t-dropdown toggle-on-hover>
               <span class="material-icons" slot="trigger">more_horiz</span>
               <template>
-                <div class="bg-gray-500 absolute opacity-0 invisible group-hover:animate-tooltip_show ml-2">Mirror X axis when Editing</div>
+                <div
+                  class="
+                    bg-gray-500
+                    absolute
+                    opacity-0
+                    invisible
+                    group-hover:animate-tooltip_show
+                    ml-2
+                  "
+                >
+                  Mirror X axis when Editing
+                </div>
               </template>
             </t-dropdown>
           </t-button>
@@ -105,7 +148,18 @@
             <t-dropdown toggle-on-hover>
               <span class="material-icons" slot="trigger">more_vert</span>
               <template>
-                <div class="bg-gray-500 absolute opacity-0 invisible group-hover:animate-tooltip_show ml-2">Mirror Y axis when Editing</div>
+                <div
+                  class="
+                    bg-gray-500
+                    absolute
+                    opacity-0
+                    invisible
+                    group-hover:animate-tooltip_show
+                    ml-2
+                  "
+                >
+                  Mirror Y axis when Editing
+                </div>
               </template>
             </t-dropdown>
           </t-button>
@@ -130,7 +184,16 @@
             <t-dropdown toggle-on-hover>
               <span class="material-icons" slot="trigger">color_lens</span>
               <template>
-                <div class="bg-gray-500 absolute opacity-0 invisible group-hover:animate-tooltip_show ml-2">
+                <div
+                  class="
+                    bg-gray-500
+                    absolute
+                    opacity-0
+                    invisible
+                    group-hover:animate-tooltip_show
+                    ml-2
+                  "
+                >
                   Update Brush Automatically when Colours or Char Changes
                 </div>
               </template>
@@ -158,7 +221,16 @@
               }}</span>
 
               <template>
-                <div class="bg-gray-500 absolute opacity-0 invisible group-hover:animate-tooltip_show ml-2">
+                <div
+                  class="
+                    bg-gray-500
+                    absolute
+                    opacity-0
+                    invisible
+                    group-hover:animate-tooltip_show
+                    ml-2
+                  "
+                >
                   <span class="material-icons">{{
                     !this.gridView ? "grid_on" : "grid_off"
                   }}</span>
@@ -187,7 +259,16 @@
               </span>
 
               <template>
-                <div class="bg-gray-500 absolute opacity-0 invisible group-hover:animate-tooltip_show ml-2">
+                <div
+                  class="
+                    bg-gray-500
+                    absolute
+                    opacity-0
+                    invisible
+                    group-hover:animate-tooltip_show
+                    ml-2
+                  "
+                >
                   <span class="material-icons">{{ value.icon }}</span>
                   {{ tooltipName(value) }}
                 </div>

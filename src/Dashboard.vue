@@ -1259,7 +1259,7 @@ export default {
       const fileReader = new FileReader();
 
       const fileType = this.importType;
-      fileReader.addEventListener("load", () => {
+      fileReader.addEventListener("load", async () => {
         switch (fileType) {
           case "asb":
             this.importAsciibirdState(fileReader.result, filename);
@@ -1267,7 +1267,7 @@ export default {
 
           default:
           case "mirc":
-            parseMircAscii(fileReader.result, filename);
+            await parseMircAscii(fileReader.result, filename);
             break;
         }
       });
