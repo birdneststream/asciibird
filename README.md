@@ -83,7 +83,6 @@ A most latest production build to use is available at https://asciibird.jewbird.
 * Colors / chars panels wont open where toolbar is, if you scroll down a lot then try open them they will be at the top
 * One of the mirror brushes might be bugged sometimes and leave undoable blocks, if the mirror paths cross over it seems to do this
 * The layers and undo sometimes may have bugs, but seems hard to replicate.
-* The width and height of the ascii cannot be changed from edit modal, still to do
 * Improve image overlay modal
 * The current mIRC importer will fail on `C5,` type blocks by discarding the `,` character when it should preserve it. `art.txt` ascii is a good example of this. 98% of txt ascii imported should be fine.
 

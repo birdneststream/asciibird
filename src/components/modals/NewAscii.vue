@@ -97,6 +97,8 @@ export default {
       this.forms.createAscii.title = "New ASCII";
     },
     initiateNewAscii() {
+      this.forms.createAscii.height = Number.parseInt(this.forms.createAscii.height)
+      this.forms.createAscii.width = Number.parseInt(this.forms.createAscii.width)
       createNewASCII(this.forms);
     },
   },

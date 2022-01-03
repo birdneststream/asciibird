@@ -6,11 +6,11 @@
     :esc-to-close="true"
     @closed="$store.commit('closeModal', 'edit-ascii')"
   >
-    <!-- Width
+    Width
     <t-input type="number" name="width" v-model="layer.width" min="1" />
 
     Height
-    <t-input type="number" name="height" v-model="layer.height" min="1" /> -->
+    <t-input type="number" name="height" v-model="layer.height" min="1" /> 
 
     Title
     <t-input type="text" name="title" v-model="layer.title" max="128" />
@@ -32,6 +32,9 @@
 </template>
 
 <script>
+import {
+  fillNullBlocks,
+} from "../../ascii";
 export default {
   name: "EditAsciiModal",
   created() {},
@@ -84,11 +87,15 @@ export default {
   },
   methods: {
     updateAscii() {
-      this.$store.commit("updateAsciiTitle", this.layer.title);
-      this.$emit("updateAscii", {
-        width: this.layer.width,
-        height: this.layer.height,
+      const canvasBlockHeight = Number.parseInt(this.layer.height);
+      const canvasBlockWidth = Number.parseInt(this.layer.width);
+      let layers = fillNullBlocks(canvasBlockHeight, canvasBlockWidth);
+      this.$store.commit("changeAsciiWidthHeight", {
+        width: canvasBlockWidth,
+        height: canvasBlockHeight,
+        layers: [...layers],
       });
+
       this.close();
     },
     open() {

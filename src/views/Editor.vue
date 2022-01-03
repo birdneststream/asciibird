@@ -381,6 +381,12 @@ export default {
     },
   },
   watch: {
+    currentAsciiHeight(val) {
+        this.canvas.height = val * blockHeight;
+    },
+    currentAsciiWidth(val) {
+      this.canvas.width = val * blockWidth;
+    },
     async currentAscii(val, old) {
       if (val !== old) {
         this.canvas.width = this.currentAsciiWidth * blockWidth;
@@ -392,9 +398,9 @@ export default {
       this.resetSelectTool();
     },
     currentSelectedLayer(val, old) {
-      // if (val && val.visible) {
-      //   this.warnInvisibleLayer();
-      // }
+      if (val && val.visible) {
+        this.warnInvisibleLayer();
+      }
     },
     async currentAsciiLayerBlocks() {
       await this.delayRedrawCanvas();

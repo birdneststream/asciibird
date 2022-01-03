@@ -400,8 +400,8 @@ export const createNewAscii = (forms) => {
       label: forms.createAscii.title,
       visible: true,
       data: create2DArray(forms.createAscii.height),
-      width: forms.createAscii.width,
-      height: forms.createAscii.height,
+      width: Number.parseInt(forms.createAscii.width),
+      height: Number.parseInt(forms.createAscii.height),
     }],
     imageOverlay: {
       url: null,
@@ -416,14 +416,8 @@ export const createNewAscii = (forms) => {
     selectedLayer: 0,
   };
 
-  // Push all the default ASCII blocks
-  for (let x = 0; x < newAscii.layers[0].width; x++) {
-    for (let y = 0; y < newAscii.layers[0].height; y++) {
-      newAscii.layers[0].data[y].push({
-        ...emptyBlock,
-      });
-    }
-  }
+  newAscii.layers = [...fillNullBlocks(newAscii.layers[0].height, newAscii.layers[0]
+    .width, newAscii.layers)];
 
   newAscii.layers = LZString.compressToUTF16(JSON.stringify(newAscii.layers));
 
