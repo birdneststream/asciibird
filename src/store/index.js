@@ -603,10 +603,11 @@ export default new Vuex.Store({
         if (prev.old) {
           for (let change in prev.old) {
             let data = prev.old[change];
-
-            tempLayers[prev.l].data[data.y][data.x] = {
-              ...data.b
-            };
+            if (tempLayers[prev.l] !== undefined) {
+              tempLayers[prev.l].data[data.y][data.x] = {
+                ...data.b
+              };
+            }
           }
         }
 
@@ -650,14 +651,12 @@ export default new Vuex.Store({
         // Process block chunks
         if (prev.new && prev.l !== undefined) {
           for (let change in prev.new) {
-            let data = prev.new[change];
-            tempLayers[prev.l].data[data.y][data.x] = {
-              ...data.b
-            };
-
-            // if (tempLayers[prev.l].data[data.y][data.x]['char'] === undefined) {
-            //   tempLayers[prev.l].data[data.y][data.x]['char'] = " ";
-            // }
+            if (tempLayers[prev.l] !== undefined) {
+              let data = prev.new[change];
+              tempLayers[prev.l].data[data.y][data.x] = {
+                ...data.b
+              };
+            }
           }
         }
 

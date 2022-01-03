@@ -1052,8 +1052,8 @@ export default {
       this.top = y;
     },
     async dispatchBlocks(clearDiff = false) {
-      this.diffBlocks.old = this.diffBlocks.old.flat().reverse();
-      this.diffBlocks.new = this.diffBlocks.new.flat().reverse();
+      this.diffBlocks.old = this.diffBlocks.old.flat();
+      this.diffBlocks.new = this.diffBlocks.new.flat();
 
       await this.$store.dispatch("updateAsciiBlocksAsync", {
         blocks: this.currentAsciiLayerBlocks,
@@ -1619,7 +1619,6 @@ export default {
       // Apply the actual brush block to the ascii block
       if (this.canTool && brushBlock[target] !== undefined) {
         targetBlock[target] = brushBlock[target];
-        // targetBlock['char'] = brushBlock['char'];
 
         let theX = asciiWidth - arrayX;
         let theY = asciiHeight - arrayY;
@@ -1628,37 +1627,40 @@ export default {
         if (
           this.mirrorX &&
           this.currentAsciiLayerBlocks[arrayY] &&
-          this.currentAsciiLayerBlocks[arrayY][theX]
+          this.currentAsciiLayerBlocks[arrayY][theX] &&
+          (this.x !== theX || this.y !== arrayY)
         ) {
           oldBlock = { ...this.currentAsciiLayerBlocks[arrayY][theX] };
           this.currentAsciiLayerBlocks[arrayY][theX][target] =
             brushBlock[target];
 
-          this.storeDiffBlocks(theX, arrayY, oldBlock, brushBlock);
+          await this.storeDiffBlocks(theX, arrayY, oldBlock, brushBlock);
         }
 
         if (
           this.mirrorY &&
           this.currentAsciiLayerBlocks[theY] &&
-          this.currentAsciiLayerBlocks[theY][arrayX]
+          this.currentAsciiLayerBlocks[theY][arrayX] &&
+          (this.x !== arrayX || this.y !== theY)
         ) {
           oldBlock = { ...this.currentAsciiLayerBlocks[theY][arrayX] };
           this.currentAsciiLayerBlocks[theY][arrayX][target] =
             brushBlock[target];
 
-          this.storeDiffBlocks(arrayX, theY, oldBlock, brushBlock);
+          await this.storeDiffBlocks(arrayX, theY, oldBlock, brushBlock);
         }
 
         if (
           this.mirrorY &&
           this.mirrorX &&
           this.currentAsciiLayerBlocks[theY] &&
-          this.currentAsciiLayerBlocks[theY][theX]
+          this.currentAsciiLayerBlocks[theY][theX] &&
+          (this.x !== theX || this.y !== theY)
         ) {
           oldBlock = { ...this.currentAsciiLayerBlocks[theY][theX] };
           this.currentAsciiLayerBlocks[theY][theX][target] = brushBlock[target];
 
-          this.storeDiffBlocks(theX, theY, oldBlock, brushBlock);
+          await this.storeDiffBlocks(theX, theY, oldBlock, brushBlock);
         }
       }
 

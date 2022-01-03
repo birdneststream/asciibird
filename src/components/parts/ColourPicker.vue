@@ -1,5 +1,5 @@
 <template>
-  <vue-draggable-resizable :x="100" :y="100" :w="400" :h="278">
+  <vue-draggable-resizable :x="100" :y="100+yOffset" :w="400" :h="278">
     <t-card class="w-full h-full">
       <span v-for="(value, keyColours) in mircColours" :key="keyColours">
         <hr v-if="keyColours === 16" />
@@ -21,6 +21,7 @@ import { mircColours99 } from "../../ascii";
 export default {
   name: "ColourPicker",
   created() {},
+  props: ["yOffset"],
   computed: {
     mircColours() {
       return mircColours99;
