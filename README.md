@@ -80,6 +80,8 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 * Warning on mirc export if ascii exceeds IRCs 512 per chat line limit.
 * Review encodings check on file import - UTF8 vs Latin something
+* Brush blocks larger than 1x1 can leave undoable blocks
+* Asciis sometimes open with 1 more block width and height
 * The layers and undo sometimes may have bugs, but seems hard to replicate.
 * Improve image overlay modal
 * The current mIRC importer will fail on `C5,` type blocks by discarding the `,` character when it should preserve it. `art.txt` ascii is a good example of this. 98% of txt ascii imported should be fine.

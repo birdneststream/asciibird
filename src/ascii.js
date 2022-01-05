@@ -316,8 +316,8 @@ export const parseMircAscii = async (contents, filename) => {
             curBlock.fg = Number.parseInt(colourArray[0]);
             delete curBlock['bg'];
           }
-        } 
-      
+        }
+
         colourData.push({
           code: codeData,
           b: {
@@ -430,7 +430,7 @@ export const createNewAscii = (forms) => {
 // Converts ASCIIBIRD blocks to mIRC colours
 export const exportMirc = (blocks = null) => {
   var isPng = false;
-  
+
   if (blocks === null) {
     var {
       currentAscii
@@ -460,6 +460,8 @@ export const exportMirc = (blocks = null) => {
     fg: -1
   };
 
+  const zeroPad = (num, places) => String(num).padStart(places, '0');
+
   for (let y = 0; y <= currentAsciiLayersWidthHeight.height - 1; y++) {
 
     for (let x = 0; x <= currentAsciiLayersWidthHeight.width - 1; x++) {
@@ -469,38 +471,43 @@ export const exportMirc = (blocks = null) => {
 
       // If we have a difference between our previous block
       // we'll put a colour codes and continue as normal
-      if (curBlock.bg !== prevBlock.bg || curBlock.fg !== prevBlock.fg) {
+      let isNextCharInt = blocks[y][x + 1].char !== undefined && (Number.parseInt(blocks[y][x + 1]
+        .char) >= 0 && Number.parseInt(blocks[y][x + 1].char) <= 9)
+
+      let isCharInt = blocks[y][x].char !== undefined && (Number.parseInt(blocks[y][x]
+        .char) >= 0 && Number.parseInt(blocks[y][x].char) <= 9)
+
+      if ((curBlock.bg !== prevBlock.bg || curBlock.fg !== prevBlock.fg)) {
         curBlock = {
           ...blocks[y][x]
         };
-        const zeroPad = (num, places) => String(num).padStart(places, '0');
 
         if (curBlock.fg === undefined && curBlock.bg === undefined) {
           output.push('\u0003');
         } else {
 
-          if (curBlock.bg === undefined && (curBlock.fg !== undefined && curBlock.fg !== null)) {
-            pushString = `\u0003${zeroPad(curBlock.fg ?? 0, 2)}`;
+          if ((curBlock.bg === null || curBlock.bg === undefined) && (curBlock.fg !== undefined &&
+              curBlock.fg !== null)) {
+            pushString =
+              `\u0003${(isCharInt || isNextCharInt) ? zeroPad(curBlock.fg ?? 0, 2) : curBlock.fg}`;
           }
 
-          if ((curBlock.bg !== undefined && curBlock.bg !== null) && (curBlock.fg !== undefined && curBlock.fg !== null)) {
+          if ((curBlock.bg !== undefined && curBlock.bg !== null) && (curBlock.fg !== undefined &&
+              curBlock.fg !== null)) {
             // export will check if the next char is a number and add 0 padding to prevent clients eating characters
-            if (blocks[y][x + 1].char !== undefined && (Number.parseInt(blocks[y][x + 1].char) >= 0 && Number.parseInt(blocks[y][x + 1].char) <= 9)) {
-              pushString = `\u0003${curBlock.fg ?? 0},${zeroPad(curBlock.bg ?? 1, 2)}`;
-            } else {
-              pushString = `\u0003${curBlock.fg},${curBlock.bg}`;
-            }
+            pushString =
+              `\u0003${curBlock.fg},${(isCharInt || isNextCharInt) ? zeroPad(curBlock.bg ?? 1, 2) : curBlock.bg}`;
           }
 
-          if ((curBlock.bg !== undefined && curBlock.bg !== null) && curBlock.fg === undefined) {
-            pushString = `\u0003,${zeroPad(curBlock.bg ?? 1, 2)}`;
+          if ((curBlock.bg !== undefined && curBlock.bg !== null) && (curBlock.fg === undefined ||
+              curBlock.fg === null)) {
+            pushString =
+              `\u0003,${(isCharInt || isNextCharInt) ? zeroPad(curBlock.bg ?? 1, 2) : curBlock.bg}`;
           }
 
           output.push(pushString);
         }
-
       }
-
       // null .chars will end up as space
       output.push(curBlock.char ?? ' ');
       prevBlock = {
@@ -517,7 +524,7 @@ export const exportMirc = (blocks = null) => {
 
     // New line except for the very last line
     // if (blocks[y] && y < blocks[y].length - 1) {
-      output.push('\n');
+    output.push('\n');
     // }
   }
 
@@ -660,7 +667,7 @@ export const fillNullBlocks = function (height, width, layerData = null) {
     layers[i].height = height
   }
 
-  return [ ... layers]
+  return [...layers]
 }
 
 // Sometimes if we copy blocks the initial Y values will be null
@@ -758,7 +765,7 @@ export const mergeLayers = function (blocks = null) {
 
           if (curBlock.fg === undefined) {
             curBlock.fg = store.getters.currentAsciiLayers[z].data[y][x].fg;
-          } 
+          }
 
           if (curBlock.char === undefined) {
             curBlock.char = store.getters.currentAsciiLayers[z].data[y][x].char;
