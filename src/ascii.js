@@ -460,7 +460,7 @@ export const exportMirc = (blocks = null) => {
     fg: -1
   };
 
-  const zeroPad = (num, places) => String(num).padStart(places, '0');
+  const zeroPad = (num, places = 2) => String(num).padStart(places, '0');
 
   for (let y = 0; y <= currentAsciiLayersWidthHeight.height - 1; y++) {
 
@@ -469,14 +469,13 @@ export const exportMirc = (blocks = null) => {
         ...blocks[y][x]
       };
 
+      let isPadded = (blocks[y][x + 1].char !== undefined && (Number.parseInt(blocks[y][x + 1]
+        .char) >= 0 && Number.parseInt(blocks[y][x + 1].char) <= 9) || (blocks[y][x].char !==
+        undefined && (Number.parseInt(blocks[y][x]
+          .char) >= 0 && Number.parseInt(blocks[y][x].char) <= 9)))
+
       // If we have a difference between our previous block
       // we'll put a colour codes and continue as normal
-      let isNextCharInt = blocks[y][x + 1].char !== undefined && (Number.parseInt(blocks[y][x + 1]
-        .char) >= 0 && Number.parseInt(blocks[y][x + 1].char) <= 9)
-
-      let isCharInt = blocks[y][x].char !== undefined && (Number.parseInt(blocks[y][x]
-        .char) >= 0 && Number.parseInt(blocks[y][x].char) <= 9)
-
       if ((curBlock.bg !== prevBlock.bg || curBlock.fg !== prevBlock.fg)) {
         curBlock = {
           ...blocks[y][x]
@@ -489,20 +488,20 @@ export const exportMirc = (blocks = null) => {
           if ((curBlock.bg === null || curBlock.bg === undefined) && (curBlock.fg !== undefined &&
               curBlock.fg !== null)) {
             pushString =
-              `\u0003${(isCharInt || isNextCharInt) ? zeroPad(curBlock.fg ?? 0, 2) : curBlock.fg}`;
+              `\u0003${(isPadded) ? zeroPad(curBlock.fg) : curBlock.fg}`;
           }
 
           if ((curBlock.bg !== undefined && curBlock.bg !== null) && (curBlock.fg !== undefined &&
               curBlock.fg !== null)) {
             // export will check if the next char is a number and add 0 padding to prevent clients eating characters
             pushString =
-              `\u0003${curBlock.fg},${(isCharInt || isNextCharInt) ? zeroPad(curBlock.bg ?? 1, 2) : curBlock.bg}`;
+              `\u0003${curBlock.fg},${(isPadded) ? zeroPad(curBlock.bg) : curBlock.bg}`;
           }
 
           if ((curBlock.bg !== undefined && curBlock.bg !== null) && (curBlock.fg === undefined ||
               curBlock.fg === null)) {
             pushString =
-              `\u0003,${(isCharInt || isNextCharInt) ? zeroPad(curBlock.bg ?? 1, 2) : curBlock.bg}`;
+              `\u0003,${(isPadded) ? zeroPad(curBlock.bg) : curBlock.bg}`;
           }
 
           output.push(pushString);
