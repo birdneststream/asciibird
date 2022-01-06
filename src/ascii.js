@@ -224,7 +224,7 @@ export const parseMircAscii = async (contents, filename) => {
     .split('\u0003\n').join('\n')
     .split('\u0002\u0003').join('\u0003')
     .split('\u0002').join('') // bold
-    .split('\u001D').join(''); // italics
+    .split('\u001D').join(''); // bg highlight
 
   let asciiLines = contents.split("\n");
 
@@ -265,6 +265,9 @@ export const parseMircAscii = async (contents, filename) => {
     if (cleanedWidth > finalAscii.layers[0].width) {
       finalAscii.layers[0].width = cleanedWidth;
     }
+
+    // Save some time on large asciis?
+    // if (i > 50) break;
   }
 
   // https://modern.ircdocs.horse/formatting.html#color
@@ -366,6 +369,18 @@ export const parseMircAscii = async (contents, filename) => {
       }
 
       curBlock.char = char;
+
+      if (curBlock.bg === null) {
+        delete curBlock['bg']
+      }
+
+      if (curBlock.fg === null) {
+        delete curBlock['fg']
+      }
+
+      if (curBlock.char === null) {
+        delete curBlock['char']
+      }
 
       finalAscii.layers[0].data[y][i] = {
         ...curBlock

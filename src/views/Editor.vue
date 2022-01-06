@@ -1325,6 +1325,19 @@ export default {
                 this.currentAsciiLayerBlocks[y] &&
                 this.currentAsciiLayerBlocks[y][x]
               ) {
+
+                if (this.currentAsciiLayerBlocks[y][x].bg === null) {
+                  delete this.currentAsciiLayerBlocks[y][x]['bg']
+                }
+
+                if (this.currentAsciiLayerBlocks[y][x].fg === null) {
+                  delete this.currentAsciiLayerBlocks[y][x]['fg']
+                }
+
+                if (this.currentAsciiLayerBlocks[y][x].char === null) {
+                  delete this.currentAsciiLayerBlocks[y][x]['char']
+                }
+                
                 curBlock = { ...this.currentAsciiLayerBlocks[y][x] };
 
                 if (!this.selectedBlocks[y][x]) {
