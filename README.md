@@ -80,6 +80,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 To fix before properly releasing v1
 
+* System to review the localStorage data and update any differences
 * Fill tool buggered on big ascii, related to undo system and recursion limit
 * Brush blocks larger than 1x1 can leave undoable blocks
 * Asciis sometimes open with 1 more block width and height

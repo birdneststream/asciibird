@@ -490,10 +490,13 @@ export const exportMirc = (blocks = null) => {
         ...blocks[y][x]
       };
 
-      let isPadded = (blocks[y][x + 1].char !== undefined && (Number.parseInt(blocks[y][x + 1]
-        .char) >= 0 && Number.parseInt(blocks[y][x + 1].char) <= 9) || (blocks[y][x].char !==
-        undefined && (Number.parseInt(blocks[y][x]
-          .char) >= 0 && Number.parseInt(blocks[y][x].char) <= 9)))
+      let isPadded = ((blocks[y][x + 1].bg === undefined || blocks[y][x + 1].fg === undefined) && blocks[y][x + 1]
+          .char !== undefined && (Number.parseInt(
+              blocks[y][x + 1]
+          .char) >= 0 && Number.parseInt(blocks[y][x + 1].char) <= 9) ||
+        (blocks[y][x].char !==
+          undefined && (Number.parseInt(blocks[y][x]
+            .char) >= 0 && Number.parseInt(blocks[y][x].char) <= 9)))
 
       // If we have a difference between our previous block
       // we'll put a colour codes and continue as normal
