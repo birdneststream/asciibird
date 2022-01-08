@@ -315,6 +315,7 @@ export default {
     updateAscii: false,
   }),
   computed: {
+    isMacLike: () => /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform),
     isDefault() {
       return this.currentTool.name === "default";
     },
@@ -494,7 +495,7 @@ export default {
             text: "New ASCII",
             click: () => this.$store.commit("openModal", "new-ascii"),
             icon: "fiber_new",
-            hotkey: "ctrl+m",
+            hotkey: !this.isMacLike ? "ctrl+m" : "command+m",
           },
         ],
       });
@@ -505,7 +506,7 @@ export default {
             text: "Close ASCII",
             click: () => this.closeTab(this.currentTab),
             icon: "close",
-            hotkey: "ctrl+r",
+            hotkey: !this.isMacLike ? "ctrl+r" : "command+r",
           },
           {
             text: "Change ASCII",
@@ -522,7 +523,7 @@ export default {
               text: "Edit ASCII",
               click: () => this.$store.commit("openModal", "edit-ascii"),
               icon: "edit",
-              hotkey: "ctrl+e",
+              hotkey: !this.isMacLike ? "ctrl+e" : "command+e",
             },
             {
               is: "separator",
@@ -531,13 +532,13 @@ export default {
               text: "Undo",
               click: () => this.$store.commit("undoBlocks"),
               icon: "undo",
-              hotkey: "ctrl+z",
+              hotkey: !this.isMacLike ? "ctrl+z" : "command+z",
             },
             {
               text: "Redo",
               click: () => this.$store.commit("redoBlocks"),
               icon: "redo",
-              hotkey: "ctrl+y",
+              hotkey: !this.isMacLike ? "ctrl+y" : "command+y",
             },
             {
               is: "separator",
@@ -558,7 +559,7 @@ export default {
               },
               icon: "content_copy",
               disabled: !this.isSelecting || !this.selectedBlocks.length,
-              hotkey: "ctrl+c",
+              hotkey: !this.isMacLike ? "ctrl+c" : "command+c",
             },
             {
               text: "Cut Selection",
@@ -598,7 +599,7 @@ export default {
               },
               icon: "content_cut",
               disabled: !this.isSelecting || !this.selectedBlocks.length,
-              hotkey: "ctrl+x",
+              hotkey: !this.isMacLike ? "ctrl+x" : "command+x",
             },
             {
               text: "Paste Select as Brush",
@@ -613,7 +614,7 @@ export default {
               },
               icon: "content_paste",
               disabled: !this.selectBlocks.length,
-              hotkey: "ctrl+v",
+              hotkey: !this.isMacLike ? "ctrl+v" : "command+v",
             },
             {
               text: "Delete Selected Blocks",
@@ -665,7 +666,7 @@ export default {
               },
               icon: "brush",
               disabled: !this.isSelected && !this.selectedBlocks.length,
-              hotkey: "ctrl+b",
+              hotkey: !this.isMacLike ? "ctrl+b" : "command+b",
             },
           ],
         });
@@ -684,7 +685,7 @@ export default {
                   icon: this.tabsVisible
                     ? "check_box"
                     : "check_box_outline_blank",
-                  hotkey: "ctrl+alt+t",
+                  hotkey: !this.isMacLike ? "ctrl+alt+t" : "command+alt+t",
                   click: (e) => {
                     this.$store.commit("changeTabsVisible", !this.tabsVisible);
                   },
@@ -694,7 +695,7 @@ export default {
                   icon: this.menuBarVisible
                     ? "check_box"
                     : "check_box_outline_blank",
-                  hotkey: "ctrl+alt+m",
+                  hotkey: !this.isMacLike ? "ctrl+alt+m" : "command+alt+m",
                   click: (e) => {
                     this.$store.commit(
                       "changeMenuBarVisible",
@@ -712,7 +713,7 @@ export default {
                   icon: this.debugPanelState.visible
                     ? "check_box"
                     : "check_box_outline_blank",
-                  hotkey: "ctrl+alt+d",
+                  hotkey: !this.isMacLike ? "ctrl+alt+d" : "command+alt+d",
                   click: (e) => {
                     this.$store.commit(
                       "toggleDebugPanel",
@@ -727,7 +728,7 @@ export default {
                   icon: this.brushLibraryState.visible
                     ? "check_box"
                     : "check_box_outline_blank",
-                  hotkey: "ctrl+alt+b",
+                  hotkey: !this.isMacLike ? "ctrl+alt+b" : "command+alt+b",
                   click: (e) => {
                     this.$store.commit(
                       "toggleBrushLibrary",
@@ -742,7 +743,7 @@ export default {
                   icon: this.layersLibraryState.visible
                     ? "check_box"
                     : "check_box_outline_blank",
-                  hotkey: "ctrl+alt+l",
+                  hotkey: !this.isMacLike ? "ctrl+alt+l" : "command+alt+l",
                   click: (e) => {
                     this.layersLibraryState.visible =
                       !this.layersLibraryState.visible;
@@ -759,7 +760,7 @@ export default {
                   icon: this.toolbarState.visible
                     ? "check_box"
                     : "check_box_outline_blank",
-                  hotkey: "ctrl+alt+n",
+                  hotkey: !this.isMacLike ? "ctrl+alt+n" : "command+alt+n",
                   click: (e) => {
                     this.toolbarState.visible = !this.toolbarState.visible;
                     this.$store.commit("changeToolBarState", this.toolbarState);
@@ -772,7 +773,7 @@ export default {
                   icon: this.brushPreviewState.visible
                     ? "check_box"
                     : "check_box_outline_blank",
-                  hotkey: "ctrl+alt+e",
+                  hotkey: !this.isMacLike ? "ctrl+alt+e" : "command+alt+e",
                   click: (e) => {
                     this.brushPreviewState.visible =
                       !this.brushPreviewState.visible;
@@ -865,7 +866,7 @@ export default {
 
             {
               text: "Increase Brush Size",
-              hotkey: "ctrl+]",
+              hotkey: !this.isMacLike ? "ctrl+]" : "command+]",
               disabled: !this.isBrushing && !this.isErasing,
               icon: "add",
               click: (e) => {
@@ -885,7 +886,7 @@ export default {
             },
             {
               text: "Decrease Brush Size",
-              hotkey: "ctrl+[",
+              hotkey: !this.isMacLike ? "ctrl+[" : "command+[",
               disabled: !this.isBrushing && !this.isErasing,
               icon: "remove",
               click: (e) => {
@@ -959,7 +960,7 @@ export default {
               icon: "settings",
               click: () => this.$store.commit("openModal", "options"),
               disabled: !this.isDefault,
-              hotkey: "ctrl+o",
+              hotkey: !this.isMacLike ? "ctrl+o" : "command+o",
               // menu: [
               //   {
               //     text: "Show Options",
@@ -980,12 +981,12 @@ export default {
             text: "mIRC File",
             click: () => this.startImport("mirc"),
             icon: "upload_file",
-            hotkey: "ctrl+shift+o",
+            hotkey: !this.isMacLike ? "ctrl+shift+o" : "command+shift+o",
           },
           {
             text: "mIRC Clipboard",
             click: () => this.$store.commit("openModal", "paste-ascii"),
-            hotkey: "ctrl+shift+v",
+            hotkey: !this.isMacLike ? "ctrl+shift+v" : "command+shift+v",
             icon: "copy_all",
           },
           {
@@ -1006,17 +1007,17 @@ export default {
                 text: "mIRC File",
                 click: () => this.startExport("file"),
                 icon: "download_file",
-                hotkey: "ctrl+shift+f",
+                hotkey: !this.isMacLike ? "ctrl+shift+f" : "command+shift+f",
               },
               {
                 text: "mIRC Clipboard",
-                hotkey: "ctrl+shift+c",
+                hotkey: !this.isMacLike ? "ctrl+shift+c" : "command+shift+c",
                 click: () => this.startExport("clipboard"),
                 icon: "copy_all",
               },
               {
                 text: "PNG Image",
-                hotkey: "ctrl+shift+g",
+                hotkey: !this.isMacLike ? "ctrl+shift+g" : "command+shift+g",
                 click: () => {
                   canvasToPng(
                     document.getElementById("canvas"),
@@ -1028,7 +1029,7 @@ export default {
               {
                 text: "HTTP POST",
                 click: () => this.startExport("post"),
-                hotkey: "ctrl+shift+h",
+                hotkey: !this.isMacLike ? "ctrl+shift+h" : "command+shift+h",
                 icon: "post_add",
               },
               {
@@ -1051,12 +1052,12 @@ export default {
                 click: () =>
                   this.$store.commit("toggleLayer", this.selectedLayer),
                 icon: "panorama_fish_eye",
-                hotkey: "ctrl+shift+t",
+                hotkey: !this.isMacLike ? "ctrl+shift+t" : "command+shift+t",
                 disabled: !this.canToggleLayer,
               },
               {
                 text: "Rename Layer",
-                hotkey: "ctrl+shift+r",
+                hotkey: !this.isMacLike ? "ctrl+shift+r" : "command+shift+r",
                 click: () =>
                   this.showLayerRename(
                     this.selectedLayer,
@@ -1066,13 +1067,13 @@ export default {
               },
               {
                 text: "Add Layer",
-                hotkey: "ctrl+shift+a",
+                hotkey: !this.isMacLike ? "ctrl+shift+a" : "command+shift+a",
                 click: () => this.$store.commit("addLayer"),
                 icon: "playlist_add",
               },
               {
                 text: "Delete Layer",
-                hotkey: "ctrl+shift+d",
+                hotkey: !this.isMacLike ? "ctrl+shift+d" : "command+shift+d",
                 click: () =>
                   this.$store.commit("removeLayer", this.selectedLayer),
                 icon: "delete_sweep",
@@ -1080,14 +1081,14 @@ export default {
               },
               {
                 text: "Move Layer Down",
-                hotkey: "ctrl+shift+s",
+                hotkey: !this.isMacLike ? "ctrl+shift+s" : "command+shift+s",
                 click: () => this.$store.commit("upLayer", this.selectedLayer),
                 icon: "arrow_downward",
                 disabled: !this.canToggleLayer,
               },
               {
                 text: "Move Layer Up",
-                hotkey: "ctrl+shift+w",
+                hotkey: !this.isMacLike ? "ctrl+shift+w" : "command+shift+w",
                 click: () =>
                   this.$store.commit("downLayer", this.selectedLayer),
                 icon: "arrow_upward",
@@ -1095,7 +1096,7 @@ export default {
               },
               {
                 text: "Merge All Layers",
-                hotkey: "ctrl+shift+m",
+                hotkey: !this.isMacLike ? "ctrl+shift+m" : "command+shift+m",
                 click: () => this.$store.commit("mergeAllLayers"),
                 icon: "playlist_play",
                 disabled: !this.canToggleLayer,

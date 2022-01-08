@@ -144,3 +144,7 @@ body {
 .ab-context-menu-item {
     @apply ml-1 hover:bg-gray-800 hover:text-white;
 }
+
+.ab-button {
+    @apply block w-full border-gray-200 bg-gray-500 text-sm;
+}

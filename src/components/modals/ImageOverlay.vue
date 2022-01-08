@@ -7,77 +7,201 @@
     @closed="$store.commit('closeModal', 'overlay')"
   >
     <template v-slot:default>
+      
+      <!--Card-->
       <div>
-        <span class="text-sm"
-          >URL <br /><small
-            >Note: ASCIIBIRD only supports URL images</small
-          ></span
-        >
+              <div class="md:flex mb-6">
+                  <div class="md:w-1/3">
+                      <label class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4" for="my-textarea">
+                          URL
+                      </label>
+                  </div>
+                  <div class="md:w-2/3">
+                      
+                          <t-input type="text" name="url" v-model="imageOverlay.url" />
 
-        <t-input type="text" name="url" v-model="imageOverlay.url" />
+                          <p class="py-2 text-sm text-gray-600">Note: ASCIIBIRD only supports URL images</p>
+
+                  </div>
+              </div>
+
+              <div class="md:flex mb-6">
+                  <div class="md:w-1/3">
+                      <label class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4" for="my-textfield">
+                          Visibility
+                      </label>
+                  </div>
+                  <div class="md:w-1/3">
+                    <label class="ml-1 w-1/3">
+                      <t-checkbox
+                        class="form-checkbox m-1"
+                        name="visible"
+                        v-model="imageOverlay.visible"
+                      />
+                      <span class="text-sm">Visible</span>
+                    </label>
+                  </div>
+       
+              </div>
+
+
+              <div class="md:flex mb-6">
+                  <div class="md:w-1/3">
+                      <label class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4" for="my-textfield">
+                          Overlay Transparency
+                      </label>
+                  </div>
+                  <div class="md:w-1/2">
+
+                      <vue-slider
+                        class="m-1"
+                        v-model="imageOverlay.opacity"
+                        :min="1"
+                        :max="100"
+                      ></vue-slider>
+
+                  </div>
+       
+              </div>
+
+              <div class="md:flex mb-6">
+                  <div class="md:w-1/3">
+                      <label class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4" for="my-textfield">
+                          ASCII Transparency
+                      </label>
+                  </div>
+                  <div class="md:w-1/2">
+
+                      <vue-slider
+                        class="m-1"
+                        v-model="imageOverlay.asciiOpacity"
+                        :min="1"
+                        :max="100"
+                      ></vue-slider>
+
+                  </div>
+       
+              </div>
+
+              <div class="md:flex mb-6">
+                  <div class="md:w-1/3">
+                      <label class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4" for="my-textfield">
+                          Image Scale
+                      </label>
+                  </div>
+                  <div class="md:w-1/2">
+
+                      <vue-slider
+                        class="m-1"
+                        v-model="imageOverlay.size"
+                        :min="10"
+                        :max="100"
+                      ></vue-slider>
+
+                  </div>
+       
+              </div>
+
+
+              <div class="md:flex mb-6">
+                  <div class="md:w-1/3">
+                      <label class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4" for="my-textfield">
+                          Left
+                      </label>
+                  </div>
+                  <div class="md:w-1/2">
+
+                      <vue-slider
+                        class="m-1"
+                        v-model="imageOverlay.left"
+                        :min="0"
+                        :max="100"
+                      ></vue-slider>
+
+                  </div>
+       
+              </div>
+
+              <div class="md:flex mb-6">
+                  <div class="md:w-1/3">
+                      <label class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4" for="my-textfield">
+                          Top
+                      </label>
+                  </div>
+                  <div class="md:w-1/2">
+
+                      <vue-slider
+                        class="m-1"
+                        v-model="imageOverlay.top"
+                        :min="0"
+                        :max="100"
+                      ></vue-slider>
+
+                  </div>
+       
+              </div>
+
+
+              <div class="md:flex mb-6">
+                  <div class="md:w-1/3">
+                      <label class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4" for="my-textfield">
+                          Fit To
+                      </label>
+                  </div>
+                  <div class="md:w-1/2">
+                          <label class="items-center">
+                            <t-radio
+                              name="options"
+                              :value="true"
+                              v-model="imageOverlay.stretched"
+                            />
+                            <span class="ml-2 text-sm">ASCII</span>
+                          </label>
+                          <label class="items-center ml-2">
+                            <t-radio
+                              name="options"
+                              :value="false"
+                              v-model="imageOverlay.stretched"
+                            />
+                            <span class="ml-2 text-sm">Image Size</span>
+                          </label>
+                  </div>
+       
+              </div>
+
+
+
+              <div class="md:flex mb-6">
+                  <div class="md:w-1/3">
+                      <label class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4" for="my-textfield">
+                          Repeat
+                      </label>
+                  </div>
+                  <div class="md:w-1/2">
+                      <label class="ml-1 w-1/3">
+                        <t-checkbox
+                          class="form-checkbox m-1"
+                          name="repeatx"
+                          v-model="imageOverlay.repeatx"
+                        />
+                        <span class="text-sm">X</span>
+                      </label>
+
+                      <label class="ml-1 w-1/3 pl-4">
+                        <t-checkbox
+                          class="form-checkbox m-1"
+                          name="repeatx"
+                          v-model="imageOverlay.repeaty"
+                        />
+                        <span class="text-sm">Y</span>
+                      </label>
+                  </div>
+       
+              </div>
+
       </div>
+      <!--/Card-->
 
-      <div class="flex">
-        <label class="ml-1 w-1/3">
-          <t-checkbox
-            class="form-checkbox m-1"
-            name="visible"
-            v-model="imageOverlay.visible"
-          />
-          <span class="text-sm">Visible</span>
-        </label>
-
-        <label class="ml-1 w-1/3">
-          <span class="text-sm">Transparency</span>
-          <t-input
-            type="number"
-            name="width"
-            v-model="imageOverlay.opacity"
-            min="1"
-            max="100"
-            class="m-1"
-          />
-        </label>
-
-        <div class="flex">
-          <label class="flex items-center">
-            <t-radio
-              name="options"
-              :value="true"
-              v-model="imageOverlay.stretched"
-            />
-            <span class="ml-2 text-sm">Fit to ASCII</span>
-          </label>
-          <label class="flex items-center ml-2">
-            <t-radio
-              name="options"
-              :value="false"
-              v-model="imageOverlay.stretched"
-            />
-            <span class="ml-2 text-sm">Original Size</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="flex">
-        <label class="ml-1 w-1/3">
-          <t-checkbox
-            class="form-checkbox m-1"
-            name="repeatx"
-            v-model="imageOverlay.repeatx"
-          />
-          <span class="text-sm">Repeat X</span>
-        </label>
-
-        <label class="ml-1 w-1/3">
-          <t-checkbox
-            class="form-checkbox m-1"
-            name="repeatx"
-            v-model="imageOverlay.repeaty"
-          />
-          <span class="text-sm">Repeat Y</span>
-        </label>
-      </div>
     </template>
 
     <template v-slot:footer>
@@ -85,16 +209,21 @@
         class="flex justify-between"
         @click="$store.commit('closeModal', 'overlay')"
       >
-        <t-button type="button" class="p-2"> Cancel </t-button>
-        <t-button type="button" class="p-2"> Ok </t-button>
+        <t-button type="button" class="ab-button"> <span class="material-icons relative top-2 pb-4">cancel</span> Cancel </t-button>
+        <t-button type="button" class="ab-button"> <span class="material-icons relative top-2 pb-4">save</span> Ok </t-button>
       </div>
     </template>
   </t-modal>
 </template>
 
 <script>
+import vueSlider from "vue-slider-component";
+
 export default {
   name: "Overlay",
+  components: {
+    vueSlider,
+  },
   created() {},
   mounted() {
     if (this.showOverlayModal) {

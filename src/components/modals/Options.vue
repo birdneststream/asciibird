@@ -86,8 +86,8 @@
         class="flex justify-between"
         @click="$store.commit('closeModal', 'options')"
       >
-        <t-button type="button" class="p-2"> Cancel </t-button>
-        <t-button type="button" class="p-2"> Ok </t-button>
+        <t-button type="button" class="ab-button"> <span class="material-icons relative top-2 pb-4">cancel</span> Cancel </t-button>
+        <t-button type="button" class="ab-button"> <span class="material-icons relative top-2 pb-4">save</span> Ok </t-button>
       </div>
     </template>
   </t-modal>

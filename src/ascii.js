@@ -242,6 +242,9 @@ export const parseMircAscii = async (contents, filename) => {
     imageOverlay: {
       url: null,
       opacity: 95,
+      asciiOpacity: 100,
+      left: 0,
+      top: 0,
       position: 'centered',
       size: 100,
       repeatx: true,
@@ -421,6 +424,9 @@ export const createNewAscii = (forms) => {
     imageOverlay: {
       url: null,
       opacity: 95,
+      asciiOpacity: 100,
+      left: 0,
+      top: 0,
       position: 'centered',
       size: 100,
       repeatx: true,

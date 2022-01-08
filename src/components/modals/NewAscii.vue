@@ -6,38 +6,66 @@
     :esc-to-close="true"
     @closed="$store.commit('closeModal', 'new-ascii')"
   >
-    Width
-    <t-input
-      type="number"
-      name="width"
-      v-model="forms.createAscii.width"
-      min="1"
-    />
 
-    Height
-    <t-input
-      type="number"
-      name="height"
-      v-model="forms.createAscii.height"
-      min="1"
-    />
+      <!--Card-->
+      <div>
+              <div class="md:flex mb-6">
+                  <div class="md:w-1/3">
+                      <label class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4" for="my-textarea">
+                          Title
+                      </label>
+                  </div>
+                  <div class="md:w-2/3">
+                      
+                          <t-input
+                            type="text"
+                            name="title"
+                            class="form-input block w-full focus:bg-white"
+                            v-model="forms.createAscii.title"
+                            max="128"
+                          />
 
-    Title
-    <t-input
-      type="text"
-      name="title"
-      v-model="forms.createAscii.title"
-      max="128"
-    />
+                  </div>
+              </div>
+
+              <div class="md:flex mb-6">
+                  <div class="md:w-1/3">
+                      <label class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4" for="my-textfield">
+                          Width and Height
+                      </label>
+                  </div>
+                  <div class="md:w-1/3">
+                          <t-input
+                            type="number"
+                            name="width"
+                            class="form-input block w-full focus:bg-white"
+                            v-model="forms.createAscii.width"
+                            min="1"
+                          />
+                  </div>
+                  <div class="md:w-1/3">
+                        <t-input
+                          type="number"
+                          name="height"
+                          class="form-input block w-full focus:bg-white"
+                          v-model="forms.createAscii.height"
+                          min="1"
+                        />
+                  </div>
+
+              </div>
+
+      </div>
+      <!--/Card-->
 
     <template v-slot:footer>
       <div
         class="flex justify-between"
-        @click="$store.commit('closeModal', 'new-ascii')"
+        
       >
-        <t-button type="button" class="p-2"> Cancel </t-button>
-        <t-button type="button" class="p-2" @click="initiateNewAscii()">
-          Ok
+        <t-button type="button" class="ab-button" @click="$store.commit('closeModal', 'new-ascii')"> <span class="material-icons relative top-2 pb-4">cancel</span> Cancel </t-button>
+        <t-button type="button" class="ab-button" @click="initiateNewAscii()">
+          <span class="material-icons relative top-2 pb-4">save</span>  Create
         </t-button>
       </div>
     </template>
@@ -97,6 +125,7 @@ export default {
       this.forms.createAscii.title = "New ASCII";
     },
     initiateNewAscii() {
+      this.$store.commit('closeModal', 'new-ascii')
       this.forms.createAscii.height = Number.parseInt(this.forms.createAscii.height)
       this.forms.createAscii.width = Number.parseInt(this.forms.createAscii.width)
       createNewASCII(this.forms);

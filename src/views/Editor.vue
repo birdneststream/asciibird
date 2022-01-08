@@ -349,6 +349,8 @@ export default {
     imageOverlayStyle() {
       let repeat = "background-repeat: no-repeat;";
       let stretched = "background-size: 100%;";
+      let left = `left: ${this.imageOverlay.left}%;`
+      let top = `top: ${this.imageOverlay.top}%;`
 
       if (this.imageOverlay.repeatx && this.imageOverlay.repeaty) {
         repeat = "background-repeat: repeat;";
@@ -365,19 +367,19 @@ export default {
       if (this.imageOverlay.stretched) {
         stretched = "background-size: 100%;";
       } else {
-        stretched = "";
+        stretched = `background-size: ${this.imageOverlay.size}%;`;
       }
 
       return this.imageOverlay.visible
         ? `background-image: url('${
             this.imageOverlay.url
-          }'); ${stretched} ${repeat} opacity: ${
+          }'); ${stretched} ${repeat} ${left} ${top} opacity: ${  
             this.imageOverlay.opacity / 100
           }; z-index: -1; position: absolute;`
         : "position: absolute;";
     },
     canvasTransparent() {
-      return this.imageOverlay.visible ? "opacity: 0.6;" : "opacity: 1;";
+      return this.imageOverlay.visible ? `opacity: ${this.imageOverlay.asciiOpacity / 100};` : "opacity: 1;";
     },
   },
   watch: {
@@ -887,7 +889,7 @@ export default {
         if (
           this.diffBlocks.new.length &&
           !this.canTool &&
-          !this.isTextEditing &&
+          !this.isTextEditing && !this.isFill &&
           // The main point of this was to use with brushing, but there is a redraw bug
           // where it draws the cached blocks the wrong way around, for now it's simpler
           // to have this.
@@ -2023,8 +2025,10 @@ export default {
         }
       }
 
-      this.storeDiffBlocks(x, y, oldBlock, targetBlock);
-
+      // if (this.diffBlocks.new[y] === undefined && this.diffBlocks.new[y][x] === undefined) {
+        this.storeDiffBlocks(x, y, oldBlock, targetBlock);
+      // }
+      
       // Fill in all four directions
       // Fill Prev row
       this.fillTool(currentLayerBlocks, y, x - 1, current, eraser);

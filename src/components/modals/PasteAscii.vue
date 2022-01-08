@@ -15,16 +15,18 @@
       <div class="flex justify-between">
         <t-button
           type="button"
+          class="ab-button"
           @click="$store.commit('closeModal', 'paste-ascii')"
         >
-          Cancel
+          <span class="material-icons relative top-2 pb-4">cancel</span> Cancel
         </t-button>
         <t-button
           type="button"
+          class="ab-button"
           @click="importPasteAscii()"
           :disabled="checkPasteContent"
         >
-          Import Clipboard
+          <span class="material-icons relative top-2 pb-4">save</span> Import Clipboard
         </t-button>
       </div>
     </template>

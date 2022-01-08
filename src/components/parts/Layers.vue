@@ -3,7 +3,7 @@
     <div class="flex">
       <t-button
         type="button"
-        class="block w-1/2 border-gray-200 bg-gray-500 text-sm"
+        class="ab-button"
         @click="addLayer()"
       >
         <span class="material-icons relative top-2 pb-4">playlist_add</span> Add
@@ -12,7 +12,7 @@
 
       <t-button
         type="button"
-        class="block w-1/2 border-gray-200 bg-gray-500 text-sm"
+        class="ab-button"
         @click="mergeLayers()"
       >
         <span class="material-icons relative top-2 pb-4">playlist_play</span>
