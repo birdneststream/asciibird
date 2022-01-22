@@ -23,6 +23,19 @@ Vue.use(Toasted, {
   duration: 1200,
 });
 
+// Check for localStorage and asciibird cache
+if (localStorage.getItem('vuex')) {
+  let asciiCache = JSON.parse(localStorage.getItem('vuex'));
+
+  // Remove old old asciibird cache
+  if (asciiCache && asciiCache.ver === undefined) {
+    localStorage.removeItem('vuex');
+    window.location.reload();
+  }
+
+  // Future state file changes can be amended here
+}
+
 new Vue({
   store,
   render: (h) => h(Dashboard),

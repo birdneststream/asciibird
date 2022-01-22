@@ -78,19 +78,32 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 # Roadmap and Bug To Fixes
 
-To fix before properly releasing v1
+## Bugs in v1
+
+* Undo sometimes stops working.
+
+##### Fixed
 
 * System to review the localStorage data and update any differences
-* Fill tool buggered on big ascii, related to undo system and recursion limit
-* Brush blocks larger than 1x1 can leave undoable blocks
 * Asciis sometimes open with 1 more block width and height
 * The layers and undo sometimes may have bugs, but seems hard to replicate.
+
+##### To fix before properly releasing v1
+
+* Brush blocks larger than 1x1 can leave undoable blocks
 * The current mIRC importer will fail on `C5,` type blocks by discarding the `,` character when it should preserve it. `art.txt` ascii is a good example of this. 98% of txt ascii imported should be fine.
 
-### V1 Proper Release
+### v 1.1
 
+* Fix brush tool for seamless lines when drawing fast
 * Warning on mirc export if ascii exceeds IRCs 512 per chat line limit.
 * Review encodings check on file import - UTF8 vs Latin something
+* Fill tool is limited by the recursion limit on the browser. Each browser has a different limit. Filling an empty 80x196 ascii will throw a recursion error on firefox, but not on Safari for this reason. We can review the fill feature in a future version of ASCII bird.
+
+### v 1.2
+
+* Half block editing mode
+* Dark / light modes, different themes
 
 ## Mobile / Touch Screen support
 
@@ -219,8 +232,9 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 * http://anti.teamidiot.de/static/nei/*/extended_mirc_color_proposal.html - Good for 99 colours info
 * https://modern.ircdocs.horse/formatting.html#color - Also really good
 * https://www.mirc.com/colors.html
-* https://www.oocities.org/spunk1111/history.htm - The history of ASCII art by Joan Stark aka jgs
-## ASCII Resources
+* https://www.oocities.org/spunk1111/history.htm - The history of ASCII art by Joan Stark (jgs) aka spunk
+
+# ASCII Resources
 
 * https://mircart.org/ - IRC ASCII art
 * https://asdf.us/asciiblaster/ - Asciiblaster ASCII editor, ASCIIBIRD is loosely based on this

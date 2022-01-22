@@ -210,7 +210,7 @@ export const maxUndoHistory = 500;
 export const tabLimit = 20;
 
 export const parseMircAscii = async (contents, filename) => {
-  const mIrcColourRegex = new RegExp(/\u0003(\d{0,2})?[,]?(\d{0,2})?/, 'gu');
+
 
   // The current state of the Colours
   let curBlock = {
@@ -261,17 +261,7 @@ export const parseMircAscii = async (contents, filename) => {
   const colourCodeRegex = new RegExp(/\u0003/, 'g');
   let isPlainText = !colourCodeRegex.test(contents);
 
-  // Get the max line width, as some lines can be trimmed by spaces
-  // we cannot always rely on the first line for the width
-  for (let i = 0; i < asciiLines.length; i++) {
-    let cleanedWidth = asciiLines[i].replace(mIrcColourRegex, '').length;
-    if (cleanedWidth > finalAscii.layers[0].width) {
-      finalAscii.layers[0].width = cleanedWidth;
-    }
 
-    // Save some time on large asciis?
-    // if (i > 50) break;
-  }
 
   // https://modern.ircdocs.horse/formatting.html#color
   // In the following list, <CODE> represents the color formatting character (0x03), <COLOR> represents one or two ASCII digits (either 0-9 or 00-99).
@@ -284,31 +274,68 @@ export const parseMircAscii = async (contents, filename) => {
   //     <CODE><COLOR>, - Set the foreground color and display the , character as text.
   //     <CODE><COLOR>,<COLOR> - Set the foreground and background color.
 
+
+  // const mIrcSingleColourRegex = new RegExp(/(\u0003\d{0,2}[^,])/, 'gu');
+  const mIrcColourRegex = new RegExp(/\u0003(\d{0,2})?[,]?(\d{0,2})?/, 'gu');
+
+  // Get the max line width, as some lines can be trimmed by spaces
+  // we cannot always rely on the first line for the width
+  for (let i = 0; i < asciiLines.length; i++) {
+    let cleanedWidth = asciiLines[i].replace(mIrcColourRegex, '').length;
+    if (cleanedWidth > finalAscii.layers[0].width) {
+      finalAscii.layers[0].width = cleanedWidth;
+    }
+
+    // Save some time on large asciis?
+    // if (i > 50) break;
+  }
+
   // The foreground color is the first <COLOR>, and the background color is the second <COLOR> (if sent).
   for (let y in asciiLines) {
     let line = asciiLines[y];
-    let cleanLines = line.replace(mIrcColourRegex, '').split("");
 
+    // Check C5, or C, first then
+    // let cleanLines = line.replace(mIrcSingleColourRegex, '');
+
+    // Do this
+    // let cleanLinesSingle = line.replace(mIrcSingleColourRegex, '');
+    let cleanLines = line.replace(mIrcColourRegex, '');
+    // cleanLines = cleanLines.replace(mIrcColourRegex, '');
+
+    // Somehow merge the arrays
+    // let parsedLineSingle = [...line.matchAll(mIrcSingleColourRegex)];
     let parsedLine = [...line.matchAll(mIrcColourRegex)];
+    
     let colourData = [];
+
+    // parsedLine = [...parsedLine, ...parsedLineSingle];
 
     curBlock = {
       ...emptyBlock,
     };
 
     let newData = [];
+    console.log({
+      parsedLine
+    });
 
     if (!isPlainText) {
       for (let x in parsedLine) {
         let codeData = parsedLine[x];
         let colourArray = codeData[0].split("\u0003").join("").split(",");
 
+        // If we have C3,
+        let endsWithComma = /,$/;
+        if (endsWithComma.test(colourArray[0])) {
+          cleanLines[codeData.index] = ',';
+        }
+        
         if (colourArray.length === 2) {
           if (colourArray[0] > -1) {
             curBlock.fg = Number.parseInt(colourArray[0]);
           }
 
-          if (colourArray[1] > -1) {
+          if (colourArray[1] !== "" && colourArray[1] > -1) {
             curBlock.bg = Number.parseInt(colourArray[1]);
           }
         } else if (colourArray.length === 1) {
@@ -322,6 +349,7 @@ export const parseMircAscii = async (contents, filename) => {
             curBlock.fg = Number.parseInt(colourArray[0]);
             delete curBlock['bg'];
           }
+
         }
 
         colourData.push({
@@ -450,9 +478,8 @@ export const createNewAscii = (forms) => {
 
 // Converts ASCIIBIRD blocks to mIRC colours
 export const exportMirc = (blocks = null) => {
-  var isPng = false;
-
   if (blocks === null) {
+    // Export the entire main ascii
     var {
       currentAscii
     } = store.getters;
@@ -463,9 +490,9 @@ export const exportMirc = (blocks = null) => {
 
     blocks = mergeLayers();
   } else {
+    // We are exporting a brush
     var currentAscii = {};
-    currentAscii.title = `brush-${cyrb53(JSON.stringify(blocks))}.png`
-    isPng = true;
+    currentAscii.title = `brush-${cyrb53(JSON.stringify(blocks))}.txt`
     var currentAsciiLayersWidthHeight = {
       height: blocks.length,
       width: blocks[0].length
@@ -490,7 +517,21 @@ export const exportMirc = (blocks = null) => {
         ...blocks[y][x]
       };
 
-      let isPadded = ((blocks[y][x + 1].bg === undefined || blocks[y][x + 1].fg === undefined) && blocks[y][x + 1]
+      if (curBlock.bg === null) {
+        delete curBlock['bg']
+      }
+
+      if (curBlock.fg === null) {
+        delete curBlock['fg']
+      }
+
+      if (curBlock.char === null) {
+        delete curBlock['char']
+      }
+
+      let isPadded = ((blocks[y][x + 1] !== undefined) && (blocks[y][x + 1].bg === undefined || blocks[
+              y][x + 1].fg ===
+            undefined) && blocks[y][x + 1]
           .char !== undefined && (Number.parseInt(
               blocks[y][x + 1]
           .char) >= 0 && Number.parseInt(blocks[y][x + 1].char) <= 9) ||
@@ -509,21 +550,18 @@ export const exportMirc = (blocks = null) => {
           output.push('\u0003');
         } else {
 
-          if ((curBlock.bg === null || curBlock.bg === undefined) && (curBlock.fg !== undefined &&
-              curBlock.fg !== null)) {
+          if (curBlock.bg === undefined && curBlock.fg !== undefined) {
             pushString =
               `\u0003${(isPadded) ? zeroPad(curBlock.fg) : curBlock.fg}`;
           }
 
-          if ((curBlock.bg !== undefined && curBlock.bg !== null) && (curBlock.fg !== undefined &&
-              curBlock.fg !== null)) {
+          if (curBlock.bg !== undefined && curBlock.fg !== undefined) {
             // export will check if the next char is a number and add 0 padding to prevent clients eating characters
             pushString =
               `\u0003${curBlock.fg},${(isPadded) ? zeroPad(curBlock.bg) : curBlock.bg}`;
           }
 
-          if ((curBlock.bg !== undefined && curBlock.bg !== null) && (curBlock.fg === undefined ||
-              curBlock.fg === null)) {
+          if (curBlock.bg !== undefined && curBlock.fg === undefined) {
             pushString =
               `\u0003,${(isPadded) ? zeroPad(curBlock.bg) : curBlock.bg}`;
           }
