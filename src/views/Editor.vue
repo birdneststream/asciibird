@@ -1057,7 +1057,7 @@ export default {
       this.diffBlocks.old = this.diffBlocks.old.flat();
       this.diffBlocks.new = this.diffBlocks.new.flat();
 
-      await this.$store.dispatch("updateAsciiBlocksAsync", {
+      this.$store.commit("updateAsciiBlocks", {
         blocks: this.currentAsciiLayerBlocks,
         diff: { ...this.diffBlocks },
       });

@@ -224,21 +224,22 @@ export default new Vuex.Store({
       state.toolbarState.mirrorY = payload.y;
     },
     updateAsciiBlocks(state, payload) {
-      if (state.asciibirdMeta[state.tab].history.length >= state.options.undoLimit) {
-        state.asciibirdMeta[state.tab].history.shift()
-      }
-
-      let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
-        .layers))
-
-      tempLayers[state.asciibirdMeta[state.tab].selectedLayer].data = payload.blocks
-
-      state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
-        tempLayers));
-
-      let historyIndex = state.asciibirdMeta[state.tab].historyIndex;
-
       if (payload.diff && payload.diff.new && payload.diff.new.length) {
+
+        if (state.asciibirdMeta[state.tab].history.length >= state.options.undoLimit) {
+          state.asciibirdMeta[state.tab].history.shift()
+        }
+
+        let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
+          .layers))
+
+        tempLayers[state.asciibirdMeta[state.tab].selectedLayer].data = payload.blocks
+
+        state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
+          tempLayers));
+
+        let historyIndex = state.asciibirdMeta[state.tab].historyIndex;
+
         if (state.asciibirdMeta[state.tab].history.length !== historyIndex) {
           state.asciibirdMeta[state.tab].history.splice(historyIndex, state.asciibirdMeta[state
             .tab].history.length);
