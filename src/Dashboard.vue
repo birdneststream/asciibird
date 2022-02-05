@@ -190,7 +190,7 @@
     </template>
     <template v-else>
       <div
-        class="absolute left-1/2 transform -translate-x-1/2 text-center"
+        class="absolute left-1/2 transform -translate-x-1/2 text-center top-1/2 -translate-y-1/2"
         @mouseup.right="openContextMenu"
       >
         <BrushCanvas :blocks="this.splashAscii()" />

@@ -236,8 +236,6 @@ export default new Vuex.Store({
       state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
         tempLayers));
 
-      // state.asciibirdMeta[state.tab].current = LZString.compressToUTF16(JSON.stringify(mergeLayers()));
-
       let historyIndex = state.asciibirdMeta[state.tab].historyIndex;
 
       if (payload.diff && payload.diff.new && payload.diff.new.length) {
@@ -248,8 +246,15 @@ export default new Vuex.Store({
 
         state.asciibirdMeta[state.tab].history.push(LZString.compressToUTF16(JSON.stringify(
           payload.diff)))
+
         state.asciibirdMeta[state.tab].historyIndex = state.asciibirdMeta[state.tab].history
           .length;
+
+        if (historyIndex > state.asciibirdMeta[state.tab].history.length) {
+          state.asciibirdMeta[state.tab].historyIndex = state.asciibirdMeta[state.tab].history
+            .length;
+        }
+
       }
 
       return;
@@ -296,6 +301,7 @@ export default new Vuex.Store({
           old: oldLayer
         }))
       });
+
       state.asciibirdMeta[state.tab].historyIndex = state.asciibirdMeta[state.tab].history
         .length;
     },
@@ -337,6 +343,7 @@ export default new Vuex.Store({
           old: oldLayer
         }))
       });
+
       state.asciibirdMeta[state.tab].historyIndex = state.asciibirdMeta[state.tab].history
         .length;
     },
@@ -361,6 +368,7 @@ export default new Vuex.Store({
           old: oldLayer
         }))
       });
+
       state.asciibirdMeta[state.tab].historyIndex = state.asciibirdMeta[state.tab].history
         .length;
     },
@@ -408,6 +416,7 @@ export default new Vuex.Store({
             old: oldLayer
           }))
         });
+
         state.asciibirdMeta[state.tab].historyIndex = state.asciibirdMeta[state.tab].history
           .length;
       }
@@ -571,10 +580,11 @@ export default new Vuex.Store({
           let data = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
             .history[historyIndex - 1].d));
 
-            state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(data
+          state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(data
             .old));
 
           state.asciibirdMeta[state.tab].historyIndex--;
+
 
 
           // Automatically select the next best layer to avoid bugs
@@ -614,7 +624,15 @@ export default new Vuex.Store({
         state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
           tempLayers));
 
+
+
         state.asciibirdMeta[state.tab].historyIndex--;
+
+        if (state.asciibirdMeta[state.tab].historyIndex > state.asciibirdMeta[state.tab].history
+          .length) {
+          state.asciibirdMeta[state.tab].historyIndex = state.asciibirdMeta[state.tab].history
+            .length;
+        }
       }
     },
     redoBlocks(state) {
@@ -664,6 +682,12 @@ export default new Vuex.Store({
           tempLayers));
 
         state.asciibirdMeta[state.tab].historyIndex++;
+
+        if (state.asciibirdMeta[state.tab].historyIndex > state.asciibirdMeta[state.tab].history
+          .length) {
+          state.asciibirdMeta[state.tab].historyIndex = state.asciibirdMeta[state.tab].history
+            .length;
+        }
       }
     },
 

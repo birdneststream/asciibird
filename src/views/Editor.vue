@@ -1926,8 +1926,8 @@ export default {
     // Fill tool
     fill(eraser = false) {
       const newColor = {
-        fg: this.currentFg,
         bg: this.currentBg,
+        // fg: this.currentFg,
         char: this.currentChar,
       };
 
@@ -1937,13 +1937,13 @@ export default {
         delete newColor["bg"];
       }
 
-      if (!this.canFg) {
-        delete newColor["fg"];
-      }
-
-      // if (!this.canText) {
-      //   delete newColor["char"];
+      // if (!this.canFg) {
+      //   delete newColor["fg"];
       // }
+
+      if (!this.canText) {
+        delete newColor["char"];
+      }
 
       // If the newColor is same as the existing
       // Then return the original image.
@@ -1975,26 +1975,19 @@ export default {
         return;
       }
 
-      if (
-        this.diffBlocks[y] !== undefined &&
-        this.diffBlocks[y][x] !== undefined
-      ) {
-        return;
-      }
-
       let targetBlock = currentLayerBlocks[y][x];
 
       if (this.canBg && targetBlock.bg !== current.bg) {
         return;
       }
 
-      if (this.canFg && targetBlock.fg !== current.fg) {
-        return;
-      }
-
-      // if (this.canText && targetBlock.char !== current.char) {
+      // if (this.canFg && targetBlock.fg !== current.fg) {
       //   return;
       // }
+
+      if (this.canText && targetBlock.char !== current.char) {
+        return;
+      }
 
       // We can eraser or fill
       let oldBlock = { ...targetBlock };
@@ -2025,22 +2018,32 @@ export default {
         }
       }
 
-      // if (this.diffBlocks.new[y] === undefined && this.diffBlocks.new[y][x] === undefined) {
+      // if (!this.diffBlocks.new && !this.diffBlocks.new[y] && !this.diffBlocks.new[y][x]) {
         this.storeDiffBlocks(x, y, oldBlock, targetBlock);
       // }
       
       // Fill in all four directions
       // Fill Prev row
-      this.fillTool(currentLayerBlocks, y, x - 1, current, eraser);
+      if (currentLayerBlocks[y] && currentLayerBlocks[y][x - 1]) {
+        this.fillTool(currentLayerBlocks, y, x - 1, current, eraser);
+      }
 
       // Fill Next row
-      this.fillTool(currentLayerBlocks, y, x + 1, current, eraser);
+      if (currentLayerBlocks[y] && currentLayerBlocks[y][x + 1]) {
+        this.fillTool(currentLayerBlocks, y, x + 1, current, eraser);
+      }
 
       // Fill Prev col
-      this.fillTool(currentLayerBlocks, y - 1, x, current, eraser);
+      if (currentLayerBlocks[y - 1] && currentLayerBlocks[y - 1][x]) {
+        this.fillTool(currentLayerBlocks, y - 1, x, current, eraser);
+      }
 
       // Fill next col
-      this.fillTool(currentLayerBlocks, y + 1, x, current, eraser);
+      if (currentLayerBlocks[y + 1] && currentLayerBlocks[y + 1][x]) {
+        this.fillTool(currentLayerBlocks, y + 1, x, current, eraser);
+      }
+
+      return;
     },
   },
 };

@@ -80,13 +80,14 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 ## Bugs in v1
 
-* Undo sometimes stops working.
+* Ignore checkboxes when saving/copy brush
 
 ##### Fixed
 
 * System to review the localStorage data and update any differences
 * Asciis sometimes open with 1 more block width and height
-* The layers and undo sometimes may have bugs, but seems hard to replicate.
+* The layers and undo sometimes may have bugs, but seems hard to replicate. Related to undo bug.
+* Undo sometimes stops working.
 
 ##### To fix before properly releasing v1
 
@@ -99,11 +100,14 @@ A most latest production build to use is available at https://asciibird.jewbird.
 * Warning on mirc export if ascii exceeds IRCs 512 per chat line limit.
 * Review encodings check on file import - UTF8 vs Latin something
 * Fill tool is limited by the recursion limit on the browser. Each browser has a different limit. Filling an empty 80x196 ascii will throw a recursion error on firefox, but not on Safari for this reason. We can review the fill feature in a future version of ASCII bird.
+* More fill tool options?
 
 ### v 1.2
 
 * Half block editing mode
 * Dark / light modes, different themes
+* Expand the brush manager, brush categories, download brushes, import/export brushes
+* ASCIIBIRD API ?!
 
 ## Mobile / Touch Screen support
 
