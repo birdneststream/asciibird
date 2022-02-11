@@ -230,6 +230,29 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 <totally_real_nick> asciibird made me quit my job leave my wife an kids and realize my true calling as a groupie furry lot lizard at vocaloid hologram anime concerts. now i go on tour and my life has never been more full of yiffing. thanks asciibird!
 ```
 
+```
+<mr-spambot> fuck slime lion
+<mr-spambot> i had no owldea howl good dat editor was
+<mr-spambot> like u can drowl on two fuckin sides at once
+<mr-spambot> it is the vim of head art
+<sansGato> its cool dat asciibird u can just do like half the picture because u have that mirror thing
+<sansGato> its fuckin owlsome
+<sansGato> It was like I was using nanowl the whole time, i find asciibird then I am deep in the head of neowlvim
+<sansGato> its like i was using boring i3, and THEN i find asciibird and I am deep in the dwm with st and dmenu !!
+<sansGato> dw1 make jbird lion head admin
+<sansGato> there i said it
+<sansGato> !op slime lion as head admin
+```
+
+```
+<chzz> asciibird is the therac-25 of ascii editors
+```
+
+```
+<rebird> <g> im a changed man since ive been using asciibird
+<rebird> <g> i hope you are too!
+```
+
 
 # References
 
