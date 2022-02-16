@@ -78,34 +78,22 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 # Roadmap and Bug To Fixes
 
-## Bugs in v1
+### v1 is released, thanks pals!
 
-* Ignore checkboxes when saving/copy brush
+### v 1.2
 
-##### Fixed
-
-* System to review the localStorage data and update any differences
-* Asciis sometimes open with 1 more block width and height
-* The layers and undo sometimes may have bugs, but seems hard to replicate. Related to undo bug.
-* Undo sometimes stops working.
-
-##### To fix before properly releasing v1
-
-* Brush blocks larger than 1x1 can leave undoable blocks
-* The current mIRC importer will fail on `C5,` type blocks by discarding the `,` character when it should preserve it. `art.txt` ascii is a good example of this. 98% of txt ascii imported should be fine.
-
-### v 1.1
-
+* Unit testing
 * Fix brush tool for seamless lines when drawing fast
 * Warning on mirc export if ascii exceeds IRCs 512 per chat line limit.
 * Review encodings check on file import - UTF8 vs Latin something
 * Fill tool is limited by the recursion limit on the browser. Each browser has a different limit. Filling an empty 80x196 ascii will throw a recursion error on firefox, but not on Safari for this reason. We can review the fill feature in a future version of ASCII bird.
 * More fill tool options?
-
-### v 1.2
-
+* Brush blocks larger than 1x1 can leave undoable blocks
 * Half block editing mode
+* This one time this ascii exported with a 1 more width and height
 * Dark / light modes, different themes
+* Context menus inside the panels can be way off sometimes
+* Main toolbar can sometimes get stuck and unmovable
 * Expand the brush manager, brush categories, download brushes, import/export brushes
 * ASCIIBIRD API ?!
 
@@ -119,6 +107,9 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 
 * Ctrl + Z - Undo
 * Ctrl + Y - Redo
+
+* F1 - Toggle Help
+* Shift + F1 - About ASCIIBIRD and shout outs
 
 * Escape - Return to default mode, stop using any tool and close fg, bg and char panels.
 

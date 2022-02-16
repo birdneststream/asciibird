@@ -210,6 +210,148 @@ export const maxUndoHistory = 500;
 export const tabLimit = 20;
 
 export const parseMircAscii = async (contents, filename) => {
+  // The current state of the Colours
+  let curBlock = {
+    ...emptyBlock,
+  };
+
+  contents = contents
+    .split('\u0003\u0003')
+    .join('\u0003')
+    .split('\u000F').join('')
+    .split('\u0003\n').join('\n')
+    .split('\u0002\u0003').join('\u0003')
+    .split('\u0002').join('') // bold
+    .split('\u001D').join(''); // bg highlight
+
+  let asciiLines = contents.split("\n");
+
+  const finalAscii = {
+    title: filename,
+    layers: [{
+      label: filename,
+      visible: true,
+      data: create2DArray(contents.split('\n').length),
+      width: 0, // calculated down bellow
+      height: contents.split('\n').length,
+    }],
+    history: [],
+    historyIndex: 0,
+    imageOverlay: {
+      url: null,
+      opacity: 95,
+      asciiOpacity: 100,
+      left: 0,
+      top: 0,
+      position: 'centered',
+      size: 100,
+      repeatx: true,
+      repeaty: true,
+      visible: false,
+      stretched: false,
+    },
+    x: blockWidth * 35, // the dragable ascii canvas x
+    y: blockHeight * 2, // the dragable ascii canvas y
+    selectedLayer: 0,
+  };
+
+  // let isPlainText = !colourCodeRegex.test(contents);
+
+  // https://modern.ircdocs.horse/formatting.html#color
+  // In the following list, <CODE> represents the color formatting character (0x03), <COLOR> represents one or two ASCII digits (either 0-9 or 00-99).
+
+  // The use of this code can take on the following forms:
+
+  //     <CODE> - Reset foreground and background colors.
+  //     <CODE>, - Reset foreground and background colors and display the , character as text.
+  //     <CODE><COLOR> - Set the foreground color.
+  //     <CODE><COLOR>, - Set the foreground color and display the , character as text.
+  //     <CODE><COLOR>,<COLOR> - Set the foreground and background color.
+
+
+  // const mIrcSingleColourRegex = new RegExp(/(\u0003\d{0,2}[,])/, 'gu');
+  const asciiblasterRegex = /(^[\d]{1,2})?(?:,([\d]{1,2}))?/;
+  const mIrcColourRegex = new RegExp(/\u0003(\d{0,2})?[,]?(\d{0,2})?/, 'gu');
+  // let isPlainText = !colourCodeRegex.test(contents);
+
+  // Get the max line width, as some lines can be trimmed by spaces
+  // we cannot always rely on the first line for the width
+  for (let i = 0; i < asciiLines.length; i++) {
+    let cleanedWidth = asciiLines[i].replace(mIrcColourRegex, '').length;
+    if (cleanedWidth > finalAscii.layers[0].width) {
+      finalAscii.layers[0].width = cleanedWidth;
+    }
+
+    // Save some time on large asciis?
+    // if (i > 50) break;
+  }
+
+  // The foreground color is the first <COLOR>, and the background color is the second <COLOR> (if sent).
+  for (let y in asciiLines) {
+    let line = asciiLines[y];
+    let len = line.length - 1;
+    let char;
+    let block = {};
+    let pos = -1;
+    let actualPos = 0;
+
+    while (pos < len) {
+      pos++;
+      char = line[pos];
+
+      // next char is a color styling char, with possible color nums after
+      if (char === '\x03') {
+        var matches = line.substr(pos + 1, 5).match(asciiblasterRegex);
+
+        // \x03 without color code is a soft block reset 
+        if (matches[1] === undefined && matches[2] === undefined) {
+          block.fg = 1;
+          block.bg = 0;
+          continue;
+        }
+
+        if (matches[1] !== undefined)
+          block.fg = Number(matches[1]);
+
+        if (matches[2] !== undefined)
+          block.bg = Number(matches[2]);
+
+        pos += matches[0].length;
+        continue;
+
+      }
+
+      block.char = char;
+
+      finalAscii.layers[0].data[y][actualPos] = {
+        ...block
+      };
+
+      actualPos++;
+    }
+
+    pos = -1;
+    actualPos = 0;
+    block = {};
+  }
+
+  // First layer data generation
+  finalAscii.layers = [...fillNullBlocks(finalAscii.layers[0].height, finalAscii.layers[0]
+    .width, finalAscii.layers)];
+
+  // Store the ASCII and ensure we have no null blocks
+  finalAscii.layers = LZString.compressToUTF16(
+    JSON.stringify(finalAscii.layers),
+  );
+
+  // Save ASCII to storage
+  store.commit('newAsciibirdMeta', finalAscii);
+
+  return true;
+}
+
+
+export const parseMircAsciiOld = async (contents, filename) => {
 
 
   // The current state of the Colours
@@ -273,8 +415,9 @@ export const parseMircAscii = async (contents, filename) => {
   //     <CODE><COLOR>,<COLOR> - Set the foreground and background color.
 
 
-  const mIrcSingleColourRegex = new RegExp(/(\u0003\d{0,2}[,])/, 'gu');
+  // const mIrcSingleColourRegex = new RegExp(/(\u0003\d{0,2}[,])/, 'gu');
   const mIrcColourRegex = new RegExp(/\u0003(\d{0,2})?[,]?(\d{0,2})?/, 'gu');
+  const asciiblasterRegex = /(^[\d]{1,2})?(?:,([\d]{1,2}))?/;
 
   // Get the max line width, as some lines can be trimmed by spaces
   // we cannot always rely on the first line for the width
@@ -293,7 +436,7 @@ export const parseMircAscii = async (contents, filename) => {
     let line = asciiLines[y];
 
     // Check C5, or C, first then
-    let cleanLinesSingle = line.replace(mIrcSingleColourRegex, '');
+    // let cleanLinesSingle = line.replace(mIrcSingleColourRegex, '');
 
     // Do this
     // let cleanLinesSingle = line.replace(mIrcSingleColourRegex, '');
@@ -303,7 +446,7 @@ export const parseMircAscii = async (contents, filename) => {
     // Somehow merge the arrays
     // let parsedLineSingle = [...line.matchAll(mIrcSingleColourRegex)];
     let parsedLine = [...line.matchAll(mIrcColourRegex)];
-    
+
     let colourData = [];
 
     // parsedLine = [...parsedLine, ...parsedLineSingle];
@@ -324,7 +467,7 @@ export const parseMircAscii = async (contents, filename) => {
         if (endsWithComma.test(colourArray[0])) {
           cleanLines[codeData.index] = ',';
         }
-        
+
         if (colourArray.length === 2) {
           if (colourArray[0] > -1) {
             curBlock.fg = Number.parseInt(colourArray[0]);
@@ -524,11 +667,12 @@ export const exportMirc = (blocks = null) => {
         delete curBlock['char']
       }
 
-      let isPadded = ((blocks[y][x + 1] !== undefined) && (blocks[y][x + 1].bg === undefined || blocks[
-              y][x + 1].fg ===
-            undefined) && blocks[y][x + 1]
-          .char !== undefined && (Number.parseInt(
-              blocks[y][x + 1]
+      let isPadded = ((blocks[y][x + 1] !== undefined) && (blocks[y][x + 1].bg === undefined ||
+          blocks[
+            y][x + 1].fg ===
+          undefined) && blocks[y][x + 1]
+        .char !== undefined && (Number.parseInt(
+          blocks[y][x + 1]
           .char) >= 0 && Number.parseInt(blocks[y][x + 1].char) <= 9) ||
         (blocks[y][x].char !==
           undefined && (Number.parseInt(blocks[y][x]
@@ -846,7 +990,7 @@ export const mergeLayers = function (blocks = null) {
 
 // Splash screen ascii encoded
 export const splashAscii = JSON.parse(LZString.decompressFromEncodedURIComponent(
-  "NrDeCICMHNwLgMwEYA04BmtGvAYwBYCGATvOAATgC+KEM8yamDOBJZlNdWjGPrRUnArVaUfkwl5BHUdxaSF09sM5j62RZuVCRXcUuba2utfO1HeJ2fo29LAlXvVSHaa6rkGLUj8-P2vjKetq5BTmbegUp+kXY4bjo2Lobhpl7xWlbB-lEJackB+TE5cWElERnlxqVVqRXpofU1lU0+DYV5WY6NKe0tvUXd7rVt0QOdmXwdIX3j2a1zxROzQ9MruVOJsXX9C4Nd6-uT1cerh9ujS8NJ51sFd6c9J81nm08ji2uXXxcP769no9AZ8DvcZgC9kDIfNoWUQbcYcs3vCoaCXmjEajYejgZidmNkXDdjisSSibikTcCdcjsTCdSrt9-tiKWSGXTKazGb9wRtuZz2bSfmCPkLmRCBSKMaSaRL+eSeaKEXK-pLFYLVXyURrpXjZUy1QqOXqqZrDdr6cKWbqbfoCQBdFBgI06k1263q91ez3G31u-1W+UB4NB11hy1c20+0NR71+2Pi8NxwMpxNasUZlUWzM57O83MF-PK-F50tF8slg0V6tVtlZysy+tl2tNpVt8015td9v67t13tm01Sj3plv9jvD6MJ5NJyNzwslgBMAE4tEgAGyUwCJpLtV+ut4jd219+tNzu92uz4e-Me+qejOej5eDxeT1fHzecnfzA+sE-b2nENZwbVs+0HEcYxA8cIKAiNF0nUdoJ7TsB1QxCoPnUCJ3A9DcKneNgKwmC8KHJDiJQgjUwXYsMJnCi0KosdfkdZ1mMY8iEPwzjaO4zCuLI-jeME+iBMg0ThPEoixLgtNkI4oTGz4iSlJE6TJNkmjVKk+CNMI3TtM07DYP0uSGLo9TDNMrSwLUgzbJ0syZOs4zSMcmycLspz4D-eAAO-F9rzfe8P3-L8nB-bxfLgfyIsCz9gt-UK-PC3RIo0aLYrS+KwsSqLkpi1KyHSrBMqK4QSp8gqsuKoySKY+SLPszz3NchrzOUyyHLqyieKs6i2r67qXPqoaWp6hSVOGgbRsU6b2Ka7z+oW85WJdDqvI8kyZt6ubxpG3apv2nbJq646Vs2wa9u2i7Wtmo6bsazrmseja7sOs7Xuck7Fq2tyJt+q6Hv+g7TpekGfuepb5qey77s+iHbt2DcAFYvvgVH0bgTHEe8HGjAAdkpQAFUmRtHcY0fG+qp+AicRUm2hplSmcslmDLKvKMuq8rwEquAOefUHAfh8H2u+pGhahv6xb0yG4Y+0WxqxmG3oBqWgYRmXlth96weh86da8NaJbl1EAA4Cssi2setimsFtrWHb6p3FJdlS3aty2DI972vaWn3-b9rSA+DoOGxD8Ow7LCPo6jisY-juOSwTvXpaVu3ZZNrPDcl+XU41xXroz7XVdz3XhYV-XlYN0u+jZpb660xuG2bstW4rduS07jFu7xJm6b8QB7UjJrHe8hMfURRhBR-JrWVfFnPTbVvOK-zkWq+L+fM8X7Pa93he953o-D5Pg+z+3w-jeP8+4BTjE77xB-ITdgnoQAW12J-zaT++f8fv-n4AO-jbIBn9QFtC-mAkB0Di6QIgeAvocDEEIPMEg1BKDr4XxvlvEu2Ca54OroQze+CsGkNwWQnBlCSHkJoTgieI91gDxyIAW1IGFa3oYzWe1MuGKQAAzrkpIAdNJdj8OLhwuuPDmaSNZtIgy4jzBTxnkQue1CqHKPTio9RRdNHEK0cDHRBiNFGO0cY-RpjNbmMLmYqCV9T5kLQd4BxGg3YoyXJSAAllA9YrjKSkHgVoDcPNcBeKMIEykwh-HrDCaHLQoi-AAGcQlYDiTkAArkk+AKSnAAAcMlwCyboXJkSjAFLIAAezyaU4QfjkGxMpAAF0qYHOpiJYDFOSb4ppiIKntMyZSdJvT8mUiKbU2BGC7G0NUVMvRFiTFzOsQs2ZiyrFLNWSs9ZG9DHzLWZs7hWNRGPiESIpRYjJHQgADxsL2ack5j5oQAC6rmKXkXjWRDc3lNw+S3L56807bI2X85Zuz-nAqBYCnZ4KAUF1BRC6FkKYVQt+XC5FhpbEELGTAx24z7bYvgE4nFmLna4tvsS-FeLSUUsJa7SlGLaVYqpe7GlWywUosrvC9lrK15ss5avXl6skUCu5YKrlIq+Ur35UKjuPypXrgeU8qRtz-yUgAPryuhKqzhirnnSq7jqnueq+4GvHka1ELzKYmt2AAFjpkYS1ZtOZYGtVoO1Dr4BOvWC6wWS8y7L3LhK0V-qxV+vFSG4NYbfURp9VG71Mb97bzRRQ6hZKSUMqqYAlpfgADuXS-AAFMc05AADYFqcMEwZaaemjJKZSD+5bKT5rrTE9Yab0Alt0JW9BGacg1M7c2+tbayAADcB3CAbVWjpiIe2OKZUShlsLhVBsjbGzBkyZmIslQG0NS642rt0Xu5l86N2LujeYM1WAz0YzOZSQAIgTypkVqmKlIAA6T671yItZqm5X72EfokVjd1tr7VevMABx1QHAJtFA268DAVIM2rA66uAUGkNMIrMh91PLA1Ya3Seldaj92WIRURjlC7sPhtwxMmGCbd30rpbOuj1K52+yY80hjjKWNNto1x+j3HGNsc9hxyOa7iOYZw8uyj0yCMgpI0esj268OSYPeukslrlhIFQ9lSDamNO1S0+uHTFUrXacQ6p-TJnjPAdeQ++937rk-us++hz7z-3wegyZ1zSGYNxTg86rzmm+joYM5CQLS0QtaTCw2CLZYotoY8xh6LcWgvkfE+ipTInSNiZ3fhtLMnN3JeztR7LPHit8d4+x-jzGKusbKwJqrnGSvlZq5Vpr1WGu1Za7l49KXE3Cc63JijqXCN9cywp3r3yBGIkAACkarKTTc-YcqbM3FvzaVctv9Z5ZtLb8HNgLFmIO7bM5Z81TnPknfG7Z7VZ2EvOqS1axLoWPMrh5nzZDT33NaDe0dx1j3nt3Y+79nz6xPv7ZAz997QOAcBbB19t10OQfeBiyp+7w38ujakyyjLqOJNjcx-Jy+ownTrUG9J0TWPicY9kyN7H6PD15bx+T2nXWsuKaG6T+nPWafKaZ2jnLbOBsc957jlbl2NtrdPVesXVnRfba2zkHb4uJsy+F4+yXx3pdy9l04eXCO9uwYO2eILL3dfef14+Q3RnDvw40KZg3iGcGI4xA7vETvgvI8i2767HrbuA9td7qHN2Hu+fB4B4PCGYcoaD+H9DfndP+49THwzPuw9W++wH8LHvKdk4F6zoX3WaM58z+z7WhWWck9z8znHhf+f57L1XvPRXa90+rw3inTf6+l9b9z6ngu68V85+l3vCOPOWWQzZ+zF2VdK-WwtqfCv1da817obXauZ8a+V9CZf56Jez+8ATYfBk99Y0P8XY-WtT99XP4pF3qJXuQ9B-90P8Bgd6-v17wP8fH+ec-56lPsPI+-4jw-yjziwT15j+yAIAOj2-1AJexAOgPgOAP-xfyHyQJN1f19wHzbz7x7ywJ5wL1wO7yQhL0rwIIZy5363bxIK7zIMwOoOz0bzoJr07woOwPwMYJb0ZxYLwIYK4ImVHwMn4Pf3H2ELs1Wx3xXzELX2n0kIX3X02zkNVy30VykPMEvxUjUMskURP33yWg0IPx0PTzT3dyMM9wwMMLf3MLMOMIgOQOtzgMQJsLQJQMcP83QOT1sNTxcNjzcLcwcJDz8PcKcLsNQNcOcP8MgPsIiJCO8LCMCNCOCK8MTzj3CI8L-wsL50oP7xRyLw4PIKpwXmIKyIyNYJ4PyPoOYLKKYM4MqNyNoN4JoOyObw72qKzyqLyNaNqMaLz0EMsL6h6OsK1n6LLD0N0IMIbBGK0gmPGLGOGJmIrCmNmKPzmJLAWPmOWIxDUKQGhEAAcCcAqw0wzwgYw4g4p-O-WItIo43wqIxIsApPK41IwAlIoIzwp4+Il4uImIhI14z494+454tI74pInwr-AIv4t4gEj4oE84kE64wE245IyE+E4En-B4qA0EwAy4jE8vbgiojo5o9onIg2QonA9g-Euomoskroko3Ewkqg+o8olo2koo7Ewg0ovEukikjk1ooY2LFzG2aebxK8AAs2AUowFGIUh4kUrQcUxDKUwUxDVYlY9YvERUjY5UyEVUlU9U1ETUjU7U3YXUm-DPJHEw3k9Ik4uAZ-f4x4rAK08Em0047-P3ZEmAvYxE2A6IqEr490t0sEn4iEv0r034mE1EyI0Mz0pE6ElE60tE2En0u4kMmMsMpMiMj0m4tM-Ys0zMk080wfVkmkporkpkkk1aAnNiHExkws5kvMho4oisgkqskszk6s0ghkhszIps9kls0kos6vOUx2UU52Qc12Yc92Ucq2UcmUxEQAJ1JP5JyJTrT+ysApzhT5yFT9S2hDSDSNy+gtzNydzVCDzd8jzvSLiLT4sszjjLyzzrysTbyLyczszHdjTnzUzfTEz7TYzwz0z3zozPzkz-y3yEy-z-SHSPzQKvyUyfzgLXSYKEC4zAzIzTzwKgyAzLSzjkK7SIK4dvyjAsLUK2jySuzOziy2DSzWhCdqTKyOyyLmySLGzaLiLGLSK2SWKCyaLWKGLOKOL2LUFxzvZ+L-Y1yZy5z+StA5Tw5RyJLo4pKBTJLxK5KZKFKhLpSFzdBZyIFhLVzVLZStKHi9zdyTysADLDyli+TczHzbSMLgz8KkKbLrK0LbKMyrLP8nL3y3KEyPKETELnKfLfzYLvKUK7K0KQKCLILALoLArQrgqwLorfKgr4q4r-L4LcL4yoqAqXSnShCrzLKbzcq7zWzCKqT6yiK2LgJiTmKuLeKSrir8zqKqL2yGrSqqr6qaq6y6rGq2qlLYFBLg5er5L1hpL45ZKVL5SRLNLlK+rJqBqjAhrk4RqprBrFLhrpruqxS1KyANLEE9LFydr7Slz4AVzJS9rQKTLjzzKnzncXyrrTT8qHzXyLKHrLrXdbqnqcq3q8qPqErkr0Skq4LfqMqozAbkK-r0qUqoK4TErgbgzQbMqAbwaIrIafqEKCqvr7qbrHqMbnqjTXr6Sir2rayWSCiyyic2zmqeLWqOryamrarCaayybaaGaCamaiaWb6bb5+q1qhzVqVqlrRrZrlr5qeaha+bFr1rKQtq+Lhb74FqZr7ZBaZbpbH5Zaua8UFbladLxrtrNbtKxrdbxbw97drqXrMaTa8KHKwKvLgSrboSbbMKLbb9XKHbjacbIq4aUbYagaEbsKgKwb4b-aPboaQqg7YqQ7wqfa3avaA7UrHT0S7b7KnbE7frnSur2bOjmb8bUUSaaaM707WbM607KTc6i78687C7eyKbOqqaxbuaeqlbn4VbeaBb+b5aW61a26OaO65rFbRa5bDqNrhBJbHFG6Rbm6a727x64AjrdqdbjrZ6Z69acgh7nFOby7i5r9fyU6Qat6Yad6Qq97YqD6N7gKj6XbkaY7vr-rA7vawqAKI6kar6L7PaQaw677b7fb3an7X6P6o6PbT7cazb3qsagHAHPrgGwG6LKrK7qbU7cCKruKc7S6S6176LoHGaC7Cqy7MHkHsGK6pa66CGx6+7O7J7p7dBAAbUlEt7tVpIeIe7o1uoabtbsnvoYbvnv2pOoIoOqnoHpiu4bIdAv4d4b5iEd0vYcEc4b4dXtHr6LPpPuyogddvNqTpRvjscudof2ToUcvr9uvujohrSs-oMb8sfuMZ0aMcRsMd-q-pvpivDvfsju3u0fRtAdRvAbcdcZcaUZAe8cUbKqrrptwe7K4PgequruLrwdgZ7OCcgYQaibxqweidQfwYHLEsYZkYnrofVrYfSZ7qIZodYfNhHryeYeIYEa4ckZEcqaoYNv1uXOEZqfqbEcXoXtqbnpaY4fEYqfrqKYup8c3ucf-tNt8Y8ZGa8YGd6JMd0Zsf0csamYsfvqsZftsahpWfPrMefphu-sca2bWfkcmfQpUYvrUcto0YhyObMZOcSYSZwaSagYK2zvidibCcCbubifCaQciY+ZQfuaed6cIdrvyaYcyYKeyf+aBYydodBa7rBcaZBeBZ4eabadaaafD1EbReqYmo6Yka6akdxaqfxbhcRYxcJaxYhZKavzkaiqGexomcxPGdMbmfMesY2e2YfumdZb2Y5aZc2eDq5YWYcfZYFbsbfpFZ-uWa0YOYZepcGdlalZpf6f2fpYPuueecpteZucelCfVbZqCeSb+f8Zge+b1d+eNbeZeYntSdyYYfJZtdKehZYdhbJftYRcKaJbdedfhchfKbxexe6b9d9eRc6YDYJZDaJZ9dDaDZxbDc9eJbqf7qRZdchZHypeRIVb8aVfPLZaWd2dmcWfmZZZ5ezYLYlb0bLZmfLc5bzcFZzb5clcxJOcdrjrOeUebYuaZcbZwsuZbcVbQYiZiaYveeJoovLLNc1YHcNfQdVcHYtYwfNZ1bnfHateXaTYpahddade1utZydtZ3dXbta9bXY9a3d3fBdRfjbjfaajf9evcDfPavfvZRYTZJZjZPcfeDdvcjffejdPaJZTYAbGfTdGfWaLf5cLfzeZdLYreg6rcrdA+rbFZ2brb-rleVdQ-PKA+lbTfQ-vMw7w5w7uvw-laNY1bVYCd1e52Nn0GrURAACovAaO-B6PqOJ0mOGPWPDRGOcgABhdjvpREAAeT46GURAADlhO00ABxCTykAAJRk8RAAEEFO-AAAVFTnIAAVQ06cAABkdPdBlOWP+O1ODOyAABJMz4QIT4zkTvwcT2ztNAAZSs9yC46cHk8c8pCM7EHc90H0688RAAAVXOAAJVzyIPzsgAAMVc5s9844484i9c584gCi+EBc8C78F46y5yEs9y6cHy4S5M848S90Hi7S7K5i+S4K90HU9q7IHC4a+EAAFEaviu7OcgAB1Vztr5r8APrjrtNAAaXa8q5K9+HS-ACXFc5XDG77URAACkUvXOHOhu5IpuZv+veFXOtv1vEQ9vxvOvJuqvhBmP9u2P+vzvQAuBbvaA7ubv7unvHuXuHu3vnv3vXv7vKLPvfuPv-uvvAe-ugeAfgewfQeIeQeofwfofIeYf4e4fEfYfke3uHQHQgA"
+  "NrDeCICMHNwLgIwFYA04BmtFoMYAsBDAJ3nAAJwBfFCGeZNTe3QkucqmqLBjHl4qQrVaPVH2bh8g9sK51E4ptimshnUfSX9VMjiO5bGO6W33yxxyafUGFvZQgFm5mxVZU3ZGw+4me1bztLfyddFx97bWtA8zcHE1jXXwSYvWSojzCvOJTogPTIkOUABmdSQCTSIvgy0OzYwGTSarhax3q9JuCarPazTotuuvL2frdWnl7SUd9x+kmR5tnEefBphSWEFbWsDa3FnuHV-aHwqeO2w+3Bi9OFrpaD26P73cvzibeXx5yrh5Of95zT4DP43AFff6NQHLYFjb5QiFghEg15PX6o8Eo+EdaGbWEzbF9XF7REfNHE-HrQlnUlA8m0mH0rGQnEMvFMuEsolsknMpGsvlkzGc-ncwV04UErk08WMyVU6V3WXs+U7alKkVC5GaiXaqWimU6uV6hUGjX6rUCo0qk1qxXPZW861Oi26q2u43u02WsXO2GUAC6KDAeSyhwyxUShXuqQKERj+RWEaMoXDzQAHB5ajlk3BM-5s0kM1m0-d86VSyDy3ac81Y0m64nK-Em09c-Xm6HU23G2Gewm+7WBwXDlVh45O5kR08x47KXazQ6-RyPTavQufYbVy7vW7fdv59dN+bd5796e1+eN3utxed9ez7eH5en0ebyfn-e34+P9+X7-QWPJcDxXO9D0A99gLA0DP3AjFbT-L8IJ-KDYJgxC4PVVCMPQ5D-2wvCkPg9ccNVUiEMIzD7XRLCaOoilcOIq9yJIyjGNohiyLYrimNfbiKN4gDBII4S6MXMSgIkyCpJQmT8LkoiOJEQNgxbQci3HKN4xBDt+yrEs9LcatBiHfTp1MoyDIs3xjL+ayFFswtozMitDJsqyNJcmtPLU7t7MjNJtN8ic3KnEL-JTcKfK7KLnOCrTbB01sIr8VyclneKTNiDKQJ4pS53Y+ieSo8TOIE-LlzyoqCqq0risKuqavK6rKuaxrWtY0Sys6ircrayTuuY-iepavqRvasahq6+raoGmb+ukwa+Omprxrm1apt66DZsW+a1t2jblq2tCdtkpahOOljNtG7aFrOvbrom26rRUkMwoSoIkvUuL3PM6KHI8n6Ab+oGdEXXNHMnLBIdC6HAaClIsIh+HEsskGEeBtL-oCuNUZij7cnewK8aJ3HPsysnCZxhtNOJ8n8bpqnIoJ9t8icswcoUAB2b6OeaHm-Oy-necqYXBb0TmsAF2K+fuaWCcl+B5cZxW4GVynVfVlZNZF9gdfF2WQS10cxZl0W5d18B9bNvXTYVu2VYdjWne1l2TYtg3zaNy3rftj2batt2ZyD9KQ6F-2-e9z3bYjx3Y+d+PXcT92o4D3249TyO3GN4Pk9zzOM+zn2w4lkvDaL6PA7z0Pq-DguE-rpPG5Tiu07Lr3W6z3wc5r5v887wvu+L2vS5H8vXopmmvsr5H0ZJuG5-pzHvNB+AYZS9fsbXlGl4XgOAD5i0Xpm8x3k-N9X0-j9Zy2b5n3t79pym74Dl+WeaZKt7gT-L5-jGsD-vPbe-gBYbw8KAr+YRlDiBSlAgBUNJDQIQWrW+7dd5K1QWPIBKDH59xSj3L+BDL5EP-hg3BA9n5oJPiQ7BND0E4NflQ3MdDqGYLwYQthFCp5cOQSw5hnCh7kMEYwrB9C+FMIkaI1hQjuYCNkTIqWcjFEKLISI9hxClGqPflI-hKiGHaPUaQ-RjNdFqJ4bDLRJjJGGNoZo4xlDlJBjetTZBukwHXyPljS+F8jE+OwX4+hATz5n1nl43xITPEr3CR4p+3CGYOOnmY3wgD6EpJPmk3MGSP52KyfcXJXkyGwI8DAyBxTXFlIsfYpu5je41LrnU0eNiY5NKri09ODcGnl2EV3eRbcpHtOqd0wevSenKL6W0qhAyW5DI6TMwZIzhljNGZY2ZCzVlLMWSs+ZGz1lbOmWs7Zez+5zP2Tsw5VTTlHNqSc45BzLkXNuWc+5LCpmPKufUm51y7lvIeV8p5PyXmTKBf04FEyQWONUvEuJpNoV7yif4iJZZEXKkOIAbwJcRooxU8dFbJMW4uxVinIOKCl2UgfkyeyDyXJJyTSvRVKFD0pcZUuB8ASmXxZd-cp-g2VGI5Ty7BK0OqPXWkKo6N0Tp3XkudESl1hrCoOqKi64qrpiqehK-a91DpKrVSq7VIrJqqv1c9eVmrFUyuVXKw1CqDV6utcaq1pqbXmp1Za21jr7VuqlQ9B1XqtXOqNeqk1vqzUKRKgG3V-q7WBp9YpC1gqnWjAnlC1xjLWV2KCaE+FgTkXWjxSigl+KiWEtiMStGYTsGps5XS2lSSGU1oMRS5lla3GlO5VypBzKKlFLbZU+NpN2Yd3iQO5pIbpWhoauG11kb3XRs9bGl1fbZ3TuDQmsda7vVzrDVGiN47Toro9cu+dk7F07vXX63dkqj3bqnRejV+6l23qDVemdp6N2Hq3S+m9Z7R1vsfTGj997X3nu-auiFzjmZWLyfWyDIJK0ZsiVlbxObfrluzTEklw70nQYSW4SteG7EtvZc2rtraO3drI6R+Bnae2wObWze5J7UpZtaRTTDqtGMbH5SO1cXGWOgeA7+kDB6-2bondejjsqJNxskzJ6TcmF2yYUxahAAAWZD9g1PofiJp1DJ9VPqZ4Dp5j7YjOId5aZ0l7KLOYZMwZ+g1nXEOeZU52BLnIFuas3ZxAHnzNef01plIPnsH+d07ZgLGm-NBfoSF4zdYot6fi2F0LcWvNSfakmut1asu1qozltN2WG3UoKzB3D2HYX5by1WyrdGCM1b0RsQ4gAnUmLXoZrhbYhtZ0iR9l3XeW9eC-1sRw8wUjc6YO75fy-y8deZN35HyJvzf+bNwF4LRufMW+8xpY3uMLa2+tvbu2umHfG0tjbc2DunYu5to7l2bvXZO-dnbhnUt2Ia7217H36ufcq29lKv2v7-cvoDoxwOBXfcKxeZBoP6HQ5PrD3M8OWsg-ByV1cUOUc4bR85rzK3RsZdyxDgnqPMvVeG6V4rmOSeE4q9TqrtP8MU-K3T4nRPKfPia0j0gnXc1PG51jnIfPIe885+wQXYMqPkYl5R-LkuZccL0eInR1jtvSJ+1kabyv9tGMVy00xtOdcq71yzx7qv9d2IN1r2xCvzc2+t3byrMWzNg6+5XAAyiL8AABbD3BAPcABt-ce4R5bAAQh7gAlh7gAXkHj3AAZD3AB7H3HuAB2dYlg2Yz152yTPc-IPz5Uwv7jKvF8gZn1xFf3t6Md5Z7XtuzH45p8b5nbPm9t9b0ztJqsGek8Z5SsrA-+-V4DmLv8HP2utY92PvCE-80C+n4vmMg29Mr-bGvusG+lfb915r47Q29Fl6Q4f9Np+T-n8qxb-fpuW-q3zDkAAzk7e-sRk-xxf3oNA7-eEeA-2YX33+Tw3uO+FCf+pAAAknvs9uFuziPgTIAACkHuiBk+ZgyB8+sQaBPOOQmB-OGBSBseKBzuauLuxBpBtOCAVeJetOR+0SpeZ+dBF+1BBGlBAOBGiWUBJurgTeneQ+fefB9Og+Py3e2SlcPeghKUlasOM+UhS+6BU+hBoushWBHWShiMNG0uVasumhGhvG6+6hGi9uZuhht+DeTBjBLeNBCK5hHelhaGDB9hRhl+phwCOQAB9cYB7AAADs-ocN4YATkCQP4a-j4U8AAG4hE5AACmERsQAAJjEXoAAPwpYwHj5wGMwAByKeChXuHu0ROR7AORwelcOAHueA0eFRRRBBchyO1hee9B5BSMCGNhDRLeHK+EmaFhGOTOteWeIBlu5M3BhGRiveAhw+Eh4hX8oxmyV8ygECx+cx6Olc0hlsKxyxqhQuC+ORaxo+m++hfW+xA2hx0WW+u+-R1+RuHeV+t2VuThdRBerRHe7R9R9xReBGTRSKrx+CzhVxPxTO1xnBHB529exhTx7BVRORWROR+RNRpAAALh7gAO5J4e6BGwnsAADWHuhR6JcOlsMJyheg6AaeeRHuCJnxDhXRXxX8thwSlch8FJZhlJLRJB5B4JZxHJoAQxdWDu0xHefJXekxv8jx8xtByif2qxGxsBWxuJOxBMM+fK7aUuPWxxq+qplx-xfxP+oJmpOp2pdxBpTJRpVJzJLxpphwDJJKZpxpLJhpJheplSAJwJtxjhrp9pdpYJL2rJjMAAgh7sAbiW-riQAK4kk5Hkm4k4mEm1EBwAAkHuAATB7iUB7gANLVHRlWGOCYaAAhpM0daSacxoAMGkzRmGJZjJTu7A5ZGGhw1ZZaxZ+ZDx3pnpqRzpB+jeTijatG7x6pexFGKp-ZBxg5RB8pUpaRMpmZih2xY5s+wu05y+vZC5w5Jxi5XWq58QpxKuM28uHpupu5+pbpvxDp3x1JCxNpBZdepAdZKGDZFZl5VZpZtZj5Tw15y8hZ7ph5e5n5B5H5v5R5+5jpbBXpZBjMAACh7qGTkWiZOeAH4YGR7k-tCdiRmbgXoAGTBZHjkfETkZhbie2CwWefQLmY2W8c2R4eAK+Q+ORZRd+NRSRVQW0QRTGWyTjlqYZNybVpxTXpuWocuWqXxXoQJTOTIfObKTOYqdRkJUucqUOTJUcVJQJopVuUCU6apWxSeQBRpd+YBceTSY8ReUzksORYAKGk0IJlZlhwpld5BlP5-52lWlf5X5jltlTldlzl2OrZiOORAASqSTkYhbibhTBdhbiQSahWYOnjkaUUhQUShZsbEEFeFaQJFbiSFTBUGelaiQhXFdKawc2YZd0UsQ7uyYbsrtwYxsMcFjyY0eubxXJSuQpRubVfFfIWJdJXLgOfVfxV1YJT1X2X1YJoNUpfxspecTce2fZTuZNQYZpe5pbL8LXkhIteBByn0XhTlcAuaaRSBR3l5WucljGBZktUdStSdbhGpbpTNdNSCbNZ5p5YVU8AAPIe7RW4mvUwWQW4lwUwVuEwURkYUok5EpUwVRlJUw6WzvVg3gDlE5G-VQ3-VQ3FEBzoVQ1w0tURUbWzkSn5VFUsWtkXUdmQrCZCYPok1AY-r7UDWU0dWyU03yVU1NWNV1V00NUM0jXs3E1DUU3c0DF8YXEqXqVTXuWubzUpEBwLVnVcSrVKmVndWy29Xy2Y0Jm-7ILK3+DkW5hq3KAa2Y3S2SWxbtX3ly1G1JYEwS2i1jWAmW1tk35uUtkHXrU5GQFA0vWA24ko3o2kBhWe3sCg0+14mVzA1Q0ZXw2Y2w7e25V6BB3+0h3+2fUwWwA5Ew2O0p0wVI2057Vp260lW80anNjlWKbHqF3ibF2fppZF3yYV1KbV1V210l2V31013Xq46lXW0E3XXBaS0UTLW4R61aFrWM0G3U0m39WK2G0D3M3ea43wBq0pRa0LzY3KCz0aH+ZaGr0aET32B+bb2tk91S1d2sTt3C1C1209E53+3p2+nZX+V+W4kI3+0BUg1h2Wyx2R1mDhFJ3P2Vwf1fXX24lf6p1Q2P3B3+m31Z1YVhm4nAMRb42C1xQF0N1l2l2AZfpc0c2k1oOc3DVYM804PoPk34OoPYPjV80kN506W3U3V43i2j0j3j0y10PD2b3QE0P0P61j3D3r1A4eDL2Xzz0uF5VL0MNcO02MOD0cPaYW1MMMPMOIJD2SOVzm2KMC2XVUNtHn0sPyOBaRY6O70aP2a6MO0KNGPaN6OGNaMwMmOWMWOaMSOmNWO2NiP2M2MGNmNuMOOuMeNT3uMuPeNeO9GObmN2P80gEINN1IOIMoPl2N110RPhNRPIPPoJORNJOpMAZpPnVk650qOUMunqNSPiNONb271BOUwLU73+MVPQFz1nyAAxpM0Pw1fIvVgLw2YIALGktDIj9NwT4uPTcjfTfjZttDsjKglTPjjMvwR9p9LlMzFDHdE1x9V1izaj0zczyzeTqzIt4zRTjjIzUzrlBzszDlmzJ9hz7DOzVtnJ2ToTnZhD0Tn6whUGohIh4y5OrzRW7zVOMxjzsGWTXzuyPBQhfzrO5yPzbzyygLs2YLHzEL0L-zoLwL7eCLzzh1BTk9IzfdG9MjgTyjqLuL0j5zXT9CjTOt9wJLqtKthLmm-dOLrDOkB9Q0mLnVAzTLvm+LxjQzTznzIL9ycLPLQLKLvzgr4L3ziLkLZ2fLSLvLYrkr4rV2crd2CrD2SrT2njvjATHlXjsr2rMrurwrMLor+r8L0rRr-Ls2rL3TFzKrpDUr-cYTsTKDOrprtrULHxQr4MLzQEmSbrIrKE3r9o-rHrXLXrnrkEgbIbwbYbobfrzQAAzB4AAJyHCABBpHG4mym2m-4Em08Km-cPG1mxm3m+mzm80Nm8oPmzkIAFGk0bHRNbZ9aL1jEzwz2L5zGLVTLLDLPqTZlW5L21GdQF7L6LLbNLrbtLnL9LDbILgpAbdbvBEb7r87vrtbkbMbK7y7C7Uba707QbG7q7u767S727i7Bre7h7c7m7E72zGL+jneR7F7Z7lSiYd7p7J7B7r7z7b78LH73757L7xTWrPr9r16Tr3LSLP7j7Pr77v7n7U70H4HExM7W7cHyHEHiHII+byg2bOQub6Hxb2HmbmHhbuHBbJbRbJH+H9wZbWAFbsQ1blHHgNHegdH+78HUxkHX7Y7TbeLdLHLXHl7PHzjfHvHZTmNtJmtlLDFu1A7AnjbIn3H47wnx1k7YHKHCHO7D7anx7HHqH6nUHOnWnsH+n97enmnxn2npnf7hnWz-jN7Gr1n6rtnjnpT17znnHVrT7qnbHaHGnXnun5nvnBnKno7Rnp73BIHsL7HVnAXZnUXwp3nJn0XlnQXFnMHyXiXqXt7nnl8GH1TX8OXjMkNCg+XlMydbgxXKwaN1Hls99WAVH8AjHZgzHbgdXcADXpATXCXcXfnsXIxkXaXXXgXmXIXGXHnmrzGgAYaRi0TdTey2TfyezczdG1zf8fTfzdLeLeYbLfCebezvDescDcxf9e9fxf+cHdJdDcpf7fHfdcuuxBWX7uWU1uPdrvPcPdPD3dLuveffvdPc-cvd-dvc5Afevtfcg8A-fdA+-eQ--fQ+A93dQ-w8w+I9w96DA-Gvg9g+w8Q-I-Y+o8I949I8E8sfDvpfcJhd6s3cXek9ZfXeDejeXc08Vp9dU9ncjfM-0-U+VLlfILc9PCFdVeVyVf1eWzQMC8Byle+AtdtfsAdene0+Hcs-y-ncc+s9XdM8nc9fq+U+w4ADtX9Ac-P45sQQvWNsQovRvegiVMd+vYxlPKvSvbPGvR3WvdP7PbvTvivLvCv9vlrLn2zWHsQeZa3AfegQfK38AIfZgYfwnkfpA0fgncAsf7A8fsnSf4AKfjjafGfarEfhw2fgzAz8WaVvg8WEd8A8WhvcA8WAe9w8WVvWA8W0dDfZ8ZfVfZ8xfCgpfzQFf3fZ8NfIIdfG3JPzL7n7v6nQx6uwjuhnT0-htvAa9s-KPoj8-6XU-a-hLi-hTK-rP6-KXjP7ASAu3OQAApEf5zzkJAGf3oNBZ12YPX87+wJf0h08K3z76kmP67x72-1hl-x-wr7rzb0ZhYkcir9C3mYBv7+1E6gDC+riGpbn94Bqvffj-zt5-9leqAx3igN-4e8LW0WG9i1xWCV98BhwE3kQKeAQDaudiUgTkH77NcX6pbS2CQMthN8c+VrRvr32Pit8i+7A3TJwLPiV9q+QJNgbXxb7cDmMHfZvhwNEGy1K+dnLFntyQHht72E-UIJv0x4r1VB6PBftB136r9huoPTQboK0F6CN+2g+QWYIZ7mCEBDvNXu-ywGYD7Bn-Bwd73QE2CA6AcPXhCVxLkCwBpAUAabz0A0DUakDYKrAIUFX9rBYQ5-hYOiFWCveaAuwY4MG44CEspTLPotzSHB88+6QrIZkKeD59a8GQ8PonxyFFDCh23ZBAIOEHHx7+bfY+MwNqE8CpBRtcQeXxEHxw9mlsQAPGkVCboVIl6EtJ+hbgLgWtzbatlv+ig+IeP1ub-sQge-EwcYKMFzDFhhg9QToJH7b9l+Ggs1qsIWGxDbBTgyYYkOcEJDjhBwjAUcMOGnCLh5wq4f-0tgeDoBb9UgAAE9si7tN4TBQl7+0TeGwOAYgMsH-CYhgIvYcgOuGuCJhNwy4ed2SGm0BmVA2IB7QoGVw-B8I6-vQMrg1dc+lcKAbQMF7oiA4OIyXviSH6VIu+VQ3TPwL75NDMMNQoQVc2vyDCZkHQ2BiyK8Z0jyhwXIEREIBFBQJ4ykGgAYFKCCjmMAAKh8BJJdMYo4UXY0lHiitGumAAMJyjZaz1aUUbShJcBdMAAcWVFG1fKaozDH6QNGHAAAKrqMwwAAtc0Z2EVHWingAACTtE5ArRxop4C6M1HyjmMAAMSdGxBVRHo2WvqIDFONdMRo4MZhndyuicgSoqMbEGdrhjDg8YiACY10z+jkx3o30T9F0xmjYxegR0bmLMAABRTMQjF0wAB1EsaQGLEFiqxlY9gOmRrH0xdMCAOseAAABsrY5ILph9GNjwA1YhMU8DDy9iuxzGJMr2JTK9ixxA4nIFOPTEyjRRnY1sVKOnHRRZRBotUQgA3H8iuSAo3cTuP3HbjDxe4w8Z2SPEHjjxF488VeLPE3jLxt468XeMfEPjnx9418U+LfEvj3xX4z8T+JPEBggAA"
 ));
 
 export default createNewAscii;

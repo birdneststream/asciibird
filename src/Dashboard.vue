@@ -11,6 +11,7 @@
     <Options v-if="asciibirdMeta.length && modalState.options" />
 
     <About v-if="modalState.about" />
+    <Help v-if="modalState.help" />
     <EditAscii v-if="asciibirdMeta.length  && modalState.editAscii" @updateAscii="updateAsciiDetails" />
     <PasteAscii v-if="modalState.pasteAscii"  />
     <ImageOverlay v-if="asciibirdMeta.length && modalState.overlay" />
@@ -221,6 +222,7 @@ import ImageOverlay from "./components/modals/ImageOverlay.vue";
 import EditAscii from "./components/modals/EditAscii.vue";
 import PasteAscii from "./components/modals/PasteAscii.vue";
 import About from "./components/modals/About.vue";
+import Help from "./components/modals/Help.vue";
 
 import BrushCanvas from "./components/parts/BrushCanvas.vue";
 import BrushPreview from "./components/parts/BrushPreview.vue";
@@ -237,7 +239,7 @@ import {
   getBlocksWidth,
   emptyBlock,
   canvasToPng,
-  maxBrushSize,
+  maxBrushSize
 } from "./ascii";
 
 import VueFileToolbarMenu from "vue-file-toolbar-menu";
@@ -277,6 +279,7 @@ export default {
     ImageOverlay,
     VueFileToolbarMenu,
     About,
+    Help
   },
   name: "Dashboard",
   data: () => ({
@@ -1108,9 +1111,15 @@ export default {
             icon: "help",
             menu: [
               {
+                text: "Help",
+                click: () => this.$store.commit("openModal", "help"),
+                hotkey: "F1",
+                icon: "help",
+              },
+              {
                 text: "About ASCIIBIRD",
                 click: () => this.$store.commit("openModal", "about"),
-                hotkey: "F1",
+                hotkey: "shift+F1",
                 icon: "help_outline",
               },
             ],

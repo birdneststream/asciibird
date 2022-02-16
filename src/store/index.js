@@ -30,6 +30,7 @@ export default new Vuex.Store({
       options: false,
       overlay: false,
       about: false,
+      help: false,
     },
     isKeyboardDisabled: false,
     // The various options of ASCIIBIRD will eventually
@@ -822,6 +823,11 @@ export default new Vuex.Store({
           state.modalState.about = true;
           state.isKeyboardDisabled = true;
           break;
+
+        case 'help':
+          state.modalState.help = true;
+          state.isKeyboardDisabled = true;
+          break;
       }
     },
     closeModal(state, type) {
@@ -854,6 +860,11 @@ export default new Vuex.Store({
 
         case 'about':
           state.modalState.about = false;
+          state.isKeyboardDisabled = false;
+          break;
+
+        case 'help':
+          state.modalState.help = false;
           state.isKeyboardDisabled = false;
           break;
       }
