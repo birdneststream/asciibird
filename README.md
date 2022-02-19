@@ -18,7 +18,7 @@
 ASCIIBIRD is an IRC ascii art editor to create or edit mIRC art, it is most times worked on during live stream. It's 100% client side and created in vue2 and may be migrated to vue3 in the future.
 
 You can view and load ASCII art from https://irc.watch/ascii into asciibird.
-
+1
 A most latest production build to use is available at https://asciibird.jewbird.live/
 
 # Big Shout outs to Patrons
@@ -80,9 +80,12 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 ### v1 is released, thanks pals!
 
+* Fix up help modal
+
 ### v 1.2
 
 * Unit testing
+* More tooltips on other parts, at the moment only Toolbar has tooltips, option to disable tooltips
 * Fix brush tool for seamless lines when drawing fast
 * Warning on mirc export if ascii exceeds IRCs 512 per chat line limit.
 * Review encodings check on file import - UTF8 vs Latin something

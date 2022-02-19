@@ -6,7 +6,7 @@ module.exports = {
       keyframes: {
         tooltip_show: {
           '0%' : { visibility: 'hidden', opacity: '0'},
-          '75%' : { visibility: 'hidden', opacity: '0'},
+          '30%' : { visibility: 'visible', opacity: '100'},
           '100%' : { visibility: 'visible', opacity: '100'},
         }
       },

@@ -211,10 +211,6 @@ export const tabLimit = 20;
 
 export const parseMircAscii = async (contents, filename) => {
   // The current state of the Colours
-  let curBlock = {
-    ...emptyBlock,
-  };
-
   contents = contents
     .split('\u0003\u0003')
     .join('\u0003')
@@ -255,8 +251,6 @@ export const parseMircAscii = async (contents, filename) => {
     selectedLayer: 0,
   };
 
-  // let isPlainText = !colourCodeRegex.test(contents);
-
   // https://modern.ircdocs.horse/formatting.html#color
   // In the following list, <CODE> represents the color formatting character (0x03), <COLOR> represents one or two ASCII digits (either 0-9 or 00-99).
 
@@ -267,26 +261,9 @@ export const parseMircAscii = async (contents, filename) => {
   //     <CODE><COLOR> - Set the foreground color.
   //     <CODE><COLOR>, - Set the foreground color and display the , character as text.
   //     <CODE><COLOR>,<COLOR> - Set the foreground and background color.
-
-
-  // const mIrcSingleColourRegex = new RegExp(/(\u0003\d{0,2}[,])/, 'gu');
   const asciiblasterRegex = /(^[\d]{1,2})?(?:,([\d]{1,2}))?/;
-  const mIrcColourRegex = new RegExp(/\u0003(\d{0,2})?[,]?(\d{0,2})?/, 'gu');
-  // let isPlainText = !colourCodeRegex.test(contents);
+  let cleanedWidth = 0;
 
-  // Get the max line width, as some lines can be trimmed by spaces
-  // we cannot always rely on the first line for the width
-  for (let i = 0; i < asciiLines.length; i++) {
-    let cleanedWidth = asciiLines[i].replace(mIrcColourRegex, '').length;
-    if (cleanedWidth > finalAscii.layers[0].width) {
-      finalAscii.layers[0].width = cleanedWidth;
-    }
-
-    // Save some time on large asciis?
-    // if (i > 50) break;
-  }
-
-  // The foreground color is the first <COLOR>, and the background color is the second <COLOR> (if sent).
   for (let y in asciiLines) {
     let line = asciiLines[y];
     let len = line.length - 1;
@@ -298,8 +275,9 @@ export const parseMircAscii = async (contents, filename) => {
     while (pos < len) {
       pos++;
       char = line[pos];
-
-      // next char is a color styling char, with possible color nums after
+      
+      // This code and regex had come from asciiblaster and was changed to
+      // work with asciibird.
       if (char === '\x03') {
         var matches = line.substr(pos + 1, 5).match(asciiblasterRegex);
 
@@ -328,12 +306,18 @@ export const parseMircAscii = async (contents, filename) => {
       };
 
       actualPos++;
+
+      if (actualPos > cleanedWidth) {
+        cleanedWidth = actualPos;
+      }
     }
 
     pos = -1;
     actualPos = 0;
     block = {};
   }
+
+  finalAscii.layers[0].width = cleanedWidth;
 
   // First layer data generation
   finalAscii.layers = [...fillNullBlocks(finalAscii.layers[0].height, finalAscii.layers[0]
@@ -349,228 +333,6 @@ export const parseMircAscii = async (contents, filename) => {
 
   return true;
 }
-
-
-export const parseMircAsciiOld = async (contents, filename) => {
-
-
-  // The current state of the Colours
-  let curBlock = {
-    ...emptyBlock,
-  };
-
-  contents = contents
-    .split('\u0003\u0003')
-    .join('\u0003')
-    .split('\u000F').join('')
-    .split('\u0003\n').join('\n')
-    .split('\u0002\u0003').join('\u0003')
-    .split('\u0002').join('') // bold
-    .split('\u001D').join(''); // bg highlight
-
-  let asciiLines = contents.split("\n");
-
-  const finalAscii = {
-    title: filename,
-    layers: [{
-      label: filename,
-      visible: true,
-      data: create2DArray(contents.split('\n').length),
-      width: 0, // calculated down bellow
-      height: contents.split('\n').length,
-    }],
-    history: [],
-    historyIndex: 0,
-    imageOverlay: {
-      url: null,
-      opacity: 95,
-      asciiOpacity: 100,
-      left: 0,
-      top: 0,
-      position: 'centered',
-      size: 100,
-      repeatx: true,
-      repeaty: true,
-      visible: false,
-      stretched: false,
-    },
-    x: blockWidth * 35, // the dragable ascii canvas x
-    y: blockHeight * 2, // the dragable ascii canvas y
-    selectedLayer: 0,
-  };
-
-  // Determine if we have a plain text ascii
-  const colourCodeRegex = new RegExp(/\u0003/, 'g');
-  let isPlainText = !colourCodeRegex.test(contents);
-
-  // https://modern.ircdocs.horse/formatting.html#color
-  // In the following list, <CODE> represents the color formatting character (0x03), <COLOR> represents one or two ASCII digits (either 0-9 or 00-99).
-
-  // The use of this code can take on the following forms:
-
-  //     <CODE> - Reset foreground and background colors.
-  //     <CODE>, - Reset foreground and background colors and display the , character as text.
-  //     <CODE><COLOR> - Set the foreground color.
-  //     <CODE><COLOR>, - Set the foreground color and display the , character as text.
-  //     <CODE><COLOR>,<COLOR> - Set the foreground and background color.
-
-
-  // const mIrcSingleColourRegex = new RegExp(/(\u0003\d{0,2}[,])/, 'gu');
-  const mIrcColourRegex = new RegExp(/\u0003(\d{0,2})?[,]?(\d{0,2})?/, 'gu');
-  const asciiblasterRegex = /(^[\d]{1,2})?(?:,([\d]{1,2}))?/;
-
-  // Get the max line width, as some lines can be trimmed by spaces
-  // we cannot always rely on the first line for the width
-  for (let i = 0; i < asciiLines.length; i++) {
-    let cleanedWidth = asciiLines[i].replace(mIrcColourRegex, '').length;
-    if (cleanedWidth > finalAscii.layers[0].width) {
-      finalAscii.layers[0].width = cleanedWidth;
-    }
-
-    // Save some time on large asciis?
-    // if (i > 50) break;
-  }
-
-  // The foreground color is the first <COLOR>, and the background color is the second <COLOR> (if sent).
-  for (let y in asciiLines) {
-    let line = asciiLines[y];
-
-    // Check C5, or C, first then
-    // let cleanLinesSingle = line.replace(mIrcSingleColourRegex, '');
-
-    // Do this
-    // let cleanLinesSingle = line.replace(mIrcSingleColourRegex, '');
-    let cleanLines = line.replace(mIrcColourRegex, '');
-    // cleanLines = cleanLines.replace(mIrcColourRegex, '');
-
-    // Somehow merge the arrays
-    // let parsedLineSingle = [...line.matchAll(mIrcSingleColourRegex)];
-    let parsedLine = [...line.matchAll(mIrcColourRegex)];
-
-    let colourData = [];
-
-    // parsedLine = [...parsedLine, ...parsedLineSingle];
-
-    curBlock = {
-      ...emptyBlock,
-    };
-
-    let newData = [];
-
-    if (!isPlainText) {
-      for (let x in parsedLine) {
-        let codeData = parsedLine[x];
-        let colourArray = codeData[0].split("\u0003").join("").split(",");
-
-        // If we have C3,
-        let endsWithComma = /,$/;
-        if (endsWithComma.test(colourArray[0])) {
-          cleanLines[codeData.index] = ',';
-        }
-
-        if (colourArray.length === 2) {
-          if (colourArray[0] > -1) {
-            curBlock.fg = Number.parseInt(colourArray[0]);
-          }
-
-          if (colourArray[1] !== "" && colourArray[1] > -1) {
-            curBlock.bg = Number.parseInt(colourArray[1]);
-          }
-        } else if (colourArray.length === 1) {
-          if (colourArray[0] == "") {
-            delete curBlock['bg'];
-            delete curBlock['fg'];
-            delete curBlock['char'];
-          }
-
-          if (colourArray[0] > 0) {
-            curBlock.fg = Number.parseInt(colourArray[0]);
-            delete curBlock['bg'];
-          }
-
-        }
-
-        colourData.push({
-          code: codeData,
-          b: {
-            ...curBlock
-          }
-        });
-      }
-
-      // Readjust the indexes
-      let indexAdjustment = 0;
-
-      for (let index in colourData) {
-        if (index === 0) {
-          continue;
-        }
-
-        colourData[index].code.index = colourData[index].code.index - indexAdjustment;
-        indexAdjustment = indexAdjustment + colourData[index].code[0].length;
-        newData[colourData[index].code.index] = colourData[index].b;
-      }
-
-    }
-
-
-    // Construct the ascii blocks
-    for (let i in cleanLines) {
-      let char = cleanLines[i];
-
-      // If there is a colour change present at this index
-      // we will keep track of it
-      if (!isPlainText && newData[i]) {
-        if (newData[i].bg !== undefined) {
-          curBlock.bg = newData[i].bg;
-        }
-
-        if (newData[i].fg !== undefined) {
-          curBlock.fg = newData[i].fg;
-        }
-
-        if (newData[i].fg === undefined && newData[i].bg === undefined) {
-          curBlock = {
-            ...emptyBlock
-          };
-        }
-
-      }
-
-      curBlock.char = char;
-
-      if (curBlock.bg === null) {
-        delete curBlock['bg']
-      }
-
-      if (curBlock.fg === null) {
-        delete curBlock['fg']
-      }
-
-      if (curBlock.char === null) {
-        delete curBlock['char']
-      }
-
-      finalAscii.layers[0].data[y][i] = {
-        ...curBlock
-      };
-    }
-
-  }
-  // First layer data generation
-  finalAscii.layers = [...fillNullBlocks(finalAscii.layers[0].height, finalAscii.layers[0]
-    .width, finalAscii.layers)];
-
-  // Store the ASCII and ensure we have no null blocks
-  finalAscii.layers = LZString.compressToUTF16(
-    JSON.stringify(finalAscii.layers),
-  );
-
-  // Save ASCII to storage
-  store.commit('newAsciibirdMeta', finalAscii);
-
-  return true;
-};
 
 // Creates new blank ASCII
 export const createNewAscii = (forms) => {
