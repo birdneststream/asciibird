@@ -1,5 +1,8 @@
 <template>
-  <div id="app" @contextmenu.prevent>
+  <div
+    id="app"
+    @contextmenu.prevent
+  >
     <div v-show="menuBarVisible">
       <vue-file-toolbar-menu
         :content="myMenu"
@@ -12,8 +15,11 @@
 
     <About v-if="modalState.about" />
     <Help v-if="modalState.help" />
-    <EditAscii v-if="asciibirdMeta.length  && modalState.editAscii" @updateAscii="updateAsciiDetails" />
-    <PasteAscii v-if="modalState.pasteAscii"  />
+    <EditAscii
+      v-if="asciibirdMeta.length && modalState.editAscii"
+      @updateAscii="updateAsciiDetails"
+    />
+    <PasteAscii v-if="modalState.pasteAscii" />
     <ImageOverlay v-if="asciibirdMeta.length && modalState.overlay" />
 
     <KeyboardShortcuts
@@ -25,7 +31,10 @@
       :canvas-y="canvasY"
     />
 
-    <context-menu ref="menu" class="z-50">
+    <context-menu
+      ref="menu"
+      class="z-50"
+    >
       <ul>
         <li
           @click="$store.commit('openModal', 'new-ascii')"
@@ -55,7 +64,10 @@
           Options
         </li>
 
-        <li @click="startImport('mirc')" class="ab-context-menu-item">
+        <li
+          @click="startImport('mirc')"
+          class="ab-context-menu-item"
+        >
           Import mIRC from File
         </li>
         <li
@@ -92,7 +104,10 @@
         >
           Save Asciibird State
         </li>
-        <li @click="startImport('asb')" class="ab-context-menu-item">
+        <li
+          @click="startImport('asb')"
+          class="ab-context-menu-item"
+        >
           Load Asciibird State
         </li>
       </ul>
@@ -108,7 +123,7 @@
       style="display: none"
       ref="asciiInput"
       @change="onImport()"
-    />
+    >
 
     <template v-if="asciibirdMeta.length">
       <div
@@ -133,10 +148,10 @@
               <t-button
                 class="relative bottom-1 z-40 rounded-3xl h-5"
                 @click="closeTab(key)"
-                ><span class="material-icons" style="font-size: 16px"
-                  >close</span
-                ></t-button
-              >
+              ><span
+                class="material-icons"
+                style="font-size: 16px"
+              >close</span></t-button>
             </span>
           </t-button>
         </span>
@@ -153,7 +168,10 @@
         :reset-select="resetSelect"
       />
 
-      <Toolbar v-show="toolbarState.visible" :y-offset="scrollOffset" />
+      <Toolbar
+        v-show="toolbarState.visible"
+        :y-offset="scrollOffset"
+      />
 
       <DebugPanel
         :canvas-x="canvasX"

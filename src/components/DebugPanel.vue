@@ -13,23 +13,48 @@
       :y="debugPanelState.y"
     >
       <t-card class="h-full">
-        <span class="ml-5" v-html="`Tool: ${getToolName}`" /> <br />
-        <span class="ml-5" v-html="`FgColour: ${currentFg}`" /> <br />
-        <span class="ml-5" v-html="`BgColor: ${currentBg}`" /> <br />
-        <span class="ml-5" v-html="`Char: ${currentChar}`" /> <br />
+        <span
+          class="ml-5"
+          v-html="`Tool: ${getToolName}`"
+        /> <br>
+        <span
+          class="ml-5"
+          v-html="`FgColour: ${currentFg}`"
+        /> <br>
+        <span
+          class="ml-5"
+          v-html="`BgColor: ${currentBg}`"
+        /> <br>
+        <span
+          class="ml-5"
+          v-html="`Char: ${currentChar}`"
+        /> <br>
 
-        <span class="ml-5" v-html="`canvasX: ${canvasX}`" /> <br />
-        <span class="ml-5" v-html="`canvasY: ${canvasY}`" /> <br />
+        <span
+          class="ml-5"
+          v-html="`canvasX: ${canvasX}`"
+        /> <br>
+        <span
+          class="ml-5"
+          v-html="`canvasY: ${canvasY}`"
+        /> <br>
 
-        <span class="ml-5" v-html="`mirrorX: ${mirrorX}`" /> <br />
-        <span class="ml-5" v-html="`mirrorY: ${mirrorY}`" />
+        <span
+          class="ml-5"
+          v-html="`mirrorX: ${mirrorX}`"
+        /> <br>
+        <span
+          class="ml-5"
+          v-html="`mirrorY: ${mirrorY}`"
+        />
 
-        <br />
+        <br>
 
-        <span class="ml-5"
-          >State Internal Size: {{ asciiStats.stateSize }}
+        <span
+          class="ml-5"
+        >State Internal Size: {{ asciiStats.stateSize }}
         </span>
-        <br />
+        <br>
 
         <div class="mb-4 border-t-2">
           <div

@@ -1,5 +1,10 @@
 <template>
-  <vue-draggable-resizable :x="100" :y="100+yOffset" :w="1100" :h="350">
+  <vue-draggable-resizable
+    :x="100"
+    :y="100+yOffset"
+    :w="1100"
+    :h="350"
+  >
     <t-card class="w-full h-full">
       <t-button
         type="button"

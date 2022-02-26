@@ -20,7 +20,7 @@
       </t-button>
     </div>
 
-    <hr />
+    <hr>
 
     <div class="w-full bg-white rounded-lg shadow">
       <ul class="divide-y-2 divide-gray-100 mb-2">
@@ -34,7 +34,10 @@
               !imageOverlay.visible ? "remove_red_eye" : "panorama_fish_eye"
             }}</span>
           </t-button>
-          <div class="w-full p-1" @click="showOverlayModal">
+          <div
+            class="w-full p-1"
+            @click="showOverlayModal"
+          >
             <div class="flex text-right">
               <div class="w-full">
                 <t-card class="w-full pl-2 hover:bg-gray-300 cursor-pointer">
@@ -47,12 +50,18 @@
       </ul>
 
       <ul class="mt-1 mb-2">
-        <li></li>
+        <li />
       </ul>
 
-      <context-menu ref="layers-menu" class="z-50">
+      <context-menu
+        ref="layers-menu"
+        class="z-50"
+      >
         <ul>
-          <li @click="addLayer()" class="ab-context-menu-item">
+          <li
+            @click="addLayer()"
+            class="ab-context-menu-item"
+          >
             Add New Layer
           </li>
           <li
@@ -109,8 +118,14 @@
           :key="key"
           @click.right="changeLayer(key)"
         >
-          <div class="flex" @mouseup.right="openContextMenu">
-            <div class="w-12" @click="changeLayer(key)">
+          <div
+            class="flex"
+            @mouseup.right="openContextMenu"
+          >
+            <div
+              class="w-12"
+              @click="changeLayer(key)"
+            >
               <t-button
                 type="button"
                 class="ab-rounded-button"
@@ -119,8 +134,8 @@
               >
                 <span class="material-icons">{{
                   layer.visible ? "remove_red_eye" : "panorama_fish_eye"
-                }}</span> </t-button
-              ><br />
+                }}</span>
+              </t-button><br>
 
               <t-button
                 type="button"
@@ -134,7 +149,10 @@
 
             <div class="w-full">
               <div class="flex text-right">
-                <div class="w-full" @click="changeLayer(key)">
+                <div
+                  class="w-full"
+                  @click="changeLayer(key)"
+                >
                   <t-card class="w-full hover:bg-gray-300 cursor-pointer">
                     <span @dblclick="showLayerRename(key, layer.label)">{{
                       layer.label
@@ -149,8 +167,8 @@
                     @click="downLayer(key)"
                     :disabled="!canToggleLayer"
                   >
-                    <span class="material-icons">arrow_upward</span> </t-button
-                  ><br />
+                    <span class="material-icons">arrow_upward</span>
+                  </t-button><br>
 
                   <t-button
                     type="button"

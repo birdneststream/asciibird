@@ -43,10 +43,16 @@
         </div>
 
         <div class="w-full">
-          <t-select :options="brushOptions" v-model="brushSizeTypeInput" />
+          <t-select
+            :options="brushOptions"
+            v-model="brushSizeTypeInput"
+          />
         </div>
 
-        <div @mouseenter="canDrag = false" @mouseleave="canDrag = true">
+        <div
+          @mouseenter="canDrag = false"
+          @mouseleave="canDrag = true"
+        >
           <MainBrushCanvas />
         </div>
       </t-card>

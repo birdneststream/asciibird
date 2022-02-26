@@ -7,15 +7,29 @@
   >
     <template v-slot:default>
       <div class="mt-6 rounded shadow bg-white">
-        <h1 class="help-h1">Current Features</h1>
+        <h1 class="help-h1">
+          Current Features
+        </h1>
 
         <ul class="help-list">
-          <li class="help-li">Tabbed ASCII editing</li>
-          <li class="help-li">Layers support</li>
-          <li class="help-li-space">- Show and hide layers</li>
-          <li class="help-li-space">- Change layer order</li>
-          <li class="help-li-space">- Double click to rename layer</li>
-          <li class="help-li-space">- Context menu for layers</li>
+          <li class="help-li">
+            Tabbed ASCII editing
+          </li>
+          <li class="help-li">
+            Layers support
+          </li>
+          <li class="help-li-space">
+            - Show and hide layers
+          </li>
+          <li class="help-li-space">
+            - Change layer order
+          </li>
+          <li class="help-li-space">
+            - Double click to rename layer
+          </li>
+          <li class="help-li-space">
+            - Context menu for layers
+          </li>
           <li class="help-li">
             Copy and paste ASCII blocks between tabs with the select tool
           </li>
@@ -23,7 +37,9 @@
             Remembers state on refresh and when the browser loads, can also
             export the state to a file and load elsewhere.
           </li>
-          <li class="help-li-space">- So you never lose your ascii art!</li>
+          <li class="help-li-space">
+            - So you never lose your ascii art!
+          </li>
           <li class="help-li-space">
             - Saves layers, brushes data also to same file
           </li>
@@ -33,12 +49,18 @@
           <li class="help-li">
             Can export mirc ascii to clipboard, file or HTTP POST
           </li>
-          <li class="help-li">99 Colour support</li>
+          <li class="help-li">
+            99 Colour support
+          </li>
           <li class="help-li">
             Swap fg and bg colours with button click or Alt + r
           </li>
-          <li class="help-li">Mirror X and Y</li>
-          <li class="help-li">Grid mode with Alt + g</li>
+          <li class="help-li">
+            Mirror X and Y
+          </li>
+          <li class="help-li">
+            Grid mode with Alt + g
+          </li>
           <li class="help-li">
             Undo and redo with Ctrl + z and Ctrl + y, undos are set to a limit
             of 200 at the moment.
@@ -54,15 +76,27 @@
             - If you want to remove the background but keep the text, uncheck FG
             and Char and eraser the bg only.
           </li>
-          <li class="help-li">Image overlay to trace images</li>
-          <li class="help-li-space">- Accepts URLs only at the moment</li>
-          <li class="help-li-space">- Can adjust the size and properties</li>
-          <li class="help-li">Toolbar containing</li>
+          <li class="help-li">
+            Image overlay to trace images
+          </li>
+          <li class="help-li-space">
+            - Accepts URLs only at the moment
+          </li>
+          <li class="help-li-space">
+            - Can adjust the size and properties
+          </li>
+          <li class="help-li">
+            Toolbar containing
+          </li>
           <li class="help-li-space">
             - Select, to copy, paste and save blocks as brushes
           </li>
-          <li class="help-li-space">- Text mode, with arrow key support</li>
-          <li class="help-li-space">- Fill background blocks</li>
+          <li class="help-li-space">
+            - Text mode, with arrow key support
+          </li>
+          <li class="help-li-space">
+            - Fill background blocks
+          </li>
           <li class="help-li-space">
             - Brush mode, can be controlled with keyboard and mouse
           </li>
@@ -75,7 +109,9 @@
           <li class="help-li-space">
             - Fill Eraser - Fill remove blocks by bg, fg or char
           </li>
-          <li class="help-li">Brush Library and History</li>
+          <li class="help-li">
+            Brush Library and History
+          </li>
           <li class="help-li-space">
             - Make circle, square, cross and other brushes by sizes
           </li>
@@ -85,9 +121,15 @@
           <li class="help-li-space">
             - Library - Save most used brushes to library
           </li>
-          <li class="help-li-space">- Brush history is set to a limit of 50</li>
-          <li class="help-li">Brush Preview</li>
-          <li class="help-li-space">- Editable brush preview</li>
+          <li class="help-li-space">
+            - Brush history is set to a limit of 50
+          </li>
+          <li class="help-li">
+            Brush Preview
+          </li>
+          <li class="help-li-space">
+            - Editable brush preview
+          </li>
           <li class="help-li-space">
             - Can use the brush tool inside the brush preview
           </li>
@@ -106,18 +148,28 @@
           </li>
         </ul>
 
-        <h1 class="help-h1">Roadmap and Bug To Fixes</h1>
+        <h1 class="help-h1">
+          Roadmap and Bug To Fixes
+        </h1>
 
-        <h3 class="help-h3">v1 is released, thanks pals!</h3>
+        <h3 class="help-h3">
+          v1 is released, thanks pals!
+        </h3>
 
         <ul class="help-list">
-          <li class="help-li">Fix up help modal</li>
+          <li class="help-li">
+            Fix up help modal
+          </li>
         </ul>
 
-        <h3 class="help-h3">v 1.2</h3>
+        <h3 class="help-h3">
+          v 1.2
+        </h3>
 
         <ul class="help-list">
-          <li class="help-li">Unit testing</li>
+          <li class="help-li">
+            Unit testing
+          </li>
           <li class="help-li">
             More tooltips on other parts, at the moment only Toolbar has
             tooltips, option to disable tooltips
@@ -139,15 +191,21 @@
           </li>
           this reason. We can review the fill feature in a future version of
           ASCII bird.
-          <li class="help-li">More fill tool options?</li>
+          <li class="help-li">
+            More fill tool options?
+          </li>
           <li class="help-li">
             Brush blocks larger than 1x1 can leave undoable blocks
           </li>
-          <li class="help-li">Half block editing mode</li>
+          <li class="help-li">
+            Half block editing mode
+          </li>
           <li class="help-li">
             This one time this ascii exported with a 1 more width and height
           </li>
-          <li class="help-li">Dark / light modes, different themes</li>
+          <li class="help-li">
+            Dark / light modes, different themes
+          </li>
           <li class="help-li">
             Context menus inside the panels can be way off sometimes
           </li>
@@ -158,9 +216,13 @@
             Expand the brush manager, brush categories, download brushes,
             import/export brushes
           </li>
-          <li class="help-li">ASCIIBIRD API ?!</li>
+          <li class="help-li">
+            ASCIIBIRD API ?!
+          </li>
 
-          <h2 class="help-h2">Mobile / Touch Screen support</h2>
+          <h2 class="help-h2">
+            Mobile / Touch Screen support
+          </h2>
 
           <p>
             Doesn't exist at the moment. While the underlying functions and code
@@ -170,15 +232,27 @@
             brush around.
           </p>
 
-          <h1 class="help-h1">Keyboard Shortcuts</h1>
+          <h1 class="help-h1">
+            Keyboard Shortcuts
+          </h1>
 
-          <h2 class="help-h2">ASCII Editing</h2>
+          <h2 class="help-h2">
+            ASCII Editing
+          </h2>
 
-          <li class="help-li">Ctrl + Z - Undo</li>
-          <li class="help-li">Ctrl + Y - Redo</li>
+          <li class="help-li">
+            Ctrl + Z - Undo
+          </li>
+          <li class="help-li">
+            Ctrl + Y - Redo
+          </li>
 
-          <li class="help-li">F1 - Toggle Help</li>
-          <li class="help-li">Shift + F1 - About ASCIIBIRD and shout outs</li>
+          <li class="help-li">
+            F1 - Toggle Help
+          </li>
+          <li class="help-li">
+            Shift + F1 - About ASCIIBIRD and shout outs
+          </li>
 
           <li class="help-li">
             Escape - Return to default mode, stop using any tool and close fg,
@@ -189,7 +263,9 @@
             Alt 1 to 8 - Will toggle the corresponding toolbar icon
           </li>
 
-          <li class="help-li">Ctrl 1 to 0 - Change ASCII tab if possible</li>
+          <li class="help-li">
+            Ctrl 1 to 0 - Change ASCII tab if possible
+          </li>
 
           <li class="help-li">
             Alt + c - Opens character Panel (You can then press on the keyboard
@@ -204,72 +280,156 @@
             colour)
           </li>
 
-          <li class="help-li">Alt + g - Toggle grid mode</li>
+          <li class="help-li">
+            Alt + g - Toggle grid mode
+          </li>
 
-          <li class="help-li">Alt + x - Toggle Mirror X</li>
-          <li class="help-li">Alt + y - Toggle Mirror Y</li>
+          <li class="help-li">
+            Alt + x - Toggle Mirror X
+          </li>
+          <li class="help-li">
+            Alt + y - Toggle Mirror Y
+          </li>
           <li class="help-li">
             Alt + u - Toggle Update Brush (change brush preview if fg, bg or
             char changes)
           </li>
-          <li class="help-li">Alt + r - Flip FG and BG colours</li>
+          <li class="help-li">
+            Alt + r - Flip FG and BG colours
+          </li>
 
-          <li class="help-li">Ctrl + e - Edit ASCII</li>
-          <li class="help-li">Ctrl + r - Close ASCII</li>
-          <li class="help-li">Ctrl + m - New ASCII (can't use ctrl + n)</li>
-          <li class="help-li">Ctrl + o - Toggle Asciibird Options</li>
+          <li class="help-li">
+            Ctrl + e - Edit ASCII
+          </li>
+          <li class="help-li">
+            Ctrl + r - Close ASCII
+          </li>
+          <li class="help-li">
+            Ctrl + m - New ASCII (can't use ctrl + n)
+          </li>
+          <li class="help-li">
+            Ctrl + o - Toggle Asciibird Options
+          </li>
         </ul>
 
-        <h3 class="help-h3">Importing</h3>
+        <h3 class="help-h3">
+          Importing
+        </h3>
         <ul class="help-list">
           <li class="help-li">
             Ctrl + Shift + o - Open mIRC TXT File as new Ascii
           </li>
-          <li class="help-li">Ctrl + Shift + v - Paste New Ascii</li>
+          <li class="help-li">
+            Ctrl + Shift + v - Paste New Ascii
+          </li>
         </ul>
-        <h3 class="help-h3">Exporting</h3>
+        <h3 class="help-h3">
+          Exporting
+        </h3>
         <ul class="help-list">
-          <li class="help-li">Ctrl + Shift + C - Copy to clipboard</li>
-          <li class="help-li">Ctrl + Shift + F - Save to TXT file</li>
-          <li class="help-li">Ctrl + Shift + G - Save to PNG file</li>
-          <li class="help-li">Ctrl + Shift + H - Save to HTTP Post</li>
+          <li class="help-li">
+            Ctrl + Shift + C - Copy to clipboard
+          </li>
+          <li class="help-li">
+            Ctrl + Shift + F - Save to TXT file
+          </li>
+          <li class="help-li">
+            Ctrl + Shift + G - Save to PNG file
+          </li>
+          <li class="help-li">
+            Ctrl + Shift + H - Save to HTTP Post
+          </li>
         </ul>
-        <h2 class="help-h2">Showing / Hiding menus, tabs and panels</h2>
+        <h2 class="help-h2">
+          Showing / Hiding menus, tabs and panels
+        </h2>
         <ul class="help-list">
-          <li class="help-li">Ctrl + Alt + t - Hide / Show Tabs</li>
-          <li class="help-li">Ctrl + Alt + m - Hide / Show Menu</li>
-          <li class="help-li">Ctrl + Alt + d - Hide / Show Debug Panel</li>
-          <li class="help-li">Ctrl + Alt + b - Hide / Show Brush Library</li>
-          <li class="help-li">Ctrl + Alt + l - Hide / Show Layers</li>
-          <li class="help-li">Ctrl + Alt + n - Hide / Show Toolbar</li>
-          <li class="help-li">Ctrl + Alt + e - Hide / Show Brush Preview</li>
+          <li class="help-li">
+            Ctrl + Alt + t - Hide / Show Tabs
+          </li>
+          <li class="help-li">
+            Ctrl + Alt + m - Hide / Show Menu
+          </li>
+          <li class="help-li">
+            Ctrl + Alt + d - Hide / Show Debug Panel
+          </li>
+          <li class="help-li">
+            Ctrl + Alt + b - Hide / Show Brush Library
+          </li>
+          <li class="help-li">
+            Ctrl + Alt + l - Hide / Show Layers
+          </li>
+          <li class="help-li">
+            Ctrl + Alt + n - Hide / Show Toolbar
+          </li>
+          <li class="help-li">
+            Ctrl + Alt + e - Hide / Show Brush Preview
+          </li>
         </ul>
-        <h2 class="help-h2">Select Mode</h2>
+        <h2 class="help-h2">
+          Select Mode
+        </h2>
         <ul class="help-list">
-          <li class="help-li">Ctrl + c - Copy blocks to clipboard</li>
-          <li class="help-li">Ctrl + x - Cut blocks to clipboard</li>
-          <li class="help-li">Ctrl + v - Paste blocks as brush</li>
-          <li class="help-li">Ctrl + b - Save Selection to Library</li>
-          <li class="help-li">Delete - Delete selected blocks</li>
+          <li class="help-li">
+            Ctrl + c - Copy blocks to clipboard
+          </li>
+          <li class="help-li">
+            Ctrl + x - Cut blocks to clipboard
+          </li>
+          <li class="help-li">
+            Ctrl + v - Paste blocks as brush
+          </li>
+          <li class="help-li">
+            Ctrl + b - Save Selection to Library
+          </li>
+          <li class="help-li">
+            Delete - Delete selected blocks
+          </li>
         </ul>
-        <h2 class="help-h2">Eraser Mode</h2>
+        <h2 class="help-h2">
+          Eraser Mode
+        </h2>
         <ul class="help-list">
-          <li class="help-li">Four arrow keys control eraser cursor</li>
-          <li class="help-li">Space - apply eraser</li>
+          <li class="help-li">
+            Four arrow keys control eraser cursor
+          </li>
+          <li class="help-li">
+            Space - apply eraser
+          </li>
         </ul>
-        <h2 class="help-h2">Brush Mode</h2>
+        <h2 class="help-h2">
+          Brush Mode
+        </h2>
         <ul class="help-list">
-          <li class="help-li">Four arrow keys control text cursor</li>
-          <li class="help-li">Space - apply brush</li>
-          <li class="help-li">Ctrl + ] - Increase both brush sizes by 1</li>
-          <li class="help-li">Ctrl + [ - Decrease both brush sizes by 1</li>
-          <li class="help-li">e - rotate brush</li>
-          <li class="help-li">q - flip brush</li>
+          <li class="help-li">
+            Four arrow keys control text cursor
+          </li>
+          <li class="help-li">
+            Space - apply brush
+          </li>
+          <li class="help-li">
+            Ctrl + ] - Increase both brush sizes by 1
+          </li>
+          <li class="help-li">
+            Ctrl + [ - Decrease both brush sizes by 1
+          </li>
+          <li class="help-li">
+            e - rotate brush
+          </li>
+          <li class="help-li">
+            q - flip brush
+          </li>
         </ul>
-        <h2 class="help-h2">Text mode</h2>
+        <h2 class="help-h2">
+          Text mode
+        </h2>
         <ul class="help-list">
-          <li class="help-li">Four arrow keys control text cursor</li>
-          <li class="help-li">Delete - Remove text from highlighted block</li>
+          <li class="help-li">
+            Four arrow keys control text cursor
+          </li>
+          <li class="help-li">
+            Delete - Remove text from highlighted block
+          </li>
           <li class="help-li">
             Backspace - Remove current character and move to previous block
           </li>
@@ -277,17 +437,35 @@
             Enter - Go to next line and reset X position to 0
           </li>
         </ul>
-        <h3 class="help-h3">Layers Related</h3>
+        <h3 class="help-h3">
+          Layers Related
+        </h3>
         <ul class="help-list">
-          <li class="help-li">Ctrl + Shift + t - Show / Hide Layer</li>
-          <li class="help-li">Ctrl + Shift + r - Rename Layer</li>
-          <li class="help-li">Ctrl + Shift + a - Add Layer</li>
-          <li class="help-li">Ctrl + Shift + d - Delete Layer</li>
-          <li class="help-li">Ctrl + Shift + s - Move Layer Down</li>
-          <li class="help-li">Ctrl + Shift + w - Move Layer Up</li>
-          <li class="help-li">Ctrl + Shift + m - Merge All Layers</li>
+          <li class="help-li">
+            Ctrl + Shift + t - Show / Hide Layer
+          </li>
+          <li class="help-li">
+            Ctrl + Shift + r - Rename Layer
+          </li>
+          <li class="help-li">
+            Ctrl + Shift + a - Add Layer
+          </li>
+          <li class="help-li">
+            Ctrl + Shift + d - Delete Layer
+          </li>
+          <li class="help-li">
+            Ctrl + Shift + s - Move Layer Down
+          </li>
+          <li class="help-li">
+            Ctrl + Shift + w - Move Layer Up
+          </li>
+          <li class="help-li">
+            Ctrl + Shift + m - Merge All Layers
+          </li>
         </ul>
-        <h1 class="help-h1">Context Menus (right click menus)</h1>
+        <h1 class="help-h1">
+          Context Menus (right click menus)
+        </h1>
         <ul class="help-list">
           <li class="help-li">
             Right clicking on any brush preview in the main area or library will
@@ -313,7 +491,12 @@
         class="flex justify-between"
         @click="$store.commit('closeModal', 'help')"
       >
-        <t-button type="button" class="p-2 w-full"> Ok </t-button>
+        <t-button
+          type="button"
+          class="p-2 w-full"
+        >
+          Ok
+        </t-button>
       </div>
     </template>
   </t-modal>

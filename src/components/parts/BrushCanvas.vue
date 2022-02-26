@@ -14,18 +14,33 @@
         />
       </div>
 
-      <context-menu :ref="`block-menu-${hash}`" class="z-50">
+      <context-menu
+        :ref="`block-menu-${hash}`"
+        class="z-50"
+      >
         <ul>
-          <li @click="canvasToPng()" class="ab-context-menu-item">
+          <li
+            @click="canvasToPng()"
+            class="ab-context-menu-item"
+          >
             Save as PNG
           </li>
-          <li @click="startExport('clipboard')" class="ab-context-menu-item">
+          <li
+            @click="startExport('clipboard')"
+            class="ab-context-menu-item"
+          >
             Export Brush to mIRC Clipboard
           </li>
-          <li @click="startExport('file')" class="ab-context-menu-item">
+          <li
+            @click="startExport('file')"
+            class="ab-context-menu-item"
+          >
             Export Brush to mIRC File
           </li>
-          <li @click="saveToLibrary()" class="ab-context-menu-item">
+          <li
+            @click="saveToLibrary()"
+            class="ab-context-menu-item"
+          >
             Save to Library
           </li>
         </ul>

@@ -17,21 +17,20 @@
               @dragend="updateOptions"
               :min="1"
               :max="200"
-            ></vue-slider>
+            />
           </label>
         </div>
 
         <div class="mb-4">
           <label class="ml-1">
-            <span class="text-lg">Render Offscreen Blocks</span><br />
+            <span class="text-lg">Render Offscreen Blocks</span><br>
             <t-checkbox
               class="form-checkbox m-1"
               name="renderOffScreen"
               v-model="options.renderOffScreen"
               @change="updateOptions"
             />
-            <small
-              >ASCIIBIRD will avoid rendering blocks off screen to speed things
+            <small>ASCIIBIRD will avoid rendering blocks off screen to speed things
               up.
             </small>
           </label>
@@ -46,7 +45,7 @@
               @dragend="updateOptions"
               :min="1"
               :max="maxBrushHistory"
-            ></vue-slider>
+            />
           </label>
         </div>
 
@@ -59,17 +58,15 @@
               @dragend="updateOptions"
               :min="1"
               :max="maxUndoHistory"
-            ></vue-slider>
+            />
           </label>
         </div>
 
         <div class="mb-4 border-t-2">
           <label class="ml-1">
-            <span class="text-lg">Reset ASCIIBIRD state</span><br />
-            <small
-              >This will clear all data and start asciibird from a fresh
-              state.</small
-            ><br />
+            <span class="text-lg">Reset ASCIIBIRD state</span><br>
+            <small>This will clear all data and start asciibird from a fresh
+              state.</small><br>
             <div
               class="mt-1 p-2 bg-red-300 rounded-md cursor-pointer"
               @click="clearCache()"
@@ -86,8 +83,18 @@
         class="flex justify-between"
         @click="$store.commit('closeModal', 'options')"
       >
-        <t-button type="button" class="ab-button"> <span class="material-icons relative top-2 pb-4">cancel</span> Cancel </t-button>
-        <t-button type="button" class="ab-button"> <span class="material-icons relative top-2 pb-4">save</span> Ok </t-button>
+        <t-button
+          type="button"
+          class="ab-button"
+        >
+          <span class="material-icons relative top-2 pb-4">cancel</span> Cancel
+        </t-button>
+        <t-button
+          type="button"
+          class="ab-button"
+        >
+          <span class="material-icons relative top-2 pb-4">save</span> Ok
+        </t-button>
       </div>
     </template>
   </t-modal>

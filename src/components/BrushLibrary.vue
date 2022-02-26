@@ -43,7 +43,10 @@
 
         <div class="flex">
           <div v-if="panel.tab === 0">
-            <div v-for="(brush, key) in brushHistory" :key="key">
+            <div
+              v-for="(brush, key) in brushHistory"
+              :key="key"
+            >
               <t-card
                 class="hover:border-blue-900 border-gray-300 bg-gray-200 mt-2"
               >
@@ -82,7 +85,10 @@
               </p>
             </div>
 
-            <div v-for="(brush, key) in brushLibrary" :key="key">
+            <div
+              v-for="(brush, key) in brushLibrary"
+              :key="key"
+            >
               <t-card
                 :class="`hover:border-blue-900 border-gray-300 bg-gray-200 mt-2`"
               >

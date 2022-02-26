@@ -5,9 +5,15 @@
       @mouseleave="isMouseOnCanvas = false"
       @mouseenter="isMouseOnCanvas = true"
     >
-      <context-menu ref="editor-menu" class="z-50">
+      <context-menu
+        ref="editor-menu"
+        class="z-50"
+      >
         <ul>
-          <li @click="canvasToPng()" class="ml-1 text-sm hover:bg-gray-400">
+          <li
+            @click="canvasToPng()"
+            class="ml-1 text-sm hover:bg-gray-400"
+          >
             Save as PNG
           </li>
           <li
@@ -43,7 +49,7 @@
           :style="imageOverlayStyle"
           :width="currentAsciiWidth * blockWidth"
           :height="currentAsciiHeight * blockHeight"
-        ></canvas>
+        />
 
         <canvas
           ref="canvas"
@@ -75,6 +81,8 @@
 
 <script>
 import ContextMenu from "./../components/parts/ContextMenu.vue";
+import VueDraggableResizable from 'vue-draggable-resizable';
+
 import {
   toolbarIcons,
   mircColours99,
@@ -96,6 +104,7 @@ export default {
   name: "Editor",
   components: {
     ContextMenu,
+    VueDraggableResizable
   },
   async mounted() {
     this.ctx = this.canvasRef.getContext("2d");

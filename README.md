@@ -78,13 +78,15 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 # Roadmap and Bug To Fixes
 
-### v1 is released, thanks pals!
+## v1 is released, thanks pals!
 
-* Fix up help modal
+### Working on now
+
+* Unit testing
+* char panel has bg,fg when displaying chars, outline chars if same colours
 
 ### v 1.2
 
-* Unit testing
 * More tooltips on other parts, at the moment only Toolbar has tooltips, option to disable tooltips
 * Fix brush tool for seamless lines when drawing fast
 * Warning on mirc export if ascii exceeds IRCs 512 per chat line limit.

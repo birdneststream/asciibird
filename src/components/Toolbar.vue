@@ -28,7 +28,10 @@
               :disabled="!canBg && !canText"
             />
             <t-dropdown toggle-on-hover>
-              <span class="ab-checkbox-label" slot="trigger">FG</span>
+              <span
+                class="ab-checkbox-label"
+                slot="trigger"
+              >FG</span>
               <template>
                 <div
                   class="
@@ -55,7 +58,10 @@
               checked
             />
             <t-dropdown toggle-on-hover>
-              <span class="ab-checkbox-label" slot="trigger">BG</span>
+              <span
+                class="ab-checkbox-label"
+                slot="trigger"
+              >BG</span>
               <template>
                 <div
                   class="
@@ -80,8 +86,14 @@
               v-model="toolbarState.targetingChar"
               :disabled="!canFg && !canBg"
             />
-            <t-dropdown toggle-on-hover class="">
-              <span class="ab-checkbox-label" slot="trigger">Text</span>
+            <t-dropdown
+              toggle-on-hover
+              class=""
+            >
+              <span
+                class="ab-checkbox-label"
+                slot="trigger"
+              >Text</span>
               <template>
                 <span
                   class="
@@ -92,8 +104,7 @@
                     group-hover:animate-tooltip_show
                     ml-2
                   "
-                  >Ignore Characters when Editing</span
-                >
+                >Ignore Characters when Editing</span>
               </template>
             </t-dropdown>
           </label>
@@ -114,7 +125,10 @@
             "
           >
             <t-dropdown toggle-on-hover>
-              <span class="material-icons" slot="trigger">more_horiz</span>
+              <span
+                class="material-icons"
+                slot="trigger"
+              >more_horiz</span>
               <template>
                 <div
                   class="
@@ -146,7 +160,10 @@
             "
           >
             <t-dropdown toggle-on-hover>
-              <span class="material-icons" slot="trigger">more_vert</span>
+              <span
+                class="material-icons"
+                slot="trigger"
+              >more_vert</span>
               <template>
                 <div
                   class="
@@ -182,7 +199,10 @@
             "
           >
             <t-dropdown toggle-on-hover>
-              <span class="material-icons" slot="trigger">color_lens</span>
+              <span
+                class="material-icons"
+                slot="trigger"
+              >color_lens</span>
               <template>
                 <div
                   class="
@@ -216,7 +236,10 @@
             "
           >
             <t-dropdown toggle-on-hover>
-              <span class="material-icons" slot="trigger">{{
+              <span
+                class="material-icons"
+                slot="trigger"
+              >{{
                 !this.gridView ? "grid_on" : "grid_off"
               }}</span>
 
