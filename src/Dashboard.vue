@@ -496,7 +496,7 @@ export default {
             click: () => this.changeTab(i),
             
             icon: "insert_drive_file",
-            hotkey: `ctrl+${i}`,
+            hotkey: `ctrl+shift+${i}`,
           });
         }
       }

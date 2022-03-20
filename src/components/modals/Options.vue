@@ -16,7 +16,7 @@
               v-model="options.fps"
               @dragend="updateOptions"
               :min="1"
-              :max="200"
+              :max="1000"
             />
           </label>
         </div>

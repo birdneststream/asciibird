@@ -82,9 +82,8 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 ### Working on now
 
+* If you drag a panel, then right click you can't drag it anymore
 * Unit testing
-* char panel has bg,fg when displaying chars, outline chars if same colours
-
 ### v 1.2
 
 * More tooltips on other parts, at the moment only Toolbar has tooltips, option to disable tooltips
@@ -100,6 +99,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
 * Context menus inside the panels can be way off sometimes
 * Main toolbar can sometimes get stuck and unmovable
 * Expand the brush manager, brush categories, download brushes, import/export brushes
+* Hotkeys for forst 10 brushes
 * ASCIIBIRD API ?!
 
 ## Mobile / Touch Screen support

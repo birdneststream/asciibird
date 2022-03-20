@@ -14,6 +14,13 @@ import hotkeysImport from 'hotkeys-js';
 const localVue = createLocalVue()
 localVue.use(Vuex)
 
+// Test cases will cover most of asciibirds stuff
+// Make new ascii
+// Import ascii
+// Change tabs ?
+// Whatever tools on both
+
+
 describe('Editor.vue', () => {
   let actions
   let state
@@ -39,6 +46,8 @@ describe('Editor.vue', () => {
         height: 5,
       }
     })
+
+    
 
   })
 
@@ -73,4 +82,5 @@ describe('Editor.vue', () => {
       "selectedLayer": 0
     });
   })
+
 })

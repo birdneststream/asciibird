@@ -32,7 +32,7 @@
 
     <t-button
       type="button"
-      :style="`background-color: ${mircColours[currentBg]} !important;color: ${mircColours[currentFg]};`"
+      :style="`background-color: ${mircColours[currentBg]} !important;color: ${mircColours[currentFg]};${outline}`"
       class="border-gray-200 w-14 h-14 text-2xl ml-14"
       id="currentChar"
       @click="
@@ -63,6 +63,14 @@ export default {
     currentBg() {
       return this.$store.getters.currentBg;
     },
+    outline() {
+      let outlineColor = this.currentBg === 0 ? 'black' : 'white';
+      if (this.currentFg === this.currentBg) {
+        return `-webkit-text-stroke-width: 0.5px;-webkit-text-stroke-color: ${outlineColor};`;
+      }
+
+      return "";
+    }
   },
   methods: {
     swapColours() {

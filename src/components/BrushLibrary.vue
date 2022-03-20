@@ -43,10 +43,7 @@
 
         <div class="flex">
           <div v-if="panel.tab === 0">
-            <div
-              v-for="(brush, key) in brushHistory"
-              :key="key"
-            >
+            <div v-for="(brush, key) in brushHistory" :key="key">
               <t-card
                 class="hover:border-blue-900 border-gray-300 bg-gray-200 mt-2"
               >
@@ -85,13 +82,13 @@
               </p>
             </div>
 
-            <div
-              v-for="(brush, key) in brushLibrary"
-              :key="key"
-            >
+            <div v-for="(brush, key) in brushLibrary" :key="key">
               <t-card
                 :class="`hover:border-blue-900 border-gray-300 bg-gray-200 mt-2`"
               >
+                <small v-if="key <= 9"
+                  >Ctrl+{{ key === 9 ? 0 : key + 1 }}</small
+                >
                 <BrushCanvas :blocks="decompressBlock(brush.blocks)" />
 
                 <t-button
@@ -107,6 +104,24 @@
                   @click="reuseBlocks(decompressBlock(brush.blocks))"
                 >
                   <span class="material-icons">brush</span>
+                </t-button>
+
+                <t-button
+                  v-if="key !== 0"
+                  type="button"
+                  class="ab-rounded-button ml-1 mt-1"
+                  @click="upBrush(key)"
+                >
+                  <span class="material-icons">arrow_upward</span>
+                </t-button>
+
+                <t-button
+                  type="button"
+                  class="ab-rounded-button ml-1 mt-1"
+                  @click="downBrush(key)"
+                  v-if="key !== brushLibrary.length-1"
+                >
+                  <span class="material-icons">arrow_downward</span>
                 </t-button>
               </t-card>
             </div>
@@ -128,7 +143,7 @@
 </style>
 
 <script>
-import { mircColours99, blockWidth, blockHeight } from "../ascii";
+import { mircColours99, blockWidth, blockHeight, toolbarIcons } from "../ascii";
 import BrushCanvas from "./parts/BrushCanvas.vue";
 import LZString from "lz-string";
 
@@ -140,6 +155,21 @@ export default {
     this.panel.w = this.brushLibraryState.w;
     this.panel.h = this.brushLibraryState.h;
     this.panel.tab = this.brushLibraryState.tab;
+
+    var _this = this;
+    hotkeys(`${this.hotkeyBrushes}`, async function (event, handler) {
+      event.preventDefault();
+
+      if (_this.isBrushing || _this.isErasing) {
+        let brushSelect =
+          Number.parseInt(event.key) !== 0 ? Number.parseInt(event.key) - 1 : 9;
+        if (_this.brushLibrary[brushSelect]) {
+          _this.reuseBlocks(
+            _this.decompressBlock(_this.brushLibrary[brushSelect].blocks)
+          );
+        }
+      }
+    });
   },
   data: () => ({
     panel: {
@@ -157,6 +187,13 @@ export default {
   },
   props: ["yOffset"],
   computed: {
+    hotkeyBrushes() {
+      let hotkeyString = "";
+      for (let i = 0; i <= 9; i++) {
+        hotkeyString = `${hotkeyString}ctrl+${i},`;
+      }
+      return hotkeyString;
+    },
     blockWidth() {
       return blockWidth * this.blockSizeMultiplier;
     },
@@ -188,6 +225,18 @@ export default {
       return this.brushLibrary.length > 0
         ? `(${this.brushLibrary.length})`
         : "";
+    },
+    toolbarIcons() {
+      return toolbarIcons;
+    },
+    currentTool() {
+      return toolbarIcons[this.$store.getters.currentTool];
+    },
+    isBrushing() {
+      return this.currentTool.name === "brush";
+    },
+    isErasing() {
+      return this.currentTool.name === "eraser";
     },
   },
   watch: {
@@ -225,6 +274,12 @@ export default {
     removeFromHistory(value) {
       this.$store.commit("removeBrushHistory", value);
       this.$toasted.show(`Removed brush from History`);
+    },
+    upBrush(key) {
+      this.$store.commit("upBrush", key);
+    },
+    downBrush(key) {
+      this.$store.commit("downBrush", key);
     },
     onResize(x, y, w, h) {
       this.panel.x = x;
