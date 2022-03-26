@@ -99,7 +99,6 @@ A most latest production build to use is available at https://asciibird.jewbird.
 * Context menus inside the panels can be way off sometimes
 * Main toolbar can sometimes get stuck and unmovable
 * Expand the brush manager, brush categories, download brushes, import/export brushes
-* Hotkeys for forst 10 brushes
 * ASCIIBIRD API ?!
 
 ## Mobile / Touch Screen support
@@ -175,6 +174,7 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 ## Brush Mode
 
 * Four arrow keys control text cursor
+* Ctrl 1 to 0 - change hotkeyable brush
 * Space - apply brush
 * Ctrl + ] - Increase both brush sizes by 1
 * Ctrl + [ - Decrease both brush sizes by 1

@@ -409,26 +409,31 @@ export default new Vuex.Store({
 
     },
     upBrush(state, key) {
-      let tempBrushLibrary = [ ... state.brushLibrary];
+      let tempBrushLibrary = [...state.brushLibrary];
 
-      let swap1 = tempBrushLibrary[key - 1];
-      let swap = tempBrushLibrary[key];
+      if (tempBrushLibrary[key - 1] && tempBrushLibrary[key]) {
+        let swap1 = tempBrushLibrary[key - 1];
+        let swap = tempBrushLibrary[key];
 
-      tempBrushLibrary[key - 1] = swap
-      tempBrushLibrary[key] = swap1
+        tempBrushLibrary[key - 1] = swap
+        tempBrushLibrary[key] = swap1
 
-      state.brushLibrary = tempBrushLibrary
+        state.brushLibrary = tempBrushLibrary
+      }
     },
     downBrush(state, key) {
-      let tempBrushLibrary = [ ... state.brushLibrary];
+      let tempBrushLibrary = [...state.brushLibrary];
 
-      let swap1 = tempBrushLibrary[key + 1];
-      let swap = tempBrushLibrary[key];
+      if (tempBrushLibrary[key + 1] && tempBrushLibrary[key]) {
+        let swap1 = tempBrushLibrary[key + 1];
+        let swap = tempBrushLibrary[key];
 
-      tempBrushLibrary[key + 1] = swap
-      tempBrushLibrary[key] = swap1
+        tempBrushLibrary[key + 1] = swap
+        tempBrushLibrary[key] = swap1
 
-      state.brushLibrary = tempBrushLibrary
+        state.brushLibrary = tempBrushLibrary
+      }
+
     },
     downLayer(state, payload) {
       let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]

@@ -1,8 +1,5 @@
 <template>
-  <div
-    id="app"
-    @contextmenu.prevent
-  >
+  <div id="app" @contextmenu.prevent>
     <div v-show="menuBarVisible">
       <vue-file-toolbar-menu
         :content="myMenu"
@@ -31,10 +28,7 @@
       :canvas-y="canvasY"
     />
 
-    <context-menu
-      ref="menu"
-      class="z-50"
-    >
+    <context-menu ref="menu" class="z-50">
       <ul>
         <li
           @click="$store.commit('openModal', 'new-ascii')"
@@ -64,10 +58,7 @@
           Options
         </li>
 
-        <li
-          @click="startImport('mirc')"
-          class="ab-context-menu-item"
-        >
+        <li @click="startImport('mirc')" class="ab-context-menu-item">
           Import mIRC from File
         </li>
         <li
@@ -104,10 +95,7 @@
         >
           Save Asciibird State
         </li>
-        <li
-          @click="startImport('asb')"
-          class="ab-context-menu-item"
-        >
+        <li @click="startImport('asb')" class="ab-context-menu-item">
           Load Asciibird State
         </li>
       </ul>
@@ -123,7 +111,7 @@
       style="display: none"
       ref="asciiInput"
       @change="onImport()"
-    >
+    />
 
     <template v-if="asciibirdMeta.length">
       <div
@@ -148,10 +136,10 @@
               <t-button
                 class="relative bottom-1 z-40 rounded-3xl h-5"
                 @click="closeTab(key)"
-              ><span
-                class="material-icons"
-                style="font-size: 16px"
-              >close</span></t-button>
+                ><span class="material-icons" style="font-size: 16px"
+                  >close</span
+                ></t-button
+              >
             </span>
           </t-button>
         </span>
@@ -168,10 +156,7 @@
         :reset-select="resetSelect"
       />
 
-      <Toolbar
-        v-show="toolbarState.visible"
-        :y-offset="scrollOffset"
-      />
+      <Toolbar v-show="toolbarState.visible" :y-offset="scrollOffset" />
 
       <DebugPanel
         :canvas-x="canvasX"
@@ -209,7 +194,15 @@
     </template>
     <template v-else>
       <div
-        class="absolute left-1/2 transform -translate-x-1/2 text-center top-1/2 -translate-y-1/2"
+        class="
+          absolute
+          left-1/2
+          transform
+          -translate-x-1/2
+          text-center
+          top-1/2
+          -translate-y-1/2
+        "
         @mouseup.right="openContextMenu"
       >
         <BrushCanvas :blocks="this.splashAscii()" />
@@ -257,7 +250,7 @@ import {
   getBlocksWidth,
   emptyBlock,
   canvasToPng,
-  maxBrushSize
+  maxBrushSize,
 } from "./ascii";
 
 import VueFileToolbarMenu from "vue-file-toolbar-menu";
@@ -297,7 +290,7 @@ export default {
     ImageOverlay,
     VueFileToolbarMenu,
     About,
-    Help
+    Help,
   },
   name: "Dashboard",
   data: () => ({
@@ -395,7 +388,6 @@ export default {
       return menu.reverse();
     },
     isKeyboardDisabled() {
-      
       return this.$store.getters.isKeyboardDisabled;
     },
     selectedLayer() {
@@ -494,7 +486,7 @@ export default {
           menu.push({
             text: ascii.title,
             click: () => this.changeTab(i),
-            
+
             icon: "insert_drive_file",
             hotkey: `ctrl+shift+${i}`,
           });
@@ -673,20 +665,33 @@ export default {
               hotkey: "Delete",
             },
             {
-              text: "Save Selection to Library",
+              text: "Save Selection/Brush to Library",
               click: () => {
-                if (this.selectedBlocks.length) {
-                  this.resetSelect = !this.resetSelect;
-                  this.$store.commit("pushBrushLibrary", filterNullBlocks(this.selectedBlocks));
-                  this.selectedBlocks = [];
-                  this.$toasted.show("Saved brush to Library!", {
-                    type: "success",
-                    icon: "brush",
-                  });
+                if (this.isBrushing) {
+                  this.$store.commit(
+                    "pushBrushLibrary",
+                    filterNullBlocks(this.brushBlocks)
+                  );
                 }
+
+                if (
+                  this.selectedBlocks.length && this.isSelecting
+                ) {
+                  this.resetSelect = !this.resetSelect;
+                  this.$store.commit(
+                    "pushBrushLibrary",
+                    filterNullBlocks(this.selectedBlocks)
+                  );
+                  this.selectedBlocks = [];
+                }
+
+                this.$toasted.show("Saved brush to Library!", {
+                  type: "success",
+                  icon: "brush",
+                });
               },
               icon: "brush",
-              disabled: !this.isSelected && !this.selectedBlocks.length,
+              disabled: (!this.isBrushing && !(this.selectedBlocks.length || this.isSelecting)),
               hotkey: !this.isMacLike ? "ctrl+b" : "command+b",
             },
           ],
@@ -1156,18 +1161,18 @@ export default {
     isModalOpen(val, old) {
       if (val) {
         hotkeys.deleteScope("all");
-      } 
+      }
     },
     isKeyboardDisabled(val, old) {
       if (val) {
         hotkeys.deleteScope("all");
-      } 
+      }
     },
-    currentTool(val,old) {
+    currentTool(val, old) {
       if (old === "select") {
         this.selectedBlocks = [];
       }
-    }
+    },
   },
   methods: {
     updateAsciiDetails(widthHeight) {
