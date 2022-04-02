@@ -6,7 +6,10 @@ import Vuex from 'vuex'
 import Editor from '@/views/Editor.vue'
 import vuexStore from '../../src/store/index'
 import {
-  createNewAscii
+  createNewAscii,
+  exportMirc,
+  mergeLayers,
+  cyrb53
 } from '../../src/ascii'
 import 'jest-canvas-mock';
 import hotkeysImport from 'hotkeys-js';
@@ -27,14 +30,6 @@ describe('Editor.vue', () => {
   let store
 
   beforeEach(() => {
-    // state = {
-    //   clicks: 2
-    // }
-
-    // actions = {
-    //   moduleActionClick: jest.fn()
-    // }
-
     store = vuexStore
     hotkeys = hotkeysImport
 
@@ -57,7 +52,6 @@ describe('Editor.vue', () => {
       localVue,
       hotkeys
     })
-
 
     expect(store.getters.asciibirdMeta[0]).toStrictEqual({
       "title": "New Test ASCII",
@@ -82,5 +76,52 @@ describe('Editor.vue', () => {
       "selectedLayer": 0
     });
   })
+
+
+  it('new ascii exports as expected', () => {
+    const wrapper = mount(Editor, {
+      store,
+      localVue,
+      hotkeys
+    })
+
+    // Blank ascii exported to mIRC
+    let mircExportHash = cyrb53(exportMirc(mergeLayers()).output.join(""));
+
+    expect(mircExportHash).toEqual(182731023251036);
+  })
+
+
+  it('fill tool on new ascii and export', () => {
+    const wrapper = mount(Editor, {
+      store,
+      localVue,
+      hotkeys,
+    })
+
+    wrapper.vm.x = 1;
+    wrapper.vm.y = 1;
+
+    wrapper.vm.fill(false);
+    
+    // Black canvas fill
+    let mircExportHash = cyrb53(exportMirc(mergeLayers()).output.join(""));
+    expect(mircExportHash).toEqual(8495140863968528);
+  })
+
+
+  // it('brush tool on new ascii and export', () => {
+  //   const wrapper = mount(Editor, {
+  //     store,
+  //     localVue,
+  //     hotkeys,
+  //   })
+
+  //   // Black canvas fill
+  //   let mircExportHash = cyrb53(exportMirc(mergeLayers()).output.join(""));
+  //   expect(mircExportHash).toEqual(182731023251036);
+  // })
+
+
 
 })

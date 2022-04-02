@@ -200,8 +200,7 @@
           transform
           -translate-x-1/2
           text-center
-          top-1/2
-          -translate-y-1/2
+
         "
         @mouseup.right="openContextMenu"
       >

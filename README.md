@@ -83,6 +83,8 @@ A most latest production build to use is available at https://asciibird.jewbird.
 ### Working on now
 
 * If you drag a panel, then right click you can't drag it anymore
+* Resize canvas undo
+* When undoing blocks defaults to current fg instead of blocks fg
 * Unit testing
 ### v 1.2
 
