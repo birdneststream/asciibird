@@ -9,7 +9,8 @@ import {
   createNewAscii,
   exportMirc,
   mergeLayers,
-  cyrb53
+  cyrb53,
+  toolbarIcons
 } from '../../src/ascii'
 import 'jest-canvas-mock';
 import hotkeysImport from 'hotkeys-js';
@@ -40,9 +41,7 @@ describe('Editor.vue', () => {
         width: 5,
         height: 5,
       }
-    })
-
-    
+    })   
 
   })
 
@@ -115,11 +114,20 @@ describe('Editor.vue', () => {
   //     store,
   //     localVue,
   //     hotkeys,
+  //     toolbarIcons
   //   })
 
-  //   // Black canvas fill
-  //   let mircExportHash = cyrb53(exportMirc(mergeLayers()).output.join(""));
-  //   expect(mircExportHash).toEqual(182731023251036);
+  //   wrapper.vm.x = 0;
+  //   wrapper.vm.y = 0;
+
+  //   // console.log(exportMirc(mergeLayers()).output.join(""));
+
+  //   store.commit('changeTool', 'brush');
+
+  //   const canvasTools = wrapper.find('#canvastools')
+  //   canvasTools.trigger('click');
+
+  //   // console.log(exportMirc(mergeLayers()).output.join(""));
   // })
 
 

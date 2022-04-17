@@ -283,8 +283,8 @@ export const parseMircAscii = async (contents, filename) => {
 
         // \x03 without color code is a soft block reset 
         if (matches[1] === undefined && matches[2] === undefined) {
-          block.fg = 1;
-          block.bg = 0;
+          block.fg = null;
+          block.bg = null;
           continue;
         }
 
