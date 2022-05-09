@@ -574,6 +574,7 @@ export default new Vuex.Store({
         if (prev.old) {
           for (let change in prev.old) {
             let data = prev.old[change];
+            console.log(data);
             if (tempLayers[prev.l] !== undefined) {
               tempLayers[prev.l].data[data.y][data.x] = {
                 ...data.b
@@ -584,8 +585,6 @@ export default new Vuex.Store({
 
         state.asciibirdMeta[state.tab].layers = LZString.compressToUTF16(JSON.stringify(
           tempLayers));
-
-
 
         state.asciibirdMeta[state.tab].historyIndex--;
 

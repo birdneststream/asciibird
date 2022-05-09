@@ -84,7 +84,8 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 * If you drag a panel, then right click you can't drag it anymore
 * Resize canvas undo
-* When undoing blocks defaults to current fg instead of blocks fg
+* Chzz's corrupt state, maybe running out of internal space?
+* Bug with hotkey brush switching, if make a new ascii hotkeys are broke - something to do with the hotkey function
 * Unit testing
 ### v 1.2
 

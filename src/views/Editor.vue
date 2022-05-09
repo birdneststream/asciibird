@@ -393,13 +393,15 @@ export default {
   },
   watch: {
     currentAsciiHeight(val) {
+       console.log(val);
         this.canvas.height = val * blockHeight;
     },
     currentAsciiWidth(val) {
+       console.log(val);
       this.canvas.width = val * blockWidth;
     },
     async currentAscii(val, old) {
-      if (val !== old) {
+      if (JSON.stringify(val) !== JSON.stringify(old)) {
         this.canvas.width = this.currentAsciiWidth * blockWidth;
         this.canvas.height = this.currentAsciiHeight * blockHeight;
         await this.delayRedrawCanvas();
@@ -704,12 +706,12 @@ export default {
           // Normal typing
           default:
             if (char.length === 1) {
+              oldBlock = { ...targetBlock };
+              targetBlock.char = char;
+
               if (this.canFg) {
                 targetBlock.fg = this.currentFg;
               }
-
-              oldBlock = { ...targetBlock };
-              targetBlock.char = char;
 
               this.storeDiffBlocks(
                 this.textEditing.startX,

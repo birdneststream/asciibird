@@ -161,9 +161,11 @@ export default {
       event.preventDefault();
 
       if (_this.isBrushing || _this.isErasing) {
+        
         let brushSelect =
           Number.parseInt(event.key) !== 0 ? Number.parseInt(event.key) - 1 : 9;
         if (_this.brushLibrary[brushSelect]) {
+          
           _this.reuseBlocks(
             _this.decompressBlock(_this.brushLibrary[brushSelect].blocks)
           );
