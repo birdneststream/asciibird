@@ -80,6 +80,7 @@ export default new Vuex.Store({
       updateBrush: true,
       gridView: false,
       visible: true,
+      halfBlockEditing: false,
     },
     debugPanelState: {
       x: blockWidth * 40,
@@ -667,6 +668,9 @@ export default new Vuex.Store({
     },
     toggleGridView(state, payload) {
       state.toolbarState.gridView = payload;
+    },
+    toggleHalfBlockEditing(state, payload) {
+      state.toolbarState.halfBlockEditing = payload;
     },
     toggleUpdateBrush(state, payload) {
       state.toolbarState.updateBrush = payload;

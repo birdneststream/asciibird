@@ -262,6 +262,49 @@
               </template>
             </t-dropdown>
           </t-button>
+
+          <t-button
+            type="button"
+            :class="`ab-toolbar-button ${
+              toolbarState.halfBlockEditing
+                ? 'border-gray-900 bg-blue-800'
+                : 'border-gray-200 bg-gray-500'
+            }`"
+            @click="
+              toolbarState.halfBlockEditing = !toolbarState.halfBlockEditing;
+              $store.commit('toggleHalfBlockEditing', toolbarState.halfBlockEditing);
+              $toasted.show(
+                `Half Block Editing Mode ${toolbarState.halfBlockEditing ? 'enabled' : 'disabled'}`
+              );
+            "
+          >
+            <t-dropdown toggle-on-hover>
+              <span
+                class="material-icons"
+                slot="trigger"
+              >{{
+                "grid_view"
+              }}</span>
+
+              <template>
+                <div
+                  class="
+                    bg-gray-500
+                    absolute
+                    opacity-0
+                    invisible
+                    group-hover:animate-tooltip_show
+                    ml-2
+                  "
+                >
+                  <span class="material-icons">{{
+                    "grid_view"
+                  }}</span>
+                  Toggle Half Block Editing Mode
+                </div>
+              </template>
+            </t-dropdown>
+          </t-button>
         </div>
 
         <div class="border-t border-black border-opacity-10 pt-2">
@@ -379,6 +422,9 @@ export default {
     },
     gridView() {
       return this.toolbarState.gridView;
+    },
+    halfBlockEditing() {
+      return this.toolbarState.halfBlockEditing;
     },
     updateBrush() {
       return this.toolbarState.updateBrush;
