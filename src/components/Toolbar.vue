@@ -128,7 +128,7 @@
               <span
                 class="material-icons"
                 slot="trigger"
-              >more_horiz</span>
+              >more_vert</span>
               <template>
                 <div
                   class="
@@ -163,7 +163,7 @@
               <span
                 class="material-icons"
                 slot="trigger"
-              >more_vert</span>
+              >more_horiz</span>
               <template>
                 <div
                   class="
@@ -275,6 +275,10 @@
               $store.commit('toggleHalfBlockEditing', toolbarState.halfBlockEditing);
               $toasted.show(
                 `Half Block Editing Mode ${toolbarState.halfBlockEditing ? 'enabled' : 'disabled'}`
+              );
+
+              $toasted.show(
+                `WARNING THIS FEATURE IS STILL EXPERIMENTAL`
               );
             "
           >

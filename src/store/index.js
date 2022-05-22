@@ -547,8 +547,6 @@ export default new Vuex.Store({
 
           state.asciibirdMeta[state.tab].historyIndex--;
 
-
-
           // Automatically select the next best layer to avoid bugs
           let selectedLayer = state.asciibirdMeta[state.tab].selectedLayer
 
@@ -575,7 +573,6 @@ export default new Vuex.Store({
         if (prev.old) {
           for (let change in prev.old) {
             let data = prev.old[change];
-            console.log(data);
             if (tempLayers[prev.l] !== undefined) {
               tempLayers[prev.l].data[data.y][data.x] = {
                 ...data.b

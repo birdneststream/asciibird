@@ -82,6 +82,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 ### Working on now
 
+* Half block editing mode
 * If you drag a panel, then right click you can't drag it anymore
 * Resize canvas undo
 * Chzz's corrupt state, maybe running out of internal space?
@@ -96,7 +97,6 @@ A most latest production build to use is available at https://asciibird.jewbird.
 * Fill tool is limited by the recursion limit on the browser. Each browser has a different limit. Filling an empty 80x196 ascii will throw a recursion error on firefox, but not on Safari for this reason. We can review the fill feature in a future version of ASCII bird.
 * More fill tool options?
 * Brush blocks larger than 1x1 can leave undoable blocks
-* Half block editing mode
 * This one time this ascii exported with a 1 more width and height
 * Dark / light modes, different themes
 * Context menus inside the panels can be way off sometimes

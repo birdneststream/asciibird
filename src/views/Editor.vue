@@ -396,11 +396,9 @@ export default {
   },
   watch: {
     currentAsciiHeight(val) {
-      console.log(val);
       this.canvas.height = val * blockHeight;
     },
     currentAsciiWidth(val) {
-      console.log(val);
       this.canvas.width = val * blockWidth;
     },
     async currentAscii(val, old) {
@@ -1204,7 +1202,7 @@ export default {
       this.x = Math.floor(this.x / blockWidth);
       this.y = Math.floor(this.y / blockHeight);
 
-      if (this.x === lastX && this.y === lastY) {
+      if (this.x === lastX && this.y === lastY && !this.halfBlockEditing) {
         return;
       }
 
@@ -1701,255 +1699,57 @@ export default {
     //
     // Functions related to drawBrush function bellow
     //
-    async drawHalfBlocks(brushX, brushY, brushBlock, plain = false) {
+    async drawHalfBlocks(brushX, brushY, plain = false) {
       const arrayY = brushY / blockHeight;
       const arrayX = brushX / blockWidth;
-      const asciiWidth = this.currentAsciiWidth;
-      const asciiHeight = this.currentAsciiHeight;
       let targetBlock = this.currentAsciiLayerBlocks[arrayY][arrayX];
 
       let topChar = "▀";
       let bottomChar = "▄";
       let fullChar = "█";
+      let drawOnBg = false;
 
       let drawChar = !this.atTopHalf ? bottomChar : topChar;
-      
-      if ((this.atTopHalf && targetBlock.char === bottomChar) || (!this.atTopHalf && targetBlock.char === topChar)) {
-        drawChar = fullChar
+
+      if (targetBlock.char === fullChar) {
+        drawChar = fullChar;
+        drawOnBg = true;
       }
 
-      let actualBrushY = this.atTopHalf ? brushY : brushY + (blockHeight / 2);
-      await this.clearToolCanvas();
-
-      if (plain) {
-        // Used for eraser preview and other non brushes
-        let indicatorColour = targetBlock.bg === 0 ? 1 : 0;
-
-        if (targetBlock.bg === 8) {
-          indicatorColour = 1;
-        }
-
-        this.toolCtx.fillStyle = this.mircColours[indicatorColour];
-
-        this.toolCtx.fillRect(brushX, brushY, blockWidth, blockHeight / 2);
-
-        if (this.mirrorX) {
-          this.toolCtx.fillRect(
-            (asciiWidth - arrayX) * blockWidth,
-            actualBrushY,
-            blockWidth,
-            blockHeight / 2
-          );
-        }
-
-        if (this.mirrorY) {
-          this.toolCtx.fillRect(
-            brushX,
-            (asciiHeight - arrayY) * blockHeight / 2,
-            blockWidth,
-            blockHeight / 2
-          );
-        }
-
-        if (this.mirrorY && this.mirrorX) {
-          this.toolCtx.fillRect(
-            (asciiWidth - arrayX) * blockWidth,
-            (asciiHeight - arrayY) * blockHeight / 2,
-            blockWidth,
-            blockHeight / 2
-          );
-        }
-
-        return;
+      if (
+        (targetBlock.char === bottomChar && this.atTopHalf) ||
+        (targetBlock.char === topChar && !this.atTopHalf)
+      ) {
+        drawChar = fullChar;
       }
 
-      this.toolCtx.fillStyle =
-        brushBlock.bg !== undefined
-          ? this.mircColours[brushBlock.bg]
-          : "rgba(255,255,255,0.4)";
-
-      this.toolCtx.fillStyle =
-        brushBlock.fg !== undefined
-          ? this.mircColours[brushBlock.fg]
-          : "#FFFFFF";
-
-      // If no target is specified we assume we are rendering the text
+      // console.log(
+      //   this.atTopHalf,
+      //   drawChar,
+      //   drawOnBg,
+      //   JSON.stringify(targetBlock)
+      // );
 
       this.toolCtx.font = "Hack 13px";
-
-      this.toolCtx.fillStyle = this.canFg
-        ? this.mircColours[brushBlock.fg]
-        : "#FFFFFF";
-
-      this.toolCtx.fillText(brushBlock.char, brushX, brushY + blockHeight - 3);
-
-      if (this.mirrorX) {
-        this.toolCtx.fillText(
-          brushBlock.char,
-          (asciiWidth - arrayX) * blockWidth,
-          brushY + blockHeight - 4
-        );
-      }
-
-      if (this.mirrorY) {
-        this.toolCtx.fillText(
-          brushBlock.char,
-          brushX,
-          (asciiHeight - arrayY) * blockHeight + 10
-        );
-      }
-      if (this.mirrorY && this.mirrorX) {
-        this.toolCtx.fillText(
-          brushBlock.char,
-          (asciiWidth - arrayX) * blockWidth,
-          (asciiHeight - arrayY) * blockHeight + 10
-        );
-      }
+      this.toolCtx.fillStyle = this.mircColours[this.currentFg];
+      this.toolCtx.fillText(
+        !this.atTopHalf ? bottomChar : topChar,
+        brushX,
+        brushY + blockHeight - 3
+      );
 
       // Apply text to ascii blocks
       if (this.canTool) {
-        targetBlock["char"] = drawChar;
-
-        if (
-          this.mirrorX &&
-          this.currentAsciiLayerBlocks[arrayY] &&
-          this.currentAsciiLayerBlocks[arrayY][asciiWidth - arrayX]
-        ) {
-          this.currentAsciiLayerBlocks[arrayY][asciiWidth - arrayX].char =
-            brushBlock.char;
-        }
-
-        if (
-          this.mirrorY &&
-          this.currentAsciiLayerBlocks[asciiHeight - arrayY] &&
-          this.currentAsciiLayerBlocks[asciiHeight - arrayY][arrayX]
-        ) {
-          this.currentAsciiLayerBlocks[asciiHeight - arrayY][arrayX].char =
-            brushBlock.char;
-        }
-
-        if (
-          this.mirrorY &&
-          this.mirrorX &&
-          this.currentAsciiLayerBlocks[asciiHeight - arrayY] &&
-          this.currentAsciiLayerBlocks[asciiHeight - arrayY][
-            asciiWidth - arrayX
-          ]
-        ) {
-          this.currentAsciiLayerBlocks[asciiHeight - arrayY][
-            asciiWidth - arrayX
-          ].char = brushBlock.char;
-        }
-
-        return;
-      }
-
-      if (this.canBg) {
-        await this.clearToolCanvas();
-        this.toolCtx.setLineDash([1, 2]);
-        this.toolCtx.strokeRect(brushX, actualBrushY, blockWidth, blockHeight / 2);
-        this.toolCtx.fillRect(brushX, actualBrushY, blockWidth, blockHeight / 2);
-
-        if (this.mirrorX) {
-          this.toolCtx.fillRect(
-            (asciiWidth - arrayX) * blockWidth,
-            brushY,
-            blockWidth,
-            blockHeight / 2
-          );
-
-          this.toolCtx.setLineDash([1, 2]);
-          this.toolCtx.strokeRect(
-            (asciiWidth - arrayX) * blockWidth,
-            brushY,
-            blockWidth,
-            blockHeight / 2
-          );
-        }
-
-        if (this.mirrorY) {
-          this.toolCtx.fillRect(
-            brushX,
-            (asciiHeight - arrayY) * blockHeight / 2,
-            blockWidth,
-            blockHeight / 2
-          );
-
-          this.toolCtx.setLineDash([1, 2]);
-          this.toolCtx.strokeRect(
-            brushX,
-            (asciiHeight - arrayY) * blockHeight / 2,
-            blockWidth,
-            blockHeight / 2
-          );
-        }
-
-        if (this.mirrorY && this.mirrorX) {
-          this.toolCtx.fillRect(
-            (asciiWidth - arrayX) * blockWidth,
-            (asciiHeight - arrayY) * blockHeight / 2,
-            blockWidth,
-            blockHeight / 2
-          );
-
-          this.toolCtx.setLineDash([1, 2]);
-          this.toolCtx.strokeRect(
-            (asciiWidth - arrayX) * blockWidth,
-            (asciiHeight - arrayY) * blockHeight / 2,
-            blockWidth,
-            blockHeight / 2
-          );
-        }
-      }
-
-      // Apply the actual brush block to the ascii block
-      if (this.canTool && brushBlock !== undefined) {
-        targetBlock = brushBlock;
-
-        let theX = asciiWidth - arrayX;
-        let theY = asciiHeight - arrayY;
-        let oldBlock = {};
-
-        if (
-          this.mirrorX &&
-          this.currentAsciiLayerBlocks[arrayY] &&
-          this.currentAsciiLayerBlocks[arrayY][theX] &&
-          (this.x !== theX || this.y !== arrayY)
-        ) {
-          oldBlock = { ...this.currentAsciiLayerBlocks[arrayY][theX] };
-          this.currentAsciiLayerBlocks[arrayY][theX] = brushBlock;
-
-          await this.storeDiffBlocks(theX, arrayY, oldBlock, brushBlock);
-        }
-
-        if (
-          this.mirrorY &&
-          this.currentAsciiLayerBlocks[theY] &&
-          this.currentAsciiLayerBlocks[theY][arrayX] &&
-          (this.x !== arrayX || this.y !== theY)
-        ) {
-          oldBlock = { ...this.currentAsciiLayerBlocks[theY][arrayX] };
-          this.currentAsciiLayerBlocks[theY][arrayX] = brushBlock;
-
-          await this.storeDiffBlocks(arrayX, theY, oldBlock, brushBlock);
-        }
-
-        if (
-          this.mirrorY &&
-          this.mirrorX &&
-          this.currentAsciiLayerBlocks[theY] &&
-          this.currentAsciiLayerBlocks[theY][theX] &&
-          (this.x !== theX || this.y !== theY)
-        ) {
-          oldBlock = { ...this.currentAsciiLayerBlocks[theY][theX] };
-          this.currentAsciiLayerBlocks[theY][theX] = brushBlock;
-
-          await this.storeDiffBlocks(theX, theY, oldBlock, brushBlock);
+        if (drawOnBg) {
+          targetBlock["char"] = this.atTopHalf ? bottomChar : topChar;
+          targetBlock["bg"] = this.currentFg;
+        } else {
+          targetBlock["fg"] = this.currentFg;
+          targetBlock["char"] = drawChar;
         }
       }
 
       this.toolCtx.restore();
-      return;
     },
 
     //
@@ -2022,7 +1822,7 @@ export default {
 
             if (!plain) {
               if (this.toolbarState.halfBlockEditing) {
-                await this.drawHalfBlocks(brushX, brushY, brushBlock);
+                await this.drawHalfBlocks(brushX, brushY);
               } else {
                 if (this.canBg) {
                   await this.drawBrushBlocks(brushX, brushY, brushBlock, "bg");

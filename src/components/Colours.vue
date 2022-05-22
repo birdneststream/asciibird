@@ -35,6 +35,7 @@
       :style="`background-color: ${mircColours[currentBg]} !important;color: ${mircColours[currentFg]};${outline}`"
       class="border-gray-200 w-14 h-14 text-2xl ml-14"
       id="currentChar"
+      :disabled="halfBlockEditing"
       @click="
         $store.commit('changeIsUpdatingChar', !toolbarState.isChoosingChar)
       "
@@ -70,7 +71,10 @@ export default {
       }
 
       return "";
-    }
+    },
+    halfBlockEditing() {
+      return this.toolbarState.halfBlockEditing;
+    },
   },
   methods: {
     swapColours() {
