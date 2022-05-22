@@ -498,6 +498,12 @@ export default {
     async currentAsciiLayers(val, old) {
       await this.delayRedrawCanvas(true);
     },
+    halfBlockEditing(val, old) {
+      if (val !== old && this.gridView) {
+        this.clearToolCanvas();
+        this.drawGrid();
+      }
+    }
   },
   methods: {
     startExport(type) {
@@ -876,7 +882,7 @@ export default {
       this.toolCtx.stroke();
 
       this.toolCtx.beginPath();
-      for (var y = 1; y <= h; y += blockHeight) {
+      for (var y = 1; y <= h; y += this.halfBlockEditing ? (blockHeight / 2) : blockHeight) {
         this.toolCtx.moveTo(0, y);
         this.toolCtx.lineTo(w, y);
       }

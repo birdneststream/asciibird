@@ -437,7 +437,7 @@ export const exportMirc = (blocks = null) => {
         };
 
         if (curBlock.fg === undefined && curBlock.bg === undefined) {
-          output.push(curBlock.char !== ' ' ? ' ' : '\u0003');
+          output.push('\u0003');
         } else {
 
           if (curBlock.bg === undefined && curBlock.fg !==
