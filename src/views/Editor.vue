@@ -1718,24 +1718,16 @@ export default {
       let drawChar = !this.atTopHalf ? bottomChar : topChar;
 
       if (targetBlock.char === fullChar) {
+        drawOnBg = true;
+      } else if (targetBlock.char === topChar && !this.atTopHalf) {
+        drawChar = fullChar;
+        drawOnBg = true;
+      } else if (targetBlock.char === bottomChar && this.atTopHalf) {
         drawChar = fullChar;
         drawOnBg = true;
       }
 
-      if (
-        (targetBlock.char === bottomChar && this.atTopHalf) ||
-        (targetBlock.char === topChar && !this.atTopHalf)
-      ) {
-        drawChar = fullChar;
-      }
-
-      // console.log(
-      //   this.atTopHalf,
-      //   drawChar,
-      //   drawOnBg,
-      //   JSON.stringify(targetBlock)
-      // );
-
+      // Draw the preview brush
       this.toolCtx.font = "Hack 13px";
       this.toolCtx.fillStyle = this.mircColours[this.currentFg];
       this.toolCtx.fillText(
@@ -1744,7 +1736,7 @@ export default {
         brushY + blockHeight - 3
       );
 
-      // Apply text to ascii blocks
+      // Apply the half block to the ascii block
       if (this.canTool) {
         if (drawOnBg) {
           targetBlock["char"] = this.atTopHalf ? bottomChar : topChar;
@@ -1767,6 +1759,12 @@ export default {
       await this.clearToolCanvas();
       let brushDiffX = 0;
       let xLength = false;
+
+      // Force 1x1 when half block editing mode as we ignore the brush
+      if (this.toolbarState.halfBlockEditing) {
+        await this.drawHalfBlocks(this.x * blockWidth, this.y * blockHeight);
+        return;
+      } 
 
       // If the first row isn't selected then we cannot get the width
       // with the 0 index
@@ -1827,9 +1825,7 @@ export default {
             };
 
             if (!plain) {
-              if (this.toolbarState.halfBlockEditing) {
-                await this.drawHalfBlocks(brushX, brushY);
-              } else {
+
                 if (this.canBg) {
                   await this.drawBrushBlocks(brushX, brushY, brushBlock, "bg");
                 }
@@ -1858,8 +1854,7 @@ export default {
                 true
               );
             }
-          }
-        }
+          } 
       }
     },
     async storeDiffBlocks(x, y, oldBlock, newBlock) {

@@ -108,7 +108,6 @@ describe('Editor.vue', () => {
     expect(mircExportHash).toEqual(8495140863968528);
   })
 
-
   // it('brush tool on new ascii and export', () => {
   //   const wrapper = mount(Editor, {
   //     store,
