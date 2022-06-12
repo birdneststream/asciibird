@@ -82,6 +82,9 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 ### Working on now
 
+* FLOOD FILL
+* SVG export
+* SHADING mode
 * Half block editing mode
 * If you drag a panel, then right click you can't drag it anymore
 * Resize canvas undo
