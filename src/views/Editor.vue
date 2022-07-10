@@ -1714,6 +1714,7 @@ export default {
         const arrayY = brushY / blockHeight;
         const arrayX = brushX / blockWidth;
         let targetBlock = this.currentAsciiLayerBlocks[arrayY][arrayX];
+        let oldBlock = { ... this.currentAsciiLayerBlocks[arrayY][arrayX]};
 
         let topChar = "▀";
         let bottomChar = "▄";
@@ -1746,6 +1747,8 @@ export default {
             targetBlock["fg"] = this.currentFg;
             targetBlock["char"] = this.atTopHalf ? topChar : bottomChar;
           }
+
+          await this.storeDiffBlocks(arrayX, arrayY, oldBlock, targetBlock);
         }
 
       this.toolCtx.restore();
