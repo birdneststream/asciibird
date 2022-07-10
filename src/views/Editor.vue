@@ -92,6 +92,7 @@ import {
   exportMirc,
   downloadFile,
   cyrb53,
+  emptyBlock
 } from "../ascii";
 
 export default {
@@ -393,6 +394,9 @@ export default {
         ? `opacity: ${this.imageOverlay.asciiOpacity / 100};`
         : "opacity: 1;";
     },
+    emptyBlock() {
+      return emptyBlock;
+    }
   },
   watch: {
     currentAsciiHeight(val) {
@@ -1706,48 +1710,43 @@ export default {
     // Functions related to drawBrush function bellow
     //
     async drawHalfBlocks(brushX, brushY, plain = false) {
-      const arrayY = brushY / blockHeight;
-      const arrayX = brushX / blockWidth;
-      let targetBlock = this.currentAsciiLayerBlocks[arrayY][arrayX];
+        // Draw the preview brush
+        const arrayY = brushY / blockHeight;
+        const arrayX = brushX / blockWidth;
+        let targetBlock = this.currentAsciiLayerBlocks[arrayY][arrayX];
 
-      let topChar = "▀";
-      let bottomChar = "▄";
-      let fullChar = " ";
-      let drawOnBg = false;
+        let topChar = "▀";
+        let bottomChar = "▄";
+        let fullChar = " ";
 
-      let drawChar = this.atTopHalf ? topChar : bottomChar;
+        this.toolCtx.font = "Hack 13px";
+        this.toolCtx.fillStyle = this.mircColours[this.currentFg];
+        this.toolCtx.fillText(
+          this.atTopHalf ? topChar : bottomChar,
+          brushX,
+          brushY + blockHeight - 3
+        );
 
-      // if (targetBlock.char === fullChar) {
-      //   drawOnBg = true;
-      // } else 
-      
-      if (targetBlock.char === topChar && !this.atTopHalf && targetBlock.fg === this.currentFg) {
-        drawChar = fullChar;
-        drawOnBg = true;
-      } else if (targetBlock.char === bottomChar && this.atTopHalf && targetBlock.fg === this.currentFg) {
-        drawChar = fullChar;
-        drawOnBg = true;
-      }
-
-      // Draw the preview brush
-      this.toolCtx.font = "Hack 13px";
-      this.toolCtx.fillStyle = this.mircColours[this.currentFg];
-      this.toolCtx.fillText(
-        !this.atTopHalf ? bottomChar : topChar,
-        brushX,
-        brushY + blockHeight - 3
-      );
-
-      // Apply the half block to the ascii block
-      if (this.canTool) {
-        if (drawOnBg) {
-          targetBlock["char"] = drawChar; // (targetBlock.fg === this.currentFg ? fullChar : drawChar);
-          targetBlock["bg"] = this.currentFg;
-        } else {
-          targetBlock["fg"] = this.currentFg;
-          targetBlock["char"] = drawChar; // this.atTopHalf ? bottomChar : topChar;
+          // Apply the half block to the ascii block
+        if (this.canTool) {
+          if ((targetBlock.char === topChar && !this.atTopHalf) || (targetBlock.char === bottomChar && this.atTopHalf)) {
+            
+            // if the current fg is different to the current block fg then only apply fg
+            if (this.currentFg === targetBlock.fg) {
+              targetBlock["bg"] = this.currentFg;
+              targetBlock["char"] = fullChar;
+            } else {
+              targetBlock["bg"] = this.currentFg;
+              targetBlock["fg"] = targetBlock.fg;
+              targetBlock["char"] = !this.atTopHalf ? topChar : bottomChar;
+            }
+            
+          } else {
+            // Have a block without any existing half blocks
+            targetBlock["fg"] = this.currentFg;
+            targetBlock["char"] = this.atTopHalf ? topChar : bottomChar;
+          }
         }
-      }
 
       this.toolCtx.restore();
     },
@@ -2038,7 +2037,6 @@ export default {
         return;
       }
 
-      // slime pal yanking my chain
       let stack = [];
 
       // do flood fill
@@ -2049,10 +2047,11 @@ export default {
         
         // left
         if (this.currentAsciiLayerBlocks[pos.y][pos.x - 1] && 
-          (this.currentAsciiLayerBlocks[pos.y][pos.x-1].bg == (current.bg || undefined) &&
-          this.currentAsciiLayerBlocks[pos.y][pos.x-1].fg == (current.fg || undefined) &&
-          this.currentAsciiLayerBlocks[pos.y][pos.x-1].char == (current.char || undefined)) 
-          ) {
+          (this.currentAsciiLayerBlocks[pos.y][pos.x-1].bg == (current.bg || undefined)
+          // this.currentAsciiLayerBlocks[pos.y][pos.x-1].fg == (current.fg || undefined) ||
+          // this.currentAsciiLayerBlocks[pos.y][pos.x-1].char == (current.char || undefined)
+          
+          )) {
           this.storeDiffBlocks(pos.x - 1, pos.y, this.currentAsciiLayerBlocks[pos.y][pos.x -1], newColor);
           this.currentAsciiLayerBlocks[pos.y][pos.x-1] = (eraser ? { ... emptyBlock} : { ... newColor });
           stack.push({ x: pos.x - 1, y: pos.y});
@@ -2060,10 +2059,11 @@ export default {
 
         //right
         if (this.currentAsciiLayerBlocks[pos.y][pos.x + 1] && 
-          (this.currentAsciiLayerBlocks[pos.y][pos.x+1].bg == (current.bg || undefined) &&
-          this.currentAsciiLayerBlocks[pos.y][pos.x+1].fg == (current.fg || undefined) &&
-          this.currentAsciiLayerBlocks[pos.y][pos.x+1].char == (current.char || undefined))
-          ) {
+          (this.currentAsciiLayerBlocks[pos.y][pos.x+1].bg == (current.bg || undefined)
+          // this.currentAsciiLayerBlocks[pos.y][pos.x+1].fg == (current.fg || undefined) ||
+          // this.currentAsciiLayerBlocks[pos.y][pos.x+1].char == (current.char || undefined)
+          
+          )) {
           this.storeDiffBlocks(pos.x + 1, pos.y, this.currentAsciiLayerBlocks[pos.y][pos.x+1], newColor);
           this.currentAsciiLayerBlocks[pos.y][pos.x+1] = (eraser ? { ... emptyBlock} : { ... newColor });
           stack.push({ x: pos.x + 1, y: pos.y });
@@ -2071,10 +2071,11 @@ export default {
 
         // top
         if (this.currentAsciiLayerBlocks[pos.y - 1] && 
-          (this.currentAsciiLayerBlocks[pos.y-1][pos.x].bg == (current.bg || undefined) &&
-          this.currentAsciiLayerBlocks[pos.y-1][pos.x].fg == (current.fg || undefined) &&
-          this.currentAsciiLayerBlocks[pos.y-1][pos.x].char == (current.char || undefined))
-          ) {
+          (this.currentAsciiLayerBlocks[pos.y-1][pos.x].bg == (current.bg || undefined) 
+          // this.currentAsciiLayerBlocks[pos.y-1][pos.x].fg == (current.fg || undefined) ||
+          // this.currentAsciiLayerBlocks[pos.y-1][pos.x].char == (current.char || undefined)
+          
+          )) {
           this.storeDiffBlocks(pos.x, pos.y - 1, this.currentAsciiLayerBlocks[pos.y-1][pos.x], newColor);
           this.currentAsciiLayerBlocks[pos.y -1 ][pos.x] = (eraser ? { ... emptyBlock} : { ... newColor });
           stack.push({ x: pos.x, y: pos.y - 1});
@@ -2082,10 +2083,11 @@ export default {
 
         // bottom
         if (this.currentAsciiLayerBlocks[pos.y + 1] && 
-          (this.currentAsciiLayerBlocks[pos.y+1][pos.x].bg == (current.bg || undefined) &&
-          this.currentAsciiLayerBlocks[pos.y+1][pos.x].fg == (current.fg || undefined) &&
-          this.currentAsciiLayerBlocks[pos.y+1][pos.x].char == (current.char || undefined))
-          ) {
+          (this.currentAsciiLayerBlocks[pos.y+1][pos.x].bg == (current.bg || undefined) 
+          // this.currentAsciiLayerBlocks[pos.y+1][pos.x].fg == (current.fg || undefined) ||
+          // this.currentAsciiLayerBlocks[pos.y+1][pos.x].char == (current.char || undefined)
+          
+          )) {
           this.storeDiffBlocks(pos.x, pos.y + 1, this.currentAsciiLayerBlocks[pos.y+1][pos.x], newColor);
           this.currentAsciiLayerBlocks[pos.y + 1][pos.x] = (eraser ? { ... emptyBlock} : { ... newColor });
           stack.push({ x: pos.x, y: pos.y + 1});

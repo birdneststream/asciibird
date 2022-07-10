@@ -82,15 +82,16 @@ A most latest production build to use is available at https://asciibird.jewbird.
 
 ### Working on now
 
-* FLOOD FILL
+* Half block editing mode
+* FLOOD FILL - sometimes not working
 * SVG export
 * SHADING mode
-* Half block editing mode
 * If you drag a panel, then right click you can't drag it anymore
 * Resize canvas undo
 * Chzz's corrupt state, maybe running out of internal space?
 * Bug with hotkey brush switching, if make a new ascii hotkeys are broke - something to do with the hotkey function
 * Unit testing
+* Editing ascii does not update title
 ### v 1.2
 
 * More tooltips on other parts, at the moment only Toolbar has tooltips, option to disable tooltips
