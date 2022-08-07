@@ -455,7 +455,7 @@ export default {
     tooltipName(value) {
       switch (value.name) {
         case "default":
-          return "Defualt Mode";
+          return "Default Mode";
         case "select":
           return "Select Blocks";
         case "text":
