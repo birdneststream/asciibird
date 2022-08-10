@@ -205,6 +205,10 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 * Ctrl + Shift + w - Move Layer Up 
 * Ctrl + Shift + m - Merge All Layers 
 
+# Half Block editing Mode
+
+
+
 # Context Menus (right click menus)
 
 * Right clicking on any brush preview in the main area or library will allow you to export to PNG, txt or clipboard just the brush itself.
