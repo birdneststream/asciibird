@@ -1,34 +1,14 @@
 # ASCIIBIRD V1 - PRERELEASE BUILD
 
-```
-                           ┏   ┰╛    ╔═━┉┈┉╼━━╌┈╍┅┉╌┄┉┉━═╾─┈═──┄┈╼╍═┈┄╍═╍╼━┈─┈╼┉╍┅╌╮
-                         ╘███╏████╒█ ┕█   http://jewbird.live/                     ╏
-                            █┻█  █┦█  █╕  http://yt.jewbird.live/                  ┇
-                          ╔╼█ ████ ████╚━ http://patreon.jewbird.live/             ┃
-                         ╕  █ █ █┉╍█ ┌█═  http://streamlabs.jewbird.live/          ╽
-                       ━█████ █ ██ █ ╯█   ASCIIBIRD TAKING FLIGHT                  ╎
-                          ┸╮    ╛     ╘╼┈┅┅──━┈┉┅┈╍┄┈┄┈╍┉╾╾╼╍═━╾╾┄╼╾═─┈═┉═╼┅─┈━╌╾╾┅╯
-
-                              [BTC] 1L2u8mQs5pe7k11ozn2BgX388e3fGMD7qo
-[XMR] 832owKc3ZuGCnmjHXHeZeeJzGAxyKx5uWU9WxoaXg6BhQ7aWSnZ6EhxFK8Mzw137nSgGAfMM8FgHjM6rpq5s1EofD7UT2yp
-           [STREAMLABS] http://streamlabs.jewbird.live [PATREON] http://patreon.jewbird.live
-     [YT] http://yt.jewbird.live [TWITCH] http://twitch.jewbird.live [GITHUB] http://git.jewbird.live
-```
-
 ASCIIBIRD is an IRC ascii art editor to create or edit mIRC art, it is most times worked on during live stream. It's 100% client side and created in vue2 and may be migrated to vue3 in the future.
 
-You can view and load ASCII art from https://irc.watch/ascii into asciibird.
-1
 A most latest production build to use is available at https://asciibird.jewbird.live/
 
 # Big Shout outs to Patrons
 
-> beenz, xartet, OfMonsters&Crime, mouse, funkpower, Charles, PP4L, octopus, addct, hotline, dingopride, skg, eraser, aaa, chz, L0j1k
+> xartet, OfMonsters&Crime, mouse, funkpower, Charles, PP4L, octopus, hotline, dingopride, skg, eraser, chz, L0j1k
 
-> special thanks to slime aka botmaster slime aka knivey for the wonderful bot integration with asciibird
-## Greetz to Chat Pals
-
-> darkmage, l0de, bex, blarf, sludg, shart, chode, corn, ralph, jrra, kuntz, moony, sniff, scd, aztec, astro, anji, b-rex, bengt, butth0le, canada420, clamkin, deakin, dumbguy, ElBurro, interdome, syn, darkness, vae, gowce, moneytree, Retarded, spoon, sylar, zen, bj0rn, stovepipe, morthrane, chrono, acidvegas, again, hgc, durendal, knio, mavericks, pyrex, sh, irie, seirdy, sq, stratum, WeEatnKid, dieforirc, tater, buttvomit, luldangs, MichealK, AnalMan, poccri, vap0r, kakama, fregyXin, kayos, stovepipe, higgs, Audasity, PsyMaster, perplexa, alyosha, Darn, efsenable, EchoShun, dumbguy, HorseCrusherKristian, phobos, COMPUTERS
+> special thanks to slime aka botmaster slime for the wonderful bot integration with asciibird
 
 # Current Features
 
@@ -75,6 +55,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
   * Hovering outside brush area will save brush to history
 * Context menu available on all brushes preview areas
   * Export any brush to PNG, mIRC clipboard or file by right clicking the brush preview
+* Half block editing mode
 
 # Roadmap and Bug To Fixes
 
@@ -92,7 +73,7 @@ A most latest production build to use is available at https://asciibird.jewbird.
 * Bug with hotkey brush switching, if make a new ascii hotkeys are broke - something to do with the hotkey function
 * Unit testing
 * Editing ascii does not update title
-### v 1.2
+### Coming soon
 
 * More tooltips on other parts, at the moment only Toolbar has tooltips, option to disable tooltips
 * Fix brush tool for seamless lines when drawing fast
@@ -207,7 +188,7 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 
 # Half Block editing Mode
 
-
+This is still experimental and at the moment the brush tool will work with half block mode only.
 
 # Context Menus (right click menus)
 
@@ -276,6 +257,10 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 * https://github.com/ircart/resources - More resources on ASCII and configuring terminals/clients to display ASCII art correctly
 * http://wepump.in/ascii/ - Classic IRC ASCII art
 * https://irc.watch/ascii/ - IRC ASCIIs you can load into ASCIIBIRD
+
+## Hello to friends on the IRC
+
+> darkmage, l0de, bex, blarf, sludg, shart, chode, corn, ralph, jrra, kuntz, moony, sniff, scd, aztec, astro, anji, b-rex, bengt, butth0le, canada420, clamkin, deakin, dumbguy, ElBurro, interdome, syn, darkness, vae, gowce, moneytree, Retarded, spoon, sylar, zen, bj0rn, stovepipe, morthrane, chrono, acidvegas, again, hgc, durendal, knio, mavericks, pyrex, sh, irie, seirdy, sq, stratum, WeEatnKid, dieforirc, tater, buttvomit, luldangs, MichealK, AnalMan, poccri, vap0r, kakama, fregyXin, kayos, stovepipe, higgs, Audasity, PsyMaster, perplexa, alyosha, Darn, efsenable, EchoShun, dumbguy, HorseCrusherKristian, phobos, COMPUTERS
 
 ## Project setup
 ```
