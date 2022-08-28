@@ -436,7 +436,7 @@ export const exportMirc = (blocks = null) => {
 
       // optimise out half or full blocks with same bg and fg, to save width space on export
       if (curBlock.fg === curBlock.bg && optimiseArray.includes(curBlock.char)) {
-        curBlock.fg = undefined;
+        curBlock.fg = 0;
         curBlock.char = " ";
       }
 
