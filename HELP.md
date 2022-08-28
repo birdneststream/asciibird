@@ -78,7 +78,7 @@ ASCIIBIRD allows tabbed editing of mIRC ascii art, and contains powerful feature
 
 *View -> Windows* from the toolbar menu can show or hide most of these panels. The keyboard shortcuts can be found at [Show and Hide Panels Keyboard Shortcuts](#showing--hiding-menus-tabs-and-panels)
 
-![alt text](https://asciibird.jewbird.live/docs/overview.png)
+![ASCIIBIRD overview](https://asciibird.jewbird.live/docs/overview.png)
 
 ## 1. Toolbar
 
