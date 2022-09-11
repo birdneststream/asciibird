@@ -2,10 +2,13 @@
   <vue-draggable-resizable
     :x="170"
     :y="100+yOffset"
-    :w="650"
+    :w="750"
     :h="350"
   >
     <t-card class="w-full h-full">
+      <div class="p-1">
+        <t-checkbox class="ab-checkbox" name="leave-open" v-model="persistChars" @click="changePersistChars" /> <small>Persist this panel after character changes</small>
+      </div>
       <t-button
         type="button"
         v-for="(char, keyChar) in charCodes"
@@ -27,6 +30,14 @@ export default {
   name: "CharPicker",
   created() {},
   props: ["canvasX", "canvasY", "yOffset"],
+  data: () => ({
+    persistChars: false,
+  }),
+  // watch: {
+  //   persistChars(val, old) {
+  //     this.$store.commit("persistCharPanel", val)
+  //   }
+  // },
   computed: {
     charCodes() {
       return charCodes;
@@ -53,12 +64,18 @@ export default {
     },
     blockHeight() {
       return blockHeight*2;
+    },
+    persistCharPanel() {
+      return this.$store.getters.persistCharPanel
     }
   },
   methods: {
     onCharChange(char) {
       this.$store.commit("changeChar", char);
     },
+    changePersistChars() {
+      this.$store.commit("persistCharPanel", !this.persistChars)
+    }
   },
 };
 </script>

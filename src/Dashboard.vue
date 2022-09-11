@@ -182,7 +182,7 @@
       />
 
       <CharPicker
-        v-if="toolbarState.isChoosingChar"
+        v-show="toolbarState.isChoosingChar"
         class="z-50"
         :y-offset="scrollOffset"
       />
@@ -1349,6 +1349,31 @@ export default {
     },
     startExport(type) {
       let ascii = exportMirc();
+      
+      // Check the lines length on export to warn the user they maybe too large for irc
+      let checkLengthArray = ascii.output.join("").split("\n");
+      let checkLines = [];
+
+      checkLengthArray.forEach((a, i) => {
+        console.log((new TextEncoder().encode(a)).length)
+        // The irc line limit is 512 bytes which also includes the users nick, indent and host.
+        // 500 should be a good indication nonetheless.
+        if ((new TextEncoder().encode(a)).length > 500) {
+          checkLines.push(i);
+        }
+      });
+
+      if (checkLines.length) {
+        let displayLines = checkLines.join(", ")
+        this.$toasted.show(
+          `Line${checkLines.length > 0 ? 's' : ''} ${displayLines} may be too large width for IRC.`,
+          {
+            type: "error",
+            position: "bottom-center",
+            duration: 1200,
+          }
+        );
+      }
 
       switch (type) {
         case "clipboard":

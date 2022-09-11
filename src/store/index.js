@@ -58,6 +58,7 @@ export default new Vuex.Store({
       isChoosingFg: false,
       isChoosingBg: false,
       isChoosingChar: false,
+      persistCharPanel: false,
       brushSizeWidth: 1,
       brushSizeHeight: 1,
       // square, circle, cross
@@ -182,10 +183,16 @@ export default new Vuex.Store({
     changeChar(state, payload) {
       state.toolbarState.selectedChar = payload;
       state.toolbarState.isUpdating = false;
-      state.toolbarState.isChoosingChar = false;
+
+      if (!state.toolbarState.persistCharPanel) {
+        state.toolbarState.isChoosingChar = false;
+      }
     },
     changeTool(state, payload) {
       state.toolbarState.currentTool = payload;
+    },
+    persistCharPanel(state, payload) {
+      state.toolbarState.persistCharPanel = payload;
     },
     changeIsUpdatingFg(state, payload) {
       state.toolbarState.isChoosingFg = payload;
@@ -307,6 +314,8 @@ export default new Vuex.Store({
 
       state.asciibirdMeta[state.tab].historyIndex = state.asciibirdMeta[state.tab].history
         .length;
+
+      state.asciibirdMeta[state.tab].selectedLayer = Number.parseInt(tempLayers.length) - 1;
     },
     mergeAllLayers(state) {
       let tempLayers = JSON.parse(LZString.decompressFromUTF16(state.asciibirdMeta[state.tab]
@@ -882,6 +891,7 @@ export default new Vuex.Store({
     brushSizeHeight: (state) => state.toolbarState.brushSizeHeight,
     brushSizeWidth: (state) => state.toolbarState.brushSizeWidth,
     brushSizeType: (state) => state.toolbarState.brushSizeType,
+    persistCharPanel: (state) => state.toolbarState.persistCharPanel,
     blockSizeMultiplier: (state) => state.blockSizeMultiplier,
     brushHistory: (state) => state.brushHistory,
     brushLibrary: (state) => state.brushLibrary,

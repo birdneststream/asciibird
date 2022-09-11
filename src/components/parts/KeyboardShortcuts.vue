@@ -23,7 +23,7 @@ export default {
 
       event.preventDefault();
 
-      if (_this.toolbarState.isChoosingChar && event.key.length === 1 && !_this.disableKeyboard) {
+      if (_this.toolbarState.isChoosingChar && event.key.length === 1 && !_this.disableKeyboard && !_this.toolbarState.persistCharPanel) {
         _this.$store.commit("changeChar", event.key);
         return;
       }

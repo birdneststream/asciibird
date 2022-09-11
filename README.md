@@ -79,7 +79,7 @@ To view in detailed help and documentation please see [Help and Documentation](H
 * Context menu available on all brushes preview areas
   * Export any brush to PNG, mIRC clipboard or file by right clicking the brush preview
 * Half block editing mode
- * Supports brush only, experimental feature
+  * Supports brush only, experimental feature
 
 # Roadmap and Known Bugs
 
@@ -87,6 +87,7 @@ In no particular order, future development goals and bug fixes.
 
 ## To Be Developed
 
+* History of colour changes
 * Half block editing mode
 * SVG export
 * Export options for colour codes. C,00 or C0,00
@@ -94,10 +95,8 @@ In no particular order, future development goals and bug fixes.
 * Resize canvas undo
 * Unit testing (hahaha)
 * More tooltips on other parts, at the moment only Toolbar has tooltips, option to disable tooltips
-* Warning on mirc export if ascii exceeds IRCs 512 per chat line limit
 * Review encodings check on file import - UTF8 vs Latin something
 * More fill tool options? (search / replace, new check boxes to replace what contents)
-* Brush blocks larger than 1x1 can leave undoable blocks in mirror mode
 * Dark / light modes, different themes
 * Expand the brush manager, brush categories, download brushes, import/export brushes
 * ASCIIBIRD API ?! - Web api to extend features of asciibird
@@ -111,7 +110,9 @@ In no particular order, future development goals and bug fixes.
 * Editing ascii does not update title
 * Fix brush tool for seamless lines when drawing fast
 * Context menus inside the panels can be way off sometimes
-
+* The context menu for the background doesn't work when scrolled down
+* Brush blocks larger than 1x1 can leave undoable blocks in mirror mode
+  
 ## Mobile / Touch Screen support
 
 Doesn't exist at the moment. While the underlying functions and code is compatible with mobile browsers from *babel*, the touch canvas events and text will need to be reviewed to work better with touch screens. For example while you can brush once, you cannot move the brush around.
