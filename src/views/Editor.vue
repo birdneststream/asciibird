@@ -1208,9 +1208,9 @@ export default {
             if (this.canText) {
               this.$store.commit(
                 "changeChar",
-                { char: targetBlock.char === undefined
+                targetBlock.char === undefined
                   ? this.currentChar
-                  : targetBlock.char }
+                  : targetBlock.char
               );
             }
 
