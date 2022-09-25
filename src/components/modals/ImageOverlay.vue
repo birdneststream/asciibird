@@ -124,7 +124,7 @@
             <vue-slider
               class="m-1"
               v-model="imageOverlay.left"
-              :min="0"
+              :min="-100"
               :max="100"
             />
           </div>
@@ -143,7 +143,7 @@
             <vue-slider
               class="m-1"
               v-model="imageOverlay.top"
-              :min="0"
+              :min="-100"
               :max="100"
             />
           </div>
