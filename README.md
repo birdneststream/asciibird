@@ -103,7 +103,7 @@ In no particular order, future development goals and bug fixes.
 
 ## Known Bugs
 
-* Circle brush will error when changing size if bg is not checked
+* If you hide layers it wont select the next best visible layer
 * Importing a half block with continued background will persist the background
 * Clear the URL after GET file import
 * Bug with hotkey brush switching, if make a new ascii hotkeys are broke - something to do with the hotkey function

@@ -450,9 +450,9 @@ export default {
       }
 
       // We can eraser or fill
-      if (this.canBg) this.blocks[y][x].bg = this.currentBg;
-      if (this.canFg) this.blocks[y][x].fg = this.currentFg;
-      if (this.canText) this.blocks[y][x].char = this.currentChar;
+      this.blocks[y][x].bg = this.currentBg;
+      this.blocks[y][x].fg = this.currentFg;
+      this.blocks[y][x].char = this.currentChar;
 
       // Fill in all four directions
       // Fill Prev row
