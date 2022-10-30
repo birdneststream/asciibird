@@ -29,7 +29,7 @@ To view in detailed help and documentation please see [Help and Documentation](H
 
 # Big Shout outs to Patrons
 
-> xartet, OfMonsters&Crime, mouse, funkpower, Charles, PP4L, octopus, hotline, dingopride, skg, eraser, chzz, L0j1k, deakin
+> xartet, OfMonsters&Crime, mouse, funkpower, Charles, PP4L, octopus, slime, dingopride, skg, eraser, chzz, L0j1k, deakin
 
 > special thanks to slime aka botmaster slime for the wonderful bot integration with asciibird
 
