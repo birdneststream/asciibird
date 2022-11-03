@@ -2,7 +2,7 @@
 
 ASCIIBIRD is an IRC ascii art editor to create or edit mIRC art, it is most times worked on during live stream. It's 100% client side and created in vue2 and may be migrated to vue3 in the future.
 
-A most latest production build to use is available at https://asciibird.jewbird.live/ - create cool and fun IRC ascii arts for your ircd MOTD or to share with your chat friends and have a good time!
+A most latest production build to use is available at https://asciibird.birdnest.live/ - create cool and fun IRC ascii arts for your ircd MOTD or to share with your chat friends and have a good time!
 
 Support ASCIIBIRD and birdnest streaming by [jumping on our patreon](https://www.patreon.com/birdnestshow)!
 
@@ -168,12 +168,12 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 
 Already there have been hundreds of new mIRC ascii arts created with asciibird! Here are just a few from our pal *chzz*.
 
-![fraidnobully.png](https://asciibird.jewbird.live/docs/fraidnobully.png)
-![hoodie.png](https://asciibird.jewbird.live/docs/hoodie.png)
-![mediation.png](https://asciibird.jewbird.live/docs/mediation.png)
-![bullyfreechat.png](https://asciibird.jewbird.live/docs/bullyfreechat.png)
-![midiweekend.png](https://asciibird.jewbird.live/docs/midiweekend.png)
-![chzz-dimension-noose.png](https://asciibird.jewbird.live/docs/chzz-dimension-noose.png)
+![fraidnobully.png](https://asciibird.birdnest.live/docs/fraidnobully.png)
+![hoodie.png](https://asciibird.birdnest.live/docs/hoodie.png)
+![mediation.png](https://asciibird.birdnest.live/docs/mediation.png)
+![bullyfreechat.png](https://asciibird.birdnest.live/docs/bullyfreechat.png)
+![midiweekend.png](https://asciibird.birdnest.live/docs/midiweekend.png)
+![chzz-dimension-noose.png](https://asciibird.birdnest.live/docs/chzz-dimension-noose.png)
 
 # References
 
