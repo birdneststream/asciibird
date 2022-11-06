@@ -88,7 +88,8 @@ In no particular order, future development goals and bug fixes.
 ## To Be Developed
 
 * History of colour changes
-* Half block editing mode
+* Easier to cycle through brush history
+* Half block editing mode, make own half block brush
 * SVG export
 * Export options for colour codes. C,00 or C0,00
 * SHADING mode, draw shading chars with brush (pressure.js maybe)
@@ -164,6 +165,10 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 <rebird> <g> i hope you are too!
 ```
 
+```
+<higgs> asciibird changed my life.
+```
+
 # ASCII art created with ASCIIBIRD
 
 Already there have been hundreds of new mIRC ascii arts created with asciibird! Here are just a few from our pal *chzz*.
@@ -193,7 +198,7 @@ Already there have been hundreds of new mIRC ascii arts created with asciibird! 
 
 ## Hello to friends on the IRC
 
-> darkmage, l0de, bex, blarf, sludg, shart, chode, corn, ralph, jrra, kuntz, moony, sniff, scd, aztec, astro, anji, b-rex, bengt, butth0le, canada420, clamkin, deakin, dumbguy, ElBurro, interdome, syn, darkness, vae, gowce, moneytree, Retarded, spoon, sylar, zen, bj0rn, stovepipe, morthrane, chrono, acidvegas, again, hgc, durendal, knio, mavericks, pyrex, sh, irie, seirdy, sq, stratum, WeEatnKid, dieforirc, tater, buttvomit, luldangs, MichealK, AnalMan, poccri, vap0r, kakama, fregyXin, kayos, stovepipe, higgs, Audasity, PsyMaster, perplexa, alyosha, Darn, efsenable, EchoShun, dumbguy, HorseCrusherKristian, phobos, COMPUTERS
+> darkmage, l0de, bex, blarf, sludg, shart, chode, corn, ralph, jrra, kuntz, moony, sniff, scd, aztec, astro, anji, b-rex, bengt, butth0le, canada420, clamkin, deakin, dumbguy, ElBurro, interdome, syn, darkness, vae, gowce, moneytree, Retarded, spoon, sylar, zen, bj0rn, stovepipe, morthrane, chrono, acidvegas, again, hgc, durendal, knio, mavericks, pyrex, sh, irie, seirdy, sq, stratum, WeEatnKid, dieforirc, tater, buttvomit, luldangs, MichealK, AnalMan, poccri, vap0r, kakama, fregyXin, kayos, stovepipe, higgs, Audasity, PsyMaster, perplexa, alyosha, Darn, efsenable, EchoShun, dumbguy, HorseCrusherKristian, phobos, COMPUTERS, dave, nance, sthors
 
 # Project setup
 ```

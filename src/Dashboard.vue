@@ -59,34 +59,34 @@
         </li>
 
         <li @click="startImport('mirc')" class="ab-context-menu-item">
-          Import mIRC from File
+          Import from File
         </li>
         <li
           @click="startExport('file')"
           class="ab-context-menu-item border-b"
           v-if="asciibirdMeta.length"
         >
-          Export mIRC to File
+          Export to File
         </li>
         <li
           class="ab-context-menu-item"
           @click="$store.commit('openModal', 'paste-ascii')"
         >
-          Import mIRC from Clipboard
+          Import from Clipboard
         </li>
         <li
           class="ab-context-menu-item"
           @click="startExport('clipboard')"
           v-if="asciibirdMeta.length"
         >
-          Export mIRC to Clipboard
+          Export to Clipboard
         </li>
         <li
           class="ab-context-menu-item border-b"
           @click="startExport('post')"
           v-if="asciibirdMeta.length"
         >
-          Export mIRC to HTTP POST
+          Export to HTTP POST
         </li>
         <li
           @click="exportAsciibirdState()"
@@ -1003,13 +1003,13 @@ export default {
         icon: "upload_file",
         menu: [
           {
-            text: "mIRC File",
+            text: "File",
             click: () => this.startImport("mirc"),
             icon: "upload_file",
             hotkey: !this.isMacLike ? "ctrl+shift+o" : "command+shift+o",
           },
           {
-            text: "mIRC Clipboard",
+            text: "Clipboard",
             click: () => this.$store.commit("openModal", "paste-ascii"),
             hotkey: !this.isMacLike ? "ctrl+shift+v" : "command+shift+v",
             icon: "copy_all",
@@ -1029,13 +1029,13 @@ export default {
             icon: "save_alt",
             menu: [
               {
-                text: "mIRC File",
+                text: "File",
                 click: () => this.startExport("file"),
                 icon: "download_file",
                 hotkey: !this.isMacLike ? "ctrl+shift+f" : "command+shift+f",
               },
               {
-                text: "mIRC Clipboard",
+                text: "Clipboard",
                 hotkey: !this.isMacLike ? "ctrl+shift+c" : "command+shift+c",
                 click: () => this.startExport("clipboard"),
                 icon: "copy_all",

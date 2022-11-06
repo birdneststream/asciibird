@@ -36,13 +36,13 @@
               @click="startExport('clipboard')"
               class="ab-context-menu-item"
             >
-              Export Brush to mIRC Clipboard
+              Export Brush to Clipboard
             </li>
             <li
               @click="startExport('file')"
               class="ab-context-menu-item"
             >
-              Export Brush to mIRC File
+              Export Brush to File
             </li>
             <li
               @click="saveToLibrary()"
