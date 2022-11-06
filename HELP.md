@@ -78,7 +78,7 @@ ASCIIBIRD allows tabbed editing of mIRC ascii art, and contains powerful feature
 
 *View -> Windows* from the toolbar menu can show or hide most of these panels. The keyboard shortcuts can be found at [Show and Hide Panels Keyboard Shortcuts](#showing--hiding-menus-tabs-and-panels)
 
-![ASCIIBIRD overview](https://asciibird.jewbird.live/docs/overview.png)
+![ASCIIBIRD overview](https://asciibird.birdnest.live/docs/overview.png)
 
 ## 1. Toolbar
 
@@ -118,7 +118,7 @@ ASCIIBIRD allows tabbed editing of mIRC ascii art, and contains powerful feature
 
 The toolbar contains the major functions required to create mIRC art.
 
-![Toolbar](https://asciibird.jewbird.live/docs/toolbar.png)
+![Toolbar](https://asciibird.birdnest.live/docs/toolbar.png)
 
 ## 1. FG (foreground)
 
@@ -236,7 +236,7 @@ The toolbar contains the major functions required to create mIRC art.
 
 The brush preview shows your current brush, and also allows you to create new basic brushes of different shapes and types with some basic editing capabilities.
 
-![Brush Preview](https://asciibird.jewbird.live/docs/brush-preview.png)
+![Brush Preview](https://asciibird.birdnest.live/docs/brush-preview.png)
 
 ## 1. Brush Width
 
@@ -267,7 +267,7 @@ The brush preview shows your current brush, and also allows you to create new ba
 
 Allows layered editing and image overlays for tracing ASCII arts. You have to be careful using layers!
 
-![Layers Toolbar](https://asciibird.jewbird.live/docs/layers.png)
+![Layers Toolbar](https://asciibird.birdnest.live/docs/layers.png)
 
 * The current selected layer has a blue highlight.
 * If you have a transparent layer over the top of ascii blocks, and try to use the block picker - it will be somewhat deceptive and pick a transparent block, despite looking like it should pick the ascii block.
@@ -290,7 +290,7 @@ Allows layered editing and image overlays for tracing ASCII arts. You have to be
 
 Click this area to see the image overlay options. Within here you can specify the image URL, and also change the position and other properties.
 
-![Image Overlay Options](https://asciibird.jewbird.live/docs/layer-options.png)
+![Image Overlay Options](https://asciibird.birdnest.live/docs/layer-options.png)
 
 ## 5. Layer Visibility
 
@@ -313,7 +313,7 @@ Click this area to see the image overlay options. Within here you can specify th
 
 Asciibird will keep track of your brush changes and also allows you to save your commonly used brushes for future use. If a duplicate brush is detected it will be moved to the top.
 
-![Brush History](https://asciibird.jewbird.live/docs/brush-history.png)
+![Brush History](https://asciibird.birdnest.live/docs/brush-history.png)
 
 ## Brush History
 
@@ -344,7 +344,7 @@ Asciibird will keep track of your brush changes and also allows you to save your
 
 ## Brush Library
 
-![Brush Library](https://asciibird.jewbird.live/docs/brush-library.png)
+![Brush Library](https://asciibird.birdnest.live/docs/brush-library.png)
 
 ### 1. Brush History Tab 
 

@@ -114,7 +114,7 @@
         <p><em>View -&gt; Windows</em> from the toolbar menu can show or hide most of these panels. The keyboard
           shortcuts can be found at <a href="#showing--hiding-menus-tabs-and-panels">Show and Hide Panels Keyboard
             Shortcuts</a></p>
-        <p><img src="https://asciibird.jewbird.live/docs/overview.png" alt="alt text"></p>
+        <p><img src="https://asciibird.birdnest.live/docs/overview.png" alt="alt text"></p>
         <h2 class="help-h2" id="1-toolbar">1. Toolbar</h2>
         <ul>
           <li class="help-li-space">Allows you to see the shortcuts and features of ASCIIBIRD.</li>
@@ -153,7 +153,7 @@
         </ul>
         <h1 class="help-h1" id="main-toolbar">Main Toolbar</h1>
         <p>The toolbar contains the major functions required to create mIRC art.</p>
-        <p><img src="https://asciibird.jewbird.live/docs/toolbar.png" alt="Toolbar"></p>
+        <p><img src="https://asciibird.birdnest.live/docs/toolbar.png" alt="Toolbar"></p>
         <h2 class="help-h2" id="1-fg-foreground">1. FG (foreground)</h2>
         <ul>
           <li class="help-li-space">Changes the FG of the brush.</li>
@@ -276,7 +276,7 @@
         <h1 class="help-h1" id="brush-preview">Brush Preview</h1>
         <p>The brush preview shows your current brush, and also allows you to create new basic brushes of different
           shapes and types with some basic editing capabilities.</p>
-        <p><img src="https://asciibird.jewbird.live/docs/brush-preview.png" alt="Brush Preview"></p>
+        <p><img src="https://asciibird.birdnest.live/docs/brush-preview.png" alt="Brush Preview"></p>
         <h2 class="help-h2" id="1-brush-width">1. Brush Width</h2>
         <ul>
           <li class="help-li-space">Changes the width of the brush. The max is 50, although you can type a larger number if you really want
@@ -311,7 +311,7 @@
         </ul>
         <h1 class="help-h1" id="layers-and-image-overlay">Layers and Image Overlay</h1>
         <p>Allows layered editing and image overlays for tracing ASCII arts. You have to be careful using layers!</p>
-        <p><img src="https://asciibird.jewbird.live/docs/layers.png" alt="Layers Toolbar"></p>
+        <p><img src="https://asciibird.birdnest.live/docs/layers.png" alt="Layers Toolbar"></p>
         <ul>
           <li class="help-li-space">The current selected layer has a blue highlight.</li>
           <li class="help-li-space">If you have a transparent layer over the top of ascii blocks, and try to use the block picker - it will be
@@ -335,7 +335,7 @@
         <h2 class="help-h2" id="4-image-overlay-options">4. Image Overlay Options</h2>
         <p>Click this area to see the image overlay options. Within here you can specify the image URL, and also change
           the position and other properties.</p>
-        <p><img src="https://asciibird.jewbird.live/docs/layer-options.png" alt="Image Overlay Options"></p>
+        <p><img src="https://asciibird.birdnest.live/docs/layer-options.png" alt="Image Overlay Options"></p>
         <h2 class="help-h2" id="5-layer-visibility">5. Layer Visibility</h2>
         <ul>
           <li class="help-li-space">Show or hide the layer.</li>
@@ -357,7 +357,7 @@
         <h1 class="help-h1" id="brush-history-and-brush-library">Brush History and Brush Library</h1>
         <p>Asciibird will keep track of your brush changes and also allows you to save your commonly used brushes for
           future use. If a duplicate brush is detected it will be moved to the top.</p>
-        <p><img src="https://asciibird.jewbird.live/docs/brush-history.png" alt="Brush History"></p>
+        <p><img src="https://asciibird.birdnest.live/docs/brush-history.png" alt="Brush History"></p>
         <h2 class="help-h2" id="brush-history">Brush History</h2>
         <h3 class="help-h3" id="1-brush-history-tab">1. Brush History Tab</h3>
         <ul>
@@ -386,7 +386,7 @@
           <li class="help-li-space">Removes the brush from history, no undo.</li>
         </ul>
         <h2 class="help-h2" id="brush-library">Brush Library</h2>
-        <p><img src="https://asciibird.jewbird.live/docs/brush-library.png" alt="Brush Library"></p>
+        <p><img src="https://asciibird.birdnest.live/docs/brush-library.png" alt="Brush Library"></p>
         <h3 class="help-h3" id="1-brush-history-tab-1">1. Brush History Tab</h3>
         <ul>
           <li class="help-li-space">View your brush history.</li>
