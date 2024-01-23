@@ -169,6 +169,22 @@ Doesn't exist at the moment. While the underlying functions and code is compatib
 <higgs> asciibird changed my life.
 ```
 
+```
+<acidvegas> ngl ive seen asciibird on github
+<acidvegas> hella
+<acidvegas> first time using it
+<acidvegas> rn
+<acidvegas> this is v impressive jewbird 
+<acidvegas> props
+* acidvegas throws jewbird an ice cold   BUD c =)
+<jewbird> cool
+<jewbird> thx
+<acidvegas> beautiful design
+<acidvegas> looks very
+<acidvegas> iOS circa 2015
+<acidvegas> classic
+```
+
 # ASCII art created with ASCIIBIRD
 
 Already there have been hundreds of new mIRC ascii arts created with asciibird! Here are just a few from our pal *chzz*.
@@ -198,7 +214,7 @@ Already there have been hundreds of new mIRC ascii arts created with asciibird! 
 
 ## Hello to friends on the IRC
 
-> darkmage, l0de, bex, blarf, sludg, shart, chode, corn, ralph, jrra, kuntz, moony, sniff, scd, aztec, astro, anji, b-rex, bengt, butth0le, canada420, clamkin, deakin, dumbguy, ElBurro, interdome, syn, darkness, vae, gowce, moneytree, Retarded, spoon, sylar, zen, bj0rn, stovepipe, morthrane, chrono, acidvegas, again, hgc, durendal, knio, mavericks, pyrex, sh, irie, seirdy, sq, stratum, WeEatnKid, dieforirc, tater, buttvomit, luldangs, MichealK, AnalMan, poccri, vap0r, kakama, fregyXin, kayos, stovepipe, higgs, Audasity, PsyMaster, perplexa, alyosha, Darn, efsenable, EchoShun, dumbguy, HorseCrusherKristian, phobos, COMPUTERS, dave, nance, sthors
+> darkmage (confirmed snitch), l0de, bex, blarf, sludg, shart, chode, corn, ralph, jrra, kuntz, moony, sniff, scd, aztec, astro, anji, b-rex, bengt, butth0le, canada420, clamkin, deakin, dumbguy, ElBurro, interdome, syn, darkness, vae, gowce, moneytree, Retarded, spoon, sylar, zen, bj0rn, stovepipe, morthrane, chrono, acidvegas, again, hgc, durendal, knio, mavericks, pyrex, sh, irie, seirdy, sq, stratum, WeEatnKid, dieforirc, tater, buttvomit, luldangs, MichealK, AnalMan, poccri, vap0r, kakama, fregyXin, kayos, stovepipe, higgs, Audasity, PsyMaster, perplexa, alyosha, Darn, efsenable, EchoShun, dumbguy, HorseCrusherKristian, phobos, COMPUTERS, dave, nance, sthors
 
 # Project setup
 ```
