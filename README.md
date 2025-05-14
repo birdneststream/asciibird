@@ -4,7 +4,7 @@ ASCIIBIRD is an IRC ascii art editor to create or edit mIRC art, it is most time
 
 A most latest production build to use is available at https://asciibird.birdnest.live/ - create cool and fun IRC ascii arts for your ircd MOTD or to share with your chat friends and have a good time!
 
-Support ASCIIBIRD and birdnest streaming by [jumping on our patreon](https://www.patreon.com/birdnestshow)!
+Support ASCIIBIRD and birdnest streaming by [jumping on our patreon](https://www.patreon.com/birdnestlive)!
 
 To view in detailed help and documentation please see [Help and Documentation](HELP.md)
 
