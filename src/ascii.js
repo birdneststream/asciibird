@@ -281,7 +281,7 @@ export const parseMircAscii = async (contents, filename) => {
       if (char === '\x03') {
         var matches = line.substr(pos + 1, 5).match(asciiblasterRegex);
 
-        // \x03 without color code is a soft block reset 
+        // \x03 without color code is a soft block reset
         if (matches[1] === undefined && matches[2] === undefined) {
           block.fg = null;
           block.bg = null;
@@ -523,37 +523,9 @@ export function canvasToPng(canvas, filename) {
 }
 
 export const checkForGetRequest = async () => {
-  const asciiUrlCdn = new URL(location.href).searchParams.get('ascii');
-  if (asciiUrlCdn) {
-    const res = await fetch(`https://ascii.jewbird.live/${asciiUrlCdn}`, {
-      method: 'GET',
-      headers: {
-        Accept: 'text/plain',
-      },
-    });
-
-    const asciiData = await res.text();
-    parseMircAscii(asciiData, asciiUrlCdn);
-    return;
-  }
-
-  const asciiUrl = new URL(location.href).searchParams.get('ircwatch');
-  if (asciiUrl) {
-    const res = await fetch(`https://irc.watch/ascii/txt/${asciiUrl}`, {
-      method: 'GET',
-      headers: {
-        Accept: 'text/plain',
-      },
-    });
-
-    const asciiData = await res.text();
-    parseMircAscii(asciiData, asciiUrl);
-    return;
-  }
-
   const haxAscii = new URL(location.href).searchParams.get('haxAscii');
   if (haxAscii) {
-    const res = await fetch(`https://art.h4x.life/${haxAscii}`, {
+    const res = await fetch(`https://art.shrews.xyz/${haxAscii}`, {
       method: 'GET',
       headers: {
         Accept: 'text/plain',

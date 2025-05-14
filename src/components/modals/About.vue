@@ -6,12 +6,11 @@
         <BrushCanvas :blocks="aboutAscii" class="w-32 -right-40 relative" />
 
         <span class="p-2"><small class="text-blue-400 cursor-pointer"><a href="https://github.com/birdneststream/asciibird"
-              target="_blank">Github</a></small></span> 
+              target="_blank">Github</a></small></span>
         <h1 class="p-2 font-extrabold">
           Big Shout Outs to Patrons
         </h1>
-        <span>xartet, OfMonsters&Crime, mouse, funkpower, Charles, PP4L, octopus, hotline, dingopride, skg, eraser,
-          chzz, L0j1k, deakin</span>
+        <span>shrew, octopus, j-hex, nes, mouse, dingo, eraser, pancakes</span>
 
         <h5 class="p-2 font-extrabold">
           Special Thanks to

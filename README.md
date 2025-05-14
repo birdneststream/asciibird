@@ -26,10 +26,9 @@ To view in detailed help and documentation please see [Help and Documentation](H
   - [Lints and fixes files](#lints-and-fixes-files)
   - [Customize configuration](#customize-configuration)
 
-
 # Big Shout outs to Patrons
 
-> xartet, OfMonsters&Crime, mouse, funkpower, Charles, PP4L, octopus, slime, dingopride, skg, eraser, chzz, L0j1k, deakin
+> shrew, octopus, j-hex, nes, mouse, dingo, eraser, pancakes
 
 > special thanks to slime aka botmaster slime for the wonderful bot integration with asciibird
 
