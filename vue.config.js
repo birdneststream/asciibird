@@ -5,5 +5,5 @@ module.exports = {
     extract: false
   },
 
-  publicPath: ''
+  publicPath: process.env.NODE_ENV === 'production' ? 'https://asciibird.birdnest.live/' : ''
 };
