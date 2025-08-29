@@ -524,6 +524,8 @@ export function canvasToPng(canvas, filename) {
 
 export const checkForGetRequest = async () => {
   const haxAscii = new URL(location.href).searchParams.get('haxAscii');
+  const birdhole = new URL(location.href).searchParams.get('birdhole');
+  
   if (haxAscii) {
     const res = await fetch(`https://art.shrews.xyz/${haxAscii}`, {
       method: 'GET',
@@ -536,6 +538,18 @@ export const checkForGetRequest = async () => {
     const asciiName = haxAscii.split('/').pop();
     const asciiData = await res.text();
     parseMircAscii(asciiData, asciiName);
+  }
+  
+  if (birdhole) {
+    const res = await fetch(`https://hole.birdnest.live/derived/${birdhole}.png/${birdhole}.txt`, {
+      method: 'GET',
+      headers: {
+        Accept: 'text/plain',
+      },
+    });
+
+    const asciiData = await res.text();
+    parseMircAscii(asciiData, `${birdhole}.txt`);
   }
 }
 
