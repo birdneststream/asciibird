@@ -343,9 +343,6 @@ export default {
   }),
   computed: {
     isMacLike: () => /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform),
-    isDefault() {
-      return this.currentTool.name === "default";
-    },
     isSelecting() {
       return this.currentTool.name === "select";
     },
@@ -488,25 +485,6 @@ export default {
         this.selecting.endX !== null &&
         this.selecting.endY !== null
       );
-    },
-    changeAsciiMenu() {
-      let menu = [];
-
-      if (this.asciibirdMeta.length) {
-        for (let i in this.asciibirdMeta) {
-          let ascii = this.asciibirdMeta[i];
-
-          menu.push({
-            text: ascii.title,
-            click: () => this.changeTab(i),
-
-            icon: "insert_drive_file",
-            hotkey: `ctrl+shift+${i}`,
-          });
-        }
-      }
-
-      return menu;
     },
     // Toolbar menu — delegated to composable
     myMenu() {

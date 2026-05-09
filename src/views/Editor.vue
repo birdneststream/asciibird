@@ -1745,8 +1745,9 @@ export default {
               targetBlock["bg"] = this.currentFg;
               targetBlock["char"] = fullChar;
             } else {
+              // Different colors — set the newly-painted half to the user's color (bg),
+              // while keeping the existing half's color (fg) unchanged.
               targetBlock["bg"] = this.currentFg;
-              targetBlock["fg"] = this.currentFg;
               targetBlock["char"] = !this.atTopHalf ? topChar : bottomChar;
             }
             
