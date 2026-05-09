@@ -12,8 +12,6 @@ import { mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import BrushPreview from '@/components/parts/BrushPreview.vue'
 import {
-  blockWidth,
-  blockHeight,
   emptyBlock,
   maxBrushSize,
 } from '@/ascii'
@@ -80,21 +78,6 @@ describe('BrushPreview.vue', () => {
         'Square', 'Circle', 'Cross', 'Grid',
         'Inverted Grid', 'H lines', 'V lines',
       ])
-    })
-
-    it('blockWidth returns scaled width', () => {
-      const wrapper = mountBrushPreview()
-      expect(wrapper.vm.blockWidth).toBe(blockWidth)
-    })
-
-    it('blockHeight returns scaled height', () => {
-      const wrapper = mountBrushPreview()
-      expect(wrapper.vm.blockHeight).toBe(blockHeight)
-    })
-
-    it('blockSizeMultiplier reads from store', () => {
-      const wrapper = mountBrushPreview()
-      expect(wrapper.vm.blockSizeMultiplier).toBe(1)
     })
 
     it('canFg reads from store', () => {
@@ -204,9 +187,7 @@ describe('BrushPreview.vue', () => {
     it('has correct default values', () => {
       const wrapper = mountBrushPreview()
       expect(wrapper.vm.canDrag).toBe(true)
-      expect(wrapper.vm.blocks).toBeDefined()
       expect(wrapper.vm.isInputtingBrushSize).toBe(false)
-      expect(wrapper.vm.panel).toBeTruthy()
     })
   })
 
@@ -399,17 +380,6 @@ describe('BrushPreview.vue', () => {
   })
 
   describe('panel state methods', () => {
-    it('panel is initialized from brushPreviewState', () => {
-      store.brushPreviewState = {
-        x: 100, y: 200, w: 300, h: 400, visible: true,
-      }
-      const wrapper = mountBrushPreview()
-      expect(wrapper.vm.panel.x).toBe(100)
-      expect(wrapper.vm.panel.y).toBe(200)
-      expect(wrapper.vm.panel.w).toBe(300)
-      expect(wrapper.vm.panel.h).toBe(400)
-    })
-
     it('changeBrushPreviewState updates store', () => {
       const spy = vi.spyOn(store, 'changeBrushPreviewState')
       store.brushPreviewState = { x: 50, y: 60, w: 100, h: 200, visible: true }
@@ -458,26 +428,32 @@ describe('BrushPreview.vue', () => {
 
     it('brushSizeHeightInput triggers createBlocks on change', async () => {
       const wrapper = mountBrushPreview()
-      const spy = vi.spyOn(wrapper.vm, 'createBlocks')
+      const spy = vi.spyOn(store, 'updateBrushSize')
       wrapper.vm.brushSizeHeightInput = 5
       await wrapper.vm.$nextTick()
-      expect(spy).toHaveBeenCalled()
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({ brushSizeHeight: 5 }),
+      )
     })
 
     it('brushSizeWidthInput triggers createBlocks on change', async () => {
       const wrapper = mountBrushPreview()
-      const spy = vi.spyOn(wrapper.vm, 'createBlocks')
+      const spy = vi.spyOn(store, 'updateBrushSize')
       wrapper.vm.brushSizeWidthInput = 5
       await wrapper.vm.$nextTick()
-      expect(spy).toHaveBeenCalled()
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({ brushSizeWidth: 5 }),
+      )
     })
 
     it('brushSizeTypeInput triggers createBlocks on change', async () => {
       const wrapper = mountBrushPreview()
-      const spy = vi.spyOn(wrapper.vm, 'createBlocks')
+      const spy = vi.spyOn(store, 'updateBrushSize')
       wrapper.vm.brushSizeTypeInput = 'circle'
       await wrapper.vm.$nextTick()
-      expect(spy).toHaveBeenCalled()
+      expect(spy).toHaveBeenCalledWith(
+        expect.objectContaining({ brushSizeType: 'circle' }),
+      )
     })
 
     it('canFg computed reads targetingFg', () => {

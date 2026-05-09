@@ -36,6 +36,9 @@ export const globalStubs = {
       close: vi.fn(),
     },
   },
+  MainBrushCanvas: {
+    template: '<div class="main-brush-canvas-stub" />',
+  },
   // Headless UI component stubs
   Dialog: { template: '<div><slot /></div>' },
   DialogPanel: { template: '<div><slot /></div>' },

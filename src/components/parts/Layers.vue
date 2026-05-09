@@ -54,7 +54,7 @@
       </ul>
 
       <context-menu
-        ref="layers-menu"
+        ref="layersMenu"
         class="z-50"
       >
         <ul>
@@ -188,181 +188,168 @@
   </div>
 </template>
 
-<script>
-import ContextMenu from "./ContextMenu.vue";
-import { useAsciiBirdStore } from "../../store";
-import { useToast } from "../../composables/useToast";
-import { useDialog } from "../../composables/useDialog";
+<script setup lang="ts">
+import { ref, computed, watch } from 'vue';
+import { useAsciiBirdStore } from '../../store';
+import { useToast } from '../../composables/useToast';
+import { useDialog } from '../../composables/useDialog';
+import ContextMenu from './ContextMenu.vue';
 
-export default {
-  name: "Layers",
-  setup() {
-    const store = useAsciiBirdStore();
-    const { show: toastShow } = useToast();
-    const dialog = useDialog();
-    return { store, toastShow, dialog };
-  },
-  components: {
-    ContextMenu,
-  },
-  created() {},
-  data: () => ({}),
-  computed: {
-    currentAsciiLayers() {
-      return this.store.currentAsciiLayers;
-    },
-    selectedLayer() {
-      let selectedLayer = this.store.selectedLayer;
+const store = useAsciiBirdStore();
+const { show: toastShow } = useToast();
+const dialog = useDialog();
 
-      if (this.currentAsciiLayers[selectedLayer] === undefined) {
-        while (
-          this.currentAsciiLayers[selectedLayer] === undefined &&
-          selectedLayer >= 0
-        ) {
-          selectedLayer--;
-        }
+const layersMenu = ref<InstanceType<typeof ContextMenu> | null>(null);
 
-        this.store.changeLayer(selectedLayer);
-      }
+const currentAsciiLayers = computed(() => store.currentAsciiLayers);
 
-      return selectedLayer;
-    },
-    currentLayer() {
-      return this.currentAsciiLayers[this.selectedLayer];
-    },
-    canToggleLayer() {
-      return this.currentAsciiLayers.length > 1;
-    },
-    toolbarState() {
-      return this.store.toolbarState;
-    },
-    imageOverlay() {
-      return this.store.imageOverlay || false;
-    },
-    imageOverlayUrl() {
-      return this.imageOverlay.url
-        ? this.imageOverlay.url.split("/").pop()
-        : "";
-    },
-  },
-  watch: {
-    selectedLayer() {
-      this.selectBestLayer();
-    },
-  },
-  methods: {
-    openContextMenu(e) {
-      e.preventDefault();
-      this.$refs["layers-menu"].open({
-        pageX: e.layerX,
-        pageY: e.layerY,
-      });
-    },
-    selectBestLayer() {
-      let found = false;
-      this.currentAsciiLayers.map((item) => {
-        if (item && item.visible) {
-          found = true;
-        }
-      });
+const selectedLayer = computed(() => {
+  let idx = store.selectedLayer;
 
-      if (!found) {
-        this.store.toggleLayer(0);
-        this.changeLayer(0);
-      }
-    },
-    selectedLayerClass(key) {
-      if (!this.currentAsciiLayers[key].visible) {
-        return "bg-red-200";
-      }
+  if (currentAsciiLayers.value[idx] === undefined) {
+    while (
+      currentAsciiLayers.value[idx] === undefined &&
+      idx >= 0
+    ) {
+      idx--;
+    }
+    store.changeLayer(idx);
+  }
 
-      if (key === this.selectedLayer) {
-        return "bg-blue-200";
-      }
+  return idx;
+});
 
-      return "bg-gray-200";
-    },
-    showLayerRename(key, label) {
-      this.store.toggleDisableKeyboard(true);
-      this.dialog
-        .prompt({
-          title: "Rename Layer",
-          text: "Please input your new layer name",
-          icon: "question",
-          inputValue: label,
-          clickToClose: false,
-        })
-        .then((result) => {
-          this.store.toggleDisableKeyboard(false);
-          if (!result.input.length) {
-            this.toastShow("You must enter a layer name!", {
-              type: "error",
-            });
+const currentLayer = computed(
+  () => currentAsciiLayers.value[selectedLayer.value],
+);
 
-            return;
-          }
+const canToggleLayer = computed(
+  () => currentAsciiLayers.value.length > 1,
+);
 
-          if (result.isOk) {
-            this.updateLayerName(key, result.input);
-          }
+const imageOverlay = computed(
+  () => store.imageOverlay || { visible: false },
+);
 
-          return;
+const imageOverlayUrl = computed(() => {
+  const overlay = imageOverlay.value;
+  return overlay.url ? overlay.url.split('/').pop() : '';
+});
+
+watch(selectedLayer, () => {
+  selectBestLayer();
+});
+
+function openContextMenu(e: MouseEvent) {
+  e.preventDefault();
+  layersMenu.value?.open({
+    pageX: (e as MouseEvent & { layerX: number }).layerX,
+    pageY: (e as MouseEvent & { layerY: number }).layerY,
+  });
+}
+
+function selectBestLayer() {
+  let found = false;
+  currentAsciiLayers.value.forEach((item) => {
+    if (item && item.visible) {
+      found = true;
+    }
+  });
+
+  if (!found) {
+    store.toggleLayer(0);
+    changeLayer(0);
+  }
+}
+
+function selectedLayerClass(key: number) {
+  if (!currentAsciiLayers.value[key]?.visible) {
+    return 'bg-red-200';
+  }
+
+  if (key === selectedLayer.value) {
+    return 'bg-blue-200';
+  }
+
+  return 'bg-gray-200';
+}
+
+function showLayerRename(key: number, label: string) {
+  store.toggleDisableKeyboard(true);
+  dialog
+    .prompt({
+      title: 'Rename Layer',
+      text: 'Please input your new layer name',
+      inputValue: label,
+    })
+    .then((result) => {
+      store.toggleDisableKeyboard(false);
+      if (!result.input.length) {
+        toastShow('You must enter a layer name!', {
+          type: 'error',
         });
-    },
-    updateLayerName(key, label) {
-      this.store.updateLayerName({
-        key: key,
-        label: label,
-      });
-      this.closeMenu();
-    },
-    addLayer() {
-      this.store.addLayer();
-      this.toastShow(`Added a new layer.`, {
-        type: "success",
-      });
-      this.closeMenu();
-    },
-    mergeLayers() {
-      this.store.mergeAllLayers();
-      this.toastShow(`All layers have been merged.`, {
-        type: "success",
-      });
-      this.closeMenu();
-    },
-    changeLayer(key) {
-      this.store.changeLayer(key);
-    },
-    toggleLayer(key) {
-      this.store.toggleLayer(key);
-      this.closeMenu();
-    },
-    upLayer(key) {
-      this.store.upLayer(key);
-      this.closeMenu();
-    },
-    downLayer(key) {
-      this.store.downLayer(key);
-      this.closeMenu();
-    },
-    removeLayer(key) {
-      this.store.removeLayer(key);
-      this.toastShow(`Removed layer.`, {
-        type: "success",
-      });
-      this.closeMenu();
-    },
-    showOverlayModal() {
-      this.store.openModal("overlay");
-    },
-    updateImageOverlay() {
-      let overlay = { ...this.imageOverlay };
-      overlay.visible = !overlay.visible;
-      this.store.updateImageOverlay(overlay);
-    },
-    closeMenu() {
-      this.$refs["layers-menu"].close();
-    },
-  },
-};
+        return;
+      }
+
+      if (result.isOk) {
+        updateLayerName(key, result.input);
+      }
+    });
+}
+
+function updateLayerName(key: number, label: string) {
+  store.updateLayerName({ key, label });
+  closeMenu();
+}
+
+function addLayer() {
+  store.addLayer();
+  toastShow('Added a new layer.', { type: 'success' });
+  closeMenu();
+}
+
+function mergeLayers() {
+  store.mergeAllLayers();
+  toastShow('All layers have been merged.', { type: 'success' });
+  closeMenu();
+}
+
+function changeLayer(key: number) {
+  store.changeLayer(key);
+}
+
+function toggleLayer(key: number) {
+  store.toggleLayer(key);
+  closeMenu();
+}
+
+function upLayer(key: number) {
+  store.upLayer(key);
+  closeMenu();
+}
+
+function downLayer(key: number) {
+  store.downLayer(key);
+  closeMenu();
+}
+
+function removeLayer(key: number) {
+  store.removeLayer(key);
+  toastShow('Removed layer.', { type: 'success' });
+  closeMenu();
+}
+
+function showOverlayModal() {
+  store.openModal('overlay');
+}
+
+function updateImageOverlay() {
+  const overlay = { ...imageOverlay.value };
+  overlay.visible = !overlay.visible;
+  store.updateImageOverlay(overlay);
+}
+
+function closeMenu() {
+  layersMenu.value?.close();
+}
 </script>

@@ -110,13 +110,6 @@ describe('Layers.vue', () => {
     expect(wrapper.vm.canToggleLayer).toBe(false)
   })
 
-  it('toolbarState returns store toolbarState', () => {
-    const wrapper = createWrapper()
-    const ts = wrapper.vm.toolbarState
-    expect(ts).toBeDefined()
-    expect(ts.currentTool).toBe(0)
-  })
-
   it('imageOverlay returns overlay object from store', () => {
     const wrapper = createWrapper()
     const overlay = wrapper.vm.imageOverlay
@@ -125,11 +118,11 @@ describe('Layers.vue', () => {
     expect(overlay.opacity).toBe(95)
   })
 
-  it('imageOverlay returns false when no meta', () => {
+  it('imageOverlay returns fallback when no meta', () => {
     store = createMockStore({ asciibirdMeta: [] })
     _mockStore = store
     const wrapper = createWrapper()
-    expect(wrapper.vm.imageOverlay).toBe(false)
+    expect(wrapper.vm.imageOverlay).toEqual({ visible: false })
   })
 
   it('imageOverlayUrl returns empty string when no url', () => {

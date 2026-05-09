@@ -60,415 +60,374 @@
   </div>
 </template>
 
-<script>
-import { emptyBlock, maxBrushSize, blockWidth, blockHeight } from "../../ascii";
-import MainBrushCanvas from "./MainBrushCanvas.vue";
-import { useAsciiBirdStore } from "../../store";
-import { useDraggable } from "@vueuse/core";
-import { ref } from "vue";
+<script setup lang="ts">
+import { ref, computed, watch } from 'vue';
+import { useDraggable } from '@vueuse/core';
+import { emptyBlock, maxBrushSize } from '../../ascii';
+import { useAsciiBirdStore } from '../../store';
+import MainBrushCanvas from './MainBrushCanvas.vue';
 
-export default {
-  name: "BrushPreview",
-  setup() {
-    const store = useAsciiBirdStore();
-    const panelEl = ref(null);
-    const { style: panelStyle } = useDraggable(panelEl, {
-      initialValue: { x: store.brushPreviewState.x, y: store.brushPreviewState.y },
-    });
-    return { store, panelEl, panelStyle };
+const props = defineProps<{ yOffset?: number }>();
+const emit = defineEmits<{
+  inputtingbrush: [value: boolean];
+}>();
+
+const store = useAsciiBirdStore();
+const panelEl = ref<HTMLElement | null>(null);
+
+const { style: panelStyle } = useDraggable(panelEl, {
+  initialValue: {
+    x: store.brushPreviewState.x,
+    y: store.brushPreviewState.y,
   },
-  components: {
-    MainBrushCanvas,
-  },
-  created() {
-    if (this.brushBlocksEmpty) {
-      this.createBlocks();
-      this.brushSizeWidthInput = this.brushSizeWidth;
-      this.brushSizeHeightInput = this.brushSizeHeight;
-      this.brushSizeTypeInput = this.brushSizeType;
+});
+
+const canDrag = ref(true);
+const brushSizeHeightInput = ref(1);
+const brushSizeWidthInput = ref(1);
+const brushSizeTypeInput = ref('square');
+const isInputtingBrushSize = ref(false);
+const blocks = ref<Record<string, unknown>[][]>([]);
+
+const brushOptions = [
+  'Square',
+  'Circle',
+  'Cross',
+  'Grid',
+  'Inverted Grid',
+  'H lines',
+  'V lines',
+];
+
+const brushSizeHeight = computed(() => store.brushSizeHeight);
+const brushSizeWidth = computed(() => store.brushSizeWidth);
+const brushSizeType = computed(() => store.brushSizeType);
+const brushBlocks = computed(() => store.brushBlocks);
+const currentFg = computed(() => store.currentFg);
+const currentBg = computed(() => store.currentBg);
+const currentChar = computed(() => store.currentChar);
+const canFg = computed(() => store.isTargettingFg);
+const canBg = computed(() => store.isTargettingBg);
+const canText = computed(() => store.isTargettingChar);
+const updateBrush = computed(() => store.toolbarState.updateBrush);
+const brushPreviewState = computed(() => store.brushPreviewState);
+
+const brushBlocksEmpty = computed(() => brushBlocks.value.length === 0);
+const middleY = computed(() => Math.floor(brushSizeHeight.value / 2));
+const middleX = computed(() => Math.floor(brushSizeWidth.value / 2));
+
+// Initialization (was created())
+brushSizeWidthInput.value = brushSizeWidth.value;
+brushSizeHeightInput.value = brushSizeHeight.value;
+brushSizeTypeInput.value = brushSizeType.value;
+if (brushBlocksEmpty.value) {
+  createBlocks();
+}
+
+watch(isInputtingBrushSize, (val) => {
+  emit('inputtingbrush', val);
+});
+
+watch(brushSizeWidth, (val) => {
+  brushSizeWidthInput.value = val;
+});
+
+watch(brushSizeHeight, (val) => {
+  brushSizeHeightInput.value = val;
+});
+
+watch(brushSizeType, (val) => {
+  brushSizeTypeInput.value = val;
+});
+
+watch(brushSizeHeightInput, (val, old) => {
+  if (val !== old) createBlocks();
+});
+
+watch(brushSizeWidthInput, (val, old) => {
+  if (val !== old) createBlocks();
+});
+
+watch(brushSizeTypeInput, (val, old) => {
+  if (val !== old) createBlocks();
+});
+
+watch(canFg, (val, old) => {
+  if (val !== old && updateBrush.value) createBlocks();
+});
+
+watch(canBg, (val, old) => {
+  if (val !== old && updateBrush.value) createBlocks();
+});
+
+watch(canText, (val, old) => {
+  if (val !== old && updateBrush.value) createBlocks();
+});
+
+watch(currentFg, (val, old) => {
+  if (val !== old && updateBrush.value) createBlocks();
+});
+
+watch(currentBg, (val, old) => {
+  if (val !== old && updateBrush.value) createBlocks();
+});
+
+watch(currentChar, (val, old) => {
+  if (val !== old && updateBrush.value) createBlocks();
+});
+
+watch(brushBlocks, () => {
+  store.pushBrushHistory(brushBlocks.value);
+});
+
+watch(
+  () => props.yOffset,
+  (val) => {
+    if (panelEl.value) {
+      panelEl.value.style.top =
+        `${Math.trunc(brushPreviewState.value.y + val)}px`;
     }
-
-    this.panel.x = this.store.brushPreviewState.x;
-    this.panel.y = this.store.brushPreviewState.y;
-    this.panel.w = this.store.brushPreviewState.w;
-    this.panel.h = this.store.brushPreviewState.h;
   },
-  props: { yOffset: { type: Number, default: 0 } },
-  emits: ['inputtingbrush'],
-  data: () => ({
-    canDrag: true,
-    blocks: [],
-    brushSizeHeightInput: 1,
-    brushSizeWidthInput: 1,
-    brushSizeTypeInput: "square",
-    panel: {
-      w: 0,
-      h: 0,
-      x: 100,
-      y: 100,
-      visible: true,
-    },
-    isInputtingBrushSize: false,
-  }),
-  computed: {
-    brushOptions() {
-      return [
-        "Square",
-        "Circle",
-        "Cross",
-        "Grid",
-        "Inverted Grid",
-        "H lines",
-        "V lines",
-      ];
-    },
-    blockWidth() {
-      return blockWidth * this.store.blockSizeMultiplier;
-    },
-    blockHeight() {
-      return blockHeight * this.store.blockSizeMultiplier;
-    },
-    blockSizeMultiplier() {
-      return this.store.blockSizeMultiplier;
-    },
-    canFg() {
-      return this.store.isTargettingFg;
-    },
-    canBg() {
-      return this.store.isTargettingBg;
-    },
-    canText() {
-      return this.store.isTargettingChar;
-    },
-    currentFg() {
-      return this.store.currentFg;
-    },
-    currentBg() {
-      return this.store.currentBg;
-    },
-    currentChar() {
-      return this.store.currentChar;
-    },
-    toolbarState() {
-      return this.store.toolbarState;
-    },
-    brushSizeHeight() {
-      return this.store.brushSizeHeight;
-    },
-    brushSizeWidth() {
-      return this.store.brushSizeWidth;
-    },
-    brushSizeType() {
-      return this.store.brushSizeType;
-    },
-    brushBlocks() {
-      return this.store.brushBlocks;
-    },
-    brushBlocksEmpty() {
-      return this.brushBlocks.length === 0;
-    },
-    maxBrushSize() {
-      return maxBrushSize;
-    },
-    brushPreviewState() {
-      return this.store.brushPreviewState;
-    },
-    updateBrush() {
-      return this.toolbarState.updateBrush;
-    },
-    middleY() {
-      return Math.floor(this.brushSizeHeight / 2);
-    },
-    middleX() {
-      return Math.floor(this.brushSizeWidth / 2);
-    },
-  },
-  watch: {
-    isInputtingBrushSize(val) {
-      this.$emit("inputtingbrush", val);
-    },
-    brushSizeWidth() {
-      this.brushSizeWidthInput = this.brushSizeWidth;
-    },
-    brushSizeHeight() {
-      this.brushSizeHeightInput = this.brushSizeHeight;
-    },
-    brushSizeType() {
-      this.brushSizeTypeInput = this.brushSizeType;
-    },
-    brushSizeHeightInput(val, old) {
-      if (val !== old) {
-        this.createBlocks();
-      }
-    },
-    brushSizeWidthInput(val, old) {
-      if (val !== old) {
-        this.createBlocks();
-      }
-    },
-    brushSizeTypeInput(val, old) {
-      if (val !== old) {
-        this.createBlocks();
-      }
-    },
-    canFg(val, old) {
-      if (val !== old && this.updateBrush) {
-        this.createBlocks();
-      }
-    },
-    canBg(val, old) {
-      if (val !== old && this.updateBrush) {
-        this.createBlocks();
-      }
-    },
-    canText(val, old) {
-      if (val !== old && this.updateBrush) {
-        this.createBlocks();
-      }
-    },
-    currentFg(val, old) {
-      if (val !== old && this.updateBrush) {
-        this.createBlocks();
-      }
-    },
-    currentBg(val, old) {
-      if (val !== old && this.updateBrush) {
-        this.createBlocks();
-      }
-    },
-    currentChar(val, old) {
-      if (val !== old && this.updateBrush) {
-        this.createBlocks();
-      }
-    },
-    brushBlocks() {
-      this.store.pushBrushHistory(this.brushBlocks);
-    },
-    yOffset(val) {
-      this.panelEl.style.top = Number.parseInt(
-        this.brushPreviewState.y + val
-      ) + "px";
-    },
-  },
-  methods: {
-    updateBrushSize() {
-      this.store.updateBrushSize({
-        brushSizeHeight: this.brushSizeHeightInput,
-        brushSizeWidth: this.brushSizeWidthInput,
-        brushSizeType: this.brushSizeTypeInput,
-      });
-    },
-    createBlocks() {
-      this.updateBrushSize();
+);
 
-      const brushHeight = this.brushSizeHeight;
-      const brushWidth = this.brushSizeWidth;
-      this.blocks = [];
+function updateBrushSize() {
+  store.updateBrushSize({
+    brushSizeHeight: brushSizeHeightInput.value,
+    brushSizeWidth: brushSizeWidthInput.value,
+    brushSizeType: brushSizeTypeInput.value,
+  });
+}
 
-      let y = 0;
-      let x = 0;
-      let targetX = 0;
-      let targetY = 0;
+function createBlocks() {
+  updateBrushSize();
 
-      const block = {
-        fg: this.currentFg,
-        bg: this.currentBg,
-        char: this.currentChar,
-      };
+  const brushHeight = brushSizeHeight.value;
+  const brushWidth = brushSizeWidth.value;
+  blocks.value = [];
 
-      for (y = 0; y < brushHeight; y++) {
-        this.blocks[y] = [];
-        for (x = 0; x < brushWidth; x++) {
-          switch (this.brushSizeType.toLowerCase()) {
-            case "cross":
-              if (x === 0 && y === 0) {
-                this.blocks[y][x] = { ...block };
-                continue;
-              }
+  let x = 0;
+  let y = 0;
+  let targetX = 0;
+  let targetY = 0;
 
-              this.blocks[y][x] = { ...emptyBlock };
+  const block = {
+    fg: currentFg.value,
+    bg: currentBg.value,
+    char: currentChar.value,
+  };
 
-              if (this.blocks[y] && this.blocks[y][x]) {
-                if (x % 2 === 0 && y % 2 === 0) {
-                  this.blocks[y][x] = { ...block };
-                }
-
-                if (x % 2 === 1 && y % 2 === 1) {
-                  this.blocks[y][x] = { ...block };
-                }
-              }
-
-              break;
-
-            case "inverted grid":
-              if (x === 0 && y === 0) {
-                this.blocks[y][x] = { ...block };
-                continue;
-              }
-              if (y % 2 === 0 || x % 2 === 0) {
-                this.blocks[y][x] = { ...block };
-              } else {
-                this.blocks[y][x] = { ...emptyBlock };
-              }
-              break;
-
-            case "grid":
-              if (x === 0 && y === 0) {
-                this.blocks[y][x] = { ...block };
-                continue;
-              }
-
-              if (x === brushWidth) {
-                this.blocks[y][x] = { ...emptyBlock };
-              } else {
-                this.blocks[y][x] = { ...block };
-              }
-
-              targetX = x;
-
-              if (y % 2 === 0) {
-                targetX -= 1;
-              }
-
-              if (this.blocks[y] && this.blocks[y][targetX]) {
-                if (y % 2 === 0 && x % 2 !== 0) {
-                  this.blocks[y][targetX] = { ...block };
-                } else {
-                  this.blocks[y][targetX] = { ...emptyBlock };
-                }
-              }
-
-              break;
-
-            case "h lines":
-              if (x === 0 && y === 0) {
-                this.blocks[y][x] = { ...block };
-                continue;
-              }
-
-              if (x === brushWidth) {
-                this.blocks[y][x] = { ...emptyBlock };
-              } else {
-                this.blocks[y][x] = { ...block };
-              }
-
-              targetX = x;
-
-              if (y % 2 === 0) {
-                targetX -= 1;
-              }
-
-              if (this.blocks[y] && this.blocks[y][targetX]) {
-                if (y % 2 === 0) {
-                  if (targetX % 2 === 0) {
-                    this.blocks[y][targetX] = { ...block };
-                  }
-                } else {
-                  this.blocks[y][targetX] = { ...emptyBlock };
-                }
-              }
-
-              break;
-
-            case "v lines":
-              if (x === 0 && y === 0) {
-                this.blocks[y][x] = { ...block };
-                continue;
-              }
-
-              if (x === brushWidth) {
-                this.blocks[y][x] = { ...emptyBlock };
-              } else {
-                this.blocks[y][x] = { ...block };
-              }
-
-              targetY = y;
-
-              if (targetY % 2 === 0) {
-                targetY -= 1;
-              }
-
-              if (this.blocks[targetY] && this.blocks[targetY][x]) {
-                if (targetY % 2 === 0) {
-                  if (x % 2 === 0) {
-                    this.blocks[targetY][x] = { ...block };
-                  }
-                } else {
-                  this.blocks[targetY][x] = { ...emptyBlock };
-                }
-              }
-
-              break;
-
-            case "square":
-              this.blocks[y][x] = { ...block };
-              break;
-
-            case "circle":
-              this.blocks[y][x] = { ...emptyBlock };
-              break;
+  for (y = 0; y < brushHeight; y++) {
+    blocks.value[y] = [];
+    for (x = 0; x < brushWidth; x++) {
+      switch (brushSizeType.value.toLowerCase()) {
+        case 'cross':
+          if (x === 0 && y === 0) {
+            blocks.value[y][x] = { ...block };
+            continue;
           }
-        }
-      }
 
-      switch (this.brushSizeType.toLowerCase()) {
-        case "circle": {
-          let x1 = 0;
-          let y1 = 0;
+          blocks.value[y][x] = { ...emptyBlock };
 
-          for (let angle = 0; angle <= 360; angle += 1) {
-            const radian = angle * ((Math.PI * 2) / 360);
-            x1 = Math.round(
-              (brushWidth - 1) * ((Math.cos(radian) + 1.0) / 2.0)
-            );
-            y1 = Math.round(
-              (brushHeight - 1) * ((Math.sin(radian) + 1.0) / 2.0)
-            );
+          if (blocks.value[y] && blocks.value[y][x]) {
+            if (x % 2 === 0 && y % 2 === 0) {
+              blocks.value[y][x] = { ...block };
+            }
 
-            if (this.blocks[y1] && this.blocks[y1][x1]) {
-              this.blocks[y1][x1] = { ...block };
+            if (x % 2 === 1 && y % 2 === 1) {
+              blocks.value[y][x] = { ...block };
             }
           }
 
-          this.fill();
           break;
+
+        case 'inverted grid':
+          if (x === 0 && y === 0) {
+            blocks.value[y][x] = { ...block };
+            continue;
+          }
+          if (y % 2 === 0 || x % 2 === 0) {
+            blocks.value[y][x] = { ...block };
+          } else {
+            blocks.value[y][x] = { ...emptyBlock };
+          }
+          break;
+
+        case 'grid':
+          if (x === 0 && y === 0) {
+            blocks.value[y][x] = { ...block };
+            continue;
+          }
+
+          if (x === brushWidth) {
+            blocks.value[y][x] = { ...emptyBlock };
+          } else {
+            blocks.value[y][x] = { ...block };
+          }
+
+          targetX = x;
+
+          if (y % 2 === 0) {
+            targetX -= 1;
+          }
+
+          if (blocks.value[y] && blocks.value[y][targetX]) {
+            if (y % 2 === 0 && x % 2 !== 0) {
+              blocks.value[y][targetX] = { ...block };
+            } else {
+              blocks.value[y][targetX] = { ...emptyBlock };
+            }
+          }
+
+          break;
+
+        case 'h lines':
+          if (x === 0 && y === 0) {
+            blocks.value[y][x] = { ...block };
+            continue;
+          }
+
+          if (x === brushWidth) {
+            blocks.value[y][x] = { ...emptyBlock };
+          } else {
+            blocks.value[y][x] = { ...block };
+          }
+
+          targetX = x;
+
+          if (y % 2 === 0) {
+            targetX -= 1;
+          }
+
+          if (blocks.value[y] && blocks.value[y][targetX]) {
+            if (y % 2 === 0) {
+              if (targetX % 2 === 0) {
+                blocks.value[y][targetX] = { ...block };
+              }
+            } else {
+              blocks.value[y][targetX] = { ...emptyBlock };
+            }
+          }
+
+          break;
+
+        case 'v lines':
+          if (x === 0 && y === 0) {
+            blocks.value[y][x] = { ...block };
+            continue;
+          }
+
+          if (x === brushWidth) {
+            blocks.value[y][x] = { ...emptyBlock };
+          } else {
+            blocks.value[y][x] = { ...block };
+          }
+
+          targetY = y;
+
+          if (targetY % 2 === 0) {
+            targetY -= 1;
+          }
+
+          if (blocks.value[targetY] && blocks.value[targetY][x]) {
+            if (targetY % 2 === 0) {
+              if (x % 2 === 0) {
+                blocks.value[targetY][x] = { ...block };
+              }
+            } else {
+              blocks.value[targetY][x] = { ...emptyBlock };
+            }
+          }
+
+          break;
+
+        case 'square':
+          blocks.value[y][x] = { ...block };
+          break;
+
+        case 'circle':
+          blocks.value[y][x] = { ...emptyBlock };
+          break;
+      }
+    }
+  }
+
+  switch (brushSizeType.value.toLowerCase()) {
+    case 'circle': {
+      let x1 = 0;
+      let y1 = 0;
+
+      for (let angle = 0; angle <= 360; angle += 1) {
+        const radian = angle * ((Math.PI * 2) / 360);
+        x1 = Math.round(
+          (brushWidth - 1) * ((Math.cos(radian) + 1.0) / 2.0),
+        );
+        y1 = Math.round(
+          (brushHeight - 1) * ((Math.sin(radian) + 1.0) / 2.0),
+        );
+
+        if (blocks.value[y1] && blocks.value[y1][x1]) {
+          blocks.value[y1][x1] = { ...block };
         }
       }
 
-      this.store.setBrushBlocks(this.blocks);
-    },
-    fill() {
-      const current = {};
-      current.bg = null;
+      fill();
+      break;
+    }
+  }
 
-      this.fillTool(this.middleY, this.middleX);
-    },
-    fillTool(y, x) {
-      if (y >= this.brushSizeHeight) {
-        return;
-      }
+  store.setBrushBlocks(blocks.value);
+}
 
-      if (x >= this.brushSizeWidth) {
-        return;
-      }
+function fill() {
+  fillTool(middleY.value, middleX.value);
+}
 
-      if (this.blocks[y] === undefined || this.blocks[y][x] === undefined) {
-        return;
-      }
+function fillTool(y: number, x: number) {
+  if (y >= brushSizeHeight.value) return;
+  if (x >= brushSizeWidth.value) return;
+  if (!blocks.value[y] || blocks.value[y][x] === undefined) return;
 
-      if (this.blocks[y][x].bg === this.currentBg) {
-        return;
-      }
+  const block = blocks.value[y][x] as Record<string, unknown>;
+  if (block.bg === currentBg.value) return;
 
-      this.blocks[y][x].bg = this.currentBg;
-      this.blocks[y][x].fg = this.currentFg;
-      this.blocks[y][x].char = this.currentChar;
+  block.bg = currentBg.value;
+  block.fg = currentFg.value;
+  block.char = currentChar.value;
 
-      this.fillTool(y, x - 1);
-      this.fillTool(y, x + 1);
-      this.fillTool(y - 1, x);
-      this.fillTool(y + 1, x);
-    },
-  },
-};
+  fillTool(y, x - 1);
+  fillTool(y, x + 1);
+  fillTool(y - 1, x);
+  fillTool(y + 1, x);
+}
+
+// Expose internals for testing
+defineExpose({
+  canDrag,
+  blocks,
+  brushSizeWidthInput,
+  brushSizeHeightInput,
+  brushSizeTypeInput,
+  isInputtingBrushSize,
+  brushOptions,
+  brushSizeHeight,
+  brushSizeWidth,
+  brushSizeType,
+  brushBlocks,
+  brushBlocksEmpty,
+  maxBrushSize,
+  brushPreviewState,
+  updateBrush,
+  middleY,
+  middleX,
+  canFg,
+  canBg,
+  canText,
+  currentFg,
+  currentBg,
+  currentChar,
+  toolbarState: computed(() => store.toolbarState),
+  updateBrushSize,
+  createBlocks,
+  fillTool,
+})
 </script>
