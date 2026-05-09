@@ -415,20 +415,46 @@ export const mutations = {
 
     if (tempLayers.length > 1) {
       const oldLayer = JSON.parse(JSON.stringify(tempLayers));
+      const wasSelectedLayer = payload === state.asciibirdMeta[state.tab].selectedLayer;
 
       tempLayers.splice(payload, 1);
 
-      let selectedLayer =
-        state.asciibirdMeta[state.tab].selectedLayer;
+      if (wasSelectedLayer) {
+        // Auto-select the next visible layer when removing the selected one
+        let selectedLayer = Math.min(
+          payload,
+          tempLayers.length - 1,
+        );
 
-      while (
-        tempLayers[selectedLayer] === undefined &&
-        selectedLayer >= 0
-      ) {
-        selectedLayer--;
+        // Find the nearest visible layer
+        if (!tempLayers[selectedLayer]?.visible) {
+          let found = -1;
+          // Search downward first
+          for (let i = selectedLayer; i < tempLayers.length; i++) {
+            if (tempLayers[i].visible) {
+              found = i;
+              break;
+            }
+          }
+          // If not found below, search upward
+          if (found === -1) {
+            for (let i = selectedLayer - 1; i >= 0; i--) {
+              if (tempLayers[i].visible) {
+                found = i;
+                break;
+              }
+            }
+          }
+          if (found !== -1) {
+            selectedLayer = found;
+          }
+        }
+
+        state.asciibirdMeta[state.tab].selectedLayer = selectedLayer;
+      } else if (payload < state.asciibirdMeta[state.tab].selectedLayer) {
+        // Removed a layer before the selected one — adjust index
+        state.asciibirdMeta[state.tab].selectedLayer--;
       }
-
-      state.asciibirdMeta[state.tab].selectedLayer = selectedLayer;
 
       state.asciibirdMeta[state.tab].layers =
         LZString.compressToUTF16(JSON.stringify(tempLayers));

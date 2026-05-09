@@ -250,6 +250,7 @@ import {
   emptyBlock,
   canvasToPng,
   maxBrushSize,
+  checkIrcByteLimits,
 } from "./ascii";
 
 import VueFileToolbarMenu from "vue-file-toolbar-menu";
@@ -258,17 +259,15 @@ export default {
   async created() {
     // Load from irc watch if present in the URL bar
     checkForGetRequest();
-    var isThis = this;
-    window.addEventListener("scroll", function (event) {
-      isThis.scrollOffset = this.scrollY;
-    });
+    this.scrollHandler = (event) => {
+      this.scrollOffset = window.scrollY;
+    };
+    window.addEventListener("scroll", this.scrollHandler);
     this.mirror.x = this.toolbarState.mirrorX;
     this.mirror.y = this.toolbarState.mirrorY;
   },
   destroyed() {
-    window.removeEventListener("scroll", function (event) {
-      isThis.scrollOffset = this.scrollY;
-    });
+    window.removeEventListener("scroll", this.scrollHandler);
   },
   components: {
     Toolbar,
@@ -297,6 +296,7 @@ export default {
     canvasY: null,
     dashboardX: 0,
     dashboardY: 0,
+    scrollHandler: null,
     importType: null,
     showContextMenu: false,
     selectedBlocks: [],
@@ -986,13 +986,6 @@ export default {
               click: () => this.$store.commit("openModal", "options"),
               disabled: !this.isDefault,
               hotkey: !this.isMacLike ? "ctrl+o" : "command+o",
-              // menu: [
-              //   {
-              //     text: "Show Options",
-              //     click: () => this.$store.commit("openModal", "options"),
-              //     icon: "settings",
-              //   },
-              // ],
             },
           ],
         });
@@ -1314,10 +1307,17 @@ export default {
       this.$refs.asciiInput.click();
     },
     importAsciibirdState(fileContents) {
-      const contents = JSON.parse(
-        LZString.decompressFromEncodedURIComponent(fileContents)
-      );
-      this.$store.commit("changeState", { ...contents });
+      try {
+        const contents = JSON.parse(
+          LZString.decompressFromEncodedURIComponent(fileContents)
+        );
+        this.$store.commit("changeState", { ...contents });
+      } catch (err) {
+        this.$toasted.show("Failed to import ASCIIBIRD state. File may be corrupted.", {
+          type: "error",
+          icon: "error",
+        });
+      }
     },
     exportAsciibirdState() {
       let output;
@@ -1350,23 +1350,13 @@ export default {
     startExport(type) {
       let ascii = exportMirc();
       
-      // Check the lines length on export to warn the user they maybe too large for irc
-      let checkLengthArray = ascii.output.join("").split("\n");
-      let checkLines = [];
-
-      checkLengthArray.forEach((a, i) => {
-        console.log((new TextEncoder().encode(a)).length)
-        // The irc line limit is 512 bytes which also includes the users nick, indent and host.
-        // 500 should be a good indication nonetheless.
-        if ((new TextEncoder().encode(a)).length > 500) {
-          checkLines.push(i);
-        }
-      });
+      // Check line lengths for IRC compatibility
+      const checkLines = checkIrcByteLimits(ascii.output.join(""));
 
       if (checkLines.length) {
-        let displayLines = checkLines.join(", ")
+        const displayLines = checkLines.join(", ");
         this.$toasted.show(
-          `Line${checkLines.length > 0 ? 's' : ''} ${displayLines} may be too large width for IRC.`,
+          `Line${checkLines.length > 1 ? 's' : ''} ${displayLines} may be too large for IRC.`,
           {
             type: "error",
             position: "bottom-center",

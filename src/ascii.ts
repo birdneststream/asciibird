@@ -659,6 +659,97 @@ export const checkVisible = (bottom: number, top: number): boolean => {
   return !(bottom < 0 || top - viewHeight >= 0);
 };
 
+/**
+ * Iterative flood fill using DFS with visited set.
+ * Replaces recursive approach to avoid stack overflow on large grids.
+ * Selectively targets only the properties enabled by canBg/canFg/canText.
+ * Note: canFg matching is intentionally not used in the boundary check
+ * to match the original recursive fillTool behavior where fg matching
+ * was commented out.
+ */
+export const iterativeFill = (
+  blocks: Block[][],
+  startY: number,
+  startX: number,
+  current: Block,
+  fillColor: Block,
+  canBg: boolean,
+  canFg: boolean,
+  canText: boolean,
+  eraser: boolean,
+): void => {
+  const height = blocks.length;
+  if (height === 0) return;
+  const width = blocks[0]?.length ?? 0;
+  if (width === 0) return;
+
+  // Bounds check starting position
+  if (startY < 0 || startY >= height || startX < 0 || startX >= width) return;
+
+  // Check if starting block matches current
+  // Note: canFg is used for applying fill but NOT for boundary matching,
+  // matching the original recursive fillTool behavior where fg matching was
+  // commented out
+  const startBlock = blocks[startY][startX];
+  if (canBg && startBlock.bg !== current.bg) return;
+  if (canText && startBlock.char !== current.char) return;
+
+  const visited = new Set<number>();
+  const stack: Array<{ x: number; y: number }> = [{ x: startX, y: startY }];
+
+  while (stack.length > 0) {
+    const pos = stack.pop()!;
+    const key = pos.y * width + pos.x;
+
+    if (visited.has(key)) continue;
+    if (pos.y < 0 || pos.y >= height || pos.x < 0 || pos.x >= width) continue;
+
+    const block = blocks[pos.y][pos.x];
+
+    // Check if this block matches the current color pattern
+    if (canBg && block.bg !== current.bg) continue;
+    if (canText && block.char !== current.char) continue;
+
+    visited.add(key);
+
+    // Apply fill (selectively target properties)
+    if (!eraser) {
+      if (canBg) block.bg = fillColor.bg;
+      if (canFg) block.fg = fillColor.fg;
+      if (canText) block.char = fillColor.char;
+    } else {
+      if (canBg) delete block.bg;
+      if (canFg) delete block.fg;
+      if (canText) delete block.char;
+    }
+
+    // Push neighbors (4-directional)
+    stack.push({ x: pos.x - 1, y: pos.y });
+    stack.push({ x: pos.x + 1, y: pos.y });
+    stack.push({ x: pos.x, y: pos.y - 1 });
+    stack.push({ x: pos.x, y: pos.y + 1 });
+  }
+};
+
+/**
+ * Check IRC line byte lengths and return indices exceeding 512-byte limit.
+ * IRC protocol has a 512-byte line limit including nick/ident/host.
+ * We use 500 as a practical threshold.
+ */
+export const checkIrcByteLimits = (output: string): number[] => {
+  const lines = output.split('\n');
+  const overLimit: number[] = [];
+
+  lines.forEach((line, i) => {
+    const byteLength = new TextEncoder().encode(line).length;
+    if (byteLength > 500) {
+      overLimit.push(i);
+    }
+  });
+
+  return overLimit;
+};
+
 export const mergeLayers = (_blocks: Block[][] | null = null): Block[][] => {
   const mergedLayers: Block[][] = [];
 

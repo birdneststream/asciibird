@@ -92,7 +92,9 @@ import {
   exportMirc,
   downloadFile,
   cyrb53,
-  emptyBlock
+  emptyBlock,
+  iterativeFill,
+  checkIrcByteLimits,
 } from "../ascii";
 
 export default {
@@ -113,7 +115,7 @@ export default {
       await this.delayRedrawCanvas();
     });
 
-    var _this = this;
+    const _this = this;
     hotkeys("*", "editor", async function (event, handler) {
       event.preventDefault();
 
@@ -513,23 +515,13 @@ export default {
     startExport(type) {
       let ascii = exportMirc();
 
-      // Check the lines length on export to warn the user they maybe too large for irc
-      let checkLengthArray = ascii.output.join("").split("\n");
-      let checkLines = [];
-
-      checkLengthArray.forEach((a, i) => {
-        console.log((new TextEncoder().encode(a)).length)
-        // The irc line limit is 512 bytes which also includes the users nick, indent and host.
-        // 500 should be a good indication nonetheless.
-        if ((new TextEncoder().encode(a)).length > 500) {
-          checkLines.push(i);
-        }
-      });
+      // Check line lengths for IRC compatibility
+      const checkLines = checkIrcByteLimits(ascii.output.join(""));
 
       if (checkLines.length) {
-        let displayLines = checkLines.join(", ")
+        const displayLines = checkLines.join(", ");
         this.$toasted.show(
-          `Line${checkLines.length > 0 ? 's' : ''} ${displayLines} may be too large width for IRC.`,
+          `Line${checkLines.length > 1 ? 's' : ''} ${displayLines} may be too large for IRC.`,
           {
             type: "error",
             position: "bottom-center",
@@ -899,7 +891,7 @@ export default {
 
       this.toolCtx.beginPath();
 
-      for (var x = 1; x <= w; x += blockWidth) {
+      for (let x = 1; x <= w; x += blockWidth) {
         this.toolCtx.moveTo(x, 0);
         this.toolCtx.lineTo(x, h);
       }
@@ -911,7 +903,7 @@ export default {
       this.toolCtx.stroke();
 
       this.toolCtx.beginPath();
-      for (var y = 1; y <= h; y += this.halfBlockEditing ? (blockHeight / 2) : blockHeight) {
+      for (let y = 1; y <= h; y += this.halfBlockEditing ? (blockHeight / 2) : blockHeight) {
         this.toolCtx.moveTo(0, y);
         this.toolCtx.lineTo(w, y);
       }
@@ -1314,7 +1306,7 @@ export default {
       // Force will skip hash checking and redraw everything anyway
       if (this.redraw) {
         this.redraw = false;
-        var _this = this;
+        const _this = this;
         setTimeout(function () {
           requestAnimationFrame(async () => {
             await _this.redrawCanvas(force);
@@ -2033,228 +2025,59 @@ export default {
         }
       }
     },
-    // Fill tool
+    // Fill tool — uses iterative flood fill from ascii.ts
     fill(eraser = false) {
-      const newColor = {
-        bg: this.currentBg,
-        // fg: this.currentFg,
-        char: this.currentChar,
-      };
-      const current = { ...this.asciiBlockAtXy };
-      if (!this.canBg) {
-        delete newColor["bg"];
-      }
-      // if (!this.canFg) {
-      //   delete newColor["fg"];
-      // }
-      if (!this.canText) {
-        delete newColor["char"];
-      }
-      // If the newColor is same as the existing
-      // Then return the original image.
-      if (JSON.stringify(current) === JSON.stringify(newColor) && !eraser) {
-        return;
-      }
-      this.fillTool(
-        this.currentAsciiLayerBlocks,
-        this.y,
-        this.x,
-        current,
-        eraser
-      );
-    },
-    fillTool(currentLayerBlocks, y, x, current, eraser) {
-      if (y >= Math.floor(this.canvas.height / blockHeight)) {
-        return;
-      }
-      if (x >= Math.floor(this.canvas.width / blockWidth)) {
-        return;
-      }
-      if (
-        currentLayerBlocks[y] === undefined ||
-        currentLayerBlocks[y][x] === undefined
-      ) {
-        return;
-      }
-      let targetBlock = currentLayerBlocks[y][x];
-      if (this.canBg && targetBlock.bg !== current.bg) {
-        return;
-      }
-      // if (this.canFg && targetBlock.fg !== current.fg) {
-      //   return;
-      // }
-      if (this.canText && targetBlock.char !== current.char) {
-        return;
-      }
-      // We can eraser or fill
-      let oldBlock = { ...targetBlock };
-      if (!eraser) {
-        if (this.canBg) {
-          targetBlock.bg = this.currentBg;
-        }
-        if (this.canFg) {
-          targetBlock.fg = this.currentFg;
-        }
-        if (this.canText) {
-          targetBlock.char = this.currentChar;
-        }
-      } else {
-        // If we are fill erasing
-        if (this.canBg) {
-          delete targetBlock["bg"];
-        }
-        if (this.canFg) {
-          delete targetBlock["fg"];
-        }
-        if (this.canText) {
-          delete targetBlock["char"];
-        }
-      }
-      // if (!this.diffBlocks.new && !this.diffBlocks.new[y] && !this.diffBlocks.new[y][x]) {
-      this.storeDiffBlocks(x, y, oldBlock, targetBlock);
-      // }
-      // Fill in all four directions
-      // Fill Prev row
-      if (currentLayerBlocks[y] && currentLayerBlocks[y][x - 1]) {
-        this.fillTool(currentLayerBlocks, y, x - 1, current, eraser);
-      }
-      // Fill Next row
-      if (currentLayerBlocks[y] && currentLayerBlocks[y][x + 1]) {
-        this.fillTool(currentLayerBlocks, y, x + 1, current, eraser);
-      }
-      // Fill Prev col
-      if (currentLayerBlocks[y - 1] && currentLayerBlocks[y - 1][x]) {
-        this.fillTool(currentLayerBlocks, y - 1, x, current, eraser);
-      }
-      // Fill next col
-      if (currentLayerBlocks[y + 1] && currentLayerBlocks[y + 1][x]) {
-        this.fillTool(currentLayerBlocks, y + 1, x, current, eraser);
-      }
-      return;
-    },
-    // Fill tool
-    floodFill(eraser = false) {
-      const newColor = {
+      const fillColor = {
         bg: this.currentBg,
         fg: this.currentFg,
         char: this.currentChar,
       };
-
       const current = { ...this.asciiBlockAtXy };
-
       if (!this.canBg) {
-        delete current["bg"];
-        delete newColor["bg"];
+        delete fillColor["bg"];
       }
-
-      if (!this.canFg) {
-        delete current["fg"];
-        delete newColor["fg"];
-      }
-
       if (!this.canText) {
-        delete current["char"];
-        delete newColor["char"];
+        delete fillColor["char"];
       }
-
-
-      if (JSON.stringify(current) == JSON.stringify(newColor)) {
+      // If the fillColor is same as the existing, no-op
+      if (JSON.stringify(current) === JSON.stringify(fillColor) && !eraser) {
         return;
       }
 
-      let stack = [];
-
-      // do flood fill
-      stack.push({ x: this.x, y: this.y });
-
-      while (stack.length) {
-        let pos = stack.shift();
-
-        
-        // left
-        if (this.currentAsciiLayerBlocks[pos.y][pos.x - 1] && pos.x - 1 < this.currentAsciiWidth && pos.y < this.currentAsciiHeight &&
-          (this.currentAsciiLayerBlocks[pos.y][pos.x-1].bg == (current.bg || undefined) &&
-          (this.canFg && this.currentAsciiLayerBlocks[pos.y][pos.x-1].fg == (current.fg || undefined)) &&
-          (this.canText && this.currentAsciiLayerBlocks[pos.y][pos.x-1].char == (current.char || undefined))
-          
-          )) {
-          this.storeDiffBlocks(pos.x - 1, pos.y, this.currentAsciiLayerBlocks[pos.y][pos.x -1], newColor);
-          this.currentAsciiLayerBlocks[pos.y][pos.x-1] = (eraser ? { ... emptyBlock} : { ... newColor });
-
-          // if (!stackX.includes(pos.x - 1) || !stackY.includes(pos.y)) {
-            stack.push({ x: pos.x - 1, y: pos.y});  
-            // stackX.push(pos.x - 1);
-            // stackY.push(pos.y);
-          // }
-          
+      // Capture old state for undo before mutating
+      const height = this.currentAsciiLayerBlocks.length;
+      const width = height > 0 ? this.currentAsciiLayerBlocks[0].length : 0;
+      const oldBlocks = [];
+      for (let y = 0; y < height; y++) {
+        oldBlocks[y] = [];
+        for (let x = 0; x < width; x++) {
+          oldBlocks[y][x] = { ...this.currentAsciiLayerBlocks[y][x] };
         }
-
-        //right
-        if (this.currentAsciiLayerBlocks[pos.y][pos.x + 1] && pos.x + 1 < this.currentAsciiWidth && pos.y < this.currentAsciiHeight &&
-          (this.currentAsciiLayerBlocks[pos.y][pos.x+1].bg == (current.bg || undefined) &&
-          (this.canFg && this.currentAsciiLayerBlocks[pos.y][pos.x+1].fg == (current.fg || undefined)) &&
-          (this.canText && this.currentAsciiLayerBlocks[pos.y][pos.x+1].char == (current.char || undefined))
-          
-          )) {
-          this.storeDiffBlocks(pos.x + 1, pos.y, this.currentAsciiLayerBlocks[pos.y][pos.x+1], newColor);
-          this.currentAsciiLayerBlocks[pos.y][pos.x+1] = (eraser ? { ... emptyBlock} : { ... newColor });
-
-          // if (!stackX.includes(pos.x + 1) || !stackY.includes(pos.y)) {
-            stack.push({ x: pos.x + 1, y: pos.y });  
-            // stackX.push(pos.x + 1);
-            // stackY.push(pos.y);
-          // }
-          
-        }
-
-        // top
-        if (this.currentAsciiLayerBlocks[pos.y - 1] && this.currentAsciiLayerBlocks[pos.y - 1][pos.x] && pos.x < this.currentAsciiWidth && pos.y - 1 < this.currentAsciiHeight &&
-          (this.currentAsciiLayerBlocks[pos.y-1][pos.x].bg == (current.bg || undefined) && 
-          (this.canFg && this.currentAsciiLayerBlocks[pos.y-1][pos.x].fg == (current.fg || undefined)) &&
-          (this.canText && this.currentAsciiLayerBlocks[pos.y-1][pos.x].char == (current.char || undefined))
-          
-          )) {
-          this.storeDiffBlocks(pos.x, pos.y - 1, this.currentAsciiLayerBlocks[pos.y-1][pos.x], newColor);
-          this.currentAsciiLayerBlocks[pos.y -1 ][pos.x] = (eraser ? { ... emptyBlock} : { ... newColor });
-
-          // if (!stackX.includes(pos.x) || !stackY.includes(pos.y - 1)) {
-            stack.push({ x: pos.x, y: pos.y - 1});  
-            // stackX.push(pos.x);
-            // stackY.push(pos.y - 1);
-          // }
-          
-        }
-
-        // bottom
-        if (this.currentAsciiLayerBlocks[pos.y + 1] && this.currentAsciiLayerBlocks[pos.y + 1][pos.x] && pos.x < this.currentAsciiWidth && pos.y + 1 < this.currentAsciiHeight &&
-          (this.currentAsciiLayerBlocks[pos.y+1][pos.x].bg == (current.bg || undefined) && 
-          (this.canFg && this.currentAsciiLayerBlocks[pos.y+1][pos.x].fg == (current.fg || undefined)) &&
-          (this.canText && this.currentAsciiLayerBlocks[pos.y+1][pos.x].char == (current.char || undefined))
-          
-          )) {
-          this.storeDiffBlocks(pos.x, pos.y + 1, this.currentAsciiLayerBlocks[pos.y+1][pos.x], newColor);
-          this.currentAsciiLayerBlocks[pos.y + 1][pos.x] = (eraser ? { ... emptyBlock} : { ... newColor });
-
-          // if (!stackX.includes(pos.x) || !stackY.includes(pos.y + 1)) {
-            stack.push({ x: pos.x, y: pos.y + 1});  
-            // stackX.push(pos.x);
-            // stackY.push(pos.y + 1);
-          // }
-          
-        }
-
-        // Absolute base case
-        if (stack.length >= (this.currentAsciiHeight * this.currentAsciiWidth)) {
-          break;
-        }
-
-        // stackX.push(pos.x);
-        // stackY.push(pos.y);
       }
 
+      iterativeFill(
+        this.currentAsciiLayerBlocks,
+        this.y,
+        this.x,
+        current,
+        fillColor,
+        this.canBg,
+        this.canFg, // Used for applying fill, not for boundary matching
+        this.canText,
+        eraser,
+      );
 
-      this.delayRedrawCanvas();
-
+      // Store diffs by comparing old vs new state (direct property comparison)
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          const oldB = oldBlocks[y][x];
+          const newB = this.currentAsciiLayerBlocks[y][x];
+          if (oldB.bg !== newB.bg || oldB.fg !== newB.fg
+              || oldB.char !== newB.char) {
+            this.storeDiffBlocks(x, y, oldB, newB);
+          }
+        }
+      }
     },
 
   },
