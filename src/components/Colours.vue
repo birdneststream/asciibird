@@ -23,7 +23,7 @@
     <button
       type="button"
       class="ab-button rounded-3xl w-7 h-7"
-      style="margin-left: -75px; margin-top: 12px"
+      style="margin-left: -86px; margin-top: 12px"
       id="swapColour"
       @click="swapColours()"
     >

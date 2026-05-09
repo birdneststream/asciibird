@@ -896,37 +896,30 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       switch (type) {
         case 'new-ascii':
           this.modalState.newAscii = true;
-          this.isKeyboardDisabled = true;
           break;
 
         case 'edit-ascii':
           this.modalState.editAscii = true;
-          this.isKeyboardDisabled = true;
           break;
 
         case 'paste-ascii':
           this.modalState.pasteAscii = true;
-          this.isKeyboardDisabled = true;
           break;
 
         case 'options':
           this.modalState.options = true;
-          this.isKeyboardDisabled = true;
           break;
 
         case 'overlay':
           this.modalState.overlay = true;
-          this.isKeyboardDisabled = true;
           break;
 
         case 'about':
           this.modalState.about = true;
-          this.isKeyboardDisabled = true;
           break;
 
         case 'help':
           this.modalState.help = true;
-          this.isKeyboardDisabled = true;
           break;
       }
     },
@@ -934,37 +927,30 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       switch (type) {
         case 'new-ascii':
           this.modalState.newAscii = false;
-          this.isKeyboardDisabled = false;
           break;
 
         case 'edit-ascii':
           this.modalState.editAscii = false;
-          this.isKeyboardDisabled = false;
           break;
 
         case 'paste-ascii':
           this.modalState.pasteAscii = false;
-          this.isKeyboardDisabled = false;
           break;
 
         case 'options':
           this.modalState.options = false;
-          this.isKeyboardDisabled = false;
           break;
 
         case 'overlay':
           this.modalState.overlay = false;
-          this.isKeyboardDisabled = false;
           break;
 
         case 'about':
           this.modalState.about = false;
-          this.isKeyboardDisabled = false;
           break;
 
         case 'help':
           this.modalState.help = false;
-          this.isKeyboardDisabled = false;
           break;
       }
     },

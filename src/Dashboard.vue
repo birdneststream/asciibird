@@ -5,7 +5,7 @@
   >
     <div v-show="menuBarVisible">
       <div
-        v-if="!(isModalOpen || isKeyboardDisabled)"
+        v-if="!isKeyboardDisabled"
         class="flex bg-gray-800 text-white text-sm"
       >
         <Menu

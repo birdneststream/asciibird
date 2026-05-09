@@ -50,8 +50,8 @@ defineProps<{
 }>();
 
 const store = useAsciiBirdStore();
-const toastShow = useToast();
-const copyText = useClipboard();
+const { show: toastShow } = useToast();
+const { copyText } = useClipboard();
 const panelEl = ref<HTMLElement | null>(null);
 
 const { style: panelStyle } = useDraggable(panelEl, {

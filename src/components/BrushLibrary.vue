@@ -150,7 +150,7 @@ import hotkeys from 'hotkeys-js';
 const props = defineProps<{ yOffset?: number }>();
 
 const store = useAsciiBirdStore();
-const toastShow = useToast();
+const { show: toastShow } = useToast();
 const panelEl = ref<HTMLElement | null>(null);
 
 const { style: panelStyle } = useDraggable(panelEl, {

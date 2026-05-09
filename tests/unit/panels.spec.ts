@@ -36,7 +36,7 @@ vi.mock('@/store', () => ({
 }))
 
 vi.mock('@/composables/useToast', () => ({
-  useToast: () => toastedMock.show,
+  useToast: () => ({ show: toastedMock.show, messages: { value: [] } }),
 }))
 
 vi.mock('@/composables/useDialog', () => ({
@@ -47,7 +47,7 @@ vi.mock('@/composables/useDialog', () => ({
 }))
 
 vi.mock('@/composables/useClipboard', () => ({
-  useClipboard: () => copyTextMock,
+  useClipboard: () => ({ copyText: copyTextMock, copied: { value: false } }),
 }))
 
 vi.mock('@vueuse/core', async (importOriginal) => {

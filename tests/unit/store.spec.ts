@@ -765,17 +765,15 @@ describe('Pinia Store Actions', () => {
   // ── Modal actions ──────────────────────────────────────────
 
   describe('modal actions', () => {
-    it('openModal sets modal state and disables keyboard', () => {
+    it('openModal sets modal state', () => {
       store.openModal('new-ascii');
       expect(store.modalState.newAscii).toBe(true);
-      expect(store.isKeyboardDisabled).toBe(true);
     });
 
-    it('closeModal unsets modal state and enables keyboard', () => {
+    it('closeModal unsets modal state', () => {
       store.openModal('new-ascii');
       store.closeModal('new-ascii');
       expect(store.modalState.newAscii).toBe(false);
-      expect(store.isKeyboardDisabled).toBe(false);
     });
 
     it('openModal handles all modal types', () => {

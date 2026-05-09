@@ -80,8 +80,8 @@ export default {
   name: "MainBrushCanvas",
   setup() {
     const store = useAsciiBirdStore();
-    const toastShow = useToast();
-    const copyText = useClipboard();
+    const { show: toastShow } = useToast();
+    const { copyText } = useClipboard();
     return { store, toastShow, copyText };
   },
   components: {

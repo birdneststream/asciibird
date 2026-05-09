@@ -34,11 +34,11 @@ vi.mock('@/store', () => ({
 }))
 
 vi.mock('@/composables/useToast', () => ({
-  useToast: () => toastedMock.show,
+  useToast: () => ({ show: toastedMock.show, messages: { value: [] } }),
 }))
 
 vi.mock('@/composables/useClipboard', () => ({
-  useClipboard: () => copyTextMock,
+  useClipboard: () => ({ copyText: copyTextMock, copied: { value: false } }),
 }))
 
 let store: any
