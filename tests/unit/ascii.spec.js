@@ -18,10 +18,29 @@ import {
 const localVue = createLocalVue()
 localVue.use(Vuex)
 
+// Mock hotkeys-js global used by Editor.vue
+vi.stubGlobal('hotkeys', vi.fn((keys, scope, handler) => {
+  if (typeof scope === 'function') return scope
+  return handler
+}))
+vi.stubGlobal('hotkeys/filter', vi.fn(() => true))
+vi.stubGlobal('hotkeys/setScope', vi.fn())
+vi.stubGlobal('hotkeys/deleteScope', vi.fn())
+vi.stubGlobal('hotkeys/unbind', vi.fn())
+
 describe('Editor.vue', () => {
   let store
+  let wrapper
 
   beforeEach(() => {
+    // Prevent Editor.vue's delayRedrawCanvas RAF from firing after cleanup
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => {
+      return 0
+    })
+    vi.spyOn(window, 'setTimeout').mockImplementation(() => {
+      return 0
+    })
+
     store = vuexStore
 
     // make a new ascii
@@ -34,8 +53,16 @@ describe('Editor.vue', () => {
     })
   })
 
+  afterEach(() => {
+    if (wrapper) {
+      wrapper.destroy()
+      wrapper = null
+    }
+    vi.restoreAllMocks()
+  })
+
   it('create new ascii data is as expected', () => {
-    mount(Editor, { store, localVue })
+    wrapper = mount(Editor, { store, localVue })
 
     const meta = store.getters.asciibirdMeta[0]
 
@@ -73,7 +100,7 @@ describe('Editor.vue', () => {
   })
 
   it('new ascii exports as expected', () => {
-    mount(Editor, { store, localVue })
+    wrapper = mount(Editor, { store, localVue })
 
     // Blank ascii exported to mIRC
     let mircExportHash = cyrb53(exportMirc(mergeLayers()).output.join(''))
@@ -82,7 +109,7 @@ describe('Editor.vue', () => {
   })
 
   it('fill tool on new ascii and export', () => {
-    const wrapper = mount(Editor, { store, localVue })
+    wrapper = mount(Editor, { store, localVue })
 
     wrapper.vm.x = 1
     wrapper.vm.y = 1
