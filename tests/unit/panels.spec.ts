@@ -96,32 +96,6 @@ describe('LayersLibrary.vue', () => {
     )
     expect(wrapper.findComponent(LayersLibrary).exists()).toBe(true)
   })
-
-  it('computed blockWidth returns scaled block width', () => {
-    const wrapper = shallowMount(
-      LayersLibrary,
-      mountOpts({ propsData: { yOffset: 0 } }),
-    )
-    expect(wrapper.vm.blockWidth).toBe(blockWidth)
-  })
-
-  it('computed blockHeight returns scaled block height', () => {
-    const wrapper = shallowMount(
-      LayersLibrary,
-      mountOpts({ propsData: { yOffset: 0 } }),
-    )
-    expect(wrapper.vm.blockHeight).toBe(blockHeight)
-  })
-
-  it('computed layersLibraryState returns store state', () => {
-    const wrapper = shallowMount(
-      LayersLibrary,
-      mountOpts({ propsData: { yOffset: 0 } }),
-    )
-    const state = wrapper.vm.layersLibraryState
-    expect(state.x).toBe(10)
-    expect(state.y).toBe(40)
-  })
 })
 
 // NOTE: DebugPanel computed `isSelected` references `this.selecting`

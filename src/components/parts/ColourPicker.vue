@@ -22,51 +22,29 @@
   </div>
 </template>
 
-<script>
-import { ref } from "vue";
-import { mircColours99 } from "../../ascii";
-import { useAsciiBirdStore } from '../../store';
-import { useToast } from '../../composables/useToast';
-import { useDialog } from '../../composables/useDialog';
-import { useClipboard } from '../../composables/useClipboard';
+<script setup lang="ts">
+import { ref } from 'vue';
 import { useDraggable } from '@vueuse/core';
+import { mircColours99 } from '../../ascii';
+import { useAsciiBirdStore } from '../../store';
 
-export default {
-  name: "ColourPicker",
-  setup(props) {
-    const store = useAsciiBirdStore();
-    const toast = useToast();
-    const dialog = useDialog();
-    const clipboard = useClipboard();
-    const el = ref(null);
-    const { style } = useDraggable(el, {
-      initialValue: { x: 100, y: 100 + (props.yOffset || 0) },
-    });
-    return { store, toast, dialog, clipboard, el, style };
-  },
-  props: { yOffset: { type: Number, default: 0 } },
-  computed: {
-    mircColours() {
-      return mircColours99;
-    },
-    toolbarState() {
-      return this.store.toolbarState;
-    },
-  },
-  methods: {
-    close() {
-      this.store.changeIsUpdatingFg(false);
-      this.store.changeIsUpdatingBg(false);
-    },
-    onColourChange(colour) {
-      if (this.toolbarState.isChoosingFg) {
-        this.store.changeColourFg(colour);
-      }
+const props = defineProps<{ yOffset?: number }>();
+const store = useAsciiBirdStore();
+const el = ref<HTMLElement | null>(null);
 
-      if (this.toolbarState.isChoosingBg) {
-        this.store.changeColourBg(colour);
-      }
-    },
-  },
-};
+const { style } = useDraggable(el, {
+  initialValue: { x: 100, y: 100 + (props.yOffset || 0) },
+});
+
+const mircColours = mircColours99;
+
+function onColourChange(colour: number) {
+  if (store.toolbarState.isChoosingFg) {
+    store.changeColourFg(colour);
+  }
+
+  if (store.toolbarState.isChoosingBg) {
+    store.changeColourBg(colour);
+  }
+}
 </script>

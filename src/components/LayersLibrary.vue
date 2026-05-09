@@ -12,64 +12,30 @@
   </div>
 </template>
 
-<script>
-import { blockWidth, blockHeight } from "../ascii";
-import Layers from "./parts/Layers.vue";
-import { useAsciiBirdStore } from "../store";
-import { useDraggable } from "@vueuse/core";
-import { ref } from "vue";
+<script setup lang="ts">
+import { ref, watch } from 'vue';
+import { useDraggable } from '@vueuse/core';
+import { useAsciiBirdStore } from '../store';
+import Layers from './parts/Layers.vue';
 
-export default {
-  name: "LayersLibrary",
-  setup() {
-    const store = useAsciiBirdStore();
-    const panelEl = ref(null);
-    const { style: panelStyle } = useDraggable(panelEl, {
-      initialValue: { x: store.layersLibraryState.x, y: store.layersLibraryState.y },
-    });
-    return { store, panelEl, panelStyle };
+const props = defineProps<{ yOffset?: number }>();
+const store = useAsciiBirdStore();
+const panelEl = ref<HTMLElement | null>(null);
+
+const { style: panelStyle } = useDraggable(panelEl, {
+  initialValue: {
+    x: store.layersLibraryState.x,
+    y: store.layersLibraryState.y,
   },
-  components: {
-    Layers,
+});
+
+watch(
+  () => props.yOffset,
+  (val) => {
+    if (panelEl.value) {
+      panelEl.value.style.top =
+        `${Math.trunc(store.layersLibraryState.y + val)}px`;
+    }
   },
-  created() {
-    this.panel.x = this.store.layersLibraryState.x;
-    this.panel.y = this.store.layersLibraryState.y;
-    this.panel.w = this.store.layersLibraryState.w;
-    this.panel.h = this.store.layersLibraryState.h;
-  },
-  data: () => ({
-    panel: {
-      w: 0,
-      h: 0,
-      x: 100,
-      y: 100,
-      visible: true,
-      tab: 1,
-      dragging: false,
-    },
-  }),
-  props: { yOffset: { type: Number, default: 0 } },
-  computed: {
-    blockWidth() {
-      return blockWidth * this.store.blockSizeMultiplier;
-    },
-    blockHeight() {
-      return blockHeight * this.store.blockSizeMultiplier;
-    },
-    blockSizeMultiplier() {
-      return this.store.blockSizeMultiplier;
-    },
-    layersLibraryState() {
-      return this.store.layersLibraryState;
-    },
-  },
-  watch: {
-    yOffset(val) {
-      this.panelEl.style.top = Number.parseInt(
-        this.layersLibraryState.y + val
-      ) + "px";
-    },
-  },
-};
+);
 </script>

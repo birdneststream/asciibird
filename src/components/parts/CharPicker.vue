@@ -18,7 +18,7 @@
         type="button"
         v-for="(char, keyChar) in charCodes"
         :key="keyChar"
-        :style="`background-color: ${mircColours[currentBg]} !important;color: ${mircColours[currentFg]} !important;${outline};font-size: 13px;width: ${blockWidth}px;height: ${blockHeight}px;`"
+        :style="`background-color: ${mircColours[currentBg]} !important;color: ${mircColours[currentFg]} !important;${outline};font-size: 13px;width: ${charBlockWidth}px;height: ${charBlockHeight}px;`"
         class="ab-button m-0.5"
         @click="onCharChange(char)"
       >
@@ -28,68 +28,51 @@
   </div>
 </template>
 
-<script>
-import { ref } from "vue";
-import { charCodes, mircColours99, blockWidth, blockHeight } from "../../ascii";
-import { useAsciiBirdStore } from '../../store';
+<script setup lang="ts">
+import { ref, computed } from 'vue';
 import { useDraggable } from '@vueuse/core';
+import {
+  charCodes,
+  mircColours99,
+  blockWidth,
+  blockHeight,
+} from '../../ascii';
+import { useAsciiBirdStore } from '../../store';
 
-export default {
-  name: "CharPicker",
-  setup(props) {
-    const store = useAsciiBirdStore();
-    const el = ref(null);
-    const { style } = useDraggable(el, {
-      initialValue: { x: 170, y: 100 + (props.yOffset || 0) },
-    });
-    return { store, el, style };
-  },
-  props: {
-    canvasX: { type: Number, default: null },
-    canvasY: { type: Number, default: null },
-    yOffset: { type: Number, default: 0 },
-  },
-  data: () => ({
-    persistChars: false,
-  }),
-  computed: {
-    charCodes() {
-      return charCodes;
-    },
-    mircColours() {
-      return mircColours99;
-    },
-    currentFg() {
-      return this.store.currentFg;
-    },
-    currentBg() {
-      return this.store.currentBg;
-    },
-    outline() {
-      let outlineColor = this.currentBg === 0 ? 'black' : 'white';
-      if (this.currentFg === this.currentBg) {
-        return `-webkit-text-stroke-width: 0.5px;-webkit-text-stroke-color: ${outlineColor};`;
-      }
+const props = defineProps<{
+  canvasX?: number | null;
+  canvasY?: number | null;
+  yOffset?: number;
+}>();
 
-      return "";
-    },
-    blockWidth() {
-      return blockWidth*2;
-    },
-    blockHeight() {
-      return blockHeight*2;
-    },
-    persistCharPanel() {
-      return this.store.toolbarState.persistCharPanel;
-    }
-  },
-  methods: {
-    onCharChange(char) {
-      this.store.changeChar(char);
-    },
-    changePersistChars() {
-      this.store.persistCharPanel(!this.persistChars);
-    }
-  },
-};
+const store = useAsciiBirdStore();
+const el = ref<HTMLElement | null>(null);
+const persistChars = ref(false);
+
+const { style } = useDraggable(el, {
+  initialValue: { x: 170, y: 100 + (props.yOffset || 0) },
+});
+
+const mircColours = mircColours99;
+
+const currentFg = computed(() => store.currentFg);
+const currentBg = computed(() => store.currentBg);
+const charBlockWidth = computed(() => blockWidth * 2);
+const charBlockHeight = computed(() => blockHeight * 2);
+
+const outline = computed(() => {
+  const outlineColor = currentBg.value === 0 ? 'black' : 'white';
+  if (currentFg.value === currentBg.value) {
+    return `-webkit-text-stroke-width: 0.5px;-webkit-text-stroke-color: ${outlineColor};`;
+  }
+  return '';
+});
+
+function onCharChange(char: string) {
+  store.changeChar(char);
+}
+
+function changePersistChars() {
+  store.persistCharPanel(!persistChars.value);
+}
 </script>

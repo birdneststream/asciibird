@@ -300,22 +300,6 @@ describe('ColourPicker.vue', () => {
     expect(store.toolbarState.currentColourBg).toBe(8)
   })
 
-  it('close resets both fg and bg choosing state', () => {
-    _mockStore = createMockStore({
-      toolbarState: { isChoosingFg: true, isChoosingBg: true },
-    })
-    store = _mockStore
-    const wrapper = shallowMount(
-      ColourPicker,
-      mountOptsWithVdr({
-        propsData: { yOffset: 0 },
-      }),
-    )
-    wrapper.vm.close()
-    expect(store.toolbarState.isChoosingFg).toBe(false)
-    expect(store.toolbarState.isChoosingBg).toBe(false)
-  })
-
   it('onColourChange does nothing when neither fg nor bg choosing', () => {
     const wrapper = shallowMount(
       ColourPicker,
