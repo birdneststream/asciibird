@@ -2,232 +2,122 @@
   <div />
 </template>
 
-<script>
-import { toolbarIcons } from "../../ascii";
-import { useAsciiBirdStore } from "../../store";
-import hotkeys from "hotkeys-js";
+<script setup lang="ts">
+import { computed, watch, onUnmounted } from 'vue';
+import { toolbarIcons } from '../../ascii';
+import { useAsciiBirdStore } from '../../store';
+import hotkeys from 'hotkeys-js';
 
-export default {
-  name: "KeyboardShortcuts",
-  setup() {
-    const store = useAsciiBirdStore();
-    return { store };
-  },
-  created() {
-    var _this = this;
+const props = defineProps<{
+  selectedBlocks?: unknown[];
+  textEditing?: object | null;
+  selecting?: Record<string, unknown>;
+  isInputtingBrushSize?: boolean;
+  isShowingDialog?: boolean;
+  canvasX?: number | null;
+  canvasY?: number | null;
+}>();
 
-    hotkeys("*", "editor", function (event) {
+const emit = defineEmits<{
+  updatecanvas: [];
+}>();
 
-      event.preventDefault();
+const store = useAsciiBirdStore();
 
-      if (_this.toolbarState.isChoosingChar && event.key.length === 1 && !_this.disableKeyboard && !_this.toolbarState.persistCharPanel) {
-        _this.store.changeChar(event.key);
-        return;
-      }
+const toolbarState = computed(() => store.toolbarState);
+const currentTool = computed(() => toolbarIcons[store.currentTool]);
+const haveOpenTabs = computed(() => store.currentAscii !== false);
+const isDefault = computed(() => currentTool.value?.name === 'default');
+const isKeyboardDisabled = computed(() => store.isKeyboardDisabled);
+const isModalOpen = computed(() => store.isModalOpen);
 
-      if (
-        Number.parseInt(event.key) >= 1 &&
-        Number.parseInt(event.key) <= 8 &&
-        !_this.toolbarState.isChoosingFg &&
-        !_this.toolbarState.isChoosingBg &&
-        event.altKey &&
-        _this.haveOpenTabs
-      ) {
-        _this.store.changeTool(Number.parseInt(event.key - 1));
-        _this.$emit("updatecanvas");
-        return;
-      }
+const disableKeyboard = computed(
+  () =>
+    props.isInputtingBrushSize ||
+    isKeyboardDisabled.value ||
+    props.isShowingDialog ||
+    isModalOpen.value,
+);
 
-      if (
-        Number.parseInt(event.key) >= 0 &&
-        Number.parseInt(event.key) <= 9 &&
-        (_this.toolbarState.isChoosingFg || _this.toolbarState.isChoosingBg) &&
-        _this.haveOpenTabs
-      ) {
-        if (_this.toolbarState.isChoosingFg) {
-          _this.store.changeColourFg(Number.parseInt(event.key));
-          return;
-        }
+// Hotkey: all keys in editor scope
+hotkeys('*', 'editor', (event) => {
+  event.preventDefault();
 
-        if (_this.toolbarState.isChoosingBg) {
-          _this.store.changeColourBg(Number.parseInt(event.key));
-          return;
-        }
-      }
-    });
+  if (
+    toolbarState.value.isChoosingChar &&
+    event.key.length === 1 &&
+    !disableKeyboard.value &&
+    !toolbarState.value.persistCharPanel
+  ) {
+    store.changeChar(event.key);
+    return;
+  }
 
-    hotkeys("Escape", "editor", function (event) {
-      if (
-        !_this.textEditing &&
-        (_this.toolbarState.isChoosingChar ||
-          _this.toolbarState.isChoosingBg ||
-          (_this.toolbarState.isChoosingFg && _this.haveOpenTabs))
-      ) {
-        event.preventDefault();
-        _this.store.changeIsUpdatingFg(false);
-        _this.store.changeIsUpdatingBg(false);
-        _this.store.changeIsUpdatingChar(false);
-        return;
-      }
+  if (
+    Number.parseInt(event.key) >= 1 &&
+    Number.parseInt(event.key) <= 8 &&
+    !toolbarState.value.isChoosingFg &&
+    !toolbarState.value.isChoosingBg &&
+    event.altKey &&
+    haveOpenTabs.value
+  ) {
+    store.changeTool(Number.parseInt(event.key) - 1);
+    emit('updatecanvas');
+    return;
+  }
 
-      if (!_this.isDefault) {
-        event.preventDefault();
-        _this.$emit("updatecanvas");
-        _this.store.changeTool(0);
-        return;
-      }
-
+  if (
+    Number.parseInt(event.key) >= 0 &&
+    Number.parseInt(event.key) <= 9 &&
+    (toolbarState.value.isChoosingFg ||
+      toolbarState.value.isChoosingBg) &&
+    haveOpenTabs.value
+  ) {
+    if (toolbarState.value.isChoosingFg) {
+      store.changeColourFg(Number.parseInt(event.key));
       return;
-    });
+    }
 
-    hotkeys.setScope(this.disableKeyboard ? "modals" : "editor");
-  },
-  data: () => ({}),
-  props: {
-    selectedBlocks: { type: Array, default: () => [] },
-    textEditing: { type: [Object, null], default: null },
-    selecting: { type: Object, default: () => ({}) },
-    isInputtingBrushSize: { type: Boolean, default: false },
-    showingPostUrl: { type: Boolean, default: false },
-    isShowingDialog: { type: Boolean, default: false },
-    canvasX: { type: Number, default: null },
-    canvasY: { type: Number, default: null },
-  },
-  computed: {
-    canvasXy() {
-      return { x: this.canvasX, y: this.canvasY };
-    },
-    isModalOpen() {
-      return this.store.isModalOpen;
-    },
-    brushSizeHeight() {
-      return this.store.brushSizeHeight;
-    },
-    brushSizeWidth() {
-      return this.store.brushSizeWidth;
-    },
-    brushSizeType() {
-      return this.store.brushSizeType;
-    },
-    currentAscii() {
-      return this.store.currentAscii;
-    },
-    currentTool() {
-      return toolbarIcons[this.store.currentTool];
-    },
-    canFg() {
-      return this.store.isTargettingFg;
-    },
-    canBg() {
-      return this.store.isTargettingBg;
-    },
-    canText() {
-      return this.store.isTargettingChar;
-    },
-    currentFg() {
-      return this.store.currentFg;
-    },
-    currentBg() {
-      return this.store.currentBg;
-    },
-    currentChar() {
-      return this.store.currentChar;
-    },
-    isTextEditing() {
-      return this.currentTool.name === "text";
-    },
-    isSelecting() {
-      return this.currentTool.name === "select";
-    },
-    isDefault() {
-      return this.currentTool.name === "default";
-    },
-    isBrushing() {
-      return this.currentTool.name === "brush";
-    },
-    isEraser() {
-      return this.currentTool.name === "eraser";
-    },
-    isSelected() {
-      return (
-        this.selecting.startX >= 0 &&
-        this.selecting.startY >= 0 &&
-        this.selecting.endX >= 0 &&
-        this.selecting.endY >= 0
-      );
-    },
-    brushBlocks() {
-      return this.store.brushBlocks;
-    },
-    toolbarState() {
-      return this.store.toolbarState;
-    },
-    mirrorX() {
-      return this.toolbarState.mirrorX;
-    },
-    mirrorY() {
-      return this.toolbarState.mirrorY;
-    },
-    debugPanelState() {
-      return this.store.debugPanel;
-    },
-    selectBlocks() {
-      return this.store.selectBlocks;
-    },
-    asciibirdMeta() {
-      return this.store.asciibirdMeta;
-    },
-    haveSelectBlocks() {
-      return !!this.selectBlocks.length;
-    },
-    brushLibraryState() {
-      return this.store.brushLibraryState;
-    },
-    currentAsciiLayers() {
-      return this.store.currentAsciiLayers;
-    },
-    currentSelectedLayer() {
-      return this.currentAsciiLayers[this.currentAscii.selectedLayer];
-    },
-    currentAsciiLayerBlocks() {
-      return this.currentSelectedLayer.data;
-    },
-    currentAsciiWidth() {
-      return this.currentSelectedLayer.width;
-    },
-    currentAsciiHeight() {
-      return this.currentSelectedLayer.height;
-    },
-    haveOpenTabs() {
-      return this.currentAscii !== false;
-    },
-    gridView() {
-      return this.toolbarState.gridView;
-    },
-    isKeyboardDisabled() {
-      return this.store.isKeyboardDisabled;
-    },
-    disableKeyboard() {
-      return (
-        this.isInputtingBrushSize ||
-        this.isKeyboardDisabled ||
-        this.isShowingDialog ||
-        this.isModalOpen
-      );
-    },
-  },
-  watch: {
-    disableKeyboard() {
-      hotkeys.setScope(this.disableKeyboard ? "modals" : "editor");
-    },
-  },
-  methods: {
-    undo() {
-      this.store.undoBlocks();
-    },
-    redo() {
-      this.store.redoBlocks();
-    },
-  },
-};
+    if (toolbarState.value.isChoosingBg) {
+      store.changeColourBg(Number.parseInt(event.key));
+      return;
+    }
+  }
+});
+
+// Hotkey: Escape in editor scope
+hotkeys('Escape', 'editor', (event) => {
+  if (
+    !props.textEditing &&
+    (toolbarState.value.isChoosingChar ||
+      toolbarState.value.isChoosingBg ||
+      (toolbarState.value.isChoosingFg && haveOpenTabs.value))
+  ) {
+    event.preventDefault();
+    store.changeIsUpdatingFg(false);
+    store.changeIsUpdatingBg(false);
+    store.changeIsUpdatingChar(false);
+    return;
+  }
+
+  if (!isDefault.value) {
+    event.preventDefault();
+    emit('updatecanvas');
+    store.changeTool(0);
+    return;
+  }
+});
+
+// Set initial scope
+hotkeys.setScope(disableKeyboard.value ? 'modals' : 'editor');
+
+// Watch for scope changes
+watch(disableKeyboard, (val) => {
+  hotkeys.setScope(val ? 'modals' : 'editor');
+});
+
+// Cleanup hotkeys on unmount
+onUnmounted(() => {
+  hotkeys.deleteScope('editor');
+});
 </script>

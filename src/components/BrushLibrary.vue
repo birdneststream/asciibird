@@ -137,160 +137,125 @@
 }
 </style>
 
-<script>
-import { mircColours99, blockWidth, blockHeight, toolbarIcons } from "../ascii";
-import BrushCanvas from "./parts/BrushCanvas.vue";
-import LZString from "lz-string";
-import { useAsciiBirdStore } from "../store";
-import { useToast } from "../composables/useToast";
-import { useDraggable } from "@vueuse/core";
-import { ref } from "vue";
+<script setup lang="ts">
+import { ref, reactive, computed, watch, onUnmounted } from 'vue';
+import LZString from 'lz-string';
+import { useDraggable } from '@vueuse/core';
+import { toolbarIcons } from '../ascii';
+import { useAsciiBirdStore } from '../store';
+import { useToast } from '../composables/useToast';
+import BrushCanvas from './parts/BrushCanvas.vue';
+import hotkeys from 'hotkeys-js';
 
-export default {
-  name: "BrushLibrary",
-  setup() {
-    const store = useAsciiBirdStore();
-    const toastShow = useToast();
-    const panelEl = ref(null);
-    const { style: panelStyle } = useDraggable(panelEl, {
-      initialValue: { x: store.brushLibraryState.x, y: store.brushLibraryState.y },
-    });
-    return { store, toastShow, panelEl, panelStyle };
-  },
-  created() {
-    this.panel.x = this.store.brushLibraryState.x;
-    this.panel.y = this.store.brushLibraryState.y;
-    this.panel.w = this.store.brushLibraryState.w;
-    this.panel.h = this.store.brushLibraryState.h;
-    this.panel.tab = this.store.brushLibraryState.tab;
+const props = defineProps<{ yOffset?: number }>();
 
-    var _this = this;
-    hotkeys(`${this.hotkeyBrushes}`, async function (event) {
-      event.preventDefault();
+const store = useAsciiBirdStore();
+const toastShow = useToast();
+const panelEl = ref<HTMLElement | null>(null);
 
-      if (_this.isBrushing || _this.isErasing) {
+const { style: panelStyle } = useDraggable(panelEl, {
+  initialValue: {
+    x: store.brushLibraryState.x,
+    y: store.brushLibraryState.y,
+  },
+});
 
-        let brushSelect =
-          Number.parseInt(event.key) !== 0 ? Number.parseInt(event.key) - 1 : 9;
-        if (_this.brushLibrary[brushSelect]) {
+const panel = reactive({
+  w: store.brushLibraryState.w,
+  h: store.brushLibraryState.h,
+  x: store.brushLibraryState.x,
+  y: store.brushLibraryState.y,
+  visible: true,
+  tab: store.brushLibraryState.tab,
+  dragging: false,
+});
 
-          _this.reuseBlocks(
-            _this.decompressBlock(_this.brushLibrary[brushSelect].blocks)
-          );
-        }
-      }
-    });
+const brushHistory = computed(() => store.brushHistory);
+const brushLibrary = computed(() => store.brushLibrary);
+const currentTool = computed(() => toolbarIcons[store.currentTool]);
+const isBrushing = computed(() => currentTool.value?.name === 'brush');
+const isErasing = computed(() => currentTool.value?.name === 'eraser');
+
+const libraryCount = computed(() =>
+  brushLibrary.value.length > 0
+    ? `(${brushLibrary.value.length})`
+    : '',
+);
+
+const hotkeyBrushes = computed(() => {
+  let hotkeyString = '';
+  for (let i = 0; i <= 9; i++) {
+    hotkeyString = `${hotkeyString}ctrl+${i},`;
+  }
+  return hotkeyString;
+});
+
+// Register hotkeys for brush selection
+hotkeys(hotkeyBrushes.value, (event) => {
+  event.preventDefault();
+
+  if (isBrushing.value || isErasing.value) {
+    const brushSelect =
+      Number.parseInt(event.key) !== 0
+        ? Number.parseInt(event.key) - 1
+        : 9;
+    if (brushLibrary.value[brushSelect]) {
+      reuseBlocks(
+        decompressBlock(brushLibrary.value[brushSelect].blocks),
+      );
+    }
+  }
+});
+
+watch(
+  () => props.yOffset,
+  (val) => {
+    if (panelEl.value) {
+      panelEl.value.style.top =
+        `${Math.trunc(store.brushLibraryState.y + val)}px`;
+    }
   },
-  data: () => ({
-    panel: {
-      w: 0,
-      h: 0,
-      x: 100,
-      y: 100,
-      visible: true,
-      tab: 1,
-      dragging: false,
-    },
-  }),
-  components: {
-    BrushCanvas,
-  },
-  props: { yOffset: { type: Number, default: 0 } },
-  computed: {
-    hotkeyBrushes() {
-      let hotkeyString = "";
-      for (let i = 0; i <= 9; i++) {
-        hotkeyString = `${hotkeyString}ctrl+${i},`;
-      }
-      return hotkeyString;
-    },
-    blockWidth() {
-      return blockWidth * this.store.blockSizeMultiplier;
-    },
-    blockHeight() {
-      return blockHeight * this.store.blockSizeMultiplier;
-    },
-    blockSizeMultiplier() {
-      return this.store.blockSizeMultiplier;
-    },
-    currentAscii() {
-      return this.store.currentAscii;
-    },
-    brushHistory() {
-      return this.store.brushHistory;
-    },
-    brushLibrary() {
-      return this.store.brushLibrary;
-    },
-    mircColours() {
-      return mircColours99;
-    },
-    brushBlocks() {
-      return this.store.brushBlocks;
-    },
-    brushLibraryState() {
-      return this.store.brushLibraryState;
-    },
-    libraryCount() {
-      return this.brushLibrary.length > 0
-        ? `(${this.brushLibrary.length})`
-        : "";
-    },
-    toolbarIcons() {
-      return toolbarIcons;
-    },
-    currentTool() {
-      return toolbarIcons[this.store.currentTool];
-    },
-    isBrushing() {
-      return this.currentTool.name === "brush";
-    },
-    isErasing() {
-      return this.currentTool.name === "eraser";
-    },
-  },
-  watch: {
-    yOffset(val) {
-      this.panelEl.style.top = Number.parseInt(
-        this.brushLibraryState.y + val
-      ) + "px";
-    },
-  },
-  methods: {
-    changeTab(tab) {
-      this.panel.tab = tab;
-      this.store.changeBrushLibraryState(this.panel);
-    },
-    decompressBlock(item) {
-      return JSON.parse(LZString.decompressFromUTF16(item));
-    },
-    reuseBlocks(value) {
-      this.store.setBrushBlocks(value);
-      this.store.changeTool(4);
-      this.toastShow(`Applied brush from Library`, {
-        type: "success",
-      });
-    },
-    saveToLibrary(value) {
-      this.store.pushBrushLibrary(value);
-      this.toastShow(`Saved brush to Library`, {
-        type: "success",
-      });
-    },
-    removeFromLibrary(value) {
-      this.store.removeBrushLibrary(value);
-      this.toastShow(`Removed brush from Library`);
-    },
-    removeFromHistory(value) {
-      this.store.removeBrushHistory(value);
-      this.toastShow(`Removed brush from History`);
-    },
-    upBrush(key) {
-      this.store.upBrush(key);
-    },
-    downBrush(key) {
-      this.store.downBrush(key);
-    },
-  },
-};
+);
+
+onUnmounted(() => {
+  hotkeys.unbind(hotkeyBrushes.value);
+});
+
+function changeTab(tab: number) {
+  panel.tab = tab;
+  store.changeBrushLibraryState(panel);
+}
+
+function decompressBlock(item: string) {
+  return JSON.parse(LZString.decompressFromUTF16(item));
+}
+
+function reuseBlocks(value: unknown[][]) {
+  store.setBrushBlocks(value);
+  store.changeTool(4);
+  toastShow('Applied brush from Library', { type: 'success' });
+}
+
+function saveToLibrary(value: unknown[][]) {
+  store.pushBrushLibrary(value);
+  toastShow('Saved brush to Library', { type: 'success' });
+}
+
+function removeFromLibrary(value: unknown[][]) {
+  store.removeBrushLibrary(value);
+  toastShow('Removed brush from Library');
+}
+
+function removeFromHistory(value: unknown[][]) {
+  store.removeBrushHistory(value);
+  toastShow('Removed brush from History');
+}
+
+function upBrush(key: number) {
+  store.upBrush(key);
+}
+
+function downBrush(key: number) {
+  store.downBrush(key);
+}
 </script>

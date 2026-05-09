@@ -232,32 +232,9 @@ describe('KeyboardShortcuts.vue', () => {
     expect(spy).toHaveBeenCalledWith(0)
   })
 
-  it('undo calls undoBlocks', () => {
-    const wrapper = shallowMount(KeyboardShortcuts, mountOpts())
-    const spy = vi.spyOn(store, 'undoBlocks')
-    wrapper.vm.undo()
-    expect(spy).toHaveBeenCalled()
-  })
-
-  it('redo calls redoBlocks', () => {
-    const wrapper = shallowMount(KeyboardShortcuts, mountOpts())
-    const spy = vi.spyOn(store, 'redoBlocks')
-    wrapper.vm.redo()
-    expect(spy).toHaveBeenCalled()
-  })
-
   it('isDefault returns true when currentTool is 0', () => {
     const wrapper = shallowMount(KeyboardShortcuts, mountOpts())
     expect(wrapper.vm.isDefault).toBe(true)
-  })
-
-  it('isTextEditing returns true when currentTool is text', () => {
-    store = createMockStore({
-      toolbarState: createToolbarState({ currentTool: 2 }),
-    })
-    _mockStore = store
-    const wrapper = shallowMount(KeyboardShortcuts, mountOpts())
-    expect(wrapper.vm.isTextEditing).toBe(true)
   })
 
   it('haveOpenTabs returns true when currentAscii exists', () => {
@@ -270,24 +247,6 @@ describe('KeyboardShortcuts.vue', () => {
     _mockStore = store
     const wrapper = shallowMount(KeyboardShortcuts, mountOpts())
     expect(wrapper.vm.haveOpenTabs).toBe(false)
-  })
-
-  it('canvasXy returns prop coordinates', () => {
-    const wrapper = shallowMount(KeyboardShortcuts, mountOpts({
-      props: {
-        selectedBlocks: [],
-        textEditing: false,
-        selecting: {
-          startX: -1, startY: -1, endX: -1, endY: -1,
-        },
-        isInputtingBrushSize: false,
-        showingPostUrl: false,
-        isShowingDialog: false,
-        canvasX: 100,
-        canvasY: 200,
-      },
-    }))
-    expect(wrapper.vm.canvasXy).toEqual({ x: 100, y: 200 })
   })
 
   it('disableKeyboard is true when isInputtingBrushSize', () => {
