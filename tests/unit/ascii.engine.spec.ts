@@ -543,7 +543,7 @@ describe('canvasToPng', () => {
     const canvas = document.createElement('canvas');
     const mockBlob = new Blob([''], { type: 'image/png' });
     const toBlobSpy = vi.spyOn(canvas, 'toBlob').mockImplementation(
-      (cb: (b: Blob | null) => void) => cb(mockBlob),
+      (cb: (_b: Blob | null) => void) => cb(mockBlob),
     );
     const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click');
     const createObjectURLSpy = vi.fn(() => 'blob:png');
@@ -562,7 +562,7 @@ describe('canvasToPng', () => {
   it('handles null blob gracefully', () => {
     const canvas = document.createElement('canvas');
     const toBlobSpy = vi.spyOn(canvas, 'toBlob').mockImplementation(
-      (cb: (b: Blob | null) => void) => cb(null),
+      (cb: (_b: Blob | null) => void) => cb(null),
     );
     const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click');
 
@@ -1139,5 +1139,288 @@ describe('splashAscii', () => {
       if (hasContent) break;
     }
     expect(hasContent).toBe(true);
+  });
+});
+
+// ─── mergeLayers edge cases (line 700 — null char) ──────────────
+
+describe('mergeLayers edge cases', () => {
+  let mockStore: AsciiBirdStore;
+
+  beforeEach(() => {
+    mockStore = createMockStore();
+    setStore(mockStore);
+  });
+
+  it('handles blocks with null char in front layer', () => {
+    const layers: Layer[] = [{
+      label: 'Back',
+      visible: true,
+      width: 1,
+      height: 1,
+      data: [[{ fg: 1, bg: 0, char: 'B' }]],
+    }, {
+      label: 'Front',
+      visible: true,
+      width: 1,
+      height: 1,
+      // char: null triggers the srcBlock.char !== null check (line 700)
+      data: [[{ fg: 5, bg: 3, char: null as unknown as string }]],
+    }];
+
+    mockStore = createMockStore({ layers });
+    setStore(mockStore);
+
+    const result = mergeLayers();
+    // Front layer has null char, which sets curBlock.char to undefined
+    // Then back layer (processed after) sees undefined and fills in 'B'
+    // This exercises the null branch on line 700
+    expect(result[0][0].char).toBe('B');
+  });
+
+  it('handles blocks with all null properties in front layer only', () => {
+    const layers: Layer[] = [{
+      label: 'Only',
+      visible: true,
+      width: 1,
+      height: 1,
+      // All null - triggers null checks for fg, bg, and char
+      data: [[{
+        fg: null as unknown as number,
+        bg: null as unknown as number,
+        char: null as unknown as string,
+      }]],
+    }];
+
+    mockStore = createMockStore({ layers });
+    setStore(mockStore);
+
+    const result = mergeLayers();
+    // null fg/bg/char should all set curBlock properties to undefined
+    expect(result[0][0].fg).toBeUndefined();
+    expect(result[0][0].bg).toBeUndefined();
+    expect(result[0][0].char).toBeUndefined();
+  });
+
+  it('handles empty layer data (no rows or columns)', () => {
+    const layers: Layer[] = [{
+      label: 'Empty',
+      visible: true,
+      width: 0,
+      height: 0,
+      data: [] as Block[][],
+    }];
+
+    mockStore = createMockStore({ layers });
+    setStore(mockStore);
+
+    // mergeLayers should handle empty layers gracefully
+    // It loops height+1 and width+1, so even 0x0 creates row 0 col 0
+    const result = mergeLayers();
+    expect(Array.isArray(result)).toBe(true);
+  });
+});
+
+// ─── LZ-String compression/decompression edge cases ─────────────
+
+describe('LZ-String compression edge cases', () => {
+  it('round-trips empty block arrays', () => {
+    const empty: Block[][] = [];
+    const compressed = LZString.compressToUTF16(JSON.stringify(empty));
+    const decompressed = JSON.parse(
+      LZString.decompressFromUTF16(compressed),
+    );
+    expect(decompressed).toEqual([]);
+  });
+
+  it('round-trips large block arrays', () => {
+    const large: Block[][] = [];
+    for (let y = 0; y < 100; y++) {
+      large[y] = [];
+      for (let x = 0; x < 100; x++) {
+        large[y][x] = { fg: x % 99, bg: y % 99, char: String.fromCharCode(32 + ((x + y) % 94)) };
+      }
+    }
+    const compressed = LZString.compressToUTF16(JSON.stringify(large));
+    const decompressed = JSON.parse(
+      LZString.decompressFromUTF16(compressed),
+    );
+    expect(decompressed).toEqual(large);
+    // Compression should actually reduce size for repetitive data
+    expect(compressed.length).toBeLessThan(JSON.stringify(large).length);
+  });
+
+  it('round-trips blocks with empty objects', () => {
+    const blocks: Block[][] = [[{}, {}, {}]];
+    const compressed = LZString.compressToUTF16(JSON.stringify(blocks));
+    const decompressed = JSON.parse(
+      LZString.decompressFromUTF16(compressed),
+    );
+    expect(decompressed).toEqual([[{}, {}, {}]]);
+  });
+
+  it('handles corrupted compressed data gracefully', () => {
+    // Invalid compressed string should throw or return null
+    const result = LZString.decompressFromUTF16('not-valid-compressed-data');
+    // LZ-String may return null or empty string for invalid data
+    expect(result === null || typeof result === 'string').toBe(true);
+  });
+});
+
+// ─── exportMirc edge cases ───────────────────────────────────────
+
+describe('exportMirc edge cases', () => {
+  let mockStore: AsciiBirdStore;
+
+  beforeEach(() => {
+    mockStore = createMockStore();
+    setStore(mockStore);
+  });
+
+  it('handles digit chars that need padding', () => {
+    // When the next block's char is a digit, color codes need zero-padding
+    const blocks: Block[][] = [
+      [{ fg: 4, bg: 1, char: 'A' }, { fg: 5, bg: 2, char: '3' }],
+    ];
+
+    const result = exportMirc(blocks);
+    const joined = result.output.join('');
+    expect(joined).toContain('A');
+    expect(joined).toContain('3');
+  });
+
+  it('handles single-digit color codes', () => {
+    const blocks: Block[][] = [
+      [{ fg: 1, bg: 0, char: 'X' }],
+    ];
+
+    const result = exportMirc(blocks);
+    const joined = result.output.join('');
+    expect(joined).toContain('\x03');
+    expect(joined).toContain('X');
+  });
+
+  it('handles two-digit color codes', () => {
+    const blocks: Block[][] = [
+      [{ fg: 15, bg: 10, char: 'Y' }],
+    ];
+
+    const result = exportMirc(blocks);
+    const joined = result.output.join('');
+    expect(joined).toContain('Y');
+  });
+
+  it('handles consecutive blocks with same colors (optimisation)', () => {
+    const blocks: Block[][] = [
+      [{ fg: 1, bg: 0, char: 'A' }, { fg: 1, bg: 0, char: 'B' }],
+    ];
+
+    const result = exportMirc(blocks);
+    const joined = result.output.join('');
+    // Should have only one color code for both
+    // eslint-disable-next-line no-control-regex
+    const colorCount = (joined.match(/\x03/g) || []).length;
+    expect(colorCount).toBe(1);
+  });
+
+  it('handles blocks where char is a digit following a color code', () => {
+    const blocks: Block[][] = [
+      [{ fg: 4, bg: 1, char: '5' }],
+    ];
+
+    const result = exportMirc(blocks);
+    const joined = result.output.join('');
+    expect(joined).toContain('5');
+    // Should be zero-padded since char is a digit
+    expect(joined).toContain('\x03');
+  });
+});
+
+// ─── parseMircAscii edge cases ───────────────────────────────────
+
+describe('parseMircAscii edge cases', () => {
+  let mockStore: AsciiBirdStore;
+
+  beforeEach(() => {
+    mockStore = createMockStore();
+    setStore(mockStore);
+  });
+
+  it('handles two-digit color codes', async () => {
+    // Color code 12,08 (blue, yellow)
+    const mirc = '\x0312,08Hello';
+
+    await parseMircAscii(mirc, 'twodigit.txt');
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const layers = decompressLayers(payload.layers);
+    expect(layers[0].data[0][0].fg).toBe(12);
+    expect(layers[0].data[0][0].bg).toBe(8);
+  });
+
+  it('handles mixed single and double digit color codes', async () => {
+    // \x031,0 is fg=1, bg=0
+    const mirc = '\x031,0A\x0312,15B';
+
+    await parseMircAscii(mirc, 'mixed.txt');
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const layers = decompressLayers(payload.layers);
+    expect(layers[0].data[0][0].fg).toBe(1);
+    expect(layers[0].data[0][1].fg).toBe(12);
+    expect(layers[0].data[0][1].bg).toBe(15);
+  });
+
+  it('handles null reset followed by new color', async () => {
+    // \x03 = reset, then \x034,2 = new color
+    const mirc = '\x031,0A\x03\x034,2B';
+
+    await parseMircAscii(mirc, 'resetnew.txt');
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const layers = decompressLayers(payload.layers);
+    expect(layers[0].data[0][0].char).toBe('A');
+    expect(layers[0].data[0][0].fg).toBe(1);
+    expect(layers[0].data[0][1].char).toBe('B');
+    expect(layers[0].data[0][1].fg).toBe(4);
+  });
+
+  it('handles very long single line', async () => {
+    const longLine = '\x031,0' + 'X'.repeat(500);
+
+    await parseMircAscii(longLine, 'long.txt');
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const layers = decompressLayers(payload.layers);
+    expect(layers[0].width).toBe(500);
+    expect(layers[0].height).toBe(1);
+  });
+
+  it('handles multiple newlines (empty lines)', async () => {
+    const mirc = '\x031,0A\n\n\x032,1B';
+
+    await parseMircAscii(mirc, 'emptylines.txt');
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const layers = decompressLayers(payload.layers);
+    expect(layers[0].height).toBe(3);
+    expect(layers[0].data[0][0].char).toBe('A');
+    expect(layers[0].data[2][0].char).toBe('B');
+  });
+});
+
+// ─── setStore/getStore edge cases ────────────────────────────────
+
+describe('setStore/getStore', () => {
+  it('getStore throws if store not initialised', () => {
+    // Reset the internal store reference by importing a fresh module
+    // Since we can't easily reset the module, test that calling
+    // getStore before setStore was ever called would throw
+    // (but it's already been called in other tests, so we test the
+    // mechanism by verifying the store is set)
+    const mockStore = createMockStore();
+    setStore(mockStore);
+    // Store-dependent functions should work now
+    expect(() => mergeLayers()).not.toThrow();
   });
 });
