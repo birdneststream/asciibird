@@ -18,7 +18,6 @@ export default defineConfig({
       'vue-tailwind',
       'node-emoji',
       'vue-file-toolbar-menu',
-      'vue-color',
       'material-icons',
     ],
   },
