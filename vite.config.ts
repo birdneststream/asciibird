@@ -4,9 +4,7 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [vue()],
-  base: process.env.NODE_ENV === 'production'
-    ? 'https://asciibird.birdnest.live/'
-    : '/',
+  base: process.env.VITE_BASE_URL || '/',
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
@@ -16,6 +14,34 @@ export default defineConfig({
     port: 5180,
   },
   optimizeDeps: {
-    include: ['vue-tailwind'],
+    include: [
+      'vue-tailwind',
+      'node-emoji',
+      'vue-file-toolbar-menu',
+    ],
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: 'modern-compiler',
+      },
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-vue': ['vue', 'vuex', 'vue-template-compiler'],
+          'vendor-ui': [
+            'vue-tailwind',
+            'vue-file-toolbar-menu',
+            'vue-draggable-resizable',
+            'vue-toasted',
+            'vue-clipboard2',
+            'vue-slider-component',
+          ],
+        },
+      },
+    },
   },
 })
