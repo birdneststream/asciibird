@@ -97,6 +97,8 @@ import {
   checkIrcByteLimits,
 } from "../ascii";
 
+import { getMirrorPositions } from "../utils/mirror";
+
 export default {
   name: "Editor",
   components: {
@@ -1419,47 +1421,24 @@ export default {
       );
     },
     async drawIndicator() {
-      this.drawRectangleBlock(this.x, this.y);
-
-      if (this.isTextEditing) {
-        if (this.mirrorX) {
-          this.drawRectangleBlock(this.currentAsciiWidth - this.x, this.y);
-        }
-
-        if (this.mirrorY) {
-          this.drawRectangleBlock(this.x, this.currentAsciiHeight - this.y);
-        }
-
-        if (this.mirrorY && this.mirrorX) {
-          this.drawRectangleBlock(
-            this.currentAsciiWidth - this.x,
-            this.currentAsciiHeight - this.y
-          );
-        }
+      const positions = getMirrorPositions(
+        this.x, this.y,
+        this.currentAsciiWidth, this.currentAsciiHeight,
+        this.mirrorX && this.isTextEditing,
+        this.mirrorY && this.isTextEditing,
+      );
+      for (const pos of positions) {
+        this.drawRectangleBlock(pos.x, pos.y);
       }
     },
     async drawTextIndicator() {
-      this.drawRectangleBlock(this.textEditing.startX, this.textEditing.startY);
-
-      if (this.mirrorX) {
-        this.drawRectangleBlock(
-          this.currentAsciiWidth - this.textEditing.startX,
-          this.textEditing.startY
-        );
-      }
-
-      if (this.mirrorY) {
-        this.drawRectangleBlock(
-          this.textEditing.startX,
-          this.currentAsciiHeight - this.textEditing.startY
-        );
-      }
-
-      if (this.mirrorY && this.mirrorX) {
-        this.drawRectangleBlock(
-          this.currentAsciiWidth - this.textEditing.startX,
-          this.currentAsciiHeight - this.textEditing.startY
-        );
+      const positions = getMirrorPositions(
+        this.textEditing.startX, this.textEditing.startY,
+        this.currentAsciiWidth, this.currentAsciiHeight,
+        this.mirrorX, this.mirrorY,
+      );
+      for (const pos of positions) {
+        this.drawRectangleBlock(pos.x, pos.y);
       }
     },
     //
