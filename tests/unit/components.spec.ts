@@ -598,6 +598,91 @@ describe('NewAscii.vue', () => {
     )
     expect(wrapper.vm.showNewAsciiModal).toBe(false)
   })
+
+  it('mounted opens modal when showNewAsciiModal is true', () => {
+    store = createMockStore({
+      modalState: {
+        newAscii: true, editAscii: false, pasteAscii: false,
+        options: false, overlay: false, about: false, help: false,
+      },
+    })
+    shallowMount(NewAscii, mountOptions(store))
+    expect(modalMock.show).toHaveBeenCalledWith('new-ascii-modal')
+  })
+
+  it('watch showNewAsciiModal opens modal on true', async () => {
+    const wrapper = shallowMount(
+      NewAscii,
+      mountOptions(store)
+    )
+    store.state.modalState.newAscii = true
+    await wrapper.vm.$nextTick()
+    expect(modalMock.show).toHaveBeenCalledWith('new-ascii-modal')
+  })
+
+  it('watch showNewAsciiModal closes modal on false', async () => {
+    store = createMockStore({
+      modalState: {
+        newAscii: true, editAscii: false, pasteAscii: false,
+        options: false, overlay: false, about: false, help: false,
+      },
+    })
+    const wrapper = shallowMount(
+      NewAscii,
+      mountOptions(store)
+    )
+    store.state.modalState.newAscii = false
+    await wrapper.vm.$nextTick()
+    expect(modalMock.hide).toHaveBeenCalledWith('new-ascii-modal')
+  })
+
+  it('initiateNewAscii commits closeModal and parses dimensions',
+    async () => {
+      // Mock the ascii module's default export (createNewASCII)
+      const asciiMock = vi.fn()
+      vi.doMock('@/ascii', () => ({ default: asciiMock }))
+
+      const wrapper = shallowMount(
+        NewAscii,
+        mountOptions(store)
+      )
+      wrapper.vm.forms.createAscii.width = '100'
+      wrapper.vm.forms.createAscii.height = '50'
+      wrapper.vm.forms.createAscii.title = 'Test ASCII'
+
+      // Call initiateNewAscii — the commit spy verifies closeModal
+      const commitSpy = vi.spyOn(store, 'commit')
+      try {
+        wrapper.vm.initiateNewAscii()
+      } catch {
+        // createNewASCII may throw due to missing store
+        // but we verify the commit and parsing happened first
+      }
+      expect(commitSpy).toHaveBeenCalledWith(
+        'closeModal', 'new-ascii',
+      )
+      expect(wrapper.vm.forms.createAscii.height).toBe(50)
+      expect(wrapper.vm.forms.createAscii.width).toBe(100)
+
+      vi.doUnmock('@/ascii')
+    })
+
+  it('initiateNewAscii handles string dimensions via parseInt',
+    async () => {
+      const wrapper = shallowMount(
+        NewAscii,
+        mountOptions(store)
+      )
+      wrapper.vm.forms.createAscii.width = '40'
+      wrapper.vm.forms.createAscii.height = '15'
+      try {
+        wrapper.vm.initiateNewAscii()
+      } catch {
+        // createNewASCII may throw due to missing store
+      }
+      expect(wrapper.vm.forms.createAscii.width).toBe(40)
+      expect(wrapper.vm.forms.createAscii.height).toBe(15)
+    })
 })
 
 // ─── About.vue ───────────────────────────────
@@ -650,6 +735,43 @@ describe('About.vue', () => {
       mountOptions(store)
     )
     expect(wrapper.vm.showOptionsModal).toBe(false)
+  })
+
+  it('mounted opens modal when modalState.about is true', () => {
+    store = createMockStore({
+      modalState: {
+        newAscii: false, editAscii: false, pasteAscii: false,
+        options: false, overlay: false, about: true, help: false,
+      },
+    })
+    shallowMount(About, mountOptions(store))
+    expect(modalMock.show).toHaveBeenCalledWith('about-modal')
+  })
+
+  it('watch showOptionsModal opens modal on true', async () => {
+    const wrapper = shallowMount(
+      About,
+      mountOptions(store)
+    )
+    store.state.modalState.about = true
+    await wrapper.vm.$nextTick()
+    expect(modalMock.show).toHaveBeenCalledWith('about-modal')
+  })
+
+  it('watch showOptionsModal closes modal on false', async () => {
+    store = createMockStore({
+      modalState: {
+        newAscii: false, editAscii: false, pasteAscii: false,
+        options: false, overlay: false, about: true, help: false,
+      },
+    })
+    const wrapper = shallowMount(
+      About,
+      mountOptions(store)
+    )
+    store.state.modalState.about = false
+    await wrapper.vm.$nextTick()
+    expect(modalMock.hide).toHaveBeenCalledWith('about-modal')
   })
 })
 
