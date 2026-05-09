@@ -483,6 +483,37 @@ export function createMockStore(
     changeIsUpdatingChar: (s: any, val: boolean) => {
       s.toolbarState.isChoosingChar = val
     },
+    changeBrushPreviewState: (s: any, p: any) => {
+      Object.assign(s.brushPreviewState, p)
+    },
+    changeToolBarDraggable: (s: any, val: boolean) => {
+      s.toolbarState.draggable = val
+    },
+    pushBrushHistory: (s: any, blocks: any) => {
+      const hash = cyrb53(JSON.stringify(blocks))
+      if (!s.brushHistory.some((b: any) => b.hash === hash)) {
+        s.brushHistory.push({
+          blocks: LZString.compressToUTF16(
+            JSON.stringify(blocks),
+          ),
+          hash,
+        })
+      }
+    },
+    updateBrushSize: (s: any, p: any) => {
+      if (p.brushSizeHeight !== undefined) {
+        s.toolbarState.brushSizeHeight = p.brushSizeHeight
+      }
+      if (p.brushSizeWidth !== undefined) {
+        s.toolbarState.brushSizeWidth = p.brushSizeWidth
+      }
+      if (p.brushSizeType !== undefined) {
+        s.toolbarState.brushSizeType = p.brushSizeType
+      }
+    },
+    changeToolBarState: (s: any, p: any) => {
+      Object.assign(s.toolbarState, p)
+    },
   }
 
   const mutations = {
@@ -541,6 +572,34 @@ export function createMockStore(
     },
     mutations,
   })
+}
+
+// ─── Mock canvas ref factory ─────────────────────────────────────
+
+export function createMockCanvasRef(
+  width = 256,
+  height = 256,
+) {
+  const mockCtx = {
+    fillRect: vi.fn(),
+    fillText: vi.fn(),
+    clearRect: vi.fn(),
+    fillStyle: '',
+    font: '',
+    beginPath: vi.fn(),
+    moveTo: vi.fn(),
+    lineTo: vi.fn(),
+    stroke: vi.fn(),
+    setLineDash: vi.fn(),
+    strokeStyle: '',
+    lineWidth: 1,
+  }
+  return {
+    width,
+    height,
+    getContext: vi.fn(() => mockCtx),
+    _mockCtx: mockCtx, // exposed for assertions
+  }
 }
 
 // ─── Mount options factory ────────────────────────────────────────

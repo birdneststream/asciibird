@@ -256,6 +256,7 @@ export default {
       let y = 0;
       let x = 0;
       let targetX = 0;
+      let targetY = 0;
 
       const block = {
         fg: this.currentFg,
@@ -371,14 +372,14 @@ export default {
                 this.blocks[y][x] = { ...block };
               }
 
-              let targetY = y;
+              targetY = y;
 
-              if (screenY % 2 === 0) {
-                screenY -= 1;
+              if (targetY % 2 === 0) {
+                targetY -= 1;
               }
 
               if (this.blocks[targetY] && this.blocks[targetY][x]) {
-                if (x % 2 === 0) {
+                if (targetY % 2 === 0) {
                   if (x % 2 === 0) {
                     this.blocks[targetY][x] = { ...block };
                   }
@@ -402,12 +403,12 @@ export default {
       }
 
       switch (this.brushSizeType.toLowerCase()) {
-        case "circle":
+        case "circle": {
           let x1 = 0;
           let y1 = 0;
 
           for (let angle = 0; angle <= 360; angle += 1) {
-            let radian = angle * ((Math.PI * 2) / 360);
+            const radian = angle * ((Math.PI * 2) / 360);
             x1 = Math.round(
               (brushWidth - 1) * ((Math.cos(radian) + 1.0) / 2.0)
             );
@@ -422,6 +423,7 @@ export default {
 
           this.fill();
           break;
+        }
       }
 
       this.$store.commit("brushBlocks", this.blocks);

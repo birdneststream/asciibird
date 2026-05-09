@@ -240,12 +240,12 @@ export default {
       switch (type) {
         case "clipboard":
           this.$copyText(ascii.output.join("")).then(
-            (e) => {
+            () => {
               this.$toasted.show("Copied mIRC brush to clipboard!", {
                 type: "success",
               });
             },
-            (e) => {
+            () => {
               this.$toasted.show("Error when copying mIRC to clipboard!", {
                 type: "error",
               });
@@ -393,7 +393,7 @@ export default {
     delayRedrawCanvas() {
       if (this.redraw) {
         this.redraw = false;
-        var _this = this;
+        const _this = this;
         setTimeout(function () {
           requestAnimationFrame(() => {
             _this.drawPreview();
