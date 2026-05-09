@@ -1,9 +1,16 @@
+// Vue 2 + Vuex type augmentation
+declare module 'vue/types/options' {
+  interface ComponentOptions<V extends Vue> {
+    store?: any;
+  }
+}
+
 import Vue from 'vue';
 import VueTailwind from 'vue-tailwind';
 import VueDraggableResizable from 'vue-draggable-resizable';
 import VueClipboard from 'vue-clipboard2';
 import {
-  tailwindCss
+  tailwindCss,
 } from './tailwindSettings';
 import 'vue-draggable-resizable/dist/VueDraggableResizable.css';
 import store from './store';
@@ -25,9 +32,9 @@ Vue.use(Toasted, {
 
 // Check for localStorage and asciibird cache
 if (localStorage.getItem('vuex')) {
-  let asciiCache = JSON.parse(localStorage.getItem('vuex'));
+  const asciiCache = JSON.parse(localStorage.getItem('vuex') || '{}');
 
-  // Remove old old asciibird cache
+  // Remove old asciibird cache
   if (asciiCache && asciiCache.ver === undefined) {
     localStorage.removeItem('vuex');
     window.location.reload();
