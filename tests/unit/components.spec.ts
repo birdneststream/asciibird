@@ -473,13 +473,6 @@ describe('Help.vue', () => {
     const wrapper = shallowMount(Help, mountOpts())
     expect(wrapper.vm.showHelpModal).toBe(false)
   })
-
-  it('helpAscii decompresses to an array', () => {
-    const wrapper = shallowMount(Help, mountOpts())
-    const ascii = wrapper.vm.helpAscii
-    expect(ascii).toBeDefined()
-    expect(Array.isArray(ascii)).toBe(true)
-  })
 })
 
 // ─── ContextMenu.vue ─────────────────────────

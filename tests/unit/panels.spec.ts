@@ -98,61 +98,71 @@ describe('LayersLibrary.vue', () => {
   })
 })
 
-// NOTE: DebugPanel computed `isSelected` references `this.selecting`
-// which is never declared — a pre-existing bug. We inject a mock
-// `selecting` object via data override so the component mounts cleanly.
-
-const debugPanelSelecting = {
-  startX: null, startY: null, endX: null, endY: null,
-}
-
-function debugMountOpts(extra: Record<string, any> = {}) {
-  return mountOpts({
-    propsData: { canvasX: 0, canvasY: 0 },
-    data: () => ({ selecting: debugPanelSelecting }),
-    ...extra,
-  })
-}
+// ─── DebugPanel.vue ───────────────────────────────────────────
 
 describe('DebugPanel.vue', () => {
   it('mounts successfully', () => {
-    const wrapper = shallowMount(DebugPanel, debugMountOpts())
+    const wrapper = shallowMount(
+      DebugPanel,
+      mountOpts({ propsData: { canvasX: 0, canvasY: 0 } }),
+    )
     expect(wrapper.findComponent(DebugPanel).exists()).toBe(true)
   })
 
   it('computed getToolName returns current tool name', () => {
-    const wrapper = shallowMount(DebugPanel, debugMountOpts())
+    const wrapper = shallowMount(
+      DebugPanel,
+      mountOpts({ propsData: { canvasX: 0, canvasY: 0 } }),
+    )
     expect(wrapper.vm.getToolName).toBe('default')
   })
 
   it('computed getToolName returns none for invalid tool', () => {
     store.toolbarState.currentTool = 99
-    const wrapper = shallowMount(DebugPanel, debugMountOpts())
+    const wrapper = shallowMount(
+      DebugPanel,
+      mountOpts({ propsData: { canvasX: 0, canvasY: 0 } }),
+    )
     expect(wrapper.vm.getToolName).toBe('none')
   })
 
   it('computed currentFg returns fg color', () => {
-    const wrapper = shallowMount(DebugPanel, debugMountOpts())
+    const wrapper = shallowMount(
+      DebugPanel,
+      mountOpts({ propsData: { canvasX: 0, canvasY: 0 } }),
+    )
     expect(wrapper.vm.currentFg).toBe(0)
   })
 
   it('computed currentBg returns bg color', () => {
-    const wrapper = shallowMount(DebugPanel, debugMountOpts())
+    const wrapper = shallowMount(
+      DebugPanel,
+      mountOpts({ propsData: { canvasX: 0, canvasY: 0 } }),
+    )
     expect(wrapper.vm.currentBg).toBe(1)
   })
 
   it('computed mirrorX returns mirror state', () => {
-    const wrapper = shallowMount(DebugPanel, debugMountOpts())
+    const wrapper = shallowMount(
+      DebugPanel,
+      mountOpts({ propsData: { canvasX: 0, canvasY: 0 } }),
+    )
     expect(wrapper.vm.mirrorX).toBe(false)
   })
 
   it('computed mirrorY returns mirror state', () => {
-    const wrapper = shallowMount(DebugPanel, debugMountOpts())
+    const wrapper = shallowMount(
+      DebugPanel,
+      mountOpts({ propsData: { canvasX: 0, canvasY: 0 } }),
+    )
     expect(wrapper.vm.mirrorY).toBe(false)
   })
 
   it('computed asciiStats returns state size string', () => {
-    const wrapper = shallowMount(DebugPanel, debugMountOpts())
+    const wrapper = shallowMount(
+      DebugPanel,
+      mountOpts({ propsData: { canvasX: 0, canvasY: 0 } }),
+    )
     const stats = wrapper.vm.asciiStats
     expect(stats.stateSize).toContain('kb')
     const kbValue = parseFloat(stats.stateSize)
@@ -162,7 +172,10 @@ describe('DebugPanel.vue', () => {
   it('copyUriToClipboard calls copyText with compressed data', async () => {
     setStore(store)
 
-    const wrapper = shallowMount(DebugPanel, debugMountOpts())
+    const wrapper = shallowMount(
+      DebugPanel,
+      mountOpts({ propsData: { canvasX: 0, canvasY: 0 } }),
+    )
     await wrapper.vm.copyUriToClipboard()
     expect(copyTextMock).toHaveBeenCalledWith(
       expect.any(String),

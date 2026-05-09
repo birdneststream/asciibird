@@ -1501,61 +1501,12 @@
 }
 </style>
 
-<script>
-import LZString from "lz-string";
+<script setup lang="ts">
+import { computed } from 'vue';
 import { useAsciiBirdStore } from '../../store';
-import { useToast } from '../../composables/useToast';
-import { useDialog } from '../../composables/useDialog';
-import { useClipboard } from '../../composables/useClipboard';
 import ABModal from '../ABModal.vue';
 
-export default {
-  name: "Help",
-  components: { ABModal },
-  setup() {
-    const store = useAsciiBirdStore();
-    const toast = useToast();
-    const dialog = useDialog();
-    const clipboard = useClipboard();
-    return { store, toast, dialog, clipboard };
-  },
-  created() {},
-  mounted() {
-    if (this.showHelpModal) {
-      this.open();
-    } else {
-      this.close();
-    }
-  },
-  data: () => ({}),
-  computed: {
-    showHelpModal() {
-      return this.store.modalState.help;
-    },
-    helpAscii() {
-      return JSON.parse(
-        LZString.decompressFromEncodedURIComponent(
-          "NrDeF8BpQIgMwOYwFwAZIwMYAsCGAnFGAQRilkRXSz0ORgGUzp4k0McCiBhZit6pzowAkn1ZUOtImPIT2NLvQBC4ygqEy1AqUpgAlbZMXCAIn3KXolgLqQwViC3WDp9AG5GNbmAEYL1oFOwY6hdg5BjvKuegAKXjHChnIuusIAoglpRABqWSZaKToF9JlFxpr0AOoBIdbhwTAARmy+GKklMAAE4i0obdHZ9D1yfcgDHZXdva3txVMjkUHNs4Odi7BjE-M+Gyv9cxW7MwdrCyfjh956G7b2m6uTx6OPOze1L6dP75+XZ88sLZXRJEPZA-4-QGvI6QuqNcHfYRg6HXJEWBr7P6I0EfJYPL5vNG-bYwol40LkhoUuHU2mU+7lVFEAB6+XOjJB9AALmyfNheXoAJYC4QAZxFOI5QxgwqlnXFcvZzkJRFwCTCDPJytJRCaEvosu1TPohEVPgAJriaZEqVrrfa6RAbDYgA"
-        )
-      );
-    },
-  },
-  watch: {
-    showHelpModal(val) {
-      if (val === true) {
-        this.open();
-      }
+const store = useAsciiBirdStore();
 
-      if (val === false) {
-        this.close();
-      }
-    },
-  },
-  methods: {
-    open() {
-    },
-    close() {
-    },
-  },
-};
+const showHelpModal = computed(() => store.modalState.help);
 </script>
