@@ -1,5 +1,7 @@
 # ASCIIBIRD - The Worlds Best IRC ASCII Art Editor
 
+This is a snapshot of asciibird before LLM times. This entire app was hand coded by myself over two years. I want to leave this here as a memory that I can do manual coding and LLMs are totally stupid.
+
 ASCIIBIRD is an IRC ascii art editor to create or edit mIRC art, it is most times worked on during live stream. It's 100% client side and created in vue2 and may be migrated to vue3 in the future.
 
 A most latest production build to use is available at https://asciibird.birdnest.live/ - create cool and fun IRC ascii arts for your ircd MOTD or to share with your chat friends and have a good time!
