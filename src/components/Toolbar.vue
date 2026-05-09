@@ -20,7 +20,7 @@
         </div>
 
         <div class="flex">
-          <label class="ab-checkbox-hover">
+          <label class="ab-checkbox-hover group">
             <t-checkbox
               class="form-checkbox h-5 w-5 text-blue-600"
               name="targetingFg"
@@ -49,7 +49,7 @@
             </t-dropdown>
           </label>
 
-          <label class="ab-checkbox-hover">
+          <label class="ab-checkbox-hover group">
             <t-checkbox
               class="ab-checkbox"
               name="targetingBg"
@@ -79,7 +79,7 @@
             </t-dropdown>
           </label>
 
-          <label class="ab-checkbox-hover">
+          <label class="ab-checkbox-hover group">
             <t-checkbox
               class="ab-checkbox"
               name="targetingChar"
@@ -113,7 +113,7 @@
         <div class="flex mb-3 border-t border-black border-opacity-10 pt-2">
           <t-button
             type="button"
-            :class="`ab-toolbar-button ${
+            :class="`ab-toolbar-button group ${
               mirror.x
                 ? 'border-gray-900 bg-blue-800'
                 : 'border-gray-200 bg-gray-500'
@@ -148,7 +148,7 @@
 
           <t-button
             type="button"
-            :class="`ab-toolbar-button ${
+            :class="`ab-toolbar-button group ${
               mirror.y
                 ? 'border-gray-900 bg-blue-800'
                 : 'border-gray-200 bg-gray-500'
@@ -183,7 +183,7 @@
 
           <t-button
             type="button"
-            :class="`ab-toolbar-button ${
+            :class="`ab-toolbar-button group ${
               toolbarState.updateBrush
                 ? 'border-gray-900 bg-blue-800'
                 : 'border-gray-200 bg-gray-500'
@@ -222,7 +222,7 @@
 
           <t-button
             type="button"
-            :class="`ab-toolbar-button ${
+            :class="`ab-toolbar-button group ${
               toolbarState.gridView
                 ? 'border-gray-900 bg-blue-800'
                 : 'border-gray-200 bg-gray-500'
@@ -265,7 +265,7 @@
 
           <t-button
             type="button"
-            :class="`ab-toolbar-button ${
+            :class="`ab-toolbar-button group ${
               toolbarState.halfBlockEditing
                 ? 'border-gray-900 bg-blue-800'
                 : 'border-gray-200 bg-gray-500'
@@ -366,6 +366,7 @@ export default {
     this.mirror.x = this.mirrorX;
     this.mirror.y = this.mirrorY;
   },
+  // eslint-disable-next-line vue/multi-word-component-names
   name: "Toolbar",
   components: { Colours },
   props: ["yOffset"],

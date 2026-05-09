@@ -764,7 +764,7 @@ export default new Vuex.Store({
       switch (type) {
         case 'new-ascii':
           state.modalState.newAscii = true;
-          state.isKeyboardDiasbled = true;
+          state.isKeyboardDisabled = true;
           break;
 
         case 'edit-ascii':
