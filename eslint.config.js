@@ -1,8 +1,10 @@
 import js from '@eslint/js'
 import pluginVue from 'eslint-plugin-vue'
+import tseslint from 'typescript-eslint'
 
 export default [
   js.configs.recommended,
+  ...tseslint.configs.recommended,
   ...pluginVue.configs['flat/vue2-strongly-recommended'],
   {
     languageOptions: {
@@ -30,6 +32,15 @@ export default [
     },
     rules: {
       'no-unused-vars': 'warn',
+      '@typescript-eslint/no-unused-vars': 'warn',
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-var-requires': 'off',
+      '@typescript-eslint/ban-ts-comment': 'off',
+      '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint/no-this-alias': 'off',
+      '@typescript-eslint/no-unused-expressions': 'off',
+      'no-redeclare': 'off',
+      '@typescript-eslint/no-redeclare': 'warn',
     },
   },
   // Node.js globals for config files

@@ -31,6 +31,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.4.0",
+    "@types/node": "^25.6.2",
+    "@typescript-eslint/eslint-plugin": "^8.59.2",
+    "@typescript-eslint/parser": "^8.59.2",
     "@vitejs/plugin-vue2": "^2.3.1",
     "@vue/test-utils": "^1.0.3",
     "eslint": "^9.4.0",
@@ -39,9 +42,12 @@
     "lint-staged": "^15.2.7",
     "sass": "^1.77.6",
     "simple-git-hooks": "^2.11.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.2",
     "vite": "^5.3.1",
     "vitest": "^1.6.0",
-    "vue-template-compiler": "^2.6.11"
+    "vue-template-compiler": "^2.6.11",
+    "vue-tsc": "^3.2.8"
   },
   "browserslist": [
     "> 1%",
@@ -52,7 +58,7 @@
     "pre-commit": "npx lint-staged"
   },
   "lint-staged": {
-    "*.{js,jsx,vue}": [
+    "*.{js,jsx,ts,tsx,vue}": [
       "eslint --no-fix"
     ]
   }
