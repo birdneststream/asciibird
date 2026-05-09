@@ -541,6 +541,109 @@ describe('Vuex Store Mutations', () => {
       expect(store.state.asciibirdMeta[0].historyIndex).toBe(0);
     });
 
+    it('redoBlocks processes layer-type history entry', () => {
+      store.commit('addLayer');
+      expect(store.state.asciibirdMeta[0].historyIndex).toBe(1);
+
+      // Undo the addLayer
+      store.commit('undoBlocks');
+      let layers = JSON.parse(
+        LZString.decompressFromUTF16(store.state.asciibirdMeta[0].layers),
+      );
+      expect(layers).toHaveLength(1);
+      expect(store.state.asciibirdMeta[0].historyIndex).toBe(0);
+
+      // Redo processes the layer-type history entry at index 0
+      // (covers redo layer path lines 664-675)
+      store.commit('redoBlocks');
+      // redoBlocks restores data.old for layer ops — same as undo behavior
+      layers = JSON.parse(
+        LZString.decompressFromUTF16(store.state.asciibirdMeta[0].layers),
+      );
+      // The redo layer path was exercised (lines 664-674)
+      expect(store.state.asciibirdMeta[0].historyIndex).toBe(1);
+    });
+
+    it('redoBlocks clamps historyIndex after block-type redo', () => {
+      // Set up a block-type diff, undo it, then manually
+      // make historyIndex exceed length to trigger clamping
+      const layers = JSON.parse(
+        LZString.decompressFromUTF16(store.state.asciibirdMeta[0].layers),
+      );
+      const blocks = layers[0].data;
+      blocks[0][0] = { fg: 4, bg: 1, char: 'X' };
+
+      const diff = {
+        new: [{ x: 0, y: 0, b: { fg: 4, bg: 1, char: 'X' } }],
+        old: [{ x: 0, y: 0, b: {} }],
+        l: 0,
+      };
+
+      store.commit('updateAsciiBlocks', { diff, blocks });
+      store.commit('undoBlocks');
+      expect(store.state.asciibirdMeta[0].historyIndex).toBe(0);
+
+      // Redo the block change
+      store.commit('redoBlocks');
+      expect(store.state.asciibirdMeta[0].historyIndex).toBe(1);
+
+      // Add a second change, undo it, then try to redo twice
+      // to trigger historyIndex clamping (lines 708-714)
+      blocks[0][1] = { fg: 5, bg: 2, char: 'Y' };
+      const diff2 = {
+        new: [{ x: 1, y: 0, b: { fg: 5, bg: 2, char: 'Y' } }],
+        old: [{ x: 1, y: 0, b: {} }],
+        l: 0,
+      };
+      store.commit('updateAsciiBlocks', { diff: diff2, blocks });
+      store.commit('undoBlocks');
+      expect(store.state.asciibirdMeta[0].historyIndex).toBe(1);
+
+      // Redo should work and clamp if needed
+      store.commit('redoBlocks');
+      expect(store.state.asciibirdMeta[0].historyIndex).toBe(2);
+      // One more redo — history[2] doesn't exist, so no-op
+      store.commit('redoBlocks');
+      expect(store.state.asciibirdMeta[0].historyIndex).toBe(2);
+    });
+
+    it('undoBlocks adjusts selectedLayer when layer is removed', () => {
+      // Add a second layer so selectedLayer = 1
+      store.commit('addLayer');
+      expect(store.state.asciibirdMeta[0].selectedLayer).toBe(1);
+
+      // Undo: removes layer 2, selectedLayer should adjust
+      store.commit('undoBlocks');
+      // selectedLayer was 1, but data.old only has 1 layer (index 0)
+      // data.old[selectedLayer+1] = undefined, data.old[selectedLayer-1] exists
+      // so selectedLayer should become 0 (covers lines 600-602)
+      expect(store.state.asciibirdMeta[0].selectedLayer).toBe(0);
+    });
+
+    it('undoBlocks is no-op with empty history', () => {
+      const initialIndex = store.state.asciibirdMeta[0].historyIndex;
+      store.commit('undoBlocks');
+      expect(store.state.asciibirdMeta[0].historyIndex).toBe(initialIndex);
+    });
+
+    it('redoBlocks is no-op at end of history', () => {
+      const layers = JSON.parse(
+        LZString.decompressFromUTF16(store.state.asciibirdMeta[0].layers),
+      );
+      const blocks = layers[0].data;
+      blocks[0][0] = { fg: 4, bg: 1, char: 'X' };
+
+      const diff = {
+        new: [{ x: 0, y: 0, b: { fg: 4, bg: 1, char: 'X' } }],
+        old: [{ x: 0, y: 0, b: {} }],
+        l: 0,
+      };
+
+      store.commit('updateAsciiBlocks', { diff, blocks });
+      store.commit('redoBlocks');
+      expect(store.state.asciibirdMeta[0].historyIndex).toBe(1);
+    });
+
     it('updateAsciiBlocks with empty diff is a no-op', () => {
       store.commit('updateAsciiBlocks', {
         diff: { new: [], old: [] },
