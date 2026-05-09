@@ -366,7 +366,7 @@ export default {
     this.mirror.x = this.mirrorX;
     this.mirror.y = this.mirrorY;
   },
-  // eslint-disable-next-line vue/multi-word-component-names
+   
   name: "Toolbar",
   components: { Colours },
   props: ["yOffset"],

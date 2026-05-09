@@ -7,7 +7,12 @@
   >
     <t-card class="w-full h-full">
       <div class="p-1">
-        <t-checkbox class="ab-checkbox" name="leave-open" v-model="persistChars" @click="changePersistChars" /> <small>Persist this panel after character changes</small>
+        <t-checkbox
+          class="ab-checkbox"
+          name="leave-open"
+          v-model="persistChars"
+          @click="changePersistChars"
+        /> <small>Persist this panel after character changes</small>
       </div>
       <t-button
         type="button"

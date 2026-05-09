@@ -21,7 +21,7 @@ import './style.scss';
 Vue.config.productionTip = false;
 Vue.use(VueTailwind, tailwindCss);
 
-Vue.component('vue-draggable-resizable', VueDraggableResizable);
+Vue.component('VueDraggableResizable', VueDraggableResizable);
 Vue.use(VueClipboard);
 Vue.use(Toasted, {
   position: 'bottom-center',

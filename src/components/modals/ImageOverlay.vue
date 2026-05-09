@@ -6,7 +6,7 @@
     :esc-to-close="true"
     @closed="$store.commit('closeModal', 'overlay')"
   >
-    <template v-slot:default>
+    <template #default>
       <!--Card-->
       <div>
         <div class="md:flex mb-6">
@@ -214,7 +214,7 @@
       <!--/Card-->
     </template>
 
-    <template v-slot:footer>
+    <template #footer>
       <div
         class="flex justify-between"
         @click="$store.commit('closeModal', 'overlay')"

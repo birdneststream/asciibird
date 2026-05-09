@@ -20,7 +20,7 @@
       rows="10"
     />
 
-    <template v-slot:footer>
+    <template #footer>
       <div class="flex justify-between">
         <t-button
           type="button"

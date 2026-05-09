@@ -6,7 +6,7 @@
     :esc-to-close="true"
     @closed="$store.commit('closeModal', 'options')"
   >
-    <template v-slot:default>
+    <template #default>
       <div class="mt-6 lg:mt-0 rounded shadow bg-white">
         <div class="mb-4">
           <label class="ml-1">
@@ -78,7 +78,7 @@
       </div>
     </template>
 
-    <template v-slot:footer>
+    <template #footer>
       <div
         class="flex justify-between"
         @click="$store.commit('closeModal', 'options')"

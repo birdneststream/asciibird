@@ -1,12 +1,21 @@
 <template>
-  <t-modal name="about-modal" :click-to-close="false" :esc-to-close="true"
-    @closed="$store.commit('closeModal', 'about')">
-    <template v-slot:default>
+  <t-modal
+    name="about-modal"
+    :click-to-close="false"
+    :esc-to-close="true"
+    @closed="$store.commit('closeModal', 'about')"
+  >
+    <template #default>
       <div class="mt-6 lg:mt-0 rounded shadow bg-white text-center ">
-        <BrushCanvas :blocks="aboutAscii" class="w-32 -right-40 relative" />
+        <BrushCanvas
+          :blocks="aboutAscii"
+          class="w-32 -right-40 relative"
+        />
 
-        <span class="p-2"><small class="text-blue-400 cursor-pointer"><a href="https://github.com/birdneststream/asciibird"
-              target="_blank">Github</a></small></span>
+        <span class="p-2"><small class="text-blue-400 cursor-pointer"><a
+          href="https://github.com/birdneststream/asciibird"
+          target="_blank"
+        >Github</a></small></span>
         <h1 class="p-2 font-extrabold">
           Big Shout Outs to Patrons
         </h1>
@@ -20,9 +29,15 @@
       </div>
     </template>
 
-    <template v-slot:footer>
-      <div class="flex justify-between" @click="$store.commit('closeModal', 'about')">
-        <t-button type="button" class="p-2 w-full">
+    <template #footer>
+      <div
+        class="flex justify-between"
+        @click="$store.commit('closeModal', 'about')"
+      >
+        <t-button
+          type="button"
+          class="p-2 w-full"
+        >
           Ok
         </t-button>
       </div>

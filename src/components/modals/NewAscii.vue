@@ -59,7 +59,7 @@
     </div>
     <!--/Card-->
 
-    <template v-slot:footer>
+    <template #footer>
       <div
         class="flex justify-between"
       >

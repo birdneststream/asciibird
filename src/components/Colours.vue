@@ -42,7 +42,6 @@
     >
       {{ toolbarState.selectedChar === " " ? "SP" : toolbarState.selectedChar }}
     </t-button>
-
   </div>
 </template>
 
