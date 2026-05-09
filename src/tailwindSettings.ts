@@ -9,7 +9,10 @@ import TDialog from 'vue-tailwind/dist/t-dialog';
 import TSelect from 'vue-tailwind/dist/t-select';
 import TDropdown from 'vue-tailwind/dist/t-dropdown';
 
-export const tailwindCss = {
+export const tailwindCss: Record<string, {
+  component: any;
+  props: Record<string, any>;
+}> = {
   't-input': {
     component: TInput,
     props: {
