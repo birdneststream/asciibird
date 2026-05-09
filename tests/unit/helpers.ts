@@ -68,6 +68,18 @@ export const globalStubs = {
   'Colours': {
     template: '<div class="colours-stub"><slot /></div>',
   },
+  't-radio': {
+    template:
+      '<input type="radio" :checked="value" @change="$emit(\'change\', $event)" />',
+    props: ['value'],
+  },
+  'ContextMenu': {
+    template: '<div class="context-menu-stub"><slot /></div>',
+    methods: {
+      open: vi.fn(),
+      close: vi.fn(),
+    },
+  },
 }
 
 // ─── Shared mock instances ────────────────────────────────────────
@@ -86,14 +98,33 @@ export const copyTextMock = vi.fn(() => Promise.resolve())
 // ─── Global stubs for hotkeys ─────────────────────────────────────
 
 export function setupHotkeysMocks() {
-  vi.stubGlobal('hotkeys', vi.fn((keys: any, scope: any, handler: any) => {
-    if (typeof scope === 'function') return scope
-    return handler
-  }))
-  vi.stubGlobal('hotkeys/filter', vi.fn(() => true))
-  vi.stubGlobal('hotkeys/setScope', vi.fn())
-  vi.stubGlobal('hotkeys/deleteScope', vi.fn())
-  vi.stubGlobal('hotkeys/unbind', vi.fn())
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+  const capturedHandlers = new Map<string, Function[]>()
+
+  const hotkeysFn = vi.fn((keys: any, scope: any, handler: any) => {
+    if (typeof scope === 'function') {
+      handler = scope
+      scope = '*'
+    }
+    const key = `${scope}:${keys}`
+    if (!capturedHandlers.has(key)) {
+      capturedHandlers.set(key, [])
+    }
+    capturedHandlers.get(key)!.push(handler)
+  })
+
+  hotkeysFn.filter = vi.fn(() => true)
+  hotkeysFn.setScope = vi.fn()
+  hotkeysFn.deleteScope = vi.fn()
+  hotkeysFn.unbind = vi.fn()
+
+  vi.stubGlobal('hotkeys', hotkeysFn)
+  vi.stubGlobal('hotkeys/filter', hotkeysFn.filter)
+  vi.stubGlobal('hotkeys/setScope', hotkeysFn.setScope)
+  vi.stubGlobal('hotkeys/deleteScope', hotkeysFn.deleteScope)
+  vi.stubGlobal('hotkeys/unbind', hotkeysFn.unbind)
+
+  return { capturedHandlers, hotkeysFn }
 }
 
 // ─── Toolbar state factory ────────────────────────────────────────
@@ -348,6 +379,110 @@ export function createMockStore(
         s.brushLibrary[key + 1] = temp
       }
     },
+    updateImageOverlay: (s: any, payload: any) => {
+      const meta = s.asciibirdMeta[s.tab]
+      if (meta) meta.imageOverlay = payload
+    },
+    changeLayer: (s: any, idx: number) => {
+      const meta = s.asciibirdMeta[s.tab]
+      if (meta) meta.selectedLayer = idx
+    },
+    toggleLayer: (s: any, idx: number) => {
+      const meta = s.asciibirdMeta[s.tab]
+      if (!meta) return
+      const layers = JSON.parse(
+        LZString.decompressFromUTF16(meta.layers),
+      )
+      if (layers[idx]) layers[idx].visible = !layers[idx].visible
+      meta.layers = LZString.compressToUTF16(JSON.stringify(layers))
+    },
+    removeLayer: (s: any, idx: number) => {
+      const meta = s.asciibirdMeta[s.tab]
+      if (!meta) return
+      const layers = JSON.parse(
+        LZString.decompressFromUTF16(meta.layers),
+      )
+      layers.splice(idx, 1)
+      meta.layers = LZString.compressToUTF16(JSON.stringify(layers))
+      if (meta.selectedLayer >= layers.length) {
+        meta.selectedLayer = layers.length - 1
+      }
+    },
+    addLayer: (s: any) => {
+      const meta = s.asciibirdMeta[s.tab]
+      if (!meta) return
+      const layers = JSON.parse(
+        LZString.decompressFromUTF16(meta.layers),
+      )
+      layers.push({
+        label: `Layer ${layers.length + 1}`,
+        visible: true,
+        width: layers[0]?.width || 3,
+        height: layers[0]?.height || 3,
+        data: create2DArray(layers[0]?.height || 3).map(
+          (row: any[]) => {
+            for (let x = 0; x < (layers[0]?.width || 3); x++) {
+              row.push({ ...emptyBlock })
+            }
+            return row
+          },
+        ),
+      })
+      meta.layers = LZString.compressToUTF16(JSON.stringify(layers))
+    },
+    mergeAllLayers: () => {
+      // Simplified mock — just keeps first layer
+    },
+    upLayer: (s: any, idx: number) => {
+      const meta = s.asciibirdMeta[s.tab]
+      if (!meta || idx <= 0) return
+      const layers = JSON.parse(
+        LZString.decompressFromUTF16(meta.layers),
+      )
+      const temp = layers[idx]
+      layers[idx] = layers[idx - 1]
+      layers[idx - 1] = temp
+      meta.layers = LZString.compressToUTF16(JSON.stringify(layers))
+    },
+    downLayer: (s: any, idx: number) => {
+      const meta = s.asciibirdMeta[s.tab]
+      if (!meta) return
+      const layers = JSON.parse(
+        LZString.decompressFromUTF16(meta.layers),
+      )
+      if (idx >= layers.length - 1) return
+      const temp = layers[idx]
+      layers[idx] = layers[idx + 1]
+      layers[idx + 1] = temp
+      meta.layers = LZString.compressToUTF16(JSON.stringify(layers))
+    },
+    updateLayerName: (s: any, payload: any) => {
+      const meta = s.asciibirdMeta[s.tab]
+      if (!meta) return
+      const layers = JSON.parse(
+        LZString.decompressFromUTF16(meta.layers),
+      )
+      if (layers[payload.key]) layers[payload.key].label = payload.label
+      meta.layers = LZString.compressToUTF16(JSON.stringify(layers))
+    },
+    toggleDisableKeyboard: (s: any, val: boolean) => {
+      s.isKeyboardDisabled = val
+    },
+    undoBlocks: () => {
+      // Simplified mock for keyboard shortcut tests
+    },
+    redoBlocks: () => {
+      // Simplified mock for keyboard shortcut tests
+    },
+    changeIsUpdatingFg: (s: any, val: boolean) => {
+      s.toolbarState.isChoosingFg = val
+    },
+    changeIsUpdatingBg: (s: any, val: boolean) => {
+      s.toolbarState.isChoosingBg = val
+    },
+    changeIsUpdatingChar: (s: any, val: boolean) => {
+      s.toolbarState.isChoosingChar = val
+    },
   }
 
   const mutations = {
@@ -395,6 +530,14 @@ export function createMockStore(
       brushBlocks: (s: any) => JSON.parse(
         LZString.decompressFromUTF16(s.brushBlocks),
       ),
+      imageOverlay: (s: any) =>
+        s.asciibirdMeta[s.tab]?.imageOverlay,
+      selectBlocks: (s: any) => JSON.parse(
+        LZString.decompressFromUTF16(s.selectBlocks),
+      ),
+      brushSizeHeight: (s: any) => s.toolbarState.brushSizeHeight,
+      brushSizeWidth: (s: any) => s.toolbarState.brushSizeWidth,
+      brushSizeType: (s: any) => s.toolbarState.brushSizeType,
     },
     mutations,
   })

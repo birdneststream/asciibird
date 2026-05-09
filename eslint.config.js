@@ -41,6 +41,7 @@ export default [
       '@typescript-eslint/no-unused-expressions': 'off',
       'no-redeclare': 'off',
       '@typescript-eslint/no-redeclare': 'warn',
+      'vue/multi-word-component-names': 'off',
     },
   },
   // Node.js globals for config files

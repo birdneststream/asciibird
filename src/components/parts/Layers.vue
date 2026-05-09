@@ -227,7 +227,7 @@ export default {
       // visible left, we have to disable the buttons
     },
     toolbarState() {
-      return this.$tore.getters.toolbarState;
+      return this.$store.getters.toolbarState;
     },
     imageOverlay() {
       return this.$store.getters.imageOverlay || false;

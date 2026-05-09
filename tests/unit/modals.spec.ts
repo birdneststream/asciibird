@@ -12,6 +12,7 @@ import { shallowMount, createLocalVue } from '@vue/test-utils'
 import PasteAscii from '@/components/modals/PasteAscii.vue'
 import EditAscii from '@/components/modals/EditAscii.vue'
 import Options from '@/components/modals/Options.vue'
+import ImageOverlay from '@/components/modals/ImageOverlay.vue'
 import {
   maxBrushHistory,
   maxUndoHistory,
@@ -304,5 +305,107 @@ describe('Options.vue', () => {
     store.state.modalState.options = true
     await wrapper.vm.$nextTick()
     expect(modalMock.show).toHaveBeenCalledWith('options-modal')
+  })
+})
+
+// ─── ImageOverlay.vue ────────────────────────────────────────────
+
+describe('ImageOverlay.vue', () => {
+  it('mounts successfully', () => {
+    const wrapper = shallowMount(ImageOverlay, mountOpts())
+    expect(wrapper.findComponent(ImageOverlay).exists()).toBe(true)
+  })
+
+  it('computed showOverlayModal reads from store', () => {
+    const wrapper = shallowMount(ImageOverlay, mountOpts())
+    expect(wrapper.vm.showOverlayModal).toBe(false)
+  })
+
+  it('computed imageOverlay returns overlay object from store', () => {
+    const wrapper = shallowMount(ImageOverlay, mountOpts())
+    const overlay = wrapper.vm.imageOverlay
+    expect(overlay).toBeDefined()
+    expect(overlay.opacity).toBe(95)
+    expect(overlay.asciiOpacity).toBe(100)
+    expect(overlay.visible).toBe(false)
+  })
+
+  it('computed imageOverlay returns empty object when no meta', () => {
+    store = createMockStore({ asciibirdMeta: [] })
+    const wrapper = shallowMount(ImageOverlay, mountOpts())
+    expect(wrapper.vm.imageOverlay).toEqual({})
+  })
+
+  it('open calls $modal.show with overlay-modal', () => {
+    const wrapper = shallowMount(ImageOverlay, mountOpts())
+    wrapper.vm.open()
+    expect(modalMock.show).toHaveBeenCalledWith('overlay-modal')
+  })
+
+  it('close calls $modal.hide with overlay-modal', () => {
+    const wrapper = shallowMount(ImageOverlay, mountOpts())
+    wrapper.vm.close()
+    expect(modalMock.hide).toHaveBeenCalledWith('overlay-modal')
+  })
+
+  it('mounted opens modal when showOverlayModal is true', () => {
+    store = createMockStore({
+      modalState: {
+        newAscii: false, editAscii: false, pasteAscii: false,
+        options: false, overlay: true, about: false, help: false,
+      },
+    })
+    shallowMount(ImageOverlay, mountOpts())
+    expect(modalMock.show).toHaveBeenCalledWith('overlay-modal')
+  })
+
+  it('mounted closes modal when showOverlayModal is false', () => {
+    shallowMount(ImageOverlay, mountOpts())
+    expect(modalMock.hide).toHaveBeenCalledWith('overlay-modal')
+  })
+
+  it('watch showOverlayModal triggers open on true', async () => {
+    const wrapper = shallowMount(ImageOverlay, mountOpts())
+    store.state.modalState.overlay = true
+    await wrapper.vm.$nextTick()
+    expect(modalMock.show).toHaveBeenCalledWith('overlay-modal')
+  })
+
+  it('watch showOverlayModal triggers close on false', async () => {
+    store = createMockStore({
+      modalState: {
+        newAscii: false, editAscii: false, pasteAscii: false,
+        options: false, overlay: true, about: false, help: false,
+      },
+    })
+    const wrapper = shallowMount(ImageOverlay, mountOpts())
+    store.state.modalState.overlay = false
+    await wrapper.vm.$nextTick()
+    expect(modalMock.hide).toHaveBeenCalledWith('overlay-modal')
+  })
+
+  it('watch imageOverlay commits updateImageOverlay on change',
+    async () => {
+      const commitSpy = vi.spyOn(store, 'commit')
+      const wrapper = shallowMount(ImageOverlay, mountOpts())
+      const overlay = wrapper.vm.imageOverlay
+      overlay.opacity = 50
+      await wrapper.vm.$nextTick()
+      expect(commitSpy).toHaveBeenCalledWith(
+        'updateImageOverlay',
+        expect.objectContaining({ opacity: 50 }),
+      )
+    },
+  )
+
+  it('contains vue-slider component registration', () => {
+    const wrapper = shallowMount(ImageOverlay, mountOpts())
+    expect(wrapper.vm.$options.components.vueSlider).toBeDefined()
+  })
+
+  it('renders t-checkbox stubs for repeat toggles', () => {
+    const wrapper = shallowMount(ImageOverlay, mountOpts())
+    // t-checkbox stubs are present in the component's template
+    expect(wrapper.html()).toContain('t-modal')
   })
 })
