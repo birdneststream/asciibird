@@ -149,11 +149,12 @@ describe('Layers.vue', () => {
     expect(commitSpy).toHaveBeenCalledWith('changeLayer', 2)
   })
 
-  it('toggleLayer commits toggleLayer and calls closeMenu', () => {
+  it('toggleLayer commits toggleLayer and closes menu', () => {
     const wrapper = createWrapper()
     const commitSpy = vi.spyOn(store, 'commit')
     wrapper.vm.toggleLayer(0)
     expect(commitSpy).toHaveBeenCalledWith('toggleLayer', 0)
+    expect(wrapper.vm.$refs['layers-menu'].close).toHaveBeenCalled()
   })
 
   it('addLayer commits addLayer and shows toast', () => {
@@ -266,5 +267,42 @@ describe('Layers.vue', () => {
     expect(commitSpy).not.toHaveBeenCalledWith(
       'changeLayer', expect.anything(),
     )
+  })
+
+  it('openContextMenu calls preventDefault and refs open', () => {
+    const wrapper = createWrapper()
+    const mockEvent = { preventDefault: vi.fn(), layerX: 10, layerY: 20 }
+    wrapper.vm.openContextMenu(mockEvent)
+    expect(mockEvent.preventDefault).toHaveBeenCalled()
+    expect(wrapper.vm.$refs['layers-menu'].open).toHaveBeenCalledWith({
+      pageX: 10,
+      pageY: 20,
+    })
+  })
+
+  it('closeMenu calls refs close', () => {
+    const wrapper = createWrapper()
+    wrapper.vm.closeMenu()
+    expect(wrapper.vm.$refs['layers-menu'].close).toHaveBeenCalled()
+  })
+
+  it('updateLayerName commits updateLayerName and closes menu', () => {
+    const wrapper = createWrapper()
+    const commitSpy = vi.spyOn(store, 'commit')
+    wrapper.vm.updateLayerName(0, 'Renamed Layer')
+    expect(commitSpy).toHaveBeenCalledWith('updateLayerName', {
+      key: 0,
+      label: 'Renamed Layer',
+    })
+    expect(wrapper.vm.$refs['layers-menu'].close).toHaveBeenCalled()
+  })
+
+  it('watch selectedLayer triggers selectBestLayer', async () => {
+    store.commit('addLayer')
+    const wrapper = createWrapper()
+    const spy = vi.spyOn(wrapper.vm, 'selectBestLayer')
+    store.commit('changeLayer', 1)
+    await wrapper.vm.$nextTick()
+    expect(spy).toHaveBeenCalled()
   })
 })
