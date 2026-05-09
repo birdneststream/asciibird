@@ -34,7 +34,7 @@ export interface ImageOverlay {
   stretched: boolean;
 }
 
-/** Per-tab metadata for an ASCII document */
+/** Per-tab metadata for an ASCII document (stored state) */
 export interface AsciibirdMeta {
   title: string;
   layers: string; // LZ-String compressed JSON of Layer[]
@@ -44,6 +44,11 @@ export interface AsciibirdMeta {
   historyIndex: number;
   x: number; // canvas scroll X
   y: number; // canvas scroll Y
+}
+
+/** Pre-compression metadata used during creation/import */
+export interface AsciibirdMetaBuilder extends Omit<AsciibirdMeta, 'layers'> {
+  layers: Layer[] | string;
 }
 
 /** A single block diff for undo/redo */

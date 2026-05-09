@@ -102,7 +102,7 @@
 
 <script>
 import vueSlider from "vue-slider-component";
-import { maxBrushHistory, maxUndoHistory, tabLimit } from "./../../ascii.js";
+import { maxBrushHistory, maxUndoHistory, tabLimit } from "../../ascii";
 
 export default {
   name: "Options",
