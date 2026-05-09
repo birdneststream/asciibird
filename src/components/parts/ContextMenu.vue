@@ -2,49 +2,40 @@
   <div
     class="context-menu"
     v-show="show"
-    :style="style"
-    ref="context"
+    :style="contextStyle"
+    ref="contextEl"
     tabindex="0"
     @blur="close"
   >
     <slot />
   </div>
 </template>
-<script>
-import { nextTick } from "vue";
 
-export default {
-  name: "ContextMenu",
-  props: {
-    display: Boolean,
-  },
-  data() {
-    return {
-      left: 0,
-      top: 0,
-      show: false,
-    };
-  },
-  computed: {
-    style() {
-      return {
-        top: `${this.top}px`,
-        left: `${this.left}px`,
-      };
-    },
-  },
-  methods: {
-    close() {
-      this.show = false;
-      this.left = 0;
-      this.top = 0;
-    },
-    open(evt) {
-      this.left = evt.pageX || evt.clientX;
-      this.top = (evt.pageY || evt.clientY) - window.pageYOffset;
-      nextTick(() => this.$el.focus());
-      this.show = true;
-    },
-  },
-};
+<script setup lang="ts">
+import { ref, computed, nextTick } from 'vue';
+
+const left = ref(0);
+const top = ref(0);
+const show = ref(false);
+const contextEl = ref<HTMLElement>();
+
+const contextStyle = computed(() => ({
+  top: `${top.value}px`,
+  left: `${left.value}px`,
+}));
+
+function close() {
+  show.value = false;
+  left.value = 0;
+  top.value = 0;
+}
+
+function open(evt: MouseEvent) {
+  left.value = evt.pageX || evt.clientX;
+  top.value = (evt.pageY || evt.clientY) - window.pageYOffset;
+  show.value = true;
+  nextTick(() => contextEl.value?.focus());
+}
+
+defineExpose({ open, close, show, contextStyle });
 </script>

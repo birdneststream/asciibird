@@ -503,7 +503,6 @@ describe('ContextMenu.vue', () => {
   it('mounts successfully', () => {
     const wrapper = shallowMount(ContextMenu, {
       global: { stubs: globalStubs },
-      propsData: { display: false },
     })
     expect(wrapper.exists()).toBe(true)
   })
@@ -511,18 +510,16 @@ describe('ContextMenu.vue', () => {
   it('hidden by default (show=false)', () => {
     const wrapper = shallowMount(ContextMenu, {
       global: { stubs: globalStubs },
-      propsData: { display: false },
     })
     expect(wrapper.vm.show).toBe(false)
   })
 
-  it('style returns left and top positions', () => {
+  it('style returns left and top positions after open', () => {
     const wrapper = shallowMount(ContextMenu, {
       global: { stubs: globalStubs },
-      propsData: { display: false },
     })
-    wrapper.setData({ left: 100, top: 200 })
-    const style = wrapper.vm.style
+    wrapper.vm.open({ pageX: 100, pageY: 200 })
+    const style = wrapper.vm.contextStyle
     expect(style.left).toContain('100')
     expect(style.top).toContain('200')
   })
@@ -530,9 +527,8 @@ describe('ContextMenu.vue', () => {
   it('close sets show to false', () => {
     const wrapper = shallowMount(ContextMenu, {
       global: { stubs: globalStubs },
-      propsData: { display: false },
     })
-    wrapper.setData({ show: true })
+    wrapper.vm.open({ pageX: 100, pageY: 200 })
     wrapper.vm.close()
     expect(wrapper.vm.show).toBe(false)
   })

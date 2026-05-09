@@ -7,7 +7,7 @@
     <Dialog
       as="div"
       class="relative z-50"
-      @close="$emit('close')"
+      @close="emit('close')"
     >
       <TransitionChild
         as="template"
@@ -55,7 +55,7 @@
   </TransitionRoot>
 </template>
 
-<script>
+<script setup lang="ts">
 import {
   Dialog,
   DialogPanel,
@@ -63,18 +63,12 @@ import {
   TransitionChild,
 } from '@headlessui/vue';
 
-export default {
-  name: 'ABModal',
-  components: {
-    Dialog: Dialog,
-    DialogPanel: DialogPanel,
-    TransitionRoot: TransitionRoot,
-    TransitionChild: TransitionChild,
-  },
-  props: {
-    open: { type: Boolean, default: false },
-    title: { type: String, default: '' },
-  },
-  emits: ['close'],
-};
+defineProps<{
+  open?: boolean;
+  title?: string;
+}>();
+
+const emit = defineEmits<{
+  close: [];
+}>();
 </script>

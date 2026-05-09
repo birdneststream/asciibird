@@ -51,7 +51,6 @@
         </div>
       </div>
 
-
       <div class="md:flex mb-6">
         <div class="md:w-1/3">
           <label
@@ -112,7 +111,6 @@
         </div>
       </div>
 
-
       <div class="md:flex mb-6">
         <div class="md:w-1/3">
           <label
@@ -153,7 +151,6 @@
         </div>
       </div>
 
-
       <div class="md:flex mb-6">
         <div class="md:w-1/3">
           <label
@@ -184,8 +181,6 @@
           </label>
         </div>
       </div>
-
-
 
       <div class="md:flex mb-6">
         <div class="md:w-1/3">
@@ -230,76 +225,35 @@
           type="button"
           class="ab-button"
         >
-          <span class="material-icons relative top-2 pb-4">cancel</span> Cancel
+          <span class="material-icons relative top-2 pb-4">cancel</span>
+          Cancel
         </button>
         <button
           type="button"
           class="ab-button"
         >
-          <span class="material-icons relative top-2 pb-4">save</span> Ok
+          <span class="material-icons relative top-2 pb-4">save</span>
+          Ok
         </button>
       </div>
     </template>
   </ABModal>
 </template>
 
-<script>
-import { useAsciiBirdStore } from '../../store';
-import { useToast } from '../../composables/useToast';
-import { useDialog } from '../../composables/useDialog';
-import { useClipboard } from '../../composables/useClipboard';
+<script setup lang="ts">
+import { computed, watch } from 'vue';
 import ABModal from '../ABModal.vue';
+import { useAsciiBirdStore } from '../../store';
 
-export default {
-  name: "Overlay",
-  components: {
-  },
-  setup() {
-    const store = useAsciiBirdStore();
-    const toast = useToast();
-    const dialog = useDialog();
-    const clipboard = useClipboard();
-    return { store, toast, dialog, clipboard };
-  },
-  created() {},
-  mounted() {
-    if (this.showOverlayModal) {
-      this.open();
-    } else {
-      this.close();
-    }
-  },
-  data: () => ({}),
-  computed: {
-    showOverlayModal() {
-      return this.store.modalState.overlay;
-    },
-    imageOverlay() {
-      return this.store.imageOverlay || {};
-    },
-  },
-  watch: {
-    showOverlayModal(val) {
-      if (val === true) {
-        this.open();
-      }
+const store = useAsciiBirdStore();
 
-      if (val === false) {
-        this.close();
-      }
-    },
-    imageOverlay: {
-      handler: function (val, old) {
-        this.store.updateImageOverlay(this.imageOverlay);
-      },
-      deep: true,
-    },
-  },
-  methods: {
-    open() {
-    },
-    close() {
-    },
-  },
-};
+const showOverlayModal = computed(() => store.modalState.overlay);
+const imageOverlay = computed(() => store.imageOverlay || {});
+
+// Deep watch: auto-save overlay changes back to store
+watch(imageOverlay, () => {
+  store.updateImageOverlay(imageOverlay.value);
+}, { deep: true });
+
+defineExpose({ showOverlayModal, imageOverlay });
 </script>

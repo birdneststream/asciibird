@@ -66,88 +66,76 @@
           class="ab-button"
           @click="store.closeModal('new-ascii')"
         >
-          <span class="material-icons relative top-2 pb-4">cancel</span> Cancel
+          <span class="material-icons relative top-2 pb-4">cancel</span>
+          Cancel
         </button>
         <button
           type="button"
           class="ab-button"
           @click="initiateNewAscii()"
         >
-          <span class="material-icons relative top-2 pb-4">save</span>  Create
+          <span class="material-icons relative top-2 pb-4">save</span>
+          Create
         </button>
       </div>
     </template>
   </ABModal>
 </template>
 
-<script>
-import createNewASCII from "../../ascii";
-import { useAsciiBirdStore } from '../../store';
-import { useToast } from '../../composables/useToast';
-import { useDialog } from '../../composables/useDialog';
-import { useClipboard } from '../../composables/useClipboard';
+<script setup lang="ts">
+import { reactive, computed, watch } from 'vue';
+import createNewASCII from '../../ascii';
 import ABModal from '../ABModal.vue';
+import { useAsciiBirdStore } from '../../store';
 
-export default {
-  name: "NewAsciiModal",
-  components: { ABModal },
-  setup() {
-    const store = useAsciiBirdStore();
-    const toast = useToast();
-    const dialog = useDialog();
-    const clipboard = useClipboard();
-    return { store, toast, dialog, clipboard };
-  },
-  created() {},
-  mounted() {
-    if (this.showNewAsciiModal) {
-      this.open();
-    } else {
-      this.close();
-    }
-  },
-  data: () => ({
-    forms: {
-      createAscii: {
-        width: 80,
-        height: 30,
-        title: "ascii",
-      },
-    },
-  }),
-  computed: {
-    showNewAsciiModal() {
-      return this.store.modalState.newAscii;
-    },
-  },
-  watch: {
-    showNewAsciiModal(val) {
-      if (val === true) {
-        this.open();
-      }
+const store = useAsciiBirdStore();
 
-      if (val === false) {
-        this.close();
-      }
-    },
+const forms = reactive({
+  createAscii: {
+    width: 80,
+    height: 30,
+    title: 'ascii',
   },
-  methods: {
-    open() {
-      this.forms.createAscii.title = `New ASCII ${
-        this.store.asciibirdMeta.length + 1
-      }`;
-    },
-    close() {
-      this.forms.createAscii.width = 80;
-      this.forms.createAscii.height = 30;
-      this.forms.createAscii.title = "New ASCII";
-    },
-    initiateNewAscii() {
-      this.store.closeModal('new-ascii');
-      this.forms.createAscii.height = Number.parseInt(this.forms.createAscii.height);
-      this.forms.createAscii.width = Number.parseInt(this.forms.createAscii.width);
-      createNewASCII(this.forms);
-    },
-  },
-};
+});
+
+const showNewAsciiModal = computed(() => store.modalState.newAscii);
+
+function open() {
+  forms.createAscii.title = `New ASCII ${
+    store.asciibirdMeta.length + 1
+  }`;
+}
+
+function close() {
+  forms.createAscii.width = 80;
+  forms.createAscii.height = 30;
+  forms.createAscii.title = 'New ASCII';
+}
+
+function initiateNewAscii() {
+  store.closeModal('new-ascii');
+  forms.createAscii.height = Number.parseInt(
+    String(forms.createAscii.height),
+  );
+  forms.createAscii.width = Number.parseInt(
+    String(forms.createAscii.width),
+  );
+  createNewASCII(forms);
+}
+
+watch(showNewAsciiModal, (val) => {
+  if (val) {
+    open();
+  } else {
+    close();
+  }
+}, { immediate: true });
+
+defineExpose({
+  showNewAsciiModal,
+  forms,
+  initiateNewAscii,
+  open,
+  close,
+});
 </script>

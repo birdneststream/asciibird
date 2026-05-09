@@ -66,111 +66,93 @@
           type="button"
           class="ab-button"
         >
-          <span class="material-icons relative top-2 pb-4">cancel</span>  Cancel
+          <span class="material-icons relative top-2 pb-4">cancel</span>
+          Cancel
         </button>
         <button
           type="button"
           @click="updateAscii()"
           class="ab-button"
         >
-          <span class="material-icons relative top-2 pb-4">save</span>  Update
+          <span class="material-icons relative top-2 pb-4">save</span>
+          Update
         </button>
       </div>
     </template>
   </ABModal>
 </template>
 
-<script>
-import {
-  fillNullBlocks,
-} from "../../ascii";
-import { useAsciiBirdStore } from '../../store';
-import { useToast } from '../../composables/useToast';
-import { useDialog } from '../../composables/useDialog';
-import { useClipboard } from '../../composables/useClipboard';
+<script setup lang="ts">
+import { ref, computed, watch } from 'vue';
+import { fillNullBlocks } from '../../ascii';
 import ABModal from '../ABModal.vue';
+import { useAsciiBirdStore } from '../../store';
 
-export default {
-  name: "EditAsciiModal",
-  components: { ABModal },
-  setup() {
-    const store = useAsciiBirdStore();
-    const toast = useToast();
-    const dialog = useDialog();
-    const clipboard = useClipboard();
-    return { store, toast, dialog, clipboard };
-  },
-  created() {},
-  mounted() {
-    if (this.showEditAsciiModal) {
-      this.open();
-    } else {
-      this.close();
-    }
-  },
-  data: () => ({
-    layer: {},
-  }),
-  computed: {
-    showEditAsciiModal() {
-      return this.store.modalState.editAscii;
-    },
-    currentAscii() {
-      return this.store.currentAscii;
-    },
-    selectedLayerIndex() {
-      return this.currentAscii.selectedLayer;
-    },
-    currentAsciiEditingTitle() {
-      return `Editing ASCII ${this.currentAscii.title}`;
-    },
-    currentAsciiLayers() {
-      return this.store.currentAsciiLayers;
-    },
-    currentSelectedLayer() {
-      return this.currentAsciiLayers[this.selectedLayerIndex];
-    },
-    currentAsciiWidth() {
-      return this.layer.width || 0;
-    },
-    currentAsciiHeight() {
-      return this.layer.height || 0;
-    },
-  },
-  watch: {
-    showEditAsciiModal(val) {
-      if (val === true) {
-        this.open();
-      }
+const store = useAsciiBirdStore();
 
-      if (val === false) {
-        this.close();
-      }
-    },
-  },
-  methods: {
-    updateAscii() {
-      const canvasBlockHeight = Number.parseInt(this.layer.height);
-      const canvasBlockWidth = Number.parseInt(this.layer.width);
-      let layers = fillNullBlocks(canvasBlockHeight, canvasBlockWidth);
-      this.store.changeAsciiWidthHeight({
-        width: canvasBlockWidth,
-        height: canvasBlockHeight,
-        layers: [...layers],
-      });
+const layer = ref<{ width: number; height: number; title: string }>({
+  width: 0,
+  height: 0,
+  title: '',
+});
 
-      this.close();
-    },
-    open() {
-      this.layer = {
-        width: this.currentSelectedLayer.width,
-        height: this.currentSelectedLayer.height,
-        title: this.currentAscii.title,
-      };
-    },
-    close() {
-      this.layer = {};
-    },
-  },
-};
+const showEditAsciiModal = computed(() => store.modalState.editAscii);
+const currentAscii = computed(() => store.currentAscii);
+const selectedLayerIndex = computed(() => currentAscii.value.selectedLayer || 0);
+const currentAsciiEditingTitle = computed(() => `Editing ASCII ${currentAscii.value.title}`);
+const currentAsciiLayers = computed(() => store.currentAsciiLayers);
+const currentSelectedLayer = computed(
+  () => currentAsciiLayers.value[selectedLayerIndex.value],
+);
+
+function open() {
+  layer.value = {
+    width: currentSelectedLayer.value.width,
+    height: currentSelectedLayer.value.height,
+    title: currentAscii.value.title,
+  };
+}
+
+function close() {
+  layer.value = {};
+}
+
+function updateAscii() {
+  const canvasBlockHeight = Number.parseInt(String(layer.value.height));
+  const canvasBlockWidth = Number.parseInt(String(layer.value.width));
+  const layers = fillNullBlocks(canvasBlockHeight, canvasBlockWidth);
+  store.changeAsciiWidthHeight({
+    width: canvasBlockWidth,
+    height: canvasBlockHeight,
+    layers: [...layers],
+  });
+
+  close();
+}
+
+watch(showEditAsciiModal, (val) => {
+  if (val) {
+    open();
+  } else {
+    close();
+  }
+});
+
+const currentAsciiWidth = computed(() => layer.value.width || 0);
+const currentAsciiHeight = computed(() => layer.value.height || 0);
+
+defineExpose({
+  showEditAsciiModal,
+  layer,
+  currentAsciiEditingTitle,
+  currentAscii,
+  selectedLayerIndex,
+  currentAsciiLayers,
+  currentSelectedLayer,
+  currentAsciiWidth,
+  currentAsciiHeight,
+  updateAscii,
+  open,
+  close,
+});
 </script>

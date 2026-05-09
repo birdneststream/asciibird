@@ -37,7 +37,7 @@
 
       <div class="mb-4">
         <label class="ml-1">
-          <span class="text-sm">Brush Histroy Limit</span>
+          <span class="text-sm">Brush History Limit</span>
           <input
             type="range"
             class="ab-range mt-10"
@@ -51,7 +51,7 @@
 
       <div class="mb-4">
         <label class="ml-1">
-          <span class="text-sm">Undo/Redo Histroy Limit</span>
+          <span class="text-sm">Undo/Redo History Limit</span>
           <input
             type="range"
             class="ab-range mt-10"
@@ -87,87 +87,48 @@
           type="button"
           class="ab-button"
         >
-          <span class="material-icons relative top-2 pb-4">cancel</span> Cancel
+          <span class="material-icons relative top-2 pb-4">cancel</span>
+          Cancel
         </button>
         <button
           type="button"
           class="ab-button"
         >
-          <span class="material-icons relative top-2 pb-4">save</span> Ok
+          <span class="material-icons relative top-2 pb-4">save</span>
+          Ok
         </button>
       </div>
     </template>
   </ABModal>
 </template>
 
-<script>
-import { maxBrushHistory, maxUndoHistory, tabLimit } from "../../ascii";
-import { useAsciiBirdStore } from '../../store';
-import { useToast } from '../../composables/useToast';
-import { useDialog } from '../../composables/useDialog';
-import { useClipboard } from '../../composables/useClipboard';
+<script setup lang="ts">
+import { computed } from 'vue';
+import { maxBrushHistory, maxUndoHistory, tabLimit } from '../../ascii';
 import ABModal from '../ABModal.vue';
+import { useAsciiBirdStore } from '../../store';
 
-export default {
-  name: "Options",
-  components: {
-  },
-  setup() {
-    const store = useAsciiBirdStore();
-    const toast = useToast();
-    const dialog = useDialog();
-    const clipboard = useClipboard();
-    return { store, toast, dialog, clipboard };
-  },
-  created() {},
-  mounted() {
-    if (this.showOptionsModal) {
-      this.open();
-    } else {
-      this.close();
-    }
-  },
-  data: () => ({}),
-  computed: {
-    showOptionsModal() {
-      return this.store.modalState.options;
-    },
-    options() {
-      return this.store.options;
-    },
-    maxBrushHistory() {
-      return maxBrushHistory;
-    },
-    maxUndoHistory() {
-      return maxUndoHistory;
-    },
-    tabLimit() {
-      return tabLimit;
-    },
-  },
-  watch: {
-    showOptionsModal(val) {
-      if (val === true) {
-        this.open();
-      }
+const store = useAsciiBirdStore();
 
-      if (val === false) {
-        this.close();
-      }
-    },
-  },
-  methods: {
-    open() {
-    },
-    close() {
-    },
-    clearCache() {
-      localStorage.clear();
-      window.location.reload();
-    },
-    updateOptions() {
-      this.store.updateOptions({ ...this.options });
-    },
-  },
-};
+const showOptionsModal = computed(() => store.modalState.options);
+const options = computed(() => store.options);
+
+function clearCache() {
+  localStorage.clear();
+  window.location.reload();
+}
+
+function updateOptions() {
+  store.updateOptions({ ...options.value });
+}
+
+defineExpose({
+  showOptionsModal,
+  options,
+  maxBrushHistory,
+  maxUndoHistory,
+  tabLimit,
+  clearCache,
+  updateOptions,
+});
 </script>

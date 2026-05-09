@@ -42,60 +42,22 @@
   </ABModal>
 </template>
 
-<script>
+<script setup lang="ts">
+import { computed } from 'vue';
 import LZString from 'lz-string';
-import BrushCanvas from "./../parts/BrushCanvas.vue";
-import { useAsciiBirdStore } from '../../store';
-import { useToast } from '../../composables/useToast';
-import { useDialog } from '../../composables/useDialog';
-import { useClipboard } from '../../composables/useClipboard';
+import BrushCanvas from '../parts/BrushCanvas.vue';
 import ABModal from '../ABModal.vue';
+import { useAsciiBirdStore } from '../../store';
 
-export default {
-  name: "About",
-  components: {
-    BrushCanvas,
-  },
-  setup() {
-    const store = useAsciiBirdStore();
-    const toast = useToast();
-    const dialog = useDialog();
-    const clipboard = useClipboard();
-    return { store, toast, dialog, clipboard };
-  },
-  created() {},
-  mounted() {
-    if (this.showAboutModal) {
-      this.open();
-    } else {
-      this.close();
-    }
-  },
-  data: () => ({}),
-  computed: {
-    showAboutModal() {
-      return this.store.modalState.about;
-    },
-    aboutAscii() {
-      return JSON.parse(LZString.decompressFromEncodedURIComponent("NrDeF8BpQIgMwOYwFwAZIwMYAsCGAnFGAQRilkRXSz0ORgGUzp4k0McCiBhZit6pzowAkn1ZUOtImPIT2NLvQBC4ygqEy1AqUpgAlbZMXCAIn3KXolgLqQwViC3WDp9AG5GNbmAEYL1oFOwY6hdg5BjvKuegAKXjHChnIuusIAoglpRABqWSZaKToF9JlFxpr0AOoBIdbhwTAARmy+GKklMAAE4i0obdHZ9D1yfcgDHZXdva3txVMjkUHNs4Odi7BjE-M+Gyv9cxW7MwdrCyfjh956G7b2m6uTx6OPOze1L6dP75+XZ88sLZXRJEPZA-4-QGvI6QuqNcHfYRg6HXJEWBr7P6I0EfJYPL5vNG-bYwol40LkhoUuHU2mU+7lVFEAB6+XOjJB9AALmyfNheXoAJYC4QAZxFOI5QxgwqlnXFcvZzkJRFwCTCDPJytJRCaEvosu1TPohEVPgAJriaZEqVrrfa6RAbDYgA"));
-    }
-  },
-  watch: {
-    showAboutModal(val) {
-      if (val === true) {
-        this.open();
-      }
+const store = useAsciiBirdStore();
 
-      if (val === false) {
-        this.close();
-      }
-    },
-  },
-  methods: {
-    open() {
-    },
-    close() {
-    },
-  },
-};
+const showAboutModal = computed(() => store.modalState.about);
+
+const aboutAscii = computed(() =>
+  JSON.parse(LZString.decompressFromEncodedURIComponent(
+    'NrDeF8BpQIgMwOYwFwAZIwMYAsCGAnFGAQRilkRXSz0ORgGUzp4k0McCiBhZit6pzowAkn1ZUOtImPIT2NLvQBC4ygqEy1AqUpgAlbZMXCAIn3KXolgLqQwViC3WDp9AG5GNbmAEYL1oFOwY6hdg5BjvKuegAKXjHChnIuusIAoglpRABqWSZaKToF9JlFxpr0AOoBIdbhwTAARmy+GKklMAAE4i0obdHZ9D1yfcgDHZXdva3txVMjkUHNs4Odi7BjE-M+Gyv9cxW7MwdrCyfjh956G7b2m6uTx6OPOze1L6dP75+XZ88sLZXRJEPZA-4-QGvI6QuqNcHfYRg6HXJEWBr7P6I0EfJYPL5vNG-bYwol40LkhoUuHU2mU+7lVFEAB6+XOjJB9AALmyfNheXoAJYC4QAZxFOI5QxgwqlnXFcvZzkJRFwCTCDPJytJRCaEvosu1TPohEVPgAJriaZEqVrrfa6RAbDYgA',
+  )),
+);
+
+defineExpose({ showAboutModal, aboutAscii });
 </script>

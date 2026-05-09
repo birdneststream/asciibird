@@ -43,56 +43,34 @@
   </div>
 </template>
 
-<script>
-import { mircColours99 } from "../ascii";
+<script setup lang="ts">
+import { computed } from 'vue';
+import { mircColours99 } from '../ascii';
 import { useAsciiBirdStore } from '../store';
-import { useToast } from '../composables/useToast';
-import { useDialog } from '../composables/useDialog';
-import { useClipboard } from '../composables/useClipboard';
 
-export default {
-  name: "Colours",
-  setup() {
-    const store = useAsciiBirdStore();
-    const toast = useToast();
-    const dialog = useDialog();
-    const clipboard = useClipboard();
-    return { store, toast, dialog, clipboard };
-  },
-  data: () => ({}),
-  computed: {
-    mircColours() {
-      return mircColours99;
-    },
-    toolbarState() {
-      return this.store.toolbarState;
-    },
-    currentFg() {
-      return this.store.currentFg;
-    },
-    currentBg() {
-      return this.store.currentBg;
-    },
-    outline() {
-      let outlineColor = this.currentBg === 0 ? 'black' : 'white';
-      if (this.currentFg === this.currentBg) {
-        return `-webkit-text-stroke-width: 0.5px;-webkit-text-stroke-color: ${outlineColor};`;
-      }
+const store = useAsciiBirdStore();
 
-      return "";
-    },
-    halfBlockEditing() {
-      return this.toolbarState.halfBlockEditing;
-    },
-  },
-  methods: {
-    swapColours() {
-      const bg = this.currentBg;
-      const fg = this.currentFg;
+const mircColours = mircColours99;
 
-      this.store.changeColourFg(bg);
-      this.store.changeColourBg(fg);
-    },
-  },
-};
+const toolbarState = computed(() => store.toolbarState);
+const currentFg = computed(() => store.currentFg);
+const currentBg = computed(() => store.currentBg);
+const halfBlockEditing = computed(() => toolbarState.value.halfBlockEditing);
+
+const outline = computed(() => {
+  let outlineColor = currentBg.value === 0 ? 'black' : 'white';
+  if (currentFg.value === currentBg.value) {
+    return `-webkit-text-stroke-width: 0.5px;-webkit-text-stroke-color: ${outlineColor};`;
+  }
+  return '';
+});
+
+function swapColours() {
+  const bg = currentBg.value;
+  const fg = currentFg.value;
+  store.changeColourFg(bg);
+  store.changeColourBg(fg);
+}
+
+defineExpose({ swapColours, mircColours, toolbarState, currentFg, currentBg, outline, halfBlockEditing });
 </script>

@@ -7,6 +7,14 @@ export default [
   ...tseslint.configs.recommended,
   ...pluginVue.configs['flat/strongly-recommended'],
   {
+    files: ['**/*.vue'],
+    languageOptions: {
+      parserOptions: {
+        parser: tseslint.parser,
+      },
+    },
+  },
+  {
     languageOptions: {
       ecmaVersion: 2020,
       sourceType: 'module',
