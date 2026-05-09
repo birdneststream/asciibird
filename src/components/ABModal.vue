@@ -1,6 +1,14 @@
 <template>
-  <TransitionRoot appear :show="open" as="template">
-    <Dialog as="div" class="relative z-50" @close="$emit('close')">
+  <TransitionRoot
+    appear
+    :show="open"
+    as="template"
+  >
+    <Dialog
+      as="div"
+      class="relative z-50"
+      @close="$emit('close')"
+    >
       <TransitionChild
         as="template"
         enter="duration-300 ease-out"
@@ -27,7 +35,10 @@
             <DialogPanel
               class="w-full max-w-lg transform overflow-visible rounded bg-white shadow transition-all"
             >
-              <div v-if="title" class="border-b p-3 font-bold">
+              <div
+                v-if="title"
+                class="border-b p-3 font-bold"
+              >
                 {{ title }}
               </div>
               <div class="p-3">

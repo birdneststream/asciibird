@@ -1,5 +1,9 @@
 <template>
-  <ABModal :open="showNewAsciiModal" @close="store.closeModal('new-ascii')" title="Create new ASCII">
+  <ABModal
+    :open="showNewAsciiModal"
+    @close="store.closeModal('new-ascii')"
+    title="Create new ASCII"
+  >
     <!--Card-->
     <div>
       <div class="md:flex mb-6">
@@ -18,7 +22,7 @@
             class="ab-input form-input block w-full focus:bg-white"
             v-model="forms.createAscii.title"
             max="128"
-          />
+          >
         </div>
       </div>
 
@@ -38,7 +42,7 @@
             class="ab-input form-input block w-full focus:bg-white"
             v-model="forms.createAscii.width"
             min="1"
-          />
+          >
         </div>
         <div class="md:w-1/3">
           <input
@@ -47,7 +51,7 @@
             class="ab-input form-input block w-full focus:bg-white"
             v-model="forms.createAscii.height"
             min="1"
-          />
+          >
         </div>
       </div>
     </div>

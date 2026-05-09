@@ -1,6 +1,10 @@
 <template>
   <div>
-    <div ref="panelEl" :style="panelStyle" class="fixed">
+    <div
+      ref="panelEl"
+      :style="panelStyle"
+      class="fixed"
+    >
       <div class="h-full ab-card">
         <div class="flex mb-2">
           <Colours />
@@ -14,7 +18,7 @@
               name="targetingFg"
               v-model="toolbarState.targetingFg"
               :disabled="!canBg && !canText"
-            />
+            >
             <div class="inline-block relative">
               <span class="ab-checkbox-label">FG</span>
               <div
@@ -39,7 +43,7 @@
               name="targetingBg"
               v-model="toolbarState.targetingBg"
               :disabled="!canFg && !canText"
-            />
+            >
             <div class="inline-block relative">
               <span class="ab-checkbox-label">BG</span>
               <div
@@ -64,7 +68,7 @@
               name="targetingChar"
               v-model="toolbarState.targetingChar"
               :disabled="!canFg && !canBg"
-            />
+            >
             <div class="inline-block relative">
               <span class="ab-checkbox-label">Text</span>
               <span

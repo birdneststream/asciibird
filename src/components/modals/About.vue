@@ -1,5 +1,9 @@
 <template>
-  <ABModal :open="showAboutModal" @close="store.closeModal('about')" title="">
+  <ABModal
+    :open="showAboutModal"
+    @close="store.closeModal('about')"
+    title=""
+  >
     <div class="mt-6 lg:mt-0 rounded shadow bg-white text-center ">
       <BrushCanvas
         :blocks="aboutAscii"

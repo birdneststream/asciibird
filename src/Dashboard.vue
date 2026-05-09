@@ -43,7 +43,7 @@
     <Help v-if="modalState.help" />
     <EditAscii
       v-if="asciibirdMeta.length && modalState.editAscii"
-      @updateAscii="updateAsciiDetails"
+      @update-ascii="updateAsciiDetails"
     />
     <PasteAscii v-if="modalState.pasteAscii" />
     <ImageOverlay v-if="asciibirdMeta.length && modalState.overlay" />
@@ -259,20 +259,37 @@
     </div>
 
     <!-- Global dialog -->
-    <ABModal :open="dialogState.visible" @close="dialogCancel">
+    <ABModal
+      :open="dialogState.visible"
+      @close="dialogCancel"
+    >
       <div class="text-center space-y-3">
-        <h3 class="text-lg font-semibold">{{ dialogState.title }}</h3>
-        <p v-if="dialogState.text">{{ dialogState.text }}</p>
+        <h3 class="text-lg font-semibold">
+          {{ dialogState.title }}
+        </h3>
+        <p v-if="dialogState.text">
+          {{ dialogState.text }}
+        </p>
         <input
           v-if="dialogState.mode === 'prompt'"
           v-model="dialogState.inputValue"
           class="ab-input mt-3"
-        />
+        >
       </div>
       <template #footer>
         <div class="flex justify-center space-x-4 p-3">
-          <button class="ab-button" @click="dialogCancel">Cancel</button>
-          <button class="ab-button bg-blue-500 hover:bg-blue-600" @click="dialogOk">OK</button>
+          <button
+            class="ab-button"
+            @click="dialogCancel"
+          >
+            Cancel
+          </button>
+          <button
+            class="ab-button bg-blue-500 hover:bg-blue-600"
+            @click="dialogOk"
+          >
+            OK
+          </button>
         </div>
       </template>
     </ABModal>

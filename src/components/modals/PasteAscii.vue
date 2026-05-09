@@ -1,5 +1,9 @@
 <template>
-  <ABModal :open="showPasteAscii" @close="store.closeModal('paste-ascii')" title="Import from Clipboard">
+  <ABModal
+    :open="showPasteAscii"
+    @close="store.closeModal('paste-ascii')"
+    title="Import from Clipboard"
+  >
     Title
     <input
       type="text"
@@ -7,14 +11,14 @@
       class="ab-input"
       v-model="title"
       max="128"
-    />
+    >
 
     <textarea
       class="ab-input"
       v-model="pasteContent"
       name="paste-ascii"
       rows="10"
-    ></textarea>
+    />
 
     <template #footer>
       <div class="flex justify-between">

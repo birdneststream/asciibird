@@ -1,5 +1,9 @@
 <template>
-  <ABModal :open="showOverlayModal" @close="store.closeModal('overlay')" title="ASCIIBIRD Nance Trace Mode">
+  <ABModal
+    :open="showOverlayModal"
+    @close="store.closeModal('overlay')"
+    title="ASCIIBIRD Nance Trace Mode"
+  >
     <!--Card-->
     <div>
       <div class="md:flex mb-6">
@@ -17,7 +21,7 @@
             name="url"
             class="ab-input"
             v-model="imageOverlay.url"
-          />
+          >
 
           <p class="py-2 text-sm text-gray-600">
             Note: ASCIIBIRD only supports URL images
@@ -41,7 +45,7 @@
               class="form-checkbox m-1"
               name="visible"
               v-model="imageOverlay.visible"
-            />
+            >
             <span class="text-sm">Visible</span>
           </label>
         </div>
@@ -64,7 +68,7 @@
             v-model="imageOverlay.opacity"
             min="1"
             max="100"
-          />
+          >
         </div>
       </div>
 
@@ -84,7 +88,7 @@
             v-model="imageOverlay.asciiOpacity"
             min="1"
             max="100"
-          />
+          >
         </div>
       </div>
 
@@ -104,7 +108,7 @@
             v-model="imageOverlay.size"
             min="10"
             max="100"
-          />
+          >
         </div>
       </div>
 
@@ -125,7 +129,7 @@
             v-model="imageOverlay.left"
             min="-100"
             max="100"
-          />
+          >
         </div>
       </div>
 
@@ -145,7 +149,7 @@
             v-model="imageOverlay.top"
             min="-100"
             max="100"
-          />
+          >
         </div>
       </div>
 
@@ -166,7 +170,7 @@
               name="options"
               :value="true"
               v-model="imageOverlay.stretched"
-            />
+            >
             <span class="ml-2 text-sm">ASCII</span>
           </label>
           <label class="items-center ml-2">
@@ -175,7 +179,7 @@
               name="options"
               :value="false"
               v-model="imageOverlay.stretched"
-            />
+            >
             <span class="ml-2 text-sm">Image Size</span>
           </label>
         </div>
@@ -199,7 +203,7 @@
               class="form-checkbox m-1"
               name="repeatx"
               v-model="imageOverlay.repeatx"
-            />
+            >
             <span class="text-sm">X</span>
           </label>
 
@@ -209,7 +213,7 @@
               class="form-checkbox m-1"
               name="repeatx"
               v-model="imageOverlay.repeaty"
-            />
+            >
             <span class="text-sm">Y</span>
           </label>
         </div>

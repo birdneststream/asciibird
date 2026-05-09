@@ -1,5 +1,9 @@
 <template>
-  <ABModal :open="showOptionsModal" @close="store.closeModal('options')" title="ASCIIBIRD Options">
+  <ABModal
+    :open="showOptionsModal"
+    @close="store.closeModal('options')"
+    title="ASCIIBIRD Options"
+  >
     <div class="mt-6 lg:mt-0 rounded shadow bg-white">
       <div class="mb-4">
         <label class="ml-1">
@@ -11,7 +15,7 @@
             @change="updateOptions"
             min="1"
             max="1000"
-          />
+          >
         </label>
       </div>
 
@@ -24,7 +28,7 @@
             name="renderOffScreen"
             v-model="options.renderOffScreen"
             @change="updateOptions"
-          />
+          >
           <small>ASCIIBIRD will avoid rendering blocks off screen to speed things
             up.
           </small>
@@ -41,7 +45,7 @@
             @change="updateOptions"
             min="1"
             :max="maxBrushHistory"
-          />
+          >
         </label>
       </div>
 
@@ -55,7 +59,7 @@
             @change="updateOptions"
             min="1"
             :max="maxUndoHistory"
-          />
+          >
         </label>
       </div>
 

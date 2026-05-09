@@ -4,15 +4,15 @@ import type { Block, Layer, ImageOverlay, AsciibirdMetaBuilder, MircExportResult
 // Lazy store reference to break circular dependency
 // Store imports from ascii, ascii imports store
 // Using a getter ensures store is only accessed after initialization
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 let _store: any = null;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export const setStore = (s: any): void => {
   _store = s;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 const getStore = (): any => {
   if (!_store) {
     throw new Error(

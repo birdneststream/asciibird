@@ -1,5 +1,9 @@
 <template>
-  <ABModal :open="showEditAsciiModal" @close="store.closeModal('edit-ascii')" :title="currentAsciiEditingTitle">
+  <ABModal
+    :open="showEditAsciiModal"
+    @close="store.closeModal('edit-ascii')"
+    :title="currentAsciiEditingTitle"
+  >
     <!--Card-->
     <div>
       <div class="md:flex mb-6">
@@ -18,7 +22,7 @@
             class="ab-input form-input block w-full focus:bg-white"
             v-model="layer.title"
             max="128"
-          />
+          >
         </div>
       </div>
 
@@ -38,7 +42,7 @@
             class="ab-input form-input block w-full focus:bg-white"
             v-model="layer.width"
             min="1"
-          />
+          >
         </div>
         <div class="md:w-1/3">
           <input
@@ -47,7 +51,7 @@
             class="ab-input form-input block w-full focus:bg-white"
             v-model="layer.height"
             min="1"
-          />
+          >
         </div>
       </div>
     </div>

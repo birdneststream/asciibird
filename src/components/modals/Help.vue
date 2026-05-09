@@ -1,5 +1,9 @@
 <template>
-  <ABModal :open="showHelpModal" @close="store.closeModal('help')" title="">
+  <ABModal
+    :open="showHelpModal"
+    @close="store.closeModal('help')"
+    title=""
+  >
     <div class="mt-6 rounded shadow bg-white">
       <h1
         class="help-h1"

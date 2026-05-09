@@ -12,7 +12,7 @@
           name="leave-open"
           v-model="persistChars"
           @click="changePersistChars"
-        /> <small>Persist this panel after character changes</small>
+        > <small>Persist this panel after character changes</small>
       </div>
       <button
         type="button"

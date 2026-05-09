@@ -17,7 +17,7 @@
               :max="maxBrushSize"
               @focus="isInputtingBrushSize = true"
               @blur="isInputtingBrushSize = false"
-            />
+            >
           </div>
 
           <div class="w-1/2">
@@ -30,7 +30,7 @@
               :max="maxBrushSize"
               @focus="isInputtingBrushSize = true"
               @blur="isInputtingBrushSize = false"
-            />
+            >
           </div>
         </div>
 
