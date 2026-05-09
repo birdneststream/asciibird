@@ -253,6 +253,8 @@ import {
   checkIrcByteLimits,
 } from "./ascii";
 
+import { useMenuDefinition } from "./composables/useMenuDefinition";
+
 import VueFileToolbarMenu from "vue-file-toolbar-menu";
 
 export default {
@@ -494,655 +496,77 @@ export default {
 
       return menu;
     },
-    // Toolbar menu
+    // Toolbar menu — delegated to composable
     myMenu() {
-      let menu = [];
-
-      menu.push({
-        text: "File",
-        hotkey: "0",
-        icon: "insert_drive_file",
-        menu: [
-          {
-            text: "New ASCII",
-            click: () => this.$store.commit("openModal", "new-ascii"),
-            icon: "fiber_new",
-            hotkey: !this.isMacLike ? "ctrl+m" : "command+m",
-          },
-        ],
-      });
-
-      if (this.asciibirdMeta.length) {
-        menu[0].menu.push(
-          {
-            text: "Close ASCII",
-            click: () => this.closeTab(this.currentTab),
-            icon: "close",
-            hotkey: !this.isMacLike ? "ctrl+r" : "command+r",
-          },
-          {
-            text: "Change ASCII",
-            icon: "tab",
-            menu: this.changeAsciiMenu,
+      return useMenuDefinition({
+        store: this.$store,
+        toasted: this.$toasted,
+        dialog: this.$dialog,
+        copyText: this.$copyText,
+        isMacLike: this.isMacLike,
+        asciibirdMeta: this.asciibirdMeta,
+        currentTab: this.currentTab,
+        currentTool: this.currentTool,
+        isSelecting: this.isSelecting,
+        isBrushing: this.isBrushing,
+        isErasing: this.isErasing,
+        isSelected: this.isSelected,
+        selectedBlocks: this.selectedBlocks,
+        selectBlocks: this.selectBlocks,
+        brushBlocks: this.brushBlocks,
+        canFg: this.canFg,
+        canBg: this.canBg,
+        canText: this.canText,
+        currentFg: this.currentFg,
+        currentBg: this.currentBg,
+        currentChar: this.currentChar,
+        brushSizeHeight: this.brushSizeHeight,
+        brushSizeWidth: this.brushSizeWidth,
+        brushSizeType: this.brushSizeType,
+        gridView: this.gridView,
+        toolbarState: this.toolbarState,
+        debugPanelState: this.debugPanelState,
+        brushLibraryState: this.brushLibraryState,
+        brushPreviewState: this.brushPreviewState,
+        layersLibraryState: this.layersLibraryState,
+        tabsVisible: this.tabsVisible,
+        menuBarVisible: this.menuBarVisible,
+        selectedLayer: this.selectedLayer,
+        canToggleLayer: this.canToggleLayer,
+        currentAsciiLayers: this.currentAsciiLayers,
+        currentAscii: this.currentAscii,
+        currentAsciiLayerBlocks: this.currentAsciiLayerBlocks,
+        selectedLayerIndex: this.selectedLayerIndex,
+        mirror: this.mirror,
+        onChangeTab: (key) => this.changeTab(key),
+        onCloseTab: (key) => this.closeTab(key),
+        onShowLayerRename: (key, label) => this.showLayerRename(key, label),
+        onUpdateLayerName: (key, label) => this.updateLayerName(key, label),
+        onExportAsciibirdState: () => this.exportAsciibirdState(),
+        onStartImport: (type) => this.startImport(type),
+        onStartExport: (type) => this.startExport(type),
+        onResetSelect: () => { this.resetSelect = !this.resetSelect; },
+        onUpdateCanvas: () => this.updatecanvas(),
+        onClearSelectedBlocks: () => { this.selectedBlocks = []; },
+        onDeleteSelectedBlocks: () => {
+          if (this.selectedBlocks.length) {
+            for (let y = 0; y < this.selectedBlocks.length + 1; y++) {
+              for (
+                let x = 0;
+                x < getBlocksWidth(this.selectedBlocks) + 1;
+                x++
+              ) {
+                if (this.selectedBlocks[y] && this.selectedBlocks[y][x]) {
+                  let oldBlock = this.currentAsciiLayerBlocks[y][x];
+                  this.currentAsciiLayerBlocks[y][x] = { ...emptyBlock };
+                  this.storeDiffBlocks(x, y, oldBlock, { ...emptyBlock });
+                }
+              }
+            }
+            this.dispatchBlocks();
           }
-        );
-
-        menu.push({
-          text: "Edit",
-          icon: "edit",
-          menu: [
-            {
-              text: "Edit ASCII",
-              click: () => this.$store.commit("openModal", "edit-ascii"),
-              icon: "edit",
-              hotkey: !this.isMacLike ? "ctrl+e" : "command+e",
-            },
-            {
-              is: "separator",
-            },
-            {
-              text: "Undo",
-              click: () => this.$store.commit("undoBlocks"),
-              icon: "undo",
-              hotkey: !this.isMacLike ? "ctrl+z" : "command+z",
-            },
-            {
-              text: "Redo",
-              click: () => this.$store.commit("redoBlocks"),
-              icon: "redo",
-              hotkey: !this.isMacLike ? "ctrl+y" : "command+y",
-            },
-            {
-              is: "separator",
-            },
-            {
-              text: "Copy Selection",
-              click: () => {
-                this.$store.commit(
-                  "selectBlocks",
-                  filterNullBlocks(this.selectedBlocks)
-                );
-                this.resetSelect = !this.resetSelect;
-                this.selectedBlocks = [];
-                this.$toasted.show("Copied blocks!", {
-                  type: "success",
-                  icon: "content_copy",
-                });
-              },
-              icon: "content_copy",
-              disabled: !this.isSelecting || !this.selectedBlocks.length,
-              hotkey: !this.isMacLike ? "ctrl+c" : "command+c",
-            },
-            {
-              text: "Cut Selection",
-              click: () => {
-                if (this.selectedBlocks.length) {
-                  for (let y = 0; y < this.selectedBlocks.length + 1; y++) {
-                    for (
-                      let x = 0;
-                      x < getBlocksWidth(this.selectedBlocks) + 1;
-                      x++
-                    ) {
-                      if (this.selectedBlocks[y] && this.selectedBlocks[y][x]) {
-                        let oldBlock = this.currentAsciiLayerBlocks[y][x];
-                        this.currentAsciiLayerBlocks[y][x] = { ...emptyBlock };
-                        this.storeDiffBlocks(x, y, oldBlock, { ...emptyBlock });
-                      }
-                    }
-                  }
-
-                  this.$store.commit(
-                    "selectBlocks",
-                    filterNullBlocks(this.selectedBlocks)
-                  );
-
-                  this.resetSelect = !this.resetSelect;
-                  this.selectedBlocks = [];
-
-                  // Reset and hide the select after successful copy
-                  this.dispatchBlocks();
-                  this.$emit("updatecanvas");
-
-                  this.$toasted.show("Cut blocks!", {
-                    type: "success",
-                    icon: "content_cut",
-                  });
-                }
-              },
-              icon: "content_cut",
-              disabled: !this.isSelecting || !this.selectedBlocks.length,
-              hotkey: !this.isMacLike ? "ctrl+x" : "command+x",
-            },
-            {
-              text: "Paste Select as Brush",
-              click: () => {
-                this.$store.commit("pushBrushHistory", this.brushBlocks);
-                this.$store.commit("brushBlocks", this.selectBlocks);
-                this.$store.commit("changeTool", 4);
-
-                this.resetSelect = !this.resetSelect;
-                this.selectedBlocks = [];
-                this.$store.commit("selectBlocks", []);
-              },
-              icon: "content_paste",
-              disabled: !this.selectBlocks.length,
-              hotkey: !this.isMacLike ? "ctrl+v" : "command+v",
-            },
-            {
-              text: "Delete Selected Blocks",
-              click: () => {
-                if (this.selectedBlocks.length) {
-                  for (let y = 0; y < this.selectedBlocks.length + 1; y++) {
-                    for (
-                      let x = 0;
-                      x < getBlocksWidth(this.selectedBlocks) + 1;
-                      x++
-                    ) {
-                      if (this.selectedBlocks[y] && this.selectedBlocks[y][x]) {
-                        let oldBlock = this.currentAsciiLayerBlocks[y][x];
-                        this.currentAsciiLayerBlocks[y][x] = { ...emptyBlock };
-                        this.storeDiffBlocks(x, y, oldBlock, { ...emptyBlock });
-                      }
-                    }
-                  }
-
-                  // Reset and hide the select after successful copy
-                  this.dispatchBlocks();
-
-                  this.$emit("updatecanvas");
-                  this.resetSelect = !this.resetSelect;
-                  this.selectedBlocks = [];
-                  this.$store.commit("selectBlocks", []);
-                  this.$toasted.show("Deleted blocks!", {
-                    type: "success",
-                    icon: "delete_sweep",
-                  });
-                }
-              },
-              icon: "delete_sweep",
-              disabled: !this.isSelected && !this.selectedBlocks.length,
-              hotkey: "Delete",
-            },
-            {
-              text: "Save Selection/Brush to Library",
-              click: () => {
-                if (this.isBrushing) {
-                  this.$store.commit(
-                    "pushBrushLibrary",
-                    filterNullBlocks(this.brushBlocks)
-                  );
-                }
-
-                if (
-                  this.selectedBlocks.length && this.isSelecting
-                ) {
-                  this.resetSelect = !this.resetSelect;
-                  this.$store.commit(
-                    "pushBrushLibrary",
-                    filterNullBlocks(this.selectedBlocks)
-                  );
-                  this.selectedBlocks = [];
-                }
-
-                this.$toasted.show("Saved brush to Library!", {
-                  type: "success",
-                  icon: "brush",
-                });
-              },
-              icon: "brush",
-              disabled: (!this.isBrushing && !(this.selectedBlocks.length || this.isSelecting)),
-              hotkey: !this.isMacLike ? "ctrl+b" : "command+b",
-            },
-          ],
-        });
-
-        menu.push({
-          text: "View",
-          icon: "preview",
-          menu: [
-            {
-              text: "Windows",
-              icon: "desktop",
-              // Show Hide Things
-              menu: [
-                {
-                  text: `${this.tabsVisible ? "Hide" : "Show"} Tabs`,
-                  icon: this.tabsVisible
-                    ? "check_box"
-                    : "check_box_outline_blank",
-                  hotkey: !this.isMacLike ? "ctrl+alt+t" : "command+alt+t",
-                  click: (e) => {
-                    this.$store.commit("changeTabsVisible", !this.tabsVisible);
-                  },
-                },
-                {
-                  text: `${this.menuBarVisible ? "Hide" : "Show"} Toolbar Menu`,
-                  icon: this.menuBarVisible
-                    ? "check_box"
-                    : "check_box_outline_blank",
-                  hotkey: !this.isMacLike ? "ctrl+alt+m" : "command+alt+m",
-                  click: (e) => {
-                    this.$store.commit(
-                      "changeMenuBarVisible",
-                      !this.menuBarVisible
-                    );
-                  },
-                },
-                {
-                  is: "separator",
-                },
-                {
-                  text: `${
-                    this.debugPanelState.visible ? "Hide" : "Show"
-                  } Debug Panel`,
-                  icon: this.debugPanelState.visible
-                    ? "check_box"
-                    : "check_box_outline_blank",
-                  hotkey: !this.isMacLike ? "ctrl+alt+d" : "command+alt+d",
-                  click: (e) => {
-                    this.$store.commit(
-                      "toggleDebugPanel",
-                      !this.debugPanelState.visible
-                    );
-                  },
-                },
-                {
-                  text: `${
-                    this.brushLibraryState.visible ? "Hide" : "Show"
-                  } Brush Library`,
-                  icon: this.brushLibraryState.visible
-                    ? "check_box"
-                    : "check_box_outline_blank",
-                  hotkey: !this.isMacLike ? "ctrl+alt+b" : "command+alt+b",
-                  click: (e) => {
-                    this.$store.commit(
-                      "toggleBrushLibrary",
-                      !this.brushLibraryState.visible
-                    );
-                  },
-                },
-                {
-                  text: `${
-                    this.layersLibraryState.visible ? "Hide" : "Show"
-                  } Layers`,
-                  icon: this.layersLibraryState.visible
-                    ? "check_box"
-                    : "check_box_outline_blank",
-                  hotkey: !this.isMacLike ? "ctrl+alt+l" : "command+alt+l",
-                  click: (e) => {
-                    this.layersLibraryState.visible =
-                      !this.layersLibraryState.visible;
-                    this.$store.commit(
-                      "changeLayersLibraryState",
-                      this.layersLibraryState
-                    );
-                  },
-                },
-                {
-                  text: `${
-                    this.toolbarState.visible ? "Hide" : "Show"
-                  } Toolbar`,
-                  icon: this.toolbarState.visible
-                    ? "check_box"
-                    : "check_box_outline_blank",
-                  hotkey: !this.isMacLike ? "ctrl+alt+n" : "command+alt+n",
-                  click: (e) => {
-                    this.toolbarState.visible = !this.toolbarState.visible;
-                    this.$store.commit("changeToolBarState", this.toolbarState);
-                  },
-                },
-                {
-                  text: `${
-                    this.brushPreviewState.visible ? "Hide" : "Show"
-                  } Brush Preview`,
-                  icon: this.brushPreviewState.visible
-                    ? "check_box"
-                    : "check_box_outline_blank",
-                  hotkey: !this.isMacLike ? "ctrl+alt+e" : "command+alt+e",
-                  click: (e) => {
-                    this.brushPreviewState.visible =
-                      !this.brushPreviewState.visible;
-                    this.$store.commit(
-                      "changeBrushPreviewState",
-                      this.brushPreviewState
-                    );
-                  },
-                },
-              ],
-            },
-            {
-              text: "Toggle Grid",
-              icon: this.gridView ? "check_box" : "check_box_outline_blank",
-              hotkey: "alt+g",
-              click: (e) => {
-                this.$store.commit("toggleGridView", !this.gridView);
-                this.$toasted.show(
-                  `Grid view ${this.gridView ? "enabled" : "disabled"}`
-                );
-              },
-            },
-            {
-              text: "Mirror X",
-              hotkey: "alt+x",
-              icon: this.toolbarState.mirrorX
-                ? "check_box"
-                : "check_box_outline_blank",
-              click: (e) => {
-                this.mirror.x = !this.toolbarState.mirrorX;
-                this.$store.commit("updateMirror", this.mirror);
-                this.$toasted.show(
-                  `Mirror Y ${this.mirror.y ? "enabled" : "disabled"}`
-                );
-              },
-            },
-            {
-              text: "Mirror Y",
-              icon: this.toolbarState.mirrorY
-                ? "check_box"
-                : "check_box_outline_blank",
-              hotkey: "alt+y",
-              click: (e) => {
-                this.mirror.y = !this.toolbarState.mirrorY;
-                this.$store.commit("updateMirror", this.mirror);
-                this.$toasted.show(
-                  `Mirror Y ${this.mirror.y ? "enabled" : "disabled"}`
-                );
-              },
-            },
-            {
-              text: "Update Brush",
-              hotkey: "alt+u",
-              icon: this.toolbarState.updateBrush
-                ? "check_box"
-                : "check_box_outline_blank",
-              click: (e) => {
-                this.$store.commit(
-                  "toggleUpdateBrush",
-                  !this.toolbarState.updateBrush
-                );
-                this.$toasted.show(
-                  `Update Brush when colours or char changes ${
-                    this.toolbarState.updateBrush ? "enabled" : "disabled"
-                  }`
-                );
-              },
-            },
-            {
-              is: "separator",
-            },
-            {
-              text: "Flip Horizontal Brush",
-              hotkey: "e",
-              disabled: !this.isBrushing,
-              icon: "swap_horiz",
-              click: (e) => {
-                this.$store.commit("flipRotateBlocks", { type: "flip" });
-              },
-            },
-            {
-              text: "Flip Vertical Brush",
-              hotkey: "q",
-              disabled: !this.isBrushing,
-              icon: "swap_horiz",
-              click: (e) => {
-                this.$store.commit("flipRotateBlocks", { type: "rotate" });
-              },
-            },
-
-            {
-              text: "Increase Brush Size",
-              hotkey: !this.isMacLike ? "ctrl+]" : "command+]",
-              disabled: !this.isBrushing && !this.isErasing,
-              icon: "add",
-              click: (e) => {
-                if (
-                  this.brushSizeHeight < maxBrushSize &&
-                  this.brushSizeHeight >= 1 &&
-                  this.brushSizeWidth < maxBrushSize &&
-                  this.brushSizeWidth >= 1
-                ) {
-                  this.$store.commit("updateBrushSize", {
-                    brushSizeHeight: parseInt(this.brushSizeHeight) + 1,
-                    brushSizeWidth: parseInt(this.brushSizeWidth) + 1,
-                    brushSizeType: this.brushSizeType,
-                  });
-                }
-              },
-            },
-            {
-              text: "Decrease Brush Size",
-              hotkey: !this.isMacLike ? "ctrl+[" : "command+[",
-              disabled: !this.isBrushing && !this.isErasing,
-              icon: "remove",
-              click: (e) => {
-                if (
-                  this.brushSizeHeight <= maxBrushSize &&
-                  this.brushSizeHeight > 1 &&
-                  this.brushSizeWidth <= maxBrushSize &&
-                  this.brushSizeWidth > 1
-                ) {
-                  this.$store.commit("updateBrushSize", {
-                    brushSizeHeight: parseInt(this.brushSizeHeight) - 1,
-                    brushSizeWidth: parseInt(this.brushSizeWidth) - 1,
-                    brushSizeType: this.brushSizeType,
-                  });
-                }
-              },
-            },
-            {
-              is: "separator",
-            },
-            {
-              text: "Swap FG and BG",
-              hotkey: "alt+r",
-              icon: "swap_horiz",
-              click: (e) => {
-                let bg = this.currentBg;
-                let fg = this.currentFg;
-
-                this.$store.commit("changeColourFg", bg);
-                this.$store.commit("changeColourBg", fg);
-              },
-            },
-            {
-              text: "Change FG",
-              hotkey: "alt+f",
-              icon: "flip_to_front",
-              click: (e) => {
-                this.$store.commit(
-                  "changeIsUpdatingFg",
-                  !this.toolbarState.isChoosingFg
-                );
-              },
-            },
-            {
-              text: "Change BG",
-              hotkey: "alt+b",
-              icon: "flip_to_back",
-              click: (e) => {
-                this.$store.commit(
-                  "changeIsUpdatingBg",
-                  !this.toolbarState.isChoosingBg
-                );
-              },
-            },
-            {
-              text: "Change Char",
-              hotkey: "alt+c",
-              icon: "atm",
-              click: (e) => {
-                this.$store.commit(
-                  "changeIsUpdatingChar",
-                  !this.toolbarState.isChoosingChar
-                );
-              },
-            },
-            {
-              is: "separator",
-            },
-            {
-              text: "Options",
-              icon: "settings",
-              click: () => this.$store.commit("openModal", "options"),
-              disabled: !this.isDefault,
-              hotkey: !this.isMacLike ? "ctrl+o" : "command+o",
-            },
-          ],
-        });
-      }
-
-      menu.push({
-        text: "Import",
-        icon: "upload_file",
-        menu: [
-          {
-            text: "File",
-            click: () => this.startImport("mirc"),
-            icon: "upload_file",
-            hotkey: !this.isMacLike ? "ctrl+shift+o" : "command+shift+o",
-          },
-          {
-            text: "Clipboard",
-            click: () => this.$store.commit("openModal", "paste-ascii"),
-            hotkey: !this.isMacLike ? "ctrl+shift+v" : "command+shift+v",
-            icon: "copy_all",
-          },
-          {
-            text: "ASCIIBIRD State",
-            click: () => this.startImport("asb"),
-            icon: "save_alt",
-          },
-        ],
+        },
       });
-
-      if (this.asciibirdMeta.length) {
-        menu.push(
-          {
-            text: "Export",
-            icon: "save_alt",
-            menu: [
-              {
-                text: "File",
-                click: () => this.startExport("file"),
-                icon: "download_file",
-                hotkey: !this.isMacLike ? "ctrl+shift+f" : "command+shift+f",
-              },
-              {
-                text: "Clipboard",
-                hotkey: !this.isMacLike ? "ctrl+shift+c" : "command+shift+c",
-                click: () => this.startExport("clipboard"),
-                icon: "copy_all",
-              },
-              {
-                text: "PNG Image",
-                hotkey: !this.isMacLike ? "ctrl+shift+g" : "command+shift+g",
-                click: () => {
-                  canvasToPng(
-                    document.getElementById("canvas"),
-                    this.currentAscii.title
-                  );
-                },
-                icon: "image",
-              },
-              {
-                text: "HTTP POST",
-                click: () => this.startExport("post"),
-                hotkey: !this.isMacLike ? "ctrl+shift+h" : "command+shift+h",
-                icon: "post_add",
-              },
-              {
-                text: "ASCIIBIRD State",
-                click: () => this.exportAsciibirdState(),
-                icon: "save_alt",
-              },
-            ],
-          },
-          {
-            text: "Layers",
-            icon: "layers",
-            menu: [
-              // {
-              //   text: "Change Layers",
-              //   menu: this.asciiLayersMenu,
-              // },
-              {
-                text: "Show/Hide Layer",
-                click: () =>
-                  this.$store.commit("toggleLayer", this.selectedLayer),
-                icon: "panorama_fish_eye",
-                hotkey: !this.isMacLike ? "ctrl+shift+t" : "command+shift+t",
-                disabled: !this.canToggleLayer,
-              },
-              {
-                text: "Rename Layer",
-                hotkey: !this.isMacLike ? "ctrl+shift+r" : "command+shift+r",
-                click: () =>
-                  this.showLayerRename(
-                    this.selectedLayer,
-                    this.currentAsciiLayers[this.selectedLayer].label
-                  ),
-                icon: "text_rotation_none",
-              },
-              {
-                text: "Add Layer",
-                hotkey: !this.isMacLike ? "ctrl+shift+a" : "command+shift+a",
-                click: () => this.$store.commit("addLayer"),
-                icon: "playlist_add",
-              },
-              {
-                text: "Delete Layer",
-                hotkey: !this.isMacLike ? "ctrl+shift+d" : "command+shift+d",
-                click: () =>
-                  this.$store.commit("removeLayer", this.selectedLayer),
-                icon: "delete_sweep",
-                disabled: !this.canToggleLayer,
-              },
-              {
-                text: "Move Layer Down",
-                hotkey: !this.isMacLike ? "ctrl+shift+s" : "command+shift+s",
-                click: () => this.$store.commit("upLayer", this.selectedLayer),
-                icon: "arrow_downward",
-                disabled: !this.canToggleLayer,
-              },
-              {
-                text: "Move Layer Up",
-                hotkey: !this.isMacLike ? "ctrl+shift+w" : "command+shift+w",
-                click: () =>
-                  this.$store.commit("downLayer", this.selectedLayer),
-                icon: "arrow_upward",
-                disabled: !this.canToggleLayer,
-              },
-              {
-                text: "Merge All Layers",
-                hotkey: !this.isMacLike ? "ctrl+shift+m" : "command+shift+m",
-                click: () => this.$store.commit("mergeAllLayers"),
-                icon: "playlist_play",
-                disabled: !this.canToggleLayer,
-              },
-            ],
-          },
-          {
-            text: "Help",
-            icon: "help",
-            menu: [
-              {
-                text: "Help",
-                click: () => this.$store.commit("openModal", "help"),
-                hotkey: "F1",
-                icon: "help",
-              },
-              {
-                text: "About ASCIIBIRD",
-                click: () => this.$store.commit("openModal", "about"),
-                hotkey: "shift+F1",
-                icon: "help_outline",
-              },
-            ],
-          }
-        );
-      }
-
-      return menu;
     },
   },
   watch: {
