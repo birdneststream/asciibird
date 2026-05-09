@@ -1,68 +1,77 @@
 <template>
   <div>
-    <t-button
+    <button
       type="button"
       :style="`background-color: ${mircColours[currentFg]} !important;`"
-      class="border-gray-200 w-14 h-14 text-2xl"
+      class="ab-button border-gray-200 w-14 h-14 text-2xl"
       id="currentColourFg"
-      @click="$store.commit('changeIsUpdatingFg', !toolbarState.isChoosingFg)"
+      @click="store.changeIsUpdatingFg(!toolbarState.isChoosingFg)"
     >
       FG
-    </t-button>
+    </button>
 
-    <t-button
+    <button
       type="button"
       :style="`background-color: ${mircColours[currentBg]} !important;`"
-      class="border-gray-200 w-14 h-14 text-2xl ml-2"
+      class="ab-button border-gray-200 w-14 h-14 text-2xl ml-2"
       id="currentColourBg"
-      @click="$store.commit('changeIsUpdatingBg', !toolbarState.isChoosingBg)"
+      @click="store.changeIsUpdatingBg(!toolbarState.isChoosingBg)"
     >
       BG
-    </t-button>
+    </button>
 
-    <t-button
+    <button
       type="button"
-      class="rounded-3xl w-7 h-7"
+      class="ab-button rounded-3xl w-7 h-7"
       style="margin-left: -75px; margin-top: 12px"
       id="swapColour"
       @click="swapColours()"
     >
       <span class="material-icons">swap_horiz</span>
-    </t-button>
+    </button>
 
-    <t-button
+    <button
       type="button"
       :style="`background-color: ${mircColours[currentBg]} !important;color: ${mircColours[currentFg]};${outline}`"
-      class="border-gray-200 w-14 h-14 text-2xl ml-14"
+      class="ab-button border-gray-200 w-14 h-14 text-2xl ml-14"
       id="currentChar"
       :disabled="halfBlockEditing"
-      @click="
-        $store.commit('changeIsUpdatingChar', !toolbarState.isChoosingChar)
-      "
+      @click="store.changeIsUpdatingChar(!toolbarState.isChoosingChar)"
     >
       {{ toolbarState.selectedChar === " " ? "SP" : toolbarState.selectedChar }}
-    </t-button>
+    </button>
   </div>
 </template>
 
 <script>
 import { mircColours99 } from "../ascii";
+import { useAsciiBirdStore } from '../store';
+import { useToast } from '../composables/useToast';
+import { useDialog } from '../composables/useDialog';
+import { useClipboard } from '../composables/useClipboard';
 
 export default {
   name: "Colours",
+  setup() {
+    const store = useAsciiBirdStore();
+    const toast = useToast();
+    const dialog = useDialog();
+    const clipboard = useClipboard();
+    return { store, toast, dialog, clipboard };
+  },
   data: () => ({}),
   computed: {
     mircColours() {
       return mircColours99;
     },
     toolbarState() {
-      return this.$store.getters.toolbarState;
+      return this.store.toolbarState;
     },
     currentFg() {
-      return this.$store.getters.currentFg;
+      return this.store.currentFg;
     },
     currentBg() {
-      return this.$store.getters.currentBg;
+      return this.store.currentBg;
     },
     outline() {
       let outlineColor = this.currentBg === 0 ? 'black' : 'white';
@@ -81,8 +90,8 @@ export default {
       const bg = this.currentBg;
       const fg = this.currentFg;
 
-      this.$store.commit("changeColourFg", bg);
-      this.$store.commit("changeColourBg", fg);
+      this.store.changeColourFg(bg);
+      this.store.changeColourBg(fg);
     },
   },
 };

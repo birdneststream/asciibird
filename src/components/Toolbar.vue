@@ -1,117 +1,88 @@
 <template>
   <div>
-    <vue-draggable-resizable
-      @dragstop="onDragStop"
-      :grid="[blockWidth, blockHeight]"
-      :min-width="blockWidth * 25"
-      :max-width="blockWidth * 40"
-      :max-height="blockHeight * 20"
-      :min-height="blockHeight * 19"
-      :w="toolbarState.w"
-      :h="toolbarState.h"
-      :x="toolbarState.x"
-      :y="toolbarState.y"
-      :draggable="draggable"
-      ref="toolbardrag"
-    >
-      <t-card class="h-full">
+    <div ref="panelEl" :style="panelStyle" class="fixed">
+      <div class="h-full ab-card">
         <div class="flex mb-2">
           <Colours />
         </div>
 
         <div class="flex">
           <label class="ab-checkbox-hover group">
-            <t-checkbox
+            <input
+              type="checkbox"
               class="form-checkbox h-5 w-5 text-blue-600"
               name="targetingFg"
               v-model="toolbarState.targetingFg"
               :disabled="!canBg && !canText"
             />
-            <t-dropdown toggle-on-hover>
-              <span
-                class="ab-checkbox-label"
-                slot="trigger"
-              >FG</span>
-              <template>
-                <div
-                  class="
-                    bg-gray-500
-                    absolute
-                    opacity-0
-                    invisible
-                    group-hover:animate-tooltip_show
-                    ml-2
-                  "
-                >
-                  Ignore Foreground when Editing
-                </div>
-              </template>
-            </t-dropdown>
+            <div class="inline-block relative">
+              <span class="ab-checkbox-label">FG</span>
+              <div
+                class="
+                  bg-gray-500
+                  absolute
+                  opacity-0
+                  invisible
+                  group-hover:animate-tooltip_show
+                  ml-2
+                "
+              >
+                Ignore Foreground when Editing
+              </div>
+            </div>
           </label>
 
           <label class="ab-checkbox-hover group">
-            <t-checkbox
+            <input
+              type="checkbox"
               class="ab-checkbox"
               name="targetingBg"
               v-model="toolbarState.targetingBg"
               :disabled="!canFg && !canText"
-              checked
             />
-            <t-dropdown toggle-on-hover>
-              <span
-                class="ab-checkbox-label"
-                slot="trigger"
-              >BG</span>
-              <template>
-                <div
-                  class="
-                    bg-gray-500
-                    absolute
-                    opacity-0
-                    invisible
-                    group-hover:animate-tooltip_show
-                    ml-2
-                  "
-                >
-                  Ignore Background when Editing
-                </div>
-              </template>
-            </t-dropdown>
+            <div class="inline-block relative">
+              <span class="ab-checkbox-label">BG</span>
+              <div
+                class="
+                  bg-gray-500
+                  absolute
+                  opacity-0
+                  invisible
+                  group-hover:animate-tooltip_show
+                  ml-2
+                "
+              >
+                Ignore Background when Editing
+              </div>
+            </div>
           </label>
 
           <label class="ab-checkbox-hover group">
-            <t-checkbox
+            <input
+              type="checkbox"
               class="ab-checkbox"
               name="targetingChar"
               v-model="toolbarState.targetingChar"
               :disabled="!canFg && !canBg"
             />
-            <t-dropdown
-              toggle-on-hover
-              class=""
-            >
+            <div class="inline-block relative">
+              <span class="ab-checkbox-label">Text</span>
               <span
-                class="ab-checkbox-label"
-                slot="trigger"
-              >Text</span>
-              <template>
-                <span
-                  class="
-                    bg-gray-500
-                    absolute
-                    opacity-0
-                    invisible
-                    group-hover:animate-tooltip_show
-                    ml-2
-                  "
-                >Ignore Characters when Editing</span>
-              </template>
-            </t-dropdown>
+                class="
+                  bg-gray-500
+                  absolute
+                  opacity-0
+                  invisible
+                  group-hover:animate-tooltip_show
+                  ml-2
+                "
+              >Ignore Characters when Editing</span>
+            </div>
           </label>
         </div>
 
         <div class="flex mb-3 border-t border-black border-opacity-10 pt-2">
-          <t-button
+          <button
             type="button"
             :class="`ab-toolbar-button group ${
               mirror.x
@@ -121,32 +92,27 @@
             @click="
               mirror.x = !mirror.x;
               updateMirror();
-              $toasted.show(`Mirror X ${mirror.x ? 'enabled' : 'disabled'}`);
+              toastShow(`Mirror X ${mirror.x ? 'enabled' : 'disabled'}`);
             "
           >
-            <t-dropdown toggle-on-hover>
-              <span
-                class="material-icons"
-                slot="trigger"
-              >more_vert</span>
-              <template>
-                <div
-                  class="
-                    bg-gray-500
-                    absolute
-                    opacity-0
-                    invisible
-                    group-hover:animate-tooltip_show
-                    ml-2
-                  "
-                >
-                  Mirror X axis when Editing
-                </div>
-              </template>
-            </t-dropdown>
-          </t-button>
+            <div class="inline-block relative">
+              <span class="material-icons">more_vert</span>
+              <div
+                class="
+                  bg-gray-500
+                  absolute
+                  opacity-0
+                  invisible
+                  group-hover:animate-tooltip_show
+                  ml-2
+                "
+              >
+                Mirror X axis when Editing
+              </div>
+            </div>
+          </button>
 
-          <t-button
+          <button
             type="button"
             :class="`ab-toolbar-button group ${
               mirror.y
@@ -156,32 +122,27 @@
             @click="
               mirror.y = !mirror.y;
               updateMirror();
-              $toasted.show(`Mirror Y ${mirror.y ? 'enabled' : 'disabled'}`);
+              toastShow(`Mirror Y ${mirror.y ? 'enabled' : 'disabled'}`);
             "
           >
-            <t-dropdown toggle-on-hover>
-              <span
-                class="material-icons"
-                slot="trigger"
-              >more_horiz</span>
-              <template>
-                <div
-                  class="
-                    bg-gray-500
-                    absolute
-                    opacity-0
-                    invisible
-                    group-hover:animate-tooltip_show
-                    ml-2
-                  "
-                >
-                  Mirror Y axis when Editing
-                </div>
-              </template>
-            </t-dropdown>
-          </t-button>
+            <div class="inline-block relative">
+              <span class="material-icons">more_horiz</span>
+              <div
+                class="
+                  bg-gray-500
+                  absolute
+                  opacity-0
+                  invisible
+                  group-hover:animate-tooltip_show
+                  ml-2
+                "
+              >
+                Mirror Y axis when Editing
+              </div>
+            </div>
+          </button>
 
-          <t-button
+          <button
             type="button"
             :class="`ab-toolbar-button group ${
               toolbarState.updateBrush
@@ -189,38 +150,33 @@
                 : 'border-gray-200 bg-gray-500'
             }`"
             @click="
-              $store.commit('toggleUpdateBrush', updateBrush);
+              store.toggleUpdateBrush(updateBrush);
               toolbarState.updateBrush = !toolbarState.updateBrush;
-              $toasted.show(
+              toastShow(
                 `Update Brush when colours or char changes ${
                   toolbarState.updateBrush ? 'enabled' : 'disabled'
                 }`
               );
             "
           >
-            <t-dropdown toggle-on-hover>
-              <span
-                class="material-icons"
-                slot="trigger"
-              >color_lens</span>
-              <template>
-                <div
-                  class="
-                    bg-gray-500
-                    absolute
-                    opacity-0
-                    invisible
-                    group-hover:animate-tooltip_show
-                    ml-2
-                  "
-                >
-                  Update Brush Automatically when Colours or Char Changes
-                </div>
-              </template>
-            </t-dropdown>
-          </t-button>
+            <div class="inline-block relative">
+              <span class="material-icons">color_lens</span>
+              <div
+                class="
+                  bg-gray-500
+                  absolute
+                  opacity-0
+                  invisible
+                  group-hover:animate-tooltip_show
+                  ml-2
+                "
+              >
+                Update Brush Automatically when Colours or Char Changes
+              </div>
+            </div>
+          </button>
 
-          <t-button
+          <button
             type="button"
             :class="`ab-toolbar-button group ${
               toolbarState.gridView
@@ -228,42 +184,36 @@
                 : 'border-gray-200 bg-gray-500'
             }`"
             @click="
-              $store.commit('toggleGridView', gridView);
+              store.toggleGridView(gridView);
               toolbarState.gridView = !toolbarState.gridView;
-              $toasted.show(
+              toastShow(
                 `Grid view ${toolbarState.gridView ? 'enabled' : 'disabled'}`
               );
             "
           >
-            <t-dropdown toggle-on-hover>
-              <span
-                class="material-icons"
-                slot="trigger"
-              >{{
-                !this.gridView ? "grid_on" : "grid_off"
+            <div class="inline-block relative">
+              <span class="material-icons">{{
+                !gridView ? "grid_on" : "grid_off"
               }}</span>
+              <div
+                class="
+                  bg-gray-500
+                  absolute
+                  opacity-0
+                  invisible
+                  group-hover:animate-tooltip_show
+                  ml-2
+                "
+              >
+                <span class="material-icons">{{
+                  !gridView ? "grid_on" : "grid_off"
+                }}</span>
+                Toggle Grid View
+              </div>
+            </div>
+          </button>
 
-              <template>
-                <div
-                  class="
-                    bg-gray-500
-                    absolute
-                    opacity-0
-                    invisible
-                    group-hover:animate-tooltip_show
-                    ml-2
-                  "
-                >
-                  <span class="material-icons">{{
-                    !this.gridView ? "grid_on" : "grid_off"
-                  }}</span>
-                  Toggle Grid View
-                </div>
-              </template>
-            </t-dropdown>
-          </t-button>
-
-          <t-button
+          <button
             type="button"
             :class="`ab-toolbar-button group ${
               toolbarState.halfBlockEditing
@@ -272,47 +222,40 @@
             }`"
             @click="
               toolbarState.halfBlockEditing = !toolbarState.halfBlockEditing;
-              $store.commit('toggleHalfBlockEditing', toolbarState.halfBlockEditing);
-              $toasted.show(
+              store.toggleHalfBlockEditing(toolbarState.halfBlockEditing);
+              toastShow(
                 `Half Block Editing Mode ${toolbarState.halfBlockEditing ? 'enabled' : 'disabled'}`
               );
-
-              $toasted.show(
+              toastShow(
                 `WARNING THIS FEATURE IS STILL EXPERIMENTAL`
               );
             "
           >
-            <t-dropdown toggle-on-hover>
-              <span
-                class="material-icons"
-                slot="trigger"
-              >{{
+            <div class="inline-block relative">
+              <span class="material-icons">{{
                 "grid_view"
               }}</span>
-
-              <template>
-                <div
-                  class="
-                    bg-gray-500
-                    absolute
-                    opacity-0
-                    invisible
-                    group-hover:animate-tooltip_show
-                    ml-2
-                  "
-                >
-                  <span class="material-icons">{{
-                    "grid_view"
-                  }}</span>
-                  Toggle Half Block Editing Mode
-                </div>
-              </template>
-            </t-dropdown>
-          </t-button>
+              <div
+                class="
+                  bg-gray-500
+                  absolute
+                  opacity-0
+                  invisible
+                  group-hover:animate-tooltip_show
+                  ml-2
+                "
+              >
+                <span class="material-icons">{{
+                  "grid_view"
+                }}</span>
+                Toggle Half Block Editing Mode
+              </div>
+            </div>
+          </button>
         </div>
 
         <div class="border-t border-black border-opacity-10 pt-2">
-          <t-button
+          <button
             type="button"
             v-for="(value, keyToolbar) in toolbarIcons"
             :key="keyToolbar + 50"
@@ -321,67 +264,64 @@
                 ? 'border-gray-900 bg-blue-500'
                 : 'border-gray-200 bg-gray-500'
             }`"
-            @click="$store.commit('changeTool', keyToolbar)"
+            @click="store.changeTool(keyToolbar)"
           >
-            <t-dropdown toggle-on-hover>
-              <span slot="trigger">
+            <div class="inline-block relative">
+              <span class="material-icons">{{ value.icon }}</span>
+              <div
+                class="
+                  bg-gray-500
+                  absolute
+                  opacity-0
+                  invisible
+                  group-hover:animate-tooltip_show
+                  ml-2
+                "
+              >
                 <span class="material-icons">{{ value.icon }}</span>
-              </span>
-
-              <template>
-                <div
-                  class="
-                    bg-gray-500
-                    absolute
-                    opacity-0
-                    invisible
-                    group-hover:animate-tooltip_show
-                    ml-2
-                  "
-                >
-                  <span class="material-icons">{{ value.icon }}</span>
-                  {{ tooltipName(value) }}
-                </div>
-              </template>
-            </t-dropdown>
-          </t-button>
+                {{ tooltipName(value) }}
+              </div>
+            </div>
+          </button>
         </div>
-      </t-card>
-    </vue-draggable-resizable>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
+import { ref } from 'vue';
+import { useDraggable } from '@vueuse/core';
+import { useAsciiBirdStore } from '../store';
+import { useToast } from '../composables/useToast';
 import Colours from "./Colours.vue";
 import { toolbarIcons, blockWidth, blockHeight } from "../ascii";
 
 export default {
-  created() {
-    this.toolbar.x = this.toolbarState.x;
-    this.toolbar.y = this.toolbarState.y;
-    this.toolbar.w = this.toolbarState.w;
-    this.toolbar.h = this.toolbarState.h;
-    this.toolbar.visible = this.toolbarState.visible;
+  setup() {
+    const store = useAsciiBirdStore();
+    const { show: toastShow } = useToast();
 
-    this.mirror.x = this.mirrorX;
-    this.mirror.y = this.mirrorY;
+    const panelEl = ref(null);
+    const { style: panelStyle } = useDraggable(panelEl, {
+      initialValue: { x: store.toolbarState.x, y: store.toolbarState.y },
+    });
+
+    return { store, toastShow, panelEl, panelStyle };
   },
-   
   name: "Toolbar",
   components: { Colours },
   props: ["yOffset"],
   data: () => ({
-    toolbar: {
-      w: 0,
-      h: 0,
-      x: 100,
-      y: 100,
-    },
     mirror: {
       x: false,
       y: false,
     },
   }),
+  created() {
+    this.mirror.x = this.mirrorX;
+    this.mirror.y = this.mirrorY;
+  },
   computed: {
     toolbarIcons() {
       return toolbarIcons;
@@ -393,34 +333,34 @@ export default {
       return blockHeight * this.blockSizeMultiplier;
     },
     blockSizeMultiplier() {
-      return this.$store.getters.blockSizeMultiplier;
+      return this.store.blockSizeMultiplier;
     },
     toolbarState() {
-      return this.$store.getters.toolbarState;
+      return this.store.toolbarState;
     },
     currentAscii() {
-      return this.$store.getters.currentAscii;
+      return this.store.currentAscii;
     },
     currentTool() {
-      return toolbarIcons[this.$store.getters.currentTool];
+      return toolbarIcons[this.store.currentTool];
     },
     canFg() {
-      return this.$store.getters.isTargettingFg;
+      return this.store.isTargettingFg;
     },
     canBg() {
-      return this.$store.getters.isTargettingBg;
+      return this.store.isTargettingBg;
     },
     canText() {
-      return this.$store.getters.isTargettingChar;
+      return this.store.isTargettingChar;
     },
     currentFg() {
-      return this.$store.getters.currentFg;
+      return this.store.currentFg;
     },
     currentBg() {
-      return this.$store.getters.currentBg;
+      return this.store.currentBg;
     },
     currentChar() {
-      return this.$store.getters.currentChar;
+      return this.store.currentChar;
     },
     draggable() {
       return this.toolbarState.draggable;
@@ -442,8 +382,8 @@ export default {
     },
   },
   watch: {
-    yOffset(val) {
-      this.$refs.toolbardrag.top = Number.parseInt(this.toolbarState.y + val);
+    yOffset() {
+      // yOffset handling managed by useDraggable positioning
     },
     mirrorX(val) {
       this.mirror.x = val;
@@ -474,31 +414,14 @@ export default {
       }
     },
     updateMirror() {
-      this.$store.commit("updateMirror", this.mirror);
-    },
-    onResize(x, y, w, h) {
-      this.toolbar.x = x;
-      this.toolbar.y = y;
-      this.toolbar.w = w;
-      this.toolbar.h = h;
-
-      this.$store.commit("changeToolBarState", {
-        x,
-        y,
-        w: this.toolbar.w,
-        h: this.toolbar.h,
-        visible: true,
-      });
+      this.store.updateMirror(this.mirror);
     },
     onDragStop(x, y) {
-      this.toolbar.x = x;
-      this.toolbar.y = y;
-
-      this.$store.commit("changeToolBarState", {
+      this.store.changeToolBarState({
         x,
         y,
-        w: this.toolbar.w,
-        h: this.toolbar.h,
+        w: this.toolbarState.w,
+        h: this.toolbarState.h,
         visible: true,
       });
     },

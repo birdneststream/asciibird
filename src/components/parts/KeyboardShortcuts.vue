@@ -4,31 +4,27 @@
 
 <script>
 import { toolbarIcons, maxBrushSize } from "../../ascii";
+import { useAsciiBirdStore } from "../../store";
+import hotkeys from "hotkeys-js";
 
 export default {
   name: "KeyboardShortcuts",
+  setup() {
+    const store = useAsciiBirdStore();
+    return { store };
+  },
   created() {
     var _this = this;
-
-    // hotkeys("Enter", "editor", function (event, handler) {
-    //   event.preventDefault();
-    //   // Enter events to confirm and close dialogs and modals
-    //   if (_this.isShowingDialog) {
-    //     _this.$dialog.hide("dialog-posthttp");
-    //     return;
-    //   }
-    // });
 
     hotkeys("*", "editor", function (event, handler) {
 
       event.preventDefault();
 
       if (_this.toolbarState.isChoosingChar && event.key.length === 1 && !_this.disableKeyboard && !_this.toolbarState.persistCharPanel) {
-        _this.$store.commit("changeChar", event.key);
+        _this.store.changeChar(event.key);
         return;
       }
 
-      // Change toolbar icon
       if (
         Number.parseInt(event.key) >= 1 &&
         Number.parseInt(event.key) <= 8 &&
@@ -37,12 +33,11 @@ export default {
         event.altKey &&
         _this.haveOpenTabs
       ) {
-        _this.$store.commit("changeTool", Number.parseInt(event.key - 1));
+        _this.store.changeTool(Number.parseInt(event.key - 1));
         _this.$emit("updatecanvas");
         return;
       }
 
-      // Choose FG or BG with Keyboard
       if (
         Number.parseInt(event.key) >= 0 &&
         Number.parseInt(event.key) <= 9 &&
@@ -50,12 +45,12 @@ export default {
         _this.haveOpenTabs
       ) {
         if (_this.toolbarState.isChoosingFg) {
-          _this.$store.commit("changeColourFg", Number.parseInt(event.key));
+          _this.store.changeColourFg(Number.parseInt(event.key));
           return;
         }
 
         if (_this.toolbarState.isChoosingBg) {
-          _this.$store.commit("changeColourBg", Number.parseInt(event.key));
+          _this.store.changeColourBg(Number.parseInt(event.key));
           return;
         }
       }
@@ -69,16 +64,16 @@ export default {
           (_this.toolbarState.isChoosingFg && _this.haveOpenTabs))
       ) {
         event.preventDefault();
-        _this.$store.commit("changeIsUpdatingFg", false);
-        _this.$store.commit("changeIsUpdatingBg", false);
-        _this.$store.commit("changeIsUpdatingChar", false);
+        _this.store.changeIsUpdatingFg(false);
+        _this.store.changeIsUpdatingBg(false);
+        _this.store.changeIsUpdatingChar(false);
         return;
       }
 
       if (!_this.isDefault) {
         event.preventDefault();
         _this.$emit("updatecanvas");
-        _this.$store.commit("changeTool", 0);
+        _this.store.changeTool(0);
         return;
       }
 
@@ -103,40 +98,40 @@ export default {
       return { x: this.canvasX, y: this.canvasY };
     },
     isModalOpen() {
-      return this.$store.getters.isModalOpen;
+      return this.store.isModalOpen;
     },
     brushSizeHeight() {
-      return this.$store.getters.brushSizeHeight;
+      return this.store.brushSizeHeight;
     },
     brushSizeWidth() {
-      return this.$store.getters.brushSizeWidth;
+      return this.store.brushSizeWidth;
     },
     brushSizeType() {
-      return this.$store.getters.brushSizeType;
+      return this.store.brushSizeType;
     },
     currentAscii() {
-      return this.$store.getters.currentAscii;
+      return this.store.currentAscii;
     },
     currentTool() {
-      return toolbarIcons[this.$store.getters.currentTool];
+      return toolbarIcons[this.store.currentTool];
     },
     canFg() {
-      return this.$store.getters.isTargettingFg;
+      return this.store.isTargettingFg;
     },
     canBg() {
-      return this.$store.getters.isTargettingBg;
+      return this.store.isTargettingBg;
     },
     canText() {
-      return this.$store.getters.isTargettingChar;
+      return this.store.isTargettingChar;
     },
     currentFg() {
-      return this.$store.getters.currentFg;
+      return this.store.currentFg;
     },
     currentBg() {
-      return this.$store.getters.currentBg;
+      return this.store.currentBg;
     },
     currentChar() {
-      return this.$store.getters.currentChar;
+      return this.store.currentChar;
     },
     isTextEditing() {
       return this.currentTool.name === "text";
@@ -162,10 +157,10 @@ export default {
       );
     },
     brushBlocks() {
-      return this.$store.getters.brushBlocks;
+      return this.store.brushBlocks;
     },
     toolbarState() {
-      return this.$store.getters.toolbarState;
+      return this.store.toolbarState;
     },
     mirrorX() {
       return this.toolbarState.mirrorX;
@@ -174,22 +169,22 @@ export default {
       return this.toolbarState.mirrorY;
     },
     debugPanelState() {
-      return this.$store.getters.debugPanel;
+      return this.store.debugPanel;
     },
     selectBlocks() {
-      return this.$store.getters.selectBlocks;
+      return this.store.selectBlocks;
     },
     asciibirdMeta() {
-      return this.$store.getters.asciibirdMeta;
+      return this.store.asciibirdMeta;
     },
     haveSelectBlocks() {
       return !!this.selectBlocks.length;
     },
     brushLibraryState() {
-      return this.$store.getters.brushLibraryState;
+      return this.store.brushLibraryState;
     },
     currentAsciiLayers() {
-      return this.$store.getters.currentAsciiLayers;
+      return this.store.currentAsciiLayers;
     },
     currentSelectedLayer() {
       return this.currentAsciiLayers[this.currentAscii.selectedLayer];
@@ -210,7 +205,7 @@ export default {
       return this.toolbarState.gridView;
     },
     isKeyboardDisabled() {
-      return this.$store.getters.isKeyboardDisabled;
+      return this.store.isKeyboardDisabled;
     },
     disableKeyboard() {
       return (
@@ -228,10 +223,10 @@ export default {
   },
   methods: {
     undo() {
-      this.$store.commit("undoBlocks");
+      this.store.undoBlocks();
     },
     redo() {
-      this.$store.commit("redoBlocks");
+      this.store.redoBlocks();
     },
   },
 };

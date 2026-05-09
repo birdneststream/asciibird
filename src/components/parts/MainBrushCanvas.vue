@@ -1,7 +1,7 @@
 <template>
   <div>
-    <t-card
-      class="overflow-x-scroll overflow-y-scroll h-full"
+    <div
+      class="ab-card overflow-x-scroll overflow-y-scroll h-full"
       :h="blocksWidthHeight.h"
     >
       <div
@@ -53,7 +53,7 @@
           </ul>
         </context-menu>
       </div>
-    </t-card>
+    </div>
   </div>
 </template>
 
@@ -72,15 +72,23 @@ import {
   exportMirc,
   downloadFile,
 } from "../../ascii";
+import { useAsciiBirdStore } from "../../store";
+import { useToast } from "../../composables/useToast";
+import { useClipboard } from "../../composables/useClipboard";
 
 export default {
   name: "MainBrushCanvas",
+  setup() {
+    const store = useAsciiBirdStore();
+    const toastShow = useToast();
+    const copyText = useClipboard();
+    return { store, toastShow, copyText };
+  },
   components: {
     ContextMenu,
   },
   created() {
     window.addEventListener("load", () => {
-      // Fixes the font on load issue
       this.delayRedrawCanvas();
     });
   },
@@ -99,61 +107,61 @@ export default {
   }),
   computed: {
     blockWidth() {
-      return blockWidth * this.blockSizeMultiplier;
+      return blockWidth * this.store.blockSizeMultiplier;
     },
     blockHeight() {
-      return blockHeight * this.blockSizeMultiplier;
+      return blockHeight * this.store.blockSizeMultiplier;
     },
     blockSizeMultiplier() {
-      return this.$store.getters.blockSizeMultiplier;
+      return this.store.blockSizeMultiplier;
     },
     currentAscii() {
-      return this.$store.getters.currentAscii;
+      return this.store.currentAscii;
     },
     toolbarState() {
-      return this.$store.getters.toolbarState;
+      return this.store.toolbarState;
     },
     isTargettingBg() {
-      return this.$store.getters.isTargettingBg;
+      return this.store.isTargettingBg;
     },
     isTargettingFg() {
-      return this.$store.getters.isTargettingFg;
+      return this.store.isTargettingFg;
     },
     isTargettingChar() {
-      return this.$store.getters.isTargettingChar;
+      return this.store.isTargettingChar;
     },
     canFg() {
-      return this.$store.getters.isTargettingFg;
+      return this.store.isTargettingFg;
     },
     canBg() {
-      return this.$store.getters.isTargettingBg;
+      return this.store.isTargettingBg;
     },
     canText() {
-      return this.$store.getters.isTargettingChar;
+      return this.store.isTargettingChar;
     },
     currentFg() {
-      return this.$store.getters.currentFg;
+      return this.store.currentFg;
     },
     currentBg() {
-      return this.$store.getters.currentBg;
+      return this.store.currentBg;
     },
     currentChar() {
-      return this.$store.getters.currentChar;
+      return this.store.currentChar;
     },
     brushSizeHeight() {
-      return this.$store.getters.brushSizeHeight;
+      return this.store.brushSizeHeight;
     },
     brushSizeWidth() {
-      return this.$store.getters.brushSizeWidth;
+      return this.store.brushSizeWidth;
     },
     brushSizeType() {
-      return this.$store.getters.brushSizeType;
+      return this.store.brushSizeType;
     },
     options() {
-      return this.$store.getters.options;
+      return this.store.options;
     },
     brushBlocks() {
-      return this.$store.getters.brushBlocks;
+      return this.store.brushBlocks;
     },
     blocksWidthHeight() {
       return {
@@ -171,7 +179,7 @@ export default {
       return this.toolbarState.gridView;
     },
     currentTool() {
-      return toolbarIcons[this.$store.getters.currentTool] ?? null;
+      return toolbarIcons[this.store.currentTool] ?? null;
     },
     isDefault() {
       return this.currentTool.name === "default";
@@ -229,7 +237,6 @@ export default {
   methods: {
     openContextMenu(e) {
       e.preventDefault();
-      // These are the correct X and Y when inside the floating panel
       this.$refs["main-brush-menu"].open({
         pageX: e.layerX,
         pageY: e.layerY,
@@ -239,14 +246,14 @@ export default {
       let ascii = exportMirc(this.brushBlocks);
       switch (type) {
         case "clipboard":
-          this.$copyText(ascii.output.join("")).then(
+          this.copyText(ascii.output.join("")).then(
             () => {
-              this.$toasted.show("Copied mIRC brush to clipboard!", {
+              this.toastShow("Copied mIRC brush to clipboard!", {
                 type: "success",
               });
             },
             () => {
-              this.$toasted.show("Error when copying mIRC to clipboard!", {
+              this.toastShow("Error when copying mIRC to clipboard!", {
                 type: "error",
               });
             }
@@ -266,8 +273,8 @@ export default {
       }
     },
     saveToLibrary() {
-      this.$store.commit("pushBrushLibrary", this.brushBlocks);
-      this.$toasted.show(`Saved brush to Library`, {
+      this.store.pushBrushLibrary(this.brushBlocks);
+      this.toastShow(`Saved brush to Library`, {
         type: "success",
       });
       this.$refs[`main-brush-menu`].close();
@@ -292,14 +299,12 @@ export default {
         this.canTool = true;
         this.hasChanged = true;
         this.eraseBlock();
-        // this.canTool = false;
       }
 
       if (this.isBrushing) {
         this.canTool = true;
         this.hasChanged = true;
         this.addBlock();
-        // this.canTool = false;
       }
     },
     getBlocksWidth(blocks) {
@@ -339,13 +344,11 @@ export default {
       this.ctx.clearRect(0, 0, this.canvasRef.width, this.canvasRef.height);
       this.ctx.fillStyle = this.mircColours[1];
 
-      // hack font for ascii shout outs 2 beenz
       this.ctx.font = "13px Hack";
 
       let y = 0;
       let x = 0;
 
-      // Get middle block
       if (this.brushBlocks) {
         let blocksWidth = this.getBlocksWidth(this.brushBlocks);
         for (y = 0; y < this.brushBlocks.length; y++) {
@@ -354,7 +357,6 @@ export default {
               const curBlock = this.brushBlocks[y][x];
 
               if (curBlock.bg !== undefined) {
-                // we had used to hide or show depending on canFg, etc && this.isTargettingBg
                 this.ctx.fillStyle = this.mircColours[curBlock.bg];
 
                 this.ctx.fillRect(
@@ -366,14 +368,12 @@ export default {
               }
 
               if (curBlock.fg !== undefined) {
-                // we had used to hide or show depending on canFg, etc && this.isTargettingFg
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
               } else {
                 this.ctx.fillStyle = "#FFFFFF";
               }
 
               if (curBlock.char !== undefined) {
-                // we had used to hide or show depending on canFg, etc && this.isTargettingChar
                 this.ctx.fillStyle = this.mircColours[curBlock.fg];
                 this.ctx.fillText(
                   curBlock.char,
@@ -402,7 +402,6 @@ export default {
         }, 1000 / this.options.fps);
       }
     },
-    // Basic block editing
     canvasMouseMove(e) {
       if (this.canTool && (this.isErasing || this.isBrushing)) {
         this.processClick(e);
@@ -443,18 +442,16 @@ export default {
     },
     disableToolbarMoving() {
       this.canTool = false;
-      this.$store.commit("changeToolBarDraggable", false);
+      this.store.changeToolBarDraggable(false);
     },
     enableToolbarMoving() {
-      // Save the blocks when the mouse leaves the canvas area
-      // To avoid one block history changes
       this.canTool = false;
 
       if ((this.isErasing || this.isBrushing) && this.hasChanged) {
-        this.$store.commit("brushBlocks", this.brushBlocks);
-        this.$store.commit("changeToolBarDraggable", true);
+        this.store.setBrushBlocks(this.brushBlocks);
+        this.store.changeToolBarDraggable(true);
         this.hasChanged = false;
-        this.$toasted.show(`Saved brush to Library`, {
+        this.toastShow(`Saved brush to Library`, {
           type: "success",
         });
       }

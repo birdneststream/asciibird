@@ -1,18 +1,11 @@
 <template>
   <div>
-    <vue-draggable-resizable
-      @dragstop="onDragStop"
-      :grid="[blockWidth, blockHeight]"
-      :min-width="blockWidth * 40"
-      :max-width="blockWidth * 40"
-      :min-height="blockHeight * 20"
-      :max-height="blockHeight * 20"
-      :w="debugPanelState.w"
-      :h="debugPanelState.h"
-      :x="debugPanelState.x"
-      :y="debugPanelState.y"
+    <div
+      ref="panelEl"
+      :style="panelStyle"
+      class="fixed"
     >
-      <t-card class="h-full">
+      <div class="ab-card h-full">
         <span
           class="ml-5"
           v-html="`Tool: ${getToolName}`"
@@ -64,8 +57,8 @@
             Copy URI Encoded String
           </div>
         </div>
-      </t-card>
-    </vue-draggable-resizable>
+      </div>
+    </div>
   </div>
 </template>
 <script>
@@ -78,13 +71,28 @@ import {
   mergeLayers,
 } from "../ascii";
 import LZString from "lz-string";
+import { useAsciiBirdStore } from "../store";
+import { useToast } from "../composables/useToast";
+import { useClipboard } from "../composables/useClipboard";
+import { useDraggable } from "@vueuse/core";
+import { ref } from "vue";
 
 export default {
+  setup() {
+    const store = useAsciiBirdStore();
+    const toastShow = useToast();
+    const copyText = useClipboard();
+    const panelEl = ref(null);
+    const { style: panelStyle } = useDraggable(panelEl, {
+      initialValue: { x: store.debugPanel.x, y: store.debugPanel.y },
+    });
+    return { store, toastShow, copyText, panelEl, panelStyle };
+  },
   created() {
-    this.panel.x = this.debugPanelState.x;
-    this.panel.y = this.debugPanelState.y;
-    this.panel.w = this.debugPanelState.w;
-    this.panel.h = this.debugPanelState.h;
+    this.panel.x = this.store.debugPanel.x;
+    this.panel.y = this.store.debugPanel.y;
+    this.panel.w = this.store.debugPanel.w;
+    this.panel.h = this.store.debugPanel.h;
   },
   name: "DebugPanel",
   props: ["canvasX", "canvasY"],
@@ -100,28 +108,26 @@ export default {
   }),
   computed: {
     blockWidth() {
-      return blockWidth * this.blockSizeMultiplier;
+      return blockWidth * this.store.blockSizeMultiplier;
     },
     blockHeight() {
-      return blockHeight * this.blockSizeMultiplier;
+      return blockHeight * this.store.blockSizeMultiplier;
     },
     blockSizeMultiplier() {
-      return this.$store.getters.blockSizeMultiplier;
+      return this.store.blockSizeMultiplier;
     },
     getToolName() {
-      return toolbarIcons[this.$store.getters.currentTool]
-        ? toolbarIcons[this.$store.getters.currentTool].name
+      return toolbarIcons[this.store.currentTool]
+        ? toolbarIcons[this.store.currentTool].name
         : "none";
     },
     debugPanelState() {
-      return this.$store.getters.debugPanel;
+      return this.store.debugPanel;
     },
     currentAscii() {
-      return this.$store.getters.currentAscii;
+      return this.store.currentAscii;
     },
     asciiStats() {
-      // const compressed = ( JSON.stringify(this.currentAscii) / 1024).toFixed(2);
-      // const uncompressed = (JSON.stringify(this.currentAscii).length / 1024).toFixed(2);
       const byteSize = (str) => new Blob([str]).size;
 
       const stateSize = (byteSize(JSON.stringify(this.state)) / 1024).toFixed(
@@ -132,28 +138,28 @@ export default {
       };
     },
     currentTool() {
-      return toolbarIcons[this.$store.getters.currentTool];
+      return toolbarIcons[this.store.currentTool];
     },
     mircColours() {
       return mircColours99;
     },
     canFg() {
-      return this.$store.getters.isTargettingFg;
+      return this.store.isTargettingFg;
     },
     canBg() {
-      return this.$store.getters.isTargettingBg;
+      return this.store.isTargettingBg;
     },
     canText() {
-      return this.$store.getters.isTargettingChar;
+      return this.store.isTargettingChar;
     },
     currentFg() {
-      return this.$store.getters.currentFg;
+      return this.store.currentFg;
     },
     currentBg() {
-      return this.$store.getters.currentBg;
+      return this.store.currentBg;
     },
     currentChar() {
-      return this.$store.getters.currentChar;
+      return this.store.currentChar;
     },
     isTextEditing() {
       return this.currentTool.name === "text";
@@ -170,10 +176,10 @@ export default {
       );
     },
     brushBlocks() {
-      return this.$store.getters.brushBlocks;
+      return this.store.brushBlocks;
     },
     toolbarState() {
-      return this.$store.getters.toolbarState;
+      return this.store.toolbarState;
     },
     mirrorX() {
       return this.toolbarState.mirrorX;
@@ -182,7 +188,7 @@ export default {
       return this.toolbarState.mirrorY;
     },
     state() {
-      return this.$store.getters.state;
+      return this.store.state;
     },
   },
   watch: {},
@@ -192,32 +198,18 @@ export default {
         JSON.stringify(mergeLayers())
       );
 
-      this.$copyText(ascii).then(
-        (e) => {
-          this.$toasted.show("Copied URI encoded ASCII for Splash Ascii!", {
+      this.copyText(ascii).then(
+        () => {
+          this.toastShow("Copied URI encoded ASCII for Splash Ascii!", {
             type: "success",
           });
         },
-        (e) => {
-          this.$toasted.show("Error when copying URI encoded ASCII!", {
+        () => {
+          this.toastShow("Error when copying URI encoded ASCII!", {
             type: "error",
           });
         }
       );
-    },
-    onResize(x, y, w, h) {
-      this.panel.x = x;
-      this.panel.y = y;
-      this.panel.w = w;
-      this.panel.h = h;
-
-      this.$store.commit("changeDebugPanelState", this.panel);
-    },
-    onDragStop(x, y) {
-      this.panel.x = x;
-      this.panel.y = y;
-
-      this.$store.commit("changeDebugPanelState", this.panel);
     },
     exportMirc() {
       return exportMirc();

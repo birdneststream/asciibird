@@ -1,49 +1,35 @@
-// Vue 2 + Vuex type augmentation
-declare module 'vue/types/options' {
-  interface ComponentOptions<V extends Vue> {
-    store?: any;
-  }
-}
-
-import Vue from 'vue';
-import VueTailwind from 'vue-tailwind';
-import VueDraggableResizable from 'vue-draggable-resizable';
-import VueClipboard from 'vue-clipboard2';
-import {
-  tailwindCss,
-} from './tailwindSettings';
-import 'vue-draggable-resizable/dist/VueDraggableResizable.css';
-import store from './store';
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import { createPersistedState } from 'pinia-plugin-persistedstate';
 import Dashboard from './Dashboard.vue';
-import Toasted from 'vue-toasted';
+import { setStore } from './ascii';
+import { useAsciiBirdStore } from './store';
 import './style.scss';
-
-Vue.config.productionTip = false;
-Vue.use(VueTailwind, tailwindCss);
-
-Vue.component('VueDraggableResizable', VueDraggableResizable);
-Vue.use(VueClipboard);
-Vue.use(Toasted, {
-  position: 'bottom-center',
-  iconPack: 'material',
-  type: 'info',
-  duration: 1200,
-});
 
 // Check for localStorage and asciibird cache
 if (localStorage.getItem('vuex')) {
-  const asciiCache = JSON.parse(localStorage.getItem('vuex') || '{}');
+  try {
+    const asciiCache = JSON.parse(localStorage.getItem('vuex') || '{}');
 
-  // Remove old asciibird cache
-  if (asciiCache && asciiCache.ver === undefined) {
+    // Remove old asciibird cache (no version field)
+    if (asciiCache && asciiCache.ver === undefined) {
+      localStorage.removeItem('vuex');
+      window.location.reload();
+    }
+  } catch {
     localStorage.removeItem('vuex');
     window.location.reload();
   }
-
-  // Future state file changes can be amended here
 }
 
-new Vue({
-  store,
-  render: (h) => h(Dashboard),
-}).$mount('#app');
+const pinia = createPinia();
+pinia.use(createPersistedState());
+
+const app = createApp(Dashboard);
+app.use(pinia);
+
+// Break circular dependency: set store reference in ascii module
+const store = useAsciiBirdStore();
+setStore(store);
+
+app.mount('#app');

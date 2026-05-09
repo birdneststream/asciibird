@@ -31,18 +31,9 @@
         </ul>
       </context-menu>
 
-      <vue-draggable-resizable
-        ref="canvasdrag"
-        :grid="[blockWidth, blockHeight]"
-        :w="currentAsciiWidth * blockWidth"
-        :h="currentAsciiHeight * blockHeight"
-        :draggable="isDefault"
-        @resizestop="onCanvasResize"
-        @dragstop="onCanvasDragStop"
-        :x="currentAscii.x"
-        :handles="['bm', 'br', 'mr']"
-        :y="currentAscii.y"
-        style="z-index: -1"
+      <div
+        ref="editorPanel"
+        :style="editorStyle"
       >
         <canvas
           id="overlay-image"
@@ -74,14 +65,19 @@
           @touchend="canvasMouseDown"
           @touchstart="canvasMouseUp"
         />
-      </vue-draggable-resizable>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
+import { ref } from 'vue';
+import { useAsciiBirdStore } from '../store';
+import { useToast } from '../composables/useToast';
+import { useClipboard } from '../composables/useClipboard';
+import { useDraggable } from '@vueuse/core';
+
 import ContextMenu from "./../components/parts/ContextMenu.vue";
-import VueDraggableResizable from "vue-draggable-resizable";
 
 import {
   toolbarIcons,
@@ -109,7 +105,19 @@ export default {
   name: "Editor",
   components: {
     ContextMenu,
-    VueDraggableResizable,
+  },
+  setup() {
+    const store = useAsciiBirdStore();
+    const { show: toastShow } = useToast();
+    const { copyText } = useClipboard();
+
+    const editorPanel = ref(null);
+    const { style: editorStyle } = useDraggable(editorPanel, {
+      initialValue: { x: 0, y: 0 },
+      disabled: true,
+    });
+
+    return { store, toastShow, copyText, editorPanel, editorStyle };
   },
   async mounted() {
     this.ctx = this.canvasRef.getContext("2d");
@@ -119,7 +127,6 @@ export default {
   },
   async created() {
     window.addEventListener("load", async () => {
-      // Fixes the font on load issue
       await this.delayRedrawCanvas();
     });
 
@@ -181,12 +188,11 @@ export default {
       width: 512,
       height: 512,
     },
-    x: 0, // Ascii X and Y
-    y: 0, // Ascii X and Y
-    // pixelX: 0,
+    x: 0,
+    y: 0,
     atTopHalf: 0,
     top: false,
-    redraw: true, // Used to limit canvas redraw
+    redraw: true,
     canTool: false,
     textEditing: {
       startX: null,
@@ -202,7 +208,6 @@ export default {
     isMouseOnCanvas: false,
     selectedBlocks: [],
 
-    // Used to store the difference when editing blocks then commits them
     diffBlocks: {
       l: 0,
       old: [],
@@ -231,13 +236,13 @@ export default {
       return blockHeight * this.blockSizeMultiplier;
     },
     blockSizeMultiplier() {
-      return this.$store.getters.blockSizeMultiplier;
+      return this.store.blockSizeMultiplier;
     },
     currentAscii() {
-      return this.$store.getters.currentAscii;
+      return this.store.currentAscii;
     },
     currentAsciiLayers() {
-      return this.$store.getters.currentAsciiLayers;
+      return this.store.currentAsciiLayers;
     },
     selectedLayerIndex() {
       return this.currentAscii.selectedLayer || 0;
@@ -249,25 +254,25 @@ export default {
       return this.currentSelectedLayer.data;
     },
     currentTool() {
-      return toolbarIcons[this.$store.getters.currentTool];
+      return toolbarIcons[this.store.currentTool];
     },
     canFg() {
-      return this.$store.getters.isTargettingFg;
+      return this.store.isTargettingFg;
     },
     canBg() {
-      return this.$store.getters.isTargettingBg;
+      return this.store.isTargettingBg;
     },
     canText() {
-      return this.$store.getters.isTargettingChar;
+      return this.store.isTargettingChar;
     },
     currentFg() {
-      return this.$store.getters.currentFg;
+      return this.store.currentFg;
     },
     currentBg() {
-      return this.$store.getters.currentBg;
+      return this.store.currentBg;
     },
     currentChar() {
-      return this.$store.getters.currentChar;
+      return this.store.currentChar;
     },
     isTextEditing() {
       return this.currentTool.name === "text";
@@ -304,7 +309,7 @@ export default {
       );
     },
     brushBlocks() {
-      return this.$store.getters.brushBlocks;
+      return this.store.brushBlocks;
     },
     canvasX() {
       return this.x * blockWidth;
@@ -313,7 +318,7 @@ export default {
       return this.y * blockHeight;
     },
     toolbarState() {
-      return this.$store.getters.toolbarState;
+      return this.store.toolbarState;
     },
     mirrorX() {
       return this.toolbarState.mirrorX;
@@ -322,13 +327,13 @@ export default {
       return this.toolbarState.mirrorY;
     },
     debugPanelState() {
-      return this.$store.getters.debugPanel;
+      return this.store.debugPanel;
     },
     selectBlocks() {
-      return this.$store.getters.selectBlocks;
+      return this.store.selectBlocks;
     },
     options() {
-      return this.$store.getters.options;
+      return this.store.options;
     },
     haveSelectBlocks() {
       return !!this.selectBlocks.length;
@@ -337,7 +342,7 @@ export default {
       return mircColours99;
     },
     brushLibraryState() {
-      return this.$store.getters.brushLibraryState;
+      return this.store.brushLibraryState;
     },
     gridView() {
       return this.toolbarState.gridView;
@@ -358,14 +363,12 @@ export default {
       return this.currentSelectedLayer.width;
     },
     currentAsciiHeight() {
-      // Tested with wtf.txt and the max rows before the canvas
-      // stops working seems to be 2184
       return this.currentSelectedLayer.height > 2184
         ? 2184
         : this.currentSelectedLayer.height;
     },
     imageOverlay() {
-      return this.$store.getters.imageOverlay;
+      return this.store.imageOverlay;
     },
     imageOverlayStyle() {
       let repeat = "background-repeat: no-repeat;";
@@ -438,7 +441,6 @@ export default {
 
       switch (this.currentTool.name) {
         case "default":
-          // Reset default values for tools
           this.textEditing = {
             startX: null,
             startY: null,
@@ -473,12 +475,10 @@ export default {
     async brushBlocks() {
       await this.clearToolCanvas();
 
-      // This was supposed to update the brush preview real time
       if (this.isMouseOnCanvas && this.isBrushing) {
         await this.drawBrush();
       }
     },
-    // Save text to store when finished
     async isTextEditing(val, old) {
       if (val !== old && val === false) {
         await this.dispatchBlocks(true);
@@ -489,7 +489,6 @@ export default {
     },
     async updateCanvas(val, old) {
       if (val !== old) {
-        // This comes from KeyboardShortcuts.vue
         await this.clearToolCanvas();
         await this.drawTextIndicator();
         await this.drawIndicator();
@@ -508,7 +507,6 @@ export default {
         this.diffBlocks.l = val;
       }
     },
-    // Layers undo
     async currentAsciiLayers(val, old) {
       await this.delayRedrawCanvas(true);
     },
@@ -523,12 +521,11 @@ export default {
     startExport(type) {
       let ascii = exportMirc();
 
-      // Check line lengths for IRC compatibility
       const checkLines = checkIrcByteLimits(ascii.output.join(""));
 
       if (checkLines.length) {
         const displayLines = checkLines.join(", ");
-        this.$toasted.show(
+        this.toastShow(
           `Line${checkLines.length > 1 ? 's' : ''} ${displayLines} may be too large for IRC.`,
           {
             type: "error",
@@ -540,14 +537,14 @@ export default {
 
       switch (type) {
         case "clipboard":
-          this.$copyText(ascii.output.join("")).then(
+          this.copyText(ascii.output.join("")).then(
             (e) => {
-              this.$toasted.show("Copied mIRC to clipboard!", {
+              this.toastShow("Copied mIRC to clipboard!", {
                 type: "success",
               });
             },
             (e) => {
-              this.$toasted.show("Error when copying mIRC to clipboard!", {
+              this.toastShow("Error when copying mIRC to clipboard!", {
                 type: "error",
               });
             }
@@ -565,7 +562,6 @@ export default {
     },
     openContextMenu(e) {
       e.preventDefault();
-      // These are the correct X and Y when inside the floating panel
       this.$refs["editor-menu"].open(e);
     },
     async canvasKeyDown(char) {
@@ -583,7 +579,6 @@ export default {
         let oldBlock = {};
 
         switch (char) {
-          // Remove a character
           case "Backspace":
             if (
               this.currentAsciiLayerBlocks[this.textEditing.startY][
@@ -612,12 +607,9 @@ export default {
                 ]
               );
 
-              // Move back one block
               this.textEditing.startX -= 1;
             }
 
-          // falls through - Backspace backsteps then deletes like Delete
-          // Remove char as current position, but don't change position after
           // eslint-disable-next-line no-fallthrough
           case "Delete":
             if (
@@ -644,7 +636,6 @@ export default {
               );
             }
 
-            // Also remove in mirror mode the other chars
             if (this.mirrorX) {
               targetBlock =
                 this.currentAsciiLayerBlocks[this.textEditing.startY][
@@ -692,7 +683,6 @@ export default {
 
             break;
 
-          // Jump to next line at the 0 X position
           case "Enter":
             if (this.currentAsciiLayerBlocks[this.textEditing.startY + 1][0]) {
               this.textEditing.startX = 0;
@@ -700,7 +690,6 @@ export default {
             }
             break;
 
-          // Move the text indicator around with the arrow keys
           case "ArrowUp":
             if (
               this.currentAsciiLayerBlocks[this.textEditing.startY - 1][
@@ -741,7 +730,6 @@ export default {
             }
             break;
 
-          // Normal typing
           default:
             if (char.length === 1) {
               oldBlock = { ...targetBlock };
@@ -841,7 +829,7 @@ export default {
     },
     warnInvisibleLayer() {
       if (!this.currentSelectedLayer.visible) {
-        this.$toasted.show("You are trying to edit an invisible layer!!", {
+        this.toastShow("You are trying to edit an invisible layer!!", {
           type: "error",
           icon: "warning_amber",
           singleton: true,
@@ -852,10 +840,10 @@ export default {
       return checkVisible(top, top - this.blockHeight);
     },
     undo() {
-      this.$store.commit("undoBlocks");
+      this.store.undoBlocks();
     },
     redo() {
-      this.$store.commit("redoBlocks");
+      this.store.redoBlocks();
     },
     async resetSelectTool() {
       this.selecting = {
@@ -922,34 +910,20 @@ export default {
     },
     async redrawCanvas(force = false) {
       if (this.currentAsciiLayers.length) {
-        // https://stackoverflow.com/questions/28390358/high-cpu-usage-with-canvas-and-requestanimationframe
-
-        // Position of the meta array
         let x = 0;
         let y = 0;
 
-        // Draws the actual rectangle
         let canvasX = 0;
         let canvasY = 0;
         let curBlock = {};
-
-        // hack font for ascii shout outs 2 beenz
 
         if (
           this.diffBlocks.new.length &&
           !this.canTool &&
           !this.isTextEditing &&
           !this.isFill &&
-          // The main point of this was to use with brushing, but there is a redraw bug
-          // where it draws the cached blocks the wrong way around, for now it's simpler
-          // to have this.
           !this.isBrushing
         ) {
-          // If we have a difference stored, just render the difference only instead
-          // of the entire ascii again
-
-          // We also have to take into account layers, if there is a block on top
-          // we will not do anything
           outer: for (let i in this.diffBlocks.new) {
             let entry = this.diffBlocks.new[i];
             canvasX = blockWidth * entry.x;
@@ -967,7 +941,6 @@ export default {
               }
             }
 
-            // Start to draw the actual block on the canvas
             if (
               curBlock.bg !== undefined &&
               curBlock.bg !== null &&
@@ -988,7 +961,6 @@ export default {
                 this.ctx.fillStyle = this.mircColours[0];
               }
 
-              // Draw character
               if (this.canText) {
                 this.ctx.fillText(
                   curBlock.char,
@@ -1005,28 +977,23 @@ export default {
             }
           }
 
-          // Reset diff blocks now that they have been drawn
           this.diffBlocks = {
             l: this.selectedLayerIndex,
             new: [],
             old: [],
           };
 
-          // Store canvas hash
           this.canvasHash = cyrb53(JSON.stringify(this.mergeLayers()));
         } else {
           let mergeLayers = this.mergeLayers();
           let tempHash = cyrb53(JSON.stringify(mergeLayers));
 
           if (tempHash === this.canvasHash && !force) {
-            // Avoid redrawing the entire canvas to same some CPU
-            // if we have no new changes
             return;
           }
 
           this.canvasHash = tempHash;
           this.ctx.save();
-          // intentional canvas clear — resets canvas state
           // eslint-disable-next-line no-self-assign
           this.canvasRef.width = this.canvasRef.width;
           this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -1036,7 +1003,6 @@ export default {
           for (y = 0; y < this.currentAsciiHeight + 1; y++) {
             canvasY = blockHeight * y;
 
-            // Experimental code to not rows blocks off screen
             if (
               this.options.renderOffScreen &&
               this.top !== false &&
@@ -1084,21 +1050,22 @@ export default {
       this.canvas.width = width;
       this.canvas.height = height;
 
-      this.$store.commit("changeAsciiWidthHeight", {
+      this.store.changeAsciiWidthHeight({
         width: canvasBlockWidth,
         height: canvasBlockHeight,
         layers: [...layers],
       });
 
-      this.$refs.canvasdrag.width = width;
-      this.$refs.canvasdrag.height = height;
+      if (this.$refs.editorPanel) {
+        this.$refs.editorPanel.style.width = width + 'px';
+        this.$refs.editorPanel.style.height = height + 'px';
+      }
 
-      this.$toasted.show(`${canvasBlockWidth} x ${canvasBlockHeight}`);
+      this.toastShow(`${canvasBlockWidth} x ${canvasBlockHeight}`);
     },
     async onCanvasDragStop(x, y) {
-      // Update left and top in panel
       this.top = y;
-      this.$store.commit("changeAsciiCanvasState", { x, y });
+      this.store.changeAsciiCanvasState({ x, y });
 
       await this.delayRedrawCanvas();
     },
@@ -1109,7 +1076,7 @@ export default {
       this.diffBlocks.old = this.diffBlocks.old.flat();
       this.diffBlocks.new = this.diffBlocks.new.flat();
 
-      this.$store.commit("updateAsciiBlocks", {
+      this.store.updateAsciiBlocks({
         blocks: this.currentAsciiLayerBlocks,
         diff: { ...this.diffBlocks },
       });
@@ -1122,7 +1089,6 @@ export default {
         };
       }
     },
-    // Mouse Up, Down and Move
     async canvasMouseUp() {
       if (this.isDefault) return;
 
@@ -1130,8 +1096,6 @@ export default {
         case "brush":
           this.canTool = false;
 
-          // Once the diff Blocks can render in the correct way we can
-          // remove true from here
           await this.dispatchBlocks(true);
 
           break;
@@ -1196,29 +1160,26 @@ export default {
 
           case "dropper":
             if (this.canFg) {
-              this.$store.commit(
-                "changeColourFg",
+              this.store.changeColourFg(
                 targetBlock.fg === undefined ? this.currentFg : targetBlock.fg
               );
             }
 
             if (this.canBg) {
-              this.$store.commit(
-                "changeColourBg",
+              this.store.changeColourBg(
                 targetBlock.bg === undefined ? this.currentBg : targetBlock.bg
               );
             }
 
             if (this.canText) {
-              this.$store.commit(
-                "changeChar",
+              this.store.changeChar(
                 targetBlock.char === undefined
                   ? this.currentChar
                   : targetBlock.char
               );
             }
 
-            this.$store.commit("changeTool", 0);
+            this.store.changeTool(0);
             break;
         }
       }
@@ -1307,7 +1268,6 @@ export default {
     async clearToolCanvas() {
       if (this.toolCtx) {
         this.toolCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        // intentional canvas clear — resets canvas state
         // eslint-disable-next-line no-self-assign
         this.toolCtx.width = this.toolCtx.width;
         if (this.gridView) {
@@ -1316,7 +1276,6 @@ export default {
       }
     },
     async delayRedrawCanvas(force = false) {
-      // Force will skip hash checking and redraw everything anyway
       if (this.redraw) {
         this.redraw = false;
         const _this = this;
@@ -1334,19 +1293,13 @@ export default {
     filterNullBlocks(blocks) {
       return filterNullBlocks(blocks);
     },
-    //
-    // TOOLS
-    //
     async processSelect() {
-      //
       let x = 0;
       let y = 0;
 
       let curBlock = {};
       this.selectedBlocks = [];
 
-      // If we select from the bottom right towards top left
-      // we need to swap the values
       if (this.selecting.endY < this.selecting.startY) {
         let end = this.selecting.endY;
         let start = this.selecting.startY;
@@ -1452,9 +1405,6 @@ export default {
         this.drawRectangleBlock(pos.x, pos.y);
       }
     },
-    //
-    // Functions related to drawBrush function bellow
-    //
     async drawBrushBlocks(
       brushX,
       brushY,
@@ -1469,7 +1419,6 @@ export default {
       let targetBlock = this.currentAsciiLayerBlocks[arrayY][arrayX];
 
       if (plain) {
-        // Used for eraser preview and other non brushes
         let indicatorColour = targetBlock.bg === 0 ? 1 : 0;
 
         if (targetBlock.bg === 8) {
@@ -1526,7 +1475,6 @@ export default {
 
           break;
 
-        // If no target is specified we assume we are rendering the text
         default:
           if (this.canText && brushBlock.char !== undefined) {
             this.toolCtx.font = "Hack 13px";
@@ -1565,7 +1513,6 @@ export default {
             }
           }
 
-          // Apply text to ascii blocks
           if (this.canText && this.canTool) {
             targetBlock["char"] = brushBlock["char"];
 
@@ -1661,7 +1608,6 @@ export default {
         }
       }
 
-      // Apply the actual brush block to the ascii block
       if (this.canTool && brushBlock[target] !== undefined) {
         targetBlock[target] = brushBlock[target];
 
@@ -1713,11 +1659,7 @@ export default {
       return;
     },
 
-    //
-    // Functions related to drawBrush function bellow
-    //
     async drawHalfBlocks(brushX, brushY, plain = false) {
-        // Draw the preview brush
         const arrayY = brushY / blockHeight;
         const arrayX = brushX / blockWidth;
         
@@ -1736,23 +1678,18 @@ export default {
           brushY + blockHeight - 3
         );
 
-          // Apply the half block to the ascii block
         if (this.canTool) {
           if ((targetBlock.char === topChar && !this.atTopHalf) || (targetBlock.char === bottomChar && this.atTopHalf)) {
             
-            // if the current fg is different to the current block fg then only apply fg
             if (this.currentFg === targetBlock.fg) {
               targetBlock["bg"] = this.currentFg;
               targetBlock["char"] = fullChar;
             } else {
-              // Different colors — set the newly-painted half to the user's color (bg),
-              // while keeping the existing half's color (fg) unchanged.
               targetBlock["bg"] = this.currentFg;
               targetBlock["char"] = !this.atTopHalf ? topChar : bottomChar;
             }
             
           } else {
-            // Have a block without any existing half blocks
             targetBlock["fg"] = this.currentFg;
             targetBlock["char"] = this.atTopHalf ? topChar : bottomChar;
           }
@@ -1763,18 +1700,11 @@ export default {
       this.toolCtx.restore();
     },
 
-    //
-    // drawBrush
-    //  - draws brush
-    //  - draws preview for all toolbar things that need it
-    //  - also works with the copy / paste
     async drawBrush(plain = false) {
       await this.clearToolCanvas();
       let brushDiffX = 0;
       let xLength = false;
 
-      // If the first row isn't selected then we cannot get the width
-      // with the 0 index
       for (let i = 0; i <= this.brushBlocks.length; i++) {
         if (this.brushBlocks[i] && xLength === false) {
           brushDiffX = Math.floor(this.brushBlocks[i].length / 2) * blockWidth;
@@ -1798,16 +1728,8 @@ export default {
             continue;
           }
 
-          // if (
-          //   this.top !== false &&
-          //   !this.checkVisible(this.top + (y * blockHeight) - this.yOffset)
-          // ) {
-          //   continue;
-          // }
-
           const brushBlock = this.brushBlocks[y][x];
 
-          // If we have no fg or bg, and just a space - this has to be an empty block
           if (
             brushBlock.char !== undefined &&
             brushBlock.char === " " &&
@@ -1833,7 +1755,6 @@ export default {
 
             if (!plain) {
 
-                // Force 1x1 when half block editing mode as we ignore the brush
                 if (this.toolbarState.halfBlockEditing) {
                   await this.drawHalfBlocks(brushX, brushY);    
                 } else {
@@ -1871,7 +1792,6 @@ export default {
       }
     },
     async storeDiffBlocks(x, y, oldBlock, newBlock) {
-      // For undo
       if (!this.diffBlocks.old[y]) {
         this.diffBlocks.old[y] = [];
       }
@@ -2016,7 +1936,6 @@ export default {
         }
       }
     },
-    // Fill tool — uses iterative flood fill from ascii.ts
     fill(eraser = false) {
       const fillColor = {
         bg: this.currentBg,
@@ -2030,12 +1949,10 @@ export default {
       if (!this.canText) {
         delete fillColor["char"];
       }
-      // If the fillColor is same as the existing, no-op
       if (JSON.stringify(current) === JSON.stringify(fillColor) && !eraser) {
         return;
       }
 
-      // Capture old state for undo before mutating
       const height = this.currentAsciiLayerBlocks.length;
       const width = height > 0 ? this.currentAsciiLayerBlocks[0].length : 0;
       const oldBlocks = [];
@@ -2053,12 +1970,11 @@ export default {
         current,
         fillColor,
         this.canBg,
-        this.canFg, // Used for applying fill, not for boundary matching
+        this.canFg,
         this.canText,
         eraser,
       );
 
-      // Store diffs by comparing old vs new state (direct property comparison)
       for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
           const oldB = oldBlocks[y][x];

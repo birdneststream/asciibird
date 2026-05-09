@@ -1,26 +1,17 @@
 <template>
   <div>
-    <vue-draggable-resizable
-      @dragstop="onDragStop"
-      @resizestop="onResize"
-      :grid="[blockWidth, blockHeight]"
-      :min-width="blockWidth * 20"
-      :max-width="blockWidth * 80"
-      :min-height="blockHeight * 20"
-      :max-height="blockHeight * 80"
-      :w="brushPreviewState.w"
-      :h="brushPreviewState.h"
-      :x="brushPreviewState.x"
-      :y="brushPreviewState.y"
-      :draggable="canDrag && !isInputtingBrushSize"
-      ref="previewpaneldrag"
+    <div
+      ref="panelEl"
+      :style="panelStyle"
+      class="fixed"
     >
-      <t-card class="h-full">
+      <div class="ab-card h-full">
         <div class="flex w-full">
           <div class="w-1/2">
-            <t-input
+            <input
               type="number"
               name="width"
+              class="ab-input"
               v-model="brushSizeWidthInput"
               min="1"
               :max="maxBrushSize"
@@ -30,9 +21,10 @@
           </div>
 
           <div class="w-1/2">
-            <t-input
+            <input
               type="number"
               name="height"
+              class="ab-input"
               v-model="brushSizeHeightInput"
               min="1"
               :max="maxBrushSize"
@@ -43,10 +35,18 @@
         </div>
 
         <div class="w-full">
-          <t-select
-            :options="brushOptions"
+          <select
+            class="ab-input"
             v-model="brushSizeTypeInput"
-          />
+          >
+            <option
+              v-for="opt in brushOptions"
+              :key="opt"
+              :value="opt"
+            >
+              {{ opt }}
+            </option>
+          </select>
         </div>
 
         <div
@@ -55,17 +55,28 @@
         >
           <MainBrushCanvas />
         </div>
-      </t-card>
-    </vue-draggable-resizable>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import { emptyBlock, maxBrushSize, blockWidth, blockHeight } from "../../ascii";
 import MainBrushCanvas from "./MainBrushCanvas.vue";
+import { useAsciiBirdStore } from "../../store";
+import { useDraggable } from "@vueuse/core";
+import { ref } from "vue";
 
 export default {
   name: "BrushPreview",
+  setup() {
+    const store = useAsciiBirdStore();
+    const panelEl = ref(null);
+    const { style: panelStyle } = useDraggable(panelEl, {
+      initialValue: { x: store.brushPreviewState.x, y: store.brushPreviewState.y },
+    });
+    return { store, panelEl, panelStyle };
+  },
   components: {
     MainBrushCanvas,
   },
@@ -77,10 +88,10 @@ export default {
       this.brushSizeTypeInput = this.brushSizeType;
     }
 
-    this.panel.x = this.brushPreviewState.x;
-    this.panel.y = this.brushPreviewState.y;
-    this.panel.w = this.brushPreviewState.w;
-    this.panel.h = this.brushPreviewState.h;
+    this.panel.x = this.store.brushPreviewState.x;
+    this.panel.y = this.store.brushPreviewState.y;
+    this.panel.w = this.store.brushPreviewState.w;
+    this.panel.h = this.store.brushPreviewState.h;
   },
   props: ["yOffset"],
   data: () => ({
@@ -111,46 +122,46 @@ export default {
       ];
     },
     blockWidth() {
-      return blockWidth * this.blockSizeMultiplier;
+      return blockWidth * this.store.blockSizeMultiplier;
     },
     blockHeight() {
-      return blockHeight * this.blockSizeMultiplier;
+      return blockHeight * this.store.blockSizeMultiplier;
     },
     blockSizeMultiplier() {
-      return this.$store.getters.blockSizeMultiplier;
+      return this.store.blockSizeMultiplier;
     },
     canFg() {
-      return this.$store.getters.isTargettingFg;
+      return this.store.isTargettingFg;
     },
     canBg() {
-      return this.$store.getters.isTargettingBg;
+      return this.store.isTargettingBg;
     },
     canText() {
-      return this.$store.getters.isTargettingChar;
+      return this.store.isTargettingChar;
     },
     currentFg() {
-      return this.$store.getters.currentFg;
+      return this.store.currentFg;
     },
     currentBg() {
-      return this.$store.getters.currentBg;
+      return this.store.currentBg;
     },
     currentChar() {
-      return this.$store.getters.currentChar;
+      return this.store.currentChar;
     },
     toolbarState() {
-      return this.$store.getters.toolbarState;
+      return this.store.toolbarState;
     },
     brushSizeHeight() {
-      return this.$store.getters.brushSizeHeight;
+      return this.store.brushSizeHeight;
     },
     brushSizeWidth() {
-      return this.$store.getters.brushSizeWidth;
+      return this.store.brushSizeWidth;
     },
     brushSizeType() {
-      return this.$store.getters.brushSizeType;
+      return this.store.brushSizeType;
     },
     brushBlocks() {
-      return this.$store.getters.brushBlocks;
+      return this.store.brushBlocks;
     },
     brushBlocksEmpty() {
       return this.brushBlocks.length === 0;
@@ -159,7 +170,7 @@ export default {
       return maxBrushSize;
     },
     brushPreviewState() {
-      return this.$store.getters.brushPreviewState;
+      return this.store.brushPreviewState;
     },
     updateBrush() {
       return this.toolbarState.updateBrush;
@@ -230,17 +241,17 @@ export default {
       }
     },
     brushBlocks() {
-      this.$store.commit("pushBrushHistory", this.brushBlocks);
+      this.store.pushBrushHistory(this.brushBlocks);
     },
     yOffset(val) {
-      this.$refs.previewpaneldrag.top = Number.parseInt(
+      this.panelEl.style.top = Number.parseInt(
         this.brushPreviewState.y + val
-      );
+      ) + "px";
     },
   },
   methods: {
     updateBrushSize() {
-      this.$store.commit("updateBrushSize", {
+      this.store.updateBrushSize({
         brushSizeHeight: this.brushSizeHeightInput,
         brushSizeWidth: this.brushSizeWidthInput,
         brushSizeType: this.brushSizeTypeInput,
@@ -264,13 +275,11 @@ export default {
         char: this.currentChar,
       };
 
-      // Recreate 2d array for preview
       for (y = 0; y < brushHeight; y++) {
         this.blocks[y] = [];
         for (x = 0; x < brushWidth; x++) {
           switch (this.brushSizeType.toLowerCase()) {
             case "cross":
-              // If we are 1x1 force fill 1 block, to avoid an empty 1x1
               if (x === 0 && y === 0) {
                 this.blocks[y][x] = { ...block };
                 continue;
@@ -390,7 +399,6 @@ export default {
 
               break;
 
-            // default:
             case "square":
               this.blocks[y][x] = { ...block };
               break;
@@ -426,7 +434,7 @@ export default {
         }
       }
 
-      this.$store.commit("brushBlocks", this.blocks);
+      this.store.setBrushBlocks(this.blocks);
     },
     fill() {
       const current = {};
@@ -451,37 +459,14 @@ export default {
         return;
       }
 
-      // We can eraser or fill
       this.blocks[y][x].bg = this.currentBg;
       this.blocks[y][x].fg = this.currentFg;
       this.blocks[y][x].char = this.currentChar;
 
-      // Fill in all four directions
-      // Fill Prev row
       this.fillTool(y, x - 1);
-
-      // Fill Next row
       this.fillTool(y, x + 1);
-
-      // Fill Prev col
       this.fillTool(y - 1, x);
-
-      // Fill next col
       this.fillTool(y + 1, x);
-    },
-    onResize(x, y, w, h) {
-      this.panel.x = x;
-      this.panel.y = y;
-      this.panel.w = w;
-      this.panel.h = h;
-
-      this.$store.commit("changeBrushPreviewState", this.panel);
-    },
-    onDragStop(x, y) {
-      this.panel.x = x;
-      this.panel.y = y;
-
-      this.$store.commit("changeBrushPreviewState", this.panel);
     },
   },
 };

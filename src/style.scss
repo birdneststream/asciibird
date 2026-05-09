@@ -146,5 +146,17 @@ body {
 }
 
 .ab-button {
-    @apply block w-full border-gray-200 bg-gray-500 text-sm;
+    @apply text-white bg-gray-500 border border-transparent shadow-sm rounded hover:bg-blue-500 px-3 py-2 transition duration-100 ease-in-out focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+.ab-input {
+    @apply block w-full px-3 py-2 text-black placeholder-gray-400 bg-white border border-gray-300 rounded shadow-sm focus:ring-2 focus:ring-blue-500 focus:outline-none focus:ring-opacity-50;
+}
+
+.ab-card {
+    @apply border rounded shadow-sm bg-gray-200 border-gray-100 p-1;
+}
+
+.ab-range {
+    @apply w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer;
 }

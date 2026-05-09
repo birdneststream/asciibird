@@ -1,17 +1,19 @@
 import LZString from 'lz-string';
 import type { Block, Layer, ImageOverlay, AsciibirdMetaBuilder, MircExportResult, ToolbarIcon, CreateAsciiForm } from './types';
-import type { AsciiBirdStore } from './types/store';
 
 // Lazy store reference to break circular dependency
 // Store imports from ascii, ascii imports store
 // Using a getter ensures store is only accessed after initialization
-let _store: AsciiBirdStore | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _store: any = null;
 
-export const setStore = (s: AsciiBirdStore): void => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const setStore = (s: any): void => {
   _store = s;
 };
 
-const getStore = (): AsciiBirdStore => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getStore = (): any => {
   if (!_store) {
     throw new Error(
       'Store not initialized. Import store before using ascii.ts functions.',
@@ -349,7 +351,7 @@ export const parseMircAscii = async (
   );
 
   // Save ASCII to storage
-  getStore().commit('newAsciibirdMeta', finalAscii);
+  getStore().newAsciibirdMeta(finalAscii);
 
   return true;
 };
@@ -385,8 +387,8 @@ export const createNewAscii = (forms: CreateAsciiForm): boolean => {
     JSON.stringify(filledLayers),
   );
 
-  getStore().commit('newAsciibirdMeta', newAscii);
-  getStore().commit('closeModal', 'new-ascii');
+  getStore().newAsciibirdMeta(newAscii);
+  getStore().closeModal('new-ascii');
 
   return true;
 };
@@ -398,8 +400,8 @@ export const exportMirc = (blocks: Block[][] | null = null): MircExportResult =>
 
   if (blocks === null) {
     // Export the entire main ascii
-    currentAscii = getStore().getters.currentAscii;
-    currentAsciiLayersWidthHeight = getStore().getters.currentAsciiLayersWidthHeight;
+    currentAscii = getStore().currentAscii;
+    currentAsciiLayersWidthHeight = getStore().currentAsciiLayersWidthHeight;
     blocks = mergeLayers();
   } else {
     // We are exporting a brush
@@ -579,7 +581,7 @@ export const fillNullBlocks = (
   let layers: Layer[];
 
   if (layerData === null) {
-    layers = [...getStore().getters.currentAsciiLayers];
+    layers = [...getStore().currentAsciiLayers];
   } else {
     layers = [...layerData];
   }
@@ -753,7 +755,7 @@ export const checkIrcByteLimits = (output: string): number[] => {
 export const mergeLayers = (_blocks: Block[][] | null = null): Block[][] => {
   const mergedLayers: Block[][] = [];
 
-  const currentLayers: Layer[] = getStore().getters.currentAsciiLayers;
+  const currentLayers: Layer[] = getStore().currentAsciiLayers;
 
   for (let y = 0; y < currentLayers[0].height + 1; y++) {
     if (!mergedLayers[y]) {

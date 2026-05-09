@@ -5,7 +5,7 @@ import tseslint from 'typescript-eslint'
 export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
-  ...pluginVue.configs['flat/vue2-strongly-recommended'],
+  ...pluginVue.configs['flat/strongly-recommended'],
   {
     languageOptions: {
       ecmaVersion: 2020,
@@ -44,6 +44,7 @@ export default [
       'no-redeclare': 'off',
       '@typescript-eslint/no-redeclare': 'warn',
       'vue/multi-word-component-names': 'off',
+      'vue/no-reserved-component-names': 'off',
     },
   },
   // Node.js globals for config files

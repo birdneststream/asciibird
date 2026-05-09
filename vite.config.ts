@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite'
-import vue from '@vitejs/plugin-vue2'
+import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
 export default defineConfig({
@@ -15,10 +15,7 @@ export default defineConfig({
   },
   optimizeDeps: {
     include: [
-      'vue-tailwind',
-      'node-emoji',
-      'vue-file-toolbar-menu',
-      'material-icons',
+      'hotkeys-js',
     ],
   },
   css: {
@@ -31,16 +28,13 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          'vendor-vue': ['vue', 'vuex', 'vue-template-compiler'],
-          'vendor-ui': [
-            'vue-tailwind',
-            'vue-file-toolbar-menu',
-            'vue-draggable-resizable',
-            'vue-toasted',
-            'vue-clipboard2',
-            'vue-slider-component',
-          ],
+        manualChunks(id) {
+          if (id.includes('node_modules/vue/') || id.includes('node_modules/pinia/')) {
+            return 'vendor-vue';
+          }
+          if (id.includes('node_modules/@headlessui/') || id.includes('node_modules/@vueuse/')) {
+            return 'vendor-ui';
+          }
         },
       },
     },

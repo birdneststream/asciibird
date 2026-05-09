@@ -1,11 +1,5 @@
 <template>
-  <t-modal
-    name="new-ascii-modal"
-    header="Create new ASCII"
-    :click-to-close="false"
-    :esc-to-close="true"
-    @closed="$store.commit('closeModal', 'new-ascii')"
-  >
+  <ABModal :open="showNewAsciiModal" @close="store.closeModal('new-ascii')" title="Create new ASCII">
     <!--Card-->
     <div>
       <div class="md:flex mb-6">
@@ -18,10 +12,10 @@
           </label>
         </div>
         <div class="md:w-2/3">
-          <t-input
+          <input
             type="text"
             name="title"
-            class="form-input block w-full focus:bg-white"
+            class="ab-input form-input block w-full focus:bg-white"
             v-model="forms.createAscii.title"
             max="128"
           />
@@ -38,19 +32,19 @@
           </label>
         </div>
         <div class="md:w-1/3">
-          <t-input
+          <input
             type="number"
             name="width"
-            class="form-input block w-full focus:bg-white"
+            class="ab-input form-input block w-full focus:bg-white"
             v-model="forms.createAscii.width"
             min="1"
           />
         </div>
         <div class="md:w-1/3">
-          <t-input
+          <input
             type="number"
             name="height"
-            class="form-input block w-full focus:bg-white"
+            class="ab-input form-input block w-full focus:bg-white"
             v-model="forms.createAscii.height"
             min="1"
           />
@@ -63,30 +57,43 @@
       <div
         class="flex justify-between"
       >
-        <t-button
+        <button
           type="button"
           class="ab-button"
-          @click="$store.commit('closeModal', 'new-ascii')"
+          @click="store.closeModal('new-ascii')"
         >
           <span class="material-icons relative top-2 pb-4">cancel</span> Cancel
-        </t-button>
-        <t-button
+        </button>
+        <button
           type="button"
           class="ab-button"
           @click="initiateNewAscii()"
         >
           <span class="material-icons relative top-2 pb-4">save</span>  Create
-        </t-button>
+        </button>
       </div>
     </template>
-  </t-modal>
+  </ABModal>
 </template>
 
 <script>
 import createNewASCII from "../../ascii";
+import { useAsciiBirdStore } from '../../store';
+import { useToast } from '../../composables/useToast';
+import { useDialog } from '../../composables/useDialog';
+import { useClipboard } from '../../composables/useClipboard';
+import ABModal from '../ABModal.vue';
 
 export default {
   name: "NewAsciiModal",
+  components: { ABModal },
+  setup() {
+    const store = useAsciiBirdStore();
+    const toast = useToast();
+    const dialog = useDialog();
+    const clipboard = useClipboard();
+    return { store, toast, dialog, clipboard };
+  },
   created() {},
   mounted() {
     if (this.showNewAsciiModal) {
@@ -106,7 +113,7 @@ export default {
   }),
   computed: {
     showNewAsciiModal() {
-      return this.$store.getters.modalState.newAscii;
+      return this.store.modalState.newAscii;
     },
   },
   watch: {
@@ -122,22 +129,19 @@ export default {
   },
   methods: {
     open() {
-      
-      this.$modal.show("new-ascii-modal");
       this.forms.createAscii.title = `New ASCII ${
-        this.$store.getters.asciibirdMeta.length + 1
+        this.store.asciibirdMeta.length + 1
       }`;
     },
     close() {
-      this.$modal.hide("new-ascii-modal");
       this.forms.createAscii.width = 80;
       this.forms.createAscii.height = 30;
       this.forms.createAscii.title = "New ASCII";
     },
     initiateNewAscii() {
-      this.$store.commit('closeModal', 'new-ascii')
-      this.forms.createAscii.height = Number.parseInt(this.forms.createAscii.height)
-      this.forms.createAscii.width = Number.parseInt(this.forms.createAscii.width)
+      this.store.closeModal('new-ascii');
+      this.forms.createAscii.height = Number.parseInt(this.forms.createAscii.height);
+      this.forms.createAscii.width = Number.parseInt(this.forms.createAscii.width);
       createNewASCII(this.forms);
     },
   },

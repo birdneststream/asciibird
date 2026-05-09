@@ -31,18 +31,30 @@ import {
   canvasToPng,
 } from '@/ascii';
 import type { Block, Layer } from '@/types';
-import type { AsciiBirdStore } from '@/types/store';
 
-// ─── Helper: extract commit payload from mock store ──────────────────
+// ─── Helper: extract action call payload from mock store ──────────
 
-function getCommitPayload(
-  mock: AsciiBirdStore,
-  mutation: string,
+function getActionPayload(
+  mock: Record<string, any>,
+  action: string,
 ): any {
-  const call = (mock.commit as any).mock.calls.find(
-    (c: any[]) => c[0] === mutation,
-  );
-  return call?.[1];
+  const fn = mock[action];
+  if (typeof fn !== 'function') return undefined;
+  // If it's a vi.fn(), we can check mock.calls
+  if (fn.mock && fn.mock.calls) {
+    const call = fn.mock.calls.find(() => true);
+    return call?.[0];
+  }
+  return undefined;
+}
+
+// ─── Helper: get last newAsciibirdMeta call payload ───────────────
+
+function getLastNewAsciiMetaPayload(mock: ReturnType<typeof createMockStore>): any {
+  // newAsciibirdMeta is a vi.fn() — get the last call's first argument
+  const calls = (mock.newAsciibirdMeta as any).mock?.calls;
+  if (!calls || calls.length === 0) return undefined;
+  return calls[calls.length - 1][0];
 }
 
 // ─── Helper: decompress layers from an AsciibirdMeta payload ─────────
@@ -59,7 +71,7 @@ interface MockStoreConfig {
   title?: string;
 }
 
-function createMockStore(config: MockStoreConfig = {}): AsciiBirdStore {
+function createMockStore(config: MockStoreConfig = {}) {
   const layers = config.layers || [{
     label: 'Test Layer',
     visible: true,
@@ -115,24 +127,53 @@ function createMockStore(config: MockStoreConfig = {}): AsciiBirdStore {
     },
   };
 
-  return {
-    state,
-    getters: {
-      currentAscii: state.asciibirdMeta[state.tab],
-      currentAsciiLayers: layers,
-      currentAsciiLayersWidthHeight: {
-        width: layers[0].width,
-        height: layers[0].height,
-      },
+  // Track action calls
+  const newAsciibirdMetaCalls: any[] = [];
+  const closeModalCalls: any[] = [];
+
+  const store: Record<string, any> = {
+    // State
+    get tab() { return state.tab },
+    set tab(v) { state.tab = v },
+    get asciibirdMeta() { return state.asciibirdMeta },
+
+    // Getters
+    get currentAscii() {
+      return state.asciibirdMeta[state.tab]
     },
+    get currentAsciiLayers() {
+      return layers
+    },
+    get currentAsciiLayersWidthHeight() {
+      return { width: layers[0].width, height: layers[0].height }
+    },
+
+    // Actions
+    newAsciibirdMeta: vi.fn((payload: any) => {
+      newAsciibirdMetaCalls.push(payload)
+      state.asciibirdMeta.push(payload)
+      state.tab = state.asciibirdMeta.length - 1
+    }),
+    closeModal: vi.fn((name: string) => {
+      closeModalCalls.push(name)
+    }),
+
+    // Helpers for tests to inspect calls
+    _newAsciibirdMetaCalls: newAsciibirdMetaCalls,
+    _closeModalCalls: closeModalCalls,
+
+    // Vuex compat (for tests that still use commit)
     commit: vi.fn((mutation: string, payload?: any) => {
       if (mutation === 'newAsciibirdMeta') {
-        state.asciibirdMeta.push(payload);
-        state.tab = state.asciibirdMeta.length - 1;
+        newAsciibirdMetaCalls.push(payload)
+        state.asciibirdMeta.push(payload)
+        state.tab = state.asciibirdMeta.length - 1
       }
     }),
     dispatch: vi.fn(),
-  } as unknown as AsciiBirdStore;
+  }
+
+  return store
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────
@@ -580,34 +621,30 @@ describe('canvasToPng', () => {
 // ─── createNewAscii ─────────────────────────────────────────────────────
 
 describe('createNewAscii', () => {
-  let mockStore: AsciiBirdStore;
+  let mockStore: ReturnType<typeof createMockStore>;
 
   beforeEach(() => {
     mockStore = createMockStore();
     setStore(mockStore);
   });
 
-  it('creates a new ASCII and commits to store', () => {
+  it('creates a new ASCII and calls store action', () => {
     const result = createNewAscii({
       createAscii: { title: 'Test Art', width: 10, height: 8 },
     });
 
     expect(result).toBe(true);
-    expect(mockStore.commit).toHaveBeenCalledWith(
-      'newAsciibirdMeta',
+    expect(mockStore.newAsciibirdMeta).toHaveBeenCalledWith(
       expect.any(Object),
     );
   });
 
-  it('commits closeModal for new-ascii', () => {
+  it('calls closeModal for new-ascii', () => {
     createNewAscii({
       createAscii: { title: 'Test Art', width: 10, height: 8 },
     });
 
-    expect(mockStore.commit).toHaveBeenCalledWith(
-      'closeModal',
-      'new-ascii',
-    );
+    expect(mockStore.closeModal).toHaveBeenCalledWith('new-ascii');
   });
 
   it('creates ASCII with correct title', () => {
@@ -615,7 +652,7 @@ describe('createNewAscii', () => {
       createAscii: { title: 'My ASCII', width: 5, height: 5 },
     });
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     expect(payload.title).toBe('My ASCII');
   });
 
@@ -624,7 +661,7 @@ describe('createNewAscii', () => {
       createAscii: { title: 'Test', width: 3, height: 3 },
     });
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     expect(typeof payload.layers).toBe('string');
     expect(payload.layers.length).toBeGreaterThan(0);
 
@@ -644,7 +681,7 @@ describe('createNewAscii', () => {
       createAscii: { title: 'Test', width: '4', height: '6' },
     });
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     const layers = decompressLayers(payload.layers);
     expect(layers[0].width).toBe(4);
     expect(layers[0].height).toBe(6);
@@ -655,7 +692,7 @@ describe('createNewAscii', () => {
       createAscii: { title: 'Test', width: 5, height: 5 },
     });
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     expect(payload.x).toBe(247);
     expect(payload.y).toBe(24);
   });
@@ -665,7 +702,7 @@ describe('createNewAscii', () => {
       createAscii: { title: 'Test', width: 5, height: 5 },
     });
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     expect(payload.history).toEqual([]);
     expect(payload.historyIndex).toBe(0);
   });
@@ -675,7 +712,7 @@ describe('createNewAscii', () => {
       createAscii: { title: 'Test', width: 5, height: 5 },
     });
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     expect(payload.imageOverlay).toEqual({
       url: null,
       opacity: 95,
@@ -696,7 +733,7 @@ describe('createNewAscii', () => {
       createAscii: { title: 'Test', width: 'abc', height: '2' },
     });
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     const layers = decompressLayers(payload.layers);
     // parseInt('abc') returns NaN, but layer still gets created
     // The layer dimensions reflect parseInt result
@@ -707,7 +744,7 @@ describe('createNewAscii', () => {
 // ─── exportMirc ─────────────────────────────────────────────────────────
 
 describe('exportMirc', () => {
-  let mockStore: AsciiBirdStore;
+  let mockStore: ReturnType<typeof createMockStore>;
 
   beforeEach(() => {
     mockStore = createMockStore();
@@ -750,7 +787,7 @@ describe('exportMirc', () => {
   it('uses store getters when blocks is null', () => {
     const result = exportMirc(null);
     expect(result.output.length).toBeGreaterThan(0);
-    expect(mockStore.getters.currentAscii).toBeDefined();
+    expect(mockStore.currentAscii).toBeDefined();
   });
 
   it('output contains newline characters', () => {
@@ -819,7 +856,7 @@ describe('exportMirc', () => {
 // ─── parseMircAscii ─────────────────────────────────────────────────────
 
 describe('parseMircAscii', () => {
-  let mockStore: AsciiBirdStore;
+  let mockStore: ReturnType<typeof createMockStore>;
 
   beforeEach(() => {
     mockStore = createMockStore();
@@ -834,7 +871,7 @@ describe('parseMircAscii', () => {
 
     expect(result).toBe(true);
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     const layers = decompressLayers(payload.layers);
 
     // Verify parsed block values
@@ -849,7 +886,7 @@ describe('parseMircAscii', () => {
 
     await parseMircAscii(mirc, 'art.txt');
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     expect(payload.title).toBe('art.txt');
   });
 
@@ -864,7 +901,7 @@ describe('parseMircAscii', () => {
     const result = await parseMircAscii(mirc, 'plain.txt');
     expect(result).toBe(true);
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     const layers = decompressLayers(payload.layers);
     // Width should be length of "Hello World" = 11
     expect(layers[0].width).toBe(11);
@@ -880,7 +917,7 @@ describe('parseMircAscii', () => {
     const result = await parseMircAscii(mirc, 'formatted.txt');
     expect(result).toBe(true);
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     const layers = decompressLayers(payload.layers);
     // Bold/reverse should be stripped, color codes should remain
     expect(layers[0].data[0][0].char).toBe('A');
@@ -893,7 +930,7 @@ describe('parseMircAscii', () => {
 
     await parseMircAscii(mirc, 'multiline.txt');
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     const layers = decompressLayers(payload.layers);
     expect(layers[0].height).toBe(2);
     expect(layers[0].width).toBe(2);
@@ -913,7 +950,7 @@ describe('parseMircAscii', () => {
     const result = await parseMircAscii(mirc, 'reset.txt');
     expect(result).toBe(true);
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     const layers = decompressLayers(payload.layers);
     // 'A' should have fg=1, bg=0
     expect(layers[0].data[0][0].fg).toBe(1);
@@ -927,7 +964,7 @@ describe('parseMircAscii', () => {
   it('compresses layers with LZ-String', async () => {
     await parseMircAscii('\x031,0Test', 'compress.txt');
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     expect(typeof payload.layers).toBe('string');
     const decompressed = decompressLayers(payload.layers);
     expect(Array.isArray(decompressed)).toBe(true);
@@ -936,7 +973,7 @@ describe('parseMircAscii', () => {
   it('sets correct initial x/y from blockWidth/blockHeight', async () => {
     await parseMircAscii('\x031,0A', 'pos.txt');
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     expect(payload.x).toBe(blockWidth * 35);
     expect(payload.y).toBe(blockHeight * 2);
   });
@@ -945,7 +982,7 @@ describe('parseMircAscii', () => {
 // ─── mergeLayers ────────────────────────────────────────────────────────
 
 describe('mergeLayers', () => {
-  let mockStore: AsciiBirdStore;
+  let mockStore: ReturnType<typeof createMockStore>;
 
   beforeEach(() => {
     mockStore = createMockStore();
@@ -1061,7 +1098,7 @@ describe('mergeLayers', () => {
 // ─── mIRC round-trip ────────────────────────────────────────────────────
 
 describe('mIRC round-trip (parse → export)', () => {
-  let mockStore: AsciiBirdStore;
+  let mockStore: ReturnType<typeof createMockStore>;
 
   beforeEach(() => {
     mockStore = createMockStore();
@@ -1079,7 +1116,7 @@ describe('mIRC round-trip (parse → export)', () => {
 
     await parseMircAscii(original, 'roundtrip.txt');
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     const parsedLayers = decompressLayers(payload.layers);
 
     // Verify parsed structure before re-export
@@ -1145,7 +1182,7 @@ describe('splashAscii', () => {
 // ─── mergeLayers edge cases (line 700 — null char) ──────────────
 
 describe('mergeLayers edge cases', () => {
-  let mockStore: AsciiBirdStore;
+  let mockStore: ReturnType<typeof createMockStore>;
 
   beforeEach(() => {
     mockStore = createMockStore();
@@ -1270,7 +1307,7 @@ describe('LZ-String compression edge cases', () => {
 // ─── exportMirc edge cases ───────────────────────────────────────
 
 describe('exportMirc edge cases', () => {
-  let mockStore: AsciiBirdStore;
+  let mockStore: ReturnType<typeof createMockStore>;
 
   beforeEach(() => {
     mockStore = createMockStore();
@@ -1339,7 +1376,7 @@ describe('exportMirc edge cases', () => {
 // ─── parseMircAscii edge cases ───────────────────────────────────
 
 describe('parseMircAscii edge cases', () => {
-  let mockStore: AsciiBirdStore;
+  let mockStore: ReturnType<typeof createMockStore>;
 
   beforeEach(() => {
     mockStore = createMockStore();
@@ -1352,7 +1389,7 @@ describe('parseMircAscii edge cases', () => {
 
     await parseMircAscii(mirc, 'twodigit.txt');
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     const layers = decompressLayers(payload.layers);
     expect(layers[0].data[0][0].fg).toBe(12);
     expect(layers[0].data[0][0].bg).toBe(8);
@@ -1364,7 +1401,7 @@ describe('parseMircAscii edge cases', () => {
 
     await parseMircAscii(mirc, 'mixed.txt');
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     const layers = decompressLayers(payload.layers);
     expect(layers[0].data[0][0].fg).toBe(1);
     expect(layers[0].data[0][1].fg).toBe(12);
@@ -1377,7 +1414,7 @@ describe('parseMircAscii edge cases', () => {
 
     await parseMircAscii(mirc, 'resetnew.txt');
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     const layers = decompressLayers(payload.layers);
     expect(layers[0].data[0][0].char).toBe('A');
     expect(layers[0].data[0][0].fg).toBe(1);
@@ -1390,7 +1427,7 @@ describe('parseMircAscii edge cases', () => {
 
     await parseMircAscii(longLine, 'long.txt');
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     const layers = decompressLayers(payload.layers);
     expect(layers[0].width).toBe(500);
     expect(layers[0].height).toBe(1);
@@ -1401,7 +1438,7 @@ describe('parseMircAscii edge cases', () => {
 
     await parseMircAscii(mirc, 'emptylines.txt');
 
-    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const payload = getLastNewAsciiMetaPayload(mockStore);
     const layers = decompressLayers(payload.layers);
     expect(layers[0].height).toBe(3);
     expect(layers[0].data[0][0].char).toBe('A');
@@ -1412,15 +1449,9 @@ describe('parseMircAscii edge cases', () => {
 // ─── setStore/getStore edge cases ────────────────────────────────
 
 describe('setStore/getStore', () => {
-  it('getStore throws if store not initialised', () => {
-    // Reset the internal store reference by importing a fresh module
-    // Since we can't easily reset the module, test that calling
-    // getStore before setStore was ever called would throw
-    // (but it's already been called in other tests, so we test the
-    // mechanism by verifying the store is set)
+  it('store-dependent functions work after setStore', () => {
     const mockStore = createMockStore();
     setStore(mockStore);
-    // Store-dependent functions should work now
     expect(() => mergeLayers()).not.toThrow();
   });
 });

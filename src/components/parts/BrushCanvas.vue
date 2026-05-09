@@ -1,6 +1,6 @@
 <template>
   <div>
-    <t-card class="overflow-x-scroll h-full">
+    <div class="ab-card overflow-x-scroll h-full">
       <div
         :style="`height: ${blocksWidthHeight.h}px;width: ${blocksWidthHeight.w}px;`"
       >
@@ -45,7 +45,7 @@
           </li>
         </ul>
       </context-menu>
-    </t-card>
+    </div>
   </div>
 </template>
 
@@ -63,11 +63,20 @@ import {
   downloadFile,
 } from "../../ascii";
 import ContextMenu from "./ContextMenu.vue";
+import { useAsciiBirdStore } from "../../store";
+import { useToast } from "../../composables/useToast";
+import { useClipboard } from "../../composables/useClipboard";
+
 export default {
   name: "BrushCanvas",
+  setup() {
+    const store = useAsciiBirdStore();
+    const { show: toastShow } = useToast();
+    const { copyText } = useClipboard();
+    return { store, toastShow, copyText };
+  },
   created() {
     window.addEventListener("load", () => {
-      // Fixes the font on load issue
       this.delayRedrawCanvas();
     });
   },
@@ -92,49 +101,49 @@ export default {
   }),
   computed: {
     blockWidth() {
-      return blockWidth * this.blockSizeMultiplier;
+      return blockWidth * this.store.blockSizeMultiplier;
     },
     blockHeight() {
-      return blockHeight * this.blockSizeMultiplier;
+      return blockHeight * this.store.blockSizeMultiplier;
     },
     blockSizeMultiplier() {
-      return this.$store.getters.blockSizeMultiplier;
+      return this.store.blockSizeMultiplier;
     },
     currentAscii() {
-      return this.$store.getters.currentAscii;
+      return this.store.currentAscii;
     },
     toolbarState() {
-      return this.$store.getters.toolbarState;
+      return this.store.toolbarState;
     },
     isTargettingBg() {
-      return this.$store.getters.isTargettingBg;
+      return this.store.isTargettingBg;
     },
     isTargettingFg() {
-      return this.$store.getters.isTargettingFg;
+      return this.store.isTargettingFg;
     },
     isTargettingChar() {
-      return this.$store.getters.isTargettingChar;
+      return this.store.isTargettingChar;
     },
     currentFg() {
-      return this.$store.getters.currentFg;
+      return this.store.currentFg;
     },
     currentBg() {
-      return this.$store.getters.currentBg;
+      return this.store.currentBg;
     },
     currentChar() {
-      return this.$store.getters.currentChar;
+      return this.store.currentChar;
     },
     brushSizeHeight() {
-      return this.$store.getters.brushSizeHeight;
+      return this.store.brushSizeHeight;
     },
     brushSizeWidth() {
-      return this.$store.getters.brushSizeWidth;
+      return this.store.brushSizeWidth;
     },
     brushSizeType() {
-      return this.$store.getters.brushSizeType;
+      return this.store.brushSizeType;
     },
     options() {
-      return this.$store.getters.options;
+      return this.store.options;
     },
     hash() {
       return cyrb53(JSON.stringify(this.getBlocks));
@@ -144,7 +153,7 @@ export default {
     },
     getBlocks() {
       return this.blocks === false
-        ? this.$store.getters.brushBlocks
+        ? this.store.brushBlocks
         : this.blocks;
     },
     isMainCanvas() {
@@ -206,14 +215,14 @@ export default {
       let ascii = exportMirc(this.getBlocks);
       switch (type) {
         case "clipboard":
-          this.$copyText(ascii.output.join("")).then(
+          this.copyText(ascii.output.join("")).then(
             () => {
-              this.$toasted.show("Copied mIRC brush to clipboard!", {
+              this.toastShow("Copied mIRC brush to clipboard!", {
                 type: "success",
               });
             },
             () => {
-              this.$toasted.show("Error when copying mIRC to clipboard!", {
+              this.toastShow("Error when copying mIRC to clipboard!", {
                 type: "error",
               });
             }
@@ -233,8 +242,8 @@ export default {
       }
     },
     saveToLibrary() {
-      this.$store.commit("pushBrushLibrary", this.getBlocks);
-      this.$toasted.show(`Saved brush to Library`, {
+      this.store.pushBrushLibrary(this.getBlocks);
+      this.toastShow(`Saved brush to Library`, {
         type: "success",
       });
       this.$refs[`block-menu-${this.hash}`].close();
@@ -251,7 +260,6 @@ export default {
     },
     openContextMenu(e) {
       e.preventDefault();
-      // These are the correct X and Y when inside the floating panel
       this.$refs[`block-menu-${this.hash}`].open({
         pageX: e.layerX,
         pageY: e.layerY,
@@ -265,13 +273,11 @@ export default {
       this.ctx.clearRect(0, 0, this.canvasRef.width, this.canvasRef.height);
       this.ctx.fillStyle = this.mircColours[1];
 
-      // hack font for ascii shout outs 2 beenz
       this.ctx.font = "13px Hack";
 
       let y = 0;
       let x = 0;
 
-      // Get middle block
       if (this.getBlocks) {
         let blocksWidth = this.getBlocksWidth(this.getBlocks);
         for (y = 0; y < this.getBlocks.length; y++) {

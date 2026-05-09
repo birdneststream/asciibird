@@ -1,22 +1,18 @@
 // @vitest-environment jsdom
 
-import {
-  mount,
-  createLocalVue
-} from '@vue/test-utils'
-import Vuex from 'vuex'
+import { mount } from '@vue/test-utils'
+import { createPinia, setActivePinia } from 'pinia'
+import { createPersistedState } from 'pinia-plugin-persistedstate'
 import LZString from 'lz-string'
 import Editor from '@/views/Editor.vue'
-import vuexStore from '../../src/store/index'
+import { useAsciiBirdStore } from '@/store/index'
 import {
+  setStore,
   createNewAscii,
   exportMirc,
   mergeLayers,
   cyrb53,
-} from '../../src/ascii'
-
-const localVue = createLocalVue()
-localVue.use(Vuex)
+} from '@/ascii'
 
 // Mock hotkeys-js global used by Editor.vue
 vi.stubGlobal('hotkeys', vi.fn((keys, scope, handler) => {
@@ -29,11 +25,11 @@ vi.stubGlobal('hotkeys/deleteScope', vi.fn())
 vi.stubGlobal('hotkeys/unbind', vi.fn())
 
 describe('Editor.vue', () => {
-  let store
   let wrapper
+  let pinia
+  let store
 
   beforeEach(() => {
-    // Prevent Editor.vue's delayRedrawCanvas RAF from firing after cleanup
     vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => {
       return 0
     })
@@ -41,32 +37,39 @@ describe('Editor.vue', () => {
       return 0
     })
 
-    store = vuexStore
+    pinia = createPinia()
+    pinia.use(createPersistedState())
+    setActivePinia(pinia)
 
-    // make a new ascii
+    store = useAsciiBirdStore()
+    setStore(store)
+
     createNewAscii({
       createAscii: {
         title: 'New Test ASCII',
         width: 5,
         height: 5,
-      }
+      },
     })
   })
 
   afterEach(() => {
     if (wrapper) {
-      wrapper.destroy()
+      wrapper.unmount()
       wrapper = null
     }
     vi.restoreAllMocks()
   })
 
   it('create new ascii data is as expected', () => {
-    wrapper = mount(Editor, { store, localVue })
+    wrapper = mount(Editor, {
+      global: {
+        plugins: [pinia],
+      },
+    })
 
-    const meta = store.getters.asciibirdMeta[0]
+    const meta = store.asciibirdMeta[0]
 
-    // Verify structure (not exact compressed string — that's fragile)
     expect(meta.title).toBe('New Test ASCII')
     expect(meta.history).toStrictEqual([])
     expect(meta.historyIndex).toBe(0)
@@ -87,9 +90,8 @@ describe('Editor.vue', () => {
       stretched: false,
     })
 
-    // Verify layers decompress correctly to 1 layer with correct dimensions
     const layers = JSON.parse(
-      LZString.decompressFromUTF16(meta.layers)
+      LZString.decompressFromUTF16(meta.layers),
     )
     expect(layers.length).toBe(1)
     expect(layers[0].width).toBe(5)
@@ -100,24 +102,33 @@ describe('Editor.vue', () => {
   })
 
   it('new ascii exports as expected', () => {
-    wrapper = mount(Editor, { store, localVue })
+    wrapper = mount(Editor, {
+      global: {
+        plugins: [pinia],
+      },
+    })
 
-    // Blank ascii exported to mIRC
-    let mircExportHash = cyrb53(exportMirc(mergeLayers()).output.join(''))
-
+    const mircExportHash = cyrb53(
+      exportMirc(mergeLayers()).output.join(''),
+    )
     expect(mircExportHash).toEqual(182731023251036)
   })
 
   it('fill tool on new ascii and export', () => {
-    wrapper = mount(Editor, { store, localVue })
+    wrapper = mount(Editor, {
+      global: {
+        plugins: [pinia],
+      },
+    })
 
     wrapper.vm.x = 1
     wrapper.vm.y = 1
 
     wrapper.vm.fill(false)
 
-    // Black canvas fill
-    let mircExportHash = cyrb53(exportMirc(mergeLayers()).output.join(''))
+    const mircExportHash = cyrb53(
+      exportMirc(mergeLayers()).output.join(''),
+    )
     expect(mircExportHash).toEqual(8495140863968528)
   })
 })

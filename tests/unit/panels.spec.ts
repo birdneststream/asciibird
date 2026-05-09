@@ -8,7 +8,8 @@ import {
   beforeEach,
   afterEach,
 } from 'vitest'
-import { shallowMount, createLocalVue } from '@vue/test-utils'
+import { shallowMount } from '@vue/test-utils'
+import { createPinia } from 'pinia'
 import LZString from 'lz-string'
 import LayersLibrary from '@/components/LayersLibrary.vue'
 import DebugPanel from '@/components/DebugPanel.vue'
@@ -25,22 +26,60 @@ import {
   copyTextMock,
   setupHotkeysMocks,
   createMockStore,
-  createMountOptions,
+  globalStubs,
 } from './helpers'
 
-const localVue = createLocalVue()
+let _mockStore: any = null
+
+vi.mock('@/store', () => ({
+  useAsciiBirdStore: () => _mockStore,
+}))
+
+vi.mock('@/composables/useToast', () => ({
+  useToast: () => toastedMock.show,
+}))
+
+vi.mock('@/composables/useDialog', () => ({
+  useDialog: () => ({
+    confirm: vi.fn(() => Promise.resolve(true)),
+    alert: vi.fn(() => Promise.resolve()),
+  }),
+}))
+
+vi.mock('@/composables/useClipboard', () => ({
+  useClipboard: () => copyTextMock,
+}))
+
+vi.mock('@vueuse/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@vueuse/core')>()
+  return {
+    ...actual,
+    useDraggable: () => ({
+      style: { value: 'position: fixed; left: 10px; top: 40px;' },
+      x: { value: 10 },
+      y: { value: 40 },
+    }),
+  }
+})
 
 setupHotkeysMocks()
 
 let store: any
 
 function mountOpts(extra: Record<string, any> = {}) {
-  return createMountOptions(store, { localVue, ...extra })
+  return {
+    global: {
+      plugins: [createPinia()],
+      stubs: globalStubs,
+    },
+    ...extra,
+  }
 }
 
 beforeEach(() => {
   vi.clearAllMocks()
   store = createMockStore()
+  _mockStore = store
 })
 
 afterEach(() => {
@@ -83,50 +122,18 @@ describe('LayersLibrary.vue', () => {
     expect(state.x).toBe(10)
     expect(state.y).toBe(40)
   })
-
-  it('onDragStop commits changeLayersLibraryState', () => {
-    const commitSpy = vi.spyOn(store, 'commit')
-    const wrapper = shallowMount(
-      LayersLibrary,
-      mountOpts({ propsData: { yOffset: 0 } }),
-    )
-    wrapper.vm.onDragStop(50, 60)
-    expect(commitSpy).toHaveBeenCalledWith(
-      'changeLayersLibraryState',
-      expect.objectContaining({ x: 50, y: 60 }),
-    )
-  })
-
-  it('onResize commits changeLayersLibraryState', () => {
-    const commitSpy = vi.spyOn(store, 'commit')
-    const wrapper = shallowMount(
-      LayersLibrary,
-      mountOpts({ propsData: { yOffset: 0 } }),
-    )
-    wrapper.vm.onResize(10, 20, 300, 400)
-    expect(commitSpy).toHaveBeenCalledWith(
-      'changeLayersLibraryState',
-      expect.objectContaining({
-        x: 10, y: 20, w: 300, h: 400,
-      }),
-    )
-  })
 })
 
-// NOTE: DebugPanel template references `this.selecting` which is never
-// declared as a prop, data, or computed — a pre-existing bug in the
-// component. We inject a mock `selecting` object via data override so
-// the template renders without error.
+// NOTE: DebugPanel computed `isSelected` references `this.selecting`
+// which is never declared — a pre-existing bug. We inject a mock
+// `selecting` object via data override so the component mounts cleanly.
 
 const debugPanelSelecting = {
   startX: null, startY: null, endX: null, endY: null,
 }
 
-function debugMountOpts(
-  s: any, extra: Record<string, any> = {},
-) {
-  return createMountOptions(s, {
-    localVue,
+function debugMountOpts(extra: Record<string, any> = {}) {
+  return mountOpts({
     propsData: { canvasX: 0, canvasY: 0 },
     data: () => ({ selecting: debugPanelSelecting }),
     ...extra,
@@ -135,80 +142,53 @@ function debugMountOpts(
 
 describe('DebugPanel.vue', () => {
   it('mounts successfully', () => {
-    const wrapper = shallowMount(DebugPanel, debugMountOpts(store))
+    const wrapper = shallowMount(DebugPanel, debugMountOpts())
     expect(wrapper.findComponent(DebugPanel).exists()).toBe(true)
   })
 
   it('computed getToolName returns current tool name', () => {
-    const wrapper = shallowMount(DebugPanel, debugMountOpts(store))
+    const wrapper = shallowMount(DebugPanel, debugMountOpts())
     expect(wrapper.vm.getToolName).toBe('default')
   })
 
   it('computed getToolName returns none for invalid tool', () => {
-    store.state.toolbarState.currentTool = 99
-    const wrapper = shallowMount(DebugPanel, debugMountOpts(store))
+    store.toolbarState.currentTool = 99
+    const wrapper = shallowMount(DebugPanel, debugMountOpts())
     expect(wrapper.vm.getToolName).toBe('none')
   })
 
   it('computed currentFg returns fg color', () => {
-    const wrapper = shallowMount(DebugPanel, debugMountOpts(store))
+    const wrapper = shallowMount(DebugPanel, debugMountOpts())
     expect(wrapper.vm.currentFg).toBe(0)
   })
 
   it('computed currentBg returns bg color', () => {
-    const wrapper = shallowMount(DebugPanel, debugMountOpts(store))
+    const wrapper = shallowMount(DebugPanel, debugMountOpts())
     expect(wrapper.vm.currentBg).toBe(1)
   })
 
   it('computed mirrorX returns mirror state', () => {
-    const wrapper = shallowMount(DebugPanel, debugMountOpts(store))
+    const wrapper = shallowMount(DebugPanel, debugMountOpts())
     expect(wrapper.vm.mirrorX).toBe(false)
   })
 
   it('computed mirrorY returns mirror state', () => {
-    const wrapper = shallowMount(DebugPanel, debugMountOpts(store))
+    const wrapper = shallowMount(DebugPanel, debugMountOpts())
     expect(wrapper.vm.mirrorY).toBe(false)
   })
 
   it('computed asciiStats returns state size string', () => {
-    const wrapper = shallowMount(DebugPanel, debugMountOpts(store))
+    const wrapper = shallowMount(DebugPanel, debugMountOpts())
     const stats = wrapper.vm.asciiStats
     expect(stats.stateSize).toContain('kb')
     const kbValue = parseFloat(stats.stateSize)
     expect(kbValue).toBeGreaterThan(0)
   })
 
-  it('onDragStop commits changeDebugPanelState', () => {
-    const commitSpy = vi.spyOn(store, 'commit')
-    const wrapper = shallowMount(DebugPanel, debugMountOpts(store))
-    wrapper.vm.onDragStop(100, 200)
-    expect(commitSpy).toHaveBeenCalledWith(
-      'changeDebugPanelState',
-      expect.objectContaining({ x: 100, y: 200 }),
-    )
-  })
+  it('copyUriToClipboard calls copyText with compressed data', async () => {
+    setStore(store)
 
-  it('onResize commits changeDebugPanelState', () => {
-    const commitSpy = vi.spyOn(store, 'commit')
-    const wrapper = shallowMount(DebugPanel, debugMountOpts(store))
-    wrapper.vm.onResize(10, 20, 300, 400)
-    expect(commitSpy).toHaveBeenCalledWith(
-      'changeDebugPanelState',
-      expect.objectContaining({
-        x: 10, y: 20, w: 300, h: 400,
-      }),
-    )
-  })
-
-  it('copyUriToClipboard calls $copyText with compressed data', async () => {
-    setStore({
-      state: store.state,
-      getters: store.getters,
-      commit: store.commit.bind(store),
-      dispatch: store.dispatch.bind(store),
-    } as any)
-
-    const wrapper = shallowMount(DebugPanel, debugMountOpts(store))
+    const wrapper = shallowMount(DebugPanel, debugMountOpts())
     await wrapper.vm.copyUriToClipboard()
     expect(copyTextMock).toHaveBeenCalledWith(
       expect.any(String),
@@ -258,7 +238,7 @@ describe('BrushLibrary.vue', () => {
 
   it('computed libraryCount returns count when brushes exist', () => {
     const blocks = [[{ fg: 1, bg: 0, char: 'A' }]]
-    store.commit('pushBrushLibrary', blocks)
+    store.pushBrushLibrary(blocks)
     const wrapper = shallowMount(
       BrushLibrary,
       mountOpts({ propsData: { yOffset: 0 } }),
@@ -279,149 +259,112 @@ describe('BrushLibrary.vue', () => {
     expect(result).toEqual(blocks)
   })
 
-  it('saveToLibrary commits pushBrushLibrary', () => {
-    const commitSpy = vi.spyOn(store, 'commit')
+  it('saveToLibrary calls store.pushBrushLibrary', () => {
+    const spy = vi.spyOn(store, 'pushBrushLibrary')
     const wrapper = shallowMount(
       BrushLibrary,
       mountOpts({ propsData: { yOffset: 0 } }),
     )
     const blocks = [[{ fg: 1, bg: 0, char: 'X' }]]
     wrapper.vm.saveToLibrary(blocks)
-    expect(commitSpy).toHaveBeenCalledWith(
-      'pushBrushLibrary', blocks,
-    )
+    expect(spy).toHaveBeenCalledWith(blocks)
     expect(toastedMock.show).toHaveBeenCalled()
   })
 
-  it('removeFromLibrary commits removeBrushLibrary', () => {
-    const commitSpy = vi.spyOn(store, 'commit')
+  it('removeFromLibrary calls store.removeBrushLibrary', () => {
+    const spy = vi.spyOn(store, 'removeBrushLibrary')
     const wrapper = shallowMount(
       BrushLibrary,
       mountOpts({ propsData: { yOffset: 0 } }),
     )
     const blocks = [[{ fg: 1, bg: 0, char: 'X' }]]
     wrapper.vm.removeFromLibrary(blocks)
-    expect(commitSpy).toHaveBeenCalledWith(
-      'removeBrushLibrary', blocks,
-    )
+    expect(spy).toHaveBeenCalledWith(blocks)
   })
 
-  it('removeFromHistory commits removeBrushHistory', () => {
-    const commitSpy = vi.spyOn(store, 'commit')
+  it('removeFromHistory calls store.removeBrushHistory', () => {
+    const spy = vi.spyOn(store, 'removeBrushHistory')
     const wrapper = shallowMount(
       BrushLibrary,
       mountOpts({ propsData: { yOffset: 0 } }),
     )
     const blocks = [[{ fg: 1, bg: 0, char: 'X' }]]
     wrapper.vm.removeFromHistory(blocks)
-    expect(commitSpy).toHaveBeenCalledWith(
-      'removeBrushHistory', blocks,
-    )
+    expect(spy).toHaveBeenCalledWith(blocks)
   })
 
-  it('reuseBlocks commits brushBlocks and changeTool', () => {
-    const commitSpy = vi.spyOn(store, 'commit')
+  it('reuseBlocks sets brushBlocks and calls changeTool', () => {
+    const changeToolSpy = vi.spyOn(store, 'changeTool')
     const wrapper = shallowMount(
       BrushLibrary,
       mountOpts({ propsData: { yOffset: 0 } }),
     )
     const blocks = [[{ fg: 1, bg: 0, char: 'A' }]]
     wrapper.vm.reuseBlocks(blocks)
-    expect(commitSpy).toHaveBeenCalledWith('brushBlocks', blocks)
-    expect(commitSpy).toHaveBeenCalledWith('changeTool', 4)
+    expect(store.brushBlocks).toEqual(blocks)
+    expect(changeToolSpy).toHaveBeenCalledWith(4)
     expect(toastedMock.show).toHaveBeenCalled()
   })
 
-  it('changeTab updates panel and commits', () => {
-    const commitSpy = vi.spyOn(store, 'commit')
+  it('changeTab updates panel and calls store', () => {
+    const spy = vi.spyOn(store, 'changeBrushLibraryState')
     const wrapper = shallowMount(
       BrushLibrary,
       mountOpts({ propsData: { yOffset: 0 } }),
     )
     wrapper.vm.changeTab(0)
     expect(wrapper.vm.panel.tab).toBe(0)
-    expect(commitSpy).toHaveBeenCalledWith(
-      'changeBrushLibraryState',
+    expect(spy).toHaveBeenCalledWith(
       expect.objectContaining({ tab: 0 }),
     )
   })
 
-  it('upBrush commits upBrush mutation', () => {
+  it('upBrush calls store.upBrush', () => {
     const blocks1 = [[{ fg: 1, bg: 0, char: 'A' }]]
     const blocks2 = [[{ fg: 2, bg: 0, char: 'B' }]]
-    store.commit('pushBrushLibrary', blocks1)
-    store.commit('pushBrushLibrary', blocks2)
+    store.pushBrushLibrary(blocks1)
+    store.pushBrushLibrary(blocks2)
 
-    const commitSpy = vi.spyOn(store, 'commit')
+    const spy = vi.spyOn(store, 'upBrush')
     const wrapper = shallowMount(
       BrushLibrary,
       mountOpts({ propsData: { yOffset: 0 } }),
     )
     wrapper.vm.upBrush(1)
-    expect(commitSpy).toHaveBeenCalledWith('upBrush', 1)
+    expect(spy).toHaveBeenCalledWith(1)
   })
 
-  it('downBrush commits downBrush mutation', () => {
+  it('downBrush calls store.downBrush', () => {
     const blocks1 = [[{ fg: 1, bg: 0, char: 'A' }]]
     const blocks2 = [[{ fg: 2, bg: 0, char: 'B' }]]
-    store.commit('pushBrushLibrary', blocks1)
-    store.commit('pushBrushLibrary', blocks2)
+    store.pushBrushLibrary(blocks1)
+    store.pushBrushLibrary(blocks2)
 
-    const commitSpy = vi.spyOn(store, 'commit')
+    const spy = vi.spyOn(store, 'downBrush')
     const wrapper = shallowMount(
       BrushLibrary,
       mountOpts({ propsData: { yOffset: 0 } }),
     )
     wrapper.vm.downBrush(0)
-    expect(commitSpy).toHaveBeenCalledWith('downBrush', 0)
-  })
-
-  it('onDragStop commits changeBrushLibraryState', () => {
-    const commitSpy = vi.spyOn(store, 'commit')
-    const wrapper = shallowMount(
-      BrushLibrary,
-      mountOpts({ propsData: { yOffset: 0 } }),
-    )
-    wrapper.vm.onDragStop(50, 60)
-    expect(commitSpy).toHaveBeenCalledWith(
-      'changeBrushLibraryState',
-      expect.objectContaining({ x: 50, y: 60 }),
-    )
-  })
-
-  it('onResize commits changeBrushLibraryState', () => {
-    const commitSpy = vi.spyOn(store, 'commit')
-    const wrapper = shallowMount(
-      BrushLibrary,
-      mountOpts({ propsData: { yOffset: 0 } }),
-    )
-    wrapper.vm.onResize(10, 20, 300, 400)
-    expect(commitSpy).toHaveBeenCalledWith(
-      'changeBrushLibraryState',
-      expect.objectContaining({
-        x: 10, y: 20, w: 300, h: 400,
-      }),
-    )
+    expect(spy).toHaveBeenCalledWith(0)
   })
 
   it('computed isBrushing returns true when tool is brush', () => {
-    store.state.toolbarState.currentTool = 4
+    store.toolbarState.currentTool = 4
     const wrapper = shallowMount(
       BrushLibrary,
       mountOpts({ propsData: { yOffset: 0 } }),
     )
-    // Verify the index assumption explicitly
     expect(toolbarIcons[4].name).toBe('brush')
     expect(wrapper.vm.isBrushing).toBe(true)
   })
 
   it('computed isErasing returns true when tool is eraser', () => {
-    store.state.toolbarState.currentTool = 6
+    store.toolbarState.currentTool = 6
     const wrapper = shallowMount(
       BrushLibrary,
       mountOpts({ propsData: { yOffset: 0 } }),
     )
-    // Verify the index assumption explicitly
     expect(toolbarIcons[6].name).toBe('eraser')
     expect(wrapper.vm.isErasing).toBe(true)
   })
@@ -542,44 +485,26 @@ describe('Toolbar.vue', () => {
       .toBe('Fill Eraser Blocks')
   })
 
-  it('updateMirror commits updateMirror to store', () => {
-    const commitSpy = vi.spyOn(store, 'commit')
+  it('updateMirror calls store.updateMirror', () => {
+    const spy = vi.spyOn(store, 'updateMirror')
     const wrapper = shallowMount(
       Toolbar,
       mountOpts({ propsData: { yOffset: 0 } }),
     )
     wrapper.vm.mirror = { x: true, y: false }
     wrapper.vm.updateMirror()
-    expect(commitSpy).toHaveBeenCalledWith('updateMirror', {
-      x: true, y: false,
-    })
+    expect(spy).toHaveBeenCalledWith({ x: true, y: false })
   })
 
-  it('onDragStop commits changeToolBarState', () => {
-    const commitSpy = vi.spyOn(store, 'commit')
+  it('onDragStop calls store.changeToolBarState', () => {
+    const spy = vi.spyOn(store, 'changeToolBarState')
     const wrapper = shallowMount(
       Toolbar,
       mountOpts({ propsData: { yOffset: 0 } }),
     )
     wrapper.vm.onDragStop(50, 60)
-    expect(commitSpy).toHaveBeenCalledWith(
-      'changeToolBarState',
+    expect(spy).toHaveBeenCalledWith(
       expect.objectContaining({ x: 50, y: 60, visible: true }),
-    )
-  })
-
-  it('onResize commits changeToolBarState with dimensions', () => {
-    const commitSpy = vi.spyOn(store, 'commit')
-    const wrapper = shallowMount(
-      Toolbar,
-      mountOpts({ propsData: { yOffset: 0 } }),
-    )
-    wrapper.vm.onResize(10, 20, 300, 400)
-    expect(commitSpy).toHaveBeenCalledWith(
-      'changeToolBarState',
-      expect.objectContaining({
-        x: 10, y: 20, w: 300, h: 400, visible: true,
-      }),
     )
   })
 })

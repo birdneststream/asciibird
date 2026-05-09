@@ -8,7 +8,8 @@ import {
   beforeEach,
   afterEach,
 } from 'vitest'
-import { shallowMount, createLocalVue } from '@vue/test-utils'
+import { shallowMount } from '@vue/test-utils'
+import { createPinia } from 'pinia'
 import PasteAscii from '@/components/modals/PasteAscii.vue'
 import EditAscii from '@/components/modals/EditAscii.vue'
 import Options from '@/components/modals/Options.vue'
@@ -20,25 +21,52 @@ import {
   setStore,
 } from '@/ascii'
 import {
-  modalMock,
+  toastedMock,
+  copyTextMock,
   setupHotkeysMocks,
   createMockStore,
-  createMountOptions,
+  globalStubs,
 } from './helpers'
 
-const localVue = createLocalVue()
+let _mockStore: any = null
+
+vi.mock('@/store', () => ({
+  useAsciiBirdStore: () => _mockStore,
+}))
+
+vi.mock('@/composables/useToast', () => ({
+  useToast: () => toastedMock.show,
+}))
+
+vi.mock('@/composables/useDialog', () => ({
+  useDialog: () => ({
+    confirm: vi.fn(() => Promise.resolve(true)),
+    alert: vi.fn(() => Promise.resolve()),
+  }),
+}))
+
+vi.mock('@/composables/useClipboard', () => ({
+  useClipboard: () => copyTextMock,
+}))
 
 setupHotkeysMocks()
 
 let store: any
 
 function mountOpts(extra: any = {}) {
-  return createMountOptions(store, { localVue, ...extra })
+  return {
+    global: {
+      plugins: [createPinia()],
+      stubs: globalStubs,
+    },
+    ...extra,
+  }
 }
 
 beforeEach(() => {
   vi.clearAllMocks()
   store = createMockStore()
+  _mockStore = store
 })
 
 afterEach(() => {
@@ -75,33 +103,17 @@ describe('PasteAscii.vue', () => {
     expect(wrapper.vm.showPasteAscii).toBe(false)
   })
 
-  it('open calls $modal.show', () => {
-    const wrapper = shallowMount(PasteAscii, mountOpts())
-    wrapper.vm.open()
-    expect(modalMock.show).toHaveBeenCalledWith(
-      'paste-ascii-modal',
-    )
-  })
-
-  it('close resets data and hides modal', () => {
+  it('close resets data', () => {
     const wrapper = shallowMount(PasteAscii, mountOpts())
     wrapper.vm.pasteContent = 'some content'
     wrapper.vm.title = 'custom.txt'
     wrapper.vm.close()
     expect(wrapper.vm.pasteContent).toBe('')
     expect(wrapper.vm.title).toBe('clipboard.txt')
-    expect(modalMock.hide).toHaveBeenCalledWith(
-      'paste-ascii-modal',
-    )
   })
 
   it('importPasteAscii calls parseMircAscii and closes', async () => {
-    setStore({
-      state: store.state,
-      getters: store.getters,
-      commit: store.commit.bind(store),
-      dispatch: store.dispatch.bind(store),
-    } as any)
+    setStore(store)
 
     const wrapper = shallowMount(PasteAscii, mountOpts())
     wrapper.vm.pasteContent = '\x031,0Test'
@@ -109,18 +121,18 @@ describe('PasteAscii.vue', () => {
 
     await wrapper.vm.importPasteAscii()
     expect(wrapper.vm.pasteContent).toBe('')
-    expect(modalMock.hide).toHaveBeenCalledWith(
-      'paste-ascii-modal',
-    )
   })
 
-  it('watch showPasteAscii triggers open on true', async () => {
+  it('computed showPasteAscii returns correct value when true', () => {
+    _mockStore = createMockStore({
+      modalState: {
+        newAscii: false, editAscii: false, pasteAscii: true,
+        options: false, overlay: false, about: false, help: false,
+      },
+    })
+    store = _mockStore
     const wrapper = shallowMount(PasteAscii, mountOpts())
-    store.state.modalState.pasteAscii = true
-    await wrapper.vm.$nextTick()
-    expect(modalMock.show).toHaveBeenCalledWith(
-      'paste-ascii-modal',
-    )
+    expect(wrapper.vm.showPasteAscii).toBe(true)
   })
 })
 
@@ -163,25 +175,19 @@ describe('EditAscii.vue', () => {
     )
   })
 
-  it('open sets layer data and shows modal', () => {
+  it('open sets layer data', () => {
     const wrapper = shallowMount(EditAscii, mountOpts())
     wrapper.vm.open()
     expect(wrapper.vm.layer.width).toBe(3)
     expect(wrapper.vm.layer.height).toBe(3)
     expect(wrapper.vm.layer.title).toBe('Test ASCII')
-    expect(modalMock.show).toHaveBeenCalledWith(
-      'edit-ascii-modal',
-    )
   })
 
-  it('close resets layer and hides modal', () => {
+  it('close resets layer', () => {
     const wrapper = shallowMount(EditAscii, mountOpts())
     wrapper.vm.layer = { width: 10, height: 20, title: 'test' }
     wrapper.vm.close()
     expect(wrapper.vm.layer).toEqual({})
-    expect(modalMock.hide).toHaveBeenCalledWith(
-      'edit-ascii-modal',
-    )
   })
 
   it('currentAsciiWidth returns layer width or 0', () => {
@@ -198,31 +204,21 @@ describe('EditAscii.vue', () => {
     expect(wrapper.vm.currentAsciiHeight).toBe(8)
   })
 
-  it('updateAscii calls fillNullBlocks and commits mutations', () => {
-    // Need setStore for fillNullBlocks used inside updateAscii
-    setStore({
-      state: store.state,
-      getters: store.getters,
-      commit: store.commit.bind(store),
-      dispatch: store.dispatch.bind(store),
-    } as any)
+  it('updateAscii calls store.changeAsciiWidthHeight', () => {
+    setStore(store)
 
-    const commitSpy = vi.spyOn(store, 'commit')
+    const spy = vi.spyOn(store, 'changeAsciiWidthHeight')
     const wrapper = shallowMount(EditAscii, mountOpts())
     wrapper.vm.layer = { width: 5, height: 5, title: 'Test' }
 
     wrapper.vm.updateAscii()
 
-    expect(commitSpy).toHaveBeenCalledWith(
-      'changeAsciiWidthHeight',
+    expect(spy).toHaveBeenCalledWith(
       expect.objectContaining({
         width: 5,
         height: 5,
         layers: expect.any(Array),
       }),
-    )
-    expect(modalMock.hide).toHaveBeenCalledWith(
-      'edit-ascii-modal',
     )
   })
 })
@@ -242,7 +238,7 @@ describe('Options.vue', () => {
 
   it('computed options returns store options', () => {
     const wrapper = shallowMount(Options, mountOpts())
-    expect(wrapper.vm.options).toEqual(store.state.options)
+    expect(wrapper.vm.options).toEqual(store.options)
     expect(wrapper.vm.options.fps).toBe(50)
   })
 
@@ -259,18 +255,6 @@ describe('Options.vue', () => {
   it('computed tabLimit returns ascii constant', () => {
     const wrapper = shallowMount(Options, mountOpts())
     expect(wrapper.vm.tabLimit).toBe(tabLimit)
-  })
-
-  it('open calls $modal.show', () => {
-    const wrapper = shallowMount(Options, mountOpts())
-    wrapper.vm.open()
-    expect(modalMock.show).toHaveBeenCalledWith('options-modal')
-  })
-
-  it('close calls $modal.hide', () => {
-    const wrapper = shallowMount(Options, mountOpts())
-    wrapper.vm.close()
-    expect(modalMock.hide).toHaveBeenCalledWith('options-modal')
   })
 
   it('clearCache clears localStorage and reloads', () => {
@@ -290,21 +274,25 @@ describe('Options.vue', () => {
     clearSpy.mockRestore()
   })
 
-  it('updateOptions commits current options to store', () => {
-    const commitSpy = vi.spyOn(store, 'commit')
+  it('updateOptions calls store.updateOptions', () => {
+    const spy = vi.spyOn(store, 'updateOptions')
     const wrapper = shallowMount(Options, mountOpts())
     wrapper.vm.updateOptions()
-    expect(commitSpy).toHaveBeenCalledWith(
-      'updateOptions',
+    expect(spy).toHaveBeenCalledWith(
       expect.objectContaining({ fps: 50 }),
     )
   })
 
-  it('watch showOptionsModal triggers open on true', async () => {
+  it('computed showOptionsModal returns true when store has options=true', () => {
+    _mockStore = createMockStore({
+      modalState: {
+        newAscii: false, editAscii: false, pasteAscii: false,
+        options: true, overlay: false, about: false, help: false,
+      },
+    })
+    store = _mockStore
     const wrapper = shallowMount(Options, mountOpts())
-    store.state.modalState.options = true
-    await wrapper.vm.$nextTick()
-    expect(modalMock.show).toHaveBeenCalledWith('options-modal')
+    expect(wrapper.vm.showOptionsModal).toBe(true)
   })
 })
 
@@ -331,81 +319,39 @@ describe('ImageOverlay.vue', () => {
   })
 
   it('computed imageOverlay returns empty object when no meta', () => {
-    store = createMockStore({ asciibirdMeta: [] })
+    _mockStore = createMockStore({ asciibirdMeta: [] })
+    store = _mockStore
     const wrapper = shallowMount(ImageOverlay, mountOpts())
     expect(wrapper.vm.imageOverlay).toEqual({})
   })
 
-  it('open calls $modal.show with overlay-modal', () => {
-    const wrapper = shallowMount(ImageOverlay, mountOpts())
-    wrapper.vm.open()
-    expect(modalMock.show).toHaveBeenCalledWith('overlay-modal')
-  })
-
-  it('close calls $modal.hide with overlay-modal', () => {
-    const wrapper = shallowMount(ImageOverlay, mountOpts())
-    wrapper.vm.close()
-    expect(modalMock.hide).toHaveBeenCalledWith('overlay-modal')
-  })
-
-  it('mounted opens modal when showOverlayModal is true', () => {
-    store = createMockStore({
+  it('computed showOverlayModal returns true when store has overlay=true', () => {
+    _mockStore = createMockStore({
       modalState: {
         newAscii: false, editAscii: false, pasteAscii: false,
         options: false, overlay: true, about: false, help: false,
       },
     })
-    shallowMount(ImageOverlay, mountOpts())
-    expect(modalMock.show).toHaveBeenCalledWith('overlay-modal')
-  })
-
-  it('mounted closes modal when showOverlayModal is false', () => {
-    shallowMount(ImageOverlay, mountOpts())
-    expect(modalMock.hide).toHaveBeenCalledWith('overlay-modal')
-  })
-
-  it('watch showOverlayModal triggers open on true', async () => {
+    store = _mockStore
     const wrapper = shallowMount(ImageOverlay, mountOpts())
-    store.state.modalState.overlay = true
-    await wrapper.vm.$nextTick()
-    expect(modalMock.show).toHaveBeenCalledWith('overlay-modal')
+    expect(wrapper.vm.showOverlayModal).toBe(true)
   })
 
-  it('watch showOverlayModal triggers close on false', async () => {
-    store = createMockStore({
-      modalState: {
-        newAscii: false, editAscii: false, pasteAscii: false,
-        options: false, overlay: true, about: false, help: false,
-      },
-    })
+  it('computed showOverlayModal returns false when store has overlay=false', () => {
     const wrapper = shallowMount(ImageOverlay, mountOpts())
-    store.state.modalState.overlay = false
-    await wrapper.vm.$nextTick()
-    expect(modalMock.hide).toHaveBeenCalledWith('overlay-modal')
+    expect(wrapper.vm.showOverlayModal).toBe(false)
   })
 
-  it('watch imageOverlay commits updateImageOverlay on change',
-    async () => {
-      const commitSpy = vi.spyOn(store, 'commit')
-      const wrapper = shallowMount(ImageOverlay, mountOpts())
-      const overlay = wrapper.vm.imageOverlay
-      overlay.opacity = 50
-      await wrapper.vm.$nextTick()
-      expect(commitSpy).toHaveBeenCalledWith(
-        'updateImageOverlay',
-        expect.objectContaining({ opacity: 50 }),
-      )
-    },
-  )
-
-  it('contains vue-slider component registration', () => {
+  it('imageOverlay computed returns overlay properties', () => {
     const wrapper = shallowMount(ImageOverlay, mountOpts())
-    expect(wrapper.vm.$options.components.vueSlider).toBeDefined()
+    const overlay = wrapper.vm.imageOverlay
+    expect(overlay).toBeDefined()
+    expect(typeof overlay.opacity).toBe('number')
+    expect(typeof overlay.size).toBe('number')
   })
 
-  it('renders t-checkbox stubs for repeat toggles', () => {
+  it('renders ABModal component', () => {
     const wrapper = shallowMount(ImageOverlay, mountOpts())
-    // t-checkbox stubs are present in the component's template
-    expect(wrapper.html()).toContain('t-modal')
+    expect(wrapper.find('.ab-modal').exists()).toBe(true)
   })
 })

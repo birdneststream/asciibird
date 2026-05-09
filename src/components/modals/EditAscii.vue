@@ -1,11 +1,5 @@
 <template>
-  <t-modal
-    name="edit-ascii-modal"
-    :header="currentAsciiEditingTitle"
-    :click-to-close="false"
-    :esc-to-close="true"
-    @closed="$store.commit('closeModal', 'edit-ascii')"
-  >
+  <ABModal :open="showEditAsciiModal" @close="store.closeModal('edit-ascii')" :title="currentAsciiEditingTitle">
     <!--Card-->
     <div>
       <div class="md:flex mb-6">
@@ -18,10 +12,10 @@
           </label>
         </div>
         <div class="md:w-2/3">
-          <t-input
+          <input
             type="text"
             name="title"
-            class="form-input block w-full focus:bg-white"
+            class="ab-input form-input block w-full focus:bg-white"
             v-model="layer.title"
             max="128"
           />
@@ -38,19 +32,19 @@
           </label>
         </div>
         <div class="md:w-1/3">
-          <t-input
+          <input
             type="number"
             name="width"
-            class="form-input block w-full focus:bg-white"
+            class="ab-input form-input block w-full focus:bg-white"
             v-model="layer.width"
             min="1"
           />
         </div>
         <div class="md:w-1/3">
-          <t-input
+          <input
             type="number"
             name="height"
-            class="form-input block w-full focus:bg-white"
+            class="ab-input form-input block w-full focus:bg-white"
             v-model="layer.height"
             min="1"
           />
@@ -62,32 +56,46 @@
     <template #footer>
       <div
         class="flex justify-between"
-        @click="$store.commit('closeModal', 'edit-ascii')"
+        @click="store.closeModal('edit-ascii')"
       >
-        <t-button
+        <button
           type="button"
           class="ab-button"
         >
           <span class="material-icons relative top-2 pb-4">cancel</span>  Cancel
-        </t-button>
-        <t-button
+        </button>
+        <button
           type="button"
           @click="updateAscii()"
           class="ab-button"
         >
           <span class="material-icons relative top-2 pb-4">save</span>  Update
-        </t-button>
+        </button>
       </div>
     </template>
-  </t-modal>
+  </ABModal>
 </template>
 
 <script>
 import {
   fillNullBlocks,
 } from "../../ascii";
+import { useAsciiBirdStore } from '../../store';
+import { useToast } from '../../composables/useToast';
+import { useDialog } from '../../composables/useDialog';
+import { useClipboard } from '../../composables/useClipboard';
+import ABModal from '../ABModal.vue';
+
 export default {
   name: "EditAsciiModal",
+  components: { ABModal },
+  setup() {
+    const store = useAsciiBirdStore();
+    const toast = useToast();
+    const dialog = useDialog();
+    const clipboard = useClipboard();
+    return { store, toast, dialog, clipboard };
+  },
   created() {},
   mounted() {
     if (this.showEditAsciiModal) {
@@ -101,10 +109,10 @@ export default {
   }),
   computed: {
     showEditAsciiModal() {
-      return this.$store.getters.modalState.editAscii;
+      return this.store.modalState.editAscii;
     },
     currentAscii() {
-      return this.$store.getters.currentAscii;
+      return this.store.currentAscii;
     },
     selectedLayerIndex() {
       return this.currentAscii.selectedLayer;
@@ -113,7 +121,7 @@ export default {
       return `Editing ASCII ${this.currentAscii.title}`;
     },
     currentAsciiLayers() {
-      return this.$store.getters.currentAsciiLayers;
+      return this.store.currentAsciiLayers;
     },
     currentSelectedLayer() {
       return this.currentAsciiLayers[this.selectedLayerIndex];
@@ -141,7 +149,7 @@ export default {
       const canvasBlockHeight = Number.parseInt(this.layer.height);
       const canvasBlockWidth = Number.parseInt(this.layer.width);
       let layers = fillNullBlocks(canvasBlockHeight, canvasBlockWidth);
-      this.$store.commit("changeAsciiWidthHeight", {
+      this.store.changeAsciiWidthHeight({
         width: canvasBlockWidth,
         height: canvasBlockHeight,
         layers: [...layers],
@@ -155,10 +163,8 @@ export default {
         height: this.currentSelectedLayer.height,
         title: this.currentAscii.title,
       };
-      this.$modal.show("edit-ascii-modal");
     },
     close() {
-      this.$modal.hide("edit-ascii-modal");
       this.layer = {};
     },
   },

@@ -4,10 +4,36 @@
     @contextmenu.prevent
   >
     <div v-show="menuBarVisible">
-      <vue-file-toolbar-menu
-        :content="myMenu"
+      <div
         v-if="!(isModalOpen || isKeyboardDisabled)"
-      />
+        class="flex bg-gray-800 text-white text-sm"
+      >
+        <Menu
+          v-for="menuItem in menuBar"
+          :key="menuItem.label"
+          as="div"
+          class="relative"
+        >
+          <MenuButton class="px-3 py-1 hover:bg-gray-600">
+            {{ menuItem.label }}
+          </MenuButton>
+          <MenuItems class="absolute mt-0 bg-gray-900 shadow-lg rounded-b min-w-48 z-50">
+            <MenuItem
+              v-for="item in menuItem.items"
+              :key="item.text"
+              v-slot="{ active }"
+            >
+              <button
+                :class="[active ? 'bg-gray-700' : '', 'block w-full text-left px-4 py-1 text-sm text-white']"
+                @click="item.click"
+                :disabled="item.disabled"
+              >
+                {{ item.text }}
+              </button>
+            </MenuItem>
+          </MenuItems>
+        </Menu>
+      </div>
     </div>
 
     <NewAscii v-if="modalState.newAscii" />
@@ -26,7 +52,7 @@
       :selected-blocks="selectedBlocks"
       :selecting="selecting"
       @updatecanvas="updatecanvas"
-      :is-inputting-brush-size="this.isInputtingBrushSize"
+      :is-inputting-brush-size="isInputtingBrushSize"
       :canvas-x="canvasX"
       :canvas-y="canvasY"
     />
@@ -37,13 +63,13 @@
     >
       <ul>
         <li
-          @click="$store.commit('openModal', 'new-ascii')"
+          @click="store.openModal('new-ascii')"
           class="ab-context-menu-item"
         >
           New ASCII
         </li>
         <li
-          @click="$store.commit('openModal', 'edit-ascii')"
+          @click="store.openModal('edit-ascii')"
           class="ab-context-menu-item"
           v-if="asciibirdMeta.length"
         >
@@ -57,7 +83,7 @@
           Close Ascii
         </li>
         <li
-          @click="$store.commit('openModal', 'options')"
+          @click="store.openModal('options')"
           class="ab-context-menu-item border-b"
           v-if="asciibirdMeta.length"
         >
@@ -79,7 +105,7 @@
         </li>
         <li
           class="ab-context-menu-item"
-          @click="$store.commit('openModal', 'paste-ascii')"
+          @click="store.openModal('paste-ascii')"
         >
           Import from Clipboard
         </li>
@@ -137,23 +163,23 @@
           :key="key"
           class="mr-2 z-40"
         >
-          <t-button
-            class="p-1 z-40"
+          <button
+            class="ab-button p-1 z-40"
             :class="buttonStyle(key)"
             @click="changeTab(key, value)"
           >
             <span>
               <span class="material-icons relative">insert_drive_file</span>
               <span class="bottom-1 relative pl-1 pr-1">{{ value.title }}</span>
-              <t-button
-                class="relative bottom-1 z-40 rounded-3xl h-5"
+              <button
+                class="ab-button relative bottom-1 z-40 rounded-3xl h-5"
                 @click="closeTab(key)"
               ><span
                 class="material-icons"
                 style="font-size: 16px"
-              >close</span></t-button>
+              >close</span></button>
             </span>
-          </t-button>
+          </button>
         </span>
       </div>
 
@@ -209,28 +235,60 @@
     </template>
     <template v-else>
       <div
-        class="
-          absolute
-          left-1/2
-          transform
-          -translate-x-1/2
-          text-center
-
-        "
+        class="absolute left-1/2 transform -translate-x-1/2 text-center"
         @mouseup.right="openContextMenu"
       >
-        <BrushCanvas :blocks="this.splashAscii()" />
+        <BrushCanvas :blocks="splashAscii()" />
       </div>
     </template>
+
+    <!-- Toast notifications -->
+    <div class="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center gap-2">
+      <TransitionGroup name="toast">
+        <div
+          v-for="msg in toasts"
+          :key="msg.id"
+          :class="[
+            'px-4 py-2 rounded shadow-lg text-white text-sm',
+            msg.type === 'error' ? 'bg-red-500' : msg.type === 'success' ? 'bg-green-500' : 'bg-blue-500',
+          ]"
+        >
+          {{ msg.text }}
+        </div>
+      </TransitionGroup>
+    </div>
+
+    <!-- Global dialog -->
+    <ABModal :open="dialogState.visible" @close="dialogCancel">
+      <div class="text-center space-y-3">
+        <h3 class="text-lg font-semibold">{{ dialogState.title }}</h3>
+        <p v-if="dialogState.text">{{ dialogState.text }}</p>
+        <input
+          v-if="dialogState.mode === 'prompt'"
+          v-model="dialogState.inputValue"
+          class="ab-input mt-3"
+        />
+      </div>
+      <template #footer>
+        <div class="flex justify-center space-x-4 p-3">
+          <button class="ab-button" @click="dialogCancel">Cancel</button>
+          <button class="ab-button bg-blue-500 hover:bg-blue-600" @click="dialogOk">OK</button>
+        </div>
+      </template>
+    </ABModal>
   </div>
 </template>
 
 <script>
-// top-1/2
-// -translate-y-1/2
-// these css classes can put back to center smaller asciis
-
 import LZString from "lz-string";
+import {
+  Menu,
+  MenuButton,
+  MenuItems,
+  MenuItem,
+} from "@headlessui/vue";
+import { TransitionGroup } from "vue";
+
 import Toolbar from "./components/Toolbar.vue";
 import DebugPanel from "./components/DebugPanel.vue";
 import BrushLibrary from "./components/BrushLibrary.vue";
@@ -248,6 +306,7 @@ import EditAscii from "./components/modals/EditAscii.vue";
 import PasteAscii from "./components/modals/PasteAscii.vue";
 import About from "./components/modals/About.vue";
 import Help from "./components/modals/Help.vue";
+import ABModal from "./components/ABModal.vue";
 
 import BrushCanvas from "./components/parts/BrushCanvas.vue";
 import BrushPreview from "./components/parts/BrushPreview.vue";
@@ -265,13 +324,30 @@ import {
   checkIrcByteLimits,
 } from "./ascii";
 
-import { useMenuDefinition } from "./composables/useMenuDefinition";
-
-import VueFileToolbarMenu from "vue-file-toolbar-menu";
+import { useAsciiBirdStore } from "./store";
+import { useToast } from "./composables/useToast";
+import { useDialog } from "./composables/useDialog";
+import { useClipboard } from "./composables/useClipboard";
 
 export default {
+  setup() {
+    const store = useAsciiBirdStore();
+    const { messages: toasts, show: toastShow } = useToast();
+    const { state: dialogState, confirm: dialogConfirm, prompt: dialogPrompt, ok: dialogOk, cancel: dialogCancel } = useDialog();
+    const { copyText } = useClipboard();
+    return {
+      store,
+      toasts,
+      toastShow,
+      dialogState,
+      dialogConfirm,
+      dialogPrompt,
+      dialogOk,
+      dialogCancel,
+      copyText,
+    };
+  },
   async created() {
-    // Load from irc watch if present in the URL bar
     checkForGetRequest();
     this.scrollHandler = () => {
       this.scrollOffset = window.scrollY;
@@ -280,7 +356,7 @@ export default {
     this.mirror.x = this.toolbarState.mirrorX;
     this.mirror.y = this.toolbarState.mirrorY;
   },
-  destroyed() {
+  unmounted() {
     window.removeEventListener("scroll", this.scrollHandler);
   },
   components: {
@@ -300,9 +376,14 @@ export default {
     LayersLibrary,
     Options,
     ImageOverlay,
-    VueFileToolbarMenu,
     About,
     Help,
+    ABModal,
+    'Menu': Menu,
+    'MenuButton': MenuButton,
+    'MenuItems': MenuItems,
+    'MenuItem': MenuItem,
+    TransitionGroup,
   },
   name: "Dashboard",
   data: () => ({
@@ -347,23 +428,23 @@ export default {
       return this.currentTool.name === "select";
     },
     currentTool() {
-      return toolbarIcons[this.$store.getters.currentTool] ?? null;
+      return toolbarIcons[this.store.currentTool] ?? null;
     },
 
     asciibirdMeta() {
-      return this.$store.getters.asciibirdMeta;
+      return this.store.asciibirdMeta;
     },
     debugPanelState() {
-      return this.$store.getters.debugPanel;
+      return this.store.debugPanel;
     },
     currentAscii() {
-      return this.$store.getters.currentAscii;
+      return this.store.currentAscii;
     },
     currentTab() {
-      return this.$store.getters.currentTab;
+      return this.store.currentTab;
     },
     imageOverlay() {
-      return this.$store.getters.imageOverlay || false;
+      return this.store.imageOverlay || false;
     },
     imageOverlayUrl() {
       return this.imageOverlay.url
@@ -371,16 +452,15 @@ export default {
         : "";
     },
     selectBlocks() {
-      return this.$store.getters.selectBlocks;
+      return this.store.selectBlocks;
     },
     modalState() {
-      return this.$store.getters.modalState;
+      return this.store.modalState;
     },
     isModalOpen() {
-      return this.$store.getters.isModalOpen;
+      return this.store.isModalOpen;
     },
 
-    // Layers
     asciiLayersMenu() {
       let menu = [];
 
@@ -388,8 +468,7 @@ export default {
         menu.push({
           text: this.currentAsciiLayers[i].label,
           click: () =>
-            this.$store.commit(
-              "changeLayer",
+            this.store.changeLayer(
               this.currentAsciiLayers.length - i
             ),
         });
@@ -398,76 +477,73 @@ export default {
       return menu.reverse();
     },
     isKeyboardDisabled() {
-      return this.$store.getters.isKeyboardDisabled;
+      return this.store.isKeyboardDisabled;
     },
     selectedLayer() {
-      return this.$store.getters.selectedLayer;
+      return this.store.selectedLayer;
     },
     canToggleLayer() {
       return this.currentAsciiLayers.length > 1;
-      // We want to avoid hiding all the layers, so if there's only one
-      // visible left, we have to disable the buttons
     },
     brushSizeHeight() {
-      return this.$store.getters.brushSizeHeight;
+      return this.store.brushSizeHeight;
     },
     brushSizeWidth() {
-      return this.$store.getters.brushSizeWidth;
+      return this.store.brushSizeWidth;
     },
     brushSizeType() {
-      return this.$store.getters.brushSizeType;
+      return this.store.brushSizeType;
     },
-    // Toolbar related
     gridView() {
       return this.toolbarState.gridView;
     },
     canFg() {
-      return this.$store.getters.isTargettingFg;
+      return this.store.isTargettingFg;
     },
     canBg() {
-      return this.$store.getters.isTargettingBg;
+      return this.store.isTargettingBg;
     },
     canText() {
-      return this.$store.getters.isTargettingChar;
+      return this.store.isTargettingChar;
     },
     currentFg() {
-      return this.$store.getters.currentFg;
+      return this.store.currentFg;
     },
     currentBg() {
-      return this.$store.getters.currentBg;
+      return this.store.currentBg;
     },
     currentChar() {
-      return this.$store.getters.currentChar;
+      return this.store.currentChar;
     },
     toolbarState() {
-      return this.$store.getters.toolbarState;
+      return this.store.toolbarState;
     },
     brushBlocks() {
-      return this.$store.getters.brushBlocks;
+      return this.store.brushBlocks;
     },
     tabsVisible() {
-      return this.$store.getters.tabsVisible;
+      return this.store.tabsVisible;
     },
     menuBarVisible() {
-      return this.$store.getters.menuBarVisible;
+      return this.store.menuBarVisible;
     },
     currentAsciiLayerBlocks() {
       return this.currentSelectedLayer.data;
     },
     currentAsciiLayers() {
-      return this.$store.getters.currentAsciiLayers;
+      return this.store.currentAsciiLayers;
     },
     selectedLayerIndex() {
       return this.currentAscii.selectedLayer || 0;
     },
     brushLibraryState() {
-      return this.$store.getters.brushLibraryState;
+      return this.store.brushLibraryState;
     },
     brushPreviewState() {
-      return this.$store.getters.brushPreviewState;
+      return this.store.brushPreviewState;
     },
     layersLibraryState() {
-      return this.$store.getters.layersLibraryState;
+      return this.store.layersLibraryState;
     },
     currentSelectedLayer() {
       return this.currentAsciiLayers[this.currentAscii.selectedLayer];
@@ -486,90 +562,98 @@ export default {
         this.selecting.endY !== null
       );
     },
-    // Toolbar menu — delegated to composable
-    myMenu() {
-      return useMenuDefinition({
-        store: this.$store,
-        toasted: this.$toasted,
-        dialog: this.$dialog,
-        copyText: this.$copyText,
-        isMacLike: this.isMacLike,
-        asciibirdMeta: this.asciibirdMeta,
-        currentTab: this.currentTab,
-        currentTool: this.currentTool,
-        isSelecting: this.isSelecting,
-        isBrushing: this.isBrushing,
-        isErasing: this.isErasing,
-        isSelected: this.isSelected,
-        selectedBlocks: this.selectedBlocks,
-        selectBlocks: this.selectBlocks,
-        brushBlocks: this.brushBlocks,
-        canFg: this.canFg,
-        canBg: this.canBg,
-        canText: this.canText,
-        currentFg: this.currentFg,
-        currentBg: this.currentBg,
-        currentChar: this.currentChar,
-        brushSizeHeight: this.brushSizeHeight,
-        brushSizeWidth: this.brushSizeWidth,
-        brushSizeType: this.brushSizeType,
-        gridView: this.gridView,
-        toolbarState: this.toolbarState,
-        debugPanelState: this.debugPanelState,
-        brushLibraryState: this.brushLibraryState,
-        brushPreviewState: this.brushPreviewState,
-        layersLibraryState: this.layersLibraryState,
-        tabsVisible: this.tabsVisible,
-        menuBarVisible: this.menuBarVisible,
-        selectedLayer: this.selectedLayer,
-        canToggleLayer: this.canToggleLayer,
-        currentAsciiLayers: this.currentAsciiLayers,
-        currentAscii: this.currentAscii,
-        currentAsciiLayerBlocks: this.currentAsciiLayerBlocks,
-        selectedLayerIndex: this.selectedLayerIndex,
-        mirror: this.mirror,
-        onChangeTab: (key) => this.changeTab(key),
-        onCloseTab: (key) => this.closeTab(key),
-        onShowLayerRename: (key, label) => this.showLayerRename(key, label),
-        onUpdateLayerName: (key, label) => this.updateLayerName(key, label),
-        onExportAsciibirdState: () => this.exportAsciibirdState(),
-        onStartImport: (type) => this.startImport(type),
-        onStartExport: (type) => this.startExport(type),
-        onResetSelect: () => { this.resetSelect = !this.resetSelect; },
-        onUpdateCanvas: () => this.updatecanvas(),
-        onClearSelectedBlocks: () => { this.selectedBlocks = []; },
-        onDeleteSelectedBlocks: () => {
-          if (this.selectedBlocks.length) {
-            for (let y = 0; y < this.selectedBlocks.length + 1; y++) {
-              for (
-                let x = 0;
-                x < getBlocksWidth(this.selectedBlocks) + 1;
-                x++
-              ) {
-                if (this.selectedBlocks[y] && this.selectedBlocks[y][x]) {
-                  let oldBlock = this.currentAsciiLayerBlocks[y][x];
-                  this.currentAsciiLayerBlocks[y][x] = { ...emptyBlock };
-                  this.storeDiffBlocks(x, y, oldBlock, { ...emptyBlock });
-                }
-              }
-            }
-            this.dispatchBlocks();
-          }
+    // Menu bar definition for Headless UI Menu
+    menuBar() {
+      return [
+        {
+          label: "File",
+          items: [
+            { text: "New ASCII", click: () => this.store.openModal("new-ascii") },
+            { text: "Import from File", click: () => this.startImport("mirc") },
+            { text: "Import from Clipboard", click: () => this.store.openModal("paste-ascii") },
+            {
+              text: "Export to File",
+              click: () => this.startExport("file"),
+              disabled: !this.asciibirdMeta.length,
+            },
+            {
+              text: "Export to Clipboard",
+              click: () => this.startExport("clipboard"),
+              disabled: !this.asciibirdMeta.length,
+            },
+            {
+              text: "Export to HTTP POST",
+              click: () => this.startExport("post"),
+              disabled: !this.asciibirdMeta.length,
+            },
+          ],
         },
-      });
+        {
+          label: "Edit",
+          items: [
+            {
+              text: "Edit ASCII",
+              click: () => this.store.openModal("edit-ascii"),
+              disabled: !this.asciibirdMeta.length,
+            },
+            {
+              text: "Undo",
+              click: () => this.store.undoBlocks(),
+              disabled: !this.asciibirdMeta.length,
+            },
+            {
+              text: "Redo",
+              click: () => this.store.redoBlocks(),
+              disabled: !this.asciibirdMeta.length,
+            },
+          ],
+        },
+        {
+          label: "View",
+          items: [
+            {
+              text: this.menuBarVisible ? "Hide Menu Bar" : "Show Menu Bar",
+              click: () => this.store.changeMenuBarVisible(!this.menuBarVisible),
+            },
+            {
+              text: this.tabsVisible ? "Hide Tabs" : "Show Tabs",
+              click: () => this.store.changeTabsVisible(!this.tabsVisible),
+            },
+            {
+              text: this.toolbarState.gridView ? "Disable Grid" : "Enable Grid",
+              click: () => this.store.toggleGridView(!this.toolbarState.gridView),
+              disabled: !this.asciibirdMeta.length,
+            },
+            {
+              text: this.debugPanelState.visible ? "Hide Debug" : "Show Debug",
+              click: () => this.store.toggleDebugPanel(!this.debugPanelState.visible),
+            },
+          ],
+        },
+        {
+          label: "Tools",
+          items: [
+            { text: "Options", click: () => this.store.openModal("options") },
+            { text: "Image Overlay", click: () => this.store.openModal("overlay"), disabled: !this.asciibirdMeta.length },
+          ],
+        },
+        {
+          label: "Help",
+          items: [
+            { text: "About", click: () => this.store.openModal("about") },
+            { text: "Help", click: () => this.store.openModal("help") },
+          ],
+        },
+      ];
     },
   },
   watch: {
-    // scrollOffset(val) {
-    //   this.$refs.tabbar.style.top = val;
-    //   this.toolbarString = `top: ${val}px`;
-    // },
-    isModalOpen(val, _old) {
+    isModalOpen(val) {
       if (val) {
         hotkeys.deleteScope("all");
       }
     },
-    isKeyboardDisabled(val, _old) {
+    isKeyboardDisabled(val) {
       if (val) {
         hotkeys.deleteScope("all");
       }
@@ -581,15 +665,17 @@ export default {
     },
   },
   methods: {
+    splashAscii() {
+      return splashAscii;
+    },
     updateAsciiDetails(widthHeight) {
-      // From edit ascii modal to editor
       this.updateAscii = widthHeight;
     },
     dispatchBlocks() {
       this.diffBlocks.old = this.diffBlocks.old.flat();
       this.diffBlocks.new = this.diffBlocks.new.flat();
 
-      this.$store.dispatch("updateAsciiBlocksAsync", {
+      this.store.updateAsciiBlocksAsync({
         blocks: this.currentAsciiLayerBlocks,
         diff: { ...this.diffBlocks },
       });
@@ -601,7 +687,6 @@ export default {
       };
     },
     storeDiffBlocks(x, y, oldBlock, newBlock) {
-      // For undo
       if (!this.diffBlocks.old[y]) {
         this.diffBlocks.old[y] = [];
       }
@@ -626,40 +711,30 @@ export default {
         };
       }
     },
-    splashAscii() {
-      return splashAscii;
-    },
     showLayerRename(key, label) {
-      this.$store.commit("toggleDisableKeyboard", true);
-      this.$dialog
-        .prompt({
-          title: "Rename Layer",
-          text: "Please input your new layer name",
-          icon: "question",
-          inputValue: label,
-          clickToClose: false,
-        })
-        .then((result) => {
-          if (!result.input.length) {
-            this.$toasted.show("You must enter a layer name!", {
-              type: "error",
-            });
-            this.$store.commit("toggleDisableKeyboard", false);
-            return;
-          }
+      this.store.toggleDisableKeyboard(true);
+      this.dialogPrompt({
+        title: "Rename Layer",
+        text: "Please input your new layer name",
+        inputValue: label,
+      }).then((result) => {
+        if (!result.input.length) {
+          this.toastShow("You must enter a layer name!", {
+            type: "error",
+          });
+          this.store.toggleDisableKeyboard(false);
+          return;
+        }
 
-          if (result.isOk) {
-            this.updateLayerName(key, result.input);
-          }
+        if (result.isOk) {
+          this.updateLayerName(key, result.input);
+        }
 
-          this.$store.commit("toggleDisableKeyboard", false);
-        });
+        this.store.toggleDisableKeyboard(false);
+      });
     },
     updateLayerName(key, label) {
-      this.$store.commit("updateLayerName", {
-        key: key,
-        label: label,
-      });
+      this.store.updateLayerName({ key, label });
     },
     triggerbrush() {
       this.drawBrush = !this.drawBrush;
@@ -711,12 +786,9 @@ export default {
         }
       });
 
-      // This will fire the file reader 'load' event
       fileReader.readAsText(files[0]);
     },
     startImport(type) {
-      // For ANSI we'll need to add back in the
-      // type cariable here
       this.importType = type;
       this.$refs.asciiInput.click();
     },
@@ -725,11 +797,10 @@ export default {
         const contents = JSON.parse(
           LZString.decompressFromEncodedURIComponent(fileContents)
         );
-        this.$store.commit("changeState", { ...contents });
+        this.store.changeState({ ...contents });
       } catch (_err) {
-        this.$toasted.show("Failed to import ASCIIBIRD state. File may be corrupted.", {
+        this.toastShow("Failed to import ASCIIBIRD state. File may be corrupted.", {
           type: "error",
-          icon: "error",
         });
       }
     },
@@ -738,13 +809,12 @@ export default {
 
       try {
         output = LZString.compressToEncodedURIComponent(
-          JSON.stringify(this.$store.getters.state)
+          JSON.stringify(this.store.state)
         );
 
-        // Default timestamp for filename
         const today = new Date();
         const y = today.getFullYear();
-        const m = today.getMonth() + 1; // JavaScript months are 0-based.
+        const m = today.getMonth() + 1;
         const d = today.getDate();
         const h = today.getHours();
         const mi = today.getMinutes();
@@ -756,39 +826,30 @@ export default {
           "application/gzip"
         );
       } catch (err) {
-        this.$toasted.show(err, {
-          type: "error",
-        });
+        this.toastShow(String(err), { type: "error" });
       }
     },
     startExport(type) {
       let ascii = exportMirc();
-      
-      // Check line lengths for IRC compatibility
+
       const checkLines = checkIrcByteLimits(ascii.output.join(""));
 
       if (checkLines.length) {
         const displayLines = checkLines.join(", ");
-        this.$toasted.show(
+        this.toastShow(
           `Line${checkLines.length > 1 ? 's' : ''} ${displayLines} may be too large for IRC.`,
-          {
-            type: "error",
-            position: "bottom-center",
-            duration: 1200,
-          }
+          { type: "error", duration: 1200 }
         );
       }
 
       switch (type) {
         case "clipboard":
-          this.$copyText(ascii.output.join("")).then(
+          this.copyText(ascii.output.join("")).then(
             () => {
-              this.$toasted.show("Copied mIRC to clipboard!", {
-                type: "success",
-              });
+              this.toastShow("Copied mIRC to clipboard!", { type: "success" });
             },
             () => {
-              this.$toasted.show("Error when copying mIRC to clipboard!", {
+              this.toastShow("Error when copying mIRC to clipboard!", {
                 type: "error",
               });
             }
@@ -800,76 +861,64 @@ export default {
           downloadFile(ascii.output.join(""), ascii.filename, "text/plain");
           break;
         case "post":
-          this.$store.commit("toggleDisableKeyboard", true);
-          this.$dialog
-            .prompt({
-              title: "HTTP Post your Ascii",
-              text: "Please input the URL for the HTTP Post sir",
-              icon: "question",
-              inputValue: this.lastPostURL,
-              clickToClose: false,
-            })
-            .then((result) => {
-              if (result.input === undefined) {
-                this.$toasted.show("Come on bro. Get it together.", {
-                  type: "error",
-                });
-                this.$store.commit("toggleDisableKeyboard", false);
-                return;
-              }
+          this.store.toggleDisableKeyboard(true);
+          this.dialogPrompt({
+            title: "HTTP Post your Ascii",
+            text: "Please input the URL for the HTTP Post sir",
+            inputValue: this.lastPostURL,
+          }).then((result) => {
+            if (result.input === undefined) {
+              this.toastShow("Come on bro. Get it together.", {
+                type: "error",
+              });
+              this.store.toggleDisableKeyboard(false);
+              return;
+            }
 
-              if (result.isOk) {
-                let ascii = exportMirc();
-                this.lastPostURL = result.input;
-                const requestOptions = {
-                  method: "POST",
-                  headers: { "Content-Type": "application/octet-stream" },
-                  body: ascii.output.join(""),
-                };
-                fetch(this.lastPostURL, requestOptions)
-                  .then((response) => {
-                    if (response.status === 200 || response.status === 201) {
-                      this.$toasted.show("POSTed ascii!", {
-                        type: "success",
-                      });
-                    } else {
-                      this.$toasted.show(
-                        `Error: ${response.status} ${response.statusText}`,
-                        {
-                          type: "error",
-                        }
-                      );
-                    }
-                  })
-                  .catch((error) => {
-                    this.$toasted.show(`Error: ${JSON.stringify(error)}`, {
-                      type: "error",
-                    });
+            if (result.isOk) {
+              let ascii = exportMirc();
+              this.lastPostURL = result.input;
+              const requestOptions = {
+                method: "POST",
+                headers: { "Content-Type": "application/octet-stream" },
+                body: ascii.output.join(""),
+              };
+              fetch(this.lastPostURL, requestOptions)
+                .then((response) => {
+                  if (response.status === 200 || response.status === 201) {
+                    this.toastShow("POSTed ascii!", { type: "success" });
+                  } else {
+                    this.toastShow(
+                      `Error: ${response.status} ${response.statusText}`,
+                      { type: "error" }
+                    );
+                  }
+                })
+                .catch((error) => {
+                  this.toastShow(`Error: ${JSON.stringify(error)}`, {
+                    type: "error",
                   });
-              }
+                });
+            }
 
-              this.$store.commit("toggleDisableKeyboard", false);
-            });
+            this.store.toggleDisableKeyboard(false);
+          });
 
           break;
       }
     },
     changeTab(key) {
-      // Update the tab index in vuex store
-      this.$store.commit("changeTab", key);
+      this.store.changeTab(key);
     },
     closeTab(key) {
-      this.$dialog
-        .confirm({
-          title: `Close ${this.asciibirdMeta[key].title}?`,
-          text: "This action cannot be undone and the ASCII will be gone.",
-          icon: "info",
-        })
-        .then((result) => {
-          if (result.isOk) {
-            this.$store.commit("closeTab", key);
-          }
-        });
+      this.dialogConfirm({
+        title: `Close ${this.asciibirdMeta[key].title}?`,
+        text: "This action cannot be undone and the ASCII will be gone.",
+      }).then((result) => {
+        if (result.isOk) {
+          this.store.closeTab(key);
+        }
+      });
     },
     captureMouse(event) {
       this.dashboardX = event.pageX;
@@ -878,3 +927,15 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.toast-enter-active,
+.toast-leave-active {
+  transition: all 0.3s ease;
+}
+.toast-enter-from,
+.toast-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
+}
+</style>

@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 // Shared test utilities for ASCIIBIRD component tests.
+// Updated for Vue 3 + Pinia (no more Vuex).
 
 import { vi } from 'vitest'
-import Vuex from 'vuex'
-import Vue from 'vue'
+import { createPinia, setActivePinia } from 'pinia'
 import LZString from 'lz-string'
 import {
   create2DArray,
@@ -11,75 +11,40 @@ import {
   cyrb53,
 } from '@/ascii'
 
-Vue.use(Vuex)
-
 // ─── Shared component stubs ──────────────────────────────────────
 
 export const globalStubs = {
-  't-button': {
+  ABModal: {
     template:
-      '<button class="t-button" @click="$emit(\'click\')"><slot /></button>',
+      '<div class="ab-modal"><slot /><slot name="footer" /></div>',
+    props: ['open', 'title'],
   },
-  't-card': {
-    template: '<div class="t-card"><slot /></div>',
-  },
-  't-checkbox': {
-    template:
-      '<input type="checkbox" :checked="checked" @change="$emit(\'change\', $event)" />',
-    props: ['checked'],
-    model: { prop: 'checked', event: 'change' },
-  },
-  't-input': {
-    template:
-      '<input class="t-input" :value="value" @input="$emit(\'input\', $event.target.value)" />',
-    props: ['value'],
-  },
-  't-modal': {
-    template:
-      '<div class="t-modal"><slot /><slot name="footer" /><slot name="default" /></div>',
-  },
-  't-select': {
-    template: '<select><slot /></select>',
-  },
-  't-slider': {
-    template: '<input type="range" />',
-  },
-  't-textarea': {
-    template:
-      '<textarea :value="value" @input="$emit(\'input\', $event.target.value)"><slot /></textarea>',
-    props: ['value'],
-  },
-  't-dropdown': {
-    template:
-      '<div class="t-dropdown"><slot name="trigger" /><slot /></div>',
-  },
-  'vue-draggable-resizable': {
-    template: '<div class="vdr"><slot /></div>',
-  },
-  'vue-slider': {
-    template: '<input type="range" />',
-  },
-  'BrushCanvas': {
+  BrushCanvas: {
     template: '<div class="brush-canvas-stub"><slot /></div>',
   },
-  'Layers': {
+  Layers: {
     template: '<div class="layers-stub"><slot /></div>',
   },
-  'Colours': {
+  Colours: {
     template: '<div class="colours-stub"><slot /></div>',
   },
-  't-radio': {
-    template:
-      '<input type="radio" :checked="value" @change="$emit(\'change\', $event)" />',
-    props: ['value'],
-  },
-  'ContextMenu': {
+  ContextMenu: {
+    name: 'ContextMenu',
     template: '<div class="context-menu-stub"><slot /></div>',
     methods: {
       open: vi.fn(),
       close: vi.fn(),
     },
   },
+  // Headless UI component stubs
+  Dialog: { template: '<div><slot /></div>' },
+  DialogPanel: { template: '<div><slot /></div>' },
+  TransitionRoot: { template: '<div><slot /></div>' },
+  TransitionChild: { template: '<div><slot /></div>' },
+  Menu: { template: '<div><slot /></div>' },
+  MenuButton: { template: '<button><slot /></button>' },
+  MenuItems: { template: '<div><slot /></div>' },
+  MenuItem: { template: '<div><slot /></div>' },
 }
 
 // ─── Shared mock instances ────────────────────────────────────────
@@ -163,11 +128,19 @@ export function createToolbarState(overrides: Record<string, any> = {}) {
   }
 }
 
-// ─── Mock store factory ───────────────────────────────────────────
+// ─── Mock store factory (Pinia-compatible) ────────────────────────
+//
+// In Pinia, the store is a plain object where:
+//   - State properties are direct properties
+//   - Getters are computed properties (direct access)
+//   - Actions are methods
+//
+// For testing ascii.ts (which uses setStore/getStore), we create
+// a mock object that mimics the Pinia store's public API.
 
 export interface MockStoreConfig {
   // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-  extraMutations?: Record<string, Function>
+  extraActions?: Record<string, Function>
 }
 
 export function createMockStore(
@@ -245,8 +218,8 @@ export function createMockStore(
     brushLibrary: [],
     copiedBlocks: [],
     brushPreview: [],
-    brushBlocks: LZString.compressToUTF16(JSON.stringify([])),
-    selectBlocks: LZString.compressToUTF16(JSON.stringify([])),
+    _brushBlocks: LZString.compressToUTF16(JSON.stringify([])),
+    _selectBlocks: LZString.compressToUTF16(JSON.stringify([])),
     panelState: {
       toolbar: { x: 10, y: 40 },
       debugPanel: { x: 10, y: 40 },
@@ -258,9 +231,82 @@ export function createMockStore(
 
   const state = { ...defaultState, ...overrides }
 
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
-  const defaultMutations: Record<string, Function> = {
-    closeModal: (s: any, name: string) => {
+  // Create a Pinia-compatible mock store object.
+  // State properties are writable (spread first), then derived getters
+  // override only the computed ones. Actions mutate state directly.
+  const store: Record<string, any> = {
+    // ─── State (direct writable properties) ──────────
+    ...state,
+
+    // ─── Derived Getters (read-only, computed) ───────
+    get currentFg() { return state.toolbarState.currentColourFg },
+    get currentBg() { return state.toolbarState.currentColourBg },
+    get currentChar() { return state.toolbarState.selectedChar },
+    get currentTool() { return state.toolbarState.currentTool },
+    get persistCharPanel() {
+      return state.toolbarState.persistCharPanel
+    },
+    get isTargettingFg() { return state.toolbarState.targetingFg },
+    get isTargettingBg() { return state.toolbarState.targetingBg },
+    get isTargettingChar() {
+      return state.toolbarState.targetingChar
+    },
+    get isModalOpen() {
+      return Object.values(state.modalState).some((v: any) => v)
+    },
+    get currentAscii() {
+      return state.asciibirdMeta[state.tab] || false
+    },
+    get currentAsciiLayers() {
+      const meta = state.asciibirdMeta[state.tab]
+      if (!meta) return []
+      return JSON.parse(
+        LZString.decompressFromUTF16(meta.layers),
+      )
+    },
+    get currentAsciiLayersWidthHeight() {
+      const layers = JSON.parse(
+        LZString.decompressFromUTF16(
+          state.asciibirdMeta[state.tab]?.layers || '',
+        ),
+      )
+      return layers.length > 0
+        ? { width: layers[0].width, height: layers[0].height }
+        : { width: 0, height: 0 }
+    },
+    get selectedLayer() {
+      return state.asciibirdMeta[state.tab]?.selectedLayer ?? 0
+    },
+    get debugPanel() { return state.debugPanelState },
+    get brushBlocks() {
+      return JSON.parse(
+        LZString.decompressFromUTF16(state._brushBlocks),
+      )
+    },
+    get _brushBlocks() { return state._brushBlocks },
+    set _brushBlocks(val: string) { state._brushBlocks = val },
+    get _selectBlocks() { return state._selectBlocks },
+    set _selectBlocks(val: string) { state._selectBlocks = val },
+    get imageOverlay() {
+      return state.asciibirdMeta[state.tab]?.imageOverlay
+    },
+    get selectBlocks() {
+      return JSON.parse(
+        LZString.decompressFromUTF16(state._selectBlocks),
+      )
+    },
+    get brushSizeHeight() {
+      return state.toolbarState.brushSizeHeight
+    },
+    get brushSizeWidth() {
+      return state.toolbarState.brushSizeWidth
+    },
+    get brushSizeType() {
+      return state.toolbarState.brushSizeType
+    },
+
+    // ─── Actions (mutate state directly) ─────────────
+    closeModal(name: string) {
       const map: Record<string, string> = {
         'new-ascii': 'newAscii',
         'edit-ascii': 'editAscii',
@@ -270,10 +316,10 @@ export function createMockStore(
         'about': 'about',
         'help': 'help',
       }
-      if (map[name]) s.modalState[map[name]] = false
-      s.isKeyboardDisabled = false
+      if (map[name]) state.modalState[map[name]] = false
+      state.isKeyboardDisabled = false
     },
-    openModal: (s: any, name: string) => {
+    openModal(name: string) {
       const map: Record<string, string> = {
         'new-ascii': 'newAscii',
         'edit-ascii': 'editAscii',
@@ -283,69 +329,73 @@ export function createMockStore(
         'about': 'about',
         'help': 'help',
       }
-      if (map[name]) s.modalState[map[name]] = true
-      s.isKeyboardDisabled = true
+      if (map[name]) state.modalState[map[name]] = true
+      state.isKeyboardDisabled = true
     },
-    changeTool: (s: any, idx: number) => {
-      s.toolbarState.currentTool = idx
+    changeTool(idx: number) {
+      state.toolbarState.currentTool = idx
     },
-    changeColourFg: (s: any, c: number) => {
-      s.toolbarState.currentColourFg = c
+    changeColourFg(c: number) {
+      state.toolbarState.currentColourFg = c
     },
-    changeColourBg: (s: any, c: number) => {
-      s.toolbarState.currentColourBg = c
+    changeColourBg(c: number) {
+      state.toolbarState.currentColourBg = c
     },
-    changeChar: (s: any, c: string) => {
-      s.toolbarState.selectedChar = c
+    changeChar(c: string) {
+      state.toolbarState.selectedChar = c
     },
-    updateOptions: (s: any, opts: any) => {
-      s.options = opts
+    updateOptions(opts: any) {
+      state.options = opts
     },
-    updateMirror: (s: any, p: any) => {
-      s.toolbarState.mirrorX = p.x
-      s.toolbarState.mirrorY = p.y
+    updateMirror(p: any) {
+      state.toolbarState.mirrorX = p.x
+      state.toolbarState.mirrorY = p.y
     },
-    toggleGridView: (s: any) => {
-      s.toolbarState.gridView = !s.toolbarState.gridView
+    toggleGridView() {
+      state.toolbarState.gridView = !state.toolbarState.gridView
     },
-    toggleHalfBlockEditing: (s: any, v: boolean) => {
-      s.toolbarState.halfBlockEditing = v
+    toggleHalfBlockEditing(v: boolean) {
+      state.toolbarState.halfBlockEditing = v
     },
-    toggleUpdateBrush: (s: any) => {
-      s.toolbarState.updateBrush = !s.toolbarState.updateBrush
+    toggleUpdateBrush() {
+      state.toolbarState.updateBrush = !state.toolbarState.updateBrush
     },
-    changeToolBarState: (s: any, p: any) => {
-      Object.assign(s.toolbarState, p)
+    changeToolBarState(p: any) {
+      Object.assign(state.toolbarState, p)
     },
-    changeDebugPanelState: (s: any, p: any) => {
-      Object.assign(s.debugPanelState, p)
+    changeDebugPanelState(p: any) {
+      Object.assign(state.debugPanelState, p)
     },
-    changeBrushLibraryState: (s: any, p: any) => {
-      Object.assign(s.brushLibraryState, p)
+    changeBrushLibraryState(p: any) {
+      Object.assign(state.brushLibraryState, p)
     },
-    changeLayersLibraryState: (s: any, p: any) => {
-      Object.assign(s.layersLibraryState, p)
+    changeLayersLibraryState(p: any) {
+      Object.assign(state.layersLibraryState, p)
     },
-    changeAsciiWidthHeight: (s: any, p: any) => {
-      const meta = s.asciibirdMeta[s.tab]
+    changeAsciiWidthHeight(p: any) {
+      const meta = state.asciibirdMeta[state.tab]
       if (meta) {
         meta.layers = LZString.compressToUTF16(
           JSON.stringify(p.layers),
         )
       }
     },
-    updateAsciiTitle: (s: any, t: string) => {
-      s.asciibirdMeta[s.tab].title = t
+    updateAsciiTitle(t: string) {
+      state.asciibirdMeta[state.tab].title = t
     },
-    brushBlocks: (s: any, blocks: any) => {
-      s.brushBlocks = LZString.compressToUTF16(
+    newAsciibirdMeta(meta: any) {
+      state.asciibirdMeta.push(meta)
+      state.tab = state.asciibirdMeta.length - 1
+    },
+    setBrushBlocks(blocks: any) {
+      state._brushBlocks = LZString.compressToUTF16(
         JSON.stringify(blocks),
       )
     },
-    pushBrushLibrary: (s: any, blocks: any) => {
+    pushBrushLibrary(blocks: any) {
       const hash = cyrb53(JSON.stringify(blocks))
-      if (!s.brushLibrary.some((b: any) => b.hash === hash)) {
-        s.brushLibrary.push({
+      if (!state.brushLibrary.some((b: any) => b.hash === hash)) {
+        state.brushLibrary.push({
           blocks: LZString.compressToUTF16(
             JSON.stringify(blocks),
           ),
@@ -353,63 +403,67 @@ export function createMockStore(
         })
       }
     },
-    removeBrushLibrary: (s: any, blocks: any) => {
+    removeBrushLibrary(blocks: any) {
       const hash = cyrb53(JSON.stringify(blocks))
-      s.brushLibrary = s.brushLibrary.filter(
+      state.brushLibrary = state.brushLibrary.filter(
         (b: any) => b.hash !== hash,
       )
     },
-    removeBrushHistory: (s: any, blocks: any) => {
+    removeBrushHistory(blocks: any) {
       const hash = cyrb53(JSON.stringify(blocks))
-      s.brushHistory = s.brushHistory.filter(
+      state.brushHistory = state.brushHistory.filter(
         (b: any) => b.hash !== hash,
       )
     },
-    upBrush: (s: any, key: number) => {
+    upBrush(key: number) {
       if (key > 0) {
-        const temp = s.brushLibrary[key]
-        s.brushLibrary[key] = s.brushLibrary[key - 1]
-        s.brushLibrary[key - 1] = temp
+        const temp = state.brushLibrary[key]
+        state.brushLibrary[key] = state.brushLibrary[key - 1]
+        state.brushLibrary[key - 1] = temp
       }
     },
-    downBrush: (s: any, key: number) => {
-      if (key < s.brushLibrary.length - 1) {
-        const temp = s.brushLibrary[key]
-        s.brushLibrary[key] = s.brushLibrary[key + 1]
-        s.brushLibrary[key + 1] = temp
+    downBrush(key: number) {
+      if (key < state.brushLibrary.length - 1) {
+        const temp = state.brushLibrary[key]
+        state.brushLibrary[key] = state.brushLibrary[key + 1]
+        state.brushLibrary[key + 1] = temp
       }
     },
-    updateImageOverlay: (s: any, payload: any) => {
-      const meta = s.asciibirdMeta[s.tab]
+    updateImageOverlay(payload: any) {
+      const meta = state.asciibirdMeta[state.tab]
       if (meta) meta.imageOverlay = payload
     },
-    changeLayer: (s: any, idx: number) => {
-      const meta = s.asciibirdMeta[s.tab]
+    changeLayer(idx: number) {
+      const meta = state.asciibirdMeta[state.tab]
       if (meta) meta.selectedLayer = idx
     },
-    toggleLayer: (s: any, idx: number) => {
-      const meta = s.asciibirdMeta[s.tab]
+    toggleLayer(idx: number) {
+      const meta = state.asciibirdMeta[state.tab]
       if (!meta) return
       const layers = JSON.parse(
         LZString.decompressFromUTF16(meta.layers),
       )
       if (layers[idx]) layers[idx].visible = !layers[idx].visible
-      meta.layers = LZString.compressToUTF16(JSON.stringify(layers))
+      meta.layers = LZString.compressToUTF16(
+        JSON.stringify(layers),
+      )
     },
-    removeLayer: (s: any, idx: number) => {
-      const meta = s.asciibirdMeta[s.tab]
+    removeLayer(idx: number) {
+      const meta = state.asciibirdMeta[state.tab]
       if (!meta) return
       const layers = JSON.parse(
         LZString.decompressFromUTF16(meta.layers),
       )
       layers.splice(idx, 1)
-      meta.layers = LZString.compressToUTF16(JSON.stringify(layers))
+      meta.layers = LZString.compressToUTF16(
+        JSON.stringify(layers),
+      )
       if (meta.selectedLayer >= layers.length) {
         meta.selectedLayer = layers.length - 1
       }
     },
-    addLayer: (s: any) => {
-      const meta = s.asciibirdMeta[s.tab]
+    addLayer() {
+      const meta = state.asciibirdMeta[state.tab]
       if (!meta) return
       const layers = JSON.parse(
         LZString.decompressFromUTF16(meta.layers),
@@ -428,13 +482,15 @@ export function createMockStore(
           },
         ),
       })
-      meta.layers = LZString.compressToUTF16(JSON.stringify(layers))
+      meta.layers = LZString.compressToUTF16(
+        JSON.stringify(layers),
+      )
     },
-    mergeAllLayers: () => {
+    mergeAllLayers() {
       // Simplified mock — just keeps first layer
     },
-    upLayer: (s: any, idx: number) => {
-      const meta = s.asciibirdMeta[s.tab]
+    upLayer(idx: number) {
+      const meta = state.asciibirdMeta[state.tab]
       if (!meta || idx <= 0) return
       const layers = JSON.parse(
         LZString.decompressFromUTF16(meta.layers),
@@ -442,10 +498,12 @@ export function createMockStore(
       const temp = layers[idx]
       layers[idx] = layers[idx - 1]
       layers[idx - 1] = temp
-      meta.layers = LZString.compressToUTF16(JSON.stringify(layers))
+      meta.layers = LZString.compressToUTF16(
+        JSON.stringify(layers),
+      )
     },
-    downLayer: (s: any, idx: number) => {
-      const meta = s.asciibirdMeta[s.tab]
+    downLayer(idx: number) {
+      const meta = state.asciibirdMeta[state.tab]
       if (!meta) return
       const layers = JSON.parse(
         LZString.decompressFromUTF16(meta.layers),
@@ -454,45 +512,51 @@ export function createMockStore(
       const temp = layers[idx]
       layers[idx] = layers[idx + 1]
       layers[idx + 1] = temp
-      meta.layers = LZString.compressToUTF16(JSON.stringify(layers))
+      meta.layers = LZString.compressToUTF16(
+        JSON.stringify(layers),
+      )
     },
-    updateLayerName: (s: any, payload: any) => {
-      const meta = s.asciibirdMeta[s.tab]
+    updateLayerName(payload: any) {
+      const meta = state.asciibirdMeta[state.tab]
       if (!meta) return
       const layers = JSON.parse(
         LZString.decompressFromUTF16(meta.layers),
       )
-      if (layers[payload.key]) layers[payload.key].label = payload.label
-      meta.layers = LZString.compressToUTF16(JSON.stringify(layers))
+      if (layers[payload.key]) {
+        layers[payload.key].label = payload.label
+      }
+      meta.layers = LZString.compressToUTF16(
+        JSON.stringify(layers),
+      )
     },
-    toggleDisableKeyboard: (s: any, val: boolean) => {
-      s.isKeyboardDisabled = val
+    toggleDisableKeyboard(val: boolean) {
+      state.isKeyboardDisabled = val
     },
-    undoBlocks: () => {
+    undoBlocks() {
       // Simplified mock for keyboard shortcut tests
     },
-    redoBlocks: () => {
+    redoBlocks() {
       // Simplified mock for keyboard shortcut tests
     },
-    changeIsUpdatingFg: (s: any, val: boolean) => {
-      s.toolbarState.isChoosingFg = val
+    changeIsUpdatingFg(val: boolean) {
+      state.toolbarState.isChoosingFg = val
     },
-    changeIsUpdatingBg: (s: any, val: boolean) => {
-      s.toolbarState.isChoosingBg = val
+    changeIsUpdatingBg(val: boolean) {
+      state.toolbarState.isChoosingBg = val
     },
-    changeIsUpdatingChar: (s: any, val: boolean) => {
-      s.toolbarState.isChoosingChar = val
+    changeIsUpdatingChar(val: boolean) {
+      state.toolbarState.isChoosingChar = val
     },
-    changeBrushPreviewState: (s: any, p: any) => {
-      Object.assign(s.brushPreviewState, p)
+    changeBrushPreviewState(p: any) {
+      Object.assign(state.brushPreviewState, p)
     },
-    changeToolBarDraggable: (s: any, val: boolean) => {
-      s.toolbarState.draggable = val
+    changeToolBarDraggable(val: boolean) {
+      state.toolbarState.draggable = val
     },
-    pushBrushHistory: (s: any, blocks: any) => {
+    pushBrushHistory(blocks: any) {
       const hash = cyrb53(JSON.stringify(blocks))
-      if (!s.brushHistory.some((b: any) => b.hash === hash)) {
-        s.brushHistory.push({
+      if (!state.brushHistory.some((b: any) => b.hash === hash)) {
+        state.brushHistory.push({
           blocks: LZString.compressToUTF16(
             JSON.stringify(blocks),
           ),
@@ -500,78 +564,81 @@ export function createMockStore(
         })
       }
     },
-    updateBrushSize: (s: any, p: any) => {
+    updateBrushSize(p: any) {
       if (p.brushSizeHeight !== undefined) {
-        s.toolbarState.brushSizeHeight = p.brushSizeHeight
+        state.toolbarState.brushSizeHeight = p.brushSizeHeight
       }
       if (p.brushSizeWidth !== undefined) {
-        s.toolbarState.brushSizeWidth = p.brushSizeWidth
+        state.toolbarState.brushSizeWidth = p.brushSizeWidth
       }
       if (p.brushSizeType !== undefined) {
-        s.toolbarState.brushSizeType = p.brushSizeType
+        state.toolbarState.brushSizeType = p.brushSizeType
       }
     },
-    changeToolBarState: (s: any, p: any) => {
-      Object.assign(s.toolbarState, p)
-    },
+
+    // Vuex compat aliases for tests that still use commit/dispatch
+    commit: vi.fn((mutation: string, payload?: any) => {
+      // Map old mutation names to new action names
+      const actionMap: Record<string, string> = {
+        'closeModal': 'closeModal',
+        'openModal': 'openModal',
+        'changeTool': 'changeTool',
+        'changeColourFg': 'changeColourFg',
+        'changeColourBg': 'changeColourBg',
+        'changeChar': 'changeChar',
+        'updateOptions': 'updateOptions',
+        'updateMirror': 'updateMirror',
+        'toggleGridView': 'toggleGridView',
+        'toggleHalfBlockEditing': 'toggleHalfBlockEditing',
+        'toggleUpdateBrush': 'toggleUpdateBrush',
+        'changeToolBarState': 'changeToolBarState',
+        'changeDebugPanelState': 'changeDebugPanelState',
+        'changeBrushLibraryState': 'changeBrushLibraryState',
+        'changeLayersLibraryState': 'changeLayersLibraryState',
+        'changeAsciiWidthHeight': 'changeAsciiWidthHeight',
+        'updateAsciiTitle': 'updateAsciiTitle',
+        'newAsciibirdMeta': 'newAsciibirdMeta',
+        'brushBlocks': 'setBrushBlocks',
+        'setBrushBlocks': 'setBrushBlocks',
+        'setSelectBlocks': 'setSelectBlocks',
+        'pushBrushLibrary': 'pushBrushLibrary',
+        'removeBrushLibrary': 'removeBrushLibrary',
+        'removeBrushHistory': 'removeBrushHistory',
+        'upBrush': 'upBrush',
+        'downBrush': 'downBrush',
+        'updateImageOverlay': 'updateImageOverlay',
+        'changeLayer': 'changeLayer',
+        'toggleLayer': 'toggleLayer',
+        'removeLayer': 'removeLayer',
+        'addLayer': 'addLayer',
+        'mergeAllLayers': 'mergeAllLayers',
+        'upLayer': 'upLayer',
+        'downLayer': 'downLayer',
+        'updateLayerName': 'updateLayerName',
+        'toggleDisableKeyboard': 'toggleDisableKeyboard',
+        'undoBlocks': 'undoBlocks',
+        'redoBlocks': 'redoBlocks',
+        'changeIsUpdatingFg': 'changeIsUpdatingFg',
+        'changeIsUpdatingBg': 'changeIsUpdatingBg',
+        'changeIsUpdatingChar': 'changeIsUpdatingChar',
+        'changeBrushPreviewState': 'changeBrushPreviewState',
+        'changeToolBarDraggable': 'changeToolBarDraggable',
+        'pushBrushHistory': 'pushBrushHistory',
+        'updateBrushSize': 'updateBrushSize',
+      }
+      const actionName = actionMap[mutation]
+      if (actionName && typeof store[actionName] === 'function') {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (store[actionName] as (...args: any[]) => any)(payload)
+      }
+    }),
+    dispatch: vi.fn(),
+
+    // Extra actions from config
+    ...(config.extraActions || {}),
   }
 
-  const mutations = {
-    ...defaultMutations,
-    ...(config.extraMutations || {}),
-  }
-
-  return new Vuex.Store({
-    state,
-    getters: {
-      modalState: (s: any) => s.modalState,
-      toolbarState: (s: any) => s.toolbarState,
-      currentFg: (s: any) => s.toolbarState.currentColourFg,
-      currentBg: (s: any) => s.toolbarState.currentColourBg,
-      currentChar: (s: any) => s.toolbarState.selectedChar,
-      currentTool: (s: any) => s.toolbarState.currentTool,
-      asciibirdMeta: (s: any) => s.asciibirdMeta,
-      options: (s: any) => s.options,
-      tab: (s: any) => s.tab,
-      brushHistory: (s: any) => s.brushHistory,
-      brushLibrary: (s: any) => s.brushLibrary,
-      blockSizeMultiplier: (s: any) => s.blockSizeMultiplier,
-      persistCharPanel: (s: any) => s.toolbarState.persistCharPanel,
-      isTargettingFg: (s: any) => s.toolbarState.targetingFg,
-      isTargettingBg: (s: any) => s.toolbarState.targetingBg,
-      isTargettingChar: (s: any) => s.toolbarState.targetingChar,
-      brushLibraryState: (s: any) => s.brushLibraryState,
-      layersLibraryState: (s: any) => s.layersLibraryState,
-      brushPreviewState: (s: any) => s.brushPreviewState,
-      isKeyboardDisabled: (s: any) => s.isKeyboardDisabled,
-      isModalOpen: (s: any) =>
-        Object.values(s.modalState).some((v: any) => v),
-      currentAscii: (s: any) => s.asciibirdMeta[s.tab] || false,
-      currentAsciiLayers: (s: any) => {
-        const meta = s.asciibirdMeta[s.tab]
-        if (!meta) return []
-        return JSON.parse(
-          LZString.decompressFromUTF16(meta.layers),
-        )
-      },
-      selectedLayer: (s: any) =>
-        s.asciibirdMeta[s.tab]?.selectedLayer ?? 0,
-      debugPanel: (s: any) => s.debugPanelState,
-      state: (s: any) => s,
-      brushBlocks: (s: any) => JSON.parse(
-        LZString.decompressFromUTF16(s.brushBlocks),
-      ),
-      imageOverlay: (s: any) =>
-        s.asciibirdMeta[s.tab]?.imageOverlay,
-      selectBlocks: (s: any) => JSON.parse(
-        LZString.decompressFromUTF16(s.selectBlocks),
-      ),
-      brushSizeHeight: (s: any) => s.toolbarState.brushSizeHeight,
-      brushSizeWidth: (s: any) => s.toolbarState.brushSizeWidth,
-      brushSizeType: (s: any) => s.toolbarState.brushSizeType,
-    },
-    mutations,
-  })
+  return store
 }
 
 // ─── Mock canvas ref factory ─────────────────────────────────────
@@ -602,17 +669,14 @@ export function createMockCanvasRef(
   }
 }
 
-// ─── Mount options factory ────────────────────────────────────────
+// ─── Mount options factory (VTU v2 / Vue 3) ──────────────────────
 
-export function createMountOptions(store: any, extra: any = {}) {
+export function createMountOptions(extra: any = {}) {
   return {
-    store,
-    mocks: {
-      $modal: modalMock,
-      $toasted: toastedMock,
-      $copyText: copyTextMock,
+    global: {
+      plugins: [createPinia()],
+      stubs: globalStubs,
     },
-    global: { stubs: globalStubs },
     ...extra,
   }
 }

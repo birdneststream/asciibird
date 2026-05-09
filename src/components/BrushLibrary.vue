@@ -1,23 +1,14 @@
 <template>
   <div>
-    <vue-draggable-resizable
-      @dragstop="onDragStop"
-      @resizestop="onResize"
-      :grid="[blockWidth, blockHeight]"
-      :min-width="blockWidth * 35"
-      :max-width="blockWidth * 50"
-      :min-height="blockHeight * 15"
-      :max-height="blockHeight * 100"
-      :w="brushLibraryState.w"
-      :h="brushLibraryState.h"
-      :x="brushLibraryState.x"
-      :y="brushLibraryState.y"
-      ref="brushlibrarypanel"
+    <div
+      ref="panelEl"
+      :style="panelStyle"
+      class="fixed"
     >
-      <t-card class="h-full overflow-y-auto overflow-x-auto">
-        <t-button
+      <div class="ab-card h-full overflow-y-auto overflow-x-auto">
+        <button
           type="button"
-          :class="`w-1/2 border-gray-200 bg-gray-500 text-sm ${
+          :class="`ab-button w-1/2 border-gray-200 bg-gray-500 text-sm ${
             panel.tab === 0
               ? 'border-gray-900 bg-blue-500'
               : 'border-gray-200 bg-gray-500'
@@ -26,11 +17,11 @@
         >
           <span class="material-icons relative top-2 pb-4">history</span>
           History
-        </t-button>
+        </button>
 
-        <t-button
+        <button
           type="button"
-          :class="`w-1/2 border-gray-200 bg-gray-500 text-sm ${
+          :class="`ab-button w-1/2 border-gray-200 bg-gray-500 text-sm ${
             panel.tab === 1
               ? 'border-gray-900 bg-blue-500'
               : 'border-gray-200 bg-gray-500'
@@ -39,7 +30,7 @@
         >
           <span class="material-icons relative top-2 pb-4">library_books</span>
           Library {{ libraryCount }}
-        </t-button>
+        </button>
 
         <div class="flex">
           <div v-if="panel.tab === 0">
@@ -47,34 +38,34 @@
               v-for="(brush, key) in brushHistory"
               :key="key"
             >
-              <t-card
-                class="hover:border-blue-900 border-gray-300 bg-gray-200 mt-2"
+              <div
+                class="ab-card hover:border-blue-900 border-gray-300 bg-gray-200 mt-2"
               >
                 <BrushCanvas :blocks="decompressBlock(brush.blocks)" />
 
-                <t-button
+                <button
                   type="button"
                   class="ab-rounded-button ml-1 mt-1"
                   @click="saveToLibrary(decompressBlock(brush.blocks))"
                 >
                   <span class="material-icons">save</span>
-                </t-button>
-                <t-button
+                </button>
+                <button
                   type="button"
                   class="ab-rounded-button ml-1 mt-1"
                   @click="reuseBlocks(decompressBlock(brush.blocks))"
                 >
                   <span class="material-icons">brush</span>
-                </t-button>
+                </button>
 
-                <t-button
+                <button
                   type="button"
                   class="ab-rounded-button ml-1 mt-1"
                   @click="removeFromHistory(decompressBlock(brush.blocks))"
                 >
                   <span class="material-icons">delete</span>
-                </t-button>
-              </t-card>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -89,50 +80,50 @@
               v-for="(brush, key) in brushLibrary"
               :key="key"
             >
-              <t-card
-                :class="`hover:border-blue-900 border-gray-300 bg-gray-200 mt-2`"
+              <div
+                :class="`ab-card hover:border-blue-900 border-gray-300 bg-gray-200 mt-2`"
               >
                 <small v-if="key <= 9">Ctrl+{{ key === 9 ? 0 : key + 1 }}</small>
                 <BrushCanvas :blocks="decompressBlock(brush.blocks)" />
 
-                <t-button
+                <button
                   type="button"
                   class="ab-rounded-button ml-1 mt-1"
                   @click="removeFromLibrary(decompressBlock(brush.blocks))"
                 >
                   <span class="material-icons">delete</span>
-                </t-button>
-                <t-button
+                </button>
+                <button
                   type="button"
                   class="ab-rounded-button ml-1 mt-1"
                   @click="reuseBlocks(decompressBlock(brush.blocks))"
                 >
                   <span class="material-icons">brush</span>
-                </t-button>
+                </button>
 
-                <t-button
+                <button
                   v-if="key !== 0"
                   type="button"
                   class="ab-rounded-button ml-1 mt-1"
                   @click="upBrush(key)"
                 >
                   <span class="material-icons">arrow_upward</span>
-                </t-button>
+                </button>
 
-                <t-button
+                <button
                   type="button"
                   class="ab-rounded-button ml-1 mt-1"
                   @click="downBrush(key)"
                   v-if="key !== brushLibrary.length-1"
                 >
                   <span class="material-icons">arrow_downward</span>
-                </t-button>
-              </t-card>
+                </button>
+              </div>
             </div>
           </div>
         </div>
-      </t-card>
-    </vue-draggable-resizable>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -150,26 +141,39 @@
 import { mircColours99, blockWidth, blockHeight, toolbarIcons } from "../ascii";
 import BrushCanvas from "./parts/BrushCanvas.vue";
 import LZString from "lz-string";
+import { useAsciiBirdStore } from "../store";
+import { useToast } from "../composables/useToast";
+import { useDraggable } from "@vueuse/core";
+import { ref } from "vue";
 
 export default {
   name: "BrushLibrary",
+  setup() {
+    const store = useAsciiBirdStore();
+    const toastShow = useToast();
+    const panelEl = ref(null);
+    const { style: panelStyle } = useDraggable(panelEl, {
+      initialValue: { x: store.brushLibraryState.x, y: store.brushLibraryState.y },
+    });
+    return { store, toastShow, panelEl, panelStyle };
+  },
   created() {
-    this.panel.x = this.brushLibraryState.x;
-    this.panel.y = this.brushLibraryState.y;
-    this.panel.w = this.brushLibraryState.w;
-    this.panel.h = this.brushLibraryState.h;
-    this.panel.tab = this.brushLibraryState.tab;
+    this.panel.x = this.store.brushLibraryState.x;
+    this.panel.y = this.store.brushLibraryState.y;
+    this.panel.w = this.store.brushLibraryState.w;
+    this.panel.h = this.store.brushLibraryState.h;
+    this.panel.tab = this.store.brushLibraryState.tab;
 
     var _this = this;
     hotkeys(`${this.hotkeyBrushes}`, async function (event, handler) {
       event.preventDefault();
 
       if (_this.isBrushing || _this.isErasing) {
-        
+
         let brushSelect =
           Number.parseInt(event.key) !== 0 ? Number.parseInt(event.key) - 1 : 9;
         if (_this.brushLibrary[brushSelect]) {
-          
+
           _this.reuseBlocks(
             _this.decompressBlock(_this.brushLibrary[brushSelect].blocks)
           );
@@ -201,31 +205,31 @@ export default {
       return hotkeyString;
     },
     blockWidth() {
-      return blockWidth * this.blockSizeMultiplier;
+      return blockWidth * this.store.blockSizeMultiplier;
     },
     blockHeight() {
-      return blockHeight * this.blockSizeMultiplier;
+      return blockHeight * this.store.blockSizeMultiplier;
     },
     blockSizeMultiplier() {
-      return this.$store.getters.blockSizeMultiplier;
+      return this.store.blockSizeMultiplier;
     },
     currentAscii() {
-      return this.$store.getters.currentAscii;
+      return this.store.currentAscii;
     },
     brushHistory() {
-      return this.$store.getters.brushHistory;
+      return this.store.brushHistory;
     },
     brushLibrary() {
-      return this.$store.getters.brushLibrary;
+      return this.store.brushLibrary;
     },
     mircColours() {
       return mircColours99;
     },
     brushBlocks() {
-      return this.$store.getters.brushBlocks;
+      return this.store.brushBlocks;
     },
     brushLibraryState() {
-      return this.$store.getters.brushLibraryState;
+      return this.store.brushLibraryState;
     },
     libraryCount() {
       return this.brushLibrary.length > 0
@@ -236,7 +240,7 @@ export default {
       return toolbarIcons;
     },
     currentTool() {
-      return toolbarIcons[this.$store.getters.currentTool];
+      return toolbarIcons[this.store.currentTool];
     },
     isBrushing() {
       return this.currentTool.name === "brush";
@@ -247,58 +251,45 @@ export default {
   },
   watch: {
     yOffset(val) {
-      this.$refs.brushlibrarypanel.top = Number.parseInt(
+      this.panelEl.style.top = Number.parseInt(
         this.brushLibraryState.y + val
-      );
+      ) + "px";
     },
   },
   methods: {
     changeTab(tab) {
       this.panel.tab = tab;
-      this.$store.commit("changeBrushLibraryState", this.panel);
+      this.store.changeBrushLibraryState(this.panel);
     },
     decompressBlock(item) {
       return JSON.parse(LZString.decompressFromUTF16(item));
     },
     reuseBlocks(value) {
-      this.$store.commit("brushBlocks", value);
-      this.$store.commit("changeTool", 4);
-      this.$toasted.show(`Applied brush from Library`, {
+      this.store.setBrushBlocks(value);
+      this.store.changeTool(4);
+      this.toastShow(`Applied brush from Library`, {
         type: "success",
       });
     },
     saveToLibrary(value) {
-      this.$store.commit("pushBrushLibrary", value);
-      this.$toasted.show(`Saved brush to Library`, {
+      this.store.pushBrushLibrary(value);
+      this.toastShow(`Saved brush to Library`, {
         type: "success",
       });
     },
     removeFromLibrary(value) {
-      this.$store.commit("removeBrushLibrary", value);
-      this.$toasted.show(`Removed brush from Library`);
+      this.store.removeBrushLibrary(value);
+      this.toastShow(`Removed brush from Library`);
     },
     removeFromHistory(value) {
-      this.$store.commit("removeBrushHistory", value);
-      this.$toasted.show(`Removed brush from History`);
+      this.store.removeBrushHistory(value);
+      this.toastShow(`Removed brush from History`);
     },
     upBrush(key) {
-      this.$store.commit("upBrush", key);
+      this.store.upBrush(key);
     },
     downBrush(key) {
-      this.$store.commit("downBrush", key);
-    },
-    onResize(x, y, w, h) {
-      this.panel.x = x;
-      this.panel.y = y;
-      this.panel.w = w;
-      this.panel.h = h;
-      this.$store.commit("changeBrushLibraryState", this.panel);
-    },
-    onDragStop(x, y) {
-      this.panel.x = x;
-      this.panel.y = y;
-
-      this.$store.commit("changeBrushLibraryState", this.panel);
+      this.store.downBrush(key);
     },
   },
 };

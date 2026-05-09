@@ -1,40 +1,42 @@
 <template>
   <div>
-    <vue-draggable-resizable
-      @dragstop="onDragStop"
-      @resizestop="onResize"
-      :grid="[blockWidth, blockHeight]"
-      :min-width="blockWidth * 30"
-      :max-width="blockWidth * 50"
-      :min-height="blockHeight * 10"
-      :max-height="blockHeight * 100"
-      :w="layersLibraryState.w"
-      :h="layersLibraryState.h"
-      :x="layersLibraryState.x"
-      :y="layersLibraryState.y"
-      ref="layerspanel"
+    <div
+      ref="panelEl"
+      :style="panelStyle"
+      class="fixed"
     >
-      <t-card class="h-full overflow-y-auto overflow-x-hidden">
+      <div class="ab-card h-full overflow-y-auto overflow-x-hidden">
         <Layers />
-      </t-card>
-    </vue-draggable-resizable>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import { blockWidth, blockHeight } from "../ascii";
 import Layers from "./parts/Layers.vue";
+import { useAsciiBirdStore } from "../store";
+import { useDraggable } from "@vueuse/core";
+import { ref } from "vue";
 
 export default {
   name: "LayersLibrary",
+  setup() {
+    const store = useAsciiBirdStore();
+    const panelEl = ref(null);
+    const { style: panelStyle } = useDraggable(panelEl, {
+      initialValue: { x: store.layersLibraryState.x, y: store.layersLibraryState.y },
+    });
+    return { store, panelEl, panelStyle };
+  },
   components: {
     Layers,
   },
   created() {
-    this.panel.x = this.layersLibraryState.x;
-    this.panel.y = this.layersLibraryState.y;
-    this.panel.w = this.layersLibraryState.w;
-    this.panel.h = this.layersLibraryState.h;
+    this.panel.x = this.store.layersLibraryState.x;
+    this.panel.y = this.store.layersLibraryState.y;
+    this.panel.w = this.store.layersLibraryState.w;
+    this.panel.h = this.store.layersLibraryState.h;
   },
   data: () => ({
     panel: {
@@ -50,38 +52,23 @@ export default {
   props: ["yOffset"],
   computed: {
     blockWidth() {
-      return blockWidth * this.blockSizeMultiplier;
+      return blockWidth * this.store.blockSizeMultiplier;
     },
     blockHeight() {
-      return blockHeight * this.blockSizeMultiplier;
+      return blockHeight * this.store.blockSizeMultiplier;
     },
     blockSizeMultiplier() {
-      return this.$store.getters.blockSizeMultiplier;
+      return this.store.blockSizeMultiplier;
     },
     layersLibraryState() {
-      return this.$store.getters.layersLibraryState;
+      return this.store.layersLibraryState;
     },
   },
   watch: {
     yOffset(val) {
-      this.$refs.layerspanel.top = Number.parseInt(
+      this.panelEl.style.top = Number.parseInt(
         this.layersLibraryState.y + val
-      );
-    },
-  },
-  methods: {
-    onResize(x, y, w, h) {
-      this.panel.x = x;
-      this.panel.y = y;
-      this.panel.w = w;
-      this.panel.h = h;
-      this.$store.commit("changeLayersLibraryState", this.panel);
-    },
-    onDragStop(x, y) {
-      this.panel.x = x;
-      this.panel.y = y;
-
-      this.$store.commit("changeLayersLibraryState", this.panel);
+      ) + "px";
     },
   },
 };

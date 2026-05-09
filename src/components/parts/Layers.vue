@@ -1,23 +1,23 @@
 <template>
   <div>
     <div class="flex">
-      <t-button
+      <button
         type="button"
         class="ab-button"
         @click="addLayer()"
       >
         <span class="material-icons relative top-2 pb-4">playlist_add</span> Add
         Layer
-      </t-button>
+      </button>
 
-      <t-button
+      <button
         type="button"
         class="ab-button"
         @click="mergeLayers()"
       >
         <span class="material-icons relative top-2 pb-4">playlist_play</span>
         Merge Layers
-      </t-button>
+      </button>
     </div>
 
     <hr>
@@ -25,7 +25,7 @@
     <div class="w-full bg-white rounded-lg shadow">
       <ul class="divide-y-2 divide-gray-100 mb-2">
         <div class="flex p-1">
-          <t-button
+          <button
             type="button"
             class="ab-rounded-button"
             @click="updateImageOverlay"
@@ -33,16 +33,16 @@
             <span class="material-icons">{{
               !imageOverlay.visible ? "remove_red_eye" : "panorama_fish_eye"
             }}</span>
-          </t-button>
+          </button>
           <div
             class="w-full p-1"
             @click="showOverlayModal"
           >
             <div class="flex text-right">
               <div class="w-full">
-                <t-card class="w-full pl-2 hover:bg-gray-300 cursor-pointer">
+                <div class="ab-card w-full pl-2 hover:bg-gray-300 cursor-pointer">
                   <span>{{ imageOverlayUrl || "Image Overlay" }}</span>
-                </t-card>
+                </div>
               </div>
             </div>
           </div>
@@ -126,7 +126,7 @@
               class="w-12"
               @click="changeLayer(key)"
             >
-              <t-button
+              <button
                 type="button"
                 class="ab-rounded-button"
                 @click="toggleLayer(key)"
@@ -135,16 +135,16 @@
                 <span class="material-icons">{{
                   layer.visible ? "remove_red_eye" : "panorama_fish_eye"
                 }}</span>
-              </t-button><br>
+              </button><br>
 
-              <t-button
+              <button
                 type="button"
                 class="ab-rounded-button"
                 @click="removeLayer(key)"
                 :disabled="!canToggleLayer"
               >
                 <span class="material-icons">delete</span>
-              </t-button>
+              </button>
             </div>
 
             <div class="w-full">
@@ -153,31 +153,31 @@
                   class="w-full"
                   @click="changeLayer(key)"
                 >
-                  <t-card class="w-full hover:bg-gray-300 cursor-pointer">
+                  <div class="ab-card w-full hover:bg-gray-300 cursor-pointer">
                     <span @dblclick="showLayerRename(key, layer.label)">{{
                       layer.label
                     }}</span>
-                  </t-card>
+                  </div>
                 </div>
 
                 <div class="w-5">
-                  <t-button
+                  <button
                     type="button"
                     class="ab-rounded-button"
                     @click="downLayer(key)"
                     :disabled="!canToggleLayer"
                   >
                     <span class="material-icons">arrow_upward</span>
-                  </t-button><br>
+                  </button><br>
 
-                  <t-button
+                  <button
                     type="button"
                     class="ab-rounded-button"
                     @click="upLayer(key)"
                     :disabled="!canToggleLayer"
                   >
                     <span class="material-icons">arrow_downward</span>
-                  </t-button>
+                  </button>
                 </div>
               </div>
             </div>
@@ -190,9 +190,18 @@
 
 <script>
 import ContextMenu from "./ContextMenu.vue";
+import { useAsciiBirdStore } from "../../store";
+import { useToast } from "../../composables/useToast";
+import { useDialog } from "../../composables/useDialog";
 
 export default {
   name: "Layers",
+  setup() {
+    const store = useAsciiBirdStore();
+    const { show: toastShow } = useToast();
+    const dialog = useDialog();
+    return { store, toastShow, dialog };
+  },
   components: {
     ContextMenu,
   },
@@ -200,10 +209,10 @@ export default {
   data: () => ({}),
   computed: {
     currentAsciiLayers() {
-      return this.$store.getters.currentAsciiLayers;
+      return this.store.currentAsciiLayers;
     },
     selectedLayer() {
-      let selectedLayer = this.$store.getters.selectedLayer;
+      let selectedLayer = this.store.selectedLayer;
 
       if (this.currentAsciiLayers[selectedLayer] === undefined) {
         while (
@@ -213,7 +222,7 @@ export default {
           selectedLayer--;
         }
 
-        this.$store.commit("changeLayer", selectedLayer);
+        this.store.changeLayer(selectedLayer);
       }
 
       return selectedLayer;
@@ -223,14 +232,12 @@ export default {
     },
     canToggleLayer() {
       return this.currentAsciiLayers.length > 1;
-      // We want to avoid hiding all the layers, so if there's only one
-      // visible left, we have to disable the buttons
     },
     toolbarState() {
-      return this.$store.getters.toolbarState;
+      return this.store.toolbarState;
     },
     imageOverlay() {
-      return this.$store.getters.imageOverlay || false;
+      return this.store.imageOverlay || false;
     },
     imageOverlayUrl() {
       return this.imageOverlay.url
@@ -246,7 +253,6 @@ export default {
   methods: {
     openContextMenu(e) {
       e.preventDefault();
-      // These are the correct X and Y when inside the floating panel
       this.$refs["layers-menu"].open({
         pageX: e.layerX,
         pageY: e.layerY,
@@ -260,29 +266,25 @@ export default {
         }
       });
 
-      // If there's no visible layers we'll target the first one always
       if (!found) {
-        this.$store.commit("toggleLayer", 0);
+        this.store.toggleLayer(0);
         this.changeLayer(0);
       }
     },
     selectedLayerClass(key) {
-      // Invisble layers are red
       if (!this.currentAsciiLayers[key].visible) {
         return "bg-red-200";
       }
 
-      // Selected layers blue
       if (key === this.selectedLayer) {
         return "bg-blue-200";
       }
 
-      // Otherwise gray
       return "bg-gray-200";
     },
     showLayerRename(key, label) {
-      this.$store.commit("toggleDisableKeyboard", true);
-      this.$dialog
+      this.store.toggleDisableKeyboard(true);
+      this.dialog
         .prompt({
           title: "Rename Layer",
           text: "Please input your new layer name",
@@ -291,9 +293,9 @@ export default {
           clickToClose: false,
         })
         .then((result) => {
-          this.$store.commit("toggleDisableKeyboard", false);
+          this.store.toggleDisableKeyboard(false);
           if (!result.input.length) {
-            this.$toasted.show("You must enter a layer name!", {
+            this.toastShow("You must enter a layer name!", {
               type: "error",
             });
 
@@ -308,56 +310,55 @@ export default {
         });
     },
     updateLayerName(key, label) {
-      this.$store.commit("updateLayerName", {
+      this.store.updateLayerName({
         key: key,
         label: label,
       });
       this.closeMenu();
     },
     addLayer() {
-      this.$store.commit("addLayer");
-      this.$toasted.show(`Added a new layer.`, {
+      this.store.addLayer();
+      this.toastShow(`Added a new layer.`, {
         type: "success",
       });
       this.closeMenu();
     },
     mergeLayers() {
-      this.$store.commit("mergeAllLayers");
-      this.$toasted.show(`All layers have been merged.`, {
+      this.store.mergeAllLayers();
+      this.toastShow(`All layers have been merged.`, {
         type: "success",
       });
       this.closeMenu();
     },
     changeLayer(key) {
-      this.$store.commit("changeLayer", key);
+      this.store.changeLayer(key);
     },
     toggleLayer(key) {
-      this.$store.commit("toggleLayer", key);
+      this.store.toggleLayer(key);
       this.closeMenu();
     },
     upLayer(key) {
-      this.$store.commit("upLayer", key);
+      this.store.upLayer(key);
       this.closeMenu();
     },
     downLayer(key) {
-      this.$store.commit("downLayer", key);
+      this.store.downLayer(key);
       this.closeMenu();
     },
     removeLayer(key) {
-      this.$store.commit("removeLayer", key);
-      this.$toasted.show(`Removed layer.`, {
+      this.store.removeLayer(key);
+      this.toastShow(`Removed layer.`, {
         type: "success",
       });
       this.closeMenu();
     },
     showOverlayModal() {
-      this.$store.commit("openModal", "overlay");
+      this.store.openModal("overlay");
     },
-    // Image overlay
     updateImageOverlay() {
       let overlay = { ...this.imageOverlay };
       overlay.visible = !overlay.visible;
-      this.$store.commit("updateImageOverlay", overlay);
+      this.store.updateImageOverlay(overlay);
     },
     closeMenu() {
       this.$refs["layers-menu"].close();

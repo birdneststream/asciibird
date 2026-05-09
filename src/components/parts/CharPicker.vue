@@ -1,48 +1,59 @@
 <template>
-  <vue-draggable-resizable
-    :x="170"
-    :y="100+yOffset"
-    :w="750"
-    :h="350"
+  <div
+    ref="el"
+    :style="style"
+    class="fixed z-50"
   >
-    <t-card class="w-full h-full">
+    <div class="ab-card w-full h-full">
       <div class="p-1">
-        <t-checkbox
+        <input
+          type="checkbox"
           class="ab-checkbox"
           name="leave-open"
           v-model="persistChars"
           @click="changePersistChars"
         /> <small>Persist this panel after character changes</small>
       </div>
-      <t-button
+      <button
         type="button"
         v-for="(char, keyChar) in charCodes"
         :key="keyChar"
         :style="`background-color: ${mircColours[currentBg]} !important;color: ${mircColours[currentFg]} !important;${outline};font-size: 13px;width: ${blockWidth}px;height: ${blockHeight}px;`"
-        class="m-0.5"
+        class="ab-button m-0.5"
         @click="onCharChange(char)"
       >
         {{ char === " " ? "SP" : char }}
-      </t-button>
-    </t-card>
-  </vue-draggable-resizable>
+      </button>
+    </div>
+  </div>
 </template>
 
 <script>
+import { ref, computed } from "vue";
 import { charCodes, mircColours99, blockWidth, blockHeight } from "../../ascii";
+import { useAsciiBirdStore } from '../../store';
+import { useToast } from '../../composables/useToast';
+import { useDialog } from '../../composables/useDialog';
+import { useClipboard } from '../../composables/useClipboard';
+import { useDraggable } from '@vueuse/core';
 
 export default {
   name: "CharPicker",
-  created() {},
+  setup(props) {
+    const store = useAsciiBirdStore();
+    const toast = useToast();
+    const dialog = useDialog();
+    const clipboard = useClipboard();
+    const el = ref(null);
+    const { style } = useDraggable(el, {
+      initialValue: { x: 170, y: 100 + (props.yOffset || 0) },
+    });
+    return { store, toast, dialog, clipboard, el, style };
+  },
   props: ["canvasX", "canvasY", "yOffset"],
   data: () => ({
     persistChars: false,
   }),
-  // watch: {
-  //   persistChars(val, old) {
-  //     this.$store.commit("persistCharPanel", val)
-  //   }
-  // },
   computed: {
     charCodes() {
       return charCodes;
@@ -51,10 +62,10 @@ export default {
       return mircColours99;
     },
     currentFg() {
-      return this.$store.getters.currentFg;
+      return this.store.currentFg;
     },
     currentBg() {
-      return this.$store.getters.currentBg;
+      return this.store.currentBg;
     },
     outline() {
       let outlineColor = this.currentBg === 0 ? 'black' : 'white';
@@ -71,15 +82,15 @@ export default {
       return blockHeight*2;
     },
     persistCharPanel() {
-      return this.$store.getters.persistCharPanel
+      return this.store.toolbarState.persistCharPanel;
     }
   },
   methods: {
     onCharChange(char) {
-      this.$store.commit("changeChar", char);
+      this.store.changeChar(char);
     },
     changePersistChars() {
-      this.$store.commit("persistCharPanel", !this.persistChars)
+      this.store.persistCharPanel(!this.persistChars);
     }
   },
 };

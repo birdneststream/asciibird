@@ -1,53 +1,61 @@
 <template>
-  <t-modal
-    name="paste-ascii-modal"
-    header="Import from Clipboard"
-    :click-to-close="false"
-    :esc-to-close="true"
-    @closed="$store.commit('closeModal', 'paste-ascii')"
-  >
+  <ABModal :open="showPasteAscii" @close="store.closeModal('paste-ascii')" title="Import from Clipboard">
     Title
-    <t-input
+    <input
       type="text"
       name="title"
+      class="ab-input"
       v-model="title"
       max="128"
     />
 
-    <t-textarea
+    <textarea
+      class="ab-input"
       v-model="pasteContent"
       name="paste-ascii"
       rows="10"
-    />
+    ></textarea>
 
     <template #footer>
       <div class="flex justify-between">
-        <t-button
+        <button
           type="button"
           class="ab-button"
-          @click="$store.commit('closeModal', 'paste-ascii')"
+          @click="store.closeModal('paste-ascii')"
         >
           <span class="material-icons relative top-2 pb-4">cancel</span> Cancel
-        </t-button>
-        <t-button
+        </button>
+        <button
           type="button"
           class="ab-button"
           @click="importPasteAscii()"
           :disabled="checkPasteContent"
         >
           <span class="material-icons relative top-2 pb-4">save</span> Import Clipboard
-        </t-button>
+        </button>
       </div>
     </template>
-  </t-modal>
+  </ABModal>
 </template>
 
 <script>
-//
 import { parseMircAscii } from "../../ascii";
+import { useAsciiBirdStore } from '../../store';
+import { useToast } from '../../composables/useToast';
+import { useDialog } from '../../composables/useDialog';
+import { useClipboard } from '../../composables/useClipboard';
+import ABModal from '../ABModal.vue';
 
 export default {
   name: "PasteAsciiModal",
+  components: { ABModal },
+  setup() {
+    const store = useAsciiBirdStore();
+    const toast = useToast();
+    const dialog = useDialog();
+    const clipboard = useClipboard();
+    return { store, toast, dialog, clipboard };
+  },
   created() {},
   mounted() {
     if (this.showPasteAscii) {
@@ -62,7 +70,7 @@ export default {
   }),
   computed: {
     showPasteAscii() {
-      return this.$store.getters.modalState.pasteAscii;
+      return this.store.modalState.pasteAscii;
     },
     checkPasteContent() {
       return !this.pasteContent.length;
@@ -81,12 +89,10 @@ export default {
   },
   methods: {
     open() {
-      this.$modal.show("paste-ascii-modal");
     },
     close() {
       this.pasteContent = "";
       this.title = "clipboard.txt";
-      this.$modal.hide("paste-ascii-modal");
     },
     async importPasteAscii() {
       await parseMircAscii(this.pasteContent, this.title);
