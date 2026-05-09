@@ -1,0 +1,1143 @@
+// @vitest-environment jsdom
+
+// Not tested (network dependent): checkForGetRequest
+
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import LZString from 'lz-string';
+import {
+  mircColours99,
+  charCodes,
+  toolbarIcons,
+  emptyBlock,
+  create2DArray,
+  blockWidth,
+  blockHeight,
+  maxBrushSize,
+  maxBrushHistory,
+  maxUndoHistory,
+  tabLimit,
+  cyrb53,
+  getBlocksWidth,
+  filterNullBlocks,
+  checkVisible,
+  fillNullBlocks,
+  setStore,
+  createNewAscii,
+  exportMirc,
+  parseMircAscii,
+  mergeLayers,
+  splashAscii,
+  downloadFile,
+  canvasToPng,
+} from '@/ascii';
+import type { Block, Layer } from '@/types';
+import type { AsciiBirdStore } from '@/types/store';
+
+// ─── Helper: extract commit payload from mock store ──────────────────
+
+function getCommitPayload(
+  mock: AsciiBirdStore,
+  mutation: string,
+): any {
+  const call = (mock.commit as any).mock.calls.find(
+    (c: any[]) => c[0] === mutation,
+  );
+  return call?.[1];
+}
+
+// ─── Helper: decompress layers from an AsciibirdMeta payload ─────────
+
+function decompressLayers(compressed: string): Layer[] {
+  return JSON.parse(LZString.decompressFromUTF16(compressed));
+}
+
+// ─── Helper: create a mock store for store-dependent tests ──────────
+
+interface MockStoreConfig {
+  layers?: Layer[];
+  tab?: number;
+  title?: string;
+}
+
+function createMockStore(config: MockStoreConfig = {}): AsciiBirdStore {
+  const layers = config.layers || [{
+    label: 'Test Layer',
+    visible: true,
+    width: 5,
+    height: 5,
+    data: create2DArray(5).map(row => {
+      for (let x = 0; x < 5; x++) row.push({ ...emptyBlock });
+      return row;
+    }),
+  }];
+
+  const title = config.title || 'Test ASCII';
+
+  const state = {
+    ver: 1,
+    tab: config.tab ?? 0,
+    asciibirdMeta: [{
+      title,
+      layers: LZString.compressToUTF16(JSON.stringify(layers)),
+      selectedLayer: 0,
+      imageOverlay: {
+        url: null, opacity: 95, asciiOpacity: 100,
+        left: 0, top: 0, position: 'centered',
+        size: 100, repeatx: true, repeaty: true,
+        visible: false, stretched: false,
+      },
+      history: [] as any[],
+      historyIndex: 0,
+      x: 247,
+      y: 24,
+    }],
+    toolbarState: {
+      currentColourFg: 0, currentColourBg: 1,
+      isChoosingFg: false, isChoosingBg: false,
+      isChoosingChar: false, persistCharPanel: false,
+      brushSizeWidth: 1, brushSizeHeight: 1,
+      brushSizeType: 'square' as const,
+      selectedFg: 0, selectedBg: 1, selectedChar: ' ',
+      isUpdating: false, currentTool: 0,
+      targetingFg: true, targetingBg: true, targetingChar: true,
+      mirrorX: false, mirrorY: false,
+      x: 16, y: 30, h: 285, w: 200,
+      draggable: true, updateBrush: true,
+      gridView: false, visible: true, halfBlockEditing: false,
+    },
+    options: {
+      defaultBg: 1, defaultFg: 0, renderOffScreen: false,
+      undoLimit: 50, brushLimit: 50, tabLimit: 12, fps: 50,
+    },
+    modalState: {
+      newAscii: false, editAscii: false, pasteAscii: false,
+      options: false, overlay: false, about: false, help: false,
+    },
+  };
+
+  return {
+    state,
+    getters: {
+      currentAscii: state.asciibirdMeta[state.tab],
+      currentAsciiLayers: layers,
+      currentAsciiLayersWidthHeight: {
+        width: layers[0].width,
+        height: layers[0].height,
+      },
+    },
+    commit: vi.fn((mutation: string, payload?: any) => {
+      if (mutation === 'newAsciibirdMeta') {
+        state.asciibirdMeta.push(payload);
+        state.tab = state.asciibirdMeta.length - 1;
+      }
+    }),
+    dispatch: vi.fn(),
+  } as unknown as AsciiBirdStore;
+}
+
+// ─── Constants ──────────────────────────────────────────────────────────
+
+describe('ascii.ts constants', () => {
+  it('mircColours99 has 99 entries', () => {
+    expect(mircColours99).toHaveLength(99);
+  });
+
+  it('mircColours99 first entry is white', () => {
+    expect(mircColours99[0]).toBe('rgb(255,255,255)');
+  });
+
+  it('mircColours99 second entry is black', () => {
+    expect(mircColours99[1]).toBe('rgb(0,0,0)');
+  });
+
+  it('mircColours99 last entry is white', () => {
+    expect(mircColours99[98]).toBe('#ffffff');
+  });
+
+  it('mircColours99 entries are valid CSS color strings', () => {
+    for (const color of mircColours99) {
+      expect(color).toMatch(/^(rgb\(|#)[\da-fA-F,()]+/);
+    }
+  });
+
+  it('charCodes has correct length (>100)', () => {
+    expect(charCodes.length).toBeGreaterThan(100);
+  });
+
+  it('charCodes starts with space and bang', () => {
+    expect(charCodes[0]).toBe(' ');
+    expect(charCodes[1]).toBe('!');
+  });
+
+  it('toolbarIcons has 8 tool entries', () => {
+    expect(toolbarIcons).toHaveLength(8);
+  });
+
+  it('toolbarIcons each have name and icon', () => {
+    for (const icon of toolbarIcons) {
+      expect(icon).toHaveProperty('name');
+      expect(icon).toHaveProperty('icon');
+      expect(typeof icon.name).toBe('string');
+      expect(typeof icon.icon).toBe('string');
+    }
+  });
+
+  it('toolbarIcons contains expected tool names', () => {
+    const names = toolbarIcons.map(t => t.name);
+    expect(names).toContain('default');
+    expect(names).toContain('brush');
+    expect(names).toContain('fill');
+    expect(names).toContain('eraser');
+    expect(names).toContain('dropper');
+    expect(names).toContain('select');
+    expect(names).toContain('text');
+    expect(names).toContain('fill-eraser');
+  });
+
+  it('blockWidth is 8', () => {
+    expect(blockWidth).toBe(8);
+  });
+
+  it('blockHeight is 15', () => {
+    expect(blockHeight).toBe(15);
+  });
+
+  it('maxBrushSize is 50', () => {
+    expect(maxBrushSize).toBe(50);
+  });
+
+  it('maxBrushHistory is 200', () => {
+    expect(maxBrushHistory).toBe(200);
+  });
+
+  it('maxUndoHistory is 500', () => {
+    expect(maxUndoHistory).toBe(500);
+  });
+
+  it('tabLimit is 20', () => {
+    expect(tabLimit).toBe(20);
+  });
+
+  it('emptyBlock is an empty object', () => {
+    expect(emptyBlock).toEqual({});
+    expect(Object.keys(emptyBlock)).toHaveLength(0);
+  });
+});
+
+// ─── create2DArray ──────────────────────────────────────────────────────
+
+describe('create2DArray', () => {
+  it('creates array with correct number of rows', () => {
+    const arr = create2DArray(5);
+    expect(arr).toHaveLength(5);
+  });
+
+  it('each row is an empty array', () => {
+    const arr = create2DArray(3);
+    for (const row of arr) {
+      expect(Array.isArray(row)).toBe(true);
+      expect(row).toHaveLength(0);
+    }
+  });
+
+  it('handles 0 rows', () => {
+    const arr = create2DArray(0);
+    expect(arr).toHaveLength(0);
+    expect(arr).toEqual([]);
+  });
+
+  it('handles 1 row', () => {
+    const arr = create2DArray(1);
+    expect(arr).toHaveLength(1);
+    expect(arr[0]).toEqual([]);
+  });
+
+  it('handles large row count', () => {
+    const arr = create2DArray(100);
+    expect(arr).toHaveLength(100);
+  });
+});
+
+// ─── cyrb53 ─────────────────────────────────────────────────────────────
+
+describe('cyrb53', () => {
+  it('returns a number', () => {
+    expect(typeof cyrb53('test')).toBe('number');
+  });
+
+  it('is deterministic (same input = same output)', () => {
+    const hash1 = cyrb53('hello world');
+    const hash2 = cyrb53('hello world');
+    expect(hash1).toBe(hash2);
+  });
+
+  it('different inputs produce different hashes', () => {
+    const hash1 = cyrb53('hello');
+    const hash2 = cyrb53('world');
+    expect(hash1).not.toBe(hash2);
+  });
+
+  it('respects seed parameter', () => {
+    const hash1 = cyrb53('test', 1337);
+    const hash2 = cyrb53('test', 9999);
+    expect(hash1).not.toBe(hash2);
+  });
+
+  it('default seed is 1337', () => {
+    const hash1 = cyrb53('test');
+    const hash2 = cyrb53('test', 1337);
+    expect(hash1).toBe(hash2);
+  });
+
+  it('handles empty string', () => {
+    const hash = cyrb53('');
+    expect(typeof hash).toBe('number');
+  });
+
+  it('handles unicode strings', () => {
+    const hash = cyrb53('\u2588\u2584\u2580');
+    expect(typeof hash).toBe('number');
+  });
+
+  it('produces non-negative numbers', () => {
+    const hash = cyrb53('any string');
+    expect(hash).toBeGreaterThanOrEqual(0);
+  });
+
+  it('handles long strings', () => {
+    const longStr = 'x'.repeat(10000);
+    const hash = cyrb53(longStr);
+    expect(typeof hash).toBe('number');
+    // Different length should produce different hash
+    expect(hash).not.toBe(cyrb53('x'.repeat(9999)));
+  });
+
+  it('handles seed=0', () => {
+    const hash = cyrb53('test', 0);
+    expect(typeof hash).toBe('number');
+    expect(hash).not.toBe(cyrb53('test', 1337));
+  });
+});
+
+// ─── getBlocksWidth ─────────────────────────────────────────────────────
+
+describe('getBlocksWidth', () => {
+  it('returns 0 for empty array', () => {
+    expect(getBlocksWidth([])).toBe(0);
+  });
+
+  it('returns width of a single row', () => {
+    const blocks: Block[][] = [[{ fg: 0, bg: 1, char: 'A' }]];
+    expect(getBlocksWidth(blocks)).toBe(1);
+  });
+
+  it('returns max width across rows', () => {
+    const blocks: Block[][] = [
+      [{ fg: 0, bg: 1, char: 'A' }, { fg: 0, bg: 1, char: 'B' }],
+      [{ fg: 0, bg: 1, char: 'C' }],
+    ];
+    expect(getBlocksWidth(blocks)).toBe(2);
+  });
+
+  it('skips null rows', () => {
+    const blocks: (Block[] | null)[] = [
+      null,
+      [{ fg: 0, bg: 1, char: 'A' }, { fg: 0, bg: 1, char: 'B' }, { fg: 0, bg: 1, char: 'C' }],
+      null,
+      [{ fg: 0, bg: 1, char: 'D' }],
+    ];
+    expect(getBlocksWidth(blocks)).toBe(3);
+  });
+
+  it('returns 0 when all rows are null', () => {
+    const blocks: (Block[] | null)[] = [null, null, null];
+    expect(getBlocksWidth(blocks)).toBe(0);
+  });
+});
+
+// ─── filterNullBlocks ───────────────────────────────────────────────────
+
+describe('filterNullBlocks', () => {
+  it('returns empty array for empty input', () => {
+    expect(filterNullBlocks([])).toEqual([]);
+  });
+
+  it('removes null rows', () => {
+    const blocks: (Block[] | null)[] = [
+      null,
+      [{ fg: 0, bg: 1, char: 'A' }],
+      null,
+    ];
+    const result = filterNullBlocks(blocks);
+    expect(result).toHaveLength(1);
+    expect(result[0]).toEqual([{ fg: 0, bg: 1, char: 'A' }]);
+  });
+
+  it('removes null cells within rows', () => {
+    const blocks: (Block[] | null)[] = [
+      [{ fg: 0, bg: 1, char: 'A' }, null, { fg: 2, bg: 3, char: 'B' }],
+    ];
+    const result = filterNullBlocks(blocks);
+    expect(result[0]).toEqual([
+      { fg: 0, bg: 1, char: 'A' },
+      { fg: 2, bg: 3, char: 'B' },
+    ]);
+  });
+
+  it('preserves non-null rows and cells', () => {
+    const blocks: (Block[] | null)[] = [
+      [{ fg: 0, bg: 1, char: 'X' }],
+    ];
+    const result = filterNullBlocks(blocks);
+    expect(result).toEqual([[{ fg: 0, bg: 1, char: 'X' }]]);
+  });
+});
+
+// ─── checkVisible ───────────────────────────────────────────────────────
+
+describe('checkVisible', () => {
+  it('returns true when element is within viewport', () => {
+    // jsdom default viewport height ~768
+    const result = checkVisible(100, 0);
+    expect(result).toBe(true);
+  });
+
+  it('returns false when element is above viewport (bottom < 0)', () => {
+    const result = checkVisible(-50, -100);
+    expect(result).toBe(false);
+  });
+
+  it('returns true for element at top of viewport', () => {
+    const result = checkVisible(10, 0);
+    expect(result).toBe(true);
+  });
+
+  it('returns false when element is below viewport', () => {
+    // top - viewHeight >= 0 means fully below viewport
+    // jsdom viewport ~768, so top=800 should be below
+    const result = checkVisible(900, 800);
+    expect(result).toBe(false);
+  });
+});
+
+// ─── fillNullBlocks ─────────────────────────────────────────────────────
+
+describe('fillNullBlocks', () => {
+  it('fills null cells in existing rows', () => {
+    const layers: Layer[] = [{
+      label: 'Test',
+      visible: true,
+      width: 3,
+      height: 2,
+      data: [
+        [{ fg: 0, bg: 1, char: 'A' }, null as any, null as any],
+        [null as any, null as any, null as any],
+      ],
+    }];
+
+    const result = fillNullBlocks(2, 3, layers);
+    expect(result[0].data[0]).toHaveLength(3);
+    expect(result[0].data[0][0]).toEqual({ fg: 0, bg: 1, char: 'A' });
+    expect(result[0].data[0][1]).toEqual({});
+    expect(result[0].data[0][2]).toEqual({});
+    expect(result[0].data[1][0]).toEqual({});
+  });
+
+  it('creates new rows when missing', () => {
+    const layers: Layer[] = [{
+      label: 'Test',
+      visible: true,
+      width: 2,
+      height: 3,
+      data: [
+        [{ fg: 0, bg: 1, char: 'A' }, { fg: 0, bg: 1, char: 'B' }],
+      ] as Block[][],
+    }];
+
+    const result = fillNullBlocks(3, 2, layers);
+    expect(result[0].data).toHaveLength(3);
+    expect(result[0].data[1]).toEqual([{}, {}]);
+    expect(result[0].data[2]).toEqual([{}, {}]);
+  });
+
+  it('updates layer width and height', () => {
+    const layers: Layer[] = [{
+      label: 'Test',
+      visible: true,
+      width: 0,
+      height: 0,
+      data: [] as Block[][],
+    }];
+
+    const result = fillNullBlocks(4, 6, layers);
+    expect(result[0].width).toBe(6);
+    expect(result[0].height).toBe(4);
+    expect(result[0].data).toHaveLength(4);
+    expect(result[0].data[0]).toHaveLength(6);
+  });
+
+  it('handles multiple layers', () => {
+    const layers: Layer[] = [
+      { label: 'L1', visible: true, width: 0, height: 0, data: [] as Block[][] },
+      { label: 'L2', visible: true, width: 0, height: 0, data: [] as Block[][] },
+    ];
+
+    const result = fillNullBlocks(2, 2, layers);
+    expect(result).toHaveLength(2);
+    expect(result[0].data).toHaveLength(2);
+    expect(result[1].data).toHaveLength(2);
+  });
+
+  it('does not modify filled cells', () => {
+    const layers: Layer[] = [{
+      label: 'Test',
+      visible: true,
+      width: 1,
+      height: 1,
+      data: [[{ fg: 5, bg: 10, char: 'Z' }]],
+    }];
+
+    const result = fillNullBlocks(1, 1, layers);
+    expect(result[0].data[0][0]).toEqual({ fg: 5, bg: 10, char: 'Z' });
+  });
+
+  it('uses store getter when layerData is null', () => {
+    const mockStore = createMockStore();
+    setStore(mockStore);
+
+    const result = fillNullBlocks(5, 5, null);
+    // Should use store's currentAsciiLayers (5x5 from mock)
+    expect(result).toHaveLength(1);
+    expect(result[0].data).toHaveLength(5);
+    expect(result[0].data[0]).toHaveLength(5);
+  });
+});
+
+// ─── downloadFile ───────────────────────────────────────────────────────
+
+describe('downloadFile', () => {
+  it('creates a download link and clicks it', () => {
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click');
+    const createObjectURLSpy = vi.fn(() => 'blob:test');
+    const revokeObjectURLSpy = vi.fn();
+    vi.stubGlobal('URL', {
+      createObjectURL: createObjectURLSpy,
+      revokeObjectURL: revokeObjectURLSpy,
+    });
+
+    downloadFile('test content', 'test.txt', 'text/plain');
+
+    expect(createObjectURLSpy).toHaveBeenCalled();
+    expect(clickSpy).toHaveBeenCalled();
+    expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:test');
+
+    clickSpy.mockRestore();
+    vi.restoreAllMocks();
+  });
+});
+
+// ─── canvasToPng ────────────────────────────────────────────────────────
+
+describe('canvasToPng', () => {
+  it('creates a download link and triggers blob download', () => {
+    const canvas = document.createElement('canvas');
+    const mockBlob = new Blob([''], { type: 'image/png' });
+    const toBlobSpy = vi.spyOn(canvas, 'toBlob').mockImplementation(
+      (cb: (b: Blob | null) => void) => cb(mockBlob),
+    );
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click');
+    const createObjectURLSpy = vi.fn(() => 'blob:png');
+    vi.stubGlobal('URL', { createObjectURL: createObjectURLSpy });
+
+    canvasToPng(canvas, 'test.png');
+
+    expect(toBlobSpy).toHaveBeenCalled();
+    expect(clickSpy).toHaveBeenCalled();
+
+    toBlobSpy.mockRestore();
+    clickSpy.mockRestore();
+    vi.restoreAllMocks();
+  });
+
+  it('handles null blob gracefully', () => {
+    const canvas = document.createElement('canvas');
+    const toBlobSpy = vi.spyOn(canvas, 'toBlob').mockImplementation(
+      (cb: (b: Blob | null) => void) => cb(null),
+    );
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click');
+
+    canvasToPng(canvas, 'test.png');
+
+    expect(toBlobSpy).toHaveBeenCalled();
+    // Should not click when blob is null
+    expect(clickSpy).not.toHaveBeenCalled();
+
+    toBlobSpy.mockRestore();
+    clickSpy.mockRestore();
+  });
+});
+
+// ─── createNewAscii ─────────────────────────────────────────────────────
+
+describe('createNewAscii', () => {
+  let mockStore: AsciiBirdStore;
+
+  beforeEach(() => {
+    mockStore = createMockStore();
+    setStore(mockStore);
+  });
+
+  it('creates a new ASCII and commits to store', () => {
+    const result = createNewAscii({
+      createAscii: { title: 'Test Art', width: 10, height: 8 },
+    });
+
+    expect(result).toBe(true);
+    expect(mockStore.commit).toHaveBeenCalledWith(
+      'newAsciibirdMeta',
+      expect.any(Object),
+    );
+  });
+
+  it('commits closeModal for new-ascii', () => {
+    createNewAscii({
+      createAscii: { title: 'Test Art', width: 10, height: 8 },
+    });
+
+    expect(mockStore.commit).toHaveBeenCalledWith(
+      'closeModal',
+      'new-ascii',
+    );
+  });
+
+  it('creates ASCII with correct title', () => {
+    createNewAscii({
+      createAscii: { title: 'My ASCII', width: 5, height: 5 },
+    });
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    expect(payload.title).toBe('My ASCII');
+  });
+
+  it('creates ASCII with compressed layers of correct dimensions', () => {
+    createNewAscii({
+      createAscii: { title: 'Test', width: 3, height: 3 },
+    });
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    expect(typeof payload.layers).toBe('string');
+    expect(payload.layers.length).toBeGreaterThan(0);
+
+    const layers = decompressLayers(payload.layers);
+    expect(layers).toHaveLength(1);
+    expect(layers[0].width).toBe(3);
+    expect(layers[0].height).toBe(3);
+    expect(layers[0].data).toHaveLength(3);
+    expect(layers[0].data[0]).toHaveLength(3);
+    // All blocks should be empty
+    expect(layers[0].data[0][0]).toEqual({});
+    expect(layers[0].data[2][2]).toEqual({});
+  });
+
+  it('creates ASCII with string width/height (coerced to number)', () => {
+    createNewAscii({
+      createAscii: { title: 'Test', width: '4', height: '6' },
+    });
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const layers = decompressLayers(payload.layers);
+    expect(layers[0].width).toBe(4);
+    expect(layers[0].height).toBe(6);
+  });
+
+  it('sets correct initial scroll position', () => {
+    createNewAscii({
+      createAscii: { title: 'Test', width: 5, height: 5 },
+    });
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    expect(payload.x).toBe(247);
+    expect(payload.y).toBe(24);
+  });
+
+  it('initializes empty history', () => {
+    createNewAscii({
+      createAscii: { title: 'Test', width: 5, height: 5 },
+    });
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    expect(payload.history).toEqual([]);
+    expect(payload.historyIndex).toBe(0);
+  });
+
+  it('initializes image overlay with defaults', () => {
+    createNewAscii({
+      createAscii: { title: 'Test', width: 5, height: 5 },
+    });
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    expect(payload.imageOverlay).toEqual({
+      url: null,
+      opacity: 95,
+      asciiOpacity: 100,
+      left: 0,
+      top: 0,
+      position: 'centered',
+      size: 100,
+      repeatx: true,
+      repeaty: true,
+      visible: false,
+      stretched: false,
+    });
+  });
+
+  it('handles non-numeric width (parseInt returns NaN)', () => {
+    createNewAscii({
+      createAscii: { title: 'Test', width: 'abc', height: '2' },
+    });
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const layers = decompressLayers(payload.layers);
+    // parseInt('abc') returns NaN, but layer still gets created
+    // The layer dimensions reflect parseInt result
+    expect(layers[0].height).toBe(2);
+  });
+});
+
+// ─── exportMirc ─────────────────────────────────────────────────────────
+
+describe('exportMirc', () => {
+  let mockStore: AsciiBirdStore;
+
+  beforeEach(() => {
+    mockStore = createMockStore();
+    setStore(mockStore);
+  });
+
+  it('exports a blank 5x5 canvas', () => {
+    const result = exportMirc();
+    expect(result).toHaveProperty('filename');
+    expect(result).toHaveProperty('output');
+    expect(Array.isArray(result.output)).toBe(true);
+  });
+
+  it('appends .txt to filename if missing', () => {
+    const result = exportMirc();
+    expect(result.filename).toMatch(/\.txt$/);
+  });
+
+  it('preserves .txt extension if already present', () => {
+    // Need a store with a title ending in .txt
+    const store = createMockStore({ title: 'myart.txt' });
+    setStore(store);
+    const result = exportMirc();
+    expect(result.filename).toBe('myart.txt');
+  });
+
+  it('exports brush blocks directly (non-null argument)', () => {
+    const brushBlocks: Block[][] = [
+      [
+        { fg: 0, bg: 1, char: 'A' },
+        { fg: 0, bg: 1, char: 'B' },
+      ],
+    ];
+
+    const result = exportMirc(brushBlocks);
+    expect(result.filename).toMatch(/^brush-.*\.txt$/);
+    expect(result.output.length).toBeGreaterThan(0);
+  });
+
+  it('uses store getters when blocks is null', () => {
+    const result = exportMirc(null);
+    expect(result.output.length).toBeGreaterThan(0);
+    expect(mockStore.getters.currentAscii).toBeDefined();
+  });
+
+  it('output contains newline characters', () => {
+    const result = exportMirc();
+    const hasNewline = result.output.some(chunk => chunk === '\n');
+    expect(hasNewline).toBe(true);
+  });
+
+  it('handles block with only fg color', () => {
+    const blocks: Block[][] = [
+      [{ fg: 4, char: 'X' }],
+    ];
+
+    const result = exportMirc(blocks);
+    const joined = result.output.join('');
+    expect(joined).toContain('X');
+    // Should have color code for fg=4
+    expect(joined).toContain('\x03');
+  });
+
+  it('handles block with fg and bg color', () => {
+    const blocks: Block[][] = [
+      [{ fg: 4, bg: 2, char: 'Y' }],
+    ];
+
+    const result = exportMirc(blocks);
+    const joined = result.output.join('');
+    expect(joined).toContain('Y');
+    expect(joined).toContain(','); // fg,bg separator
+  });
+
+  it('handles block with only bg color (no fg)', () => {
+    const blocks: Block[][] = [
+      [{ bg: 5, char: 'Z' }],
+    ];
+
+    const result = exportMirc(blocks);
+    const joined = result.output.join('');
+    expect(joined).toContain('Z');
+    // Should use fg=0 with bg=5: \x030,5
+    expect(joined).toContain('0,5');
+  });
+
+  it('optimises half/full blocks with same fg and bg to space', () => {
+    const blocks: Block[][] = [
+      [{ fg: 1, bg: 1, char: '\u2588' }],  // full block same fg/bg
+    ];
+
+    const result = exportMirc(blocks);
+    const joined = result.output.join('');
+    // Should be optimised to space (fg=0, original bg kept)
+    expect(joined).toContain(' ');
+  });
+
+  it('null chars render as spaces', () => {
+    const blocks: Block[][] = [
+      [{ fg: 0, bg: 1, char: null as unknown as string }],
+    ];
+
+    const result = exportMirc(blocks);
+    const joined = result.output.join('');
+    expect(joined).toContain(' ');
+  });
+});
+
+// ─── parseMircAscii ─────────────────────────────────────────────────────
+
+describe('parseMircAscii', () => {
+  let mockStore: AsciiBirdStore;
+
+  beforeEach(() => {
+    mockStore = createMockStore();
+    setStore(mockStore);
+  });
+
+  it('parses simple mIRC string with correct fg/bg/char values', async () => {
+    // \x03 = color code, followed by fg,bg
+    const mirc = '\x031,0Hello';
+
+    const result = await parseMircAscii(mirc, 'test.txt');
+
+    expect(result).toBe(true);
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const layers = decompressLayers(payload.layers);
+
+    // Verify parsed block values
+    expect(layers[0].data[0][0]).toEqual({ fg: 1, bg: 0, char: 'H' });
+    expect(layers[0].data[0][1]).toEqual({ fg: 1, bg: 0, char: 'e' });
+    expect(layers[0].data[0][4]).toEqual({ fg: 1, bg: 0, char: 'o' });
+    expect(layers[0].width).toBe(5);
+  });
+
+  it('creates ASCII with correct filename as title', async () => {
+    const mirc = '\x031,0A';
+
+    await parseMircAscii(mirc, 'art.txt');
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    expect(payload.title).toBe('art.txt');
+  });
+
+  it('handles empty input', async () => {
+    const result = await parseMircAscii('', 'empty.txt');
+    expect(result).toBe(true);
+  });
+
+  it('handles input without color codes (plain text)', async () => {
+    const mirc = 'Hello World';
+
+    const result = await parseMircAscii(mirc, 'plain.txt');
+    expect(result).toBe(true);
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const layers = decompressLayers(payload.layers);
+    // Width should be length of "Hello World" = 11
+    expect(layers[0].width).toBe(11);
+    // Plain text blocks should have no color codes
+    expect(layers[0].data[0][0].char).toBe('H');
+    expect(layers[0].data[0][0].fg).toBeUndefined();
+  });
+
+  it('strips bold and reverse formatting codes', async () => {
+    // \x02 = bold, \x1D = reverse/italic
+    const mirc = '\x02\x1D\x034,1AB';
+
+    const result = await parseMircAscii(mirc, 'formatted.txt');
+    expect(result).toBe(true);
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const layers = decompressLayers(payload.layers);
+    // Bold/reverse should be stripped, color codes should remain
+    expect(layers[0].data[0][0].char).toBe('A');
+    expect(layers[0].data[0][0].fg).toBe(4);
+    expect(layers[0].data[0][0].bg).toBe(1);
+  });
+
+  it('parses multi-line mIRC with correct dimensions', async () => {
+    const mirc = '\x031,0AB\n\x032,1CD';
+
+    await parseMircAscii(mirc, 'multiline.txt');
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const layers = decompressLayers(payload.layers);
+    expect(layers[0].height).toBe(2);
+    expect(layers[0].width).toBe(2);
+    // Row 0: A, B with fg=1, bg=0
+    expect(layers[0].data[0][0].char).toBe('A');
+    expect(layers[0].data[0][0].fg).toBe(1);
+    // Row 1: C, D with fg=2, bg=1
+    expect(layers[0].data[1][0].char).toBe('C');
+    expect(layers[0].data[1][0].fg).toBe(2);
+    expect(layers[0].data[1][0].bg).toBe(1);
+  });
+
+  it('handles soft reset (\\x03 without colors) by clearing fg/bg', async () => {
+    // \x03 without color code clears fg/bg
+    const mirc = '\x031,0A\x03B';
+
+    const result = await parseMircAscii(mirc, 'reset.txt');
+    expect(result).toBe(true);
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const layers = decompressLayers(payload.layers);
+    // 'A' should have fg=1, bg=0
+    expect(layers[0].data[0][0].fg).toBe(1);
+    expect(layers[0].data[0][0].bg).toBe(0);
+    // 'B' after soft reset should have null fg/bg
+    expect(layers[0].data[0][1].fg).toBeNull();
+    expect(layers[0].data[0][1].bg).toBeNull();
+    expect(layers[0].data[0][1].char).toBe('B');
+  });
+
+  it('compresses layers with LZ-String', async () => {
+    await parseMircAscii('\x031,0Test', 'compress.txt');
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    expect(typeof payload.layers).toBe('string');
+    const decompressed = decompressLayers(payload.layers);
+    expect(Array.isArray(decompressed)).toBe(true);
+  });
+
+  it('sets correct initial x/y from blockWidth/blockHeight', async () => {
+    await parseMircAscii('\x031,0A', 'pos.txt');
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    expect(payload.x).toBe(blockWidth * 35);
+    expect(payload.y).toBe(blockHeight * 2);
+  });
+});
+
+// ─── mergeLayers ────────────────────────────────────────────────────────
+
+describe('mergeLayers', () => {
+  let mockStore: AsciiBirdStore;
+
+  beforeEach(() => {
+    mockStore = createMockStore();
+    setStore(mockStore);
+  });
+
+  it('returns a 2D block array', () => {
+    const result = mergeLayers();
+    expect(Array.isArray(result)).toBe(true);
+    expect(Array.isArray(result[0])).toBe(true);
+  });
+
+  it('returns blocks from visible layer', () => {
+    const layers: Layer[] = [{
+      label: 'Visible',
+      visible: true,
+      width: 2,
+      height: 2,
+      data: [
+        [{ fg: 4, bg: 1, char: 'A' }, { fg: 5, bg: 2, char: 'B' }],
+        [{ fg: 6, bg: 3, char: 'C' }, { fg: 7, bg: 4, char: 'D' }],
+      ],
+    }];
+
+    mockStore = createMockStore({ layers });
+    setStore(mockStore);
+
+    const result = mergeLayers();
+    expect(result[0][0].fg).toBe(4);
+    expect(result[0][0].char).toBe('A');
+  });
+
+  it('skips invisible layers', () => {
+    const layers: Layer[] = [
+      {
+        label: 'Visible',
+        visible: true,
+        width: 1,
+        height: 1,
+        data: [[{ fg: 1, bg: 0, char: 'X' }]],
+      },
+      {
+        label: 'Hidden',
+        visible: false,
+        width: 1,
+        height: 1,
+        data: [[{ fg: 9, bg: 9, char: 'Z' }]],
+      },
+    ];
+
+    mockStore = createMockStore({ layers });
+    setStore(mockStore);
+
+    const result = mergeLayers();
+    // Hidden layer should be skipped, so we should see X not Z
+    expect(result[0][0].char).toBe('X');
+  });
+
+  it('back layers render behind front layers for empty cells', () => {
+    const layers: Layer[] = [
+      {
+        label: 'Back',
+        visible: true,
+        width: 1,
+        height: 1,
+        data: [[{ fg: 1, bg: 0, char: 'B' }]],
+      },
+      {
+        label: 'Front',
+        visible: true,
+        width: 1,
+        height: 1,
+        data: [[{ fg: undefined, bg: undefined, char: undefined } as any]],
+      },
+    ];
+
+    mockStore = createMockStore({ layers });
+    setStore(mockStore);
+
+    const result = mergeLayers();
+    // Front layer has empty block, so back layer should show through
+    expect(result[0][0].char).toBe('B');
+  });
+
+  it('front layer overrides back layer for non-empty cells', () => {
+    const layers: Layer[] = [
+      {
+        label: 'Back',
+        visible: true,
+        width: 1,
+        height: 1,
+        data: [[{ fg: 1, bg: 0, char: 'B' }]],
+      },
+      {
+        label: 'Front',
+        visible: true,
+        width: 1,
+        height: 1,
+        data: [[{ fg: 5, bg: 3, char: 'F' }]],
+      },
+    ];
+
+    mockStore = createMockStore({ layers });
+    setStore(mockStore);
+
+    const result = mergeLayers();
+    // Front layer should win over back layer
+    expect(result[0][0].char).toBe('F');
+    expect(result[0][0].fg).toBe(5);
+  });
+});
+
+// ─── mIRC round-trip ────────────────────────────────────────────────────
+
+describe('mIRC round-trip (parse → export)', () => {
+  let mockStore: AsciiBirdStore;
+
+  beforeEach(() => {
+    mockStore = createMockStore();
+    setStore(mockStore);
+  });
+
+  it('export of blank canvas is deterministic', () => {
+    const hash1 = cyrb53(exportMirc().output.join(''));
+    const hash2 = cyrb53(exportMirc().output.join(''));
+    expect(hash1).toBe(hash2);
+  });
+
+  it('parse then export preserves character content', async () => {
+    const original = '\x031,0AB\n\x032,1CD';
+
+    await parseMircAscii(original, 'roundtrip.txt');
+
+    const payload = getCommitPayload(mockStore, 'newAsciibirdMeta');
+    const parsedLayers = decompressLayers(payload.layers);
+
+    // Verify parsed structure before re-export
+    expect(parsedLayers[0].width).toBe(2);
+    expect(parsedLayers[0].height).toBe(2);
+    expect(parsedLayers[0].data[0][0].char).toBe('A');
+    expect(parsedLayers[0].data[1][1].char).toBe('D');
+
+    // Create a new mock with the parsed layers for export
+    const newStore = createMockStore({ layers: parsedLayers });
+    setStore(newStore);
+
+    const exported = exportMirc();
+    expect(exported.output.length).toBeGreaterThan(0);
+
+    const joined = exported.output.join('');
+    expect(joined).toContain('A');
+    expect(joined).toContain('B');
+    expect(joined).toContain('C');
+    expect(joined).toContain('D');
+  });
+});
+
+// ─── splashAscii ────────────────────────────────────────────────────────
+
+describe('splashAscii', () => {
+  it('is an array', () => {
+    expect(Array.isArray(splashAscii)).toBe(true);
+  });
+
+  it('has content (at least 1 row)', () => {
+    expect(splashAscii.length).toBeGreaterThan(0);
+  });
+
+  it('contains block data (rows of blocks)', () => {
+    // splashAscii is a raw 2D block array, not Layer[]
+    for (const row of splashAscii) {
+      expect(Array.isArray(row)).toBe(true);
+    }
+  });
+
+  it('has valid block structure in cells', () => {
+    const firstRow = splashAscii[0];
+    expect(firstRow.length).toBeGreaterThan(0);
+    const block = firstRow[0];
+    // Blocks can be empty {} or have fg/bg/char
+    expect(typeof block).toBe('object');
+    // At least some blocks in the splash should have content
+    let hasContent = false;
+    for (const row of splashAscii) {
+      for (const cell of row) {
+        if (cell && cell.char) {
+          hasContent = true;
+          break;
+        }
+      }
+      if (hasContent) break;
+    }
+    expect(hasContent).toBe(true);
+  });
+});
