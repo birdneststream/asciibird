@@ -47,9 +47,6 @@ export default {
       dragging: false,
     },
   }),
-  components: {
-    Layers,
-  },
   props: ["yOffset"],
   computed: {
     blockWidth() {

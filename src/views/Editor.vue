@@ -5,9 +5,15 @@
       @mouseleave="isMouseOnCanvas = false"
       @mouseenter="isMouseOnCanvas = true"
     >
-      <context-menu ref="editor-menu" class="z-50">
+      <context-menu
+        ref="editor-menu"
+        class="z-50"
+      >
         <ul>
-          <li @click="canvasToPng()" class="ml-1 text-sm hover:bg-gray-400">
+          <li
+            @click="canvasToPng()"
+            class="ml-1 text-sm hover:bg-gray-400"
+          >
             Save as PNG
           </li>
           <li
@@ -610,7 +616,9 @@ export default {
               this.textEditing.startX -= 1;
             }
 
+          // falls through - Backspace backsteps then deletes like Delete
           // Remove char as current position, but don't change position after
+          // eslint-disable-next-line no-fallthrough
           case "Delete":
             if (
               this.currentAsciiLayerBlocks[this.textEditing.startY][
@@ -1018,6 +1026,8 @@ export default {
 
           this.canvasHash = tempHash;
           this.ctx.save();
+          // intentional canvas clear — resets canvas state
+          // eslint-disable-next-line no-self-assign
           this.canvasRef.width = this.canvasRef.width;
           this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -1297,7 +1307,8 @@ export default {
     async clearToolCanvas() {
       if (this.toolCtx) {
         this.toolCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        // this.toolCtx.save();
+        // intentional canvas clear — resets canvas state
+        // eslint-disable-next-line no-self-assign
         this.toolCtx.width = this.toolCtx.width;
         if (this.gridView) {
           await this.drawGrid();
@@ -1735,7 +1746,7 @@ export default {
               targetBlock["char"] = fullChar;
             } else {
               targetBlock["bg"] = this.currentFg;
-              targetBlock["fg"] = targetBlock.fg;
+              targetBlock["fg"] = this.currentFg;
               targetBlock["char"] = !this.atTopHalf ? topChar : bottomChar;
             }
             

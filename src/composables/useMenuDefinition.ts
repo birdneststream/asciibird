@@ -15,24 +15,24 @@ import {
 export interface MenuContext {
   // Store access
   store: {
-    commit: (mutation: string, payload?: any) => void;
-    dispatch: (action: string, payload?: any) => void;
+    commit: (mutation: string, _payload?: any) => void;
+    dispatch: (action: string, _payload?: any) => void;
     getters: Record<string, any>;
   };
 
   // Toast notifications
   toasted: {
-    show: (message: string, options?: Record<string, any>) => void;
+    show: (_message: string, _options?: Record<string, any>) => void;
   };
 
   // Dialog prompts
   dialog: {
-    confirm: (options: Record<string, any>) => Promise<any>;
-    prompt: (options: Record<string, any>) => Promise<any>;
+    confirm: (_options: Record<string, any>) => Promise<any>;
+    prompt: (_options: Record<string, any>) => Promise<any>;
   };
 
   // Clipboard
-  copyText: (text: string) => Promise<any>;
+  copyText: (_text: string) => Promise<any>;
 
   // Reactive state (accessed as getters)
   isMacLike: boolean;
@@ -72,12 +72,12 @@ export interface MenuContext {
   mirror: { x: boolean; y: boolean };
 
   // Callbacks
-  onChangeTab: (key: number) => void;
-  onCloseTab: (key: number) => void;
-  onShowLayerRename: (key: number, label: string) => void;
-  onUpdateLayerName: (key: number, label: string) => void;
-  onStartImport: (type: string) => void;
-  onStartExport: (type: string) => void;
+  onChangeTab: (_key: number) => void;
+  onCloseTab: (_key: number) => void;
+  onShowLayerRename: (_key: number, _label: string) => void;
+  onUpdateLayerName: (_key: number, _label: string) => void;
+  onStartImport: (_type: string) => void;
+  onStartExport: (_type: string) => void;
   onExportAsciibirdState: () => void;
   onResetSelect: () => void;
   onUpdateCanvas: () => void;

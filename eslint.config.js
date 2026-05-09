@@ -28,6 +28,8 @@ export default [
         navigator: 'readonly',
         HTMLCanvasElement: 'readonly',
         Image: 'readonly',
+        // hotkeys-js loaded via CDN as global
+        hotkeys: 'readonly',
       },
     },
     rules: {

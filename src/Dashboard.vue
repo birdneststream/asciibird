@@ -1,5 +1,8 @@
 <template>
-  <div id="app" @contextmenu.prevent>
+  <div
+    id="app"
+    @contextmenu.prevent
+  >
     <div v-show="menuBarVisible">
       <vue-file-toolbar-menu
         :content="myMenu"
@@ -28,7 +31,10 @@
       :canvas-y="canvasY"
     />
 
-    <context-menu ref="menu" class="z-50">
+    <context-menu
+      ref="menu"
+      class="z-50"
+    >
       <ul>
         <li
           @click="$store.commit('openModal', 'new-ascii')"
@@ -58,7 +64,10 @@
           Options
         </li>
 
-        <li @click="startImport('mirc')" class="ab-context-menu-item">
+        <li
+          @click="startImport('mirc')"
+          class="ab-context-menu-item"
+        >
           Import from File
         </li>
         <li
@@ -95,7 +104,10 @@
         >
           Save Asciibird State
         </li>
-        <li @click="startImport('asb')" class="ab-context-menu-item">
+        <li
+          @click="startImport('asb')"
+          class="ab-context-menu-item"
+        >
           Load Asciibird State
         </li>
       </ul>
@@ -111,7 +123,7 @@
       style="display: none"
       ref="asciiInput"
       @change="onImport()"
-    />
+    >
 
     <template v-if="asciibirdMeta.length">
       <div
@@ -136,10 +148,10 @@
               <t-button
                 class="relative bottom-1 z-40 rounded-3xl h-5"
                 @click="closeTab(key)"
-                ><span class="material-icons" style="font-size: 16px"
-                  >close</span
-                ></t-button
-              >
+              ><span
+                class="material-icons"
+                style="font-size: 16px"
+              >close</span></t-button>
             </span>
           </t-button>
         </span>
@@ -156,7 +168,10 @@
         :reset-select="resetSelect"
       />
 
-      <Toolbar v-show="toolbarState.visible" :y-offset="scrollOffset" />
+      <Toolbar
+        v-show="toolbarState.visible"
+        :y-offset="scrollOffset"
+      />
 
       <DebugPanel
         :canvas-x="canvasX"
@@ -245,11 +260,8 @@ import {
   downloadFile,
   checkForGetRequest,
   splashAscii,
-  filterNullBlocks,
   getBlocksWidth,
   emptyBlock,
-  canvasToPng,
-  maxBrushSize,
   checkIrcByteLimits,
 } from "./ascii";
 
@@ -261,7 +273,7 @@ export default {
   async created() {
     // Load from irc watch if present in the URL bar
     checkForGetRequest();
-    this.scrollHandler = (event) => {
+    this.scrollHandler = () => {
       this.scrollOffset = window.scrollY;
     };
     window.addEventListener("scroll", this.scrollHandler);
@@ -574,12 +586,12 @@ export default {
     //   this.$refs.tabbar.style.top = val;
     //   this.toolbarString = `top: ${val}px`;
     // },
-    isModalOpen(val, old) {
+    isModalOpen(val, _old) {
       if (val) {
         hotkeys.deleteScope("all");
       }
     },
-    isKeyboardDisabled(val, old) {
+    isKeyboardDisabled(val, _old) {
       if (val) {
         hotkeys.deleteScope("all");
       }
@@ -736,7 +748,7 @@ export default {
           LZString.decompressFromEncodedURIComponent(fileContents)
         );
         this.$store.commit("changeState", { ...contents });
-      } catch (err) {
+      } catch (_err) {
         this.$toasted.show("Failed to import ASCIIBIRD state. File may be corrupted.", {
           type: "error",
           icon: "error",
@@ -792,12 +804,12 @@ export default {
       switch (type) {
         case "clipboard":
           this.$copyText(ascii.output.join("")).then(
-            (e) => {
+            () => {
               this.$toasted.show("Copied mIRC to clipboard!", {
                 type: "success",
               });
             },
-            (e) => {
+            () => {
               this.$toasted.show("Error when copying mIRC to clipboard!", {
                 type: "error",
               });
