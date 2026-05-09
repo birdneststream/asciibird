@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // Dialog composable — replaces $dialog.confirm/prompt from vue-tailwind
 import { ref } from 'vue';
 

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // Shared IRC export utilities for ASCIIBIRD
 // Used by both Dashboard.vue and Editor.vue for mIRC export operations
 

@@ -131,7 +131,7 @@ export default {
     });
 
     const _this = this;
-    hotkeys("*", "editor", async function (event, handler) {
+    hotkeys("*", "editor", async function (event) {
       event.preventDefault();
 
       if (_this.isTextEditing) {
@@ -217,13 +217,19 @@ export default {
     isUsingKeyboard: false,
     canvasHash: null,
   }),
-  props: [
-    "updateCanvas",
-    "yOffset",
-    "canvasxy",
-    "brush",
-    "updateascii",
-    "resetSelect",
+  props: {
+    updateCanvas: { type: Boolean, default: false },
+    yOffset: { type: Number, default: 0 },
+    canvasxy: { type: String, default: '' },
+    brush: { type: Boolean, default: false },
+    updateascii: { type: Boolean, default: false },
+    resetSelect: { type: Boolean, default: false },
+  },
+  emits: [
+    'coordsupdate',
+    'selectedblocks',
+    'selecting',
+    'textediting',
   ],
   computed: {
     canvasRef() {
@@ -425,10 +431,10 @@ export default {
         await this.delayRedrawCanvas();
       }
     },
-    resetSelect(val, old) {
+    resetSelect() {
       this.resetSelectTool();
     },
-    currentSelectedLayer(val, old) {
+    currentSelectedLayer(val) {
       if (val && val.visible) {
         this.warnInvisibleLayer();
       }
@@ -479,22 +485,20 @@ export default {
         await this.drawBrush();
       }
     },
-    async isTextEditing(val, old) {
-      if (val !== old && val === false) {
+    async isTextEditing(val) {
+      if (val === false) {
         await this.dispatchBlocks(true);
       }
     },
-    textEditing(val, old) {
+    textEditing(val) {
       this.$emit("textediting", val);
     },
-    async updateCanvas(val, old) {
-      if (val !== old) {
-        await this.clearToolCanvas();
-        await this.drawTextIndicator();
-        await this.drawIndicator();
+    async updateCanvas() {
+      await this.clearToolCanvas();
+      await this.drawTextIndicator();
+      await this.drawIndicator();
 
-        await this.delayRedrawCanvas();
-      }
+      await this.delayRedrawCanvas();
     },
     selecting(val) {
       this.$emit("selecting", val);
@@ -507,11 +511,11 @@ export default {
         this.diffBlocks.l = val;
       }
     },
-    async currentAsciiLayers(val, old) {
+    async currentAsciiLayers() {
       await this.delayRedrawCanvas(true);
     },
-    halfBlockEditing(val, old) {
-      if (val !== old && this.gridView) {
+    halfBlockEditing() {
+      if (this.gridView) {
         this.clearToolCanvas();
         this.drawGrid();
       }
@@ -538,12 +542,12 @@ export default {
       switch (type) {
         case "clipboard":
           this.copyText(ascii.output.join("")).then(
-            (e) => {
+            () => {
               this.toastShow("Copied mIRC to clipboard!", {
                 type: "success",
               });
             },
-            (e) => {
+            () => {
               this.toastShow("Error when copying mIRC to clipboard!", {
                 type: "error",
               });
@@ -1659,7 +1663,7 @@ export default {
       return;
     },
 
-    async drawHalfBlocks(brushX, brushY, plain = false) {
+    async drawHalfBlocks(brushX, brushY) {
         const arrayY = brushY / blockHeight;
         const arrayX = brushX / blockWidth;
         

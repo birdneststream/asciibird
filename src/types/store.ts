@@ -2,7 +2,6 @@
 
 import type {
   AsciibirdMeta,
-  Block,
   BrushHistoryEntry,
   BrushLibraryEntry,
   DesktopState,

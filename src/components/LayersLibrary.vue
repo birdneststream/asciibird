@@ -49,7 +49,7 @@ export default {
       dragging: false,
     },
   }),
-  props: ["yOffset"],
+  props: { yOffset: { type: Number, default: 0 } },
   computed: {
     blockWidth() {
       return blockWidth * this.store.blockSizeMultiplier;

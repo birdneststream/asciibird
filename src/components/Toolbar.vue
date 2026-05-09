@@ -315,7 +315,7 @@ export default {
   },
   name: "Toolbar",
   components: { Colours },
-  props: ["yOffset"],
+  props: { yOffset: { type: Number, default: 0 } },
   data: () => ({
     mirror: {
       x: false,

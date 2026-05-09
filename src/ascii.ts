@@ -752,7 +752,7 @@ export const checkIrcByteLimits = (output: string): number[] => {
   return overLimit;
 };
 
-export const mergeLayers = (_blocks: Block[][] | null = null): Block[][] => {
+export const mergeLayers = (): Block[][] => {
   const mergedLayers: Block[][] = [];
 
   const currentLayers: Layer[] = getStore().currentAsciiLayers;

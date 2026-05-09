@@ -336,8 +336,6 @@ import {
   downloadFile,
   checkForGetRequest,
   splashAscii,
-  getBlocksWidth,
-  emptyBlock,
   checkIrcByteLimits,
 } from "./ascii";
 
@@ -815,7 +813,7 @@ export default {
           LZString.decompressFromEncodedURIComponent(fileContents)
         );
         this.store.changeState({ ...contents });
-      } catch (_err) {
+      } catch {
         this.toastShow("Failed to import ASCIIBIRD state. File may be corrupted.", {
           type: "error",
         });

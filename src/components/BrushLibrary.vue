@@ -165,7 +165,7 @@ export default {
     this.panel.tab = this.store.brushLibraryState.tab;
 
     var _this = this;
-    hotkeys(`${this.hotkeyBrushes}`, async function (event, handler) {
+    hotkeys(`${this.hotkeyBrushes}`, async function (event) {
       event.preventDefault();
 
       if (_this.isBrushing || _this.isErasing) {
@@ -195,7 +195,7 @@ export default {
   components: {
     BrushCanvas,
   },
-  props: ["yOffset"],
+  props: { yOffset: { type: Number, default: 0 } },
   computed: {
     hotkeyBrushes() {
       let hotkeyString = "";

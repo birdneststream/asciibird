@@ -29,28 +29,26 @@
 </template>
 
 <script>
-import { ref, computed } from "vue";
+import { ref } from "vue";
 import { charCodes, mircColours99, blockWidth, blockHeight } from "../../ascii";
 import { useAsciiBirdStore } from '../../store';
-import { useToast } from '../../composables/useToast';
-import { useDialog } from '../../composables/useDialog';
-import { useClipboard } from '../../composables/useClipboard';
 import { useDraggable } from '@vueuse/core';
 
 export default {
   name: "CharPicker",
   setup(props) {
     const store = useAsciiBirdStore();
-    const toast = useToast();
-    const dialog = useDialog();
-    const clipboard = useClipboard();
     const el = ref(null);
     const { style } = useDraggable(el, {
       initialValue: { x: 170, y: 100 + (props.yOffset || 0) },
     });
-    return { store, toast, dialog, clipboard, el, style };
+    return { store, el, style };
   },
-  props: ["canvasX", "canvasY", "yOffset"],
+  props: {
+    canvasX: { type: Number, default: null },
+    canvasY: { type: Number, default: null },
+    yOffset: { type: Number, default: 0 },
+  },
   data: () => ({
     persistChars: false,
   }),

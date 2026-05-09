@@ -8,6 +8,7 @@ declare module '*.vue' {
 
 declare module 'hack-font' {}
 
+/* eslint-disable no-unused-vars */
 declare module 'hotkeys-js' {
   const hotkeys: {
     (key: string, callback: (e: KeyboardEvent) => void): void

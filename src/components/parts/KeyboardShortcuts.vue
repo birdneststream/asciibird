@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import { toolbarIcons, maxBrushSize } from "../../ascii";
+import { toolbarIcons } from "../../ascii";
 import { useAsciiBirdStore } from "../../store";
 import hotkeys from "hotkeys-js";
 
@@ -16,7 +16,7 @@ export default {
   created() {
     var _this = this;
 
-    hotkeys("*", "editor", function (event, handler) {
+    hotkeys("*", "editor", function (event) {
 
       event.preventDefault();
 
@@ -56,7 +56,7 @@ export default {
       }
     });
 
-    hotkeys("Escape", "editor", function (event, handler) {
+    hotkeys("Escape", "editor", function (event) {
       if (
         !_this.textEditing &&
         (_this.toolbarState.isChoosingChar ||
@@ -83,16 +83,16 @@ export default {
     hotkeys.setScope(this.disableKeyboard ? "modals" : "editor");
   },
   data: () => ({}),
-  props: [
-    "selectedBlocks",
-    "textEditing",
-    "selecting",
-    "isInputtingBrushSize",
-    "showingPostUrl",
-    "isShowingDialog",
-    "canvasX",
-    "canvasY",
-  ],
+  props: {
+    selectedBlocks: { type: Array, default: () => [] },
+    textEditing: { type: [Object, null], default: null },
+    selecting: { type: Object, default: () => ({}) },
+    isInputtingBrushSize: { type: Boolean, default: false },
+    showingPostUrl: { type: Boolean, default: false },
+    isShowingDialog: { type: Boolean, default: false },
+    canvasX: { type: Number, default: null },
+    canvasY: { type: Number, default: null },
+  },
   computed: {
     canvasXy() {
       return { x: this.canvasX, y: this.canvasY };

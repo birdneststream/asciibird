@@ -93,7 +93,8 @@ export default {
     this.panel.w = this.store.brushPreviewState.w;
     this.panel.h = this.store.brushPreviewState.h;
   },
-  props: ["yOffset"],
+  props: { yOffset: { type: Number, default: 0 } },
+  emits: ['inputtingbrush'],
   data: () => ({
     canDrag: true,
     blocks: [],

@@ -95,7 +95,10 @@ export default {
     this.panel.h = this.store.debugPanel.h;
   },
   name: "DebugPanel",
-  props: ["canvasX", "canvasY"],
+  props: {
+    canvasX: { type: Number, default: null },
+    canvasY: { type: Number, default: null },
+  },
   data: () => ({
     panel: {
       w: 0,

@@ -44,7 +44,7 @@ export default {
     });
     return { store, toast, dialog, clipboard, el, style };
   },
-  props: ["yOffset"],
+  props: { yOffset: { type: Number, default: 0 } },
   computed: {
     mircColours() {
       return mircColours99;
