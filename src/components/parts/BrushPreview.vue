@@ -382,22 +382,47 @@ function fill() {
   fillTool(middleY.value, middleX.value);
 }
 
-function fillTool(y: number, x: number) {
-  if (y >= brushSizeHeight.value) return;
-  if (x >= brushSizeWidth.value) return;
-  if (!blocks.value[y] || blocks.value[y][x] === undefined) return;
+function fillTool(startY: number, startX: number) {
+  const maxY = brushSizeHeight.value;
+  const maxX = brushSizeWidth.value;
+  if (startY >= maxY || startX >= maxX) return;
+  if (!blocks.value[startY] || blocks.value[startY][startX] === undefined) {
+    return;
+  }
 
-  const block = blocks.value[y][x] as Record<string, unknown>;
-  if (block.bg === currentBg.value) return;
+  const targetBg = currentBg.value;
+  const startBlock = blocks.value[startY][startX] as Record<string, unknown>;
+  if (startBlock.bg === targetBg) return;
 
-  block.bg = currentBg.value;
-  block.fg = currentFg.value;
-  block.char = currentChar.value;
+  // Iterative flood fill using explicit stack
+  const visited = new Set<number>();
+  const stack: Array<{ x: number; y: number }> = [
+    { x: startX, y: startY },
+  ];
 
-  fillTool(y, x - 1);
-  fillTool(y, x + 1);
-  fillTool(y - 1, x);
-  fillTool(y + 1, x);
+  while (stack.length > 0) {
+    const pos = stack.pop()!;
+    const key = pos.y * maxX + pos.x;
+
+    if (visited.has(key)) continue;
+    if (pos.y < 0 || pos.y >= maxY || pos.x < 0 || pos.x >= maxX) continue;
+
+    const row = blocks.value[pos.y];
+    if (!row || row[pos.x] === undefined) continue;
+
+    const block = row[pos.x] as Record<string, unknown>;
+    if (block.bg === targetBg) continue;
+
+    visited.add(key);
+    block.bg = currentBg.value;
+    block.fg = currentFg.value;
+    block.char = currentChar.value;
+
+    stack.push({ x: pos.x - 1, y: pos.y });
+    stack.push({ x: pos.x + 1, y: pos.y });
+    stack.push({ x: pos.x, y: pos.y - 1 });
+    stack.push({ x: pos.x, y: pos.y + 1 });
+  }
 }
 
 // Expose internals for testing

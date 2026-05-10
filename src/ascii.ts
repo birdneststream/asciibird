@@ -662,9 +662,23 @@ export const checkVisible = (bottom: number, top: number): boolean => {
 };
 
 /**
+ * A single cell change recorded during flood fill.
+ * Two FillChanges (old+new per cell) map to one undo HistoryDiff entry
+ * via storeDiffBlocks in Editor.vue.
+ */
+export interface FillChange {
+  x: number;
+  y: number;
+  old: Block;
+  new: Block;
+}
+
+/**
  * Iterative flood fill using DFS with visited set.
  * Replaces recursive approach to avoid stack overflow on large grids.
  * Selectively targets only the properties enabled by canBg/canFg/canText.
+ * Returns an array of changes for efficient undo diff construction.
+ *
  * Note: canFg matching is intentionally not used in the boundary check
  * to match the original recursive fillTool behavior where fg matching
  * was commented out.
@@ -679,32 +693,36 @@ export const iterativeFill = (
   canFg: boolean,
   canText: boolean,
   eraser: boolean,
-): void => {
+): FillChange[] => {
+  const changes: FillChange[] = [];
   const height = blocks.length;
-  if (height === 0) return;
+  if (height === 0) return changes;
   const width = blocks[0]?.length ?? 0;
-  if (width === 0) return;
+  if (width === 0) return changes;
 
   // Bounds check starting position
-  if (startY < 0 || startY >= height || startX < 0 || startX >= width) return;
+  if (startY < 0 || startY >= height || startX < 0 || startX >= width) {
+    return changes;
+  }
 
   // Check if starting block matches current
-  // Note: canFg is used for applying fill but NOT for boundary matching,
-  // matching the original recursive fillTool behavior where fg matching was
-  // commented out
   const startBlock = blocks[startY][startX];
-  if (canBg && startBlock.bg !== current.bg) return;
-  if (canText && startBlock.char !== current.char) return;
+  if (canBg && startBlock.bg !== current.bg) return changes;
+  if (canText && startBlock.char !== current.char) return changes;
 
   const visited = new Set<number>();
-  const stack: Array<{ x: number; y: number }> = [{ x: startX, y: startY }];
+  const stack: Array<{ x: number; y: number }> = [
+    { x: startX, y: startY },
+  ];
 
   while (stack.length > 0) {
     const pos = stack.pop()!;
     const key = pos.y * width + pos.x;
 
     if (visited.has(key)) continue;
-    if (pos.y < 0 || pos.y >= height || pos.x < 0 || pos.x >= width) continue;
+    if (pos.y < 0 || pos.y >= height || pos.x < 0 || pos.x >= width) {
+      continue;
+    }
 
     const block = blocks[pos.y][pos.x];
 
@@ -713,6 +731,10 @@ export const iterativeFill = (
     if (canText && block.char !== current.char) continue;
 
     visited.add(key);
+
+    // Save old state before mutation (shallow clone — Block has only
+    // primitives)
+    const oldBlock: Block = { ...block };
 
     // Apply fill (selectively target properties)
     if (!eraser) {
@@ -725,12 +747,22 @@ export const iterativeFill = (
       if (canText) delete block.char;
     }
 
+    // Record the change
+    changes.push({
+      x: pos.x,
+      y: pos.y,
+      old: oldBlock,
+      new: { ...block },
+    });
+
     // Push neighbors (4-directional)
     stack.push({ x: pos.x - 1, y: pos.y });
     stack.push({ x: pos.x + 1, y: pos.y });
     stack.push({ x: pos.x, y: pos.y - 1 });
     stack.push({ x: pos.x, y: pos.y + 1 });
   }
+
+  return changes;
 };
 
 /**

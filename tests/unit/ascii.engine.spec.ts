@@ -21,6 +21,7 @@ import {
   filterNullBlocks,
   checkVisible,
   fillNullBlocks,
+  iterativeFill,
   setStore,
   createNewAscii,
   exportMirc,
@@ -1453,5 +1454,231 @@ describe('setStore/getStore', () => {
     const mockStore = createMockStore();
     setStore(mockStore);
     expect(() => mergeLayers()).not.toThrow();
+  });
+});
+
+// ─── iterativeFill ─────────────────────────────────────────────────
+
+describe('iterativeFill', () => {
+  /** Create a grid of uniform blocks */
+  function makeGrid(
+    h: number,
+    w: number,
+    fg = 0,
+    bg = 1,
+    char = ' ',
+  ): Block[][] {
+    return Array.from({ length: h }, () =>
+      Array.from({ length: w }, () => ({ fg, bg, char })),
+    );
+  }
+
+  it('returns empty array on empty grid', () => {
+    const changes = iterativeFill(
+      [],
+      0,
+      0,
+      { bg: 1 },
+      { bg: 2 },
+      true,
+      false,
+      false,
+      false,
+    );
+    expect(changes).toEqual([]);
+  });
+
+  it('returns empty array when start position is out of bounds', () => {
+    const grid = makeGrid(3, 3);
+    const changes = iterativeFill(
+      grid,
+      -1,
+      0,
+      { bg: 1 },
+      { bg: 2 },
+      true,
+      false,
+      false,
+      false,
+    );
+    expect(changes).toEqual([]);
+  });
+
+  it('returns empty array when start block does not match current', () => {
+    const grid = makeGrid(3, 3, 0, 1);
+    const changes = iterativeFill(
+      grid,
+      1,
+      1,
+      { bg: 99 },
+      { bg: 2 },
+      true,
+      false,
+      false,
+      false,
+    );
+    expect(changes).toEqual([]);
+  });
+
+  it('fills a single cell and returns one change', () => {
+    const grid = makeGrid(1, 1);
+    const changes = iterativeFill(
+      grid,
+      0,
+      0,
+      { bg: 1 },
+      { bg: 5 },
+      true,
+      false,
+      false,
+      false,
+    );
+    expect(changes).toHaveLength(1);
+    expect(changes[0]).toEqual({
+      x: 0,
+      y: 0,
+      old: { fg: 0, bg: 1, char: ' ' },
+      new: { fg: 0, bg: 5, char: ' ' },
+    });
+    expect(grid[0][0].bg).toBe(5);
+  });
+
+  it('fills all connected cells with matching bg', () => {
+    const grid = makeGrid(3, 3);
+    const changes = iterativeFill(
+      grid,
+      1,
+      1,
+      { bg: 1 },
+      { bg: 7 },
+      true,
+      false,
+      false,
+      false,
+    );
+    expect(changes).toHaveLength(9);
+    for (const c of changes) {
+      expect(c.new.bg).toBe(7);
+    }
+  });
+
+  it('stops at boundary with different bg', () => {
+    const grid = makeGrid(3, 3);
+    // Create a barrier row
+    grid[1][0].bg = 99;
+    grid[1][1].bg = 99;
+    grid[1][2].bg = 99;
+
+    const changes = iterativeFill(
+      grid,
+      0,
+      1,
+      { bg: 1 },
+      { bg: 5 },
+      true,
+      false,
+      false,
+      false,
+    );
+    // Only top row should be filled
+    expect(changes).toHaveLength(3);
+    expect(grid[0][0].bg).toBe(5);
+    expect(grid[0][1].bg).toBe(5);
+    expect(grid[0][2].bg).toBe(5);
+    // Barrier untouched
+    expect(grid[1][0].bg).toBe(99);
+    expect(grid[1][1].bg).toBe(99);
+    expect(grid[1][2].bg).toBe(99);
+  });
+
+  it('only modifies bg when canBg=true, canFg=false, canText=false', () => {
+    const grid = makeGrid(2, 2, 3, 1, 'X');
+    const changes = iterativeFill(
+      grid,
+      0,
+      0,
+      { bg: 1, fg: 3, char: 'X' },
+      { bg: 5, fg: 9, char: 'Y' },
+      true,
+      false,
+      false,
+      false,
+    );
+    expect(changes).toHaveLength(4);
+    for (const c of changes) {
+      expect(c.new.bg).toBe(5);
+      expect(c.new.fg).toBe(3); // unchanged
+      expect(c.new.char).toBe('X'); // unchanged
+    }
+  });
+
+  it('erases by deleting properties when eraser=true', () => {
+    const grid = makeGrid(2, 2, 3, 1, 'A');
+    const changes = iterativeFill(
+      grid,
+      0,
+      0,
+      { bg: 1, fg: 3, char: 'A' },
+      {},
+      true,
+      true,
+      true,
+      true,
+    );
+    expect(changes).toHaveLength(4);
+    for (const c of changes) {
+      expect(c.new.bg).toBeUndefined();
+      expect(c.new.fg).toBeUndefined();
+      expect(c.new.char).toBeUndefined();
+    }
+  });
+
+  it('completes 100x100 fill efficiently (O(k) not O(n))', () => {
+    const grid = makeGrid(100, 100);
+    const start = performance.now();
+    const changes = iterativeFill(
+      grid,
+      50,
+      50,
+      { bg: 1 },
+      { bg: 5 },
+      true,
+      false,
+      false,
+      false,
+    );
+    const elapsed = performance.now() - start;
+    expect(changes).toHaveLength(10_000);
+    // CI/jsdom is slower than browser; just verify it completes reasonably
+    // Developer target: <16ms on real hardware
+    expect(elapsed).toBeLessThan(500);
+  });
+
+  it('returns changes that map directly to BlockDiff format', () => {
+    const grid = makeGrid(2, 2);
+    const changes = iterativeFill(
+      grid,
+      0,
+      0,
+      { bg: 1 },
+      { bg: 5 },
+      true,
+      false,
+      false,
+      false,
+    );
+    expect(changes).toHaveLength(4);
+
+    // Verify each change has the correct structure for undo system
+    for (const c of changes) {
+      expect(c).toHaveProperty('x');
+      expect(c).toHaveProperty('y');
+      expect(c).toHaveProperty('old');
+      expect(c).toHaveProperty('new');
+      expect(typeof c.x).toBe('number');
+      expect(typeof c.y).toBe('number');
+      expect(c.old).toHaveProperty('bg');
+      expect(c.new).toHaveProperty('bg');
+    }
   });
 });

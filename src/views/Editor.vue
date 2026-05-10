@@ -1859,17 +1859,7 @@ function fill(eraser = false) {
     return;
   }
 
-  const height = currentAsciiLayerBlocks.value.length;
-  const width = height > 0 ? currentAsciiLayerBlocks.value[0].length : 0;
-  const oldBlocks: Block[][] = [];
-  for (let fy = 0; fy < height; fy++) {
-    oldBlocks[fy] = [];
-    for (let fx = 0; fx < width; fx++) {
-      oldBlocks[fy][fx] = { ...currentAsciiLayerBlocks.value[fy][fx] };
-    }
-  }
-
-  iterativeFill(
+  const changes = iterativeFill(
     currentAsciiLayerBlocks.value,
     y.value,
     x.value,
@@ -1881,13 +1871,14 @@ function fill(eraser = false) {
     eraser,
   );
 
-  for (let fy = 0; fy < height; fy++) {
-    for (let fx = 0; fx < width; fx++) {
-      const oldB = oldBlocks[fy][fx];
-      const newB = currentAsciiLayerBlocks.value[fy][fx];
-      if (oldB.bg !== newB.bg || oldB.fg !== newB.fg || oldB.char !== newB.char) {
-        storeDiffBlocks(fx, fy, oldB, newB);
-      }
+  // Only record diffs for cells that actually changed
+  for (const change of changes) {
+    if (
+      change.old.bg !== change.new.bg ||
+      change.old.fg !== change.new.fg ||
+      change.old.char !== change.new.char
+    ) {
+      storeDiffBlocks(change.x, change.y, change.old, change.new);
     }
   }
 }
