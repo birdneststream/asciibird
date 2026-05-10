@@ -193,7 +193,7 @@ describe('EditAscii.vue', () => {
     const wrapper = shallowMount(EditAscii, mountOpts())
     wrapper.vm.layer = { width: 10, height: 20, title: 'test' }
     wrapper.vm.close()
-    expect(wrapper.vm.layer).toEqual({})
+    expect(wrapper.vm.layer).toEqual({ width: 0, height: 0, title: '' })
   })
 
   it('currentAsciiWidth returns layer width or 0', () => {

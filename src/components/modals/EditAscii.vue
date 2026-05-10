@@ -58,13 +58,11 @@
     <!--/Card-->
 
     <template #footer>
-      <div
-        class="flex justify-between"
-        @click="modalStore.closeModal('edit-ascii')"
-      >
+      <div class="flex justify-between">
         <button
           type="button"
           class="ab-button"
+          @click="modalStore.closeModal('edit-ascii')"
         >
           <span
             class="material-icons relative top-2 pb-4"
@@ -74,7 +72,7 @@
         </button>
         <button
           type="button"
-          @click="updateAscii()"
+          @click.stop="updateAscii()"
           class="ab-button"
         >
           <span
@@ -94,9 +92,11 @@ import { fillNullBlocks } from '../../ascii';
 import ABModal from '../ABModal.vue';
 import { useAsciiBirdStore } from '../../store';
 import { useModalStore } from '../../store/modal';
+import { useToast } from '../../composables/useToast';
 
 const store = useAsciiBirdStore();
 const modalStore = useModalStore();
+const { show: toastShow } = useToast();
 
 const layer = ref<{ width: number; height: number; title: string }>({
   width: 0,
@@ -114,20 +114,42 @@ const currentSelectedLayer = computed(
 );
 
 function open() {
+  const selected = currentSelectedLayer.value;
+  if (!selected || !selected.width || !selected.height) {
+    toastShow('No valid layer selected. Please create or select a layer first.', {
+      type: 'error',
+    });
+    modalStore.closeModal('edit-ascii');
+    return;
+  }
+
   layer.value = {
-    width: currentSelectedLayer.value.width,
-    height: currentSelectedLayer.value.height,
-    title: currentAscii.value.title,
+    width: selected.width,
+    height: selected.height,
+    title: currentAscii.value.title || '',
   };
 }
 
 function close() {
-  layer.value = {};
+  layer.value = { width: 0, height: 0, title: '' };
 }
 
 function updateAscii() {
   const canvasBlockHeight = Number.parseInt(String(layer.value.height));
   const canvasBlockWidth = Number.parseInt(String(layer.value.width));
+
+  if (
+    Number.isNaN(canvasBlockHeight) ||
+    Number.isNaN(canvasBlockWidth) ||
+    canvasBlockHeight < 1 ||
+    canvasBlockWidth < 1
+  ) {
+    toastShow('Width and height must be positive numbers.', {
+      type: 'error',
+    });
+    return;
+  }
+
   const layers = fillNullBlocks(canvasBlockHeight, canvasBlockWidth);
   store.changeAsciiWidthHeight({ layers: [...layers] });
 
@@ -140,7 +162,7 @@ watch(showEditAsciiModal, (val) => {
   } else {
     close();
   }
-});
+}, { immediate: true });
 
 const currentAsciiWidth = computed(() => layer.value.width || 0);
 const currentAsciiHeight = computed(() => layer.value.height || 0);

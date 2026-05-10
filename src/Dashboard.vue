@@ -29,12 +29,16 @@
             <MenuItem
               v-for="item in menuItem.items"
               :key="item.text"
-              v-slot="{ active }"
+              :disabled="item.disabled"
+              v-slot="{ active, disabled }"
             >
               <button
-                :class="[active ? 'bg-gray-700' : '', 'flex w-full items-center justify-between px-4 py-1 text-sm text-white']"
+                :class="[
+                  active ? 'bg-gray-700' : '',
+                  disabled ? 'opacity-50 cursor-not-allowed' : '',
+                  'flex w-full items-center justify-between px-4 py-1 text-sm text-white',
+                ]"
                 @click="item.click"
-                :disabled="item.disabled"
               >
                 <span>{{ item.text }}</span>
                 <span
