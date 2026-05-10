@@ -7,17 +7,25 @@
       <div
         v-if="!isKeyboardDisabled"
         class="flex bg-gray-800 text-white text-sm"
+        @mouseleave="onMenuBarMouseLeave"
       >
         <Menu
-          v-for="menuItem in menuBar"
+          v-for="(menuItem, index) in menuBar"
           :key="menuItem.label"
           as="div"
           class="relative"
         >
-          <MenuButton class="px-3 py-1 hover:bg-gray-600">
+          <MenuButton
+            :ref="(el: any) => menuButtonRefs[index] = el?.$el ?? el"
+            class="px-3 py-1 hover:bg-gray-600"
+            @mouseenter="onMenuButtonMouseEnter(index)"
+          >
             {{ menuItem.label }}
           </MenuButton>
-          <MenuItems class="absolute mt-0 bg-gray-900 shadow-lg rounded-b min-w-48 z-50">
+          <MenuItems
+            class="absolute mt-0 bg-gray-900 shadow-lg rounded-b min-w-48 z-50"
+            @focus="onMenuItemsOpen(index)"
+          >
             <MenuItem
               v-for="item in menuItem.items"
               :key="item.text"
@@ -400,6 +408,26 @@ const diffBlocks = reactive({
   new: [] as unknown[],
 });
 const updateAscii = ref<unknown>(false);
+
+// Menu hover cascading state
+const menuButtonRefs = ref<(HTMLButtonElement | null)[]>([]);
+const activeMenuIndex = ref<number | null>(null);
+
+function onMenuButtonMouseEnter(index: number) {
+  // If a menu is already open and user hovers a different button,
+  // click the new button to trigger Headless UI's menu switch
+  if (activeMenuIndex.value !== null && activeMenuIndex.value !== index) {
+    menuButtonRefs.value[index]?.click();
+  }
+}
+
+function onMenuItemsOpen(index: number) {
+  activeMenuIndex.value = index;
+}
+
+function onMenuBarMouseLeave() {
+  activeMenuIndex.value = null;
+}
 
 // Scroll handler (defined here so it can be referenced in onUnmounted)
 const scrollHandler = () => {
