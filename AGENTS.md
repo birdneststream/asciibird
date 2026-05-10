@@ -49,6 +49,7 @@ asciibird/
 │   ├── utils/                  # Shared utilities
 │   │   ├── layers.ts           # Layer compression/decompression
 │   │   ├── diffBlocks.ts       # Undo/redo diff tracking
+│   │   ├── idbPersistAdapter.ts # IndexedDB storage adapter for Pinia
 │   │   └── ...
 │   ├── views/
 │   │   └── Editor.vue          # Main editor canvas view
@@ -79,7 +80,7 @@ asciibird/
 │   │       └── Tooltip.vue           # Tooltip component
 ├── tests/
 │   └── unit/
-│       └── *.spec.ts           # Vitest unit tests (21 test files)
+│       └── *.spec.ts           # Vitest unit tests (22 test files)
 ├── docs/                       # Screenshot assets for README
 ├── vite.config.ts              # Vite build config
 ├── tailwind.config.js          # Tailwind CSS config
@@ -90,8 +91,9 @@ asciibird/
 ## Key Files to Understand
 
 - `src/ascii.ts` — The core engine. Contains mIRC color palette (99 colors), character codes, block dimensions, 2D array helpers, mIRC parsing/import, export (mIRC, PNG), brush generation (circle/square/cross), canvas rendering, compression helpers, splash ASCII.
-- `src/store/index.ts` — Main Pinia store. Manages: tabs (multiple ASCII documents), layers (per-tab, LZ-String compressed), undo/redo history, options. State is persisted to localStorage via pinia-plugin-persistedstate.
-- `src/store/toolbar.ts` — Toolbar Pinia store. Manages: active tool, colors, brush size/type, brush library, brush history, mirror toggles.
+- `src/store/index.ts` — Main Pinia store. Manages: tabs (multiple ASCII documents), layers (per-tab, LZ-String compressed), undo/redo history, options. State is persisted to IndexedDB via pinia-plugin-persistedstate with a custom buffered adapter (`src/utils/idbPersistAdapter.ts`).
+- `src/store/toolbar.ts` — Toolbar Pinia store. Manages: active tool, colors, brush size/type, brush library, brush history, mirror toggles. Persisted to IndexedDB.
+- `src/utils/idbPersistAdapter.ts` — Buffered IndexedDB storage adapter for `pinia-plugin-persistedstate`. Provides synchronous `getItem`/`setItem` via in-memory cache with microtask-queued async writes to IDB. Includes WAL safety net and localStorage fallback.
 - `src/Dashboard.vue` — The main orchestrator component (~963 lines). Contains the menu bar, tab bar, context menu, all modal triggers, import/export logic, and coordinates all sub-components.
 - `src/views/Editor.vue` — The main canvas editor that handles mouse/keyboard events and renders the ASCII grid.
 
@@ -175,10 +177,19 @@ All Vue 2 packages have been replaced and the app is fully running on Vue 3 + Pi
 
 **Verification**: Build ✅ Tests ✅ (764/764) TypeScript ✅ Browser ✅ Accessibility ✅
 
-### Phase 5+: IndexedDB Persistence (Next Focus)
-- Migrate from localStorage (~5MB limit) to IndexedDB for large ASCII documents
-- Use `idb` or `Dexie.js` for structured storage
-- Target Pinia persistence plugin to IndexedDB instead of localStorage
+### Phase 5+: IndexedDB Persistence ✅ COMPLETE
+
+Migrated from localStorage (~5MB limit) to IndexedDB for the two largest Pinia stores (main + toolbar). Uses `idb-keyval` with a custom buffered adapter (`src/utils/idbPersistAdapter.ts`) that provides synchronous `getItem`/`setItem` for `pinia-plugin-persistedstate` via an in-memory cache with microtask-queued async IDB writes. Includes non-destructive localStorage→IDB migration, WAL safety net for tab close, and fallback to localStorage if IDB unavailable.
+
+| Store | Storage | Key | Notes |
+|---|---|---|---|
+| `useAsciiBirdStore` | IndexedDB | `vuex` | Main store with LZ-String compressed layers + undo history |
+| `useToolbarStore` | IndexedDB | `asciibird-toolbar` | Brush history/library data |
+| `useModalStore` | localStorage | `asciibird-modal` | Tiny data |
+| `useDesktopStore` | localStorage | `asciibird-desktop` | Tiny data |
+| `usePanelStore` | localStorage | `asciibird-panel` | Tiny data |
+
+**Verification**: Build ✅ Tests ✅ (792/792) TypeScript ✅ Browser ✅
 
 ## Known Issues (from README)
 - Flood fill hits recursion limit on large ASCIIs
