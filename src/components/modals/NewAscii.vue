@@ -1,7 +1,7 @@
 <template>
   <ABModal
     :open="showNewAsciiModal"
-    @close="store.closeModal('new-ascii')"
+    @close="modalStore.closeModal('new-ascii')"
     title="Create new ASCII"
   >
     <!--Card-->
@@ -64,7 +64,7 @@
         <button
           type="button"
           class="ab-button"
-          @click="store.closeModal('new-ascii')"
+          @click="modalStore.closeModal('new-ascii')"
         >
           <span
             class="material-icons relative top-2 pb-4"
@@ -93,8 +93,10 @@ import { reactive, computed, watch } from 'vue';
 import createNewASCII from '../../ascii';
 import ABModal from '../ABModal.vue';
 import { useAsciiBirdStore } from '../../store';
+import { useModalStore } from '../../store/modal';
 
 const store = useAsciiBirdStore();
+const modalStore = useModalStore();
 
 const forms = reactive({
   createAscii: {
@@ -104,7 +106,7 @@ const forms = reactive({
   },
 });
 
-const showNewAsciiModal = computed(() => store.modalState.newAscii);
+const showNewAsciiModal = computed(() => modalStore.modalState.newAscii);
 
 function open() {
   forms.createAscii.title = `New ASCII ${
@@ -119,7 +121,7 @@ function close() {
 }
 
 function initiateNewAscii() {
-  store.closeModal('new-ascii');
+  modalStore.closeModal('new-ascii');
   forms.createAscii.height = Number.parseInt(
     String(forms.createAscii.height),
   );

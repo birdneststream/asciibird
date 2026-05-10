@@ -21,7 +21,6 @@ import type {
   Block,
   Layer,
   Options,
-  ModalState,
   ToolbarState,
   PanelState,
   BrushLibraryState,
@@ -31,16 +30,6 @@ import type {
 export const useAsciiBirdStore = defineStore('asciibird', {
   state: (): RootState => ({
     ver: 1,
-    modalState: {
-      newAscii: false,
-      editAscii: false,
-      pasteAscii: false,
-      options: false,
-      overlay: false,
-      about: false,
-      help: false,
-    },
-    isKeyboardDisabled: false,
     options: {
       defaultBg: 1,
       defaultFg: 0,
@@ -162,12 +151,6 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       decompressData<Block[]>(state._brushBlocks) || [],
     selectBlocks: (state): Block[] =>
       decompressData<Block[]>(state._selectBlocks) || [],
-    isModalOpen: (state): boolean => {
-      const keys = Object.keys(
-        state.modalState,
-      ) as (keyof ModalState)[];
-      return keys.some(key => state.modalState[key]);
-    },
   },
 
   actions: {
@@ -825,76 +808,8 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         return item.hash !== hashValue;
       });
     },
-    toggleDisableKeyboard(payload: boolean | null = null) {
-      this.isKeyboardDisabled =
-        payload === null
-          ? !this.isKeyboardDisabled
-          : payload;
-    },
 
-    // Modals / Tabs
-    openModal(type: string) {
-      switch (type) {
-        case 'new-ascii':
-          this.modalState.newAscii = true;
-          break;
-
-        case 'edit-ascii':
-          this.modalState.editAscii = true;
-          break;
-
-        case 'paste-ascii':
-          this.modalState.pasteAscii = true;
-          break;
-
-        case 'options':
-          this.modalState.options = true;
-          break;
-
-        case 'overlay':
-          this.modalState.overlay = true;
-          break;
-
-        case 'about':
-          this.modalState.about = true;
-          break;
-
-        case 'help':
-          this.modalState.help = true;
-          break;
-      }
-    },
-    closeModal(type: string) {
-      switch (type) {
-        case 'new-ascii':
-          this.modalState.newAscii = false;
-          break;
-
-        case 'edit-ascii':
-          this.modalState.editAscii = false;
-          break;
-
-        case 'paste-ascii':
-          this.modalState.pasteAscii = false;
-          break;
-
-        case 'options':
-          this.modalState.options = false;
-          break;
-
-        case 'overlay':
-          this.modalState.overlay = false;
-          break;
-
-        case 'about':
-          this.modalState.about = false;
-          break;
-
-        case 'help':
-          this.modalState.help = false;
-          break;
-      }
-    },
+    // Tabs
     closeTab(tab: number) {
       this.asciibirdMeta.splice(tab, 1);
 

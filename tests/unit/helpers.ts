@@ -146,6 +146,64 @@ export interface MockStoreConfig {
   extraActions?: Record<string, Function>
 }
 
+/**
+ * Create a mock modal store for component tests.
+ * Separated from the main store since modal state was extracted.
+ */
+export function createMockModalStore(
+  overrides: Record<string, any> = {},
+) {
+  const defaultState = {
+    modalState: {
+      newAscii: false,
+      editAscii: false,
+      pasteAscii: false,
+      options: false,
+      overlay: false,
+      about: false,
+      help: false,
+    },
+    isKeyboardDisabled: false,
+  }
+
+  const state = { ...defaultState, ...overrides }
+
+  return {
+    ...state,
+    get isModalOpen() {
+      return Object.values(state.modalState).some((v: any) => v)
+    },
+    openModal(name: string) {
+      const map: Record<string, string> = {
+        'new-ascii': 'newAscii',
+        'edit-ascii': 'editAscii',
+        'paste-ascii': 'pasteAscii',
+        'options': 'options',
+        'overlay': 'overlay',
+        'about': 'about',
+        'help': 'help',
+      }
+      if (map[name]) state.modalState[map[name]] = true
+    },
+    closeModal(name: string) {
+      const map: Record<string, string> = {
+        'new-ascii': 'newAscii',
+        'edit-ascii': 'editAscii',
+        'paste-ascii': 'pasteAscii',
+        'options': 'options',
+        'overlay': 'overlay',
+        'about': 'about',
+        'help': 'help',
+      }
+      if (map[name]) state.modalState[map[name]] = false
+    },
+    toggleDisableKeyboard(val: boolean | null = null) {
+      state.isKeyboardDisabled =
+        val === null ? !state.isKeyboardDisabled : val
+    },
+  }
+}
+
 export function createMockStore(
   overrides: Record<string, any> = {},
   config: MockStoreConfig = {},

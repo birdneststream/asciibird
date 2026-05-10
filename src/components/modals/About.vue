@@ -1,7 +1,7 @@
 <template>
   <ABModal
     :open="showAboutModal"
-    @close="store.closeModal('about')"
+    @close="modalStore.closeModal('about')"
     title=""
   >
     <div class="mt-6 lg:mt-0 rounded shadow bg-white text-center ">
@@ -29,7 +29,7 @@
     <template #footer>
       <div
         class="flex justify-between"
-        @click="store.closeModal('about')"
+        @click="modalStore.closeModal('about')"
       >
         <button
           type="button"
@@ -48,10 +48,12 @@ import LZString from 'lz-string';
 import BrushCanvas from '../parts/BrushCanvas.vue';
 import ABModal from '../ABModal.vue';
 import { useAsciiBirdStore } from '../../store';
+import { useModalStore } from '../../store/modal';
 
 const store = useAsciiBirdStore();
+const modalStore = useModalStore();
 
-const showAboutModal = computed(() => store.modalState.about);
+const showAboutModal = computed(() => modalStore.modalState.about);
 
 const aboutAscii = computed(() =>
   JSON.parse(LZString.decompressFromEncodedURIComponent(

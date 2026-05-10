@@ -1,7 +1,7 @@
 <template>
   <ABModal
     :open="showHelpModal"
-    @close="store.closeModal('help')"
+    @close="modalStore.closeModal('help')"
     title=""
   >
     <div class="mt-6 rounded shadow bg-white">
@@ -1452,7 +1452,7 @@
     <template #footer>
       <div
         class="flex justify-between"
-        @click="store.closeModal('help')"
+        @click="modalStore.closeModal('help')"
       >
         <button
           type="button"
@@ -1504,9 +1504,11 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useAsciiBirdStore } from '../../store';
+import { useModalStore } from '../../store/modal';
 import ABModal from '../ABModal.vue';
 
 const store = useAsciiBirdStore();
+const modalStore = useModalStore();
 
-const showHelpModal = computed(() => store.modalState.help);
+const showHelpModal = computed(() => modalStore.modalState.help);
 </script>

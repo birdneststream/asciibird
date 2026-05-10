@@ -1,7 +1,7 @@
 <template>
   <ABModal
     :open="showOptionsModal"
-    @close="store.closeModal('options')"
+    @close="modalStore.closeModal('options')"
     title="ASCIIBIRD Options"
   >
     <div class="mt-6 lg:mt-0 rounded shadow bg-white">
@@ -81,7 +81,7 @@
     <template #footer>
       <div
         class="flex justify-between"
-        @click="store.closeModal('options')"
+        @click="modalStore.closeModal('options')"
       >
         <button
           type="button"
@@ -113,10 +113,12 @@ import { computed } from 'vue';
 import { maxBrushHistory, maxUndoHistory, tabLimit } from '../../ascii';
 import ABModal from '../ABModal.vue';
 import { useAsciiBirdStore } from '../../store';
+import { useModalStore } from '../../store/modal';
 
 const store = useAsciiBirdStore();
+const modalStore = useModalStore();
 
-const showOptionsModal = computed(() => store.modalState.options);
+const showOptionsModal = computed(() => modalStore.modalState.options);
 const options = computed(() => store.options);
 
 function clearCache() {

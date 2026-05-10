@@ -1,7 +1,7 @@
 <template>
   <ABModal
     :open="showOverlayModal"
-    @close="store.closeModal('overlay')"
+    @close="modalStore.closeModal('overlay')"
     title="ASCIIBIRD Nance Trace Mode"
   >
     <!--Card-->
@@ -219,7 +219,7 @@
     <template #footer>
       <div
         class="flex justify-between"
-        @click="store.closeModal('overlay')"
+        @click="modalStore.closeModal('overlay')"
       >
         <button
           type="button"
@@ -250,10 +250,12 @@
 import { computed, watch } from 'vue';
 import ABModal from '../ABModal.vue';
 import { useAsciiBirdStore } from '../../store';
+import { useModalStore } from '../../store/modal';
 
 const store = useAsciiBirdStore();
+const modalStore = useModalStore();
 
-const showOverlayModal = computed(() => store.modalState.overlay);
+const showOverlayModal = computed(() => modalStore.modalState.overlay);
 const imageOverlay = computed(() => store.imageOverlay || {});
 
 // Deep watch: auto-save overlay changes back to store

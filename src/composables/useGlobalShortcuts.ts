@@ -1,6 +1,7 @@
 import { watch, onUnmounted } from 'vue';
 import hotkeys from 'hotkeys-js';
 import { useAsciiBirdStore } from '../store';
+import { useModalStore } from '../store/modal';
 
 /**
  * Global keyboard shortcuts composable.
@@ -17,18 +18,19 @@ import { useAsciiBirdStore } from '../store';
  */
 export function useGlobalShortcuts() {
   const store = useAsciiBirdStore();
+  const modalStore = useModalStore();
 
   // ─── Menu shortcuts (scope 'all' — always active) ──────────────
   const menuShortcuts: Record<string, () => void> = {
-    'ctrl+m': () => store.openModal('new-ascii'),
+    'ctrl+m': () => modalStore.openModal('new-ascii'),
     'ctrl+shift+o': () => {
       // Import from file — handled by Dashboard via custom event
       window.dispatchEvent(new CustomEvent('asciibird:import-file'));
     },
-    'ctrl+shift+v': () => store.openModal('paste-ascii'),
+    'ctrl+shift+v': () => modalStore.openModal('paste-ascii'),
     'ctrl+e': () => {
       if (store.asciibirdMeta.length) {
-        store.openModal('edit-ascii');
+        modalStore.openModal('edit-ascii');
       }
     },
     'ctrl+z': () => {
@@ -61,14 +63,14 @@ export function useGlobalShortcuts() {
         store.redoBlocks();
       }
     },
-    'ctrl+o': () => store.openModal('options'),
+    'ctrl+o': () => modalStore.openModal('options'),
     'alt+g': () => {
       if (store.asciibirdMeta.length) {
         store.toggleGridView(!store.toolbarState.gridView);
       }
     },
-    'f1': () => store.openModal('help'),
-    'shift+f1': () => store.openModal('about'),
+    'f1': () => modalStore.openModal('help'),
+    'shift+f1': () => modalStore.openModal('about'),
   };
 
   // Register all menu shortcuts in scope 'all'
@@ -109,7 +111,7 @@ export function useGlobalShortcuts() {
   // Replace dangerous deleteScope('all') with setScope transitions.
   // Use immediate:true to set initial scope on mount.
   watch(
-    () => store.isModalOpen || store.isKeyboardDisabled,
+    () => modalStore.isModalOpen || modalStore.isKeyboardDisabled,
     (disabled) => {
       if (disabled) {
         hotkeys.setScope('modals');

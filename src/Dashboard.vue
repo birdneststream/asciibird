@@ -75,13 +75,13 @@
     >
       <ul>
         <li
-          @click="store.openModal('new-ascii')"
+          @click="modalStore.openModal('new-ascii')"
           class="ab-context-menu-item"
         >
           New ASCII
         </li>
         <li
-          @click="store.openModal('edit-ascii')"
+          @click="modalStore.openModal('edit-ascii')"
           class="ab-context-menu-item"
           v-if="asciibirdMeta.length"
         >
@@ -95,7 +95,7 @@
           Close Ascii
         </li>
         <li
-          @click="store.openModal('options')"
+          @click="modalStore.openModal('options')"
           class="ab-context-menu-item border-b"
           v-if="asciibirdMeta.length"
         >
@@ -117,7 +117,7 @@
         </li>
         <li
           class="ab-context-menu-item"
-          @click="store.openModal('paste-ascii')"
+          @click="modalStore.openModal('paste-ascii')"
         >
           Import from Clipboard
         </li>
@@ -360,6 +360,7 @@ import {
 } from './ascii';
 
 import { useAsciiBirdStore } from './store';
+import { useModalStore } from './store/modal';
 import { useToast } from './composables/useToast';
 import { useDialog } from './composables/useDialog';
 import { useClipboard } from './composables/useClipboard';
@@ -370,6 +371,7 @@ import type { Block, AppMenuBar } from './types';
 defineOptions({ name: 'Dashboard' });
 
 const store = useAsciiBirdStore();
+const modalStore = useModalStore();
 const { messages: toasts, show: toastShow } = useToast();
 const { state: dialogState, confirm: dialogConfirm, prompt: dialogPrompt, ok: dialogOk, cancel: dialogCancel } = useDialog();
 const { copyText } = useClipboard();
@@ -458,8 +460,8 @@ const debugPanelState = computed(() => store.debugPanel);
 const currentAscii = computed(() => store.currentAscii);
 const currentTab = computed(() => store.currentTab);
 const selectBlocks = computed(() => store.selectBlocks);
-const modalState = computed(() => store.modalState);
-const isKeyboardDisabled = computed(() => store.isKeyboardDisabled);
+const modalState = computed(() => modalStore.modalState);
+const isKeyboardDisabled = computed(() => modalStore.isKeyboardDisabled);
 const selectedLayer = computed(() => store.selectedLayer);
 const canToggleLayer = computed(() => currentAsciiLayers.value.length > 1);
 const brushSizeHeight = computed(() => store.brushSizeHeight);
@@ -494,7 +496,7 @@ const menuBar = computed<AppMenuBar[]>(() => [
     items: [
       {
         text: 'New ASCII',
-        click: () => store.openModal('new-ascii'),
+        click: () => modalStore.openModal('new-ascii'),
         shortcut: 'Ctrl+M',
       },
       {
@@ -504,7 +506,7 @@ const menuBar = computed<AppMenuBar[]>(() => [
       },
       {
         text: 'Import from Clipboard',
-        click: () => store.openModal('paste-ascii'),
+        click: () => modalStore.openModal('paste-ascii'),
         shortcut: 'Ctrl+Shift+V',
       },
       {
@@ -529,7 +531,7 @@ const menuBar = computed<AppMenuBar[]>(() => [
     items: [
       {
         text: 'Edit ASCII',
-        click: () => store.openModal('edit-ascii'),
+        click: () => modalStore.openModal('edit-ascii'),
         disabled: !asciibirdMeta.value.length,
         shortcut: 'Ctrl+E',
       },
@@ -575,12 +577,12 @@ const menuBar = computed<AppMenuBar[]>(() => [
     items: [
       {
         text: 'Options',
-        click: () => store.openModal('options'),
+        click: () => modalStore.openModal('options'),
         shortcut: 'Ctrl+O',
       },
       {
         text: 'Image Overlay',
-        click: () => store.openModal('overlay'),
+        click: () => modalStore.openModal('overlay'),
         disabled: !asciibirdMeta.value.length,
       },
     ],
@@ -590,12 +592,12 @@ const menuBar = computed<AppMenuBar[]>(() => [
     items: [
       {
         text: 'About',
-        click: () => store.openModal('about'),
+        click: () => modalStore.openModal('about'),
         shortcut: 'Shift+F1',
       },
       {
         text: 'Help',
-        click: () => store.openModal('help'),
+        click: () => modalStore.openModal('help'),
         shortcut: 'F1',
       },
     ],
@@ -662,7 +664,7 @@ function storeDiffBlocks(x: number, y: number, oldBlock: Block, newBlock: Block)
 }
 
 function showLayerRename(key: number, label: string) {
-  store.toggleDisableKeyboard(true);
+  modalStore.toggleDisableKeyboard(true);
   dialogPrompt({
     title: 'Rename Layer',
     text: 'Please input your new layer name',
@@ -672,7 +674,7 @@ function showLayerRename(key: number, label: string) {
       toastShow('You must enter a layer name!', {
         type: 'error',
       });
-      store.toggleDisableKeyboard(false);
+      modalStore.toggleDisableKeyboard(false);
       return;
     }
 
@@ -680,7 +682,7 @@ function showLayerRename(key: number, label: string) {
       updateLayerName(key, result.input);
     }
 
-    store.toggleDisableKeyboard(false);
+    modalStore.toggleDisableKeyboard(false);
   });
 }
 
@@ -833,7 +835,7 @@ function startExport(type: string) {
       break;
 
     case 'post':
-      store.toggleDisableKeyboard(true);
+      modalStore.toggleDisableKeyboard(true);
       dialogPrompt({
         title: 'HTTP Post your Ascii',
         text: 'Please input the URL for the HTTP Post sir',
@@ -843,7 +845,7 @@ function startExport(type: string) {
           toastShow('Come on bro. Get it together.', {
             type: 'error',
           });
-          store.toggleDisableKeyboard(false);
+          modalStore.toggleDisableKeyboard(false);
           return;
         }
 
@@ -873,7 +875,7 @@ function startExport(type: string) {
             });
         }
 
-        store.toggleDisableKeyboard(false);
+        modalStore.toggleDisableKeyboard(false);
       });
 
       break;

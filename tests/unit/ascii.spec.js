@@ -6,8 +6,10 @@ import { createPersistedState } from 'pinia-plugin-persistedstate'
 import LZString from 'lz-string'
 import Editor from '@/views/Editor.vue'
 import { useAsciiBirdStore } from '@/store/index'
+import { useModalStore } from '@/store/modal'
 import {
   setStore,
+  setModalStore,
   createNewAscii,
   exportMirc,
   mergeLayers,
@@ -43,6 +45,7 @@ describe('Editor.vue', () => {
 
     store = useAsciiBirdStore()
     setStore(store)
+    setModalStore(useModalStore())
 
     createNewAscii({
       createAscii: {

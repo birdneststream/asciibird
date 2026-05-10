@@ -21,6 +21,7 @@ import {
 import LZString from 'lz-string'
 import {
   createMockStore,
+  createMockModalStore,
   createMockCanvasRef,
   toastedMock,
   copyTextMock,
@@ -28,10 +29,15 @@ import {
 } from './helpers'
 
 let _mockStore: any = null
+let _mockModalStore: any = null
 
 vi.mock('@/store', () => ({
   useAsciiBirdStore: () => _mockStore,
 }))
+vi.mock('@/store/modal', () => ({
+  useModalStore: () => _mockModalStore,
+}))
+
 
 vi.mock('@/composables/useToast', () => ({
   useToast: () => ({ show: toastedMock.show, messages: { value: [] } }),
@@ -85,6 +91,7 @@ beforeEach(() => {
     JSON.stringify(blocks),
   )
   _mockStore = store
+  _mockModalStore = createMockModalStore()
 })
 
 afterEach(() => {

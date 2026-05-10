@@ -1,7 +1,7 @@
 <template>
   <ABModal
     :open="showEditAsciiModal"
-    @close="store.closeModal('edit-ascii')"
+    @close="modalStore.closeModal('edit-ascii')"
     :title="currentAsciiEditingTitle"
   >
     <!--Card-->
@@ -60,7 +60,7 @@
     <template #footer>
       <div
         class="flex justify-between"
-        @click="store.closeModal('edit-ascii')"
+        @click="modalStore.closeModal('edit-ascii')"
       >
         <button
           type="button"
@@ -93,8 +93,10 @@ import { ref, computed, watch } from 'vue';
 import { fillNullBlocks } from '../../ascii';
 import ABModal from '../ABModal.vue';
 import { useAsciiBirdStore } from '../../store';
+import { useModalStore } from '../../store/modal';
 
 const store = useAsciiBirdStore();
+const modalStore = useModalStore();
 
 const layer = ref<{ width: number; height: number; title: string }>({
   width: 0,
@@ -102,7 +104,7 @@ const layer = ref<{ width: number; height: number; title: string }>({
   title: '',
 });
 
-const showEditAsciiModal = computed(() => store.modalState.editAscii);
+const showEditAsciiModal = computed(() => modalStore.modalState.editAscii);
 const currentAscii = computed(() => store.currentAscii);
 const selectedLayerIndex = computed(() => currentAscii.value.selectedLayer || 0);
 const currentAsciiEditingTitle = computed(() => `Editing ASCII ${currentAscii.value.title}`);

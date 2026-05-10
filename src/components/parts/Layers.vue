@@ -212,11 +212,13 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useAsciiBirdStore } from '../../store';
+import { useModalStore } from '../../store/modal';
 import { useToast } from '../../composables/useToast';
 import { useDialog } from '../../composables/useDialog';
 import ContextMenu from './ContextMenu.vue';
 
 const store = useAsciiBirdStore();
+const modalStore = useModalStore();
 const { show: toastShow } = useToast();
 const dialog = useDialog();
 
@@ -296,7 +298,7 @@ function selectedLayerClass(key: number) {
 }
 
 function showLayerRename(key: number, label: string) {
-  store.toggleDisableKeyboard(true);
+  modalStore.toggleDisableKeyboard(true);
   dialog
     .prompt({
       title: 'Rename Layer',
@@ -304,7 +306,7 @@ function showLayerRename(key: number, label: string) {
       inputValue: label,
     })
     .then((result) => {
-      store.toggleDisableKeyboard(false);
+      modalStore.toggleDisableKeyboard(false);
       if (!result.input.length) {
         toastShow('You must enter a layer name!', {
           type: 'error',
@@ -361,7 +363,7 @@ function removeLayer(key: number) {
 }
 
 function showOverlayModal() {
-  store.openModal('overlay');
+  modalStore.openModal('overlay');
 }
 
 function updateImageOverlay() {

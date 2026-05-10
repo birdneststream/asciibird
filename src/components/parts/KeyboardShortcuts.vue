@@ -6,6 +6,7 @@
 import { computed, watch, onUnmounted } from 'vue';
 import { toolbarIcons } from '../../ascii';
 import { useAsciiBirdStore } from '../../store';
+import { useModalStore } from '../../store/modal';
 import hotkeys from 'hotkeys-js';
 
 const props = defineProps<{
@@ -23,13 +24,14 @@ const emit = defineEmits<{
 }>();
 
 const store = useAsciiBirdStore();
+const modalStore = useModalStore();
 
 const toolbarState = computed(() => store.toolbarState);
 const currentTool = computed(() => toolbarIcons[store.currentTool]);
 const haveOpenTabs = computed(() => store.currentAscii !== false);
 const isDefault = computed(() => currentTool.value?.name === 'default');
-const isKeyboardDisabled = computed(() => store.isKeyboardDisabled);
-const isModalOpen = computed(() => store.isModalOpen);
+const isKeyboardDisabled = computed(() => modalStore.isKeyboardDisabled);
+const isModalOpen = computed(() => modalStore.isModalOpen);
 
 const disableKeyboard = computed(
   () =>

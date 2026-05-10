@@ -20,6 +20,7 @@ import {
 } from '@/ascii'
 import {
   createMockStore,
+  createMockModalStore,
   globalStubs,
   setupHotkeysMocks,
   toastedMock,
@@ -28,10 +29,15 @@ import {
 import LZString from 'lz-string'
 
 let _mockStore: any = null
+let _mockModalStore: any = null
 
 vi.mock('@/store', () => ({
   useAsciiBirdStore: () => _mockStore,
 }))
+vi.mock('@/store/modal', () => ({
+  useModalStore: () => _mockModalStore,
+}))
+
 
 vi.mock('@/composables/useToast', () => ({
   useToast: () => ({
@@ -65,6 +71,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   store = createMockStore()
   _mockStore = store
+  _mockModalStore = createMockModalStore()
 })
 
 describe('Editor.vue', () => {

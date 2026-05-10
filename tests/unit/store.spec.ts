@@ -9,6 +9,7 @@ import {
   cyrb53,
 } from '@/ascii';
 import { useAsciiBirdStore } from '@/store';
+import { useModalStore } from '@/store/modal';
 import type { Block, Layer, AsciibirdMeta, Options } from '@/types';
 import type { RootState } from '@/types/store';
 
@@ -66,10 +67,12 @@ function createTestMeta(
 
 describe('Pinia Store Actions', () => {
   let store: ReturnType<typeof useAsciiBirdStore>;
+  let modalStore: ReturnType<typeof useModalStore>;
 
   beforeEach(() => {
     setActivePinia(createPinia());
     store = useAsciiBirdStore();
+    modalStore = useModalStore();
     store.newAsciibirdMeta(createTestMeta());
   });
 
@@ -771,18 +774,18 @@ describe('Pinia Store Actions', () => {
     });
   });
 
-  // ── Modal actions ──────────────────────────────────────────
+  // ── Modal actions (now in useModalStore) ────────────────────
 
   describe('modal actions', () => {
     it('openModal sets modal state', () => {
-      store.openModal('new-ascii');
-      expect(store.modalState.newAscii).toBe(true);
+      modalStore.openModal('new-ascii');
+      expect(modalStore.modalState.newAscii).toBe(true);
     });
 
     it('closeModal unsets modal state', () => {
-      store.openModal('new-ascii');
-      store.closeModal('new-ascii');
-      expect(store.modalState.newAscii).toBe(false);
+      modalStore.openModal('new-ascii');
+      modalStore.closeModal('new-ascii');
+      expect(modalStore.modalState.newAscii).toBe(false);
     });
 
     it('openModal handles all modal types', () => {
@@ -791,10 +794,10 @@ describe('Pinia Store Actions', () => {
         'options', 'overlay', 'about', 'help',
       ];
       for (const type of types) {
-        store.openModal(type);
-        store.closeModal(type);
+        modalStore.openModal(type);
+        modalStore.closeModal(type);
       }
-      const allClosed = Object.values(store.modalState)
+      const allClosed = Object.values(modalStore.modalState)
         .every(v => !v);
       expect(allClosed).toBe(true);
     });
@@ -819,19 +822,19 @@ describe('Pinia Store Actions', () => {
     });
   });
 
-  // ── Keyboard toggle ──────────────────────────────────────────
+  // ── Keyboard toggle (now in useModalStore) ─────────────────────
 
   describe('toggleDisableKeyboard', () => {
     it('toggles keyboard disabled state', () => {
-      store.toggleDisableKeyboard();
-      expect(store.isKeyboardDisabled).toBe(true);
-      store.toggleDisableKeyboard();
-      expect(store.isKeyboardDisabled).toBe(false);
+      modalStore.toggleDisableKeyboard();
+      expect(modalStore.isKeyboardDisabled).toBe(true);
+      modalStore.toggleDisableKeyboard();
+      expect(modalStore.isKeyboardDisabled).toBe(false);
     });
 
     it('sets keyboard disabled to explicit value', () => {
-      store.toggleDisableKeyboard(true);
-      expect(store.isKeyboardDisabled).toBe(true);
+      modalStore.toggleDisableKeyboard(true);
+      expect(modalStore.isKeyboardDisabled).toBe(true);
     });
   });
 
@@ -853,10 +856,12 @@ describe('Pinia Store Actions', () => {
 
 describe('Pinia Store Getters', () => {
   let store: ReturnType<typeof useAsciiBirdStore>;
+  let modalStore: ReturnType<typeof useModalStore>;
 
   beforeEach(() => {
     setActivePinia(createPinia());
     store = useAsciiBirdStore();
+    modalStore = useModalStore();
     store.newAsciibirdMeta(createTestMeta());
   });
 
@@ -864,10 +869,6 @@ describe('Pinia Store Getters', () => {
     const state = store.state;
     expect(state.tab).toBe(store.tab);
     expect(state.options).toBe(store.options);
-  });
-
-  it('modalState returns modal state', () => {
-    expect(store.modalState).toEqual(store.$state.modalState);
   });
 
   it('options returns options', () => {
@@ -951,16 +952,16 @@ describe('Pinia Store Getters', () => {
   });
 
   it('isKeyboardDisabled returns disabled state', () => {
-    expect(store.isKeyboardDisabled).toBe(false);
+    expect(modalStore.isKeyboardDisabled).toBe(false);
   });
 
   it('isModalOpen returns false when all closed', () => {
-    expect(store.isModalOpen).toBe(false);
+    expect(modalStore.isModalOpen).toBe(false);
   });
 
   it('isModalOpen returns true when any open', () => {
-    store.openModal('help');
-    expect(store.isModalOpen).toBe(true);
+    modalStore.openModal('help');
+    expect(modalStore.isModalOpen).toBe(true);
   });
 
   it('brushBlocks decompresses brush data', () => {

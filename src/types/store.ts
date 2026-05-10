@@ -5,18 +5,15 @@ import type {
   BrushHistoryEntry,
   BrushLibraryEntry,
   DesktopState,
-  ModalState,
   Options,
   PanelState,
   BrushLibraryState,
   ToolbarState,
 } from './index';
 
-/** Full store root state */
+/** Main editor store state (remaining after modal/desktop/panel extraction) */
 export interface RootState {
   ver: number;
-  modalState: ModalState;
-  isKeyboardDisabled: boolean;
   options: Options;
   tab: number;
   desktopState: DesktopState;

@@ -24,14 +24,20 @@ import {
   copyTextMock,
   setupHotkeysMocks,
   createMockStore,
+  createMockModalStore,
   globalStubs,
 } from './helpers'
 
 let _mockStore: any = null
+let _mockModalStore: any = null
 
 vi.mock('@/store', () => ({
   useAsciiBirdStore: () => _mockStore,
 }))
+vi.mock('@/store/modal', () => ({
+  useModalStore: () => _mockModalStore,
+}))
+
 
 vi.mock('@/composables/useToast', () => ({
   useToast: () => ({ show: toastedMock.show, messages: { value: [] } }),
@@ -78,6 +84,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   store = createMockStore()
   _mockStore = store
+  _mockModalStore = createMockModalStore()
 })
 
 afterEach(() => {

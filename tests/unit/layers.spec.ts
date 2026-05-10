@@ -13,15 +13,21 @@ import { createPinia } from 'pinia'
 import Layers from '@/components/parts/Layers.vue'
 import {
   createMockStore,
+  createMockModalStore,
   toastedMock,
   globalStubs,
 } from './helpers'
 
 let _mockStore: any = null
+let _mockModalStore: any = null
 
 vi.mock('@/store', () => ({
   useAsciiBirdStore: () => _mockStore,
 }))
+vi.mock('@/store/modal', () => ({
+  useModalStore: () => _mockModalStore,
+}))
+
 
 vi.mock('../../src/composables/useToast', () => ({
   useToast: () => ({
@@ -53,6 +59,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   store = createMockStore()
   _mockStore = store
+  _mockModalStore = createMockModalStore()
 })
 
 afterEach(() => {
@@ -201,9 +208,9 @@ describe('Layers.vue', () => {
     )
   })
 
-  it('showOverlayModal calls store openModal with overlay', () => {
+  it('showOverlayModal calls modal store openModal with overlay', () => {
     const wrapper = createWrapper()
-    const spy = vi.spyOn(store, 'openModal')
+    const spy = vi.spyOn(_mockModalStore, 'openModal')
     wrapper.vm.showOverlayModal()
     expect(spy).toHaveBeenCalledWith('overlay')
   })

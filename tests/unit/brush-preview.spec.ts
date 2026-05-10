@@ -18,16 +18,22 @@ import {
 import LZString from 'lz-string'
 import {
   createMockStore,
+  createMockModalStore,
   createToolbarState,
   toastedMock,
   globalStubs,
 } from './helpers'
 
 let _mockStore: any = null
+let _mockModalStore: any = null
 
 vi.mock('@/store', () => ({
   useAsciiBirdStore: () => _mockStore,
 }))
+vi.mock('@/store/modal', () => ({
+  useModalStore: () => _mockModalStore,
+}))
+
 
 vi.mock('@vueuse/core', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@vueuse/core')>()
@@ -57,6 +63,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   store = createMockStore()
   _mockStore = store
+  _mockModalStore = createMockModalStore()
 })
 
 afterEach(() => {

@@ -14,11 +14,13 @@ import KeyboardShortcuts from '@/components/parts/KeyboardShortcuts.vue'
 import hotkeys from 'hotkeys-js'
 import {
   createMockStore,
+  createMockModalStore,
   createToolbarState,
   globalStubs,
 } from './helpers'
 
 let _mockStore: any = null
+let _mockModalStore: any = null
 
 // Capture hotkeys handlers via the module mock
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
@@ -49,6 +51,10 @@ vi.mock('hotkeys-js', () => {
 vi.mock('@/store', () => ({
   useAsciiBirdStore: () => _mockStore,
 }))
+vi.mock('@/store/modal', () => ({
+  useModalStore: () => _mockModalStore,
+}))
+
 
 let store: any
 
@@ -77,6 +83,7 @@ beforeEach(() => {
   capturedHandlers.clear()
   store = createMockStore()
   _mockStore = store
+  _mockModalStore = createMockModalStore()
 })
 
 afterEach(() => {
@@ -125,8 +132,7 @@ describe('KeyboardShortcuts.vue', () => {
   })
 
   it('sets scope to modals when disableKeyboard is true', () => {
-    store = createMockStore({ isKeyboardDisabled: true })
-    _mockStore = store
+    _mockModalStore = createMockModalStore({ isKeyboardDisabled: true })
     shallowMount(KeyboardShortcuts, mountOpts())
     expect((hotkeys as any).setScope).toHaveBeenCalledWith(
       'modals',
@@ -134,8 +140,7 @@ describe('KeyboardShortcuts.vue', () => {
   })
 
   it('disableKeyboard computed reads from store', () => {
-    store = createMockStore({ isKeyboardDisabled: true })
-    _mockStore = store
+    _mockModalStore = createMockModalStore({ isKeyboardDisabled: true })
     shallowMount(KeyboardShortcuts, mountOpts())
     expect((hotkeys as any).setScope).toHaveBeenCalledWith(
       'modals',
@@ -439,7 +444,7 @@ describe('useGlobalShortcuts', () => {
 
   it('ctrl+m opens new-ascii modal', async () => {
     await initShortcuts()
-    const spy = vi.spyOn(store, 'openModal')
+    const spy = vi.spyOn(_mockModalStore, 'openModal')
     const handler = getHandler('all:ctrl+m')!
     handler(createEvent(), {})
     expect(spy).toHaveBeenCalledWith('new-ascii')
@@ -447,7 +452,7 @@ describe('useGlobalShortcuts', () => {
 
   it('f1 opens help modal', async () => {
     await initShortcuts()
-    const spy = vi.spyOn(store, 'openModal')
+    const spy = vi.spyOn(_mockModalStore, 'openModal')
     const handler = getHandler('all:f1')!
     handler(createEvent({ shiftKey: false }), {})
     expect(spy).toHaveBeenCalledWith('help')
@@ -455,7 +460,7 @@ describe('useGlobalShortcuts', () => {
 
   it('shift+f1 opens about modal', async () => {
     await initShortcuts()
-    const spy = vi.spyOn(store, 'openModal')
+    const spy = vi.spyOn(_mockModalStore, 'openModal')
     const handler = getHandler('all:shift+f1')!
     handler(createEvent(), {})
     expect(spy).toHaveBeenCalledWith('about')

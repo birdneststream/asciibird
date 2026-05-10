@@ -25,14 +25,20 @@ import {
   copyTextMock,
   setupHotkeysMocks,
   createMockStore,
+  createMockModalStore,
   globalStubs,
 } from './helpers'
 
 let _mockStore: any = null
+let _mockModalStore: any = null
 
 vi.mock('@/store', () => ({
   useAsciiBirdStore: () => _mockStore,
 }))
+vi.mock('@/store/modal', () => ({
+  useModalStore: () => _mockModalStore,
+}))
+
 
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastedMock.show,
@@ -67,6 +73,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   store = createMockStore()
   _mockStore = store
+  _mockModalStore = createMockModalStore()
 })
 
 afterEach(() => {
@@ -124,13 +131,12 @@ describe('PasteAscii.vue', () => {
   })
 
   it('computed showPasteAscii returns correct value when true', () => {
-    _mockStore = createMockStore({
+    _mockModalStore = createMockModalStore({
       modalState: {
         newAscii: false, editAscii: false, pasteAscii: true,
         options: false, overlay: false, about: false, help: false,
       },
     })
-    store = _mockStore
     const wrapper = shallowMount(PasteAscii, mountOpts())
     expect(wrapper.vm.showPasteAscii).toBe(true)
   })
@@ -282,13 +288,12 @@ describe('Options.vue', () => {
   })
 
   it('computed showOptionsModal returns true when store has options=true', () => {
-    _mockStore = createMockStore({
+    _mockModalStore = createMockModalStore({
       modalState: {
         newAscii: false, editAscii: false, pasteAscii: false,
         options: true, overlay: false, about: false, help: false,
       },
     })
-    store = _mockStore
     const wrapper = shallowMount(Options, mountOpts())
     expect(wrapper.vm.showOptionsModal).toBe(true)
   })
@@ -324,13 +329,12 @@ describe('ImageOverlay.vue', () => {
   })
 
   it('computed showOverlayModal returns true when store has overlay=true', () => {
-    _mockStore = createMockStore({
+    _mockModalStore = createMockModalStore({
       modalState: {
         newAscii: false, editAscii: false, pasteAscii: false,
         options: false, overlay: true, about: false, help: false,
       },
     })
-    store = _mockStore
     const wrapper = shallowMount(ImageOverlay, mountOpts())
     expect(wrapper.vm.showOverlayModal).toBe(true)
   })

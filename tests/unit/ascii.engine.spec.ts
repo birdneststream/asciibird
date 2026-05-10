@@ -17,13 +17,14 @@ import {
   maxUndoHistory,
   tabLimit,
   cyrb53,
-  getBlocksWidth,
-  filterNullBlocks,
-  checkVisible,
-  fillNullBlocks,
-  iterativeFill,
-  setStore,
-  createNewAscii,
+   getBlocksWidth,
+   filterNullBlocks,
+   checkVisible,
+   fillNullBlocks,
+   iterativeFill,
+   setStore,
+   setModalStore,
+   createNewAscii,
   exportMirc,
   parseMircAscii,
   mergeLayers,
@@ -546,6 +547,7 @@ describe('fillNullBlocks', () => {
   it('uses store getter when layerData is null', () => {
     const mockStore = createMockStore();
     setStore(mockStore);
+    setModalStore(mockStore);
 
     const result = fillNullBlocks(5, 5, null);
     // Should use store's currentAsciiLayers (5x5 from mock)
@@ -627,6 +629,7 @@ describe('createNewAscii', () => {
   beforeEach(() => {
     mockStore = createMockStore();
     setStore(mockStore);
+    setModalStore(mockStore);
   });
 
   it('creates a new ASCII and calls store action', () => {
@@ -750,6 +753,7 @@ describe('exportMirc', () => {
   beforeEach(() => {
     mockStore = createMockStore();
     setStore(mockStore);
+    setModalStore(mockStore);
   });
 
   it('exports a blank 5x5 canvas', () => {
@@ -768,6 +772,7 @@ describe('exportMirc', () => {
     // Need a store with a title ending in .txt
     const store = createMockStore({ title: 'myart.txt' });
     setStore(store);
+    setModalStore(store);
     const result = exportMirc();
     expect(result.filename).toBe('myart.txt');
   });
@@ -862,6 +867,7 @@ describe('parseMircAscii', () => {
   beforeEach(() => {
     mockStore = createMockStore();
     setStore(mockStore);
+    setModalStore(mockStore);
   });
 
   it('parses simple mIRC string with correct fg/bg/char values', async () => {
@@ -988,6 +994,7 @@ describe('mergeLayers', () => {
   beforeEach(() => {
     mockStore = createMockStore();
     setStore(mockStore);
+    setModalStore(mockStore);
   });
 
   it('returns a 2D block array', () => {
@@ -1010,6 +1017,7 @@ describe('mergeLayers', () => {
 
     mockStore = createMockStore({ layers });
     setStore(mockStore);
+    setModalStore(mockStore);
 
     const result = mergeLayers();
     expect(result[0][0].fg).toBe(4);
@@ -1036,6 +1044,7 @@ describe('mergeLayers', () => {
 
     mockStore = createMockStore({ layers });
     setStore(mockStore);
+    setModalStore(mockStore);
 
     const result = mergeLayers();
     // Hidden layer should be skipped, so we should see X not Z
@@ -1062,6 +1071,7 @@ describe('mergeLayers', () => {
 
     mockStore = createMockStore({ layers });
     setStore(mockStore);
+    setModalStore(mockStore);
 
     const result = mergeLayers();
     // Front layer has empty block, so back layer should show through
@@ -1088,6 +1098,7 @@ describe('mergeLayers', () => {
 
     mockStore = createMockStore({ layers });
     setStore(mockStore);
+    setModalStore(mockStore);
 
     const result = mergeLayers();
     // Front layer should win over back layer
@@ -1104,6 +1115,7 @@ describe('mIRC round-trip (parse → export)', () => {
   beforeEach(() => {
     mockStore = createMockStore();
     setStore(mockStore);
+    setModalStore(mockStore);
   });
 
   it('export of blank canvas is deterministic', () => {
@@ -1129,6 +1141,7 @@ describe('mIRC round-trip (parse → export)', () => {
     // Create a new mock with the parsed layers for export
     const newStore = createMockStore({ layers: parsedLayers });
     setStore(newStore);
+    setModalStore(newStore);
 
     const exported = exportMirc();
     expect(exported.output.length).toBeGreaterThan(0);
@@ -1188,6 +1201,7 @@ describe('mergeLayers edge cases', () => {
   beforeEach(() => {
     mockStore = createMockStore();
     setStore(mockStore);
+    setModalStore(mockStore);
   });
 
   it('handles blocks with null char in front layer', () => {
@@ -1208,6 +1222,7 @@ describe('mergeLayers edge cases', () => {
 
     mockStore = createMockStore({ layers });
     setStore(mockStore);
+    setModalStore(mockStore);
 
     const result = mergeLayers();
     // Front layer has null char, which sets curBlock.char to undefined
@@ -1232,6 +1247,7 @@ describe('mergeLayers edge cases', () => {
 
     mockStore = createMockStore({ layers });
     setStore(mockStore);
+    setModalStore(mockStore);
 
     const result = mergeLayers();
     // null fg/bg/char should all set curBlock properties to undefined
@@ -1251,6 +1267,7 @@ describe('mergeLayers edge cases', () => {
 
     mockStore = createMockStore({ layers });
     setStore(mockStore);
+    setModalStore(mockStore);
 
     // mergeLayers should handle empty layers gracefully
     // It loops height+1 and width+1, so even 0x0 creates row 0 col 0
@@ -1313,6 +1330,7 @@ describe('exportMirc edge cases', () => {
   beforeEach(() => {
     mockStore = createMockStore();
     setStore(mockStore);
+    setModalStore(mockStore);
   });
 
   it('handles digit chars that need padding', () => {
@@ -1382,6 +1400,7 @@ describe('parseMircAscii edge cases', () => {
   beforeEach(() => {
     mockStore = createMockStore();
     setStore(mockStore);
+    setModalStore(mockStore);
   });
 
   it('handles two-digit color codes', async () => {
@@ -1453,6 +1472,7 @@ describe('setStore/getStore', () => {
   it('store-dependent functions work after setStore', () => {
     const mockStore = createMockStore();
     setStore(mockStore);
+    setModalStore(mockStore);
     expect(() => mergeLayers()).not.toThrow();
   });
 });

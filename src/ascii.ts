@@ -1,15 +1,20 @@
 import LZString from 'lz-string';
 import type { Block, Layer, ImageOverlay, AsciibirdMetaBuilder, MircExportResult, ToolbarIcon, CreateAsciiForm } from './types';
 
-// Lazy store reference to break circular dependency
+// Lazy store references to break circular dependency
 // Store imports from ascii, ascii imports store
 // Using a getter ensures store is only accessed after initialization
  
 let _store: any = null;
+let _modalStore: any = null;
 
  
 export const setStore = (s: any): void => {
   _store = s;
+};
+
+export const setModalStore = (s: any): void => {
+  _modalStore = s;
 };
 
  
@@ -20,6 +25,15 @@ const getStore = (): any => {
     );
   }
   return _store;
+};
+
+const getModalStore = (): any => {
+  if (!_modalStore) {
+    throw new Error(
+      'Modal store not initialized.',
+    );
+  }
+  return _modalStore;
 };
 
 // 0  => 'white',
@@ -388,7 +402,7 @@ export const createNewAscii = (forms: CreateAsciiForm): boolean => {
   );
 
   getStore().newAsciibirdMeta(newAscii);
-  getStore().closeModal('new-ascii');
+  getModalStore().closeModal('new-ascii');
 
   return true;
 };

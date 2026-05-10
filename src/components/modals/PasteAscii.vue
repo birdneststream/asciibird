@@ -1,7 +1,7 @@
 <template>
   <ABModal
     :open="showPasteAscii"
-    @close="store.closeModal('paste-ascii')"
+    @close="modalStore.closeModal('paste-ascii')"
     title="Import from Clipboard"
   >
     Title
@@ -25,7 +25,7 @@
         <button
           type="button"
           class="ab-button"
-          @click="store.closeModal('paste-ascii')"
+          @click="modalStore.closeModal('paste-ascii')"
         >
           <span
             class="material-icons relative top-2 pb-4"
@@ -55,13 +55,15 @@ import { ref, computed, watch } from 'vue';
 import { parseMircAscii } from '../../ascii';
 import ABModal from '../ABModal.vue';
 import { useAsciiBirdStore } from '../../store';
+import { useModalStore } from '../../store/modal';
 
 const store = useAsciiBirdStore();
+const modalStore = useModalStore();
 
 const pasteContent = ref('');
 const title = ref('clipboard.txt');
 
-const showPasteAscii = computed(() => store.modalState.pasteAscii);
+const showPasteAscii = computed(() => modalStore.modalState.pasteAscii);
 const checkPasteContent = computed(() => !pasteContent.value.length);
 
 function close() {

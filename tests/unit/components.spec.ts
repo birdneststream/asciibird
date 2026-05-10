@@ -21,6 +21,7 @@ import ContextMenu from '@/components/parts/ContextMenu.vue'
 import { mircColours99, charCodes } from '@/ascii'
 import {
   createMockStore,
+  createMockModalStore,
   toastedMock,
   copyTextMock,
   globalStubs,
@@ -28,10 +29,15 @@ import {
 } from './helpers'
 
 let _mockStore: any = null
+let _mockModalStore: any = null
 
 vi.mock('@/store', () => ({
   useAsciiBirdStore: () => _mockStore,
 }))
+vi.mock('@/store/modal', () => ({
+  useModalStore: () => _mockModalStore,
+}))
+
 
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastedMock.show,
@@ -85,6 +91,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   store = createMockStore()
   _mockStore = store
+  _mockModalStore = createMockModalStore()
 })
 
 afterEach(() => {
@@ -398,7 +405,7 @@ describe('NewAscii.vue', () => {
     wrapper.vm.forms.createAscii.height = '50'
     wrapper.vm.forms.createAscii.title = 'Test ASCII'
 
-    const spy = vi.spyOn(store, 'closeModal')
+    const spy = vi.spyOn(_mockModalStore, 'closeModal')
     try {
       wrapper.vm.initiateNewAscii()
     } catch {
@@ -445,13 +452,12 @@ describe('About.vue', () => {
   })
 
   it('computed showAboutModal returns true when store has about=true', () => {
-    _mockStore = createMockStore({
+    _mockModalStore = createMockModalStore({
       modalState: {
         newAscii: false, editAscii: false, pasteAscii: false,
         options: false, overlay: false, about: true, help: false,
       },
     })
-    store = _mockStore
     const wrapper = shallowMount(About, mountOpts())
     expect(wrapper.vm.showAboutModal).toBe(true)
   })

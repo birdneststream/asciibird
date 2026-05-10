@@ -2,8 +2,9 @@ import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import { createPersistedState } from 'pinia-plugin-persistedstate';
 import Dashboard from './Dashboard.vue';
-import { setStore } from './ascii';
+import { setStore, setModalStore } from './ascii';
 import { useAsciiBirdStore } from './store';
+import { useModalStore } from './store/modal';
 import 'material-icons/iconfont/material-icons.css';
 import './style.scss';
 
@@ -29,8 +30,11 @@ pinia.use(createPersistedState());
 const app = createApp(Dashboard);
 app.use(pinia);
 
-// Break circular dependency: set store reference in ascii module
+// Break circular dependency: set store references in ascii module
 const store = useAsciiBirdStore();
 setStore(store);
+
+const modalStore = useModalStore();
+setModalStore(modalStore);
 
 app.mount('#app');
