@@ -1,8 +1,7 @@
 // Pinia store for ASCIIBIRD
-// Converted from Vuex — mutations become actions using `this` instead of `state`
 //
-// Toolbar state extracted to useToolbarStore (store/toolbar.ts).
-// This store manages: tabs, layers, undo/redo, ASCII blocks, options.
+// Manages: tabs, layers, undo/redo, ASCII blocks, options.
+// Toolbar state lives in useToolbarStore (store/toolbar.ts).
 
 import { defineStore } from 'pinia';
 import {

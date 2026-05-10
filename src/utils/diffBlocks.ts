@@ -52,7 +52,7 @@ export function storeDiffBlocks(
  * Dispatch accumulated diff blocks to the store.
  * Flattens old/new arrays and commits/ dispatches the update.
  *
- * @param store - Vuex store instance
+ * @param store - Pinia store instance
  * @param diffBlocks - The diff accumulation object
  * @param currentLayerBlocks - The current layer blocks data
  * @param selectedLayerIndex - Index of the selected layer
