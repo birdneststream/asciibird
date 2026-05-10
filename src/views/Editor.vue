@@ -174,6 +174,10 @@ const editorPanel = ref<HTMLElement | null>(null);
 let ctx: CanvasRenderingContext2D | null = null;
 let toolCtx: CanvasRenderingContext2D | null = null;
 
+// Timer IDs for delayRedrawCanvas cleanup
+let pendingTimeout: ReturnType<typeof setTimeout> | null = null;
+let pendingFrame: number | null = null;
+
 // ─── Reactive State ─────────────────────────────────────────────
 const canvasSize = reactive({ width: 512, height: 512 });
 const x = ref(0);
@@ -529,12 +533,15 @@ hotkeys('*', 'editor', async function (event) {
 onMounted(async () => {
   const canvas = canvasRef.value;
   if (canvas) {
-    ctx = canvas.getContext('2d');
+    // willReadFrequently: canvas reset pattern (canvas.width = canvas.width)
+    // triggers implicit readback; hint avoids repeated Chrome warnings.
+    ctx = canvas.getContext('2d', { willReadFrequently: true });
     if (ctx) ctx.font = '13px Hack';
   }
   const tools = canvastoolsRef.value;
   if (tools) {
-    toolCtx = tools.getContext('2d');
+    // willReadFrequently: tools canvas also uses width-reset clear pattern.
+    toolCtx = tools.getContext('2d', { willReadFrequently: true });
   }
   await delayRedrawCanvas();
 });
@@ -542,6 +549,16 @@ onMounted(async () => {
 onUnmounted(() => {
   hotkeys.unbind('*', 'editor');
   canvasPanel.cleanup();
+
+  // Clean up pending canvas redraw timers
+  if (pendingTimeout !== null) {
+    clearTimeout(pendingTimeout);
+    pendingTimeout = null;
+  }
+  if (pendingFrame !== null) {
+    cancelAnimationFrame(pendingFrame);
+    pendingFrame = null;
+  }
 });
 
 // ─── Init (equivalent to created() — runs during setup) ─────────
@@ -1260,10 +1277,24 @@ async function clearToolCanvas() {
 async function delayRedrawCanvas(force = false) {
   if (redraw.value) {
     redraw.value = false;
-    setTimeout(() => {
-      requestAnimationFrame(async () => {
-        await redrawCanvas(force);
-        redraw.value = true;
+
+    // Cancel any previous pending redraw
+    if (pendingTimeout !== null) {
+      clearTimeout(pendingTimeout);
+    }
+    if (pendingFrame !== null) {
+      cancelAnimationFrame(pendingFrame);
+    }
+
+    pendingTimeout = setTimeout(() => {
+      pendingTimeout = null;
+      pendingFrame = requestAnimationFrame(async () => {
+        pendingFrame = null;
+        try {
+          await redrawCanvas(force);
+        } finally {
+          redraw.value = true;
+        }
       });
     }, 1000 / options.value.fps);
   }

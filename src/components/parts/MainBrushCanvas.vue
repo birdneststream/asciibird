@@ -58,7 +58,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import type { Block } from '../../types'
 import ContextMenu from './ContextMenu.vue'
 import {
@@ -90,6 +90,10 @@ const brushcanvas = ref<HTMLCanvasElement>()
 const contextMenuRef = ref<InstanceType<typeof ContextMenu>>()
 const ctx = ref<CanvasRenderingContext2D | null>(null)
 const redraw = ref(true)
+
+// Timer IDs for delayRedrawCanvas cleanup
+let pendingTimeout: ReturnType<typeof setTimeout> | null = null
+let pendingFrame: number | null = null
 const canTool = ref(false)
 const hasChanged = ref(false)
 const x = ref(0)
@@ -140,7 +144,8 @@ watch(
 // ─── Lifecycle ──────────────────────────────────────────
 onMounted(() => {
   if (brushcanvas.value) {
-    ctx.value = brushcanvas.value.getContext('2d')
+    // willReadFrequently: frequent redraws benefit from software-backed canvas.
+    ctx.value = brushcanvas.value.getContext('2d', { willReadFrequently: true })
   }
   delayRedrawCanvas()
 })
@@ -281,14 +286,36 @@ function drawPreview() {
 function delayRedrawCanvas() {
   if (redraw.value) {
     redraw.value = false
-    setTimeout(() => {
-      requestAnimationFrame(() => {
+
+    // Cancel any previous pending redraw
+    if (pendingTimeout !== null) {
+      clearTimeout(pendingTimeout)
+    }
+    if (pendingFrame !== null) {
+      cancelAnimationFrame(pendingFrame)
+    }
+
+    pendingTimeout = setTimeout(() => {
+      pendingTimeout = null
+      pendingFrame = requestAnimationFrame(() => {
+        pendingFrame = null
         drawPreview()
         redraw.value = true
       })
     }, 1000 / store.options.fps)
   }
 }
+
+onUnmounted(() => {
+  if (pendingTimeout !== null) {
+    clearTimeout(pendingTimeout)
+    pendingTimeout = null
+  }
+  if (pendingFrame !== null) {
+    cancelAnimationFrame(pendingFrame)
+    pendingFrame = null
+  }
+})
 
 function canvasMouseMove(e: MouseEvent) {
   if (canTool.value && (isErasing.value || isBrushing.value)) {

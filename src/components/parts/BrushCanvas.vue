@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import type { Block } from '../../types'
 import {
   mircColours99,
@@ -86,6 +86,10 @@ const canvasEl = ref<HTMLCanvasElement>()
 const contextMenuRef = ref<InstanceType<typeof ContextMenu>>()
 const ctx = ref<CanvasRenderingContext2D | null>(null)
 const redraw = ref(true)
+
+// Timer IDs for delayRedrawCanvas cleanup
+let pendingTimeout: ReturnType<typeof setTimeout> | null = null
+let pendingFrame: number | null = null
 
 // ─── Computed ───────────────────────────────────────────
 const renderBlockWidth = computed(
@@ -127,7 +131,8 @@ watch(
 // ─── Lifecycle ──────────────────────────────────────────
 onMounted(() => {
   if (canvasEl.value) {
-    ctx.value = canvasEl.value.getContext('2d')
+    // willReadFrequently: frequent redraws benefit from software-backed canvas.
+    ctx.value = canvasEl.value.getContext('2d', { willReadFrequently: true })
   }
   delayRedrawCanvas()
 })
@@ -219,14 +224,36 @@ function drawPreview() {
 function delayRedrawCanvas() {
   if (redraw.value) {
     redraw.value = false
-    setTimeout(() => {
-      requestAnimationFrame(() => {
+
+    // Cancel any previous pending redraw
+    if (pendingTimeout !== null) {
+      clearTimeout(pendingTimeout)
+    }
+    if (pendingFrame !== null) {
+      cancelAnimationFrame(pendingFrame)
+    }
+
+    pendingTimeout = setTimeout(() => {
+      pendingTimeout = null
+      pendingFrame = requestAnimationFrame(() => {
+        pendingFrame = null
         drawPreview()
         redraw.value = true
       })
     }, 1000 / store.options.fps)
   }
 }
+
+onUnmounted(() => {
+  if (pendingTimeout !== null) {
+    clearTimeout(pendingTimeout)
+    pendingTimeout = null
+  }
+  if (pendingFrame !== null) {
+    cancelAnimationFrame(pendingFrame)
+    pendingFrame = null
+  }
+})
 
 // ─── Expose for test compatibility ──────────────────────
 defineExpose({
