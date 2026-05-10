@@ -6,7 +6,7 @@
       @mouseenter="isMouseOnCanvas = true"
     >
       <context-menu
-        ref="editor-menu"
+        ref="editorMenu"
         class="z-50"
       >
         <ul>
@@ -38,25 +38,25 @@
         <canvas
           id="overlay-image"
           :style="imageOverlayStyle"
-          :width="currentAsciiWidth * blockWidth"
-          :height="currentAsciiHeight * blockHeight"
+          :width="currentAsciiWidth * blockWidthComp"
+          :height="currentAsciiHeight * blockHeightComp"
         />
 
         <canvas
-          ref="canvas"
+          ref="canvasRef"
           id="canvas"
           class="canvas"
           :style="canvasTransparent"
-          :width="currentAsciiWidth * blockWidth"
-          :height="currentAsciiHeight * blockHeight"
+          :width="currentAsciiWidth * blockWidthComp"
+          :height="currentAsciiHeight * blockHeightComp"
         />
 
         <canvas
-          ref="canvastools"
+          ref="canvastoolsRef"
           id="canvastools"
           class="canvastools"
-          :width="currentAsciiWidth * blockWidth"
-          :height="currentAsciiHeight * blockHeight"
+          :width="currentAsciiWidth * blockWidthComp"
+          :height="currentAsciiHeight * blockHeightComp"
           @mousemove="canvasMouseMove"
           @mousedown.left="canvasMouseDown"
           @mouseup.left="canvasMouseUp"
@@ -70,14 +70,15 @@
   </div>
 </template>
 
-<script>
-import { ref } from 'vue';
+<script setup lang="ts">
+import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useAsciiBirdStore } from '../store';
 import { useToast } from '../composables/useToast';
 import { useClipboard } from '../composables/useClipboard';
 import { useDraggable } from '@vueuse/core';
+import hotkeys from 'hotkeys-js';
 
-import ContextMenu from "./../components/parts/ContextMenu.vue";
+import ContextMenu from '../components/parts/ContextMenu.vue';
 
 import {
   toolbarIcons,
@@ -90,1907 +91,1889 @@ import {
   getBlocksWidth,
   checkVisible,
   mergeLayers,
-  canvasToPng,
+  canvasToPng as canvasToPngUtil,
   exportMirc,
   downloadFile,
   cyrb53,
   emptyBlock,
   iterativeFill,
   checkIrcByteLimits,
-} from "../ascii";
+} from '../ascii';
 
-import { getMirrorPositions } from "../utils/mirror";
+import { getMirrorPositions } from '../utils/mirror';
+import type { Block } from '../types';
 
-export default {
-  name: "Editor",
-  components: {
-    ContextMenu,
-  },
-  setup() {
-    const store = useAsciiBirdStore();
-    const { show: toastShow } = useToast();
-    const { copyText } = useClipboard();
+defineOptions({ name: 'Editor' });
 
-    const editorPanel = ref(null);
-    const { style: editorStyle } = useDraggable(editorPanel, {
-      initialValue: { x: 0, y: 0 },
-      disabled: true,
-    });
+// ─── Props & Emits ──────────────────────────────────────────────
+const props = withDefaults(defineProps<{
+  updateCanvas?: boolean;
+  yOffset?: number;
+  canvasxy?: string;
+  brush?: boolean;
+  updateascii?: boolean;
+  resetSelect?: boolean;
+}>(), {
+  updateCanvas: false,
+  yOffset: 0,
+  canvasxy: '',
+  brush: false,
+  updateascii: false,
+  resetSelect: false,
+});
 
-    return { store, toastShow, copyText, editorPanel, editorStyle };
-  },
-  async mounted() {
-    this.ctx = this.canvasRef.getContext("2d");
-    this.ctx.font = "13px Hack";
-    this.toolCtx = this.$refs.canvastools.getContext("2d");
-    await this.delayRedrawCanvas();
-  },
-  async created() {
-    window.addEventListener("load", async () => {
-      await this.delayRedrawCanvas();
-    });
+const emit = defineEmits<{
+  coordsupdate: [value: { x: number; y: number }];
+  selectedblocks: [value: Block[][]];
+  selecting: [value: {
+    startX: number | null;
+    startY: number | null;
+    endX: number | null;
+    endY: number | null;
+    canSelect: boolean;
+  }];
+  textediting: [value: {
+    startX: number | null;
+    startY: number | null;
+  }];
+}>();
 
-    const _this = this;
-    hotkeys("*", "editor", async function (event) {
-      event.preventDefault();
+// ─── Store & Composables ────────────────────────────────────────
+const store = useAsciiBirdStore();
+const { show: toastShow } = useToast();
+const { copyText } = useClipboard();
 
-      if (_this.isTextEditing) {
-        await _this.canvasKeyDown(event.key);
-        return;
-      }
+// ─── Template Refs ──────────────────────────────────────────────
+const canvasRef = ref<HTMLCanvasElement | null>(null);
+const canvastoolsRef = ref<HTMLCanvasElement | null>(null);
+const editorMenu = ref<InstanceType<typeof ContextMenu> | null>(null);
+const editorPanel = ref<HTMLElement | null>(null);
 
-      if (_this.isBrushing || _this.isErasing) {
-        switch (event.key) {
-          case "ArrowUp":
-            _this.y--;
-            await _this.drawBrush(_this.isErasing);
-            break;
+// ─── Draggable ──────────────────────────────────────────────────
+const { style: editorStyle } = useDraggable(editorPanel, {
+  initialValue: { x: 0, y: 0 },
+  disabled: true,
+});
 
-          case "ArrowDown":
-            _this.y++;
-            await _this.drawBrush(_this.isErasing);
-            break;
+// ─── Canvas Contexts (NOT reactive — performance critical) ──────
+let ctx: CanvasRenderingContext2D | null = null;
+let toolCtx: CanvasRenderingContext2D | null = null;
 
-          case "ArrowLeft":
-            _this.x--;
-            await _this.drawBrush(_this.isErasing);
-            break;
+// ─── Reactive State ─────────────────────────────────────────────
+const canvasSize = reactive({ width: 512, height: 512 });
+const x = ref(0);
+const y = ref(0);
+const atTopHalf = ref(0);
+const top = ref<number | false>(false);
+const redraw = ref(true);
+const canTool = ref(false);
+const textEditing = ref<{ startX: number | null; startY: number | null }>({
+  startX: null,
+  startY: null,
+});
+const selecting = ref({
+  startX: null as number | null,
+  startY: null as number | null,
+  endX: null as number | null,
+  endY: null as number | null,
+  canSelect: false,
+});
+const isMouseOnCanvas = ref(false);
+const selectedBlocks = ref<Block[][]>([]);
+const diffBlocks = reactive<{ l: number; old: any[]; new: any[] }>({
+  l: 0,
+  old: [],
+  new: [],
+});
+const isUsingKeyboard = ref(false);
+const canvasHash = ref<number | null>(null);
 
-          case "ArrowRight":
-            _this.x++;
-            await _this.drawBrush(_this.isErasing);
-            break;
+// ─── Computed ───────────────────────────────────────────────────
+const blockSizeMultiplier = computed(() => store.blockSizeMultiplier);
+const blockWidthComp = computed(() => blockWidth * blockSizeMultiplier.value);
+const blockHeightComp = computed(() => blockHeight * blockSizeMultiplier.value);
 
-          case " ":
-            _this.canTool = true;
-            _this.isBrushing
-              ? await _this.drawBrush(false)
-              : await _this.eraser();
-            _this.canTool = false;
-            await _this.dispatchBlocks(true);
-            break;
-        }
-      }
-    });
+const currentAscii = computed(() => store.currentAscii);
+const currentAsciiLayers = computed(() => store.currentAsciiLayers);
+const selectedLayerIndex = computed(
+  () => currentAscii.value.selectedLayer || 0,
+);
+const currentSelectedLayer = computed(
+  () => currentAsciiLayers.value[selectedLayerIndex.value] || [],
+);
+const currentAsciiLayerBlocks = computed(
+  () => currentSelectedLayer.value.data,
+);
 
-    if (this.currentAsciiLayerBlocks) {
-      this.canvas.width = this.currentAsciiWidth * blockWidth;
-      this.canvas.height = this.currentAsciiHeight * blockHeight;
+const currentTool = computed(() => toolbarIcons[store.currentTool]);
+const canFg = computed(() => store.isTargettingFg);
+const canBg = computed(() => store.isTargettingBg);
+const canText = computed(() => store.isTargettingChar);
+const currentFg = computed(() => store.currentFg);
+const currentBg = computed(() => store.currentBg);
+const currentChar = computed(() => store.currentChar);
 
-      await this.delayRedrawCanvas();
-      this.$emit("textediting", this.textEditing);
+const isTextEditing = computed(() => currentTool.value.name === 'text');
+const isEraserFill = computed(() => currentTool.value.name === 'fill-eraser');
+const isFill = computed(() => currentTool.value.name === 'fill');
+const isTextEditingValues = computed(
+  () => textEditing.value.startX !== null && textEditing.value.startY !== null,
+);
+const isSelecting = computed(() => currentTool.value.name === 'select');
+const isDefault = computed(() => currentTool.value.name === 'default');
+const isBrushing = computed(() => currentTool.value.name === 'brush');
+const isErasing = computed(() => currentTool.value.name === 'eraser');
+const isSelected = computed(
+  () =>
+    selecting.value.startX !== null &&
+    selecting.value.startY !== null &&
+    selecting.value.endX !== null &&
+    selecting.value.endY !== null,
+);
+
+const brushBlocks = computed(() => store.brushBlocks);
+const canvasX = computed(() => x.value * blockWidth);
+const canvasY = computed(() => y.value * blockHeight);
+const toolbarState = computed(() => store.toolbarState);
+const mirrorX = computed(() => toolbarState.value.mirrorX);
+const mirrorY = computed(() => toolbarState.value.mirrorY);
+const debugPanelState = computed(() => store.debugPanel);
+const selectBlocks = computed(() => store.selectBlocks);
+const options = computed(() => store.options);
+const haveSelectBlocks = computed(() => !!selectBlocks.value.length);
+const mircColours = computed(() => mircColours99);
+const brushLibraryState = computed(() => store.brushLibraryState);
+const gridView = computed(() => toolbarState.value.gridView);
+const halfBlockEditing = computed(() => toolbarState.value.halfBlockEditing);
+
+const asciiBlockAtXy = computed(() => {
+  return currentAsciiLayerBlocks.value[y.value] &&
+    currentAsciiLayerBlocks.value[y.value][x.value]
+    ? currentAsciiLayerBlocks.value[y.value][x.value]
+    : false;
+});
+
+const maxBrushSizeComp = computed(() => maxBrushSize);
+
+const currentAsciiWidth = computed(
+  () => currentSelectedLayer.value.width,
+);
+const currentAsciiHeight = computed(() =>
+  currentSelectedLayer.value.height > 2184
+    ? 2184
+    : currentSelectedLayer.value.height,
+);
+
+const imageOverlay = computed(() => store.imageOverlay);
+
+const imageOverlayStyle = computed(() => {
+  const overlay = imageOverlay.value;
+  let repeat = 'background-repeat: no-repeat;';
+  let stretched = 'background-size: 100%;';
+  const left = `left: ${overlay.left}%;`;
+  const topVal = `top: ${overlay.top}%;`;
+
+  if (overlay.repeatx && overlay.repeaty) {
+    repeat = 'background-repeat: repeat;';
+  }
+  if (overlay.repeatx && !overlay.repeaty) {
+    repeat = 'background-repeat: repeat-x;';
+  }
+  if (!overlay.repeatx && overlay.repeaty) {
+    repeat = 'background-repeat: repeat-y;';
+  }
+
+  if (overlay.stretched) {
+    stretched = 'background-size: 100%;';
+  } else {
+    stretched = `background-size: ${overlay.size}%;`;
+  }
+
+  return overlay.visible
+    ? `background-image: url('${overlay.url}'); ${stretched} ${repeat} ${left} ${topVal} opacity: ${overlay.opacity / 100}; z-index: -1; position: absolute;`
+    : 'position: absolute;';
+});
+
+const canvasTransparent = computed(() =>
+  imageOverlay.value.visible
+    ? `opacity: ${imageOverlay.value.asciiOpacity / 100};`
+    : 'opacity: 1;',
+);
+
+const emptyBlockComp = computed(() => emptyBlock);
+
+// ─── Watchers ───────────────────────────────────────────────────
+watch(currentAsciiHeight, (val) => {
+  canvasSize.height = val * blockHeight;
+});
+
+watch(currentAsciiWidth, (val) => {
+  canvasSize.width = val * blockWidth;
+});
+
+watch(currentAscii, async (val, old) => {
+  if (JSON.stringify(val) !== JSON.stringify(old)) {
+    canvasSize.width = currentAsciiWidth.value * blockWidth;
+    canvasSize.height = currentAsciiHeight.value * blockHeight;
+    await delayRedrawCanvas();
+  }
+});
+
+watch(() => props.resetSelect, () => {
+  resetSelectTool();
+});
+
+watch(currentSelectedLayer, (val) => {
+  if (val && val.visible) {
+    warnInvisibleLayer();
+  }
+});
+
+watch(currentAsciiLayerBlocks, async () => {
+  await delayRedrawCanvas();
+});
+
+watch(currentTool, async () => {
+  warnInvisibleLayer();
+
+  switch (currentTool.value.name) {
+    case 'default':
+      textEditing.value.startX = null;
+      textEditing.value.startY = null;
+      resetSelectTool();
+      await clearToolCanvas();
+      break;
+
+    case 'text':
+      textEditing.value.startX = x.value;
+      textEditing.value.startY = y.value;
+      break;
+  }
+});
+
+watch(isMouseOnCanvas, async (val, old) => {
+  if (val !== old) {
+    if (!isSelecting.value) {
+      await clearToolCanvas();
+      await dispatchBlocks(true);
+      canTool.value = false;
+      await delayRedrawCanvas();
     }
-  },
-  data: () => ({
-    ctx: null,
-    toolCtx: null,
-    canvas: {
-      width: 512,
-      height: 512,
-    },
-    x: 0,
-    y: 0,
-    atTopHalf: 0,
-    top: false,
-    redraw: true,
-    canTool: false,
-    textEditing: {
-      startX: null,
-      startY: null,
-    },
-    selecting: {
-      startX: null,
-      startY: null,
-      endX: null,
-      endY: null,
-      canSelect: false,
-    },
-    isMouseOnCanvas: false,
-    selectedBlocks: [],
-
-    diffBlocks: {
-      l: 0,
-      old: [],
-      new: [],
-    },
-
-    isUsingKeyboard: false,
-    canvasHash: null,
-  }),
-  props: {
-    updateCanvas: { type: Boolean, default: false },
-    yOffset: { type: Number, default: 0 },
-    canvasxy: { type: String, default: '' },
-    brush: { type: Boolean, default: false },
-    updateascii: { type: Boolean, default: false },
-    resetSelect: { type: Boolean, default: false },
-  },
-  emits: [
-    'coordsupdate',
-    'selectedblocks',
-    'selecting',
-    'textediting',
-  ],
-  computed: {
-    canvasRef() {
-      return this.$refs.canvas;
-    },
-    blockWidth() {
-      return blockWidth * this.blockSizeMultiplier;
-    },
-    blockHeight() {
-      return blockHeight * this.blockSizeMultiplier;
-    },
-    blockSizeMultiplier() {
-      return this.store.blockSizeMultiplier;
-    },
-    currentAscii() {
-      return this.store.currentAscii;
-    },
-    currentAsciiLayers() {
-      return this.store.currentAsciiLayers;
-    },
-    selectedLayerIndex() {
-      return this.currentAscii.selectedLayer || 0;
-    },
-    currentSelectedLayer() {
-      return this.currentAsciiLayers[this.selectedLayerIndex] || [];
-    },
-    currentAsciiLayerBlocks() {
-      return this.currentSelectedLayer.data;
-    },
-    currentTool() {
-      return toolbarIcons[this.store.currentTool];
-    },
-    canFg() {
-      return this.store.isTargettingFg;
-    },
-    canBg() {
-      return this.store.isTargettingBg;
-    },
-    canText() {
-      return this.store.isTargettingChar;
-    },
-    currentFg() {
-      return this.store.currentFg;
-    },
-    currentBg() {
-      return this.store.currentBg;
-    },
-    currentChar() {
-      return this.store.currentChar;
-    },
-    isTextEditing() {
-      return this.currentTool.name === "text";
-    },
-    isEraserFill() {
-      return this.currentTool.name === "fill-eraser";
-    },
-    isFill() {
-      return this.currentTool.name === "fill";
-    },
-    isTextEditingValues() {
-      return (
-        this.textEditing.startX !== null && this.textEditing.startY !== null
-      );
-    },
-    isSelecting() {
-      return this.currentTool.name === "select";
-    },
-    isDefault() {
-      return this.currentTool.name === "default";
-    },
-    isBrushing() {
-      return this.currentTool.name === "brush";
-    },
-    isErasing() {
-      return this.currentTool.name === "eraser";
-    },
-    isSelected() {
-      return (
-        this.selecting.startX !== null &&
-        this.selecting.startY !== null &&
-        this.selecting.endX !== null &&
-        this.selecting.endY !== null
-      );
-    },
-    brushBlocks() {
-      return this.store.brushBlocks;
-    },
-    canvasX() {
-      return this.x * blockWidth;
-    },
-    canvasY() {
-      return this.y * blockHeight;
-    },
-    toolbarState() {
-      return this.store.toolbarState;
-    },
-    mirrorX() {
-      return this.toolbarState.mirrorX;
-    },
-    mirrorY() {
-      return this.toolbarState.mirrorY;
-    },
-    debugPanelState() {
-      return this.store.debugPanel;
-    },
-    selectBlocks() {
-      return this.store.selectBlocks;
-    },
-    options() {
-      return this.store.options;
-    },
-    haveSelectBlocks() {
-      return !!this.selectBlocks.length;
-    },
-    mircColours() {
-      return mircColours99;
-    },
-    brushLibraryState() {
-      return this.store.brushLibraryState;
-    },
-    gridView() {
-      return this.toolbarState.gridView;
-    },
-    halfBlockEditing() {
-      return this.toolbarState.halfBlockEditing;
-    },
-    asciiBlockAtXy() {
-      return this.currentAsciiLayerBlocks[this.y] &&
-        this.currentAsciiLayerBlocks[this.y][this.x]
-        ? this.currentAsciiLayerBlocks[this.y][this.x]
-        : false;
-    },
-    maxBrushSize() {
-      return maxBrushSize;
-    },
-    currentAsciiWidth() {
-      return this.currentSelectedLayer.width;
-    },
-    currentAsciiHeight() {
-      return this.currentSelectedLayer.height > 2184
-        ? 2184
-        : this.currentSelectedLayer.height;
-    },
-    imageOverlay() {
-      return this.store.imageOverlay;
-    },
-    imageOverlayStyle() {
-      let repeat = "background-repeat: no-repeat;";
-      let stretched = "background-size: 100%;";
-      let left = `left: ${this.imageOverlay.left}%;`;
-      let top = `top: ${this.imageOverlay.top}%;`;
-
-      if (this.imageOverlay.repeatx && this.imageOverlay.repeaty) {
-        repeat = "background-repeat: repeat;";
-      }
-
-      if (this.imageOverlay.repeatx && !this.imageOverlay.repeaty) {
-        repeat = "background-repeat: repeat-x;";
-      }
-
-      if (!this.imageOverlay.repeatx && this.imageOverlay.repeaty) {
-        repeat = "background-repeat: repeat-y;";
-      }
-
-      if (this.imageOverlay.stretched) {
-        stretched = "background-size: 100%;";
-      } else {
-        stretched = `background-size: ${this.imageOverlay.size}%;`;
-      }
-
-      return this.imageOverlay.visible
-        ? `background-image: url('${
-            this.imageOverlay.url
-          }'); ${stretched} ${repeat} ${left} ${top} opacity: ${
-            this.imageOverlay.opacity / 100
-          }; z-index: -1; position: absolute;`
-        : "position: absolute;";
-    },
-    canvasTransparent() {
-      return this.imageOverlay.visible
-        ? `opacity: ${this.imageOverlay.asciiOpacity / 100};`
-        : "opacity: 1;";
-    },
-    emptyBlock() {
-      return emptyBlock;
-    }
-  },
-  watch: {
-    currentAsciiHeight(val) {
-      this.canvas.height = val * blockHeight;
-    },
-    currentAsciiWidth(val) {
-      this.canvas.width = val * blockWidth;
-    },
-    async currentAscii(val, old) {
-      if (JSON.stringify(val) !== JSON.stringify(old)) {
-        this.canvas.width = this.currentAsciiWidth * blockWidth;
-        this.canvas.height = this.currentAsciiHeight * blockHeight;
-        await this.delayRedrawCanvas();
-      }
-    },
-    resetSelect() {
-      this.resetSelectTool();
-    },
-    currentSelectedLayer(val) {
-      if (val && val.visible) {
-        this.warnInvisibleLayer();
-      }
-    },
-    async currentAsciiLayerBlocks() {
-      await this.delayRedrawCanvas();
-    },
-    async currentTool() {
-      this.warnInvisibleLayer();
-
-      switch (this.currentTool.name) {
-        case "default":
-          this.textEditing = {
-            startX: null,
-            startY: null,
-          };
-
-          this.resetSelectTool();
-
-          await this.clearToolCanvas();
-          break;
-
-        case "text":
-          this.textEditing.startX = this.x;
-          this.textEditing.startY = this.y;
-          break;
-      }
-    },
-    async isMouseOnCanvas(val, old) {
-      if (val !== old) {
-        if (!this.isSelecting) {
-          await this.clearToolCanvas();
-          await this.dispatchBlocks(true);
-          this.canTool = false;
-          await this.delayRedrawCanvas();
-        }
-      }
-    },
-    async gridView(val, old) {
-      if (val !== old) {
-        await this.clearToolCanvas();
-      }
-    },
-    async brushBlocks() {
-      await this.clearToolCanvas();
-
-      if (this.isMouseOnCanvas && this.isBrushing) {
-        await this.drawBrush();
-      }
-    },
-    async isTextEditing(val) {
-      if (val === false) {
-        await this.dispatchBlocks(true);
-      }
-    },
-    textEditing(val) {
-      this.$emit("textediting", val);
-    },
-    async updateCanvas() {
-      await this.clearToolCanvas();
-      await this.drawTextIndicator();
-      await this.drawIndicator();
-
-      await this.delayRedrawCanvas();
-    },
-    selecting(val) {
-      this.$emit("selecting", val);
-    },
-    async yOffset() {
-      await this.delayRedrawCanvas(true);
-    },
-    selectedLayerIndex(val, old) {
-      if (val !== old) {
-        this.diffBlocks.l = val;
-      }
-    },
-    async currentAsciiLayers() {
-      await this.delayRedrawCanvas(true);
-    },
-    halfBlockEditing() {
-      if (this.gridView) {
-        this.clearToolCanvas();
-        this.drawGrid();
-      }
-    }
-  },
-  methods: {
-    startExport(type) {
-      let ascii = exportMirc();
-
-      const checkLines = checkIrcByteLimits(ascii.output.join(""));
-
-      if (checkLines.length) {
-        const displayLines = checkLines.join(", ");
-        this.toastShow(
-          `Line${checkLines.length > 1 ? 's' : ''} ${displayLines} may be too large for IRC.`,
-          {
-            type: "error",
-            position: "bottom-center",
-            duration: 1200,
-          }
-        );
-      }
-
-      switch (type) {
-        case "clipboard":
-          this.copyText(ascii.output.join("")).then(
-            () => {
-              this.toastShow("Copied mIRC to clipboard!", {
-                type: "success",
-              });
-            },
-            () => {
-              this.toastShow("Error when copying mIRC to clipboard!", {
-                type: "error",
-              });
-            }
-          );
-          break;
-
-        default:
-        case "file":
-          downloadFile(ascii.output.join(""), ascii.filename, "text/plain");
-          break;
-      }
-    },
-    canvasToPng() {
-      canvasToPng(this.canvasRef, this.currentAscii.title);
-    },
-    openContextMenu(e) {
-      e.preventDefault();
-      this.$refs["editor-menu"].open(e);
-    },
-    async canvasKeyDown(char) {
-      if (
-        this.currentAsciiLayerBlocks[this.textEditing.startY] &&
-        this.currentAsciiLayerBlocks[this.textEditing.startY][
-          this.textEditing.startX
-        ]
-      ) {
-        let targetBlock =
-          this.currentAsciiLayerBlocks[this.textEditing.startY][
-            this.textEditing.startX
-          ];
-
-        let oldBlock = {};
-
-        switch (char) {
-          case "Backspace":
-            if (
-              this.currentAsciiLayerBlocks[this.textEditing.startY][
-                this.textEditing.startX - 1
-              ]
-            ) {
-              targetBlock =
-                this.currentAsciiLayerBlocks[this.textEditing.startY][
-                  this.textEditing.startX - 1
-                ];
-
-              oldBlock = {
-                ...targetBlock,
-              };
-
-              delete this.currentAsciiLayerBlocks[this.textEditing.startY][
-                this.textEditing.startX - 1
-              ]["char"];
-
-              this.storeDiffBlocks(
-                this.textEditing.startX,
-                this.textEditing.startY,
-                oldBlock,
-                this.currentAsciiLayerBlocks[this.textEditing.startY][
-                  this.textEditing.startX - 1
-                ]
-              );
-
-              this.textEditing.startX -= 1;
-            }
-
-          // eslint-disable-next-line no-fallthrough
-          case "Delete":
-            if (
-              this.currentAsciiLayerBlocks[this.textEditing.startY][
-                this.textEditing.startX
-              ]
-            ) {
-              targetBlock =
-                this.currentAsciiLayerBlocks[this.textEditing.startY][
-                  this.textEditing.startX
-                ];
-
-              oldBlock = { ...targetBlock };
-
-              delete this.currentAsciiLayerBlocks[this.textEditing.startY][
-                this.textEditing.startX
-              ]["char"];
-
-              this.storeDiffBlocks(
-                this.textEditing.startX,
-                this.textEditing.startY,
-                oldBlock,
-                targetBlock
-              );
-            }
-
-            if (this.mirrorX) {
-              targetBlock =
-                this.currentAsciiLayerBlocks[this.textEditing.startY][
-                  this.currentAsciiWidth - this.textEditing.startX
-                ];
-              oldBlock = { ...targetBlock };
-              delete targetBlock["char"];
-              this.storeDiffBlocks(
-                this.textEditing.startX,
-                this.textEditing.startY,
-                oldBlock,
-                targetBlock
-              );
-            }
-
-            if (this.mirrorY) {
-              targetBlock =
-                this.currentAsciiLayerBlocks[
-                  this.currentAsciiHeight - this.textEditing.startY
-                ][this.textEditing.startX];
-              oldBlock = { ...targetBlock };
-              delete targetBlock["char"];
-              this.storeDiffBlocks(
-                this.textEditing.startX,
-                this.textEditing.startY,
-                oldBlock,
-                targetBlock
-              );
-            }
-
-            if (this.mirrorY && this.mirrorX) {
-              targetBlock =
-                this.currentAsciiLayerBlocks[
-                  this.currentAsciiHeight - this.textEditing.startY
-                ][this.currentAsciiWidth - this.textEditing.startX];
-              oldBlock = { ...targetBlock };
-              delete targetBlock["char"];
-              this.storeDiffBlocks(
-                this.textEditing.startX,
-                this.textEditing.startY,
-                oldBlock,
-                targetBlock
-              );
-            }
-
-            break;
-
-          case "Enter":
-            if (this.currentAsciiLayerBlocks[this.textEditing.startY + 1][0]) {
-              this.textEditing.startX = 0;
-              this.textEditing.startY += 1;
-            }
-            break;
-
-          case "ArrowUp":
-            if (
-              this.currentAsciiLayerBlocks[this.textEditing.startY - 1][
-                this.textEditing.startX
-              ]
-            ) {
-              this.textEditing.startY -= 1;
-            }
-            break;
-
-          case "ArrowDown":
-            if (
-              this.currentAsciiLayerBlocks[this.textEditing.startY + 1][
-                this.textEditing.startX
-              ]
-            ) {
-              this.textEditing.startY += 1;
-            }
-            break;
-
-          case "ArrowLeft":
-            if (
-              this.currentAsciiLayerBlocks[this.textEditing.startY][
-                this.textEditing.startX - 1
-              ]
-            ) {
-              this.textEditing.startX -= 1;
-            }
-            break;
-
-          case "ArrowRight":
-            if (
-              this.currentAsciiLayerBlocks[this.textEditing.startY][
-                this.textEditing.startX + 1
-              ]
-            ) {
-              this.textEditing.startX += 1;
-            }
-            break;
-
-          default:
-            if (char.length === 1) {
-              oldBlock = { ...targetBlock };
-              targetBlock.char = char;
-
-              if (this.canFg) {
-                targetBlock.fg = this.currentFg;
-              }
-
-              this.storeDiffBlocks(
-                this.textEditing.startX,
-                this.textEditing.startY,
-                oldBlock,
-                targetBlock
-              );
-
-              let theX = this.currentAsciiWidth - this.textEditing.startX;
-              if (this.mirrorX) {
-                targetBlock =
-                  this.currentAsciiLayerBlocks[this.textEditing.startY][theX];
-
-                oldBlock = { ...targetBlock };
-
-                if (this.canFg) {
-                  targetBlock.fg = this.currentFg;
-                }
-
-                targetBlock.char = char;
-
-                this.storeDiffBlocks(
-                  theX,
-                  this.textEditing.startY,
-                  oldBlock,
-                  targetBlock
-                );
-              }
-
-              let theY = this.currentAsciiHeight - this.textEditing.startY;
-              if (this.mirrorY) {
-                targetBlock =
-                  this.currentAsciiLayerBlocks[theY][this.textEditing.startX];
-
-                oldBlock = { ...targetBlock };
-
-                if (this.canFg) {
-                  targetBlock.fg = this.currentFg;
-                }
-
-                targetBlock.char = char;
-
-                this.storeDiffBlocks(
-                  this.textEditing.startX,
-                  theY,
-                  oldBlock,
-                  targetBlock
-                );
-              }
-
-              if (this.mirrorY && this.mirrorX) {
-                targetBlock = this.currentAsciiLayerBlocks[theY][theX];
-
-                oldBlock = { ...targetBlock };
-
-                if (this.canFg) {
-                  targetBlock.fg = this.currentFg;
-                }
-
-                targetBlock.char = char;
-
-                this.storeDiffBlocks(theX, theY, oldBlock, targetBlock);
-              }
-
-              if (
-                this.currentAsciiLayerBlocks[this.textEditing.startY][
-                  this.textEditing.startX + 1
-                ]
-              ) {
-                this.textEditing.startX++;
-              } else {
-                this.textEditing.startX = 0;
-
-                if (this.textEditing.startY < this.currentAsciiHeight) {
-                  this.textEditing.startY++;
-                }
-              }
-            }
-
-            break;
-        }
-      }
-
-      await this.clearToolCanvas();
-      await this.drawTextIndicator();
-      await this.drawIndicator();
-
-      await this.delayRedrawCanvas();
-    },
-    warnInvisibleLayer() {
-      if (!this.currentSelectedLayer.visible) {
-        this.toastShow("You are trying to edit an invisible layer!!", {
-          type: "error",
-          icon: "warning_amber",
-          singleton: true,
-        });
-      }
-    },
-    checkVisible(top) {
-      return checkVisible(top, top - this.blockHeight);
-    },
-    undo() {
-      this.store.undoBlocks();
-    },
-    redo() {
-      this.store.redoBlocks();
-    },
-    async resetSelectTool() {
-      this.selecting = {
-        startX: null,
-        startY: null,
-        endX: null,
-        endY: null,
-        canSelect: false,
-      };
-
-      this.selectedBlocks = [];
-      await this.clearToolCanvas();
-      await this.delayRedrawCanvas();
-      this.$emit("selecting", this.selecting);
-    },
-    async redrawSelect() {
-      if (this.currentAsciiLayerBlocks.length && this.isSelected) {
-        await this.clearToolCanvas();
-        this.toolCtx.fillStyle = this.mircColours[0];
-
-        this.toolCtx.fillRect(
-          this.selecting.startX,
-          this.selecting.startY,
-          this.selecting.endX - this.selecting.startX,
-          this.selecting.endY - this.selecting.startY
-        );
-
-        this.toolCtx.setLineDash([6]);
-        this.toolCtx.strokeRect(
-          this.selecting.startX,
-          this.selecting.startY,
-          this.selecting.endX - this.selecting.startX,
-          this.selecting.endY - this.selecting.startY
-        );
-      }
-    },
-    mergeLayers() {
-      return mergeLayers();
-    },
-    async drawGrid() {
-      let w = this.canvas.width;
-      let h = this.canvas.height;
-
-      this.toolCtx.beginPath();
-
-      for (let x = 1; x <= w; x += blockWidth) {
-        this.toolCtx.moveTo(x, 0);
-        this.toolCtx.lineTo(x, h);
-      }
-
-      this.toolCtx.strokeStyle = "rgba(40, 40, 40, 1)";
-      this.toolCtx.lineWidth = 1;
-      this.toolCtx.setLineDash([1]);
-
-      this.toolCtx.stroke();
-
-      this.toolCtx.beginPath();
-      for (let y = 1; y <= h; y += this.halfBlockEditing ? (blockHeight / 2) : blockHeight) {
-        this.toolCtx.moveTo(0, y);
-        this.toolCtx.lineTo(w, y);
-      }
-
-      this.toolCtx.stroke();
-    },
-    async redrawCanvas(force = false) {
-      if (this.currentAsciiLayers.length) {
-        let x = 0;
-        let y = 0;
-
-        let canvasX = 0;
-        let canvasY = 0;
-        let curBlock = {};
-
-        if (
-          this.diffBlocks.new.length &&
-          !this.canTool &&
-          !this.isTextEditing &&
-          !this.isFill &&
-          !this.isBrushing
-        ) {
-          outer: for (let i in this.diffBlocks.new) {
-            let entry = this.diffBlocks.new[i];
-            canvasX = blockWidth * entry.x;
-            canvasY = blockHeight * entry.y;
-            curBlock = { ...entry.b };
-
-            for (
-              let j = this.currentAsciiLayers.length - 1;
-              j >= this.diffBlocks.l;
-              j--
-            ) {
-              let layer = this.currentAsciiLayers[j];
-              if (layer.data[entry.y][entry.x] && j !== this.diffBlocks.l) {
-                continue outer;
-              }
-            }
-
-            if (
-              curBlock.bg !== undefined &&
-              curBlock.bg !== null &&
-              this.canBg
-            ) {
-              this.ctx.fillStyle = this.mircColours[curBlock.bg];
-              this.ctx.fillRect(canvasX, canvasY, blockWidth, blockHeight);
-            }
-
-            if (curBlock.char !== undefined && curBlock.char !== null) {
-              if (
-                curBlock.fg !== undefined &&
-                curBlock.fg !== null &&
-                this.canFg
-              ) {
-                this.ctx.fillStyle = this.mircColours[curBlock.fg];
-              } else {
-                this.ctx.fillStyle = this.mircColours[0];
-              }
-
-              if (this.canText) {
-                this.ctx.fillText(
-                  curBlock.char,
-                  canvasX,
-                  canvasY + blockHeight - 3
-                );
-              } else {
-                this.ctx.fillText(
-                  this.currentAsciiLayerBlocks[entry.y][entry.x].char || " ",
-                  canvasX,
-                  canvasY + blockHeight - 3
-                );
-              }
-            }
-          }
-
-          this.diffBlocks = {
-            l: this.selectedLayerIndex,
-            new: [],
-            old: [],
-          };
-
-          this.canvasHash = cyrb53(JSON.stringify(this.mergeLayers()));
+  }
+});
+
+watch(gridView, async (val, old) => {
+  if (val !== old) {
+    await clearToolCanvas();
+  }
+});
+
+watch(brushBlocks, async () => {
+  await clearToolCanvas();
+  if (isMouseOnCanvas.value && isBrushing.value) {
+    await drawBrush();
+  }
+});
+
+watch(isTextEditing, async (val) => {
+  if (val === false) {
+    await dispatchBlocks(true);
+  }
+});
+
+watch(textEditing, (val) => {
+  emit('textediting', val);
+}, { deep: true });
+
+watch(() => props.updateCanvas, async () => {
+  await clearToolCanvas();
+  await drawTextIndicator();
+  await drawIndicator();
+  await delayRedrawCanvas();
+});
+
+watch(selecting, (val) => {
+  emit('selecting', val);
+}, { deep: true });
+
+watch(() => props.yOffset, async () => {
+  await delayRedrawCanvas(true);
+});
+
+watch(selectedLayerIndex, (val, old) => {
+  if (val !== old) {
+    diffBlocks.l = val;
+  }
+});
+
+watch(currentAsciiLayers, async () => {
+  await delayRedrawCanvas(true);
+});
+
+watch(halfBlockEditing, () => {
+  if (gridView.value) {
+    clearToolCanvas();
+    drawGrid();
+  }
+});
+
+// ─── Hotkeys (register + cleanup) ──────────────────────────────
+hotkeys('*', 'editor', async function (event) {
+  event.preventDefault();
+
+  if (isTextEditing.value) {
+    await canvasKeyDown(event.key);
+    return;
+  }
+
+  if (isBrushing.value || isErasing.value) {
+    switch (event.key) {
+      case 'ArrowUp':
+        y.value--;
+        await drawBrush(isErasing.value);
+        break;
+      case 'ArrowDown':
+        y.value++;
+        await drawBrush(isErasing.value);
+        break;
+      case 'ArrowLeft':
+        x.value--;
+        await drawBrush(isErasing.value);
+        break;
+      case 'ArrowRight':
+        x.value++;
+        await drawBrush(isErasing.value);
+        break;
+      case ' ':
+        canTool.value = true;
+        if (isBrushing.value) {
+          await drawBrush(false);
         } else {
-          let mergeLayers = this.mergeLayers();
-          let tempHash = cyrb53(JSON.stringify(mergeLayers));
-
-          if (tempHash === this.canvasHash && !force) {
-            return;
-          }
-
-          this.canvasHash = tempHash;
-          this.ctx.save();
-          // eslint-disable-next-line no-self-assign
-          this.canvasRef.width = this.canvasRef.width;
-          this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-          this.ctx.font = "13px Hack";
-
-          for (y = 0; y < this.currentAsciiHeight + 1; y++) {
-            canvasY = blockHeight * y;
-
-            if (
-              this.options.renderOffScreen &&
-              this.top !== false &&
-              !this.checkVisible(this.top + canvasY - this.yOffset)
-            ) {
-              continue;
-            }
-
-            for (x = 0; x < this.currentAsciiWidth + 1; x++) {
-              canvasX = blockWidth * x;
-
-              curBlock = { ...mergeLayers[y][x] };
-
-              if (curBlock.bg !== undefined && curBlock.bg !== null) {
-                this.ctx.fillStyle = this.mircColours[curBlock.bg];
-                this.ctx.fillRect(canvasX, canvasY, blockWidth, blockHeight);
-              }
-
-              if (curBlock.char !== undefined && curBlock.char !== null) {
-                if (curBlock.fg !== undefined && curBlock.fg !== null) {
-                  this.ctx.fillStyle = this.mircColours[curBlock.fg];
-                } else {
-                  this.ctx.fillStyle = "#FFFFFF";
-                }
-
-                this.ctx.fillText(
-                  curBlock.char,
-                  canvasX,
-                  canvasY + blockHeight - 3
-                );
-              }
-            }
-          }
+          await eraser();
         }
+        canTool.value = false;
+        await dispatchBlocks(true);
+        break;
+    }
+  }
+});
 
-        this.ctx.restore();
-      }
-    },
-    onCanvasResize(left, top, width, height) {
-      const canvasBlockHeight = Math.floor(height / blockHeight);
-      const canvasBlockWidth = Math.floor(width / blockWidth);
-      let layers = fillNullBlocks(canvasBlockHeight, canvasBlockWidth);
+// ─── Lifecycle ──────────────────────────────────────────────────
+onMounted(async () => {
+  const canvas = canvasRef.value;
+  if (canvas) {
+    ctx = canvas.getContext('2d');
+    if (ctx) ctx.font = '13px Hack';
+  }
+  const tools = canvastoolsRef.value;
+  if (tools) {
+    toolCtx = tools.getContext('2d');
+  }
+  await delayRedrawCanvas();
+});
 
-      this.top = top;
-      this.canvas.width = width;
-      this.canvas.height = height;
+onUnmounted(() => {
+  hotkeys.unbind('*', 'editor');
+});
 
-      this.store.changeAsciiWidthHeight({
-        width: canvasBlockWidth,
-        height: canvasBlockHeight,
-        layers: [...layers],
-      });
+// ─── Init (equivalent to created() — runs during setup) ─────────
+if (currentAsciiLayerBlocks.value) {
+  canvasSize.width = currentAsciiWidth.value * blockWidth;
+  canvasSize.height = currentAsciiHeight.value * blockHeight;
+  // delayRedrawCanvas will be called in onMounted
+}
 
-      if (this.$refs.editorPanel) {
-        this.$refs.editorPanel.style.width = width + 'px';
-        this.$refs.editorPanel.style.height = height + 'px';
-      }
+// ─── Methods ────────────────────────────────────────────────────
+function startExport(type: string) {
+  const ascii = exportMirc();
 
-      this.toastShow(`${canvasBlockWidth} x ${canvasBlockHeight}`);
-    },
-    async onCanvasDragStop(x, y) {
-      this.top = y;
-      this.store.changeAsciiCanvasState({ x, y });
+  const checkLines = checkIrcByteLimits(ascii.output.join(''));
 
-      await this.delayRedrawCanvas();
-    },
-    onCanvasDrag(x, y) {
-      this.top = y;
-    },
-    async dispatchBlocks(clearDiff = false) {
-      this.diffBlocks.old = this.diffBlocks.old.flat();
-      this.diffBlocks.new = this.diffBlocks.new.flat();
+  if (checkLines.length) {
+    const displayLines = checkLines.join(', ');
+    toastShow(
+      `Line${checkLines.length > 1 ? 's' : ''} ${displayLines} may be too large for IRC.`,
+      { type: 'error', position: 'bottom-center', duration: 1200 },
+    );
+  }
 
-      this.store.updateAsciiBlocks({
-        blocks: this.currentAsciiLayerBlocks,
-        diff: { ...this.diffBlocks },
-      });
-
-      if (clearDiff) {
-        this.diffBlocks = {
-          l: this.selectedLayerIndex,
-          new: [],
-          old: [],
-        };
-      }
-    },
-    async canvasMouseUp() {
-      if (this.isDefault) return;
-
-      switch (this.currentTool.name) {
-        case "brush":
-          this.canTool = false;
-
-          await this.dispatchBlocks(true);
-
-          break;
-
-        case "eraser":
-          this.canTool = false;
-
-          await this.dispatchBlocks(true);
-
-          break;
-
-        case "fill-eraser":
-        case "fill":
-          this.canTool = false;
-          break;
-
-        case "select":
-          this.selecting.canSelect = false;
-          await this.processSelect();
-          break;
-
-        case "text":
-          this.textEditing.startX = this.x;
-          this.textEditing.startY = this.y;
-          break;
-      }
-    },
-    async canvasMouseDown() {
-      if (this.isDefault) return;
-
-      if (this.asciiBlockAtXy && this.currentTool) {
-        const targetBlock = this.asciiBlockAtXy;
-
-        switch (this.currentTool.name) {
-          case "select":
-            this.selecting.startX = this.canvasX;
-            this.selecting.startY = this.canvasY;
-            this.selecting.canSelect = true;
-            await this.clearToolCanvas();
-            break;
-
-          case "fill":
-            this.fill();
-            this.canTool = false;
-            await this.dispatchBlocks(true);
-            break;
-
-          case "fill-eraser":
-            this.fill(true);
-            await this.dispatchBlocks(true);
-            break;
-
-          case "brush":
-            this.canTool = true;
-            await this.drawBrush();
-            break;
-
-          case "eraser":
-            this.canTool = true;
-            await this.eraser();
-            break;
-
-          case "dropper":
-            if (this.canFg) {
-              this.store.changeColourFg(
-                targetBlock.fg === undefined ? this.currentFg : targetBlock.fg
-              );
-            }
-
-            if (this.canBg) {
-              this.store.changeColourBg(
-                targetBlock.bg === undefined ? this.currentBg : targetBlock.bg
-              );
-            }
-
-            if (this.canText) {
-              this.store.changeChar(
-                targetBlock.char === undefined
-                  ? this.currentChar
-                  : targetBlock.char
-              );
-            }
-
-            this.store.changeTool(0);
-            break;
-        }
-      }
-    },
-    async canvasMouseMove(e) {
-      if (this.isDefault) return;
-
-      let lastX = this.x;
-      let lastY = this.y;
-
-      if (e.offsetX >= 0) {
-        this.x = e.offsetX;
-      }
-
-      if (e.offsetY >= 0) {
-        this.y = e.offsetY;
-        this.atTopHalf = Math.floor(e.offsetY / (blockHeight / 2)) % 2 === 0;
-      }
-
-      this.x = Math.floor(this.x / blockWidth);
-      this.y = Math.floor(this.y / blockHeight);
-
-      if (this.x === lastX && this.y === lastY && !this.halfBlockEditing) {
-        return;
-      }
-
-      this.$emit("coordsupdate", { x: this.x, y: this.y });
-
-      if (this.asciiBlockAtXy) {
-        switch (this.currentTool.name) {
-          case "brush":
-            if (this.isMouseOnCanvas) {
-              await this.clearToolCanvas();
-              await this.drawBrush();
-              await this.delayRedrawCanvas();
-            }
-            break;
-
-          case "eraser":
-            await this.clearToolCanvas();
-
-            if (this.isMouseOnCanvas) {
-              await this.drawBrush(true);
-              await this.delayRedrawCanvas();
-              await this.eraser();
-            }
-
-            break;
-
-          case "select":
-            if (this.selecting.canSelect) {
-              this.selecting.endX = this.canvasX + blockWidth;
-              this.selecting.endY = this.canvasY + blockHeight;
-
-              await this.redrawSelect();
-            }
-
-            if (!this.isSelected) {
-              await this.redrawSelect();
-            }
-
-            break;
-
-          case "text":
-            await this.clearToolCanvas();
-            await this.drawIndicator();
-
-            if (this.isTextEditingValues) {
-              await this.drawTextIndicator();
-            }
-            break;
-
-          case "dropper":
-            await this.clearToolCanvas();
-            await this.drawIndicator();
-            break;
-
-          case "fill":
-          case "fill-eraser":
-            await this.clearToolCanvas();
-            await this.drawIndicator();
-            break;
-        }
-      }
-    },
-    async clearToolCanvas() {
-      if (this.toolCtx) {
-        this.toolCtx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        // eslint-disable-next-line no-self-assign
-        this.toolCtx.width = this.toolCtx.width;
-        if (this.gridView) {
-          await this.drawGrid();
-        }
-      }
-    },
-    async delayRedrawCanvas(force = false) {
-      if (this.redraw) {
-        this.redraw = false;
-        const _this = this;
-        setTimeout(function () {
-          requestAnimationFrame(async () => {
-            await _this.redrawCanvas(force);
-            _this.redraw = true;
+  switch (type) {
+    case 'clipboard':
+      copyText(ascii.output.join('')).then(
+        () => {
+          toastShow('Copied mIRC to clipboard!', { type: 'success' });
+        },
+        () => {
+          toastShow('Error when copying mIRC to clipboard!', {
+            type: 'error',
           });
-        }, 1000 / this.options.fps);
-      }
-    },
-    getBlocksWidth(blocks) {
-      return getBlocksWidth(blocks);
-    },
-    filterNullBlocks(blocks) {
-      return filterNullBlocks(blocks);
-    },
-    async processSelect() {
-      let x = 0;
-      let y = 0;
+        },
+      );
+      break;
 
-      let curBlock = {};
-      this.selectedBlocks = [];
+    default:
+    case 'file':
+      downloadFile(ascii.output.join(''), ascii.filename, 'text/plain');
+      break;
+  }
+}
 
-      if (this.selecting.endY < this.selecting.startY) {
-        let end = this.selecting.endY;
-        let start = this.selecting.startY;
+function canvasToPng() {
+  const canvas = canvasRef.value;
+  if (canvas) {
+    canvasToPngUtil(canvas, currentAscii.value.title);
+  }
+}
 
-        this.selecting.startY = end;
-        this.selecting.endY = start;
-      }
+function openContextMenu(e: MouseEvent) {
+  e.preventDefault();
+  editorMenu.value?.open(e);
+}
 
-      if (this.selecting.endX < this.selecting.startX) {
-        let end = this.selecting.endX;
-        let start = this.selecting.startX;
+async function canvasKeyDown(char: string) {
+  if (
+    currentAsciiLayerBlocks.value[textEditing.value.startY!] &&
+    currentAsciiLayerBlocks.value[textEditing.value.startY!][textEditing.value.startX!]
+  ) {
+    let targetBlock =
+      currentAsciiLayerBlocks.value[textEditing.value.startY!][
+        textEditing.value.startX!
+      ];
+    let oldBlock: Record<string, any> = {};
 
-        this.selecting.startX = end;
-        this.selecting.endX = start;
-      }
-
-      for (y = 0; y < this.currentAsciiHeight; y++) {
+    switch (char) {
+      case 'Backspace':
         if (
-          y > Math.floor(this.selecting.startY / blockHeight) - 1 &&
-          y < Math.floor(this.selecting.endY / blockHeight)
+          currentAsciiLayerBlocks.value[textEditing.value.startY!][
+            textEditing.value.startX! - 1
+          ]
         ) {
-          if (!this.selectedBlocks[y]) {
-            this.selectedBlocks[y] = [];
+          targetBlock =
+            currentAsciiLayerBlocks.value[textEditing.value.startY!][
+              textEditing.value.startX! - 1
+            ];
+
+          oldBlock = { ...targetBlock };
+
+          delete currentAsciiLayerBlocks.value[textEditing.value.startY!][
+            textEditing.value.startX! - 1
+          ]['char'];
+
+          storeDiffBlocks(
+            textEditing.value.startX!,
+            textEditing.value.startY!,
+            oldBlock,
+            currentAsciiLayerBlocks.value[textEditing.value.startY!][
+              textEditing.value.startX! - 1
+            ],
+          );
+
+          textEditing.value.startX! -= 1;
+        }
+
+      // eslint-disable-next-line no-fallthrough
+      case 'Delete':
+        if (
+          currentAsciiLayerBlocks.value[textEditing.value.startY!][
+            textEditing.value.startX!
+          ]
+        ) {
+          targetBlock =
+            currentAsciiLayerBlocks.value[textEditing.value.startY!][
+              textEditing.value.startX!
+            ];
+
+          oldBlock = { ...targetBlock };
+
+          delete currentAsciiLayerBlocks.value[textEditing.value.startY!][
+            textEditing.value.startX!
+          ]['char'];
+
+          storeDiffBlocks(
+            textEditing.value.startX!,
+            textEditing.value.startY!,
+            oldBlock,
+            targetBlock,
+          );
+        }
+
+        if (mirrorX.value) {
+          targetBlock =
+            currentAsciiLayerBlocks.value[textEditing.value.startY!][
+              currentAsciiWidth.value - textEditing.value.startX!
+            ];
+          oldBlock = { ...targetBlock };
+          delete targetBlock['char'];
+          storeDiffBlocks(
+            textEditing.value.startX!,
+            textEditing.value.startY!,
+            oldBlock,
+            targetBlock,
+          );
+        }
+
+        if (mirrorY.value) {
+          targetBlock =
+            currentAsciiLayerBlocks.value[
+              currentAsciiHeight.value - textEditing.value.startY!
+            ][textEditing.value.startX!];
+          oldBlock = { ...targetBlock };
+          delete targetBlock['char'];
+          storeDiffBlocks(
+            textEditing.value.startX!,
+            textEditing.value.startY!,
+            oldBlock,
+            targetBlock,
+          );
+        }
+
+        if (mirrorY.value && mirrorX.value) {
+          targetBlock =
+            currentAsciiLayerBlocks.value[
+              currentAsciiHeight.value - textEditing.value.startY!
+            ][currentAsciiWidth.value - textEditing.value.startX!];
+          oldBlock = { ...targetBlock };
+          delete targetBlock['char'];
+          storeDiffBlocks(
+            textEditing.value.startX!,
+            textEditing.value.startY!,
+            oldBlock,
+            targetBlock,
+          );
+        }
+
+        break;
+
+      case 'Enter':
+        if (currentAsciiLayerBlocks.value[textEditing.value.startY! + 1]?.[0]) {
+          textEditing.value.startX = 0;
+          textEditing.value.startY! += 1;
+        }
+        break;
+
+      case 'ArrowUp':
+        if (
+          currentAsciiLayerBlocks.value[textEditing.value.startY! - 1]?.[
+            textEditing.value.startX!
+          ]
+        ) {
+          textEditing.value.startY! -= 1;
+        }
+        break;
+
+      case 'ArrowDown':
+        if (
+          currentAsciiLayerBlocks.value[textEditing.value.startY! + 1]?.[
+            textEditing.value.startX!
+          ]
+        ) {
+          textEditing.value.startY! += 1;
+        }
+        break;
+
+      case 'ArrowLeft':
+        if (
+          currentAsciiLayerBlocks.value[textEditing.value.startY!]?.[
+            textEditing.value.startX! - 1
+          ]
+        ) {
+          textEditing.value.startX! -= 1;
+        }
+        break;
+
+      case 'ArrowRight':
+        if (
+          currentAsciiLayerBlocks.value[textEditing.value.startY!]?.[
+            textEditing.value.startX! + 1
+          ]
+        ) {
+          textEditing.value.startX! += 1;
+        }
+        break;
+
+      default:
+        if (char.length === 1) {
+          oldBlock = { ...targetBlock };
+          targetBlock.char = char;
+
+          if (canFg.value) {
+            targetBlock.fg = currentFg.value;
           }
 
-          for (x = 0; x < this.currentAsciiWidth; x++) {
-            if (
-              x > Math.ceil(this.selecting.startX / blockWidth) - 1 &&
-              x <= Math.ceil(this.selecting.endX / blockWidth) - 1
-            ) {
-              if (
-                this.currentAsciiLayerBlocks[y] &&
-                this.currentAsciiLayerBlocks[y][x]
-              ) {
-                if (this.currentAsciiLayerBlocks[y][x].bg === null) {
-                  delete this.currentAsciiLayerBlocks[y][x]["bg"];
-                }
+          storeDiffBlocks(
+            textEditing.value.startX!,
+            textEditing.value.startY!,
+            oldBlock,
+            targetBlock,
+          );
 
-                if (this.currentAsciiLayerBlocks[y][x].fg === null) {
-                  delete this.currentAsciiLayerBlocks[y][x]["fg"];
-                }
+          const theX = currentAsciiWidth.value - textEditing.value.startX!;
+          if (mirrorX.value) {
+            targetBlock =
+              currentAsciiLayerBlocks.value[textEditing.value.startY!][theX];
 
-                if (this.currentAsciiLayerBlocks[y][x].char === null) {
-                  delete this.currentAsciiLayerBlocks[y][x]["char"];
-                }
+            oldBlock = { ...targetBlock };
 
-                curBlock = { ...this.currentAsciiLayerBlocks[y][x] };
+            if (canFg.value) {
+              targetBlock.fg = currentFg.value;
+            }
 
-                if (!this.selectedBlocks[y][x]) {
-                  this.selectedBlocks[y][x] = { ...curBlock };
-                }
-              }
+            targetBlock.char = char;
+
+            storeDiffBlocks(
+              theX,
+              textEditing.value.startY!,
+              oldBlock,
+              targetBlock,
+            );
+          }
+
+          const theY = currentAsciiHeight.value - textEditing.value.startY!;
+          if (mirrorY.value) {
+            targetBlock =
+              currentAsciiLayerBlocks.value[theY][textEditing.value.startX!];
+
+            oldBlock = { ...targetBlock };
+
+            if (canFg.value) {
+              targetBlock.fg = currentFg.value;
+            }
+
+            targetBlock.char = char;
+
+            storeDiffBlocks(
+              textEditing.value.startX!,
+              theY,
+              oldBlock,
+              targetBlock,
+            );
+          }
+
+          if (mirrorY.value && mirrorX.value) {
+            targetBlock = currentAsciiLayerBlocks.value[theY][theX];
+
+            oldBlock = { ...targetBlock };
+
+            if (canFg.value) {
+              targetBlock.fg = currentFg.value;
+            }
+
+            targetBlock.char = char;
+
+            storeDiffBlocks(theX, theY, oldBlock, targetBlock);
+          }
+
+          if (
+            currentAsciiLayerBlocks.value[textEditing.value.startY!]?.[
+              textEditing.value.startX! + 1
+            ]
+          ) {
+            textEditing.value.startX!++;
+          } else {
+            textEditing.value.startX = 0;
+
+            if (textEditing.value.startY! < currentAsciiHeight.value) {
+              textEditing.value.startY!++;
             }
           }
         }
-      }
 
-      this.$emit("selectedblocks", this.selectedBlocks);
-      this.$emit("selecting", this.selecting);
-    },
-    async drawRectangleBlock(x, y) {
-      let indicatorColour = this.asciiBlockAtXy.bg === 0 ? 1 : 0;
+        break;
+    }
+  }
 
-      if (this.asciiBlockAtXy.bg === 8) {
-        indicatorColour = 1;
-      }
+  await clearToolCanvas();
+  await drawTextIndicator();
+  await drawIndicator();
+  await delayRedrawCanvas();
+}
 
-      this.toolCtx.fillStyle = this.mircColours[indicatorColour];
+function warnInvisibleLayer() {
+  if (!currentSelectedLayer.value.visible) {
+    toastShow('You are trying to edit an invisible layer!!', {
+      type: 'error',
+      icon: 'warning_amber',
+      singleton: true,
+    });
+  }
+}
 
-      this.toolCtx.fillRect(
-        x * blockWidth,
-        y * blockHeight,
-        blockWidth,
-        blockHeight
-      );
+function checkVisibleFn(topVal: number) {
+  return checkVisible(topVal, topVal - blockHeightComp.value);
+}
 
-      this.toolCtx.setLineDash([1, 2]);
-      this.toolCtx.strokeRect(
-        x * blockWidth,
-        y * blockHeight,
-        blockWidth,
-        blockHeight
-      );
-    },
-    async drawIndicator() {
-      const positions = getMirrorPositions(
-        this.x, this.y,
-        this.currentAsciiWidth, this.currentAsciiHeight,
-        this.mirrorX && this.isTextEditing,
-        this.mirrorY && this.isTextEditing,
-      );
-      for (const pos of positions) {
-        this.drawRectangleBlock(pos.x, pos.y);
-      }
-    },
-    async drawTextIndicator() {
-      const positions = getMirrorPositions(
-        this.textEditing.startX, this.textEditing.startY,
-        this.currentAsciiWidth, this.currentAsciiHeight,
-        this.mirrorX, this.mirrorY,
-      );
-      for (const pos of positions) {
-        this.drawRectangleBlock(pos.x, pos.y);
-      }
-    },
-    async drawBrushBlocks(
-      brushX,
-      brushY,
-      brushBlock,
-      target = null,
-      plain = false
+function undo() {
+  store.undoBlocks();
+}
+
+function redo() {
+  store.redoBlocks();
+}
+
+async function resetSelectTool() {
+  selecting.value.startX = null;
+  selecting.value.startY = null;
+  selecting.value.endX = null;
+  selecting.value.endY = null;
+  selecting.value.canSelect = false;
+
+  selectedBlocks.value = [];
+  await clearToolCanvas();
+  await delayRedrawCanvas();
+  emit('selecting', selecting.value);
+}
+
+async function redrawSelect() {
+  if (currentAsciiLayerBlocks.value.length && isSelected.value && toolCtx) {
+    await clearToolCanvas();
+    toolCtx.fillStyle = mircColours.value[0];
+
+    toolCtx.fillRect(
+      selecting.value.startX!,
+      selecting.value.startY!,
+      selecting.value.endX! - selecting.value.startX!,
+      selecting.value.endY! - selecting.value.startY!,
+    );
+
+    toolCtx.setLineDash([6]);
+    toolCtx.strokeRect(
+      selecting.value.startX!,
+      selecting.value.startY!,
+      selecting.value.endX! - selecting.value.startX!,
+      selecting.value.endY! - selecting.value.startY!,
+    );
+  }
+}
+
+function mergeLayersFn() {
+  return mergeLayers();
+}
+
+async function drawGrid() {
+  if (!toolCtx) return;
+  const w = canvasSize.width;
+  const h = canvasSize.height;
+
+  toolCtx.beginPath();
+
+  for (let gx = 1; gx <= w; gx += blockWidth) {
+    toolCtx.moveTo(gx, 0);
+    toolCtx.lineTo(gx, h);
+  }
+
+  toolCtx.strokeStyle = 'rgba(40, 40, 40, 1)';
+  toolCtx.lineWidth = 1;
+  toolCtx.setLineDash([1]);
+
+  toolCtx.stroke();
+
+  toolCtx.beginPath();
+  for (let gy = 1; gy <= h; gy += halfBlockEditing.value ? (blockHeight / 2) : blockHeight) {
+    toolCtx.moveTo(0, gy);
+    toolCtx.lineTo(w, gy);
+  }
+
+  toolCtx.stroke();
+}
+
+async function redrawCanvas(force = false) {
+  if (!ctx) return;
+  if (currentAsciiLayers.value.length) {
+    let cx = 0;
+    let cy = 0;
+    let canvasXVal = 0;
+    let canvasYVal = 0;
+    let curBlock: Record<string, any> = {};
+
+    if (
+      diffBlocks.new.length &&
+      !canTool.value &&
+      !isTextEditing.value &&
+      !isFill.value &&
+      !isBrushing.value
     ) {
-      const arrayY = brushY / blockHeight;
-      const arrayX = brushX / blockWidth;
-      const asciiWidth = this.currentAsciiWidth;
-      const asciiHeight = this.currentAsciiHeight;
-      let targetBlock = this.currentAsciiLayerBlocks[arrayY][arrayX];
+      outer: for (const i in diffBlocks.new) {
+        const entry = diffBlocks.new[i];
+        canvasXVal = blockWidth * entry.x;
+        canvasYVal = blockHeight * entry.y;
+        curBlock = { ...entry.b };
 
-      if (plain) {
-        let indicatorColour = targetBlock.bg === 0 ? 1 : 0;
-
-        if (targetBlock.bg === 8) {
-          indicatorColour = 1;
+        for (
+          let j = currentAsciiLayers.value.length - 1;
+          j >= diffBlocks.l;
+          j--
+        ) {
+          const layer = currentAsciiLayers.value[j];
+          if (layer.data[entry.y][entry.x] && j !== diffBlocks.l) {
+            continue outer;
+          }
         }
 
-        this.toolCtx.fillStyle = this.mircColours[indicatorColour];
-
-        this.toolCtx.fillRect(brushX, brushY, blockWidth, blockHeight);
-
-        if (this.mirrorX) {
-          this.toolCtx.fillRect(
-            (asciiWidth - arrayX) * blockWidth,
-            brushY,
-            blockWidth,
-            blockHeight
-          );
+        if (curBlock.bg !== undefined && curBlock.bg !== null && canBg.value) {
+          ctx.fillStyle = mircColours.value[curBlock.bg];
+          ctx.fillRect(canvasXVal, canvasYVal, blockWidth, blockHeight);
         }
 
-        if (this.mirrorY) {
-          this.toolCtx.fillRect(
-            brushX,
-            (asciiHeight - arrayY) * blockHeight,
-            blockWidth,
-            blockHeight
-          );
-        }
+        if (curBlock.char !== undefined && curBlock.char !== null) {
+          if (curBlock.fg !== undefined && curBlock.fg !== null && canFg.value) {
+            ctx.fillStyle = mircColours.value[curBlock.fg];
+          } else {
+            ctx.fillStyle = mircColours.value[0];
+          }
 
-        if (this.mirrorY && this.mirrorX) {
-          this.toolCtx.fillRect(
-            (asciiWidth - arrayX) * blockWidth,
-            (asciiHeight - arrayY) * blockHeight,
-            blockWidth,
-            blockHeight
-          );
+          if (canText.value) {
+            ctx.fillText(curBlock.char, canvasXVal, canvasYVal + blockHeight - 3);
+          } else {
+            ctx.fillText(
+              currentAsciiLayerBlocks.value[entry.y][entry.x].char || ' ',
+              canvasXVal,
+              canvasYVal + blockHeight - 3,
+            );
+          }
         }
+      }
 
+      diffBlocks.l = selectedLayerIndex.value;
+      diffBlocks.new = [];
+      diffBlocks.old = [];
+
+      canvasHash.value = cyrb53(JSON.stringify(mergeLayersFn()));
+    } else {
+      const merged = mergeLayersFn();
+      const tempHash = cyrb53(JSON.stringify(merged));
+
+      if (tempHash === canvasHash.value && !force) {
         return;
       }
 
-      switch (target) {
-        case "bg":
-          this.toolCtx.fillStyle =
-            brushBlock.bg !== undefined
-              ? this.mircColours[brushBlock.bg]
-              : "rgba(255,255,255,0.4)";
-
-          break;
-        case "fg":
-          this.toolCtx.fillStyle =
-            brushBlock.fg !== undefined
-              ? this.mircColours[brushBlock.fg]
-              : "#FFFFFF";
-
-          break;
-
-        default:
-          if (this.canText && brushBlock.char !== undefined) {
-            this.toolCtx.font = "Hack 13px";
-
-            this.toolCtx.fillStyle = this.canFg
-              ? this.mircColours[brushBlock.fg]
-              : "#FFFFFF";
-
-            this.toolCtx.fillText(
-              brushBlock.char,
-              brushX,
-              brushY + blockHeight - 3
-            );
-
-            if (this.mirrorX) {
-              this.toolCtx.fillText(
-                brushBlock.char,
-                (asciiWidth - arrayX) * blockWidth,
-                brushY + blockHeight - 4
-              );
-            }
-
-            if (this.mirrorY) {
-              this.toolCtx.fillText(
-                brushBlock.char,
-                brushX,
-                (asciiHeight - arrayY) * blockHeight + 10
-              );
-            }
-            if (this.mirrorY && this.mirrorX) {
-              this.toolCtx.fillText(
-                brushBlock.char,
-                (asciiWidth - arrayX) * blockWidth,
-                (asciiHeight - arrayY) * blockHeight + 10
-              );
-            }
-          }
-
-          if (this.canText && this.canTool) {
-            targetBlock["char"] = brushBlock["char"];
-
-            if (
-              this.mirrorX &&
-              this.currentAsciiLayerBlocks[arrayY] &&
-              this.currentAsciiLayerBlocks[arrayY][asciiWidth - arrayX]
-            ) {
-              this.currentAsciiLayerBlocks[arrayY][asciiWidth - arrayX].char =
-                brushBlock.char;
-            }
-
-            if (
-              this.mirrorY &&
-              this.currentAsciiLayerBlocks[asciiHeight - arrayY] &&
-              this.currentAsciiLayerBlocks[asciiHeight - arrayY][arrayX]
-            ) {
-              this.currentAsciiLayerBlocks[asciiHeight - arrayY][arrayX].char =
-                brushBlock.char;
-            }
-
-            if (
-              this.mirrorY &&
-              this.mirrorX &&
-              this.currentAsciiLayerBlocks[asciiHeight - arrayY] &&
-              this.currentAsciiLayerBlocks[asciiHeight - arrayY][
-                asciiWidth - arrayX
-              ]
-            ) {
-              this.currentAsciiLayerBlocks[asciiHeight - arrayY][
-                asciiWidth - arrayX
-              ].char = brushBlock.char;
-            }
-          }
-
-          return;
+      canvasHash.value = tempHash;
+      ctx.save();
+      const canvas = canvasRef.value;
+      if (canvas) {
+        // eslint-disable-next-line no-self-assign
+        canvas.width = canvas.width;
       }
+      ctx.clearRect(0, 0, canvasSize.width, canvasSize.height);
+      ctx.font = '13px Hack';
 
-      if (this.canBg && target == "bg") {
-        this.toolCtx.setLineDash([1, 2]);
-        this.toolCtx.strokeRect(brushX, brushY, blockWidth, blockHeight);
-        this.toolCtx.fillRect(brushX, brushY, blockWidth, blockHeight);
-
-        if (this.mirrorX) {
-          this.toolCtx.fillRect(
-            (asciiWidth - arrayX) * blockWidth,
-            brushY,
-            blockWidth,
-            blockHeight
-          );
-
-          this.toolCtx.setLineDash([1, 2]);
-          this.toolCtx.strokeRect(
-            (asciiWidth - arrayX) * blockWidth,
-            brushY,
-            blockWidth,
-            blockHeight
-          );
-        }
-
-        if (this.mirrorY) {
-          this.toolCtx.fillRect(
-            brushX,
-            (asciiHeight - arrayY) * blockHeight,
-            blockWidth,
-            blockHeight
-          );
-
-          this.toolCtx.setLineDash([1, 2]);
-          this.toolCtx.strokeRect(
-            brushX,
-            (asciiHeight - arrayY) * blockHeight,
-            blockWidth,
-            blockHeight
-          );
-        }
-
-        if (this.mirrorY && this.mirrorX) {
-          this.toolCtx.fillRect(
-            (asciiWidth - arrayX) * blockWidth,
-            (asciiHeight - arrayY) * blockHeight,
-            blockWidth,
-            blockHeight
-          );
-
-          this.toolCtx.setLineDash([1, 2]);
-          this.toolCtx.strokeRect(
-            (asciiWidth - arrayX) * blockWidth,
-            (asciiHeight - arrayY) * blockHeight,
-            blockWidth,
-            blockHeight
-          );
-        }
-      }
-
-      if (this.canTool && brushBlock[target] !== undefined) {
-        targetBlock[target] = brushBlock[target];
-
-        let theX = asciiWidth - arrayX;
-        let theY = asciiHeight - arrayY;
-        let oldBlock = {};
+      for (cy = 0; cy < currentAsciiHeight.value + 1; cy++) {
+        canvasYVal = blockHeight * cy;
 
         if (
-          this.mirrorX &&
-          this.currentAsciiLayerBlocks[arrayY] &&
-          this.currentAsciiLayerBlocks[arrayY][theX] &&
-          (this.x !== theX || this.y !== arrayY)
+          options.value.renderOffScreen &&
+          top.value !== false &&
+          !checkVisibleFn(top.value + canvasYVal - props.yOffset!)
         ) {
-          oldBlock = { ...this.currentAsciiLayerBlocks[arrayY][theX] };
-          this.currentAsciiLayerBlocks[arrayY][theX][target] =
-            brushBlock[target];
-
-          await this.storeDiffBlocks(theX, arrayY, oldBlock, brushBlock);
-        }
-
-        if (
-          this.mirrorY &&
-          this.currentAsciiLayerBlocks[theY] &&
-          this.currentAsciiLayerBlocks[theY][arrayX] &&
-          (this.x !== arrayX || this.y !== theY)
-        ) {
-          oldBlock = { ...this.currentAsciiLayerBlocks[theY][arrayX] };
-          this.currentAsciiLayerBlocks[theY][arrayX][target] =
-            brushBlock[target];
-
-          await this.storeDiffBlocks(arrayX, theY, oldBlock, brushBlock);
-        }
-
-        if (
-          this.mirrorY &&
-          this.mirrorX &&
-          this.currentAsciiLayerBlocks[theY] &&
-          this.currentAsciiLayerBlocks[theY][theX] &&
-          (this.x !== theX || this.y !== theY)
-        ) {
-          oldBlock = { ...this.currentAsciiLayerBlocks[theY][theX] };
-          this.currentAsciiLayerBlocks[theY][theX][target] = brushBlock[target];
-
-          await this.storeDiffBlocks(theX, theY, oldBlock, brushBlock);
-        }
-      }
-
-      this.toolCtx.restore();
-      return;
-    },
-
-    async drawHalfBlocks(brushX, brushY) {
-        const arrayY = brushY / blockHeight;
-        const arrayX = brushX / blockWidth;
-        
-        let targetBlock = this.currentAsciiLayerBlocks[arrayY][arrayX];
-        let oldBlock = { ... this.currentAsciiLayerBlocks[arrayY][arrayX]};
-
-        let topChar = "▀";
-        let bottomChar = "▄";
-        let fullChar = " ";
-
-        this.toolCtx.font = "Hack 13px";
-        this.toolCtx.fillStyle = this.mircColours[this.currentFg];
-        this.toolCtx.fillText(
-          this.atTopHalf ? topChar : bottomChar,
-          brushX,
-          brushY + blockHeight - 3
-        );
-
-        if (this.canTool) {
-          if ((targetBlock.char === topChar && !this.atTopHalf) || (targetBlock.char === bottomChar && this.atTopHalf)) {
-            
-            if (this.currentFg === targetBlock.fg) {
-              targetBlock["bg"] = this.currentFg;
-              targetBlock["char"] = fullChar;
-            } else {
-              targetBlock["bg"] = this.currentFg;
-              targetBlock["char"] = !this.atTopHalf ? topChar : bottomChar;
-            }
-            
-          } else {
-            targetBlock["fg"] = this.currentFg;
-            targetBlock["char"] = this.atTopHalf ? topChar : bottomChar;
-          }
-
-          await this.storeDiffBlocks(arrayX, arrayY, oldBlock, targetBlock);
-        }
-
-      this.toolCtx.restore();
-    },
-
-    async drawBrush(plain = false) {
-      await this.clearToolCanvas();
-      let brushDiffX = 0;
-      let xLength = false;
-
-      for (let i = 0; i <= this.brushBlocks.length; i++) {
-        if (this.brushBlocks[i] && xLength === false) {
-          brushDiffX = Math.floor(this.brushBlocks[i].length / 2) * blockWidth;
-          xLength = this.brushBlocks[i].length;
-          break;
-        }
-      }
-
-      const brushDiffY = Math.floor(this.brushBlocks.length / 2) * blockHeight;
-
-      for (let y = 0; y < this.brushBlocks.length; y++) {
-        if (!this.brushBlocks[y]) {
           continue;
         }
 
-        for (let x = 0; x < xLength; x++) {
-          if (
-            !this.brushBlocks[y][x] ||
-            JSON.stringify(this.brushBlocks[y][x]) === "{}"
-          ) {
-            continue;
+        for (cx = 0; cx < currentAsciiWidth.value + 1; cx++) {
+          canvasXVal = blockWidth * cx;
+
+          curBlock = { ...merged[cy][cx] };
+
+          if (curBlock.bg !== undefined && curBlock.bg !== null) {
+            ctx.fillStyle = mircColours.value[curBlock.bg];
+            ctx.fillRect(canvasXVal, canvasYVal, blockWidth, blockHeight);
           }
 
-          const brushBlock = this.brushBlocks[y][x];
-
-          if (
-            brushBlock.char !== undefined &&
-            brushBlock.char === " " &&
-            brushBlock.bg === undefined &&
-            brushBlock.fg === undefined
-          ) {
-            continue;
-          }
-
-          const brushX = this.x * blockWidth + x * blockWidth - brushDiffX;
-          const brushY = this.y * blockHeight + y * blockHeight - brushDiffY;
-
-          const arrayY = brushY / blockHeight;
-          const arrayX = brushX / blockWidth;
-
-          if (
-            this.currentAsciiLayerBlocks[arrayY] &&
-            this.currentAsciiLayerBlocks[arrayY][arrayX]
-          ) {
-            let oldBlock = {
-              ...this.currentAsciiLayerBlocks[arrayY][arrayX],
-            };
-
-            if (!plain) {
-
-                if (this.toolbarState.halfBlockEditing) {
-                  await this.drawHalfBlocks(brushX, brushY);    
-                } else {
-                  if (this.canBg) {
-                    await this.drawBrushBlocks(brushX, brushY, brushBlock, "bg");
-                  }
-
-                  if (this.canFg) {
-                    await this.drawBrushBlocks(brushX, brushY, brushBlock, "fg");
-                  }
-
-                  await this.drawBrushBlocks(brushX, brushY, brushBlock, null);
-                }
-
-                if (this.canTool) {
-                  await this.storeDiffBlocks(
-                    arrayX,
-                    arrayY,
-                    oldBlock,
-                    brushBlock
-                  );
-                }
-
-            } else if (this.isErasing) {
-              await this.drawBrushBlocks(
-                brushX,
-                brushY,
-                brushBlock,
-                null,
-                true
-              );
-            }
-          } 
-        }
-      }
-    },
-    async storeDiffBlocks(x, y, oldBlock, newBlock) {
-      if (!this.diffBlocks.old[y]) {
-        this.diffBlocks.old[y] = [];
-      }
-
-      if (!this.diffBlocks.old[y][x]) {
-        this.diffBlocks.old[y][x] = {
-          x: x,
-          y: y,
-          b: { ...oldBlock },
-        };
-      }
-
-      if (!this.diffBlocks.new[y]) {
-        this.diffBlocks.new[y] = [];
-      }
-
-      if (!this.diffBlocks.new[y][x]) {
-        this.diffBlocks.new[y][x] = {
-          x: x,
-          y: y,
-          b: { ...newBlock },
-        };
-      }
-    },
-    async eraser() {
-      if (this.canTool) {
-        const brushDiffX =
-          Math.floor(this.brushBlocks[0].length / 2) * blockWidth;
-        const brushDiffY =
-          Math.floor(this.brushBlocks.length / 2) * blockHeight;
-
-        for (let y = 0; y < this.brushBlocks.length; y++) {
-          for (let x = 0; x < this.brushBlocks[0].length; x++) {
-            const brushX = this.x * blockWidth + x * blockWidth - brushDiffX;
-            const brushY = this.y * blockHeight + y * blockHeight - brushDiffY;
-
-            const arrayY = brushY / blockHeight;
-            const arrayX = brushX / blockWidth;
-
-            if (this.currentAsciiLayerBlocks[arrayY] === undefined) {
-              continue;
+          if (curBlock.char !== undefined && curBlock.char !== null) {
+            if (curBlock.fg !== undefined && curBlock.fg !== null) {
+              ctx.fillStyle = mircColours.value[curBlock.fg];
+            } else {
+              ctx.fillStyle = '#FFFFFF';
             }
 
-            if (
-              this.currentAsciiLayerBlocks[arrayY][arrayX] === undefined ||
-              JSON.stringify(this.brushBlocks[y][x]) === "{}"
-            ) {
-              continue;
-            }
-
-            let targetBlock = this.currentAsciiLayerBlocks[arrayY][arrayX];
-            let oldBlock = { ...this.currentAsciiLayerBlocks[arrayY][arrayX] };
-
-            if (this.canFg && targetBlock.fg !== undefined) {
-              delete targetBlock["fg"];
-            }
-
-            if (this.canBg && targetBlock.bg !== undefined) {
-              delete targetBlock["bg"];
-            }
-
-            if (this.canText && targetBlock.char !== undefined) {
-              delete targetBlock["char"];
-            }
-
-            this.storeDiffBlocks(arrayX, arrayY, oldBlock, targetBlock);
-
-            let theX = this.currentAsciiWidth - arrayX;
-            if (this.mirrorX) {
-              if (
-                this.currentAsciiLayerBlocks[arrayY] &&
-                this.currentAsciiLayerBlocks[arrayY][theX]
-              ) {
-                targetBlock = this.currentAsciiLayerBlocks[arrayY][theX];
-                oldBlock = { ...this.currentAsciiLayerBlocks[arrayY][theX] };
-
-                if (this.canFg && targetBlock.fg !== undefined) {
-                  delete targetBlock["fg"];
-                }
-
-                if (this.canBg && targetBlock.bg !== undefined) {
-                  delete targetBlock["bg"];
-                }
-
-                if (this.canText && targetBlock.char !== undefined) {
-                  delete targetBlock["char"];
-                }
-
-                this.storeDiffBlocks(theX, arrayY, oldBlock, targetBlock);
-              }
-            }
-
-            let theY = this.currentAsciiHeight - arrayY;
-            if (this.mirrorY) {
-              if (
-                this.currentAsciiLayerBlocks[theY] &&
-                this.currentAsciiLayerBlocks[theY][arrayX]
-              ) {
-                targetBlock = this.currentAsciiLayerBlocks[theY][arrayX];
-                oldBlock = { ...this.currentAsciiLayerBlocks[theY][arrayX] };
-
-                if (this.canFg && targetBlock.fg !== undefined) {
-                  delete targetBlock["fg"];
-                }
-
-                if (this.canBg && targetBlock.bg !== undefined) {
-                  delete targetBlock["bg"];
-                }
-
-                if (this.canText && targetBlock.char !== undefined) {
-                  delete targetBlock["char"];
-                }
-
-                this.storeDiffBlocks(arrayX, theY, oldBlock, targetBlock);
-              }
-            }
-
-            if (this.mirrorY && this.mirrorX) {
-              if (
-                this.currentAsciiLayerBlocks[theY] &&
-                this.currentAsciiLayerBlocks[theY][theX]
-              ) {
-                targetBlock = this.currentAsciiLayerBlocks[theY][theX];
-                oldBlock = { ...this.currentAsciiLayerBlocks[theY][theX] };
-
-                if (this.canFg && targetBlock.fg !== undefined) {
-                  delete targetBlock["fg"];
-                }
-
-                if (this.canBg && targetBlock.bg !== undefined) {
-                  delete targetBlock["bg"];
-                }
-
-                if (this.canText && targetBlock.char !== undefined) {
-                  delete targetBlock["char"];
-                }
-
-                this.storeDiffBlocks(theX, theY, oldBlock, targetBlock);
-              }
-            }
+            ctx.fillText(curBlock.char, canvasXVal, canvasYVal + blockHeight - 3);
           }
         }
       }
-    },
-    fill(eraser = false) {
-      const fillColor = {
-        bg: this.currentBg,
-        fg: this.currentFg,
-        char: this.currentChar,
-      };
-      const current = { ...this.asciiBlockAtXy };
-      if (!this.canBg) {
-        delete fillColor["bg"];
-      }
-      if (!this.canText) {
-        delete fillColor["char"];
-      }
-      if (JSON.stringify(current) === JSON.stringify(fillColor) && !eraser) {
-        return;
+    }
+
+    ctx.restore();
+  }
+}
+
+function onCanvasResize(
+  left: number,
+  topVal: number,
+  width: number,
+  height: number,
+) {
+  const canvasBlockHeight = Math.floor(height / blockHeight);
+  const canvasBlockWidth = Math.floor(width / blockWidth);
+  const layers = fillNullBlocks(canvasBlockHeight, canvasBlockWidth);
+
+  top.value = topVal;
+  canvasSize.width = width;
+  canvasSize.height = height;
+
+  store.changeAsciiWidthHeight({
+    width: canvasBlockWidth,
+    height: canvasBlockHeight,
+    layers: [...layers],
+  });
+
+  const panel = editorPanel.value;
+  if (panel) {
+    panel.style.width = width + 'px';
+    panel.style.height = height + 'px';
+  }
+
+  toastShow(`${canvasBlockWidth} x ${canvasBlockHeight}`);
+}
+
+async function onCanvasDragStop(dx: number, dy: number) {
+  top.value = dy;
+  store.changeAsciiCanvasState({ x: dx, y: dy });
+  await delayRedrawCanvas();
+}
+
+function onCanvasDrag(dx: number, dy: number) {
+  top.value = dy;
+}
+
+async function dispatchBlocks(clearDiff = false) {
+  diffBlocks.old = diffBlocks.old.flat();
+  diffBlocks.new = diffBlocks.new.flat();
+
+  store.updateAsciiBlocks({
+    blocks: currentAsciiLayerBlocks.value,
+    diff: { ...diffBlocks },
+  });
+
+  if (clearDiff) {
+    diffBlocks.l = selectedLayerIndex.value;
+    diffBlocks.new = [];
+    diffBlocks.old = [];
+  }
+}
+
+async function canvasMouseUp() {
+  if (isDefault.value) return;
+
+  switch (currentTool.value.name) {
+    case 'brush':
+      canTool.value = false;
+      await dispatchBlocks(true);
+      break;
+
+    case 'eraser':
+      canTool.value = false;
+      await dispatchBlocks(true);
+      break;
+
+    case 'fill-eraser':
+    case 'fill':
+      canTool.value = false;
+      break;
+
+    case 'select':
+      selecting.value.canSelect = false;
+      await processSelect();
+      break;
+
+    case 'text':
+      textEditing.value.startX = x.value;
+      textEditing.value.startY = y.value;
+      break;
+  }
+}
+
+async function canvasMouseDown() {
+  if (isDefault.value) return;
+
+  if (asciiBlockAtXy.value && currentTool.value) {
+    const targetBlock = asciiBlockAtXy.value;
+
+    switch (currentTool.value.name) {
+      case 'select':
+        selecting.value.startX = canvasX.value;
+        selecting.value.startY = canvasY.value;
+        selecting.value.canSelect = true;
+        await clearToolCanvas();
+        break;
+
+      case 'fill':
+        fill();
+        canTool.value = false;
+        await dispatchBlocks(true);
+        break;
+
+      case 'fill-eraser':
+        fill(true);
+        await dispatchBlocks(true);
+        break;
+
+      case 'brush':
+        canTool.value = true;
+        await drawBrush();
+        break;
+
+      case 'eraser':
+        canTool.value = true;
+        await eraser();
+        break;
+
+      case 'dropper':
+        if (canFg.value) {
+          store.changeColourFg(
+            targetBlock.fg === undefined ? currentFg.value : targetBlock.fg,
+          );
+        }
+        if (canBg.value) {
+          store.changeColourBg(
+            targetBlock.bg === undefined ? currentBg.value : targetBlock.bg,
+          );
+        }
+        if (canText.value) {
+          store.changeChar(
+            targetBlock.char === undefined
+              ? currentChar.value
+              : targetBlock.char,
+          );
+        }
+        store.changeTool(0);
+        break;
+    }
+  }
+}
+
+async function canvasMouseMove(e: MouseEvent) {
+  if (isDefault.value) return;
+
+  const lastX = x.value;
+  const lastY = y.value;
+
+  if (e.offsetX >= 0) {
+    x.value = e.offsetX;
+  }
+  if (e.offsetY >= 0) {
+    y.value = e.offsetY;
+    atTopHalf.value = Math.floor(e.offsetY / (blockHeight / 2)) % 2 === 0 ? 1 : 0;
+  }
+
+  x.value = Math.floor(x.value / blockWidth);
+  y.value = Math.floor(y.value / blockHeight);
+
+  if (x.value === lastX && y.value === lastY && !halfBlockEditing.value) {
+    return;
+  }
+
+  emit('coordsupdate', { x: x.value, y: y.value });
+
+  if (asciiBlockAtXy.value) {
+    switch (currentTool.value.name) {
+      case 'brush':
+        if (isMouseOnCanvas.value) {
+          await clearToolCanvas();
+          await drawBrush();
+          await delayRedrawCanvas();
+        }
+        break;
+
+      case 'eraser':
+        await clearToolCanvas();
+        if (isMouseOnCanvas.value) {
+          await drawBrush(true);
+          await delayRedrawCanvas();
+          await eraser();
+        }
+        break;
+
+      case 'select':
+        if (selecting.value.canSelect) {
+          selecting.value.endX = canvasX.value + blockWidth;
+          selecting.value.endY = canvasY.value + blockHeight;
+          await redrawSelect();
+        }
+        if (!isSelected.value) {
+          await redrawSelect();
+        }
+        break;
+
+      case 'text':
+        await clearToolCanvas();
+        await drawIndicator();
+        if (isTextEditingValues.value) {
+          await drawTextIndicator();
+        }
+        break;
+
+      case 'dropper':
+        await clearToolCanvas();
+        await drawIndicator();
+        break;
+
+      case 'fill':
+      case 'fill-eraser':
+        await clearToolCanvas();
+        await drawIndicator();
+        break;
+    }
+  }
+}
+
+async function clearToolCanvas() {
+  if (toolCtx) {
+    toolCtx.clearRect(0, 0, canvasSize.width, canvasSize.height);
+    const tools = canvastoolsRef.value;
+    if (tools) {
+      // eslint-disable-next-line no-self-assign
+      tools.width = tools.width;
+    }
+    if (gridView.value) {
+      await drawGrid();
+    }
+  }
+}
+
+async function delayRedrawCanvas(force = false) {
+  if (redraw.value) {
+    redraw.value = false;
+    setTimeout(() => {
+      requestAnimationFrame(async () => {
+        await redrawCanvas(force);
+        redraw.value = true;
+      });
+    }, 1000 / options.value.fps);
+  }
+}
+
+function getBlocksWidthFn(blocks: Block[][]) {
+  return getBlocksWidth(blocks);
+}
+
+function filterNullBlocksFn(blocks: Block[][]) {
+  return filterNullBlocks(blocks);
+}
+
+async function processSelect() {
+  let sx = 0;
+  let sy = 0;
+  let curBlock: Record<string, any> = {};
+  selectedBlocks.value = [];
+
+  if (selecting.value.endY! < selecting.value.startY!) {
+    const end = selecting.value.endY!;
+    const start = selecting.value.startY!;
+    selecting.value.startY = end;
+    selecting.value.endY = start;
+  }
+
+  if (selecting.value.endX! < selecting.value.startX!) {
+    const end = selecting.value.endX!;
+    const start = selecting.value.startX!;
+    selecting.value.startX = end;
+    selecting.value.endX = start;
+  }
+
+  for (sy = 0; sy < currentAsciiHeight.value; sy++) {
+    if (
+      sy > Math.floor(selecting.value.startY! / blockHeight) - 1 &&
+      sy < Math.floor(selecting.value.endY! / blockHeight)
+    ) {
+      if (!selectedBlocks.value[sy]) {
+        selectedBlocks.value[sy] = [];
       }
 
-      const height = this.currentAsciiLayerBlocks.length;
-      const width = height > 0 ? this.currentAsciiLayerBlocks[0].length : 0;
-      const oldBlocks = [];
-      for (let y = 0; y < height; y++) {
-        oldBlocks[y] = [];
-        for (let x = 0; x < width; x++) {
-          oldBlocks[y][x] = { ...this.currentAsciiLayerBlocks[y][x] };
+      for (sx = 0; sx < currentAsciiWidth.value; sx++) {
+        if (
+          sx > Math.ceil(selecting.value.startX! / blockWidth) - 1 &&
+          sx <= Math.ceil(selecting.value.endX! / blockWidth) - 1
+        ) {
+          if (
+            currentAsciiLayerBlocks.value[sy] &&
+            currentAsciiLayerBlocks.value[sy][sx]
+          ) {
+            if (currentAsciiLayerBlocks.value[sy][sx].bg === null) {
+              delete currentAsciiLayerBlocks.value[sy][sx]['bg'];
+            }
+            if (currentAsciiLayerBlocks.value[sy][sx].fg === null) {
+              delete currentAsciiLayerBlocks.value[sy][sx]['fg'];
+            }
+            if (currentAsciiLayerBlocks.value[sy][sx].char === null) {
+              delete currentAsciiLayerBlocks.value[sy][sx]['char'];
+            }
+
+            curBlock = { ...currentAsciiLayerBlocks.value[sy][sx] };
+
+            if (!selectedBlocks.value[sy][sx]) {
+              selectedBlocks.value[sy][sx] = { ...curBlock };
+            }
+          }
         }
       }
+    }
+  }
 
-      iterativeFill(
-        this.currentAsciiLayerBlocks,
-        this.y,
-        this.x,
-        current,
-        fillColor,
-        this.canBg,
-        this.canFg,
-        this.canText,
-        eraser,
+  emit('selectedblocks', selectedBlocks.value);
+  emit('selecting', selecting.value);
+}
+
+async function drawRectangleBlock(rx: number, ry: number) {
+  if (!toolCtx) return;
+  const block = asciiBlockAtXy.value as Block | false;
+  let indicatorColour = 1;
+
+  if (block && typeof block === 'object') {
+    indicatorColour = block.bg === 0 ? 1 : 0;
+    if (block.bg === 8) {
+      indicatorColour = 1;
+    }
+  }
+
+  toolCtx.fillStyle = mircColours.value[indicatorColour];
+  toolCtx.fillRect(rx * blockWidth, ry * blockHeight, blockWidth, blockHeight);
+  toolCtx.setLineDash([1, 2]);
+  toolCtx.strokeRect(rx * blockWidth, ry * blockHeight, blockWidth, blockHeight);
+}
+
+async function drawIndicator() {
+  const positions = getMirrorPositions(
+    x.value, y.value,
+    currentAsciiWidth.value, currentAsciiHeight.value,
+    mirrorX.value && isTextEditing.value,
+    mirrorY.value && isTextEditing.value,
+  );
+  for (const pos of positions) {
+    drawRectangleBlock(pos.x, pos.y);
+  }
+}
+
+async function drawTextIndicator() {
+  const positions = getMirrorPositions(
+    textEditing.value.startX!, textEditing.value.startY!,
+    currentAsciiWidth.value, currentAsciiHeight.value,
+    mirrorX.value, mirrorY.value,
+  );
+  for (const pos of positions) {
+    drawRectangleBlock(pos.x, pos.y);
+  }
+}
+
+async function drawBrushBlocks(
+  brushX: number,
+  brushY: number,
+  brushBlock: Record<string, any>,
+  target: string | null = null,
+  plain = false,
+) {
+  if (!toolCtx) return;
+  const arrayY = brushY / blockHeight;
+  const arrayX = brushX / blockWidth;
+  const asciiWidth = currentAsciiWidth.value;
+  const asciiHeight = currentAsciiHeight.value;
+  const tBlock = currentAsciiLayerBlocks.value[arrayY]?.[arrayX];
+  if (!tBlock) return;
+
+  if (plain) {
+    let indicatorColour = tBlock.bg === 0 ? 1 : 0;
+    if (tBlock.bg === 8) {
+      indicatorColour = 1;
+    }
+    toolCtx.fillStyle = mircColours.value[indicatorColour];
+    toolCtx.fillRect(brushX, brushY, blockWidth, blockHeight);
+
+    if (mirrorX.value) {
+      toolCtx.fillRect(
+        (asciiWidth - arrayX) * blockWidth, brushY, blockWidth, blockHeight,
       );
+    }
+    if (mirrorY.value) {
+      toolCtx.fillRect(
+        brushX, (asciiHeight - arrayY) * blockHeight, blockWidth, blockHeight,
+      );
+    }
+    if (mirrorY.value && mirrorX.value) {
+      toolCtx.fillRect(
+        (asciiWidth - arrayX) * blockWidth,
+        (asciiHeight - arrayY) * blockHeight,
+        blockWidth, blockHeight,
+      );
+    }
+    return;
+  }
 
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-          const oldB = oldBlocks[y][x];
-          const newB = this.currentAsciiLayerBlocks[y][x];
-          if (oldB.bg !== newB.bg || oldB.fg !== newB.fg
-              || oldB.char !== newB.char) {
-            this.storeDiffBlocks(x, y, oldB, newB);
+  switch (target) {
+    case 'bg':
+      toolCtx.fillStyle =
+        brushBlock.bg !== undefined
+          ? mircColours.value[brushBlock.bg]
+          : 'rgba(255,255,255,0.4)';
+      break;
+
+    case 'fg':
+      toolCtx.fillStyle =
+        brushBlock.fg !== undefined
+          ? mircColours.value[brushBlock.fg]
+          : '#FFFFFF';
+      break;
+
+    default:
+      if (canText.value && brushBlock.char !== undefined) {
+        toolCtx.font = 'Hack 13px';
+        toolCtx.fillStyle = canFg.value
+          ? mircColours.value[brushBlock.fg]
+          : '#FFFFFF';
+        toolCtx.fillText(brushBlock.char, brushX, brushY + blockHeight - 3);
+
+        if (mirrorX.value) {
+          toolCtx.fillText(
+            brushBlock.char,
+            (asciiWidth - arrayX) * blockWidth,
+            brushY + blockHeight - 4,
+          );
+        }
+        if (mirrorY.value) {
+          toolCtx.fillText(
+            brushBlock.char,
+            brushX,
+            (asciiHeight - arrayY) * blockHeight + 10,
+          );
+        }
+        if (mirrorY.value && mirrorX.value) {
+          toolCtx.fillText(
+            brushBlock.char,
+            (asciiWidth - arrayX) * blockWidth,
+            (asciiHeight - arrayY) * blockHeight + 10,
+          );
+        }
+      }
+
+      if (canText.value && canTool.value) {
+        tBlock['char'] = brushBlock['char'];
+
+        if (
+          mirrorX.value &&
+          currentAsciiLayerBlocks.value[arrayY] &&
+          currentAsciiLayerBlocks.value[arrayY][asciiWidth - arrayX]
+        ) {
+          currentAsciiLayerBlocks.value[arrayY][
+            asciiWidth - arrayX
+          ].char = brushBlock.char;
+        }
+
+        if (
+          mirrorY.value &&
+          currentAsciiLayerBlocks.value[asciiHeight - arrayY] &&
+          currentAsciiLayerBlocks.value[asciiHeight - arrayY][arrayX]
+        ) {
+          currentAsciiLayerBlocks.value[asciiHeight - arrayY][
+            arrayX
+          ].char = brushBlock.char;
+        }
+
+        if (
+          mirrorY.value &&
+          mirrorX.value &&
+          currentAsciiLayerBlocks.value[asciiHeight - arrayY] &&
+          currentAsciiLayerBlocks.value[asciiHeight - arrayY][
+            asciiWidth - arrayX
+          ]
+        ) {
+          currentAsciiLayerBlocks.value[asciiHeight - arrayY][
+            asciiWidth - arrayX
+          ].char = brushBlock.char;
+        }
+      }
+
+      return;
+  }
+
+  if (canBg.value && target === 'bg') {
+    toolCtx.setLineDash([1, 2]);
+    toolCtx.strokeRect(brushX, brushY, blockWidth, blockHeight);
+    toolCtx.fillRect(brushX, brushY, blockWidth, blockHeight);
+
+    if (mirrorX.value) {
+      toolCtx.fillRect(
+        (asciiWidth - arrayX) * blockWidth, brushY, blockWidth, blockHeight,
+      );
+      toolCtx.setLineDash([1, 2]);
+      toolCtx.strokeRect(
+        (asciiWidth - arrayX) * blockWidth, brushY, blockWidth, blockHeight,
+      );
+    }
+    if (mirrorY.value) {
+      toolCtx.fillRect(
+        brushX, (asciiHeight - arrayY) * blockHeight, blockWidth, blockHeight,
+      );
+      toolCtx.setLineDash([1, 2]);
+      toolCtx.strokeRect(
+        brushX, (asciiHeight - arrayY) * blockHeight, blockWidth, blockHeight,
+      );
+    }
+    if (mirrorY.value && mirrorX.value) {
+      toolCtx.fillRect(
+        (asciiWidth - arrayX) * blockWidth,
+        (asciiHeight - arrayY) * blockHeight,
+        blockWidth, blockHeight,
+      );
+      toolCtx.setLineDash([1, 2]);
+      toolCtx.strokeRect(
+        (asciiWidth - arrayX) * blockWidth,
+        (asciiHeight - arrayY) * blockHeight,
+        blockWidth, blockHeight,
+      );
+    }
+  }
+
+  if (canTool.value && brushBlock[target!] !== undefined) {
+    tBlock[target!] = brushBlock[target!];
+
+    const theX = asciiWidth - arrayX;
+    const theY = asciiHeight - arrayY;
+    let ob: Record<string, any> = {};
+
+    if (
+      mirrorX.value &&
+      currentAsciiLayerBlocks.value[arrayY] &&
+      currentAsciiLayerBlocks.value[arrayY][theX] &&
+      (x.value !== theX || y.value !== arrayY)
+    ) {
+      ob = { ...currentAsciiLayerBlocks.value[arrayY][theX] };
+      currentAsciiLayerBlocks.value[arrayY][theX][target!] =
+        brushBlock[target!];
+      await storeDiffBlocks(theX, arrayY, ob, brushBlock);
+    }
+
+    if (
+      mirrorY.value &&
+      currentAsciiLayerBlocks.value[theY] &&
+      currentAsciiLayerBlocks.value[theY][arrayX] &&
+      (x.value !== arrayX || y.value !== theY)
+    ) {
+      ob = { ...currentAsciiLayerBlocks.value[theY][arrayX] };
+      currentAsciiLayerBlocks.value[theY][arrayX][target!] =
+        brushBlock[target!];
+      await storeDiffBlocks(arrayX, theY, ob, brushBlock);
+    }
+
+    if (
+      mirrorY.value &&
+      mirrorX.value &&
+      currentAsciiLayerBlocks.value[theY] &&
+      currentAsciiLayerBlocks.value[theY][theX] &&
+      (x.value !== theX || y.value !== theY)
+    ) {
+      ob = { ...currentAsciiLayerBlocks.value[theY][theX] };
+      currentAsciiLayerBlocks.value[theY][theX][target!] =
+        brushBlock[target!];
+      await storeDiffBlocks(theX, theY, ob, brushBlock);
+    }
+  }
+
+  toolCtx.restore();
+}
+
+async function drawHalfBlocks(brushX: number, brushY: number) {
+  if (!toolCtx) return;
+  const arrayY = brushY / blockHeight;
+  const arrayX = brushX / blockWidth;
+
+  const tBlock = currentAsciiLayerBlocks.value[arrayY][arrayX];
+  const ob = { ...currentAsciiLayerBlocks.value[arrayY][arrayX] };
+
+  const topChar = '\u2580'; // ▀
+  const bottomChar = '\u2584'; // ▄
+  const fullChar = ' ';
+
+  toolCtx.font = 'Hack 13px';
+  toolCtx.fillStyle = mircColours.value[currentFg.value];
+  toolCtx.fillText(
+    atTopHalf.value ? topChar : bottomChar,
+    brushX,
+    brushY + blockHeight - 3,
+  );
+
+  if (canTool.value) {
+    if (
+      (tBlock.char === topChar && !atTopHalf.value) ||
+      (tBlock.char === bottomChar && atTopHalf.value)
+    ) {
+      if (currentFg.value === tBlock.fg) {
+        tBlock['bg'] = currentFg.value;
+        tBlock['char'] = fullChar;
+      } else {
+        tBlock['bg'] = currentFg.value;
+        tBlock['char'] = !atTopHalf.value ? topChar : bottomChar;
+      }
+    } else {
+      tBlock['fg'] = currentFg.value;
+      tBlock['char'] = atTopHalf.value ? topChar : bottomChar;
+    }
+
+    await storeDiffBlocks(arrayX, arrayY, ob, tBlock);
+  }
+
+  toolCtx.restore();
+}
+
+async function drawBrush(plain = false) {
+  await clearToolCanvas();
+  let brushDiffX = 0;
+  let xLength: number | false = false;
+
+  for (let i = 0; i <= brushBlocks.value.length; i++) {
+    if (brushBlocks.value[i] && xLength === false) {
+      brushDiffX = Math.floor(brushBlocks.value[i].length / 2) * blockWidth;
+      xLength = brushBlocks.value[i].length;
+      break;
+    }
+  }
+
+  const brushDiffY = Math.floor(brushBlocks.value.length / 2) * blockHeight;
+
+  for (let by = 0; by < brushBlocks.value.length; by++) {
+    if (!brushBlocks.value[by]) continue;
+
+    for (let bx = 0; bx < xLength; bx++) {
+      if (
+        !brushBlocks.value[by][bx] ||
+        JSON.stringify(brushBlocks.value[by][bx]) === '{}'
+      ) {
+        continue;
+      }
+
+      const brushBlock = brushBlocks.value[by][bx];
+
+      if (
+        brushBlock.char !== undefined &&
+        brushBlock.char === ' ' &&
+        brushBlock.bg === undefined &&
+        brushBlock.fg === undefined
+      ) {
+        continue;
+      }
+
+      const brushX = x.value * blockWidth + bx * blockWidth - brushDiffX;
+      const brushY = y.value * blockHeight + by * blockHeight - brushDiffY;
+
+      const arrayY = brushY / blockHeight;
+      const arrayX = brushX / blockWidth;
+
+      if (
+        currentAsciiLayerBlocks.value[arrayY] &&
+        currentAsciiLayerBlocks.value[arrayY][arrayX]
+      ) {
+        const ob = { ...currentAsciiLayerBlocks.value[arrayY][arrayX] };
+
+        if (!plain) {
+          if (toolbarState.value.halfBlockEditing) {
+            await drawHalfBlocks(brushX, brushY);
+          } else {
+            if (canBg.value) {
+              await drawBrushBlocks(brushX, brushY, brushBlock, 'bg');
+            }
+            if (canFg.value) {
+              await drawBrushBlocks(brushX, brushY, brushBlock, 'fg');
+            }
+            await drawBrushBlocks(brushX, brushY, brushBlock, null);
+          }
+
+          if (canTool.value) {
+            await storeDiffBlocks(arrayX, arrayY, ob, brushBlock);
+          }
+        } else if (isErasing.value) {
+          await drawBrushBlocks(brushX, brushY, brushBlock, null, true);
+        }
+      }
+    }
+  }
+}
+
+async function storeDiffBlocks(
+  sx: number,
+  sy: number,
+  oldBlock: any,
+  newBlock: any,
+) {
+  if (!diffBlocks.old[sy]) {
+    diffBlocks.old[sy] = [];
+  }
+  if (!diffBlocks.old[sy][sx]) {
+    diffBlocks.old[sy][sx] = { x: sx, y: sy, b: { ...oldBlock } };
+  }
+
+  if (!diffBlocks.new[sy]) {
+    diffBlocks.new[sy] = [];
+  }
+  if (!diffBlocks.new[sy][sx]) {
+    diffBlocks.new[sy][sx] = { x: sx, y: sy, b: { ...newBlock } };
+  }
+}
+
+async function eraser() {
+  if (canTool.value) {
+    const brushDiffX =
+      Math.floor(brushBlocks.value[0].length / 2) * blockWidth;
+    const brushDiffY =
+      Math.floor(brushBlocks.value.length / 2) * blockHeight;
+
+    for (let ey = 0; ey < brushBlocks.value.length; ey++) {
+      for (let ex = 0; ex < brushBlocks.value[0].length; ex++) {
+        const brushX =
+          x.value * blockWidth + ex * blockWidth - brushDiffX;
+        const brushY =
+          y.value * blockHeight + ey * blockHeight - brushDiffY;
+
+        const arrayY = brushY / blockHeight;
+        const arrayX = brushX / blockWidth;
+
+        if (currentAsciiLayerBlocks.value[arrayY] === undefined) continue;
+
+        if (
+          currentAsciiLayerBlocks.value[arrayY][arrayX] === undefined ||
+          JSON.stringify(brushBlocks.value[ey][ex]) === '{}'
+        ) {
+          continue;
+        }
+
+        const tBlock = currentAsciiLayerBlocks.value[arrayY][arrayX];
+        const ob = { ...currentAsciiLayerBlocks.value[arrayY][arrayX] };
+
+        if (canFg.value && tBlock.fg !== undefined) {
+          delete tBlock['fg'];
+        }
+        if (canBg.value && tBlock.bg !== undefined) {
+          delete tBlock['bg'];
+        }
+        if (canText.value && tBlock.char !== undefined) {
+          delete tBlock['char'];
+        }
+
+        storeDiffBlocks(arrayX, arrayY, ob, tBlock);
+
+        const theX = currentAsciiWidth.value - arrayX;
+        if (mirrorX.value) {
+          if (
+            currentAsciiLayerBlocks.value[arrayY] &&
+            currentAsciiLayerBlocks.value[arrayY][theX]
+          ) {
+            const mBlock = currentAsciiLayerBlocks.value[arrayY][theX];
+            const mOb = { ...currentAsciiLayerBlocks.value[arrayY][theX] };
+
+            if (canFg.value && mBlock.fg !== undefined) {
+              delete mBlock['fg'];
+            }
+            if (canBg.value && mBlock.bg !== undefined) {
+              delete mBlock['bg'];
+            }
+            if (canText.value && mBlock.char !== undefined) {
+              delete mBlock['char'];
+            }
+
+            storeDiffBlocks(theX, arrayY, mOb, mBlock);
+          }
+        }
+
+        const theY = currentAsciiHeight.value - arrayY;
+        if (mirrorY.value) {
+          if (
+            currentAsciiLayerBlocks.value[theY] &&
+            currentAsciiLayerBlocks.value[theY][arrayX]
+          ) {
+            const mBlock = currentAsciiLayerBlocks.value[theY][arrayX];
+            const mOb = { ...currentAsciiLayerBlocks.value[theY][arrayX] };
+
+            if (canFg.value && mBlock.fg !== undefined) {
+              delete mBlock['fg'];
+            }
+            if (canBg.value && mBlock.bg !== undefined) {
+              delete mBlock['bg'];
+            }
+            if (canText.value && mBlock.char !== undefined) {
+              delete mBlock['char'];
+            }
+
+            storeDiffBlocks(arrayX, theY, mOb, mBlock);
+          }
+        }
+
+        if (mirrorY.value && mirrorX.value) {
+          if (
+            currentAsciiLayerBlocks.value[theY] &&
+            currentAsciiLayerBlocks.value[theY][theX]
+          ) {
+            const mBlock = currentAsciiLayerBlocks.value[theY][theX];
+            const mOb = { ...currentAsciiLayerBlocks.value[theY][theX] };
+
+            if (canFg.value && mBlock.fg !== undefined) {
+              delete mBlock['fg'];
+            }
+            if (canBg.value && mBlock.bg !== undefined) {
+              delete mBlock['bg'];
+            }
+            if (canText.value && mBlock.char !== undefined) {
+              delete mBlock['char'];
+            }
+
+            storeDiffBlocks(theX, theY, mOb, mBlock);
           }
         }
       }
-    },
+    }
+  }
+}
 
-  },
-};
+function fill(eraser = false) {
+  const fillColor: Record<string, any> = {
+    bg: currentBg.value,
+    fg: currentFg.value,
+    char: currentChar.value,
+  };
+  const current = { ...(asciiBlockAtXy.value as Block) };
+  if (!canBg.value) {
+    delete fillColor['bg'];
+  }
+  if (!canText.value) {
+    delete fillColor['char'];
+  }
+  if (JSON.stringify(current) === JSON.stringify(fillColor) && !eraser) {
+    return;
+  }
+
+  const height = currentAsciiLayerBlocks.value.length;
+  const width = height > 0 ? currentAsciiLayerBlocks.value[0].length : 0;
+  const oldBlocks: Block[][] = [];
+  for (let fy = 0; fy < height; fy++) {
+    oldBlocks[fy] = [];
+    for (let fx = 0; fx < width; fx++) {
+      oldBlocks[fy][fx] = { ...currentAsciiLayerBlocks.value[fy][fx] };
+    }
+  }
+
+  iterativeFill(
+    currentAsciiLayerBlocks.value,
+    y.value,
+    x.value,
+    current,
+    fillColor,
+    canBg.value,
+    canFg.value,
+    canText.value,
+    eraser,
+  );
+
+  for (let fy = 0; fy < height; fy++) {
+    for (let fx = 0; fx < width; fx++) {
+      const oldB = oldBlocks[fy][fx];
+      const newB = currentAsciiLayerBlocks.value[fy][fx];
+      if (oldB.bg !== newB.bg || oldB.fg !== newB.fg || oldB.char !== newB.char) {
+        storeDiffBlocks(fx, fy, oldB, newB);
+      }
+    }
+  }
+}
+
+// ─── Expose for test compatibility ──────────────────────────────
+defineExpose({
+  // Reactive state
+  x,
+  y,
+  atTopHalf,
+  top,
+  redraw,
+  canTool,
+  textEditing,
+  selecting,
+  isMouseOnCanvas,
+  selectedBlocks,
+  diffBlocks,
+  isUsingKeyboard,
+  canvasHash,
+  canvasSize,
+  // Computed
+  blockWidth: blockWidthComp,
+  blockHeight: blockHeightComp,
+  blockSizeMultiplier,
+  currentAscii,
+  currentAsciiLayers,
+  selectedLayerIndex,
+  currentSelectedLayer,
+  currentAsciiLayerBlocks,
+  currentTool,
+  canFg,
+  canBg,
+  canText,
+  currentFg,
+  currentBg,
+  currentChar,
+  isTextEditing,
+  isEraserFill,
+  isFill,
+  isTextEditingValues,
+  isSelecting,
+  isDefault,
+  isBrushing,
+  isErasing,
+  isSelected,
+  brushBlocks,
+  canvasX,
+  canvasY,
+  toolbarState,
+  mirrorX,
+  mirrorY,
+  debugPanelState,
+  selectBlocks,
+  options,
+  haveSelectBlocks,
+  mircColours,
+  brushLibraryState,
+  gridView,
+  halfBlockEditing,
+  asciiBlockAtXy,
+  maxBrushSize: maxBrushSizeComp,
+  currentAsciiWidth,
+  currentAsciiHeight,
+  imageOverlay,
+  imageOverlayStyle,
+  canvasTransparent,
+  emptyBlock: emptyBlockComp,
+  updateCanvas: props.updateCanvas ?? false,
+  // Methods
+  startExport,
+  canvasToPng,
+  openContextMenu,
+  canvasKeyDown,
+  warnInvisibleLayer,
+  checkVisible: checkVisibleFn,
+  undo,
+  redo,
+  resetSelectTool,
+  redrawSelect,
+  mergeLayers: mergeLayersFn,
+  drawGrid,
+  redrawCanvas,
+  onCanvasResize,
+  onCanvasDragStop,
+  onCanvasDrag,
+  dispatchBlocks,
+  canvasMouseUp,
+  canvasMouseDown,
+  canvasMouseMove,
+  clearToolCanvas,
+  delayRedrawCanvas,
+  getBlocksWidth: getBlocksWidthFn,
+  filterNullBlocks: filterNullBlocksFn,
+  processSelect,
+  drawRectangleBlock,
+  drawIndicator,
+  drawTextIndicator,
+  drawBrushBlocks,
+  drawHalfBlocks,
+  drawBrush,
+  storeDiffBlocks,
+  eraser,
+  fill,
+  // Template refs
+  canvasRef,
+  canvastoolsRef,
+  editorMenu,
+  editorPanel,
+  editorStyle,
+  // Store
+  store,
+});
 </script>
