@@ -58,15 +58,6 @@ vi.mock('@/composables/useClipboard', () => ({
   useClipboard: () => copyTextMock,
 }))
 
-const vdrStub = {
-  template: '<div class="vdr"><slot /></div>',
-}
-
-const localStubs = {
-  ...globalStubs,
-  'vue-draggable-resizable': vdrStub,
-}
-
 setupHotkeysMocks()
 
 let store: any
@@ -76,16 +67,6 @@ function mountOpts(extra: any = {}) {
     global: {
       plugins: [createPinia()],
       stubs: globalStubs,
-    },
-    ...extra,
-  }
-}
-
-function mountOptsWithVdr(extra: any = {}) {
-  return {
-    global: {
-      plugins: [createPinia()],
-      stubs: localStubs,
     },
     ...extra,
   }
@@ -171,8 +152,8 @@ describe('CharPicker.vue', () => {
   it('mounts successfully with required props', () => {
     const wrapper = shallowMount(
       CharPicker,
-      mountOptsWithVdr({
-        propsData: {
+      mountOpts({
+        props: {
           canvasX: 0,
           canvasY: 0,
           yOffset: 0,
@@ -185,8 +166,8 @@ describe('CharPicker.vue', () => {
   it('provides charCodes from ascii module', () => {
     const wrapper = shallowMount(
       CharPicker,
-      mountOptsWithVdr({
-        propsData: {
+      mountOpts({
+        props: {
           canvasX: 0,
           canvasY: 0,
           yOffset: 0,
@@ -199,8 +180,8 @@ describe('CharPicker.vue', () => {
   it('provides mircColours from ascii module', () => {
     const wrapper = shallowMount(
       CharPicker,
-      mountOptsWithVdr({
-        propsData: {
+      mountOpts({
+        props: {
           canvasX: 0,
           canvasY: 0,
           yOffset: 0,
@@ -213,8 +194,8 @@ describe('CharPicker.vue', () => {
   it('onCharChange calls store.changeChar', () => {
     const wrapper = shallowMount(
       CharPicker,
-      mountOptsWithVdr({
-        propsData: {
+      mountOpts({
+        props: {
           canvasX: 0,
           canvasY: 0,
           yOffset: 0,
@@ -235,8 +216,8 @@ describe('CharPicker.vue', () => {
     })
     const wrapper = shallowMount(
       CharPicker,
-      mountOptsWithVdr({
-        propsData: {
+      mountOpts({
+        props: {
           canvasX: 0,
           canvasY: 0,
           yOffset: 0,
@@ -251,8 +232,8 @@ describe('CharPicker.vue', () => {
   it('outline is empty when fg and bg differ', () => {
     const wrapper = shallowMount(
       CharPicker,
-      mountOptsWithVdr({
-        propsData: {
+      mountOpts({
+        props: {
           canvasX: 0,
           canvasY: 0,
           yOffset: 0,
@@ -268,8 +249,8 @@ describe('ColourPicker.vue', () => {
   it('mounts successfully with required props', () => {
     const wrapper = shallowMount(
       ColourPicker,
-      mountOptsWithVdr({
-        propsData: { yOffset: 0 },
+      mountOpts({
+        props: { yOffset: 0 },
       }),
     )
     expect(wrapper.findComponent(ColourPicker).exists()).toBe(true)
@@ -278,8 +259,8 @@ describe('ColourPicker.vue', () => {
   it('provides mircColours from ascii module', () => {
     const wrapper = shallowMount(
       ColourPicker,
-      mountOptsWithVdr({
-        propsData: { yOffset: 0 },
+      mountOpts({
+        props: { yOffset: 0 },
       }),
     )
     expect(wrapper.vm.mircColours).toEqual(mircColours99)
@@ -295,8 +276,8 @@ describe('ColourPicker.vue', () => {
     })
     const wrapper = shallowMount(
       ColourPicker,
-      mountOptsWithVdr({
-        propsData: { yOffset: 0 },
+      mountOpts({
+        props: { yOffset: 0 },
       }),
     )
     wrapper.vm.onColourChange(5)
@@ -313,8 +294,8 @@ describe('ColourPicker.vue', () => {
     })
     const wrapper = shallowMount(
       ColourPicker,
-      mountOptsWithVdr({
-        propsData: { yOffset: 0 },
+      mountOpts({
+        props: { yOffset: 0 },
       }),
     )
     wrapper.vm.onColourChange(8)
@@ -324,8 +305,8 @@ describe('ColourPicker.vue', () => {
   it('onColourChange does nothing when neither fg nor bg choosing', () => {
     const wrapper = shallowMount(
       ColourPicker,
-      mountOptsWithVdr({
-        propsData: { yOffset: 0 },
+      mountOpts({
+        props: { yOffset: 0 },
       }),
     )
     const prevFg = _mockToolbarStore.toolbarState.currentColourFg

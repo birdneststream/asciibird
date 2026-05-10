@@ -900,11 +900,11 @@ describe('Pinia Store Getters', () => {
 
   it('toolbarState returns toolbar state', () => {
     expect(toolbarStore.toolbarState)
-      .toEqual(toolbarStore.toolbarState);
+      .toEqual(toolbarStore.$state.toolbarState);
   });
 
   it('debugPanel returns debug panel state', () => {
-    expect(panelStore.debugPanel).toEqual(panelStore.debugPanel);
+    expect(panelStore.debugPanel).toEqual(panelStore.$state.debugPanel);
   });
 
   it('currentTool returns current tool index', () => {

@@ -544,6 +544,23 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       },
       deserialize: (value: string) => {
         const parsed = JSON.parse(value);
+        // One-time migration: seed toolbar store from old vuex data
+        if (
+          parsed.toolbarState &&
+          !localStorage.getItem('asciibird-toolbar')
+        ) {
+          const toolbarData = {
+            toolbarState: parsed.toolbarState,
+            _brushBlocks: parsed._brushBlocks ?? parsed.brushBlocks ?? '',
+            brushHistory: parsed.brushHistory ?? [],
+            _selectBlocks: parsed._selectBlocks ?? parsed.selectBlocks ?? '',
+            brushLibrary: parsed.brushLibrary ?? [],
+          };
+          localStorage.setItem(
+            'asciibird-toolbar',
+            JSON.stringify(toolbarData),
+          );
+        }
         // Remove extracted state (now in separate stores)
         delete parsed.modalState;
         delete parsed.isKeyboardDisabled;

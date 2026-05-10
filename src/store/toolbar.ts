@@ -7,6 +7,7 @@
 import { defineStore } from 'pinia';
 import { cyrb53, getBlocksWidth } from '../ascii';
 import { compressData, decompressData } from '../utils/layers';
+import { useAsciiBirdStore } from './index';
 import type {
   Block,
   PanelState,
@@ -184,7 +185,8 @@ export const useToolbarStore = defineStore('toolbar', {
 
     // Brush Library
     pushBrushHistory(payload: Block[][]) {
-      if (this.brushHistory.length >= 50) {
+      const limit = useAsciiBirdStore().options.brushLimit;
+      if (this.brushHistory.length >= limit) {
         this.brushHistory.pop();
       }
 
