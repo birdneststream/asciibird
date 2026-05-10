@@ -21,16 +21,7 @@
             >
             <div class="inline-block relative">
               <span class="ab-checkbox-label">FG</span>
-              <div
-                class="
-                  bg-gray-500
-                  absolute
-                  opacity-0
-                  invisible
-                  group-hover:animate-tooltip_show
-                  ml-2
-                "
-              >
+              <div class="ab-tooltip">
                 Ignore Foreground when Editing
               </div>
             </div>
@@ -46,16 +37,7 @@
             >
             <div class="inline-block relative">
               <span class="ab-checkbox-label">BG</span>
-              <div
-                class="
-                  bg-gray-500
-                  absolute
-                  opacity-0
-                  invisible
-                  group-hover:animate-tooltip_show
-                  ml-2
-                "
-              >
+              <div class="ab-tooltip">
                 Ignore Background when Editing
               </div>
             </div>
@@ -71,16 +53,9 @@
             >
             <div class="inline-block relative">
               <span class="ab-checkbox-label">Text</span>
-              <span
-                class="
-                  bg-gray-500
-                  absolute
-                  opacity-0
-                  invisible
-                  group-hover:animate-tooltip_show
-                  ml-2
-                "
-              >Ignore Characters when Editing</span>
+              <div class="ab-tooltip">
+                Ignore Characters when Editing
+              </div>
             </div>
           </label>
         </div>
@@ -97,16 +72,7 @@
           >
             <div class="inline-block relative">
               <span class="material-icons">more_vert</span>
-              <div
-                class="
-                  bg-gray-500
-                  absolute
-                  opacity-0
-                  invisible
-                  group-hover:animate-tooltip_show
-                  ml-2
-                "
-              >
+              <div class="ab-tooltip">
                 Mirror X axis when Editing
               </div>
             </div>
@@ -123,16 +89,7 @@
           >
             <div class="inline-block relative">
               <span class="material-icons">more_horiz</span>
-              <div
-                class="
-                  bg-gray-500
-                  absolute
-                  opacity-0
-                  invisible
-                  group-hover:animate-tooltip_show
-                  ml-2
-                "
-              >
+              <div class="ab-tooltip">
                 Mirror Y axis when Editing
               </div>
             </div>
@@ -149,16 +106,7 @@
           >
             <div class="inline-block relative">
               <span class="material-icons">color_lens</span>
-              <div
-                class="
-                  bg-gray-500
-                  absolute
-                  opacity-0
-                  invisible
-                  group-hover:animate-tooltip_show
-                  ml-2
-                "
-              >
+              <div class="ab-tooltip">
                 Update Brush Automatically when Colours or Char Changes
               </div>
             </div>
@@ -177,19 +125,7 @@
               <span class="material-icons">{{
                 !store.toolbarState.gridView ? "grid_on" : "grid_off"
               }}</span>
-              <div
-                class="
-                  bg-gray-500
-                  absolute
-                  opacity-0
-                  invisible
-                  group-hover:animate-tooltip_show
-                  ml-2
-                "
-              >
-                <span class="material-icons">{{
-                  !store.toolbarState.gridView ? "grid_on" : "grid_off"
-                }}</span>
+              <div class="ab-tooltip">
                 Toggle Grid View
               </div>
             </div>
@@ -205,22 +141,8 @@
             @click="toggleHalfBlockEditing()"
           >
             <div class="inline-block relative">
-              <span class="material-icons">{{
-                "grid_view"
-              }}</span>
-              <div
-                class="
-                  bg-gray-500
-                  absolute
-                  opacity-0
-                  invisible
-                  group-hover:animate-tooltip_show
-                  ml-2
-                "
-              >
-                <span class="material-icons">{{
-                  "grid_view"
-                }}</span>
+              <span class="material-icons">grid_view</span>
+              <div class="ab-tooltip">
                 Toggle Half Block Editing Mode
               </div>
             </div>
@@ -241,17 +163,7 @@
           >
             <div class="inline-block relative">
               <span class="material-icons">{{ value.icon }}</span>
-              <div
-                class="
-                  bg-gray-500
-                  absolute
-                  opacity-0
-                  invisible
-                  group-hover:animate-tooltip_show
-                  ml-2
-                "
-              >
-                <span class="material-icons">{{ value.icon }}</span>
+              <div class="ab-tooltip">
                 {{ tooltipName(value) }}
               </div>
             </div>

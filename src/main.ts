@@ -4,6 +4,7 @@ import { createPersistedState } from 'pinia-plugin-persistedstate';
 import Dashboard from './Dashboard.vue';
 import { setStore } from './ascii';
 import { useAsciiBirdStore } from './store';
+import 'material-icons/iconfont/material-icons.css';
 import './style.scss';
 
 // Check for localStorage and asciibird cache

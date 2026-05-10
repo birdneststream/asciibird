@@ -134,7 +134,15 @@ body {
 }
 
 .ab-tooltip {
-    @apply absolute opacity-0 invisible group-hover:animate-tooltip_show ml-2;
+    @apply absolute opacity-0 invisible whitespace-nowrap z-50
+        text-xs text-white bg-gray-700 rounded px-2 py-1
+        left-full top-1/2 -translate-y-1/2 ml-2 pointer-events-none;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+    transition-delay: 0.6s;
+}
+
+.group:hover .ab-tooltip {
+    @apply visible opacity-100;
 }
 
 .ab-toolbar-button {
