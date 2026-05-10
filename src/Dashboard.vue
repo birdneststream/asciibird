@@ -309,7 +309,6 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref, watch, onUnmounted } from 'vue';
-import hotkeys from 'hotkeys-js';
 import LZString from 'lz-string';
 import {
   Menu,
@@ -356,6 +355,7 @@ import { useAsciiBirdStore } from './store';
 import { useToast } from './composables/useToast';
 import { useDialog } from './composables/useDialog';
 import { useClipboard } from './composables/useClipboard';
+import { useGlobalShortcuts } from './composables/useGlobalShortcuts';
 
 import type { Block, AppMenuBar } from './types';
 
@@ -365,6 +365,9 @@ const store = useAsciiBirdStore();
 const { messages: toasts, show: toastShow } = useToast();
 const { state: dialogState, confirm: dialogConfirm, prompt: dialogPrompt, ok: dialogOk, cancel: dialogCancel } = useDialog();
 const { copyText } = useClipboard();
+
+// Register global keyboard shortcuts (menu + tool shortcuts)
+useGlobalShortcuts();
 
 // Template refs
 const menu = ref<InstanceType<typeof ContextMenu> | null>(null);
@@ -403,12 +406,19 @@ const scrollHandler = () => {
   scrollOffset.value = window.scrollY;
 };
 
+// Handler for Ctrl+Shift+O import shortcut (from useGlobalShortcuts)
+const importFileHandler = () => {
+  startImport('mirc');
+};
+
 // Lifecycle equivalent to created()
 checkForGetRequest();
 window.addEventListener('scroll', scrollHandler);
+window.addEventListener('asciibird:import-file', importFileHandler);
 
 onUnmounted(() => {
   window.removeEventListener('scroll', scrollHandler);
+  window.removeEventListener('asciibird:import-file', importFileHandler);
 });
 
 // Computed
@@ -421,8 +431,6 @@ const currentAscii = computed(() => store.currentAscii);
 const currentTab = computed(() => store.currentTab);
 const selectBlocks = computed(() => store.selectBlocks);
 const modalState = computed(() => store.modalState);
-const isModalOpen = computed(() => store.isModalOpen);
-
 const isKeyboardDisabled = computed(() => store.isKeyboardDisabled);
 const selectedLayer = computed(() => store.selectedLayer);
 const canToggleLayer = computed(() => currentAsciiLayers.value.length > 1);
@@ -566,19 +574,7 @@ const menuBar = computed<AppMenuBar[]>(() => [
   },
 ]);
 
-// Watch
-watch(isModalOpen, (val) => {
-  if (val) {
-    hotkeys.deleteScope('all');
-  }
-});
-
-watch(isKeyboardDisabled, (val) => {
-  if (val) {
-    hotkeys.deleteScope('all');
-  }
-});
-
+// Watch — scope transitions handled by useGlobalShortcuts composable
 watch(currentTool, (val, old) => {
   if (old?.name === 'select') {
     selectedBlocks.value = [];

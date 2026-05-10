@@ -6,6 +6,7 @@ import {
   expect,
   vi,
   beforeEach,
+  afterEach,
 } from 'vitest'
 import { shallowMount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
@@ -265,5 +266,167 @@ describe('KeyboardShortcuts.vue', () => {
       },
     }))
     expect(wrapper.vm.disableKeyboard).toBe(true)
+  })
+})
+
+// ─── useGlobalShortcuts ─────────────────────────────────────────────
+
+describe('useGlobalShortcuts', () => {
+  // Separate captured handlers for global shortcuts tests
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+  const gsHandlers = new Map<string, Function[]>()
+
+  let gsHotkeys: any
+
+  beforeEach(async () => {
+    vi.resetModules()
+    gsHandlers.clear()
+    store = createMockStore()
+    _mockStore = store
+
+    // Set up fresh mock for this test suite
+    gsHotkeys = vi.fn((keys: any, scope: any, handler: any) => {
+      if (typeof scope === 'function') {
+        handler = scope
+        scope = '*'
+      }
+      const key = `${scope}:${keys}`
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+      if (!gsHandlers.has(key)) gsHandlers.set(key, [])
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+      gsHandlers.get(key)!.push(handler)
+    })
+    gsHotkeys.filter = vi.fn(() => true)
+    gsHotkeys.setScope = vi.fn()
+    gsHotkeys.deleteScope = vi.fn()
+    gsHotkeys.unbind = vi.fn()
+
+    vi.doMock('hotkeys-js', () => ({
+      default: gsHotkeys,
+      __esModule: true,
+    }))
+    vi.doMock('@/store', () => ({
+      useAsciiBirdStore: () => _mockStore,
+    }))
+  })
+
+  function getHandler(key: string) {
+    return gsHandlers.get(key)?.[0]
+  }
+
+  function createEvent(overrides: Record<string, any> = {}) {
+    return {
+      preventDefault: vi.fn(),
+      key: '',
+      altKey: false,
+      ctrlKey: false,
+      shiftKey: false,
+      ...overrides,
+    }
+  }
+
+  async function initShortcuts() {
+    const mod = await import('@/composables/useGlobalShortcuts')
+    mod.useGlobalShortcuts()
+  }
+
+  it('registers menu shortcuts in scope all', async () => {
+    await initShortcuts()
+    expect(getHandler('all:ctrl+z')).toBeDefined()
+    expect(getHandler('all:ctrl+y')).toBeDefined()
+    expect(getHandler('all:ctrl+m')).toBeDefined()
+    expect(getHandler('all:f1')).toBeDefined()
+    expect(getHandler('all:shift+f1')).toBeDefined()
+    expect(getHandler('all:ctrl+o')).toBeDefined()
+    expect(getHandler('all:ctrl+shift+o')).toBeDefined()
+    expect(getHandler('all:ctrl+shift+v')).toBeDefined()
+    expect(getHandler('all:ctrl+e')).toBeDefined()
+    expect(getHandler('all:alt+g')).toBeDefined()
+  })
+
+  it('registers tool shortcuts in scope editor', async () => {
+    await initShortcuts()
+    expect(getHandler('editor:b')).toBeDefined()
+    expect(getHandler('editor:e')).toBeDefined()
+    expect(getHandler('editor:f')).toBeDefined()
+    expect(getHandler('editor:s')).toBeDefined()
+    expect(getHandler('editor:t')).toBeDefined()
+    expect(getHandler('editor:g')).toBeDefined()
+  })
+
+  it('ctrl+z calls undoBlocks', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(store, 'undoBlocks')
+    const handler = getHandler('all:ctrl+z')!
+    handler(createEvent(), {})
+    expect(spy).toHaveBeenCalled()
+  })
+
+  it('ctrl+y calls redoBlocks', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(store, 'redoBlocks')
+    const handler = getHandler('all:ctrl+y')!
+    handler(createEvent(), {})
+    expect(spy).toHaveBeenCalled()
+  })
+
+  it('ctrl+m opens new-ascii modal', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(store, 'openModal')
+    const handler = getHandler('all:ctrl+m')!
+    handler(createEvent(), {})
+    expect(spy).toHaveBeenCalledWith('new-ascii')
+  })
+
+  it('f1 opens help modal', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(store, 'openModal')
+    const handler = getHandler('all:f1')!
+    handler(createEvent({ shiftKey: false }), {})
+    expect(spy).toHaveBeenCalledWith('help')
+  })
+
+  it('shift+f1 opens about modal', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(store, 'openModal')
+    const handler = getHandler('all:shift+f1')!
+    handler(createEvent(), {})
+    expect(spy).toHaveBeenCalledWith('about')
+  })
+
+  it('tool shortcut b switches to brush (tool 4)', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(store, 'changeTool')
+    const handler = getHandler('editor:b')!
+    handler(createEvent(), {})
+    expect(spy).toHaveBeenCalledWith(4)
+  })
+
+  it('tool shortcut e switches to eraser (tool 6)', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(store, 'changeTool')
+    const handler = getHandler('editor:e')!
+    handler(createEvent(), {})
+    expect(spy).toHaveBeenCalledWith(6)
+  })
+
+  it('tool shortcuts suppressed when isChoosingChar', async () => {
+    store = createMockStore({
+      toolbarState: createToolbarState({ isChoosingChar: true }),
+    })
+    _mockStore = store
+    await initShortcuts()
+    const spy = vi.spyOn(store, 'changeTool')
+    const handler = getHandler('editor:b')!
+    handler(createEvent(), {})
+    expect(spy).not.toHaveBeenCalled()
+  })
+
+  it('all handlers call preventDefault', async () => {
+    await initShortcuts()
+    const event = createEvent()
+    const handler = getHandler('all:ctrl+z')!
+    handler(event, {})
+    expect(event.preventDefault).toHaveBeenCalled()
   })
 })
