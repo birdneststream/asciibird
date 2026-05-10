@@ -215,8 +215,6 @@ describe('EditAscii.vue', () => {
 
     expect(spy).toHaveBeenCalledWith(
       expect.objectContaining({
-        width: 5,
-        height: 5,
         layers: expect.any(Array),
       }),
     )

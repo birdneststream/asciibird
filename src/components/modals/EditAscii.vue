@@ -121,11 +121,7 @@ function updateAscii() {
   const canvasBlockHeight = Number.parseInt(String(layer.value.height));
   const canvasBlockWidth = Number.parseInt(String(layer.value.width));
   const layers = fillNullBlocks(canvasBlockHeight, canvasBlockWidth);
-  store.changeAsciiWidthHeight({
-    width: canvasBlockWidth,
-    height: canvasBlockHeight,
-    layers: [...layers],
-  });
+  store.changeAsciiWidthHeight({ layers: [...layers] });
 
   close();
 }

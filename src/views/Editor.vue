@@ -33,7 +33,8 @@
 
       <div
         ref="editorPanel"
-        :style="editorStyle"
+        :style="panelStyle"
+        @pointerdown="canvasPanel.onDragPointerDown"
       >
         <canvas
           id="overlay-image"
@@ -65,6 +66,22 @@
           @touchend="canvasMouseDown"
           @touchstart="canvasMouseUp"
         />
+
+        <!-- Resize handles — visible only with default tool -->
+        <template v-if="isDefault">
+          <div
+            class="ab-resize-handle ab-resize-handle-br"
+            @pointerdown.stop="canvasPanel.startResize('br')($event)"
+          />
+          <div
+            class="ab-resize-handle ab-resize-handle-bm"
+            @pointerdown.stop="canvasPanel.startResize('bm')($event)"
+          />
+          <div
+            class="ab-resize-handle ab-resize-handle-mr"
+            @pointerdown.stop="canvasPanel.startResize('mr')($event)"
+          />
+        </template>
       </div>
     </div>
   </div>
@@ -75,7 +92,7 @@ import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useAsciiBirdStore } from '../store';
 import { useToast } from '../composables/useToast';
 import { useClipboard } from '../composables/useClipboard';
-import { useDraggable } from '@vueuse/core';
+import { useCanvasPanel } from '../composables/useCanvasPanel';
 import hotkeys from 'hotkeys-js';
 
 import ContextMenu from '../components/parts/ContextMenu.vue';
@@ -148,12 +165,6 @@ const canvasRef = ref<HTMLCanvasElement | null>(null);
 const canvastoolsRef = ref<HTMLCanvasElement | null>(null);
 const editorMenu = ref<InstanceType<typeof ContextMenu> | null>(null);
 const editorPanel = ref<HTMLElement | null>(null);
-
-// ─── Draggable ──────────────────────────────────────────────────
-const { style: editorStyle } = useDraggable(editorPanel, {
-  initialValue: { x: 0, y: 0 },
-  disabled: true,
-});
 
 // ─── Canvas Contexts (NOT reactive — performance critical) ──────
 let ctx: CanvasRenderingContext2D | null = null;
@@ -302,6 +313,50 @@ const canvasTransparent = computed(() =>
 
 const emptyBlockComp = computed(() => emptyBlock);
 
+// ─── Canvas Panel (Drag + Resize with snap-to-grid) ─────────────
+const canvasPanel = useCanvasPanel({
+  snapX: blockWidthComp,
+  snapY: blockHeightComp,
+  disabled: computed(() => !isDefault.value),
+  initialX: currentAscii.value?.x ?? 0,
+  initialY: currentAscii.value?.y ?? 0,
+  initialWidth: currentAsciiWidth.value * blockWidthComp.value,
+  initialHeight: currentAsciiHeight.value * blockHeightComp.value,
+  onDragMove: (_dx: number, dy: number) => {
+    top.value = dy;
+  },
+  onDragStop: async (dx: number, dy: number) => {
+    top.value = dy;
+    store.changeAsciiCanvasState({ x: dx, y: dy });
+    await delayRedrawCanvas();
+  },
+  onResizeStop: async (
+    _left: number,
+    _topVal: number,
+    width: number,
+    height: number,
+  ) => {
+    const canvasBlockHeight = Math.floor(
+      height / blockHeightComp.value,
+    );
+    const canvasBlockWidth = Math.floor(
+      width / blockWidthComp.value,
+    );
+    const layers = fillNullBlocks(canvasBlockHeight, canvasBlockWidth);
+
+    top.value = _topVal;
+    canvasSize.width = width;
+    canvasSize.height = height;
+
+    store.changeAsciiWidthHeight({ layers: [...layers] });
+
+    toastShow(`${canvasBlockWidth} x ${canvasBlockHeight}`);
+    await delayRedrawCanvas(true);
+  },
+});
+
+const panelStyle = computed(() => canvasPanel.style.value);
+
 // ─── Watchers ───────────────────────────────────────────────────
 watch(currentAsciiHeight, (val) => {
   canvasSize.height = val * blockHeight;
@@ -312,12 +367,20 @@ watch(currentAsciiWidth, (val) => {
 });
 
 watch(currentAscii, async (val, old) => {
-  if (JSON.stringify(val) !== JSON.stringify(old)) {
-    canvasSize.width = currentAsciiWidth.value * blockWidth;
-    canvasSize.height = currentAsciiHeight.value * blockHeight;
-    await delayRedrawCanvas();
-  }
-});
+    if (JSON.stringify(val) !== JSON.stringify(old)) {
+      canvasSize.width = currentAsciiWidth.value * blockWidth;
+      canvasSize.height = currentAsciiHeight.value * blockHeight;
+
+      // Reset panel position on tab switch
+      canvasPanel.setPosition(val?.x ?? 0, val?.y ?? 0);
+      canvasPanel.setDimensions(
+        currentAsciiWidth.value * blockWidthComp.value,
+        currentAsciiHeight.value * blockHeightComp.value,
+      );
+
+      await delayRedrawCanvas();
+    }
+  });
 
 watch(() => props.resetSelect, () => {
   resetSelectTool();
@@ -474,6 +537,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   hotkeys.unbind('*', 'editor');
+  canvasPanel.cleanup();
 });
 
 // ─── Init (equivalent to created() — runs during setup) ─────────
@@ -992,45 +1056,6 @@ async function redrawCanvas(force = false) {
 
     ctx.restore();
   }
-}
-
-function onCanvasResize(
-  left: number,
-  topVal: number,
-  width: number,
-  height: number,
-) {
-  const canvasBlockHeight = Math.floor(height / blockHeight);
-  const canvasBlockWidth = Math.floor(width / blockWidth);
-  const layers = fillNullBlocks(canvasBlockHeight, canvasBlockWidth);
-
-  top.value = topVal;
-  canvasSize.width = width;
-  canvasSize.height = height;
-
-  store.changeAsciiWidthHeight({
-    width: canvasBlockWidth,
-    height: canvasBlockHeight,
-    layers: [...layers],
-  });
-
-  const panel = editorPanel.value;
-  if (panel) {
-    panel.style.width = width + 'px';
-    panel.style.height = height + 'px';
-  }
-
-  toastShow(`${canvasBlockWidth} x ${canvasBlockHeight}`);
-}
-
-async function onCanvasDragStop(dx: number, dy: number) {
-  top.value = dy;
-  store.changeAsciiCanvasState({ x: dx, y: dy });
-  await delayRedrawCanvas();
-}
-
-function onCanvasDrag(dx: number, dy: number) {
-  top.value = dy;
 }
 
 async function dispatchBlocks(clearDiff = false) {
@@ -1946,9 +1971,6 @@ defineExpose({
   mergeLayers: mergeLayersFn,
   drawGrid,
   redrawCanvas,
-  onCanvasResize,
-  onCanvasDragStop,
-  onCanvasDrag,
   dispatchBlocks,
   canvasMouseUp,
   canvasMouseDown,
@@ -1972,8 +1994,52 @@ defineExpose({
   canvastoolsRef,
   editorMenu,
   editorPanel,
-  editorStyle,
+  // Canvas panel composable
+  canvasPanel,
   // Store
   store,
 });
 </script>
+
+<style scoped>
+/* Resize handles — visible only when default tool is active */
+.ab-resize-handle {
+  position: absolute;
+  z-index: 10;
+  background: rgba(100, 116, 139, 0.4);
+  transition: background-color 0.15s;
+}
+
+.ab-resize-handle:hover {
+  background: rgba(59, 130, 246, 0.7);
+}
+
+/* Bottom-right corner */
+.ab-resize-handle-br {
+  right: -4px;
+  bottom: -4px;
+  width: 10px;
+  height: 10px;
+  cursor: nwse-resize;
+}
+
+/* Bottom-middle edge */
+.ab-resize-handle-bm {
+  left: 50%;
+  bottom: -4px;
+  width: 20px;
+  height: 8px;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
+/* Middle-right edge */
+.ab-resize-handle-mr {
+  right: -4px;
+  top: 50%;
+  width: 8px;
+  height: 20px;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+</style>
