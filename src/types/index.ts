@@ -182,3 +182,17 @@ export interface ToolbarIcon {
   name: string;
   icon: string;
 }
+
+/** Menu bar item (e.g., File, Edit, View) */
+export interface AppMenuBar {
+  label: string;
+  items: AppMenuItem[];
+}
+
+/** Menu bar sub-item (e.g., New ASCII, Undo) */
+export interface AppMenuItem {
+  text: string;
+  click: () => void;
+  disabled?: boolean;
+  shortcut?: string;
+}

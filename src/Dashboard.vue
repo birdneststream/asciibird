@@ -24,11 +24,15 @@
               v-slot="{ active }"
             >
               <button
-                :class="[active ? 'bg-gray-700' : '', 'block w-full text-left px-4 py-1 text-sm text-white']"
+                :class="[active ? 'bg-gray-700' : '', 'flex w-full items-center justify-between px-4 py-1 text-sm text-white']"
                 @click="item.click"
                 :disabled="item.disabled"
               >
-                {{ item.text }}
+                <span>{{ item.text }}</span>
+                <span
+                  v-if="item.shortcut"
+                  class="ml-4 text-gray-400 text-xs"
+                >{{ item.shortcut }}</span>
               </button>
             </MenuItem>
           </MenuItems>
@@ -353,7 +357,7 @@ import { useToast } from './composables/useToast';
 import { useDialog } from './composables/useDialog';
 import { useClipboard } from './composables/useClipboard';
 
-import type { Block } from './types';
+import type { Block, AppMenuBar } from './types';
 
 defineOptions({ name: 'Dashboard' });
 
@@ -448,13 +452,25 @@ const isSelected = computed(() =>
   selecting.value.endY !== null
 );
 
-const menuBar = computed(() => [
+const menuBar = computed<AppMenuBar[]>(() => [
   {
     label: 'File',
     items: [
-      { text: 'New ASCII', click: () => store.openModal('new-ascii') },
-      { text: 'Import from File', click: () => startImport('mirc') },
-      { text: 'Import from Clipboard', click: () => store.openModal('paste-ascii') },
+      {
+        text: 'New ASCII',
+        click: () => store.openModal('new-ascii'),
+        shortcut: 'Ctrl+M',
+      },
+      {
+        text: 'Import from File',
+        click: () => startImport('mirc'),
+        shortcut: 'Ctrl+Shift+O',
+      },
+      {
+        text: 'Import from Clipboard',
+        click: () => store.openModal('paste-ascii'),
+        shortcut: 'Ctrl+Shift+V',
+      },
       {
         text: 'Export to File',
         click: () => startExport('file'),
@@ -479,16 +495,19 @@ const menuBar = computed(() => [
         text: 'Edit ASCII',
         click: () => store.openModal('edit-ascii'),
         disabled: !asciibirdMeta.value.length,
+        shortcut: 'Ctrl+E',
       },
       {
         text: 'Undo',
         click: () => store.undoBlocks(),
         disabled: !asciibirdMeta.value.length,
+        shortcut: 'Ctrl+Z',
       },
       {
         text: 'Redo',
         click: () => store.redoBlocks(),
         disabled: !asciibirdMeta.value.length,
+        shortcut: 'Ctrl+Y',
       },
     ],
   },
@@ -507,6 +526,7 @@ const menuBar = computed(() => [
         text: toolbarState.value.gridView ? 'Disable Grid' : 'Enable Grid',
         click: () => store.toggleGridView(!toolbarState.value.gridView),
         disabled: !asciibirdMeta.value.length,
+        shortcut: 'Alt+G',
       },
       {
         text: debugPanelState.value.visible ? 'Hide Debug' : 'Show Debug',
@@ -517,15 +537,31 @@ const menuBar = computed(() => [
   {
     label: 'Tools',
     items: [
-      { text: 'Options', click: () => store.openModal('options') },
-      { text: 'Image Overlay', click: () => store.openModal('overlay'), disabled: !asciibirdMeta.value.length },
+      {
+        text: 'Options',
+        click: () => store.openModal('options'),
+        shortcut: 'Ctrl+O',
+      },
+      {
+        text: 'Image Overlay',
+        click: () => store.openModal('overlay'),
+        disabled: !asciibirdMeta.value.length,
+      },
     ],
   },
   {
     label: 'Help',
     items: [
-      { text: 'About', click: () => store.openModal('about') },
-      { text: 'Help', click: () => store.openModal('help') },
+      {
+        text: 'About',
+        click: () => store.openModal('about'),
+        shortcut: 'Shift+F1',
+      },
+      {
+        text: 'Help',
+        click: () => store.openModal('help'),
+        shortcut: 'F1',
+      },
     ],
   },
 ]);
