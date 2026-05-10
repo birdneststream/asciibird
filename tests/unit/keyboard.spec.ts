@@ -15,12 +15,14 @@ import hotkeys from 'hotkeys-js'
 import {
   createMockStore,
   createMockModalStore,
+  createMockToolbarStore,
   createToolbarState,
   globalStubs,
 } from './helpers'
 
 let _mockStore: any = null
 let _mockModalStore: any = null
+let _mockToolbarStore: any = null
 
 // Capture hotkeys handlers via the module mock
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
@@ -54,6 +56,9 @@ vi.mock('@/store', () => ({
 vi.mock('@/store/modal', () => ({
   useModalStore: () => _mockModalStore,
 }))
+vi.mock('@/store/toolbar', () => ({
+  useToolbarStore: () => _mockToolbarStore,
+}))
 
 
 let store: any
@@ -84,6 +89,7 @@ beforeEach(() => {
   store = createMockStore()
   _mockStore = store
   _mockModalStore = createMockModalStore()
+  _mockToolbarStore = createMockToolbarStore()
 })
 
 afterEach(() => {
@@ -156,8 +162,11 @@ describe('KeyboardShortcuts.vue', () => {
         }),
       })
       _mockStore = store
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { isChoosingChar: true, persistCharPanel: false },
+      })
       shallowMount(KeyboardShortcuts, mountOpts())
-      const spy = vi.spyOn(store, 'changeChar')
+      const spy = vi.spyOn(_mockToolbarStore, 'changeChar')
       const handler = getHandler('editor:*')
       const event = createEvent({ key: 'a' })
       handler!(event, {})
@@ -166,7 +175,7 @@ describe('KeyboardShortcuts.vue', () => {
 
   it('wildcard handler calls changeTool for alt+number', () => {
     shallowMount(KeyboardShortcuts, mountOpts())
-    const spy = vi.spyOn(store, 'changeTool')
+    const spy = vi.spyOn(_mockToolbarStore, 'changeTool')
     const handler = getHandler('editor:*')
     const event = createEvent({ key: '3', altKey: true })
     handler!(event, {})
@@ -186,8 +195,11 @@ describe('KeyboardShortcuts.vue', () => {
       toolbarState: createToolbarState({ isChoosingFg: true }),
     })
     _mockStore = store
+    _mockToolbarStore = createMockToolbarStore({
+      toolbarState: { isChoosingFg: true },
+    })
     shallowMount(KeyboardShortcuts, mountOpts())
-    const spy = vi.spyOn(store, 'changeColourFg')
+    const spy = vi.spyOn(_mockToolbarStore, 'changeColourFg')
     const handler = getHandler('editor:*')
     const event = createEvent({ key: '5' })
     handler!(event, {})
@@ -199,8 +211,11 @@ describe('KeyboardShortcuts.vue', () => {
       toolbarState: createToolbarState({ isChoosingBg: true }),
     })
     _mockStore = store
+    _mockToolbarStore = createMockToolbarStore({
+      toolbarState: { isChoosingBg: true },
+    })
     shallowMount(KeyboardShortcuts, mountOpts())
-    const spy = vi.spyOn(store, 'changeColourBg')
+    const spy = vi.spyOn(_mockToolbarStore, 'changeColourBg')
     const handler = getHandler('editor:*')
     const event = createEvent({ key: '7' })
     handler!(event, {})
@@ -213,10 +228,13 @@ describe('KeyboardShortcuts.vue', () => {
         toolbarState: createToolbarState({ isChoosingChar: true }),
       })
       _mockStore = store
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { isChoosingChar: true },
+      })
       shallowMount(KeyboardShortcuts, mountOpts())
-      const fgSpy = vi.spyOn(store, 'changeIsUpdatingFg')
-      const bgSpy = vi.spyOn(store, 'changeIsUpdatingBg')
-      const charSpy = vi.spyOn(store, 'changeIsUpdatingChar')
+      const fgSpy = vi.spyOn(_mockToolbarStore, 'changeIsUpdatingFg')
+      const bgSpy = vi.spyOn(_mockToolbarStore, 'changeIsUpdatingBg')
+      const charSpy = vi.spyOn(_mockToolbarStore, 'changeIsUpdatingChar')
       const handler = getHandler('editor:Escape')
       const event = createEvent({})
       handler!(event, {})
@@ -230,8 +248,11 @@ describe('KeyboardShortcuts.vue', () => {
       toolbarState: createToolbarState({ currentTool: 2 }),
     })
     _mockStore = store
+    _mockToolbarStore = createMockToolbarStore({
+      toolbarState: { currentTool: 2 },
+    })
     shallowMount(KeyboardShortcuts, mountOpts())
-    const spy = vi.spyOn(store, 'changeTool')
+    const spy = vi.spyOn(_mockToolbarStore, 'changeTool')
     const handler = getHandler('editor:Escape')
     const event = createEvent({})
     handler!(event, {})
@@ -289,6 +310,9 @@ describe('KeyboardShortcuts.vue', () => {
       }),
     })
     _mockStore = store
+    _mockToolbarStore = createMockToolbarStore({
+      toolbarState: { isChoosingChar: true, persistCharPanel: false },
+    })
     shallowMount(KeyboardShortcuts, mountOpts())
     const handler = getHandler('editor:*')
     const event = createEvent({ key: 'a' })
@@ -344,6 +368,10 @@ describe('useGlobalShortcuts', () => {
     vi.doMock('@/store', () => ({
       useAsciiBirdStore: () => _mockStore,
     }))
+    vi.doMock('@/store/toolbar', () => ({
+      useToolbarStore: () => _mockToolbarStore,
+    }))
+    _mockToolbarStore = createMockToolbarStore()
   })
 
   function getHandler(key: string) {
@@ -468,7 +496,7 @@ describe('useGlobalShortcuts', () => {
 
   it('tool shortcut b switches to brush (tool 4)', async () => {
     await initShortcuts()
-    const spy = vi.spyOn(store, 'changeTool')
+    const spy = vi.spyOn(_mockToolbarStore, 'changeTool')
     const handler = getHandler('editor:b')!
     handler(createEvent(), {})
     expect(spy).toHaveBeenCalledWith(4)
@@ -476,7 +504,7 @@ describe('useGlobalShortcuts', () => {
 
   it('tool shortcut e switches to eraser (tool 6)', async () => {
     await initShortcuts()
-    const spy = vi.spyOn(store, 'changeTool')
+    const spy = vi.spyOn(_mockToolbarStore, 'changeTool')
     const handler = getHandler('editor:e')!
     handler(createEvent(), {})
     expect(spy).toHaveBeenCalledWith(6)
@@ -487,8 +515,11 @@ describe('useGlobalShortcuts', () => {
       toolbarState: createToolbarState({ isChoosingChar: true }),
     })
     _mockStore = store
+    _mockToolbarStore = createMockToolbarStore({
+      toolbarState: { isChoosingChar: true },
+    })
     await initShortcuts()
-    const spy = vi.spyOn(store, 'changeTool')
+    const spy = vi.spyOn(_mockToolbarStore, 'changeTool')
     const handler = getHandler('editor:b')!
     handler(createEvent(), {})
     expect(spy).not.toHaveBeenCalled()

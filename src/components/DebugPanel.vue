@@ -41,6 +41,7 @@ import LZString from 'lz-string';
 import { useDraggable } from '@vueuse/core';
 import { toolbarIcons, mergeLayers } from '../ascii';
 import { useAsciiBirdStore } from '../store';
+import { useToolbarStore } from '../store/toolbar';
 import { usePanelStore } from '../store/panels';
 import { useToast } from '../composables/useToast';
 import { useClipboard } from '../composables/useClipboard';
@@ -51,6 +52,7 @@ defineProps<{
 }>();
 
 const store = useAsciiBirdStore();
+const toolbarStore = useToolbarStore();
 const panelStore = usePanelStore();
 const { show: toastShow } = useToast();
 const { copyText } = useClipboard();
@@ -64,16 +66,16 @@ const { style: panelStyle } = useDraggable(panelEl, {
 });
 
 const getToolName = computed(() =>
-  toolbarIcons[store.currentTool]
-    ? toolbarIcons[store.currentTool].name
+  toolbarIcons[toolbarStore.currentTool]
+    ? toolbarIcons[toolbarStore.currentTool].name
     : 'none',
 );
 
-const currentFg = computed(() => store.currentFg);
-const currentBg = computed(() => store.currentBg);
-const currentChar = computed(() => store.currentChar);
-const mirrorX = computed(() => store.toolbarState.mirrorX);
-const mirrorY = computed(() => store.toolbarState.mirrorY);
+const currentFg = computed(() => toolbarStore.currentFg);
+const currentBg = computed(() => toolbarStore.currentBg);
+const currentChar = computed(() => toolbarStore.currentChar);
+const mirrorX = computed(() => toolbarStore.toolbarState.mirrorX);
+const mirrorY = computed(() => toolbarStore.toolbarState.mirrorY);
 
 const asciiStats = computed(() => {
   const byteSize = (str: string) => new Blob([str]).size;

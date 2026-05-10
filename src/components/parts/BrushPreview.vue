@@ -64,7 +64,7 @@
 import { ref, computed, watch } from 'vue';
 import { useDraggable } from '@vueuse/core';
 import { emptyBlock, maxBrushSize } from '../../ascii';
-import { useAsciiBirdStore } from '../../store';
+import { useToolbarStore } from '../../store/toolbar';
 import { usePanelStore } from '../../store/panels';
 import MainBrushCanvas from './MainBrushCanvas.vue';
 
@@ -73,7 +73,7 @@ const emit = defineEmits<{
   inputtingbrush: [value: boolean];
 }>();
 
-const store = useAsciiBirdStore();
+const toolbarStore = useToolbarStore();
 const panelStore = usePanelStore();
 const panelEl = ref<HTMLElement | null>(null);
 
@@ -101,17 +101,17 @@ const brushOptions = [
   'V lines',
 ];
 
-const brushSizeHeight = computed(() => store.brushSizeHeight);
-const brushSizeWidth = computed(() => store.brushSizeWidth);
-const brushSizeType = computed(() => store.brushSizeType);
-const brushBlocks = computed(() => store.brushBlocks);
-const currentFg = computed(() => store.currentFg);
-const currentBg = computed(() => store.currentBg);
-const currentChar = computed(() => store.currentChar);
-const canFg = computed(() => store.isTargettingFg);
-const canBg = computed(() => store.isTargettingBg);
-const canText = computed(() => store.isTargettingChar);
-const updateBrush = computed(() => store.toolbarState.updateBrush);
+const brushSizeHeight = computed(() => toolbarStore.brushSizeHeight);
+const brushSizeWidth = computed(() => toolbarStore.brushSizeWidth);
+const brushSizeType = computed(() => toolbarStore.brushSizeType);
+const brushBlocks = computed(() => toolbarStore.brushBlocks);
+const currentFg = computed(() => toolbarStore.currentFg);
+const currentBg = computed(() => toolbarStore.currentBg);
+const currentChar = computed(() => toolbarStore.currentChar);
+const canFg = computed(() => toolbarStore.isTargettingFg);
+const canBg = computed(() => toolbarStore.isTargettingBg);
+const canText = computed(() => toolbarStore.isTargettingChar);
+const updateBrush = computed(() => toolbarStore.toolbarState.updateBrush);
 const brushPreviewState = computed(() => panelStore.brushPreview);
 
 const brushBlocksEmpty = computed(() => brushBlocks.value.length === 0);
@@ -179,7 +179,7 @@ watch(currentChar, (val, old) => {
 });
 
 watch(brushBlocks, () => {
-  store.pushBrushHistory(brushBlocks.value);
+  toolbarStore.pushBrushHistory(brushBlocks.value);
 });
 
 watch(
@@ -193,7 +193,7 @@ watch(
 );
 
 function updateBrushSize() {
-  store.updateBrushSize({
+  toolbarStore.updateBrushSize({
     brushSizeHeight: brushSizeHeightInput.value,
     brushSizeWidth: brushSizeWidthInput.value,
     brushSizeType: brushSizeTypeInput.value,
@@ -377,7 +377,7 @@ function createBlocks() {
     }
   }
 
-  store.setBrushBlocks(blocks.value);
+  toolbarStore.setBrushBlocks(blocks.value);
 }
 
 function fill() {
@@ -452,7 +452,7 @@ defineExpose({
   currentFg,
   currentBg,
   currentChar,
-  toolbarState: computed(() => store.toolbarState),
+  toolbarState: computed(() => toolbarStore.toolbarState),
   updateBrushSize,
   createBlocks,
   fillTool,

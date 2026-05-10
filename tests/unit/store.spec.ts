@@ -12,8 +12,8 @@ import { useAsciiBirdStore } from '@/store';
 import { useModalStore } from '@/store/modal';
 import { useDesktopStore } from '@/store/desktop';
 import { usePanelStore } from '@/store/panels';
+import { useToolbarStore } from '@/store/toolbar';
 import type { Block, Layer, AsciibirdMeta, Options } from '@/types';
-import type { RootState } from '@/types/store';
 
 // Mock mergeLayers for mergeAllLayers action tests
 vi.mock('@/ascii', async (importOriginal) => {
@@ -72,6 +72,7 @@ describe('Pinia Store Actions', () => {
   let modalStore: ReturnType<typeof useModalStore>;
   let desktopStore: ReturnType<typeof useDesktopStore>;
   let panelStore: ReturnType<typeof usePanelStore>;
+  let toolbarStore: ReturnType<typeof useToolbarStore>;
 
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -79,6 +80,7 @@ describe('Pinia Store Actions', () => {
     modalStore = useModalStore();
     desktopStore = useDesktopStore();
     panelStore = usePanelStore();
+    toolbarStore = useToolbarStore();
     store.newAsciibirdMeta(createTestMeta());
   });
 
@@ -110,94 +112,94 @@ describe('Pinia Store Actions', () => {
     });
   });
 
-  // ── Color and char actions ──────────────────────────────────
+  // ── Color and char actions (now in useToolbarStore) ──────────
 
   describe('changeColourFg', () => {
     it('updates fg color and resets flags', () => {
-      store.toolbarState.isUpdating = true;
-      store.toolbarState.isChoosingFg = true;
-      store.changeColourFg(4);
-      expect(store.toolbarState.currentColourFg).toBe(4);
-      expect(store.toolbarState.isUpdating).toBe(false);
-      expect(store.toolbarState.isChoosingFg).toBe(false);
+      toolbarStore.toolbarState.isUpdating = true;
+      toolbarStore.toolbarState.isChoosingFg = true;
+      toolbarStore.changeColourFg(4);
+      expect(toolbarStore.toolbarState.currentColourFg).toBe(4);
+      expect(toolbarStore.toolbarState.isUpdating).toBe(false);
+      expect(toolbarStore.toolbarState.isChoosingFg).toBe(false);
     });
   });
 
   describe('changeColourBg', () => {
     it('updates bg color and resets flags', () => {
-      store.changeColourBg(7);
-      expect(store.toolbarState.currentColourBg).toBe(7);
-      expect(store.toolbarState.isUpdating).toBe(false);
+      toolbarStore.changeColourBg(7);
+      expect(toolbarStore.toolbarState.currentColourBg).toBe(7);
+      expect(toolbarStore.toolbarState.isUpdating).toBe(false);
     });
   });
 
   describe('changeChar', () => {
     it('updates selected char and resets isUpdating', () => {
-      store.changeChar('X');
-      expect(store.toolbarState.selectedChar).toBe('X');
-      expect(store.toolbarState.isUpdating).toBe(false);
+      toolbarStore.changeChar('X');
+      expect(toolbarStore.toolbarState.selectedChar).toBe('X');
+      expect(toolbarStore.toolbarState.isUpdating).toBe(false);
     });
 
     it('closes char panel when persistCharPanel is false', () => {
-      store.toolbarState.persistCharPanel = false;
-      store.toolbarState.isChoosingChar = true;
-      store.changeChar('Y');
-      expect(store.toolbarState.isChoosingChar).toBe(false);
+      toolbarStore.toolbarState.persistCharPanel = false;
+      toolbarStore.toolbarState.isChoosingChar = true;
+      toolbarStore.changeChar('Y');
+      expect(toolbarStore.toolbarState.isChoosingChar).toBe(false);
     });
 
     it('keeps char panel open when persistCharPanel is true', () => {
-      store.toolbarState.persistCharPanel = true;
-      store.toolbarState.isChoosingChar = true;
-      store.changeChar('Z');
-      expect(store.toolbarState.isChoosingChar).toBe(true);
+      toolbarStore.toolbarState.persistCharPanel = true;
+      toolbarStore.toolbarState.isChoosingChar = true;
+      toolbarStore.changeChar('Z');
+      expect(toolbarStore.toolbarState.isChoosingChar).toBe(true);
     });
   });
 
   describe('changeTool', () => {
     it('updates current tool', () => {
-      store.changeTool(3);
-      expect(store.toolbarState.currentTool).toBe(3);
+      toolbarStore.changeTool(3);
+      expect(toolbarStore.toolbarState.currentTool).toBe(3);
     });
   });
 
   describe('persistCharPanel', () => {
     it('toggles char panel persistence', () => {
-      store.toolbarState.persistCharPanel = true;
-      expect(store.toolbarState.persistCharPanel).toBe(true);
+      toolbarStore.toolbarState.persistCharPanel = true;
+      expect(toolbarStore.toolbarState.persistCharPanel).toBe(true);
     });
   });
 
-  // ── Targeting actions ──────────────────────────────────────
+  // ── Targeting actions (now in useToolbarStore) ───────────────
 
   describe('targeting actions', () => {
     it('changeTargetingFg', () => {
-      store.changeTargetingFg(false);
-      expect(store.toolbarState.targetingFg).toBe(false);
+      toolbarStore.changeTargetingFg(false);
+      expect(toolbarStore.toolbarState.targetingFg).toBe(false);
     });
 
     it('changeTargetingBg', () => {
-      store.changeTargetingBg(false);
-      expect(store.toolbarState.targetingBg).toBe(false);
+      toolbarStore.changeTargetingBg(false);
+      expect(toolbarStore.toolbarState.targetingBg).toBe(false);
     });
 
     it('changeTargetingChar', () => {
-      store.changeTargetingChar(false);
-      expect(store.toolbarState.targetingChar).toBe(false);
+      toolbarStore.changeTargetingChar(false);
+      expect(toolbarStore.toolbarState.targetingChar).toBe(false);
     });
 
     it('changeIsUpdatingFg', () => {
-      store.changeIsUpdatingFg(true);
-      expect(store.toolbarState.isChoosingFg).toBe(true);
+      toolbarStore.changeIsUpdatingFg(true);
+      expect(toolbarStore.toolbarState.isChoosingFg).toBe(true);
     });
 
     it('changeIsUpdatingBg', () => {
-      store.changeIsUpdatingBg(true);
-      expect(store.toolbarState.isChoosingBg).toBe(true);
+      toolbarStore.changeIsUpdatingBg(true);
+      expect(toolbarStore.toolbarState.isChoosingBg).toBe(true);
     });
 
     it('changeIsUpdatingChar', () => {
-      store.changeIsUpdatingChar(true);
-      expect(store.toolbarState.isChoosingChar).toBe(true);
+      toolbarStore.changeIsUpdatingChar(true);
+      expect(toolbarStore.toolbarState.isChoosingChar).toBe(true);
     });
   });
 
@@ -214,8 +216,6 @@ describe('Pinia Store Actions', () => {
       expect(desktopStore.tabsVisible).toBe(false);
     });
   });
-
-  // ── Panel state actions ────────────────────────────────────
 
   // ── Panel state (now in usePanelStore) ────────────────────────
 
@@ -237,7 +237,9 @@ describe('Pinia Store Actions', () => {
     });
 
     it('changeBrushLibraryState', () => {
-      const newState = { x: 10, y: 20, h: 30, w: 40, visible: false, tab: 1 };
+      const newState = {
+        x: 10, y: 20, h: 30, w: 40, visible: false, tab: 1,
+      };
       panelStore.changeBrushLibraryState(newState);
       expect(panelStore.brushLibrary).toEqual(newState);
     });
@@ -255,23 +257,23 @@ describe('Pinia Store Actions', () => {
     });
 
     it('changeToolBarState', () => {
-      store.changeToolBarState({
+      toolbarStore.changeToolBarState({
         x: 10, y: 20, h: 30, w: 40, visible: false,
       });
-      expect(store.toolbarState.x).toBe(10);
-      expect(store.toolbarState.y).toBe(20);
-      expect(store.toolbarState.visible).toBe(false);
+      expect(toolbarStore.toolbarState.x).toBe(10);
+      expect(toolbarStore.toolbarState.y).toBe(20);
+      expect(toolbarStore.toolbarState.visible).toBe(false);
     });
 
     it('changeToolBarDraggable', () => {
-      store.changeToolBarDraggable(false);
-      expect(store.toolbarState.draggable).toBe(false);
+      toolbarStore.changeToolBarDraggable(false);
+      expect(toolbarStore.toolbarState.draggable).toBe(false);
     });
 
     it('updateMirror', () => {
-      store.updateMirror({ x: true, y: true });
-      expect(store.toolbarState.mirrorX).toBe(true);
-      expect(store.toolbarState.mirrorY).toBe(true);
+      toolbarStore.updateMirror({ x: true, y: true });
+      expect(toolbarStore.toolbarState.mirrorX).toBe(true);
+      expect(toolbarStore.toolbarState.mirrorY).toBe(true);
     });
   });
 
@@ -634,51 +636,55 @@ describe('Pinia Store Actions', () => {
     });
   });
 
-  // ── Brush actions ──────────────────────────────────────────
+  // ── Brush actions (now in useToolbarStore) ──────────────────
 
   describe('brush actions', () => {
     it('updateBrushSize updates brush dimensions', () => {
-      store.updateBrushSize({
+      toolbarStore.updateBrushSize({
         brushSizeHeight: 5,
         brushSizeWidth: 3,
         brushSizeType: 'circle',
       });
-      expect(store.toolbarState.brushSizeHeight).toBe(5);
-      expect(store.toolbarState.brushSizeWidth).toBe(3);
-      expect(store.toolbarState.brushSizeType).toBe('circle');
+      expect(toolbarStore.toolbarState.brushSizeHeight).toBe(5);
+      expect(toolbarStore.toolbarState.brushSizeWidth).toBe(3);
+      expect(toolbarStore.toolbarState.brushSizeType).toBe('circle');
     });
 
     it('brushBlocks compresses and stores brush data', () => {
       const blocks: Block[][] = [[{ fg: 1, bg: 2, char: 'A' }]];
-      store._brushBlocks = LZString.compressToUTF16(JSON.stringify(blocks));
+      toolbarStore._brushBlocks = LZString.compressToUTF16(
+        JSON.stringify(blocks),
+      );
       const restored = JSON.parse(
-        LZString.decompressFromUTF16(store._brushBlocks),
+        LZString.decompressFromUTF16(toolbarStore._brushBlocks),
       );
       expect(restored).toEqual(blocks);
     });
 
     it('selectBlocks compresses and stores selection data', () => {
       const blocks: Block[][] = [[{ fg: 3, bg: 4, char: 'B' }]];
-      store._selectBlocks = LZString.compressToUTF16(JSON.stringify(blocks));
+      toolbarStore._selectBlocks = LZString.compressToUTF16(
+        JSON.stringify(blocks),
+      );
       const restored = JSON.parse(
-        LZString.decompressFromUTF16(store._selectBlocks),
+        LZString.decompressFromUTF16(toolbarStore._selectBlocks),
       );
       expect(restored).toEqual(blocks);
     });
 
     it('toggleGridView toggles grid', () => {
-      store.toggleGridView(true);
-      expect(store.toolbarState.gridView).toBe(true);
+      toolbarStore.toggleGridView(true);
+      expect(toolbarStore.toolbarState.gridView).toBe(true);
     });
 
     it('toggleHalfBlockEditing toggles half-block mode', () => {
-      store.toggleHalfBlockEditing(true);
-      expect(store.toolbarState.halfBlockEditing).toBe(true);
+      toolbarStore.toggleHalfBlockEditing(true);
+      expect(toolbarStore.toolbarState.halfBlockEditing).toBe(true);
     });
 
     it('toggleUpdateBrush toggles brush update flag', () => {
-      store.toggleUpdateBrush(false);
-      expect(store.toolbarState.updateBrush).toBe(false);
+      toolbarStore.toggleUpdateBrush(false);
+      expect(toolbarStore.toolbarState.updateBrush).toBe(false);
     });
 
     it('flipRotateBlocks flips brush blocks', () => {
@@ -686,10 +692,12 @@ describe('Pinia Store Actions', () => {
         [{ fg: 1, bg: 0, char: 'A' }],
         [{ fg: 2, bg: 0, char: 'B' }],
       ];
-      store._brushBlocks = LZString.compressToUTF16(JSON.stringify(blocks));
-      store.flipRotateBlocks({ type: 'flip' });
+      toolbarStore._brushBlocks = LZString.compressToUTF16(
+        JSON.stringify(blocks),
+      );
+      toolbarStore.flipRotateBlocks({ type: 'flip' });
       const flipped = JSON.parse(
-        LZString.decompressFromUTF16(store._brushBlocks),
+        LZString.decompressFromUTF16(toolbarStore._brushBlocks),
       );
       expect(flipped[0][0].char).toBe('B');
       expect(flipped[1][0].char).toBe('A');
@@ -699,85 +707,86 @@ describe('Pinia Store Actions', () => {
       const blocks: Block[][] = [
         [{ fg: 1, bg: 0, char: 'A' }, { fg: 2, bg: 0, char: 'B' }],
       ];
-      store._brushBlocks = LZString.compressToUTF16(JSON.stringify(blocks));
-      store.flipRotateBlocks({ type: 'rotate' });
+      toolbarStore._brushBlocks = LZString.compressToUTF16(
+        JSON.stringify(blocks),
+      );
+      toolbarStore.flipRotateBlocks({ type: 'rotate' });
       const rotated = JSON.parse(
-        LZString.decompressFromUTF16(store._brushBlocks),
+        LZString.decompressFromUTF16(toolbarStore._brushBlocks),
       );
       expect(rotated[0][0].char).toBe('B');
       expect(rotated[0][1].char).toBe('A');
     });
   });
 
-  // ── Brush library/history actions ──────────────────────────
+  // ── Brush library/history actions (now in useToolbarStore) ──
 
   describe('brush library actions', () => {
     const blocks1: Block[][] = [[{ fg: 1, bg: 0, char: 'A' }]];
     const blocks2: Block[][] = [[{ fg: 2, bg: 0, char: 'B' }]];
 
     it('pushBrushHistory adds to history', () => {
-      store.pushBrushHistory(blocks1);
-      expect(store.brushHistory).toHaveLength(1);
-      expect(store.brushHistory[0].hash).toBe(
+      toolbarStore.pushBrushHistory(blocks1);
+      expect(toolbarStore.brushHistory).toHaveLength(1);
+      expect(toolbarStore.brushHistory[0].hash).toBe(
         cyrb53(JSON.stringify(blocks1)),
       );
     });
 
     it('pushBrushHistory removes duplicates', () => {
-      store.pushBrushHistory(blocks1);
-      store.pushBrushHistory(blocks1);
-      expect(store.brushHistory).toHaveLength(1);
+      toolbarStore.pushBrushHistory(blocks1);
+      toolbarStore.pushBrushHistory(blocks1);
+      expect(toolbarStore.brushHistory).toHaveLength(1);
     });
 
     it('pushBrushHistory respects brushLimit', () => {
       for (let i = 0; i <= store.options.brushLimit; i++) {
-        store.pushBrushHistory([[{
+        toolbarStore.pushBrushHistory([[{
           fg: i, bg: 0, char: String(i),
         }]]);
       }
-      expect(store.brushHistory.length).toBeLessThanOrEqual(
-        store.options.brushLimit,
-      );
+      expect(toolbarStore.brushHistory.length)
+        .toBeLessThanOrEqual(store.options.brushLimit);
     });
 
     it('pushBrushLibrary adds to library', () => {
-      store.pushBrushLibrary(blocks1);
-      expect(store.brushLibrary).toHaveLength(1);
+      toolbarStore.pushBrushLibrary(blocks1);
+      expect(toolbarStore.brushLibrary).toHaveLength(1);
     });
 
     it('pushBrushLibrary removes duplicates', () => {
-      store.pushBrushLibrary(blocks1);
-      store.pushBrushLibrary(blocks1);
-      expect(store.brushLibrary).toHaveLength(1);
+      toolbarStore.pushBrushLibrary(blocks1);
+      toolbarStore.pushBrushLibrary(blocks1);
+      expect(toolbarStore.brushLibrary).toHaveLength(1);
     });
 
     it('removeBrushLibrary removes by hash', () => {
-      store.pushBrushLibrary(blocks1);
-      store.pushBrushLibrary(blocks2);
-      store.removeBrushLibrary(blocks1);
-      expect(store.brushLibrary).toHaveLength(1);
+      toolbarStore.pushBrushLibrary(blocks1);
+      toolbarStore.pushBrushLibrary(blocks2);
+      toolbarStore.removeBrushLibrary(blocks1);
+      expect(toolbarStore.brushLibrary).toHaveLength(1);
     });
 
     it('removeBrushHistory removes by hash', () => {
-      store.pushBrushHistory(blocks1);
-      store.pushBrushHistory(blocks2);
-      store.removeBrushHistory(blocks1);
-      expect(store.brushHistory).toHaveLength(1);
+      toolbarStore.pushBrushHistory(blocks1);
+      toolbarStore.pushBrushHistory(blocks2);
+      toolbarStore.removeBrushHistory(blocks1);
+      expect(toolbarStore.brushHistory).toHaveLength(1);
     });
 
     it('upBrush swaps brush up', () => {
-      store.pushBrushLibrary(blocks1);
-      store.pushBrushLibrary(blocks2);
-      store.upBrush(1);
-      const hash0 = store.brushLibrary[0].hash;
+      toolbarStore.pushBrushLibrary(blocks1);
+      toolbarStore.pushBrushLibrary(blocks2);
+      toolbarStore.upBrush(1);
+      const hash0 = toolbarStore.brushLibrary[0].hash;
       expect(hash0).toBe(cyrb53(JSON.stringify(blocks1)));
     });
 
     it('downBrush swaps brush down', () => {
-      store.pushBrushLibrary(blocks1);
-      store.pushBrushLibrary(blocks2);
-      store.downBrush(0);
-      const hash0 = store.brushLibrary[0].hash;
+      toolbarStore.pushBrushLibrary(blocks1);
+      toolbarStore.pushBrushLibrary(blocks2);
+      toolbarStore.downBrush(0);
+      const hash0 = toolbarStore.brushLibrary[0].hash;
       expect(hash0).toBe(cyrb53(JSON.stringify(blocks1)));
     });
   });
@@ -846,16 +855,16 @@ describe('Pinia Store Actions', () => {
     });
   });
 
-  // ── Toolbar state ────────────────────────────────────────────
+  // ── Toolbar state (now in useToolbarStore) ──────────────────
 
   describe('updateToolBarState', () => {
     it('replaces entire toolbar state', () => {
       const newToolbar = {
-        ...store.toolbarState,
+        ...toolbarStore.toolbarState,
         currentTool: 5,
       };
-      store.updateToolBarState(newToolbar);
-      expect(store.toolbarState.currentTool).toBe(5);
+      toolbarStore.updateToolBarState(newToolbar);
+      expect(toolbarStore.toolbarState.currentTool).toBe(5);
     });
   });
 });
@@ -867,6 +876,7 @@ describe('Pinia Store Getters', () => {
   let modalStore: ReturnType<typeof useModalStore>;
   let desktopStore: ReturnType<typeof useDesktopStore>;
   let panelStore: ReturnType<typeof usePanelStore>;
+  let toolbarStore: ReturnType<typeof useToolbarStore>;
 
   beforeEach(() => {
     setActivePinia(createPinia());
@@ -874,6 +884,7 @@ describe('Pinia Store Getters', () => {
     modalStore = useModalStore();
     desktopStore = useDesktopStore();
     panelStore = usePanelStore();
+    toolbarStore = useToolbarStore();
     store.newAsciibirdMeta(createTestMeta());
   });
 
@@ -888,7 +899,8 @@ describe('Pinia Store Getters', () => {
   });
 
   it('toolbarState returns toolbar state', () => {
-    expect(store.toolbarState).toEqual(store.$state.toolbarState);
+    expect(toolbarStore.toolbarState)
+      .toEqual(toolbarStore.toolbarState);
   });
 
   it('debugPanel returns debug panel state', () => {
@@ -896,19 +908,19 @@ describe('Pinia Store Getters', () => {
   });
 
   it('currentTool returns current tool index', () => {
-    expect(store.currentTool).toBe(0);
+    expect(toolbarStore.currentTool).toBe(0);
   });
 
   it('currentFg returns fg color', () => {
-    expect(store.currentFg).toBe(0);
+    expect(toolbarStore.currentFg).toBe(0);
   });
 
   it('currentBg returns bg color', () => {
-    expect(store.currentBg).toBe(1);
+    expect(toolbarStore.currentBg).toBe(1);
   });
 
   it('currentChar returns selected char', () => {
-    expect(store.currentChar).toBe(' ');
+    expect(toolbarStore.currentChar).toBe(' ');
   });
 
   it('currentTab returns current tab index', () => {
@@ -940,15 +952,15 @@ describe('Pinia Store Getters', () => {
   });
 
   it('brushSizeHeight returns height', () => {
-    expect(store.brushSizeHeight).toBe(1);
+    expect(toolbarStore.brushSizeHeight).toBe(1);
   });
 
   it('brushSizeWidth returns width', () => {
-    expect(store.brushSizeWidth).toBe(1);
+    expect(toolbarStore.brushSizeWidth).toBe(1);
   });
 
   it('brushSizeType returns type', () => {
-    expect(store.brushSizeType).toBe('square');
+    expect(toolbarStore.brushSizeType).toBe('square');
   });
 
   it('blockSizeMultiplier returns multiplier', () => {
@@ -956,11 +968,11 @@ describe('Pinia Store Getters', () => {
   });
 
   it('brushHistory returns history array', () => {
-    expect(store.brushHistory).toEqual([]);
+    expect(toolbarStore.brushHistory).toEqual([]);
   });
 
   it('brushLibrary returns library array', () => {
-    expect(store.brushLibrary).toEqual([]);
+    expect(toolbarStore.brushLibrary).toEqual([]);
   });
 
   it('isKeyboardDisabled returns disabled state', () => {
@@ -978,14 +990,18 @@ describe('Pinia Store Getters', () => {
 
   it('brushBlocks decompresses brush data', () => {
     const blocks: Block[][] = [[{ fg: 1, bg: 2, char: 'X' }]];
-    store._brushBlocks = LZString.compressToUTF16(JSON.stringify(blocks));
-    expect(store.brushBlocks).toEqual(blocks);
+    toolbarStore._brushBlocks = LZString.compressToUTF16(
+      JSON.stringify(blocks),
+    );
+    expect(toolbarStore.brushBlocks).toEqual(blocks);
   });
 
   it('selectBlocks decompresses selection data', () => {
     const blocks: Block[][] = [[{ fg: 3, bg: 4, char: 'Y' }]];
-    store._selectBlocks = LZString.compressToUTF16(JSON.stringify(blocks));
-    expect(store.selectBlocks).toEqual(blocks);
+    toolbarStore._selectBlocks = LZString.compressToUTF16(
+      JSON.stringify(blocks),
+    );
+    expect(toolbarStore.selectBlocks).toEqual(blocks);
   });
 
   it('currentAscii returns false when no tabs', () => {
@@ -1020,15 +1036,15 @@ describe('Pinia Store Getters', () => {
   });
 
   it('isTargettingFg returns targeting fg state', () => {
-    expect(store.isTargettingFg).toBe(true);
+    expect(toolbarStore.isTargettingFg).toBe(true);
   });
 
   it('isTargettingBg returns targeting bg state', () => {
-    expect(store.isTargettingBg).toBe(true);
+    expect(toolbarStore.isTargettingBg).toBe(true);
   });
 
   it('isTargettingChar returns targeting char state', () => {
-    expect(store.isTargettingChar).toBe(true);
+    expect(toolbarStore.isTargettingChar).toBe(true);
   });
 
   it('brushLibraryState returns brush library panel state', () => {
@@ -1044,7 +1060,7 @@ describe('Pinia Store Getters', () => {
   });
 
   it('persistCharPanel returns char panel persistence', () => {
-    expect(store.toolbarState.persistCharPanel).toBe(false);
+    expect(toolbarStore.toolbarState.persistCharPanel).toBe(false);
   });
 });
 

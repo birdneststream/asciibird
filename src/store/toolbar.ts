@@ -9,6 +9,7 @@ import { cyrb53, getBlocksWidth } from '../ascii';
 import { compressData, decompressData } from '../utils/layers';
 import type {
   Block,
+  PanelState,
   ToolbarState,
   BrushHistoryEntry,
   BrushLibraryEntry,
@@ -235,6 +236,18 @@ export const useToolbarStore = defineStore('toolbar', {
         this.brushLibrary[key] = this.brushLibrary[key + 1];
         this.brushLibrary[key + 1] = temp;
       }
+    },
+
+    // Panel position — partial update of toolbar panel fields
+    changeToolBarState(payload: PanelState & { draggable?: boolean }) {
+      this.toolbarState.x = payload.x;
+      this.toolbarState.y = payload.y;
+      this.toolbarState.w = payload.w;
+      this.toolbarState.h = payload.h;
+      this.toolbarState.visible = payload.visible;
+    },
+    changeToolBarDraggable(payload: boolean) {
+      this.toolbarState.draggable = payload;
     },
   },
 

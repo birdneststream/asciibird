@@ -91,6 +91,7 @@
 import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useAsciiBirdStore } from '../store';
 import { usePanelStore } from '../store/panels';
+import { useToolbarStore } from '../store/toolbar';
 import { useToast } from '../composables/useToast';
 import { useClipboard } from '../composables/useClipboard';
 import { useCanvasPanel } from '../composables/useCanvasPanel';
@@ -159,6 +160,7 @@ const emit = defineEmits<{
 // ─── Store & Composables ────────────────────────────────────────
 const store = useAsciiBirdStore();
 const panelStore = usePanelStore();
+const toolbarStore = useToolbarStore();
 const { show: toastShow } = useToast();
 const { copyText } = useClipboard();
 
@@ -218,13 +220,13 @@ const currentAsciiLayerBlocks = computed(
   () => currentSelectedLayer.value.data,
 );
 
-const currentTool = computed(() => toolbarIcons[store.currentTool]);
-const canFg = computed(() => store.isTargettingFg);
-const canBg = computed(() => store.isTargettingBg);
-const canText = computed(() => store.isTargettingChar);
-const currentFg = computed(() => store.currentFg);
-const currentBg = computed(() => store.currentBg);
-const currentChar = computed(() => store.currentChar);
+const currentTool = computed(() => toolbarIcons[toolbarStore.currentTool]);
+const canFg = computed(() => toolbarStore.isTargettingFg);
+const canBg = computed(() => toolbarStore.isTargettingBg);
+const canText = computed(() => toolbarStore.isTargettingChar);
+const currentFg = computed(() => toolbarStore.currentFg);
+const currentBg = computed(() => toolbarStore.currentBg);
+const currentChar = computed(() => toolbarStore.currentChar);
 
 const isTextEditing = computed(() => currentTool.value.name === 'text');
 const isEraserFill = computed(() => currentTool.value.name === 'fill-eraser');
@@ -244,14 +246,14 @@ const isSelected = computed(
     selecting.value.endY !== null,
 );
 
-const brushBlocks = computed(() => store.brushBlocks);
+const brushBlocks = computed(() => toolbarStore.brushBlocks);
 const canvasX = computed(() => x.value * blockWidth);
 const canvasY = computed(() => y.value * blockHeight);
-const toolbarState = computed(() => store.toolbarState);
+const toolbarState = computed(() => toolbarStore.toolbarState);
 const mirrorX = computed(() => toolbarState.value.mirrorX);
 const mirrorY = computed(() => toolbarState.value.mirrorY);
 const debugPanelState = computed(() => panelStore.debugPanel);
-const selectBlocks = computed(() => store.selectBlocks);
+const selectBlocks = computed(() => toolbarStore.selectBlocks);
 const options = computed(() => store.options);
 const haveSelectBlocks = computed(() => !!selectBlocks.value.length);
 const mircColours = computed(() => mircColours99);
@@ -1144,23 +1146,23 @@ async function canvasMouseDown() {
 
       case 'dropper':
         if (canFg.value) {
-          store.changeColourFg(
+          toolbarStore.changeColourFg(
             targetBlock.fg === undefined ? currentFg.value : targetBlock.fg,
           );
         }
         if (canBg.value) {
-          store.changeColourBg(
+          toolbarStore.changeColourBg(
             targetBlock.bg === undefined ? currentBg.value : targetBlock.bg,
           );
         }
         if (canText.value) {
-          store.changeChar(
+          toolbarStore.changeChar(
             targetBlock.char === undefined
               ? currentChar.value
               : targetBlock.char,
           );
         }
-        store.changeTool(0);
+        toolbarStore.changeTool(0);
         break;
     }
   }

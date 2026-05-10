@@ -37,7 +37,7 @@ import {
   blockWidth,
   blockHeight,
 } from '../../ascii';
-import { useAsciiBirdStore } from '../../store';
+import { useToolbarStore } from '../../store/toolbar';
 
 const props = defineProps<{
   canvasX?: number | null;
@@ -45,7 +45,7 @@ const props = defineProps<{
   yOffset?: number;
 }>();
 
-const store = useAsciiBirdStore();
+const toolbarStore = useToolbarStore();
 const el = ref<HTMLElement | null>(null);
 const persistChars = ref(false);
 
@@ -55,8 +55,8 @@ const { style } = useDraggable(el, {
 
 const mircColours = mircColours99;
 
-const currentFg = computed(() => store.currentFg);
-const currentBg = computed(() => store.currentBg);
+const currentFg = computed(() => toolbarStore.currentFg);
+const currentBg = computed(() => toolbarStore.currentBg);
 const charBlockWidth = computed(() => blockWidth * 2);
 const charBlockHeight = computed(() => blockHeight * 2);
 
@@ -69,10 +69,10 @@ const outline = computed(() => {
 });
 
 function onCharChange(char: string) {
-  store.changeChar(char);
+  toolbarStore.changeChar(char);
 }
 
 function changePersistChars() {
-  store.persistCharPanel(!persistChars.value);
+  toolbarStore.persistCharPanel(!persistChars.value);
 }
 </script>

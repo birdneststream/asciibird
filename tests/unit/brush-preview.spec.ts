@@ -19,6 +19,7 @@ import LZString from 'lz-string'
 import {
   createMockStore,
   createMockModalStore,
+  createMockToolbarStore,
   createToolbarState,
   toastedMock,
   globalStubs,
@@ -26,12 +27,16 @@ import {
 
 let _mockStore: any = null
 let _mockModalStore: any = null
+let _mockToolbarStore: any = null
 
 vi.mock('@/store', () => ({
   useAsciiBirdStore: () => _mockStore,
 }))
 vi.mock('@/store/modal', () => ({
   useModalStore: () => _mockModalStore,
+}))
+vi.mock('@/store/toolbar', () => ({
+  useToolbarStore: () => _mockToolbarStore,
 }))
 
 
@@ -64,6 +69,7 @@ beforeEach(() => {
   store = createMockStore()
   _mockStore = store
   _mockModalStore = createMockModalStore()
+  _mockToolbarStore = createMockToolbarStore()
 })
 
 afterEach(() => {
@@ -149,9 +155,11 @@ describe('BrushPreview.vue', () => {
     })
 
     it('brushBlocksEmpty returns false for non-empty blocks', () => {
-      store._brushBlocks = LZString.compressToUTF16(
-        JSON.stringify([[{ fg: 0, bg: 1, char: ' ' }]]),
-      )
+      _mockToolbarStore = createMockToolbarStore({
+        _brushBlocks: LZString.compressToUTF16(
+          JSON.stringify([[{ fg: 0, bg: 1, char: ' ' }]]),
+        ),
+      })
       const wrapper = mountBrushPreview()
       expect(wrapper.vm.brushBlocksEmpty).toBe(false)
     })
@@ -176,6 +184,9 @@ describe('BrushPreview.vue', () => {
         toolbarState: createToolbarState({ brushSizeHeight: 5 }),
       })
       _mockStore = store
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { brushSizeHeight: 5 },
+      })
       const wrapper = mountBrushPreview()
       expect(wrapper.vm.middleY).toBe(2)
     })
@@ -185,6 +196,9 @@ describe('BrushPreview.vue', () => {
         toolbarState: createToolbarState({ brushSizeWidth: 5 }),
       })
       _mockStore = store
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { brushSizeWidth: 5 },
+      })
       const wrapper = mountBrushPreview()
       expect(wrapper.vm.middleX).toBe(2)
     })
@@ -212,6 +226,13 @@ describe('BrushPreview.vue', () => {
         }),
       })
       _mockStore = store
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: {
+          brushSizeWidth: w,
+          brushSizeHeight: h,
+          brushSizeType: type,
+        },
+      })
       const wrapper = mountBrushPreview()
       wrapper.vm.createBlocks()
       return wrapper
@@ -285,7 +306,7 @@ describe('BrushPreview.vue', () => {
 
     it('calls updateBrushSize and brushBlocksAction via store', () => {
       const wrapper = mountBrushPreview()
-      const updateSpy = vi.spyOn(store, 'updateBrushSize')
+      const updateSpy = vi.spyOn(_mockToolbarStore, 'updateBrushSize')
 
       wrapper.vm.createBlocks()
 
@@ -309,6 +330,13 @@ describe('BrushPreview.vue', () => {
         }),
       })
       _mockStore = store
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: {
+          brushSizeWidth: 5,
+          brushSizeHeight: 5,
+          brushSizeType: 'circle',
+        },
+      })
       const wrapper = mountBrushPreview()
       wrapper.vm.createBlocks()
 
@@ -375,7 +403,7 @@ describe('BrushPreview.vue', () => {
       wrapper.vm.brushSizeHeightInput = 7
       wrapper.vm.brushSizeTypeInput = 'circle'
 
-      const spy = vi.spyOn(store, 'updateBrushSize')
+      const spy = vi.spyOn(_mockToolbarStore, 'updateBrushSize')
       wrapper.vm.updateBrushSize()
 
       expect(spy).toHaveBeenCalledWith({
@@ -411,6 +439,9 @@ describe('BrushPreview.vue', () => {
         toolbarState: createToolbarState({ brushSizeWidth: 5 }),
       })
       _mockStore = store
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { brushSizeWidth: 5 },
+      })
       const wrapper = mountBrushPreview()
       expect(wrapper.vm.brushSizeWidth).toBe(5)
     })
@@ -420,6 +451,9 @@ describe('BrushPreview.vue', () => {
         toolbarState: createToolbarState({ brushSizeHeight: 7 }),
       })
       _mockStore = store
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { brushSizeHeight: 7 },
+      })
       const wrapper = mountBrushPreview()
       expect(wrapper.vm.brushSizeHeight).toBe(7)
     })
@@ -429,13 +463,16 @@ describe('BrushPreview.vue', () => {
         toolbarState: createToolbarState({ brushSizeType: 'circle' }),
       })
       _mockStore = store
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { brushSizeType: 'circle' },
+      })
       const wrapper = mountBrushPreview()
       expect(wrapper.vm.brushSizeType).toBe('circle')
     })
 
     it('brushSizeHeightInput triggers createBlocks on change', async () => {
       const wrapper = mountBrushPreview()
-      const spy = vi.spyOn(store, 'updateBrushSize')
+      const spy = vi.spyOn(_mockToolbarStore, 'updateBrushSize')
       wrapper.vm.brushSizeHeightInput = 5
       await wrapper.vm.$nextTick()
       expect(spy).toHaveBeenCalledWith(
@@ -445,7 +482,7 @@ describe('BrushPreview.vue', () => {
 
     it('brushSizeWidthInput triggers createBlocks on change', async () => {
       const wrapper = mountBrushPreview()
-      const spy = vi.spyOn(store, 'updateBrushSize')
+      const spy = vi.spyOn(_mockToolbarStore, 'updateBrushSize')
       wrapper.vm.brushSizeWidthInput = 5
       await wrapper.vm.$nextTick()
       expect(spy).toHaveBeenCalledWith(
@@ -455,7 +492,7 @@ describe('BrushPreview.vue', () => {
 
     it('brushSizeTypeInput triggers createBlocks on change', async () => {
       const wrapper = mountBrushPreview()
-      const spy = vi.spyOn(store, 'updateBrushSize')
+      const spy = vi.spyOn(_mockToolbarStore, 'updateBrushSize')
       wrapper.vm.brushSizeTypeInput = 'circle'
       await wrapper.vm.$nextTick()
       expect(spy).toHaveBeenCalledWith(
@@ -468,6 +505,9 @@ describe('BrushPreview.vue', () => {
         toolbarState: createToolbarState({ targetingFg: false }),
       })
       _mockStore = store
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { targetingFg: false },
+      })
       const wrapper = mountBrushPreview()
       expect(wrapper.vm.canFg).toBe(false)
     })
@@ -477,6 +517,9 @@ describe('BrushPreview.vue', () => {
         toolbarState: createToolbarState({ targetingBg: false }),
       })
       _mockStore = store
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { targetingBg: false },
+      })
       const wrapper = mountBrushPreview()
       expect(wrapper.vm.canBg).toBe(false)
     })
@@ -486,6 +529,9 @@ describe('BrushPreview.vue', () => {
         toolbarState: createToolbarState({ targetingChar: false }),
       })
       _mockStore = store
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { targetingChar: false },
+      })
       const wrapper = mountBrushPreview()
       expect(wrapper.vm.canText).toBe(false)
     })
@@ -495,6 +541,9 @@ describe('BrushPreview.vue', () => {
         toolbarState: createToolbarState({ currentColourFg: 5 }),
       })
       _mockStore = store
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { currentColourFg: 5 },
+      })
       const wrapper = mountBrushPreview()
       expect(wrapper.vm.currentFg).toBe(5)
     })
@@ -504,6 +553,9 @@ describe('BrushPreview.vue', () => {
         toolbarState: createToolbarState({ currentColourBg: 5 }),
       })
       _mockStore = store
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { currentColourBg: 5 },
+      })
       const wrapper = mountBrushPreview()
       expect(wrapper.vm.currentBg).toBe(5)
     })
@@ -513,6 +565,9 @@ describe('BrushPreview.vue', () => {
         toolbarState: createToolbarState({ selectedChar: 'X' }),
       })
       _mockStore = store
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { selectedChar: 'X' },
+      })
       const wrapper = mountBrushPreview()
       expect(wrapper.vm.currentChar).toBe('X')
     })
@@ -520,17 +575,16 @@ describe('BrushPreview.vue', () => {
 
   describe('created lifecycle', () => {
     it('creates blocks when brushBlocks is empty', () => {
-      store._brushBlocks = LZString.compressToUTF16('[]')
-      _mockStore = store
       const wrapper = mountBrushPreview()
       expect(wrapper.vm.blocks.length).toBeGreaterThan(0)
     })
 
     it('skips createBlocks when brushBlocks is not empty', () => {
-      store._brushBlocks = LZString.compressToUTF16(
-        JSON.stringify([[{ fg: 0, bg: 1, char: ' ' }]]),
-      )
-      _mockStore = store
+      _mockToolbarStore = createMockToolbarStore({
+        _brushBlocks: LZString.compressToUTF16(
+          JSON.stringify([[{ fg: 0, bg: 1, char: ' ' }]]),
+        ),
+      })
       const wrapper = mountBrushPreview()
       expect(wrapper.vm.brushBlocksEmpty).toBe(false)
     })

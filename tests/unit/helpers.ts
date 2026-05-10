@@ -147,6 +147,190 @@ export interface MockStoreConfig {
 }
 
 /**
+ * Create a mock toolbar store for component tests.
+ * Separated from the main store since toolbar state was extracted.
+ */
+export function createMockToolbarStore(
+  overrides: Record<string, any> = {},
+) {
+  const toolbarState = createToolbarState(overrides.toolbarState)
+  const tState: Record<string, any> = {
+    toolbarState,
+    _brushBlocks: overrides._brushBlocks
+      ?? LZString.compressToUTF16(JSON.stringify([])),
+    brushHistory: overrides.brushHistory ?? [],
+    _selectBlocks: overrides._selectBlocks
+      ?? LZString.compressToUTF16(JSON.stringify([])),
+    brushLibrary: overrides.brushLibrary ?? [],
+  }
+
+  return {
+    ...tState,
+
+    // Getters
+    get currentTool() { return toolbarState.currentTool },
+    get isTargettingBg() { return toolbarState.targetingBg },
+    get isTargettingFg() { return toolbarState.targetingFg },
+    get isTargettingChar() { return toolbarState.targetingChar },
+    get currentFg() { return toolbarState.currentColourFg },
+    get currentBg() { return toolbarState.currentColourBg },
+    get currentChar() { return toolbarState.selectedChar },
+    get brushSizeHeight() { return toolbarState.brushSizeHeight },
+    get brushSizeWidth() { return toolbarState.brushSizeWidth },
+    get brushSizeType() { return toolbarState.brushSizeType },
+    get brushBlocks() {
+      return JSON.parse(
+        LZString.decompressFromUTF16(tState._brushBlocks as string),
+      )
+    },
+    get selectBlocks() {
+      return JSON.parse(
+        LZString.decompressFromUTF16(tState._selectBlocks as string),
+      )
+    },
+
+    // Actions
+    changeColourFg(c: number) {
+      toolbarState.currentColourFg = c
+      toolbarState.isUpdating = false
+      toolbarState.isChoosingFg = false
+    },
+    changeColourBg(c: number) {
+      toolbarState.currentColourBg = c
+      toolbarState.isUpdating = false
+      toolbarState.isChoosingBg = false
+    },
+    changeChar(c: string) {
+      toolbarState.selectedChar = c
+      toolbarState.isUpdating = false
+      if (!toolbarState.persistCharPanel) {
+        toolbarState.isChoosingChar = false
+      }
+    },
+    changeTool(idx: number) {
+      toolbarState.currentTool = idx
+    },
+    persistCharPanel(val: boolean) {
+      toolbarState.persistCharPanel = val
+    },
+    changeIsUpdatingFg(val: boolean) {
+      toolbarState.isChoosingFg = val
+    },
+    changeIsUpdatingBg(val: boolean) {
+      toolbarState.isChoosingBg = val
+    },
+    changeIsUpdatingChar(val: boolean) {
+      toolbarState.isChoosingChar = val
+    },
+    changeTargetingFg(val: boolean) {
+      toolbarState.targetingFg = val
+    },
+    changeTargetingBg(val: boolean) {
+      toolbarState.targetingBg = val
+    },
+    changeTargetingChar(val: boolean) {
+      toolbarState.targetingChar = val
+    },
+    updateToolBarState(p: any) {
+      Object.assign(toolbarState, p)
+    },
+    updateMirror(p: any) {
+      toolbarState.mirrorX = p.x
+      toolbarState.mirrorY = p.y
+    },
+    updateBrushSize(p: any) {
+      if (p.brushSizeHeight !== undefined) {
+        toolbarState.brushSizeHeight = p.brushSizeHeight
+      }
+      if (p.brushSizeWidth !== undefined) {
+        toolbarState.brushSizeWidth = p.brushSizeWidth
+      }
+      if (p.brushSizeType !== undefined) {
+        toolbarState.brushSizeType = p.brushSizeType
+      }
+    },
+    setBrushBlocks(blocks: any) {
+      tState._brushBlocks = LZString.compressToUTF16(
+        JSON.stringify(blocks),
+      )
+    },
+    setSelectBlocks(blocks: any) {
+      tState._selectBlocks = LZString.compressToUTF16(
+        JSON.stringify(blocks),
+      )
+    },
+    toggleGridView(val: boolean) {
+      toolbarState.gridView = val
+    },
+    toggleHalfBlockEditing(val: boolean) {
+      toolbarState.halfBlockEditing = val
+    },
+    toggleUpdateBrush(val: boolean) {
+      toolbarState.updateBrush = val
+    },
+    changeToolBarState(p: any) {
+      toolbarState.x = p.x
+      toolbarState.y = p.y
+      toolbarState.w = p.w
+      toolbarState.h = p.h
+      toolbarState.visible = p.visible
+    },
+    changeToolBarDraggable(val: boolean) {
+      toolbarState.draggable = val
+    },
+    flipRotateBlocks() {},
+    pushBrushHistory(blocks: any) {
+      const hash = cyrb53(JSON.stringify(blocks))
+      if (!tState.brushHistory.some((b: any) => b.hash === hash)) {
+        tState.brushHistory.push({
+          blocks: LZString.compressToUTF16(
+            JSON.stringify(blocks),
+          ),
+          hash,
+        })
+      }
+    },
+    pushBrushLibrary(blocks: any) {
+      const hash = cyrb53(JSON.stringify(blocks))
+      if (!tState.brushLibrary.some((b: any) => b.hash === hash)) {
+        tState.brushLibrary.push({
+          blocks: LZString.compressToUTF16(
+            JSON.stringify(blocks),
+          ),
+          hash,
+        })
+      }
+    },
+    removeBrushLibrary(blocks: any) {
+      const hash = cyrb53(JSON.stringify(blocks))
+      tState.brushLibrary = tState.brushLibrary.filter(
+        (b: any) => b.hash !== hash,
+      )
+    },
+    removeBrushHistory(blocks: any) {
+      const hash = cyrb53(JSON.stringify(blocks))
+      tState.brushHistory = tState.brushHistory.filter(
+        (b: any) => b.hash !== hash,
+      )
+    },
+    upBrush(key: number) {
+      if (key > 0) {
+        const temp = tState.brushLibrary[key]
+        tState.brushLibrary[key] = tState.brushLibrary[key - 1]
+        tState.brushLibrary[key - 1] = temp
+      }
+    },
+    downBrush(key: number) {
+      if (key < tState.brushLibrary.length - 1) {
+        const temp = tState.brushLibrary[key]
+        tState.brushLibrary[key] = tState.brushLibrary[key + 1]
+        tState.brushLibrary[key + 1] = temp
+      }
+    },
+  }
+}
+
+/**
  * Create a mock modal store for component tests.
  * Separated from the main store since modal state was extracted.
  */

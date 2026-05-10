@@ -26,10 +26,10 @@
 import { ref } from 'vue';
 import { useDraggable } from '@vueuse/core';
 import { mircColours99 } from '../../ascii';
-import { useAsciiBirdStore } from '../../store';
+import { useToolbarStore } from '../../store/toolbar';
 
 const props = defineProps<{ yOffset?: number }>();
-const store = useAsciiBirdStore();
+const toolbarStore = useToolbarStore();
 const el = ref<HTMLElement | null>(null);
 
 const { style } = useDraggable(el, {
@@ -39,12 +39,12 @@ const { style } = useDraggable(el, {
 const mircColours = mircColours99;
 
 function onColourChange(colour: number) {
-  if (store.toolbarState.isChoosingFg) {
-    store.changeColourFg(colour);
+  if (toolbarStore.toolbarState.isChoosingFg) {
+    toolbarStore.changeColourFg(colour);
   }
 
-  if (store.toolbarState.isChoosingBg) {
-    store.changeColourBg(colour);
+  if (toolbarStore.toolbarState.isChoosingBg) {
+    toolbarStore.changeColourBg(colour);
   }
 }
 </script>

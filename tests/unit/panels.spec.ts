@@ -26,12 +26,14 @@ import {
   createMockStore,
   createMockModalStore,
   createMockPanelStore,
+  createMockToolbarStore,
   globalStubs,
 } from './helpers'
 
 let _mockStore: any = null
 let _mockModalStore: any = null
 let _mockPanelStore: any = null
+let _mockToolbarStore: any = null
 
 vi.mock('@/store', () => ({
   useAsciiBirdStore: () => _mockStore,
@@ -41,6 +43,9 @@ vi.mock('@/store/modal', () => ({
 }))
 vi.mock('@/store/panels', () => ({
   usePanelStore: () => _mockPanelStore,
+}))
+vi.mock('@/store/toolbar', () => ({
+  useToolbarStore: () => _mockToolbarStore,
 }))
 
 
@@ -91,6 +96,7 @@ beforeEach(() => {
   _mockStore = store
   _mockModalStore = createMockModalStore()
   _mockPanelStore = createMockPanelStore()
+  _mockToolbarStore = createMockToolbarStore()
 })
 
 afterEach(() => {
@@ -129,7 +135,7 @@ describe('DebugPanel.vue', () => {
   })
 
   it('computed getToolName returns none for invalid tool', () => {
-    store.toolbarState.currentTool = 99
+    _mockToolbarStore.toolbarState.currentTool = 99
     const wrapper = shallowMount(
       DebugPanel,
       mountOpts({ propsData: { canvasX: 0, canvasY: 0 } }),
@@ -236,7 +242,7 @@ describe('BrushLibrary.vue', () => {
 
   it('computed libraryCount returns count when brushes exist', () => {
     const blocks = [[{ fg: 1, bg: 0, char: 'A' }]]
-    store.pushBrushLibrary(blocks)
+    _mockToolbarStore.pushBrushLibrary(blocks)
     const wrapper = shallowMount(
       BrushLibrary,
       mountOpts({ propsData: { yOffset: 0 } }),
@@ -258,7 +264,7 @@ describe('BrushLibrary.vue', () => {
   })
 
   it('saveToLibrary calls store.pushBrushLibrary', () => {
-    const spy = vi.spyOn(store, 'pushBrushLibrary')
+    const spy = vi.spyOn(_mockToolbarStore, 'pushBrushLibrary')
     const wrapper = shallowMount(
       BrushLibrary,
       mountOpts({ propsData: { yOffset: 0 } }),
@@ -270,7 +276,7 @@ describe('BrushLibrary.vue', () => {
   })
 
   it('removeFromLibrary calls store.removeBrushLibrary', () => {
-    const spy = vi.spyOn(store, 'removeBrushLibrary')
+    const spy = vi.spyOn(_mockToolbarStore, 'removeBrushLibrary')
     const wrapper = shallowMount(
       BrushLibrary,
       mountOpts({ propsData: { yOffset: 0 } }),
@@ -281,7 +287,7 @@ describe('BrushLibrary.vue', () => {
   })
 
   it('removeFromHistory calls store.removeBrushHistory', () => {
-    const spy = vi.spyOn(store, 'removeBrushHistory')
+    const spy = vi.spyOn(_mockToolbarStore, 'removeBrushHistory')
     const wrapper = shallowMount(
       BrushLibrary,
       mountOpts({ propsData: { yOffset: 0 } }),
@@ -292,14 +298,14 @@ describe('BrushLibrary.vue', () => {
   })
 
   it('reuseBlocks sets brushBlocks and calls changeTool', () => {
-    const changeToolSpy = vi.spyOn(store, 'changeTool')
+    const changeToolSpy = vi.spyOn(_mockToolbarStore, 'changeTool')
     const wrapper = shallowMount(
       BrushLibrary,
       mountOpts({ propsData: { yOffset: 0 } }),
     )
     const blocks = [[{ fg: 1, bg: 0, char: 'A' }]]
     wrapper.vm.reuseBlocks(blocks)
-    expect(store.brushBlocks).toEqual(blocks)
+    expect(_mockToolbarStore.brushBlocks).toEqual(blocks)
     expect(changeToolSpy).toHaveBeenCalledWith(4)
     expect(toastedMock.show).toHaveBeenCalled()
   })
@@ -320,10 +326,10 @@ describe('BrushLibrary.vue', () => {
   it('upBrush calls store.upBrush', () => {
     const blocks1 = [[{ fg: 1, bg: 0, char: 'A' }]]
     const blocks2 = [[{ fg: 2, bg: 0, char: 'B' }]]
-    store.pushBrushLibrary(blocks1)
-    store.pushBrushLibrary(blocks2)
+    _mockToolbarStore.pushBrushLibrary(blocks1)
+    _mockToolbarStore.pushBrushLibrary(blocks2)
 
-    const spy = vi.spyOn(store, 'upBrush')
+    const spy = vi.spyOn(_mockToolbarStore, 'upBrush')
     const wrapper = shallowMount(
       BrushLibrary,
       mountOpts({ propsData: { yOffset: 0 } }),
@@ -335,10 +341,10 @@ describe('BrushLibrary.vue', () => {
   it('downBrush calls store.downBrush', () => {
     const blocks1 = [[{ fg: 1, bg: 0, char: 'A' }]]
     const blocks2 = [[{ fg: 2, bg: 0, char: 'B' }]]
-    store.pushBrushLibrary(blocks1)
-    store.pushBrushLibrary(blocks2)
+    _mockToolbarStore.pushBrushLibrary(blocks1)
+    _mockToolbarStore.pushBrushLibrary(blocks2)
 
-    const spy = vi.spyOn(store, 'downBrush')
+    const spy = vi.spyOn(_mockToolbarStore, 'downBrush')
     const wrapper = shallowMount(
       BrushLibrary,
       mountOpts({ propsData: { yOffset: 0 } }),
@@ -348,7 +354,7 @@ describe('BrushLibrary.vue', () => {
   })
 
   it('computed isBrushing returns true when tool is brush', () => {
-    store.toolbarState.currentTool = 4
+    _mockToolbarStore.toolbarState.currentTool = 4
     const wrapper = shallowMount(
       BrushLibrary,
       mountOpts({ propsData: { yOffset: 0 } }),
@@ -358,7 +364,7 @@ describe('BrushLibrary.vue', () => {
   })
 
   it('computed isErasing returns true when tool is eraser', () => {
-    store.toolbarState.currentTool = 6
+    _mockToolbarStore.toolbarState.currentTool = 6
     const wrapper = shallowMount(
       BrushLibrary,
       mountOpts({ propsData: { yOffset: 0 } }),
@@ -421,7 +427,7 @@ describe('Toolbar.vue', () => {
   })
 
   it('toggleMirrorX calls store.updateMirror with toggled x', () => {
-    const spy = vi.spyOn(store, 'updateMirror')
+    const spy = vi.spyOn(_mockToolbarStore, 'updateMirror')
     const wrapper = shallowMount(
       Toolbar,
       mountOpts(),
@@ -433,7 +439,7 @@ describe('Toolbar.vue', () => {
   })
 
   it('toggleMirrorY calls store.updateMirror with toggled y', () => {
-    const spy = vi.spyOn(store, 'updateMirror')
+    const spy = vi.spyOn(_mockToolbarStore, 'updateMirror')
     const wrapper = shallowMount(
       Toolbar,
       mountOpts(),

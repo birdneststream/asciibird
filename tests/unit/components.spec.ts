@@ -22,6 +22,7 @@ import { mircColours99, charCodes } from '@/ascii'
 import {
   createMockStore,
   createMockModalStore,
+  createMockToolbarStore,
   toastedMock,
   copyTextMock,
   globalStubs,
@@ -30,6 +31,7 @@ import {
 
 let _mockStore: any = null
 let _mockModalStore: any = null
+let _mockToolbarStore: any = null
 
 vi.mock('@/store', () => ({
   useAsciiBirdStore: () => _mockStore,
@@ -37,7 +39,9 @@ vi.mock('@/store', () => ({
 vi.mock('@/store/modal', () => ({
   useModalStore: () => _mockModalStore,
 }))
-
+vi.mock('@/store/toolbar', () => ({
+  useToolbarStore: () => _mockToolbarStore,
+}))
 
 vi.mock('@/composables/useToast', () => ({
   useToast: () => toastedMock.show,
@@ -92,6 +96,7 @@ beforeEach(() => {
   store = createMockStore()
   _mockStore = store
   _mockModalStore = createMockModalStore()
+  _mockToolbarStore = createMockToolbarStore()
 })
 
 afterEach(() => {
@@ -124,24 +129,24 @@ describe('Colours.vue', () => {
   it('clicking FG button toggles isChoosingFg', () => {
     const wrapper = mount(Colours, mountOpts())
     wrapper.find('#currentColourFg').trigger('click')
-    expect(store.toolbarState.isChoosingFg).toBe(true)
+    expect(_mockToolbarStore.toolbarState.isChoosingFg).toBe(true)
   })
 
   it('clicking BG button toggles isChoosingBg', () => {
     const wrapper = mount(Colours, mountOpts())
     wrapper.find('#currentColourBg').trigger('click')
-    expect(store.toolbarState.isChoosingBg).toBe(true)
+    expect(_mockToolbarStore.toolbarState.isChoosingBg).toBe(true)
   })
 
   it('swapColours swaps FG and BG', () => {
     const wrapper = mount(Colours, mountOpts())
-    expect(store.toolbarState.currentColourFg).toBe(0)
-    expect(store.toolbarState.currentColourBg).toBe(1)
+    expect(_mockToolbarStore.toolbarState.currentColourFg).toBe(0)
+    expect(_mockToolbarStore.toolbarState.currentColourBg).toBe(1)
 
     wrapper.vm.swapColours()
 
-    expect(store.toolbarState.currentColourFg).toBe(1)
-    expect(store.toolbarState.currentColourBg).toBe(0)
+    expect(_mockToolbarStore.toolbarState.currentColourFg).toBe(1)
+    expect(_mockToolbarStore.toolbarState.currentColourBg).toBe(0)
   })
 
   it('renders the swap button', () => {
@@ -157,7 +162,7 @@ describe('Colours.vue', () => {
   it('clicking char button toggles isChoosingChar', () => {
     const wrapper = mount(Colours, mountOpts())
     wrapper.find('#currentChar').trigger('click')
-    expect(store.toolbarState.isChoosingChar).toBe(true)
+    expect(_mockToolbarStore.toolbarState.isChoosingChar).toBe(true)
   })
 })
 
@@ -217,7 +222,7 @@ describe('CharPicker.vue', () => {
       }),
     )
     wrapper.vm.onCharChange('A')
-    expect(store.toolbarState.selectedChar).toBe('A')
+    expect(_mockToolbarStore.toolbarState.selectedChar).toBe('A')
   })
 
   it('computes outline text-stroke when fg equals bg', () => {
@@ -225,6 +230,9 @@ describe('CharPicker.vue', () => {
       toolbarState: { currentColourFg: 5, currentColourBg: 5 },
     })
     store = _mockStore
+    _mockToolbarStore = createMockToolbarStore({
+      toolbarState: { currentColourFg: 5, currentColourBg: 5 },
+    })
     const wrapper = shallowMount(
       CharPicker,
       mountOptsWithVdr({
@@ -282,6 +290,9 @@ describe('ColourPicker.vue', () => {
       toolbarState: { isChoosingFg: true, isChoosingBg: false },
     })
     store = _mockStore
+    _mockToolbarStore = createMockToolbarStore({
+      toolbarState: { isChoosingFg: true, isChoosingBg: false },
+    })
     const wrapper = shallowMount(
       ColourPicker,
       mountOptsWithVdr({
@@ -289,7 +300,7 @@ describe('ColourPicker.vue', () => {
       }),
     )
     wrapper.vm.onColourChange(5)
-    expect(store.toolbarState.currentColourFg).toBe(5)
+    expect(_mockToolbarStore.toolbarState.currentColourFg).toBe(5)
   })
 
   it('onColourChange sets BG when isChoosingBg', () => {
@@ -297,6 +308,9 @@ describe('ColourPicker.vue', () => {
       toolbarState: { isChoosingFg: false, isChoosingBg: true },
     })
     store = _mockStore
+    _mockToolbarStore = createMockToolbarStore({
+      toolbarState: { isChoosingFg: false, isChoosingBg: true },
+    })
     const wrapper = shallowMount(
       ColourPicker,
       mountOptsWithVdr({
@@ -304,7 +318,7 @@ describe('ColourPicker.vue', () => {
       }),
     )
     wrapper.vm.onColourChange(8)
-    expect(store.toolbarState.currentColourBg).toBe(8)
+    expect(_mockToolbarStore.toolbarState.currentColourBg).toBe(8)
   })
 
   it('onColourChange does nothing when neither fg nor bg choosing', () => {
@@ -314,11 +328,11 @@ describe('ColourPicker.vue', () => {
         propsData: { yOffset: 0 },
       }),
     )
-    const prevFg = store.toolbarState.currentColourFg
-    const prevBg = store.toolbarState.currentColourBg
+    const prevFg = _mockToolbarStore.toolbarState.currentColourFg
+    const prevBg = _mockToolbarStore.toolbarState.currentColourBg
     wrapper.vm.onColourChange(7)
-    expect(store.toolbarState.currentColourFg).toBe(prevFg)
-    expect(store.toolbarState.currentColourBg).toBe(prevBg)
+    expect(_mockToolbarStore.toolbarState.currentColourFg).toBe(prevFg)
+    expect(_mockToolbarStore.toolbarState.currentColourBg).toBe(prevBg)
   })
 })
 

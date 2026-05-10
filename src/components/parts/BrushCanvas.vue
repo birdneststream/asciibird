@@ -65,6 +65,7 @@ import {
 } from '../../ascii'
 import ContextMenu from './ContextMenu.vue'
 import { useAsciiBirdStore } from '../../store'
+import { useToolbarStore } from '../../store/toolbar'
 import { useToast } from '../../composables/useToast'
 import { useClipboard } from '../../composables/useClipboard'
 
@@ -76,6 +77,7 @@ const props = withDefaults(
 
 // ─── Composables ────────────────────────────────────────
 const store = useAsciiBirdStore()
+const toolbarStore = useToolbarStore()
 const { show: toastShow } = useToast()
 const { copyText } = useClipboard()
 
@@ -93,7 +95,7 @@ const renderBlockHeight = computed(
   () => blockHeight * store.blockSizeMultiplier,
 )
 const getBlocks = computed(() =>
-  props.blocks === false ? store.brushBlocks : props.blocks,
+  props.blocks === false ? toolbarStore.brushBlocks : props.blocks,
 )
 const isMainCanvas = computed(() => props.blocks === false)
 const hash = computed(() => cyrb53(JSON.stringify(getBlocks.value)))
@@ -110,14 +112,14 @@ watch(
     store.blockSizeMultiplier,
     getBlocks.value,
     store.currentAscii,
-    store.brushSizeHeight,
-    store.brushSizeWidth,
-    store.isTargettingBg,
-    store.isTargettingFg,
-    store.isTargettingChar,
-    store.currentFg,
-    store.currentBg,
-    store.currentChar,
+    toolbarStore.brushSizeHeight,
+    toolbarStore.brushSizeWidth,
+    toolbarStore.isTargettingBg,
+    toolbarStore.isTargettingFg,
+    toolbarStore.isTargettingChar,
+    toolbarStore.currentFg,
+    toolbarStore.currentBg,
+    toolbarStore.currentChar,
   ],
   () => delayRedrawCanvas(),
 )
@@ -167,7 +169,7 @@ function startExport(type: string) {
 }
 
 function saveToLibrary() {
-  store.pushBrushLibrary(getBlocks.value)
+  toolbarStore.pushBrushLibrary(getBlocks.value)
   toastShow('Saved brush to Library', { type: 'success' })
   contextMenuRef.value?.close()
 }
@@ -237,16 +239,16 @@ defineExpose({
   blockHeight: renderBlockHeight,
   blockSizeMultiplier: computed(() => store.blockSizeMultiplier),
   currentAscii: computed(() => store.currentAscii),
-  toolbarState: computed(() => store.toolbarState),
-  isTargettingBg: computed(() => store.isTargettingBg),
-  isTargettingFg: computed(() => store.isTargettingFg),
-  isTargettingChar: computed(() => store.isTargettingChar),
-  currentFg: computed(() => store.currentFg),
-  currentBg: computed(() => store.currentBg),
-  currentChar: computed(() => store.currentChar),
-  brushSizeHeight: computed(() => store.brushSizeHeight),
-  brushSizeWidth: computed(() => store.brushSizeWidth),
-  brushSizeType: computed(() => store.brushSizeType),
+  toolbarState: computed(() => toolbarStore.toolbarState),
+  isTargettingBg: computed(() => toolbarStore.isTargettingBg),
+  isTargettingFg: computed(() => toolbarStore.isTargettingFg),
+  isTargettingChar: computed(() => toolbarStore.isTargettingChar),
+  currentFg: computed(() => toolbarStore.currentFg),
+  currentBg: computed(() => toolbarStore.currentBg),
+  currentChar: computed(() => toolbarStore.currentChar),
+  brushSizeHeight: computed(() => toolbarStore.brushSizeHeight),
+  brushSizeWidth: computed(() => toolbarStore.brushSizeWidth),
+  brushSizeType: computed(() => toolbarStore.brushSizeType),
   options: computed(() => store.options),
   mircColours: mircColours99,
   hash,

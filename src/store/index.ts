@@ -1,12 +1,11 @@
 // Pinia store for ASCIIBIRD
 // Converted from Vuex — mutations become actions using `this` instead of `state`
+//
+// Toolbar state extracted to useToolbarStore (store/toolbar.ts).
+// This store manages: tabs, layers, undo/redo, ASCII blocks, options.
 
 import { defineStore } from 'pinia';
 import {
-  blockWidth,
-  blockHeight,
-  cyrb53,
-  getBlocksWidth,
   mergeLayers,
 } from '../ascii';
 import {
@@ -21,8 +20,6 @@ import type {
   Block,
   Layer,
   Options,
-  ToolbarState,
-  PanelState,
   AsciibirdMeta,
 } from '../types';
 
@@ -40,52 +37,11 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     },
     tab: 0,
     asciibirdMeta: [] as AsciibirdMeta[],
-    toolbarState: {
-      currentColourFg: 0,
-      currentColourBg: 1,
-      isChoosingFg: false,
-      isChoosingBg: false,
-      isChoosingChar: false,
-      persistCharPanel: false,
-      brushSizeWidth: 1,
-      brushSizeHeight: 1,
-      brushSizeType: 'square',
-      selectedFg: 0,
-      selectedBg: 1,
-      selectedChar: ' ',
-      isUpdating: false,
-      currentTool: 0,
-      targetingFg: true,
-      targetingBg: true,
-      targetingChar: true,
-      mirrorX: false,
-      mirrorY: false,
-      x: blockWidth * 2,
-      y: blockHeight * 2,
-      h: blockHeight * 19,
-      w: blockWidth * 25,
-      draggable: true,
-      updateBrush: true,
-      gridView: false,
-      visible: true,
-      halfBlockEditing: false,
-    },
     blockSizeMultiplier: 1,
-    _brushBlocks: '',
-    brushHistory: [],
-    _selectBlocks: '',
-    brushLibrary: [],
   }),
 
   getters: {
     state: (state): RootState => state,
-    currentTool: (state) => state.toolbarState.currentTool,
-    isTargettingBg: (state) => state.toolbarState.targetingBg,
-    isTargettingFg: (state) => state.toolbarState.targetingFg,
-    isTargettingChar: (state) => state.toolbarState.targetingChar,
-    currentFg: (state) => state.toolbarState.currentColourFg,
-    currentBg: (state) => state.toolbarState.currentColourBg,
-    currentChar: (state) => state.toolbarState.selectedChar,
     currentTab: (state) => state.tab,
     currentAscii: (state) => state.asciibirdMeta[state.tab] ?? false,
     currentAsciiLayers: (state): Layer[] => {
@@ -106,14 +62,6 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       state.asciibirdMeta[state.tab]?.selectedLayer ?? 0,
     imageOverlay: (state) =>
       state.asciibirdMeta[state.tab]?.imageOverlay,
-    brushSizeHeight: (state) => state.toolbarState.brushSizeHeight,
-    brushSizeWidth: (state) => state.toolbarState.brushSizeWidth,
-    brushSizeType: (state) => state.toolbarState.brushSizeType,
-    // Decompressing getters — access compressed data as arrays
-    brushBlocks: (state): Block[] =>
-      decompressData<Block[]>(state._brushBlocks) || [],
-    selectBlocks: (state): Block[] =>
-      decompressData<Block[]>(state._selectBlocks) || [],
   },
 
   actions: {
@@ -130,18 +78,6 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     updateImageOverlay(payload: AsciibirdMeta['imageOverlay']) {
       this.asciibirdMeta[this.tab].imageOverlay = payload;
     },
-    changeToolBarState(
-      payload: PanelState & { draggable?: boolean },
-    ) {
-      this.toolbarState.x = payload.x;
-      this.toolbarState.y = payload.y;
-      this.toolbarState.w = payload.w;
-      this.toolbarState.h = payload.h;
-      this.toolbarState.visible = payload.visible;
-    },
-    changeToolBarDraggable(payload: boolean) {
-      this.toolbarState.draggable = payload;
-    },
     changeAsciiWidthHeight(payload: { layers: Layer[] }) {
       this.asciibirdMeta[this.tab].layers =
         compressLayers(payload.layers);
@@ -150,61 +86,12 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       this.asciibirdMeta[this.tab].x = payload.x;
       this.asciibirdMeta[this.tab].y = payload.y;
     },
-    changeColourFg(payload: number) {
-      this.toolbarState.currentColourFg = payload;
-      this.toolbarState.isUpdating = false;
-      this.toolbarState.isChoosingFg = false;
-    },
-    changeColourBg(payload: number) {
-      this.toolbarState.currentColourBg = payload;
-      this.toolbarState.isUpdating = false;
-      this.toolbarState.isChoosingBg = false;
-    },
-    changeChar(payload: string) {
-      this.toolbarState.selectedChar = payload;
-      this.toolbarState.isUpdating = false;
-
-      if (!this.toolbarState.persistCharPanel) {
-        this.toolbarState.isChoosingChar = false;
-      }
-    },
-    changeTool(payload: number) {
-      this.toolbarState.currentTool = payload;
-    },
-    persistCharPanel(payload: boolean) {
-      this.toolbarState.persistCharPanel = payload;
-    },
-    changeIsUpdatingFg(payload: boolean) {
-      this.toolbarState.isChoosingFg = payload;
-    },
-    changeIsUpdatingBg(payload: boolean) {
-      this.toolbarState.isChoosingBg = payload;
-    },
-    changeIsUpdatingChar(payload: boolean) {
-      this.toolbarState.isChoosingChar = payload;
-    },
-    changeTargetingFg(payload: boolean) {
-      this.toolbarState.targetingFg = payload;
-    },
-    changeTargetingBg(payload: boolean) {
-      this.toolbarState.targetingBg = payload;
-    },
-    changeTargetingChar(payload: boolean) {
-      this.toolbarState.targetingChar = payload;
-    },
     newAsciibirdMeta(payload: AsciibirdMeta) {
       this.asciibirdMeta.push(payload);
       this.tab = this.asciibirdMeta.length - 1;
       document.title = `asciibird - ${
         this.asciibirdMeta[this.tab].title
       }`;
-    },
-    updateToolBarState(payload: ToolbarState) {
-      this.toolbarState = payload;
-    },
-    updateMirror(payload: { x: boolean; y: boolean }) {
-      this.toolbarState.mirrorX = payload.x;
-      this.toolbarState.mirrorY = payload.y;
     },
     updateAsciiBlocks(
       payload: {
@@ -400,32 +287,6 @@ export const useAsciiBirdStore = defineStore('asciibird', {
           this.asciibirdMeta[this.tab].history.length;
       }
     },
-    upBrush(key: number) {
-      const tempBrushLibrary = [...this.brushLibrary];
-
-      if (tempBrushLibrary[key - 1] && tempBrushLibrary[key]) {
-        const swap1 = tempBrushLibrary[key - 1];
-        const swap = tempBrushLibrary[key];
-
-        tempBrushLibrary[key - 1] = swap;
-        tempBrushLibrary[key] = swap1;
-
-        this.brushLibrary = tempBrushLibrary;
-      }
-    },
-    downBrush(key: number) {
-      const tempBrushLibrary = [...this.brushLibrary];
-
-      if (tempBrushLibrary[key + 1] && tempBrushLibrary[key]) {
-        const swap1 = tempBrushLibrary[key + 1];
-        const swap = tempBrushLibrary[key];
-
-        tempBrushLibrary[key + 1] = swap;
-        tempBrushLibrary[key] = swap1;
-
-        this.brushLibrary = tempBrushLibrary;
-      }
-    },
     downLayer(payload: number) {
       const tempLayers: Layer[] = decompressLayers(
           this.asciibirdMeta[this.tab].layers,
@@ -505,7 +366,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       this.asciibirdMeta[this.tab].title = payload;
     },
 
-    // BLOCKS
+    // BLOCKS — undo/redo
     undoBlocks() {
       const historyIndex =
         this.asciibirdMeta[this.tab].historyIndex;
@@ -648,106 +509,6 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       }
     },
 
-    // Toolbar
-    updateBrushSize(
-      payload: {
-        brushSizeHeight: number;
-        brushSizeWidth: number;
-        brushSizeType: ToolbarState['brushSizeType'];
-      },
-    ) {
-      this.toolbarState.brushSizeHeight = payload.brushSizeHeight;
-      this.toolbarState.brushSizeWidth = payload.brushSizeWidth;
-      this.toolbarState.brushSizeType = payload.brushSizeType;
-    },
-    setBrushBlocks(payload: Block[][]) {
-      this._brushBlocks = compressData(payload);
-    },
-    setSelectBlocks(payload: Block[][]) {
-      this._selectBlocks = compressData(payload);
-    },
-    toggleGridView(payload: boolean) {
-      this.toolbarState.gridView = payload;
-    },
-    toggleHalfBlockEditing(payload: boolean) {
-      this.toolbarState.halfBlockEditing = payload;
-    },
-    toggleUpdateBrush(payload: boolean) {
-      this.toolbarState.updateBrush = payload;
-    },
-
-    flipRotateBlocks(payload: { type: string }) {
-      let tempBlocks: Block[][] = decompressData(this._brushBlocks);
-      const parsedBlocks: Block[][] = [];
-
-      switch (payload.type) {
-        case 'flip':
-          tempBlocks = tempBlocks.reverse();
-          for (let y = 0; y < tempBlocks.length; y++) {
-            parsedBlocks[y] = tempBlocks[y];
-
-            for (let x = 0; x < getBlocksWidth(tempBlocks); x++) {
-              parsedBlocks[y][x] = tempBlocks[y][x];
-            }
-          }
-          break;
-
-        case 'rotate':
-          for (let y = 0; y < tempBlocks.length; y++) {
-            parsedBlocks[y] = tempBlocks[y].reverse();
-
-            for (let x = 0; x < getBlocksWidth(tempBlocks); x++) {
-              parsedBlocks[y][x] = tempBlocks[y][x];
-            }
-          }
-          break;
-      }
-
-      this._brushBlocks = compressData(parsedBlocks);
-    },
-
-    // Brush Library
-    pushBrushHistory(payload: Block[][]) {
-      if (this.brushHistory.length >= this.options.brushLimit) {
-        this.brushHistory.pop();
-      }
-
-      const hashValue = cyrb53(JSON.stringify(payload));
-      this.brushHistory = this.brushHistory.filter(
-        obj => obj.hash !== hashValue,
-      );
-
-      this.brushHistory.unshift({
-        blocks: compressData(payload),
-        hash: hashValue,
-      });
-    },
-    pushBrushLibrary(payload: Block[][]) {
-      const hashValue = cyrb53(JSON.stringify(payload));
-      this.brushLibrary = this.brushLibrary.filter(
-        obj => obj.hash !== hashValue,
-      );
-
-      this.brushLibrary.unshift({
-        blocks: compressData(payload),
-        hash: hashValue,
-      });
-    },
-    removeBrushLibrary(payload: Block[][]) {
-      const hashValue = cyrb53(JSON.stringify(payload));
-
-      this.brushLibrary = this.brushLibrary.filter(function (item) {
-        return item.hash !== hashValue;
-      });
-    },
-    removeBrushHistory(payload: Block[][]) {
-      const hashValue = cyrb53(JSON.stringify(payload));
-
-      this.brushHistory = this.brushHistory.filter(function (item) {
-        return item.hash !== hashValue;
-      });
-    },
-
     // Tabs
     closeTab(tab: number) {
       this.asciibirdMeta.splice(tab, 1);
@@ -777,34 +538,12 @@ export const useAsciiBirdStore = defineStore('asciibird', {
   persist: {
     key: 'vuex',
     storage: localStorage,
-    // Map old state keys to new names for backward compatibility
-    // Old Vuex store had brushBlocks/selectBlocks as state,
-    // now they're _brushBlocks/_selectBlocks (getters use the old names)
     serializer: {
       serialize: (value: Record<string, unknown>) => {
-        // Rename _brushBlocks → brushBlocks, _selectBlocks → selectBlocks
-        const out: Record<string, unknown> = { ...value };
-        if ('_brushBlocks' in out) {
-          out.brushBlocks = out._brushBlocks;
-          delete out._brushBlocks;
-        }
-        if ('_selectBlocks' in out) {
-          out.selectBlocks = out._selectBlocks;
-          delete out._selectBlocks;
-        }
-        return JSON.stringify(out);
+        return JSON.stringify(value);
       },
       deserialize: (value: string) => {
         const parsed = JSON.parse(value);
-        // Rename old keys to new names
-        if ('brushBlocks' in parsed) {
-          parsed._brushBlocks = parsed.brushBlocks;
-          delete parsed.brushBlocks;
-        }
-        if ('selectBlocks' in parsed) {
-          parsed._selectBlocks = parsed.selectBlocks;
-          delete parsed.selectBlocks;
-        }
         // Remove extracted state (now in separate stores)
         delete parsed.modalState;
         delete parsed.isKeyboardDisabled;
@@ -813,6 +552,14 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         delete parsed.brushLibraryState;
         delete parsed.brushPreviewState;
         delete parsed.layersLibraryState;
+        // Remove toolbar state (now in useToolbarStore)
+        delete parsed.toolbarState;
+        delete parsed._brushBlocks;
+        delete parsed._selectBlocks;
+        delete parsed.brushHistory;
+        delete parsed.brushLibrary;
+        delete parsed.brushBlocks;
+        delete parsed.selectBlocks;
         return parsed;
       },
     },

@@ -14,7 +14,7 @@
           <Tooltip content="Ignore Foreground when Editing">
             <label class="ab-checkbox-hover">
               <input
-                v-model="store.toolbarState.targetingFg"
+                v-model="toolbarStore.toolbarState.targetingFg"
                 type="checkbox"
                 class="form-checkbox h-5 w-5 text-blue-600"
                 name="targetingFg"
@@ -27,7 +27,7 @@
           <Tooltip content="Ignore Background when Editing">
             <label class="ab-checkbox-hover">
               <input
-                v-model="store.toolbarState.targetingBg"
+                v-model="toolbarStore.toolbarState.targetingBg"
                 type="checkbox"
                 class="ab-checkbox"
                 name="targetingBg"
@@ -40,7 +40,7 @@
           <Tooltip content="Ignore Characters when Editing">
             <label class="ab-checkbox-hover">
               <input
-                v-model="store.toolbarState.targetingChar"
+                v-model="toolbarStore.toolbarState.targetingChar"
                 type="checkbox"
                 class="ab-checkbox"
                 name="targetingChar"
@@ -56,7 +56,7 @@
             <button
               type="button"
               :class="`ab-toolbar-button ${
-                store.toolbarState.mirrorX
+                toolbarStore.toolbarState.mirrorX
                   ? 'border-gray-900 bg-blue-800'
                   : 'border-gray-200 bg-gray-500'
               }`"
@@ -73,7 +73,7 @@
             <button
               type="button"
               :class="`ab-toolbar-button ${
-                store.toolbarState.mirrorY
+                toolbarStore.toolbarState.mirrorY
                   ? 'border-gray-900 bg-blue-800'
                   : 'border-gray-200 bg-gray-500'
               }`"
@@ -90,7 +90,7 @@
             <button
               type="button"
               :class="`ab-toolbar-button ${
-                store.toolbarState.updateBrush
+                toolbarStore.toolbarState.updateBrush
                   ? 'border-gray-900 bg-blue-800'
                   : 'border-gray-200 bg-gray-500'
               }`"
@@ -107,7 +107,7 @@
             <button
               type="button"
               :class="`ab-toolbar-button ${
-                store.toolbarState.gridView
+                toolbarStore.toolbarState.gridView
                   ? 'border-gray-900 bg-blue-800'
                   : 'border-gray-200 bg-gray-500'
               }`"
@@ -117,7 +117,7 @@
                 class="material-icons"
                 aria-hidden="true"
               >{{
-                !store.toolbarState.gridView ? "grid_on" : "grid_off"
+                !toolbarStore.toolbarState.gridView ? "grid_on" : "grid_off"
               }}</span>
             </button>
           </Tooltip>
@@ -126,7 +126,7 @@
             <button
               type="button"
               :class="`ab-toolbar-button ${
-                store.toolbarState.halfBlockEditing
+                toolbarStore.toolbarState.halfBlockEditing
                   ? 'border-gray-900 bg-blue-800'
                   : 'border-gray-200 bg-gray-500'
               }`"
@@ -153,7 +153,7 @@
                   ? 'border-gray-900 bg-blue-500'
                   : 'border-gray-200 bg-gray-500'
               }`"
-              @click="store.changeTool(keyToolbar)"
+              @click="toolbarStore.changeTool(keyToolbar)"
             >
               <span
                 class="material-icons"
@@ -170,7 +170,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useDraggable } from '@vueuse/core';
-import { useAsciiBirdStore } from '../store';
+import { useToolbarStore } from '../store/toolbar';
 import { useToast } from '../composables/useToast';
 import Colours from "./Colours.vue";
 import Tooltip from './parts/Tooltip.vue';
@@ -179,59 +179,59 @@ import { tooltipName } from '../utils/toolbar';
 
 defineOptions({ name: 'Toolbar' });
 
-const store = useAsciiBirdStore();
+const toolbarStore = useToolbarStore();
 const { show: toastShow } = useToast();
 
 const panelEl = ref<HTMLElement | null>(null);
 const { style: panelStyle, x: dragX, y: dragY } = useDraggable(panelEl, {
-  initialValue: { x: store.toolbarState.x, y: store.toolbarState.y },
+  initialValue: { x: toolbarStore.toolbarState.x, y: toolbarStore.toolbarState.y },
 });
 
 // Sync drag position back to store
 watch([dragX, dragY], ([newX, newY]) => {
-  store.changeToolBarState({
+  toolbarStore.changeToolBarState({
     x: newX,
     y: newY,
-    w: store.toolbarState.w,
-    h: store.toolbarState.h,
+    w: toolbarStore.toolbarState.w,
+    h: toolbarStore.toolbarState.h,
     visible: true,
   });
 });
 
-const currentTool = computed(() => toolbarIcons[store.currentTool]);
-const canFg = computed(() => store.isTargettingFg);
-const canBg = computed(() => store.isTargettingBg);
-const canText = computed(() => store.isTargettingChar);
+const currentTool = computed(() => toolbarIcons[toolbarStore.currentTool]);
+const canFg = computed(() => toolbarStore.isTargettingFg);
+const canBg = computed(() => toolbarStore.isTargettingBg);
+const canText = computed(() => toolbarStore.isTargettingChar);
 
 function toggleMirrorX() {
-  const newVal = !store.toolbarState.mirrorX;
-  store.updateMirror({ x: newVal, y: store.toolbarState.mirrorY });
+  const newVal = !toolbarStore.toolbarState.mirrorX;
+  toolbarStore.updateMirror({ x: newVal, y: toolbarStore.toolbarState.mirrorY });
   toastShow(`Mirror X ${newVal ? 'enabled' : 'disabled'}`);
 }
 
 function toggleMirrorY() {
-  const newVal = !store.toolbarState.mirrorY;
-  store.updateMirror({ x: store.toolbarState.mirrorX, y: newVal });
+  const newVal = !toolbarStore.toolbarState.mirrorY;
+  toolbarStore.updateMirror({ x: toolbarStore.toolbarState.mirrorX, y: newVal });
   toastShow(`Mirror Y ${newVal ? 'enabled' : 'disabled'}`);
 }
 
 function toggleUpdateBrush() {
-  const newVal = !store.toolbarState.updateBrush;
-  store.toggleUpdateBrush(newVal);
+  const newVal = !toolbarStore.toolbarState.updateBrush;
+  toolbarStore.toggleUpdateBrush(newVal);
   toastShow(
     `Update Brush when colours or char changes ${newVal ? 'enabled' : 'disabled'}`
   );
 }
 
 function toggleGridView() {
-  const newVal = !store.toolbarState.gridView;
-  store.toggleGridView(newVal);
+  const newVal = !toolbarStore.toolbarState.gridView;
+  toolbarStore.toggleGridView(newVal);
   toastShow(`Grid view ${newVal ? 'enabled' : 'disabled'}`);
 }
 
 function toggleHalfBlockEditing() {
-  const newVal = !store.toolbarState.halfBlockEditing;
-  store.toggleHalfBlockEditing(newVal);
+  const newVal = !toolbarStore.toolbarState.halfBlockEditing;
+  toolbarStore.toggleHalfBlockEditing(newVal);
   toastShow(`Half Block Editing Mode ${newVal ? 'enabled' : 'disabled'}`);
   toastShow('WARNING THIS FEATURE IS STILL EXPERIMENTAL');
 }

@@ -367,6 +367,7 @@ import { useAsciiBirdStore } from './store';
 import { useModalStore } from './store/modal';
 import { useDesktopStore } from './store/desktop';
 import { usePanelStore } from './store/panels';
+import { useToolbarStore } from './store/toolbar';
 import { useToast } from './composables/useToast';
 import { useDialog } from './composables/useDialog';
 import { useClipboard } from './composables/useClipboard';
@@ -380,6 +381,7 @@ const store = useAsciiBirdStore();
 const modalStore = useModalStore();
 const desktopStore = useDesktopStore();
 const panelStore = usePanelStore();
+const toolbarStore = useToolbarStore();
 const { messages: toasts, show: toastShow } = useToast();
 const { state: dialogState, confirm: dialogConfirm, prompt: dialogPrompt, ok: dialogOk, cancel: dialogCancel } = useDialog();
 const { copyText } = useClipboard();
@@ -461,25 +463,25 @@ onUnmounted(() => {
 
 // Computed
 const isSelecting = computed(() => currentTool.value?.name === 'select');
-const currentTool = computed(() => toolbarIcons[store.currentTool] ?? null);
+const currentTool = computed(() => toolbarIcons[toolbarStore.currentTool] ?? null);
 
 const asciibirdMeta = computed(() => store.asciibirdMeta);
 const debugPanelState = computed(() => panelStore.debugPanel);
 const currentAscii = computed(() => store.currentAscii);
 const currentTab = computed(() => store.currentTab);
-const selectBlocks = computed(() => store.selectBlocks);
+const selectBlocks = computed(() => toolbarStore.selectBlocks);
 const modalState = computed(() => modalStore.modalState);
 const isKeyboardDisabled = computed(() => modalStore.isKeyboardDisabled);
 const selectedLayer = computed(() => store.selectedLayer);
 const canToggleLayer = computed(() => currentAsciiLayers.value.length > 1);
-const brushSizeHeight = computed(() => store.brushSizeHeight);
-const brushSizeWidth = computed(() => store.brushSizeWidth);
-const brushSizeType = computed(() => store.brushSizeType);
-const currentFg = computed(() => store.currentFg);
-const currentBg = computed(() => store.currentBg);
-const currentChar = computed(() => store.currentChar);
-const toolbarState = computed(() => store.toolbarState);
-const brushBlocks = computed(() => store.brushBlocks);
+const brushSizeHeight = computed(() => toolbarStore.brushSizeHeight);
+const brushSizeWidth = computed(() => toolbarStore.brushSizeWidth);
+const brushSizeType = computed(() => toolbarStore.brushSizeType);
+const currentFg = computed(() => toolbarStore.currentFg);
+const currentBg = computed(() => toolbarStore.currentBg);
+const currentChar = computed(() => toolbarStore.currentChar);
+const toolbarState = computed(() => toolbarStore.toolbarState);
+const brushBlocks = computed(() => toolbarStore.brushBlocks);
 const tabsVisible = computed(() => desktopStore.tabsVisible);
 const menuBarVisible = computed(() => desktopStore.menuBarVisible);
 const currentAsciiLayerBlocks = computed(() => currentSelectedLayer.value?.data ?? []);
@@ -570,7 +572,7 @@ const menuBar = computed<AppMenuBar[]>(() => [
       },
       {
         text: toolbarState.value.gridView ? 'Disable Grid' : 'Enable Grid',
-        click: () => store.toggleGridView(!toolbarState.value.gridView),
+        click: () => toolbarStore.toggleGridView(!toolbarState.value.gridView),
         disabled: !asciibirdMeta.value.length,
         shortcut: 'Alt+G',
       },

@@ -75,11 +75,13 @@ import {
   downloadFile,
 } from '../../ascii'
 import { useAsciiBirdStore } from '../../store'
+import { useToolbarStore } from '../../store/toolbar'
 import { useToast } from '../../composables/useToast'
 import { useClipboard } from '../../composables/useClipboard'
 
 // ─── Composables ────────────────────────────────────────
 const store = useAsciiBirdStore()
+const toolbarStore = useToolbarStore()
 const { show: toastShow } = useToast()
 const { copyText } = useClipboard()
 
@@ -101,9 +103,9 @@ const renderBlockWidth = computed(
 const renderBlockHeight = computed(
   () => blockHeight * store.blockSizeMultiplier,
 )
-const brushBlocks = computed(() => store.brushBlocks)
-const gridView = computed(() => store.toolbarState.gridView)
-const currentTool = computed(() => toolbarIcons[store.currentTool] ?? null)
+const brushBlocks = computed(() => toolbarStore.brushBlocks)
+const gridView = computed(() => toolbarStore.toolbarState.gridView)
+const currentTool = computed(() => toolbarIcons[toolbarStore.currentTool] ?? null)
 const isDefault = computed(() => currentTool.value?.name === 'default')
 const isBrushing = computed(() => currentTool.value?.name === 'brush')
 const isErasing = computed(() => currentTool.value?.name === 'eraser')
@@ -121,14 +123,14 @@ watch(
   () => [
     brushBlocks.value,
     store.currentAscii,
-    store.brushSizeHeight,
-    store.brushSizeWidth,
-    store.isTargettingBg,
-    store.isTargettingFg,
-    store.isTargettingChar,
-    store.currentFg,
-    store.currentBg,
-    store.currentChar,
+    toolbarStore.brushSizeHeight,
+    toolbarStore.brushSizeWidth,
+    toolbarStore.isTargettingBg,
+    toolbarStore.isTargettingFg,
+    toolbarStore.isTargettingChar,
+    toolbarStore.currentFg,
+    toolbarStore.currentBg,
+    toolbarStore.currentChar,
     store.blockSizeMultiplier,
     gridView.value,
   ],
@@ -177,7 +179,7 @@ function startExport(type: string) {
 }
 
 function saveToLibrary() {
-  store.pushBrushLibrary(brushBlocks.value)
+  toolbarStore.pushBrushLibrary(brushBlocks.value)
   toastShow('Saved brush to Library', { type: 'success' })
   contextMenuRef.value?.close()
 }
@@ -297,14 +299,14 @@ function canvasMouseMove(e: MouseEvent) {
 function addBlock() {
   const block: Block = { ...emptyBlock }
 
-  if (store.isTargettingBg) {
-    block.bg = store.currentBg
+  if (toolbarStore.isTargettingBg) {
+    block.bg = toolbarStore.currentBg
   }
-  if (store.isTargettingFg) {
-    block.fg = store.currentFg
+  if (toolbarStore.isTargettingFg) {
+    block.fg = toolbarStore.currentFg
   }
-  if (store.isTargettingChar) {
-    block.char = store.currentChar
+  if (toolbarStore.isTargettingChar) {
+    block.char = toolbarStore.currentChar
   }
 
   brushBlocks.value[y.value][x.value] = block
@@ -315,13 +317,13 @@ function eraseBlock() {
   const target = brushBlocks.value[y.value]?.[x.value]
   if (!target) return
 
-  if (store.isTargettingBg && target.bg !== undefined) {
+  if (toolbarStore.isTargettingBg && target.bg !== undefined) {
     delete target.bg
   }
-  if (store.isTargettingFg && target.fg !== undefined) {
+  if (toolbarStore.isTargettingFg && target.fg !== undefined) {
     delete target.fg
   }
-  if (store.isTargettingChar && target.char !== undefined) {
+  if (toolbarStore.isTargettingChar && target.char !== undefined) {
     delete target.char
   }
 
@@ -330,15 +332,15 @@ function eraseBlock() {
 
 function disableToolbarMoving() {
   canTool.value = false
-  store.changeToolBarDraggable(false)
+  toolbarStore.changeToolBarDraggable(false)
 }
 
 function enableToolbarMoving() {
   canTool.value = false
 
   if ((isErasing.value || isBrushing.value) && hasChanged.value) {
-    store.setBrushBlocks(brushBlocks.value)
-    store.changeToolBarDraggable(true)
+    toolbarStore.setBrushBlocks(brushBlocks.value)
+    toolbarStore.changeToolBarDraggable(true)
     hasChanged.value = false
     toastShow('Saved brush to Library', { type: 'success' })
   }
@@ -359,19 +361,19 @@ defineExpose({
   blockHeight: renderBlockHeight,
   blockSizeMultiplier: computed(() => store.blockSizeMultiplier),
   currentAscii: computed(() => store.currentAscii),
-  toolbarState: computed(() => store.toolbarState),
-  isTargettingBg: computed(() => store.isTargettingBg),
-  isTargettingFg: computed(() => store.isTargettingFg),
-  isTargettingChar: computed(() => store.isTargettingChar),
-  canFg: computed(() => store.isTargettingFg),
-  canBg: computed(() => store.isTargettingBg),
-  canText: computed(() => store.isTargettingChar),
-  currentFg: computed(() => store.currentFg),
-  currentBg: computed(() => store.currentBg),
-  currentChar: computed(() => store.currentChar),
-  brushSizeHeight: computed(() => store.brushSizeHeight),
-  brushSizeWidth: computed(() => store.brushSizeWidth),
-  brushSizeType: computed(() => store.brushSizeType),
+  toolbarState: computed(() => toolbarStore.toolbarState),
+  isTargettingBg: computed(() => toolbarStore.isTargettingBg),
+  isTargettingFg: computed(() => toolbarStore.isTargettingFg),
+  isTargettingChar: computed(() => toolbarStore.isTargettingChar),
+  canFg: computed(() => toolbarStore.isTargettingFg),
+  canBg: computed(() => toolbarStore.isTargettingBg),
+  canText: computed(() => toolbarStore.isTargettingChar),
+  currentFg: computed(() => toolbarStore.currentFg),
+  currentBg: computed(() => toolbarStore.currentBg),
+  currentChar: computed(() => toolbarStore.currentChar),
+  brushSizeHeight: computed(() => toolbarStore.brushSizeHeight),
+  brushSizeWidth: computed(() => toolbarStore.brushSizeWidth),
+  brushSizeType: computed(() => toolbarStore.brushSizeType),
   options: computed(() => store.options),
   mircColours: mircColours99,
   brushBlocks,

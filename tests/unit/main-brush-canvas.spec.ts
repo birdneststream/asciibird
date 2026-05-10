@@ -22,6 +22,7 @@ import LZString from 'lz-string'
 import {
   createMockStore,
   createMockModalStore,
+  createMockToolbarStore,
   createMockCanvasRef,
   toastedMock,
   copyTextMock,
@@ -30,12 +31,16 @@ import {
 
 let _mockStore: any = null
 let _mockModalStore: any = null
+let _mockToolbarStore: any = null
 
 vi.mock('@/store', () => ({
   useAsciiBirdStore: () => _mockStore,
 }))
 vi.mock('@/store/modal', () => ({
   useModalStore: () => _mockModalStore,
+}))
+vi.mock('@/store/toolbar', () => ({
+  useToolbarStore: () => _mockToolbarStore,
 }))
 
 
@@ -77,7 +82,7 @@ function mountMainBrushCanvas(extra: any = {}) {
 function setTool(name: string) {
   const idx = toolbarIcons.findIndex((t: any) => t && t.name === name)
   if (idx >= 0) {
-    store.toolbarState.currentTool = idx
+    _mockToolbarStore.toolbarState.currentTool = idx
   }
 }
 
@@ -92,6 +97,11 @@ beforeEach(() => {
   )
   _mockStore = store
   _mockModalStore = createMockModalStore()
+  _mockToolbarStore = createMockToolbarStore({
+    _brushBlocks: LZString.compressToUTF16(
+      JSON.stringify(blocks),
+    ),
+  })
 })
 
 afterEach(() => {
@@ -207,7 +217,7 @@ describe('MainBrushCanvas.vue', () => {
     })
 
     it('isDefault returns true for default tool', () => {
-      store.toolbarState.currentTool = 0
+      _mockToolbarStore.toolbarState.currentTool = 0
       const wrapper = mountMainBrushCanvas()
       const tool = wrapper.vm.currentTool
       expect(wrapper.vm.isDefault).toBe(tool?.name === 'default')
@@ -289,7 +299,7 @@ describe('MainBrushCanvas.vue', () => {
         close: vi.fn(),
       }
 
-      const spy = vi.spyOn(store, 'pushBrushLibrary')
+      const spy = vi.spyOn(_mockToolbarStore, 'pushBrushLibrary')
       wrapper.vm.saveToLibrary()
 
       expect(spy).toHaveBeenCalledWith(
@@ -367,7 +377,7 @@ describe('MainBrushCanvas.vue', () => {
     })
 
     it('addBlock skips bg when canBg is false', () => {
-      store.toolbarState.targetingBg = false
+      _mockToolbarStore.toolbarState.targetingBg = false
       const wrapper = mountMainBrushCanvas()
       wrapper.vm.x = 0
       wrapper.vm.y = 0
@@ -378,7 +388,7 @@ describe('MainBrushCanvas.vue', () => {
     })
 
     it('addBlock skips fg when canFg is false', () => {
-      store.toolbarState.targetingFg = false
+      _mockToolbarStore.toolbarState.targetingFg = false
       const wrapper = mountMainBrushCanvas()
       wrapper.vm.x = 0
       wrapper.vm.y = 0
@@ -389,7 +399,7 @@ describe('MainBrushCanvas.vue', () => {
     })
 
     it('addBlock skips char when canText is false', () => {
-      store.toolbarState.targetingChar = false
+      _mockToolbarStore.toolbarState.targetingChar = false
       const wrapper = mountMainBrushCanvas()
       wrapper.vm.x = 0
       wrapper.vm.y = 0
@@ -444,7 +454,7 @@ describe('MainBrushCanvas.vue', () => {
 
     it('disableToolbarMoving sets canTool false and calls store', () => {
       const wrapper = mountMainBrushCanvas()
-      const spy = vi.spyOn(store, 'changeToolBarDraggable')
+      const spy = vi.spyOn(_mockToolbarStore, 'changeToolBarDraggable')
 
       wrapper.vm.disableToolbarMoving()
 
@@ -466,7 +476,7 @@ describe('MainBrushCanvas.vue', () => {
       const wrapper = mountMainBrushCanvas()
       wrapper.vm.hasChanged = true
 
-      const spy = vi.spyOn(store, 'changeToolBarDraggable')
+      const spy = vi.spyOn(_mockToolbarStore, 'changeToolBarDraggable')
       wrapper.vm.enableToolbarMoving()
 
       expect(spy).toHaveBeenCalledWith(true)
@@ -478,7 +488,7 @@ describe('MainBrushCanvas.vue', () => {
       const wrapper = mountMainBrushCanvas()
       wrapper.vm.hasChanged = true
 
-      const spy = vi.spyOn(store, 'changeToolBarDraggable')
+      const spy = vi.spyOn(_mockToolbarStore, 'changeToolBarDraggable')
       wrapper.vm.enableToolbarMoving()
 
       expect(spy).toHaveBeenCalledWith(true)
@@ -489,7 +499,7 @@ describe('MainBrushCanvas.vue', () => {
       const wrapper = mountMainBrushCanvas()
       wrapper.vm.hasChanged = false
 
-      const spy = vi.spyOn(store, 'changeToolBarDraggable')
+      const spy = vi.spyOn(_mockToolbarStore, 'changeToolBarDraggable')
       wrapper.vm.enableToolbarMoving()
 
       expect(spy).not.toHaveBeenCalled()

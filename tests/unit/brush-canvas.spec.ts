@@ -21,6 +21,7 @@ import LZString from 'lz-string'
 import {
   createMockStore,
   createMockModalStore,
+  createMockToolbarStore,
   createMockCanvasRef,
   createToolbarState,
   toastedMock,
@@ -30,12 +31,16 @@ import {
 
 let _mockStore: any = null
 let _mockModalStore: any = null
+let _mockToolbarStore: any = null
 
 vi.mock('@/store', () => ({
   useAsciiBirdStore: () => _mockStore,
 }))
 vi.mock('@/store/modal', () => ({
   useModalStore: () => _mockModalStore,
+}))
+vi.mock('@/store/toolbar', () => ({
+  useToolbarStore: () => _mockToolbarStore,
 }))
 
 
@@ -72,6 +77,7 @@ beforeEach(() => {
   store = createMockStore()
   _mockStore = store
   _mockModalStore = createMockModalStore()
+  _mockToolbarStore = createMockToolbarStore()
   mockCanvasRef = createMockCanvasRef()
 })
 
@@ -260,7 +266,7 @@ describe('BrushCanvas.vue', () => {
       const wrapper = mountBrushCanvas({
         props: { blocks: testBlocks },
       })
-      const spy = vi.spyOn(store, 'pushBrushLibrary')
+      const spy = vi.spyOn(_mockToolbarStore, 'pushBrushLibrary')
       wrapper.vm.saveToLibrary()
       expect(spy).toHaveBeenCalledWith(testBlocks)
       expect(toastedMock.show).toHaveBeenCalledWith(
@@ -382,6 +388,9 @@ describe('BrushCanvas.vue', () => {
         toolbarState: createToolbarState({ currentColourFg: 5 }),
       })
       _mockStore = store
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { currentColourFg: 5 },
+      })
       const wrapper = mountBrushCanvas()
       expect(wrapper.vm.currentFg).toBe(5)
     })
@@ -391,6 +400,9 @@ describe('BrushCanvas.vue', () => {
         toolbarState: createToolbarState({ currentColourBg: 5 }),
       })
       _mockStore = store
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { currentColourBg: 5 },
+      })
       const wrapper = mountBrushCanvas()
       expect(wrapper.vm.currentBg).toBe(5)
     })
@@ -400,6 +412,9 @@ describe('BrushCanvas.vue', () => {
         toolbarState: createToolbarState({ selectedChar: 'X' }),
       })
       _mockStore = store
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { selectedChar: 'X' },
+      })
       const wrapper = mountBrushCanvas()
       expect(wrapper.vm.currentChar).toBe('X')
     })

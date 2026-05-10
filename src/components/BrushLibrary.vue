@@ -169,7 +169,7 @@ import { ref, reactive, computed, watch, onUnmounted } from 'vue';
 import LZString from 'lz-string';
 import { useDraggable } from '@vueuse/core';
 import { toolbarIcons } from '../ascii';
-import { useAsciiBirdStore } from '../store';
+import { useToolbarStore } from '../store/toolbar';
 import { usePanelStore } from '../store/panels';
 import { useToast } from '../composables/useToast';
 import BrushCanvas from './parts/BrushCanvas.vue';
@@ -177,7 +177,7 @@ import hotkeys from 'hotkeys-js';
 
 const props = defineProps<{ yOffset?: number }>();
 
-const store = useAsciiBirdStore();
+const toolbarStore = useToolbarStore();
 const panelStore = usePanelStore();
 const { show: toastShow } = useToast();
 const panelEl = ref<HTMLElement | null>(null);
@@ -199,9 +199,9 @@ const panel = reactive({
   dragging: false,
 });
 
-const brushHistory = computed(() => store.brushHistory);
-const brushLibrary = computed(() => store.brushLibrary);
-const currentTool = computed(() => toolbarIcons[store.currentTool]);
+const brushHistory = computed(() => toolbarStore.brushHistory);
+const brushLibrary = computed(() => toolbarStore.brushLibrary);
+const currentTool = computed(() => toolbarIcons[toolbarStore.currentTool]);
 const isBrushing = computed(() => currentTool.value?.name === 'brush');
 const isErasing = computed(() => currentTool.value?.name === 'eraser');
 
@@ -260,31 +260,31 @@ function decompressBlock(item: string) {
 }
 
 function reuseBlocks(value: unknown[][]) {
-  store.setBrushBlocks(value);
-  store.changeTool(4);
+  toolbarStore.setBrushBlocks(value);
+  toolbarStore.changeTool(4);
   toastShow('Applied brush from Library', { type: 'success' });
 }
 
 function saveToLibrary(value: unknown[][]) {
-  store.pushBrushLibrary(value);
+  toolbarStore.pushBrushLibrary(value);
   toastShow('Saved brush to Library', { type: 'success' });
 }
 
 function removeFromLibrary(value: unknown[][]) {
-  store.removeBrushLibrary(value);
+  toolbarStore.removeBrushLibrary(value);
   toastShow('Removed brush from Library');
 }
 
 function removeFromHistory(value: unknown[][]) {
-  store.removeBrushHistory(value);
+  toolbarStore.removeBrushHistory(value);
   toastShow('Removed brush from History');
 }
 
 function upBrush(key: number) {
-  store.upBrush(key);
+  toolbarStore.upBrush(key);
 }
 
 function downBrush(key: number) {
-  store.downBrush(key);
+  toolbarStore.downBrush(key);
 }
 </script>

@@ -5,7 +5,7 @@
       :style="`background-color: ${mircColours[currentFg]} !important;`"
       class="ab-button border-gray-200 w-14 h-14 text-2xl"
       id="currentColourFg"
-      @click="store.changeIsUpdatingFg(!toolbarState.isChoosingFg)"
+      @click="toolbarStore.changeIsUpdatingFg(!toolbarState.isChoosingFg)"
     >
       FG
     </button>
@@ -15,7 +15,7 @@
       :style="`background-color: ${mircColours[currentBg]} !important;`"
       class="ab-button border-gray-200 w-14 h-14 text-2xl ml-2"
       id="currentColourBg"
-      @click="store.changeIsUpdatingBg(!toolbarState.isChoosingBg)"
+      @click="toolbarStore.changeIsUpdatingBg(!toolbarState.isChoosingBg)"
     >
       BG
     </button>
@@ -39,7 +39,7 @@
       class="ab-button border-gray-200 w-14 h-14 text-2xl ml-14"
       id="currentChar"
       :disabled="halfBlockEditing"
-      @click="store.changeIsUpdatingChar(!toolbarState.isChoosingChar)"
+      @click="toolbarStore.changeIsUpdatingChar(!toolbarState.isChoosingChar)"
     >
       {{ toolbarState.selectedChar === " " ? "SP" : toolbarState.selectedChar }}
     </button>
@@ -49,15 +49,15 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { mircColours99 } from '../ascii';
-import { useAsciiBirdStore } from '../store';
+import { useToolbarStore } from '../store/toolbar';
 
-const store = useAsciiBirdStore();
+const toolbarStore = useToolbarStore();
 
 const mircColours = mircColours99;
 
-const toolbarState = computed(() => store.toolbarState);
-const currentFg = computed(() => store.currentFg);
-const currentBg = computed(() => store.currentBg);
+const toolbarState = computed(() => toolbarStore.toolbarState);
+const currentFg = computed(() => toolbarStore.currentFg);
+const currentBg = computed(() => toolbarStore.currentBg);
 const halfBlockEditing = computed(() => toolbarState.value.halfBlockEditing);
 
 const outline = computed(() => {
@@ -71,8 +71,8 @@ const outline = computed(() => {
 function swapColours() {
   const bg = currentBg.value;
   const fg = currentFg.value;
-  store.changeColourFg(bg);
-  store.changeColourBg(fg);
+  toolbarStore.changeColourFg(bg);
+  toolbarStore.changeColourBg(fg);
 }
 
 defineExpose({ swapColours, mircColours, toolbarState, currentFg, currentBg, outline, halfBlockEditing });

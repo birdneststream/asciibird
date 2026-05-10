@@ -1,6 +1,7 @@
 import { watch, onUnmounted } from 'vue';
 import hotkeys from 'hotkeys-js';
 import { useAsciiBirdStore } from '../store';
+import { useToolbarStore } from '../store/toolbar';
 import { useModalStore } from '../store/modal';
 
 /**
@@ -18,6 +19,7 @@ import { useModalStore } from '../store/modal';
  */
 export function useGlobalShortcuts() {
   const store = useAsciiBirdStore();
+  const toolbarStore = useToolbarStore();
   const modalStore = useModalStore();
 
   // ─── Menu shortcuts (scope 'all' — always active) ──────────────
@@ -66,7 +68,7 @@ export function useGlobalShortcuts() {
     'ctrl+o': () => modalStore.openModal('options'),
     'alt+g': () => {
       if (store.asciibirdMeta.length) {
-        store.toggleGridView(!store.toolbarState.gridView);
+        toolbarStore.toggleGridView(!toolbarStore.toolbarState.gridView);
       }
     },
     'f1': () => modalStore.openModal('help'),
@@ -84,14 +86,14 @@ export function useGlobalShortcuts() {
   // ─── Tool shortcuts (scope 'editor') ───────────────────────────
   // Single-key tool switching — only when no char picker active
   const toolShortcuts: Record<string, () => void> = {
-    'b': () => store.changeTool(4),  // brush
-    'e': () => store.changeTool(6),  // eraser
-    'f': () => store.changeTool(3),  // fill
-    's': () => store.changeTool(1),  // select
-    't': () => store.changeTool(2),  // text
+    'b': () => toolbarStore.changeTool(4),  // brush
+    'e': () => toolbarStore.changeTool(6),  // eraser
+    'f': () => toolbarStore.changeTool(3),  // fill
+    's': () => toolbarStore.changeTool(1),  // select
+    't': () => toolbarStore.changeTool(2),  // text
     'g': () => {
       if (store.asciibirdMeta.length) {
-        store.toggleGridView(!store.toolbarState.gridView);
+        toolbarStore.toggleGridView(!toolbarStore.toolbarState.gridView);
       }
     },
   };
@@ -100,7 +102,7 @@ export function useGlobalShortcuts() {
     hotkeys(key, 'editor', (event) => {
       // Suppress when char picker is active (let KeyboardShortcuts.vue
       // handle single-character input)
-      if (store.toolbarState.isChoosingChar) return;
+      if (toolbarStore.toolbarState.isChoosingChar) return;
       if (!store.currentAscii) return;
       event.preventDefault();
       handler();

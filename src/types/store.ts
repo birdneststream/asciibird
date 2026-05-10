@@ -2,22 +2,14 @@
 
 import type {
   AsciibirdMeta,
-  BrushHistoryEntry,
-  BrushLibraryEntry,
   Options,
-  ToolbarState,
 } from './index';
 
-/** Main editor store state (remaining after modal/desktop/panel extraction) */
+/** Main editor store state (toolbar extracted to store/toolbar.ts) */
 export interface RootState {
   ver: number;
   options: Options;
   tab: number;
   asciibirdMeta: AsciibirdMeta[];
-  toolbarState: ToolbarState;
   blockSizeMultiplier: number;
-  _brushBlocks: string; // LZ-String compressed Block[][]
-  brushHistory: BrushHistoryEntry[];
-  _selectBlocks: string; // LZ-String compressed Block[][]
-  brushLibrary: BrushLibraryEntry[];
 }

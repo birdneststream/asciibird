@@ -6,6 +6,7 @@
 import { computed, watch, onUnmounted } from 'vue';
 import { toolbarIcons } from '../../ascii';
 import { useAsciiBirdStore } from '../../store';
+import { useToolbarStore } from '../../store/toolbar';
 import { useModalStore } from '../../store/modal';
 import hotkeys from 'hotkeys-js';
 
@@ -24,10 +25,11 @@ const emit = defineEmits<{
 }>();
 
 const store = useAsciiBirdStore();
+const toolbarStore = useToolbarStore();
 const modalStore = useModalStore();
 
-const toolbarState = computed(() => store.toolbarState);
-const currentTool = computed(() => toolbarIcons[store.currentTool]);
+const toolbarState = computed(() => toolbarStore.toolbarState);
+const currentTool = computed(() => toolbarIcons[toolbarStore.currentTool]);
 const haveOpenTabs = computed(() => store.currentAscii !== false);
 const isDefault = computed(() => currentTool.value?.name === 'default');
 const isKeyboardDisabled = computed(() => modalStore.isKeyboardDisabled);
@@ -50,7 +52,7 @@ hotkeys('*', 'editor', (event) => {
     !toolbarState.value.persistCharPanel
   ) {
     event.preventDefault();
-    store.changeChar(event.key);
+    toolbarStore.changeChar(event.key);
     return;
   }
 
@@ -63,7 +65,7 @@ hotkeys('*', 'editor', (event) => {
     haveOpenTabs.value
   ) {
     event.preventDefault();
-    store.changeTool(Number.parseInt(event.key) - 1);
+    toolbarStore.changeTool(Number.parseInt(event.key) - 1);
     emit('updatecanvas');
     return;
   }
@@ -77,12 +79,12 @@ hotkeys('*', 'editor', (event) => {
   ) {
     event.preventDefault();
     if (toolbarState.value.isChoosingFg) {
-      store.changeColourFg(Number.parseInt(event.key));
+      toolbarStore.changeColourFg(Number.parseInt(event.key));
       return;
     }
 
     if (toolbarState.value.isChoosingBg) {
-      store.changeColourBg(Number.parseInt(event.key));
+      toolbarStore.changeColourBg(Number.parseInt(event.key));
       return;
     }
   }
@@ -97,16 +99,16 @@ hotkeys('Escape', 'editor', (event) => {
       (toolbarState.value.isChoosingFg && haveOpenTabs.value))
   ) {
     event.preventDefault();
-    store.changeIsUpdatingFg(false);
-    store.changeIsUpdatingBg(false);
-    store.changeIsUpdatingChar(false);
+    toolbarStore.changeIsUpdatingFg(false);
+    toolbarStore.changeIsUpdatingBg(false);
+    toolbarStore.changeIsUpdatingChar(false);
     return;
   }
 
   if (!isDefault.value) {
     event.preventDefault();
     emit('updatecanvas');
-    store.changeTool(0);
+    toolbarStore.changeTool(0);
     return;
   }
 });
