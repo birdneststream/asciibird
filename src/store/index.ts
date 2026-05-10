@@ -731,9 +731,23 @@ export const useAsciiBirdStore = defineStore('asciibird', {
           );
 
           this.asciibirdMeta[this.tab].layers =
-            LZString.compressToUTF16(JSON.stringify(data.old));
+            LZString.compressToUTF16(JSON.stringify(data.new));
 
           this.asciibirdMeta[this.tab].historyIndex++;
+
+          const selectedLayer =
+            this.asciibirdMeta[this.tab].selectedLayer;
+
+          if (data.new[selectedLayer + 1]) {
+            this.asciibirdMeta[this.tab].selectedLayer =
+              selectedLayer + 1;
+          } else if (data.new[selectedLayer - 1]) {
+            this.asciibirdMeta[this.tab].selectedLayer =
+              selectedLayer - 1;
+          } else {
+            this.asciibirdMeta[this.tab].selectedLayer =
+              selectedLayer;
+          }
           return;
         }
 

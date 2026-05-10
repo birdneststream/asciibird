@@ -11,7 +11,7 @@ import { useAsciiBirdStore } from '../store';
  * scope transitions.
  *
  * Scope hierarchy:
- * - 'all' — menu shortcuts (Ctrl+Z, Ctrl+Y, Ctrl+M, etc.)
+ * - 'all' — menu shortcuts (Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z, Cmd+Z, etc.)
  * - 'editor' — tool shortcuts (B, E, F, S, T, G) + KeyboardShortcuts.vue
  * - 'modals' — active when modal/dialog is open (no editor shortcuts)
  */
@@ -37,6 +37,26 @@ export function useGlobalShortcuts() {
       }
     },
     'ctrl+y': () => {
+      if (store.asciibirdMeta.length) {
+        store.redoBlocks();
+      }
+    },
+    'ctrl+shift+z': () => {
+      if (store.asciibirdMeta.length) {
+        store.redoBlocks();
+      }
+    },
+    'cmd+z': () => {
+      if (store.asciibirdMeta.length) {
+        store.undoBlocks();
+      }
+    },
+    'cmd+shift+z': () => {
+      if (store.asciibirdMeta.length) {
+        store.redoBlocks();
+      }
+    },
+    'cmd+y': () => {
       if (store.asciibirdMeta.length) {
         store.redoBlocks();
       }

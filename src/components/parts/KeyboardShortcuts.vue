@@ -41,14 +41,13 @@ const disableKeyboard = computed(
 
 // Hotkey: all keys in editor scope
 hotkeys('*', 'editor', (event) => {
-  event.preventDefault();
-
   if (
     toolbarState.value.isChoosingChar &&
     event.key.length === 1 &&
     !disableKeyboard.value &&
     !toolbarState.value.persistCharPanel
   ) {
+    event.preventDefault();
     store.changeChar(event.key);
     return;
   }
@@ -61,6 +60,7 @@ hotkeys('*', 'editor', (event) => {
     event.altKey &&
     haveOpenTabs.value
   ) {
+    event.preventDefault();
     store.changeTool(Number.parseInt(event.key) - 1);
     emit('updatecanvas');
     return;
@@ -73,6 +73,7 @@ hotkeys('*', 'editor', (event) => {
       toolbarState.value.isChoosingBg) &&
     haveOpenTabs.value
   ) {
+    event.preventDefault();
     if (toolbarState.value.isChoosingFg) {
       store.changeColourFg(Number.parseInt(event.key));
       return;
@@ -118,6 +119,9 @@ watch(disableKeyboard, (val) => {
 
 // Cleanup hotkeys on unmount
 onUnmounted(() => {
-  hotkeys.deleteScope('editor');
+  // Unbind only the keys registered by this component,
+  // preserving tool shortcuts registered by useGlobalShortcuts.ts
+  hotkeys.unbind('*', 'editor');
+  hotkeys.unbind('Escape', 'editor');
 });
 </script>

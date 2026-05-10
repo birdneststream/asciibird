@@ -267,6 +267,37 @@ describe('KeyboardShortcuts.vue', () => {
     }))
     expect(wrapper.vm.disableKeyboard).toBe(true)
   })
+
+  it('wildcard handler does not preventDefault for unhandled keys', () => {
+    shallowMount(KeyboardShortcuts, mountOpts())
+    const handler = getHandler('editor:*')
+    const event = createEvent({ key: 'z', ctrlKey: true })
+    handler!(event, {})
+    expect(event.preventDefault).not.toHaveBeenCalled()
+  })
+
+  it('wildcard handler calls preventDefault for handled keys', () => {
+    store = createMockStore({
+      toolbarState: createToolbarState({
+        isChoosingChar: true,
+        persistCharPanel: false,
+      }),
+    })
+    _mockStore = store
+    shallowMount(KeyboardShortcuts, mountOpts())
+    const handler = getHandler('editor:*')
+    const event = createEvent({ key: 'a' })
+    handler!(event, {})
+    expect(event.preventDefault).toHaveBeenCalled()
+  })
+
+  it('cleanup uses unbind instead of deleteScope on unmount', () => {
+    const wrapper = shallowMount(KeyboardShortcuts, mountOpts())
+    wrapper.unmount()
+    expect((hotkeys as any).unbind).toHaveBeenCalledWith('*', 'editor')
+    expect((hotkeys as any).unbind).toHaveBeenCalledWith('Escape', 'editor')
+    expect((hotkeys as any).deleteScope).not.toHaveBeenCalled()
+  })
 })
 
 // ─── useGlobalShortcuts ─────────────────────────────────────────────
@@ -334,6 +365,10 @@ describe('useGlobalShortcuts', () => {
     await initShortcuts()
     expect(getHandler('all:ctrl+z')).toBeDefined()
     expect(getHandler('all:ctrl+y')).toBeDefined()
+    expect(getHandler('all:ctrl+shift+z')).toBeDefined()
+    expect(getHandler('all:cmd+z')).toBeDefined()
+    expect(getHandler('all:cmd+shift+z')).toBeDefined()
+    expect(getHandler('all:cmd+y')).toBeDefined()
     expect(getHandler('all:ctrl+m')).toBeDefined()
     expect(getHandler('all:f1')).toBeDefined()
     expect(getHandler('all:shift+f1')).toBeDefined()
@@ -366,6 +401,38 @@ describe('useGlobalShortcuts', () => {
     await initShortcuts()
     const spy = vi.spyOn(store, 'redoBlocks')
     const handler = getHandler('all:ctrl+y')!
+    handler(createEvent(), {})
+    expect(spy).toHaveBeenCalled()
+  })
+
+  it('ctrl+shift+z calls redoBlocks', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(store, 'redoBlocks')
+    const handler = getHandler('all:ctrl+shift+z')!
+    handler(createEvent(), {})
+    expect(spy).toHaveBeenCalled()
+  })
+
+  it('cmd+z calls undoBlocks', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(store, 'undoBlocks')
+    const handler = getHandler('all:cmd+z')!
+    handler(createEvent(), {})
+    expect(spy).toHaveBeenCalled()
+  })
+
+  it('cmd+shift+z calls redoBlocks', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(store, 'redoBlocks')
+    const handler = getHandler('all:cmd+shift+z')!
+    handler(createEvent(), {})
+    expect(spy).toHaveBeenCalled()
+  })
+
+  it('cmd+y calls redoBlocks', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(store, 'redoBlocks')
+    const handler = getHandler('all:cmd+y')!
     handler(createEvent(), {})
     expect(spy).toHaveBeenCalled()
   })

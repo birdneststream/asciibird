@@ -535,17 +535,12 @@ describe('Pinia Store Actions', () => {
       expect(layers).toHaveLength(1);
       expect(store.asciibirdMeta[0].historyIndex).toBe(0);
 
-      // Redo processes the layer-type history entry at index 0
-      // NOTE: redoBlocks for layer-type entries restores data.old (same
-      // as undoBlocks), which means the layer is NOT re-added. This
-      // appears to be a source code issue — redo should restore data.new
-      // to re-add the layer. The test documents current behavior.
+      // Redo re-applies the layer operation, restoring data.new
       store.redoBlocks();
       layers = JSON.parse(
         LZString.decompressFromUTF16(store.asciibirdMeta[0].layers),
       );
-      // Current behavior: redo uses data.old → stays at 1 layer
-      expect(layers).toHaveLength(1);
+      expect(layers).toHaveLength(2);
       expect(store.asciibirdMeta[0].historyIndex).toBe(1);
     });
 
@@ -603,6 +598,20 @@ describe('Pinia Store Actions', () => {
       // data.old[selectedLayer+1] = undefined, data.old[selectedLayer-1] exists
       // so selectedLayer should become 0
       expect(store.asciibirdMeta[0].selectedLayer).toBe(0);
+    });
+
+    it('redoBlocks restores selectedLayer after layer redo', () => {
+      // Add a second layer so selectedLayer = 1
+      store.addLayer();
+      expect(store.asciibirdMeta[0].selectedLayer).toBe(1);
+
+      // Undo: removes layer 2, selectedLayer becomes 0
+      store.undoBlocks();
+      expect(store.asciibirdMeta[0].selectedLayer).toBe(0);
+
+      // Redo: re-adds layer 2, selectedLayer should restore to 1
+      store.redoBlocks();
+      expect(store.asciibirdMeta[0].selectedLayer).toBe(1);
     });
 
     it('updateAsciiBlocks with empty diff is a no-op', () => {
