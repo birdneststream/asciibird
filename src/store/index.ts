@@ -2,16 +2,20 @@
 // Converted from Vuex — mutations become actions using `this` instead of `state`
 
 import { defineStore } from 'pinia';
-import LZString from 'lz-string';
 import {
   blockWidth,
   blockHeight,
   cyrb53,
   getBlocksWidth,
-  create2DArray,
-  emptyBlock,
   mergeLayers,
 } from '../ascii';
+import {
+  compressLayers,
+  decompressLayers,
+  createEmptyLayer,
+  compressData,
+  decompressData,
+} from '../utils/layers';
 import type { RootState } from '../types/store';
 import type {
   Block,
@@ -135,19 +139,15 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     currentAsciiLayers: (state): Layer[] => {
       const meta = state.asciibirdMeta[state.tab];
       if (!meta) return [];
-      return JSON.parse(
-        LZString.decompressFromUTF16(meta.layers),
-      );
+      return decompressLayers(meta.layers);
     },
     currentAsciiLayersWidthHeight: (state) => {
       const meta = state.asciibirdMeta[state.tab];
       if (!meta) return { width: 0, height: 0 };
-      const blocks = JSON.parse(
-        LZString.decompressFromUTF16(meta.layers),
-      );
+      const layers = decompressLayers(meta.layers);
       return {
-        width: blocks[0].width,
-        height: blocks[0].height,
+        width: layers[0].width,
+        height: layers[0].height,
       };
     },
     selectedLayer: (state) =>
@@ -159,13 +159,9 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     brushSizeType: (state) => state.toolbarState.brushSizeType,
     // Decompressing getters — access compressed data as arrays
     brushBlocks: (state): Block[] =>
-      JSON.parse(
-        LZString.decompressFromUTF16(state._brushBlocks),
-      ) || [],
+      decompressData<Block[]>(state._brushBlocks) || [],
     selectBlocks: (state): Block[] =>
-      JSON.parse(
-        LZString.decompressFromUTF16(state._selectBlocks),
-      ) || [],
+      decompressData<Block[]>(state._selectBlocks) || [],
     isModalOpen: (state): boolean => {
       const keys = Object.keys(
         state.modalState,
@@ -220,9 +216,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     },
     changeAsciiWidthHeight(payload: { layers: Layer[] }) {
       this.asciibirdMeta[this.tab].layers =
-        LZString.compressToUTF16(
-          JSON.stringify(payload.layers),
-        );
+        compressLayers(payload.layers);
     },
     changeAsciiCanvasState(payload: { x: number; y: number }) {
       this.asciibirdMeta[this.tab].x = payload.x;
@@ -304,17 +298,15 @@ export const useAsciiBirdStore = defineStore('asciibird', {
           this.asciibirdMeta[this.tab].history.shift();
         }
 
-        const tempLayers: Layer[] = JSON.parse(
-          LZString.decompressFromUTF16(
-            this.asciibirdMeta[this.tab].layers,
-          ),
+        const tempLayers: Layer[] = decompressLayers(
+          this.asciibirdMeta[this.tab].layers,
         );
 
         tempLayers[this.asciibirdMeta[this.tab].selectedLayer].data =
           payload.blocks;
 
         this.asciibirdMeta[this.tab].layers =
-          LZString.compressToUTF16(JSON.stringify(tempLayers));
+          compressLayers(tempLayers);
 
         const historyIndex =
           this.asciibirdMeta[this.tab].historyIndex;
@@ -329,7 +321,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         }
 
         this.asciibirdMeta[this.tab].history.push(
-          LZString.compressToUTF16(JSON.stringify(payload.diff)),
+          compressData(payload.diff),
         );
 
         this.asciibirdMeta[this.tab].historyIndex =
@@ -346,41 +338,26 @@ export const useAsciiBirdStore = defineStore('asciibird', {
 
     // LAYERS
     addLayer() {
-      const tempLayers: Layer[] = JSON.parse(
-        LZString.decompressFromUTF16(
+      const tempLayers: Layer[] = decompressLayers(
           this.asciibirdMeta[this.tab].layers,
-        ),
-      );
+        );
 
       const oldLayer = JSON.parse(JSON.stringify(tempLayers));
 
-      const width = tempLayers[0].width;
-      const height = tempLayers[0].height;
+      const newLayer = createEmptyLayer(
+        tempLayers[0].width,
+        tempLayers[0].height,
+        'Layer ' + Number.parseInt(String(tempLayers.length)),
+      );
 
-      const newBlocksArray: Block[][] = create2DArray(height);
-
-      for (let x = 0; x < width; x++) {
-        for (let y = 0; y < height; y++) {
-          newBlocksArray[y].push({ ...emptyBlock });
-        }
-      }
-
-      tempLayers.push({
-        label: 'Layer ' + Number.parseInt(String(tempLayers.length)),
-        visible: true,
-        data: [...newBlocksArray],
-        width,
-        height,
-      });
+      tempLayers.push(newLayer);
 
       this.asciibirdMeta[this.tab].layers =
-        LZString.compressToUTF16(JSON.stringify(tempLayers));
+        compressLayers(tempLayers);
 
       this.asciibirdMeta[this.tab].history.push({
         t: 'l',
-        d: LZString.compressToUTF16(
-          JSON.stringify({ new: tempLayers, old: oldLayer }),
-        ),
+        d: compressData({ new: tempLayers, old: oldLayer }),
       });
 
       this.asciibirdMeta[this.tab].historyIndex =
@@ -390,11 +367,9 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         Number.parseInt(String(tempLayers.length)) - 1;
     },
     mergeAllLayers() {
-      const tempLayers: Layer[] = JSON.parse(
-        LZString.decompressFromUTF16(
+      const tempLayers: Layer[] = decompressLayers(
           this.asciibirdMeta[this.tab].layers,
-        ),
-      );
+        );
 
       const oldLayer = JSON.parse(JSON.stringify(tempLayers));
 
@@ -414,13 +389,11 @@ export const useAsciiBirdStore = defineStore('asciibird', {
 
       this.asciibirdMeta[this.tab].selectedLayer = 0;
       this.asciibirdMeta[this.tab].layers =
-        LZString.compressToUTF16(JSON.stringify(merged));
+        compressLayers(merged);
 
       this.asciibirdMeta[this.tab].history.push({
         t: 'l',
-        d: LZString.compressToUTF16(
-          JSON.stringify({ new: merged, old: oldLayer }),
-        ),
+        d: compressData({ new: merged, old: oldLayer }),
       });
 
       this.asciibirdMeta[this.tab].historyIndex =
@@ -430,35 +403,29 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       this.asciibirdMeta[this.tab].selectedLayer = payload;
     },
     toggleLayer(payload: number) {
-      const tempLayers: Layer[] = JSON.parse(
-        LZString.decompressFromUTF16(
+      const tempLayers: Layer[] = decompressLayers(
           this.asciibirdMeta[this.tab].layers,
-        ),
-      );
+        );
 
       const oldLayer = JSON.parse(JSON.stringify(tempLayers));
 
       tempLayers[payload].visible = !tempLayers[payload].visible;
 
       this.asciibirdMeta[this.tab].layers =
-        LZString.compressToUTF16(JSON.stringify(tempLayers));
+        compressLayers(tempLayers);
 
       this.asciibirdMeta[this.tab].history.push({
         t: 'l',
-        d: LZString.compressToUTF16(
-          JSON.stringify({ new: tempLayers, old: oldLayer }),
-        ),
+        d: compressData({ new: tempLayers, old: oldLayer }),
       });
 
       this.asciibirdMeta[this.tab].historyIndex =
         this.asciibirdMeta[this.tab].history.length;
     },
     removeLayer(payload: number) {
-      const tempLayers: Layer[] = JSON.parse(
-        LZString.decompressFromUTF16(
+      const tempLayers: Layer[] = decompressLayers(
           this.asciibirdMeta[this.tab].layers,
-        ),
-      );
+        );
 
       if (tempLayers.length > 1) {
         const oldLayer = JSON.parse(JSON.stringify(tempLayers));
@@ -500,13 +467,11 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         }
 
         this.asciibirdMeta[this.tab].layers =
-          LZString.compressToUTF16(JSON.stringify(tempLayers));
+          compressLayers(tempLayers);
 
         this.asciibirdMeta[this.tab].history.push({
           t: 'l',
-          d: LZString.compressToUTF16(
-            JSON.stringify({ new: tempLayers, old: oldLayer }),
-          ),
+          d: compressData({ new: tempLayers, old: oldLayer }),
         });
 
         this.asciibirdMeta[this.tab].historyIndex =
@@ -540,11 +505,9 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       }
     },
     downLayer(payload: number) {
-      const tempLayers: Layer[] = JSON.parse(
-        LZString.decompressFromUTF16(
+      const tempLayers: Layer[] = decompressLayers(
           this.asciibirdMeta[this.tab].layers,
-        ),
-      );
+        );
 
       if (tempLayers[payload + 1]) {
         const oldLayer = JSON.parse(JSON.stringify(tempLayers));
@@ -556,13 +519,11 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         tempLayers[payload] = swap1;
 
         this.asciibirdMeta[this.tab].layers =
-          LZString.compressToUTF16(JSON.stringify(tempLayers));
+          compressLayers(tempLayers);
 
         this.asciibirdMeta[this.tab].history.push({
           t: 'l',
-          d: LZString.compressToUTF16(
-            JSON.stringify({ new: tempLayers, old: oldLayer }),
-          ),
+          d: compressData({ new: tempLayers, old: oldLayer }),
         });
         this.asciibirdMeta[this.tab].historyIndex =
           this.asciibirdMeta[this.tab].history.length;
@@ -571,11 +532,9 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       }
     },
     upLayer(payload: number) {
-      const tempLayers: Layer[] = JSON.parse(
-        LZString.decompressFromUTF16(
+      const tempLayers: Layer[] = decompressLayers(
           this.asciibirdMeta[this.tab].layers,
-        ),
-      );
+        );
 
       if (tempLayers[payload - 1]) {
         const oldLayer = JSON.parse(JSON.stringify(tempLayers));
@@ -587,13 +546,11 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         tempLayers[payload] = swap1;
 
         this.asciibirdMeta[this.tab].layers =
-          LZString.compressToUTF16(JSON.stringify(tempLayers));
+          compressLayers(tempLayers);
 
         this.asciibirdMeta[this.tab].history.push({
           t: 'l',
-          d: LZString.compressToUTF16(
-            JSON.stringify({ new: tempLayers, old: oldLayer }),
-          ),
+          d: compressData({ new: tempLayers, old: oldLayer }),
         });
         this.asciibirdMeta[this.tab].historyIndex =
           this.asciibirdMeta[this.tab].history.length;
@@ -602,26 +559,20 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       }
     },
     updateLayerName(payload: { key: number; label: string }) {
-      const tempLayers: Layer[] = JSON.parse(
-        LZString.decompressFromUTF16(
+      const tempLayers: Layer[] = decompressLayers(
           this.asciibirdMeta[this.tab].layers,
-        ),
-      );
+        );
 
       if (tempLayers[payload.key]) {
         const oldLayer = JSON.parse(JSON.stringify(tempLayers));
         tempLayers[payload.key].label = payload.label;
-        const newLayers = LZString.compressToUTF16(
-          JSON.stringify(tempLayers),
-        );
+        const newLayers = compressLayers(tempLayers);
 
         this.asciibirdMeta[this.tab].layers = newLayers;
 
         this.asciibirdMeta[this.tab].history.push({
           t: 'l',
-          d: LZString.compressToUTF16(
-            JSON.stringify({ new: tempLayers, old: oldLayer }),
-          ),
+          d: compressData({ new: tempLayers, old: oldLayer }),
         });
 
         this.asciibirdMeta[this.tab].historyIndex =
@@ -645,14 +596,10 @@ export const useAsciiBirdStore = defineStore('asciibird', {
           (prev as { t: string }).t !== undefined &&
           (prev as { t: string }).t === 'l'
         ) {
-          const data = JSON.parse(
-            LZString.decompressFromUTF16(
-              (prev as { d: string }).d,
-            ),
-          );
+          const data = decompressData((prev as { d: string }).d);
 
           this.asciibirdMeta[this.tab].layers =
-            LZString.compressToUTF16(JSON.stringify(data.old));
+            compressLayers(data.old);
 
           this.asciibirdMeta[this.tab].historyIndex--;
 
@@ -672,18 +619,14 @@ export const useAsciiBirdStore = defineStore('asciibird', {
           return;
         }
 
-        const prevData = JSON.parse(
-          LZString.decompressFromUTF16(
-            this.asciibirdMeta[this.tab].history[
-              historyIndex - 1
-            ] as string,
-          ),
+        const prevData = decompressData(
+          this.asciibirdMeta[this.tab].history[
+            historyIndex - 1
+          ] as string,
         );
 
-        const tempLayers: Layer[] = JSON.parse(
-          LZString.decompressFromUTF16(
-            this.asciibirdMeta[this.tab].layers,
-          ),
+        const tempLayers: Layer[] = decompressLayers(
+          this.asciibirdMeta[this.tab].layers,
         );
 
         if (prevData.old) {
@@ -698,7 +641,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         }
 
         this.asciibirdMeta[this.tab].layers =
-          LZString.compressToUTF16(JSON.stringify(tempLayers));
+          compressLayers(tempLayers);
 
         this.asciibirdMeta[this.tab].historyIndex--;
 
@@ -724,14 +667,10 @@ export const useAsciiBirdStore = defineStore('asciibird', {
           (prev as { t: string }).t !== undefined &&
           (prev as { t: string }).t === 'l'
         ) {
-          const data = JSON.parse(
-            LZString.decompressFromUTF16(
-              (prev as { d: string }).d,
-            ),
-          );
+          const data = decompressData((prev as { d: string }).d);
 
           this.asciibirdMeta[this.tab].layers =
-            LZString.compressToUTF16(JSON.stringify(data.new));
+            compressLayers(data.new);
 
           this.asciibirdMeta[this.tab].historyIndex++;
 
@@ -751,18 +690,14 @@ export const useAsciiBirdStore = defineStore('asciibird', {
           return;
         }
 
-        prev = JSON.parse(
-          LZString.decompressFromUTF16(
-            this.asciibirdMeta[this.tab].history[
-              historyIndex
-            ] as string,
-          ),
+        prev = decompressData(
+          this.asciibirdMeta[this.tab].history[
+            historyIndex
+          ] as string,
         );
 
-        const tempLayers: Layer[] = JSON.parse(
-          LZString.decompressFromUTF16(
-            this.asciibirdMeta[this.tab].layers,
-          ),
+        const tempLayers: Layer[] = decompressLayers(
+          this.asciibirdMeta[this.tab].layers,
         );
 
         if (prev.new && prev.l !== undefined) {
@@ -777,7 +712,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         }
 
         this.asciibirdMeta[this.tab].layers =
-          LZString.compressToUTF16(JSON.stringify(tempLayers));
+          compressLayers(tempLayers);
 
         this.asciibirdMeta[this.tab].historyIndex++;
 
@@ -804,14 +739,10 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       this.toolbarState.brushSizeType = payload.brushSizeType;
     },
     setBrushBlocks(payload: Block[][]) {
-      this._brushBlocks = LZString.compressToUTF16(
-        JSON.stringify(payload),
-      );
+      this._brushBlocks = compressData(payload);
     },
     setSelectBlocks(payload: Block[][]) {
-      this._selectBlocks = LZString.compressToUTF16(
-        JSON.stringify(payload),
-      );
+      this._selectBlocks = compressData(payload);
     },
     toggleGridView(payload: boolean) {
       this.toolbarState.gridView = payload;
@@ -824,9 +755,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     },
 
     flipRotateBlocks(payload: { type: string }) {
-      let tempBlocks: Block[][] = JSON.parse(
-        LZString.decompressFromUTF16(this._brushBlocks),
-      );
+      let tempBlocks: Block[][] = decompressData(this._brushBlocks);
       const parsedBlocks: Block[][] = [];
 
       switch (payload.type) {
@@ -852,9 +781,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
           break;
       }
 
-      this._brushBlocks = LZString.compressToUTF16(
-        JSON.stringify(parsedBlocks),
-      );
+      this._brushBlocks = compressData(parsedBlocks);
     },
 
     // Brush Library
@@ -869,7 +796,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       );
 
       this.brushHistory.unshift({
-        blocks: LZString.compressToUTF16(JSON.stringify(payload)),
+        blocks: compressData(payload),
         hash: hashValue,
       });
     },
@@ -880,7 +807,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       );
 
       this.brushLibrary.unshift({
-        blocks: LZString.compressToUTF16(JSON.stringify(payload)),
+        blocks: compressData(payload),
         hash: hashValue,
       });
     },
