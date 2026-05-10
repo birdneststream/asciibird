@@ -11,6 +11,7 @@ import {
 import { useAsciiBirdStore } from '@/store';
 import { useModalStore } from '@/store/modal';
 import { useDesktopStore } from '@/store/desktop';
+import { usePanelStore } from '@/store/panels';
 import type { Block, Layer, AsciibirdMeta, Options } from '@/types';
 import type { RootState } from '@/types/store';
 
@@ -70,12 +71,14 @@ describe('Pinia Store Actions', () => {
   let store: ReturnType<typeof useAsciiBirdStore>;
   let modalStore: ReturnType<typeof useModalStore>;
   let desktopStore: ReturnType<typeof useDesktopStore>;
+  let panelStore: ReturnType<typeof usePanelStore>;
 
   beforeEach(() => {
     setActivePinia(createPinia());
     store = useAsciiBirdStore();
     modalStore = useModalStore();
     desktopStore = useDesktopStore();
+    panelStore = usePanelStore();
     store.newAsciibirdMeta(createTestMeta());
   });
 
@@ -214,39 +217,41 @@ describe('Pinia Store Actions', () => {
 
   // ── Panel state actions ────────────────────────────────────
 
+  // ── Panel state (now in usePanelStore) ────────────────────────
+
   describe('panel state actions', () => {
     it('toggleDebugPanel', () => {
-      store.toggleDebugPanel(true);
-      expect(store.debugPanelState.visible).toBe(true);
+      panelStore.toggleDebugPanel(true);
+      expect(panelStore.debugPanel.visible).toBe(true);
     });
 
     it('changeDebugPanelState', () => {
       const newState = { x: 10, y: 20, h: 30, w: 40, visible: true };
-      store.changeDebugPanelState(newState);
-      expect(store.debugPanelState).toEqual(newState);
+      panelStore.changeDebugPanelState(newState);
+      expect(panelStore.debugPanel).toEqual(newState);
     });
 
     it('toggleBrushLibrary', () => {
-      store.toggleBrushLibrary(false);
-      expect(store.brushLibraryState.visible).toBe(false);
+      panelStore.toggleBrushLibrary(false);
+      expect(panelStore.brushLibrary.visible).toBe(false);
     });
 
     it('changeBrushLibraryState', () => {
       const newState = { x: 10, y: 20, h: 30, w: 40, visible: false, tab: 1 };
-      store.changeBrushLibraryState(newState);
-      expect(store.brushLibraryState).toEqual(newState);
+      panelStore.changeBrushLibraryState(newState);
+      expect(panelStore.brushLibrary).toEqual(newState);
     });
 
     it('changeBrushPreviewState', () => {
       const newState = { x: 1, y: 2, h: 3, w: 4, visible: false };
-      store.changeBrushPreviewState(newState);
-      expect(store.brushPreviewState).toEqual(newState);
+      panelStore.changeBrushPreviewState(newState);
+      expect(panelStore.brushPreview).toEqual(newState);
     });
 
     it('changeLayersLibraryState', () => {
       const newState = { x: 5, y: 6, h: 7, w: 8, visible: true };
-      store.changeLayersLibraryState(newState);
-      expect(store.layersLibraryState).toEqual(newState);
+      panelStore.changeLayersLibraryState(newState);
+      expect(panelStore.layersLibrary).toEqual(newState);
     });
 
     it('changeToolBarState', () => {
@@ -861,12 +866,14 @@ describe('Pinia Store Getters', () => {
   let store: ReturnType<typeof useAsciiBirdStore>;
   let modalStore: ReturnType<typeof useModalStore>;
   let desktopStore: ReturnType<typeof useDesktopStore>;
+  let panelStore: ReturnType<typeof usePanelStore>;
 
   beforeEach(() => {
     setActivePinia(createPinia());
     store = useAsciiBirdStore();
     modalStore = useModalStore();
     desktopStore = useDesktopStore();
+    panelStore = usePanelStore();
     store.newAsciibirdMeta(createTestMeta());
   });
 
@@ -885,7 +892,7 @@ describe('Pinia Store Getters', () => {
   });
 
   it('debugPanel returns debug panel state', () => {
-    expect(store.debugPanel).toEqual(store.debugPanelState);
+    expect(panelStore.debugPanel).toEqual(panelStore.debugPanel);
   });
 
   it('currentTool returns current tool index', () => {
@@ -1025,15 +1032,15 @@ describe('Pinia Store Getters', () => {
   });
 
   it('brushLibraryState returns brush library panel state', () => {
-    expect(store.brushLibraryState.visible).toBe(true);
+    expect(panelStore.brushLibrary.visible).toBe(true);
   });
 
   it('brushPreviewState returns brush preview panel state', () => {
-    expect(store.brushPreviewState.visible).toBe(true);
+    expect(panelStore.brushPreview.visible).toBe(true);
   });
 
   it('layersLibraryState returns layers panel state', () => {
-    expect(store.layersLibraryState.visible).toBe(true);
+    expect(panelStore.layersLibrary.visible).toBe(true);
   });
 
   it('persistCharPanel returns char panel persistence', () => {

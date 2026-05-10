@@ -25,17 +25,22 @@ import {
   setupHotkeysMocks,
   createMockStore,
   createMockModalStore,
+  createMockPanelStore,
   globalStubs,
 } from './helpers'
 
 let _mockStore: any = null
 let _mockModalStore: any = null
+let _mockPanelStore: any = null
 
 vi.mock('@/store', () => ({
   useAsciiBirdStore: () => _mockStore,
 }))
 vi.mock('@/store/modal', () => ({
   useModalStore: () => _mockModalStore,
+}))
+vi.mock('@/store/panels', () => ({
+  usePanelStore: () => _mockPanelStore,
 }))
 
 
@@ -85,6 +90,7 @@ beforeEach(() => {
   store = createMockStore()
   _mockStore = store
   _mockModalStore = createMockModalStore()
+  _mockPanelStore = createMockPanelStore()
 })
 
 afterEach(() => {
@@ -298,8 +304,8 @@ describe('BrushLibrary.vue', () => {
     expect(toastedMock.show).toHaveBeenCalled()
   })
 
-  it('changeTab updates panel and calls store', () => {
-    const spy = vi.spyOn(store, 'changeBrushLibraryState')
+  it('changeTab updates panel and calls panelStore', () => {
+    const spy = vi.spyOn(_mockPanelStore, 'changeBrushLibraryState')
     const wrapper = shallowMount(
       BrushLibrary,
       mountOpts({ propsData: { yOffset: 0 } }),

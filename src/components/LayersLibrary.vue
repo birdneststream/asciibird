@@ -15,17 +15,17 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { useDraggable } from '@vueuse/core';
-import { useAsciiBirdStore } from '../store';
+import { usePanelStore } from '../store/panels';
 import Layers from './parts/Layers.vue';
 
 const props = defineProps<{ yOffset?: number }>();
-const store = useAsciiBirdStore();
+const panelStore = usePanelStore();
 const panelEl = ref<HTMLElement | null>(null);
 
 const { style: panelStyle } = useDraggable(panelEl, {
   initialValue: {
-    x: store.layersLibraryState.x,
-    y: store.layersLibraryState.y,
+    x: panelStore.layersLibrary.x,
+    y: panelStore.layersLibrary.y,
   },
 });
 
@@ -34,7 +34,7 @@ watch(
   (val) => {
     if (panelEl.value) {
       panelEl.value.style.top =
-        `${Math.trunc(store.layersLibraryState.y + val)}px`;
+        `${Math.trunc(panelStore.layersLibrary.y + val)}px`;
     }
   },
 );

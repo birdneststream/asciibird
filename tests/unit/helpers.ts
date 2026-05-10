@@ -204,6 +204,37 @@ export function createMockModalStore(
   }
 }
 
+export function createMockPanelStore(
+  overrides: Record<string, any> = {},
+) {
+  const defaultState = {
+    debugPanel: {
+      x: 100, y: 100, h: 200, w: 300, visible: false,
+    },
+    brushLibrary: {
+      x: 200, y: 150, h: 250, w: 350, visible: true, tab: 0,
+    },
+    brushPreview: {
+      x: 50, y: 50, h: 190, w: 250, visible: true,
+    },
+    layersLibrary: {
+      x: 300, y: 100, h: 190, w: 350, visible: true,
+    },
+  }
+
+  const state = { ...defaultState, ...overrides }
+
+  return {
+    ...state,
+    changeDebugPanelState(p: any) { Object.assign(state.debugPanel, p) },
+    toggleDebugPanel(v: boolean) { state.debugPanel.visible = v },
+    changeBrushLibraryState(p: any) { Object.assign(state.brushLibrary, p) },
+    changeBrushPreviewState(p: any) { Object.assign(state.brushPreview, p) },
+    toggleBrushLibrary(v: boolean) { state.brushLibrary.visible = v },
+    changeLayersLibraryState(p: any) { Object.assign(state.layersLibrary, p) },
+  }
+}
+
 export function createMockStore(
   overrides: Record<string, any> = {},
   config: MockStoreConfig = {},

@@ -41,6 +41,7 @@ import LZString from 'lz-string';
 import { useDraggable } from '@vueuse/core';
 import { toolbarIcons, mergeLayers } from '../ascii';
 import { useAsciiBirdStore } from '../store';
+import { usePanelStore } from '../store/panels';
 import { useToast } from '../composables/useToast';
 import { useClipboard } from '../composables/useClipboard';
 
@@ -50,14 +51,15 @@ defineProps<{
 }>();
 
 const store = useAsciiBirdStore();
+const panelStore = usePanelStore();
 const { show: toastShow } = useToast();
 const { copyText } = useClipboard();
 const panelEl = ref<HTMLElement | null>(null);
 
 const { style: panelStyle } = useDraggable(panelEl, {
   initialValue: {
-    x: store.debugPanel.x,
-    y: store.debugPanel.y,
+    x: panelStore.debugPanel.x,
+    y: panelStore.debugPanel.y,
   },
 });
 

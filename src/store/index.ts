@@ -23,7 +23,6 @@ import type {
   Options,
   ToolbarState,
   PanelState,
-  BrushLibraryState,
   AsciibirdMeta,
 } from '../types';
 
@@ -71,45 +70,15 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       visible: true,
       halfBlockEditing: false,
     },
-    debugPanelState: {
-      x: blockWidth * 40,
-      y: blockHeight * 20,
-      h: blockHeight * 20,
-      w: blockWidth * 40,
-      visible: false,
-    },
     blockSizeMultiplier: 1,
     _brushBlocks: '',
     brushHistory: [],
     _selectBlocks: '',
     brushLibrary: [],
-    brushLibraryState: {
-      x: blockWidth * 130,
-      y: blockHeight * 23,
-      h: blockHeight * 25,
-      w: blockWidth * 35,
-      visible: true,
-      tab: 0,
-    },
-    brushPreviewState: {
-      x: blockWidth * 2,
-      y: blockHeight * 22,
-      h: blockHeight * 19,
-      w: blockWidth * 25,
-      visible: true,
-    },
-    layersLibraryState: {
-      x: blockWidth * 130,
-      y: blockHeight * 2,
-      h: blockHeight * 19,
-      w: blockWidth * 35,
-      visible: true,
-    },
   }),
 
   getters: {
     state: (state): RootState => state,
-    debugPanel: (state) => state.debugPanelState,
     currentTool: (state) => state.toolbarState.currentTool,
     isTargettingBg: (state) => state.toolbarState.targetingBg,
     isTargettingFg: (state) => state.toolbarState.targetingFg,
@@ -161,21 +130,6 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     updateImageOverlay(payload: AsciibirdMeta['imageOverlay']) {
       this.asciibirdMeta[this.tab].imageOverlay = payload;
     },
-    changeDebugPanelState(payload: PanelState) {
-      this.debugPanelState = payload;
-    },
-    toggleDebugPanel(payload: boolean) {
-      this.debugPanelState.visible = payload;
-    },
-    changeBrushLibraryState(payload: BrushLibraryState) {
-      this.brushLibraryState = payload;
-    },
-    changeBrushPreviewState(payload: PanelState) {
-      this.brushPreviewState = payload;
-    },
-    toggleBrushLibrary(payload: boolean) {
-      this.brushLibraryState.visible = payload;
-    },
     changeToolBarState(
       payload: PanelState & { draggable?: boolean },
     ) {
@@ -187,9 +141,6 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     },
     changeToolBarDraggable(payload: boolean) {
       this.toolbarState.draggable = payload;
-    },
-    changeLayersLibraryState(payload: PanelState) {
-      this.layersLibraryState = payload;
     },
     changeAsciiWidthHeight(payload: { layers: Layer[] }) {
       this.asciibirdMeta[this.tab].layers =
@@ -858,6 +809,10 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         delete parsed.modalState;
         delete parsed.isKeyboardDisabled;
         delete parsed.desktopState;
+        delete parsed.debugPanelState;
+        delete parsed.brushLibraryState;
+        delete parsed.brushPreviewState;
+        delete parsed.layersLibraryState;
         return parsed;
       },
     },

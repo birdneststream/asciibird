@@ -170,6 +170,7 @@ import LZString from 'lz-string';
 import { useDraggable } from '@vueuse/core';
 import { toolbarIcons } from '../ascii';
 import { useAsciiBirdStore } from '../store';
+import { usePanelStore } from '../store/panels';
 import { useToast } from '../composables/useToast';
 import BrushCanvas from './parts/BrushCanvas.vue';
 import hotkeys from 'hotkeys-js';
@@ -177,23 +178,24 @@ import hotkeys from 'hotkeys-js';
 const props = defineProps<{ yOffset?: number }>();
 
 const store = useAsciiBirdStore();
+const panelStore = usePanelStore();
 const { show: toastShow } = useToast();
 const panelEl = ref<HTMLElement | null>(null);
 
 const { style: panelStyle } = useDraggable(panelEl, {
   initialValue: {
-    x: store.brushLibraryState.x,
-    y: store.brushLibraryState.y,
+    x: panelStore.brushLibrary.x,
+    y: panelStore.brushLibrary.y,
   },
 });
 
 const panel = reactive({
-  w: store.brushLibraryState.w,
-  h: store.brushLibraryState.h,
-  x: store.brushLibraryState.x,
-  y: store.brushLibraryState.y,
+  w: panelStore.brushLibrary.w,
+  h: panelStore.brushLibrary.h,
+  x: panelStore.brushLibrary.x,
+  y: panelStore.brushLibrary.y,
   visible: true,
-  tab: store.brushLibraryState.tab,
+  tab: panelStore.brushLibrary.tab,
   dragging: false,
 });
 
@@ -239,7 +241,7 @@ watch(
   (val) => {
     if (panelEl.value) {
       panelEl.value.style.top =
-        `${Math.trunc(store.brushLibraryState.y + val)}px`;
+        `${Math.trunc(panelStore.brushLibrary.y + val)}px`;
     }
   },
 );
@@ -250,7 +252,7 @@ onUnmounted(() => {
 
 function changeTab(tab: number) {
   panel.tab = tab;
-  store.changeBrushLibraryState(panel);
+  panelStore.changeBrushLibraryState(panel);
 }
 
 function decompressBlock(item: string) {

@@ -65,6 +65,7 @@ import { ref, computed, watch } from 'vue';
 import { useDraggable } from '@vueuse/core';
 import { emptyBlock, maxBrushSize } from '../../ascii';
 import { useAsciiBirdStore } from '../../store';
+import { usePanelStore } from '../../store/panels';
 import MainBrushCanvas from './MainBrushCanvas.vue';
 
 const props = defineProps<{ yOffset?: number }>();
@@ -73,12 +74,13 @@ const emit = defineEmits<{
 }>();
 
 const store = useAsciiBirdStore();
+const panelStore = usePanelStore();
 const panelEl = ref<HTMLElement | null>(null);
 
 const { style: panelStyle } = useDraggable(panelEl, {
   initialValue: {
-    x: store.brushPreviewState.x,
-    y: store.brushPreviewState.y,
+    x: panelStore.brushPreview.x,
+    y: panelStore.brushPreview.y,
   },
 });
 
@@ -110,7 +112,7 @@ const canFg = computed(() => store.isTargettingFg);
 const canBg = computed(() => store.isTargettingBg);
 const canText = computed(() => store.isTargettingChar);
 const updateBrush = computed(() => store.toolbarState.updateBrush);
-const brushPreviewState = computed(() => store.brushPreviewState);
+const brushPreviewState = computed(() => panelStore.brushPreview);
 
 const brushBlocksEmpty = computed(() => brushBlocks.value.length === 0);
 const middleY = computed(() => Math.floor(brushSizeHeight.value / 2));

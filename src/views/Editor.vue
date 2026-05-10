@@ -90,6 +90,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useAsciiBirdStore } from '../store';
+import { usePanelStore } from '../store/panels';
 import { useToast } from '../composables/useToast';
 import { useClipboard } from '../composables/useClipboard';
 import { useCanvasPanel } from '../composables/useCanvasPanel';
@@ -157,6 +158,7 @@ const emit = defineEmits<{
 
 // ─── Store & Composables ────────────────────────────────────────
 const store = useAsciiBirdStore();
+const panelStore = usePanelStore();
 const { show: toastShow } = useToast();
 const { copyText } = useClipboard();
 
@@ -248,12 +250,12 @@ const canvasY = computed(() => y.value * blockHeight);
 const toolbarState = computed(() => store.toolbarState);
 const mirrorX = computed(() => toolbarState.value.mirrorX);
 const mirrorY = computed(() => toolbarState.value.mirrorY);
-const debugPanelState = computed(() => store.debugPanel);
+const debugPanelState = computed(() => panelStore.debugPanel);
 const selectBlocks = computed(() => store.selectBlocks);
 const options = computed(() => store.options);
 const haveSelectBlocks = computed(() => !!selectBlocks.value.length);
 const mircColours = computed(() => mircColours99);
-const brushLibraryState = computed(() => store.brushLibraryState);
+const brushLibraryState = computed(() => panelStore.brushLibrary);
 const gridView = computed(() => toolbarState.value.gridView);
 const halfBlockEditing = computed(() => toolbarState.value.halfBlockEditing);
 

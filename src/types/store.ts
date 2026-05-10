@@ -5,8 +5,6 @@ import type {
   BrushHistoryEntry,
   BrushLibraryEntry,
   Options,
-  PanelState,
-  BrushLibraryState,
   ToolbarState,
 } from './index';
 
@@ -17,13 +15,9 @@ export interface RootState {
   tab: number;
   asciibirdMeta: AsciibirdMeta[];
   toolbarState: ToolbarState;
-  debugPanelState: PanelState;
   blockSizeMultiplier: number;
   _brushBlocks: string; // LZ-String compressed Block[][]
   brushHistory: BrushHistoryEntry[];
   _selectBlocks: string; // LZ-String compressed Block[][]
   brushLibrary: BrushLibraryEntry[];
-  brushLibraryState: BrushLibraryState;
-  brushPreviewState: PanelState;
-  layersLibraryState: PanelState;
 }

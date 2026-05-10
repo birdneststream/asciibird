@@ -362,6 +362,7 @@ import {
 import { useAsciiBirdStore } from './store';
 import { useModalStore } from './store/modal';
 import { useDesktopStore } from './store/desktop';
+import { usePanelStore } from './store/panels';
 import { useToast } from './composables/useToast';
 import { useDialog } from './composables/useDialog';
 import { useClipboard } from './composables/useClipboard';
@@ -374,6 +375,7 @@ defineOptions({ name: 'Dashboard' });
 const store = useAsciiBirdStore();
 const modalStore = useModalStore();
 const desktopStore = useDesktopStore();
+const panelStore = usePanelStore();
 const { messages: toasts, show: toastShow } = useToast();
 const { state: dialogState, confirm: dialogConfirm, prompt: dialogPrompt, ok: dialogOk, cancel: dialogCancel } = useDialog();
 const { copyText } = useClipboard();
@@ -458,7 +460,7 @@ const isSelecting = computed(() => currentTool.value?.name === 'select');
 const currentTool = computed(() => toolbarIcons[store.currentTool] ?? null);
 
 const asciibirdMeta = computed(() => store.asciibirdMeta);
-const debugPanelState = computed(() => store.debugPanel);
+const debugPanelState = computed(() => panelStore.debugPanel);
 const currentAscii = computed(() => store.currentAscii);
 const currentTab = computed(() => store.currentTab);
 const selectBlocks = computed(() => store.selectBlocks);
@@ -479,9 +481,9 @@ const menuBarVisible = computed(() => desktopStore.menuBarVisible);
 const currentAsciiLayerBlocks = computed(() => currentSelectedLayer.value?.data ?? []);
 const currentAsciiLayers = computed(() => store.currentAsciiLayers);
 const selectedLayerIndex = computed(() => currentAscii.value?.selectedLayer ?? 0);
-const brushLibraryState = computed(() => store.brushLibraryState);
-const brushPreviewState = computed(() => store.brushPreviewState);
-const layersLibraryState = computed(() => store.layersLibraryState);
+const brushLibraryState = computed(() => panelStore.brushLibrary);
+const brushPreviewState = computed(() => panelStore.brushPreview);
+const layersLibraryState = computed(() => panelStore.layersLibrary);
 const currentSelectedLayer = computed(() => currentAsciiLayers.value[currentAscii.value?.selectedLayer ?? 0]);
 const isBrushing = computed(() => currentTool.value?.name === 'brush');
 const isErasing = computed(() => currentTool.value?.name === 'eraser');
@@ -570,7 +572,7 @@ const menuBar = computed<AppMenuBar[]>(() => [
       },
       {
         text: debugPanelState.value.visible ? 'Hide Debug' : 'Show Debug',
-        click: () => store.toggleDebugPanel(!debugPanelState.value.visible),
+        click: () => panelStore.toggleDebugPanel(!debugPanelState.value.visible),
       },
     ],
   },
