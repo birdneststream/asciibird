@@ -30,9 +30,9 @@ function close() {
   top.value = 0;
 }
 
-function open(evt: MouseEvent) {
-  left.value = evt.pageX || evt.clientX;
-  top.value = (evt.pageY || evt.clientY) - window.pageYOffset;
+function open(evt: { pageX: number; pageY: number }) {
+  left.value = evt.pageX;
+  top.value = evt.pageY - window.pageYOffset;
   show.value = true;
   nextTick(() => contextEl.value?.focus());
 }

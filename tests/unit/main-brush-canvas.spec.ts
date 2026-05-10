@@ -277,7 +277,7 @@ describe('MainBrushCanvas.vue', () => {
 
     it('saveToLibrary calls store.pushBrushLibrary', () => {
       const wrapper = mountMainBrushCanvas()
-      wrapper.vm.$refs['main-brush-menu'] = {
+      wrapper.vm.contextMenuRef = {
         open: vi.fn(),
         close: vi.fn(),
       }
@@ -296,7 +296,7 @@ describe('MainBrushCanvas.vue', () => {
 
     it('startExport("clipboard") calls copyText', () => {
       const wrapper = mountMainBrushCanvas()
-      wrapper.vm.$refs['main-brush-menu'] = {
+      wrapper.vm.contextMenuRef = {
         open: vi.fn(),
         close: vi.fn(),
       }

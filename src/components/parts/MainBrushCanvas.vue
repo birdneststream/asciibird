@@ -22,7 +22,7 @@
         />
 
         <context-menu
-          ref="main-brush-menu"
+          ref="contextMenuRef"
           class="z-50"
         >
           <ul>
@@ -57,8 +57,10 @@
   </div>
 </template>
 
-<script>
-import ContextMenu from "./ContextMenu.vue";
+<script setup lang="ts">
+import { ref, computed, watch, onMounted } from 'vue'
+import type { Block } from '../../types'
+import ContextMenu from './ContextMenu.vue'
 import {
   mircColours99,
   blockWidth,
@@ -67,395 +69,335 @@ import {
   filterNullBlocks,
   toolbarIcons,
   emptyBlock,
-  canvasToPng,
+  canvasToPng as canvasToPngUtil,
   cyrb53,
   exportMirc,
   downloadFile,
-} from "../../ascii";
-import { useAsciiBirdStore } from "../../store";
-import { useToast } from "../../composables/useToast";
-import { useClipboard } from "../../composables/useClipboard";
+} from '../../ascii'
+import { useAsciiBirdStore } from '../../store'
+import { useToast } from '../../composables/useToast'
+import { useClipboard } from '../../composables/useClipboard'
 
-export default {
-  name: "MainBrushCanvas",
-  setup() {
-    const store = useAsciiBirdStore();
-    const { show: toastShow } = useToast();
-    const { copyText } = useClipboard();
-    return { store, toastShow, copyText };
-  },
-  components: {
-    ContextMenu,
-  },
-  created() {
-    window.addEventListener("load", () => {
-      this.delayRedrawCanvas();
-    });
-  },
-  mounted() {
-    this.ctx = this.canvasRef.getContext("2d");
-    this.delayRedrawCanvas();
-  },
-  data: () => ({
-    ctx: null,
-    redraw: true,
-    canTool: false,
-    showContextMenu: true,
-    hasChanged: false,
-    x: 0,
-    y: 0,
-  }),
-  computed: {
-    blockWidth() {
-      return blockWidth * this.store.blockSizeMultiplier;
-    },
-    blockHeight() {
-      return blockHeight * this.store.blockSizeMultiplier;
-    },
-    blockSizeMultiplier() {
-      return this.store.blockSizeMultiplier;
-    },
-    currentAscii() {
-      return this.store.currentAscii;
-    },
-    toolbarState() {
-      return this.store.toolbarState;
-    },
-    isTargettingBg() {
-      return this.store.isTargettingBg;
-    },
-    isTargettingFg() {
-      return this.store.isTargettingFg;
-    },
-    isTargettingChar() {
-      return this.store.isTargettingChar;
-    },
-    canFg() {
-      return this.store.isTargettingFg;
-    },
-    canBg() {
-      return this.store.isTargettingBg;
-    },
-    canText() {
-      return this.store.isTargettingChar;
-    },
-    currentFg() {
-      return this.store.currentFg;
-    },
-    currentBg() {
-      return this.store.currentBg;
-    },
-    currentChar() {
-      return this.store.currentChar;
-    },
-    brushSizeHeight() {
-      return this.store.brushSizeHeight;
-    },
-    brushSizeWidth() {
-      return this.store.brushSizeWidth;
-    },
-    brushSizeType() {
-      return this.store.brushSizeType;
-    },
-    options() {
-      return this.store.options;
-    },
-    brushBlocks() {
-      return this.store.brushBlocks;
-    },
-    blocksWidthHeight() {
-      return {
-        w: this.getBlocksWidth(this.brushBlocks) * blockWidth,
-        h: this.brushBlocks.length * blockHeight,
-      };
-    },
-    mircColours() {
-      return mircColours99;
-    },
-    canvasRef() {
-      return this.$refs.brushcanvas;
-    },
-    gridView() {
-      return this.toolbarState.gridView;
-    },
-    currentTool() {
-      return toolbarIcons[this.store.currentTool] ?? null;
-    },
-    isDefault() {
-      return this.currentTool.name === "default";
-    },
-    isBrushing() {
-      return this.currentTool.name === "brush";
-    },
-    isErasing() {
-      return this.currentTool.name === "eraser";
-    },
-    hash() {
-      return cyrb53(JSON.stringify(this.brushBlocks));
-    },
-  },
-  watch: {
-    brushBlocks() {
-      this.delayRedrawCanvas();
-    },
-    currentAscii() {
-      this.delayRedrawCanvas();
-    },
-    brushSizeHeight() {
-      this.delayRedrawCanvas();
-    },
-    brushSizeWidth() {
-      this.delayRedrawCanvas();
-    },
-    isTargettingBg() {
-      this.delayRedrawCanvas();
-    },
-    isTargettingFg() {
-      this.delayRedrawCanvas();
-    },
-    isTargettingChar() {
-      this.delayRedrawCanvas();
-    },
-    currentFg() {
-      this.delayRedrawCanvas();
-    },
-    currentBg() {
-      this.delayRedrawCanvas();
-    },
-    currentChar() {
-      this.delayRedrawCanvas();
-    },
-    blockSizeMultiplier() {
-      this.delayRedrawCanvas();
-    },
-    gridView(val, old) {
-      if (val !== old) {
-        this.delayRedrawCanvas();
-      }
-    },
-  },
-  methods: {
-    openContextMenu(e) {
-      e.preventDefault();
-      this.$refs["main-brush-menu"].open({
-        pageX: e.layerX,
-        pageY: e.layerY,
-      });
-    },
-    startExport(type) {
-      let ascii = exportMirc(this.brushBlocks);
-      switch (type) {
-        case "clipboard":
-          this.copyText(ascii.output.join("")).then(
-            () => {
-              this.toastShow("Copied mIRC brush to clipboard!", {
-                type: "success",
-              });
-            },
-            () => {
-              this.toastShow("Error when copying mIRC to clipboard!", {
-                type: "error",
-              });
-            }
-          );
-          this.$refs[`main-brush-menu`].close();
-          break;
+// ─── Composables ────────────────────────────────────────
+const store = useAsciiBirdStore()
+const { show: toastShow } = useToast()
+const { copyText } = useClipboard()
 
-        default:
-        case "file":
-          downloadFile(
-            ascii.output.join(""),
-            `brush-${this.hash}.txt`,
-            "text/plain"
-          );
-          this.$refs[`main-brush-menu`].close();
-          break;
-      }
-    },
-    saveToLibrary() {
-      this.store.pushBrushLibrary(this.brushBlocks);
-      this.toastShow(`Saved brush to Library`, {
-        type: "success",
-      });
-      this.$refs[`main-brush-menu`].close();
-    },
-    canvasToPng() {
-      canvasToPng(this.canvasRef, `brush-${this.hash}.png`);
-      this.$refs[`main-brush-menu`].close();
-    },
-    processClick(e) {
-      if (e.offsetX >= 0) {
-        this.x = e.offsetX;
-      }
+// ─── Refs ───────────────────────────────────────────────
+const brushcanvas = ref<HTMLCanvasElement>()
+const contextMenuRef = ref<InstanceType<typeof ContextMenu>>()
+const ctx = ref<CanvasRenderingContext2D | null>(null)
+const redraw = ref(true)
+const canTool = ref(false)
+const hasChanged = ref(false)
+const x = ref(0)
+const y = ref(0)
 
-      if (e.offsetY >= 0) {
-        this.y = e.offsetY;
-      }
+// ─── Computed ───────────────────────────────────────────
+const canvasRef = brushcanvas
+const renderBlockWidth = computed(
+  () => blockWidth * store.blockSizeMultiplier,
+)
+const renderBlockHeight = computed(
+  () => blockHeight * store.blockSizeMultiplier,
+)
+const brushBlocks = computed(() => store.brushBlocks)
+const gridView = computed(() => store.toolbarState.gridView)
+const currentTool = computed(() => toolbarIcons[store.currentTool] ?? null)
+const isDefault = computed(() => currentTool.value?.name === 'default')
+const isBrushing = computed(() => currentTool.value?.name === 'brush')
+const isErasing = computed(() => currentTool.value?.name === 'eraser')
+const hash = computed(() => cyrb53(JSON.stringify(brushBlocks.value)))
+const blocksWidthHeight = computed(() => {
+  const blocks = brushBlocks.value
+  return {
+    w: getBlocksWidth(blocks) * renderBlockWidth.value,
+    h: (blocks?.length ?? 0) * renderBlockHeight.value,
+  }
+})
 
-      this.x = Math.floor(this.x / blockWidth);
-      this.y = Math.floor(this.y / blockHeight);
+// ─── Watcher (consolidated) ─────────────────────────────
+watch(
+  () => [
+    brushBlocks.value,
+    store.currentAscii,
+    store.brushSizeHeight,
+    store.brushSizeWidth,
+    store.isTargettingBg,
+    store.isTargettingFg,
+    store.isTargettingChar,
+    store.currentFg,
+    store.currentBg,
+    store.currentChar,
+    store.blockSizeMultiplier,
+    gridView.value,
+  ],
+  () => delayRedrawCanvas(),
+)
 
-      if (this.isErasing) {
-        this.canTool = true;
-        this.hasChanged = true;
-        this.eraseBlock();
-      }
+// ─── Lifecycle ──────────────────────────────────────────
+onMounted(() => {
+  if (brushcanvas.value) {
+    ctx.value = brushcanvas.value.getContext('2d')
+  }
+  delayRedrawCanvas()
+})
 
-      if (this.isBrushing) {
-        this.canTool = true;
-        this.hasChanged = true;
-        this.addBlock();
-      }
-    },
-    getBlocksWidth(blocks) {
-      return getBlocksWidth(blocks);
-    },
-    filterNullBlocks(blocks) {
-      return filterNullBlocks(blocks);
-    },
-    drawGrid() {
-      let ctx = this.ctx;
-      let w = this.canvasRef.width;
-      let h = this.canvasRef.height;
+// ─── Methods ────────────────────────────────────────────
+function openContextMenu(e: MouseEvent) {
+  e.preventDefault()
+  contextMenuRef.value?.open({ pageX: e.layerX, pageY: e.layerY })
+}
 
-      ctx.beginPath();
+function startExport(type: string) {
+  const ascii = exportMirc(brushBlocks.value)
+  switch (type) {
+    case 'clipboard':
+      copyText(ascii.output.join('')).then(
+        () => {
+          toastShow('Copied mIRC brush to clipboard!', { type: 'success' })
+        },
+        () => {
+          toastShow('Error when copying mIRC to clipboard!', { type: 'error' })
+        },
+      )
+      contextMenuRef.value?.close()
+      break
 
-      for (var x = 0; x <= w; x += blockWidth) {
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, h);
-      }
+    default:
+    case 'file':
+      downloadFile(
+        ascii.output.join(''),
+        `brush-${hash.value}.txt`,
+        'text/plain',
+      )
+      contextMenuRef.value?.close()
+      break
+  }
+}
 
-      ctx.strokeStyle = "rgba(0, 0, 0, 1)";
-      ctx.lineWidth = 1;
-      ctx.setLineDash([1]);
+function saveToLibrary() {
+  store.pushBrushLibrary(brushBlocks.value)
+  toastShow('Saved brush to Library', { type: 'success' })
+  contextMenuRef.value?.close()
+}
 
-      ctx.stroke();
+function canvasToPng() {
+  if (!brushcanvas.value) return
+  canvasToPngUtil(brushcanvas.value, `brush-${hash.value}.png`)
+  contextMenuRef.value?.close()
+}
 
-      ctx.beginPath();
-      for (var y = 0; y <= h; y += blockHeight) {
-        ctx.moveTo(0, y);
-        ctx.lineTo(w, y);
-      }
+function processClick(e: MouseEvent) {
+  if (e.offsetX >= 0) {
+    x.value = e.offsetX
+  }
+  if (e.offsetY >= 0) {
+    y.value = e.offsetY
+  }
 
-      ctx.stroke();
-    },
+  x.value = Math.floor(x.value / renderBlockWidth.value)
+  y.value = Math.floor(y.value / renderBlockHeight.value)
 
-    drawPreview() {
-      this.ctx.clearRect(0, 0, this.canvasRef.width, this.canvasRef.height);
-      this.ctx.fillStyle = this.mircColours[1];
+  if (isErasing.value) {
+    canTool.value = true
+    hasChanged.value = true
+    eraseBlock()
+  }
 
-      this.ctx.font = "13px Hack";
+  if (isBrushing.value) {
+    canTool.value = true
+    hasChanged.value = true
+    addBlock()
+  }
+}
 
-      let y = 0;
-      let x = 0;
+function drawGrid() {
+  if (!ctx.value || !canvasRef.value) return
+  const c = ctx.value
+  const w = canvasRef.value.width
+  const h = canvasRef.value.height
 
-      if (this.brushBlocks) {
-        let blocksWidth = this.getBlocksWidth(this.brushBlocks);
-        for (y = 0; y < this.brushBlocks.length; y++) {
-          for (x = 0; x < blocksWidth; x++) {
-            if (this.brushBlocks[y] && this.brushBlocks[y][x]) {
-              const curBlock = this.brushBlocks[y][x];
+  c.beginPath()
+  for (let gx = 0; gx <= w; gx += renderBlockWidth.value) {
+    c.moveTo(gx, 0)
+    c.lineTo(gx, h)
+  }
+  c.strokeStyle = 'rgba(0, 0, 0, 1)'
+  c.lineWidth = 1
+  c.setLineDash([1])
+  c.stroke()
 
-              if (curBlock.bg !== undefined) {
-                this.ctx.fillStyle = this.mircColours[curBlock.bg];
+  c.beginPath()
+  for (let gy = 0; gy <= h; gy += renderBlockHeight.value) {
+    c.moveTo(0, gy)
+    c.lineTo(w, gy)
+  }
+  c.stroke()
+}
 
-                this.ctx.fillRect(
-                  x * blockWidth,
-                  y * blockHeight,
-                  blockWidth,
-                  blockHeight
-                );
-              }
+function drawPreview() {
+  if (!canvasRef.value || !ctx.value) return
 
-              if (curBlock.fg !== undefined) {
-                this.ctx.fillStyle = this.mircColours[curBlock.fg];
-              } else {
-                this.ctx.fillStyle = "#FFFFFF";
-              }
+  const c = ctx.value
+  c.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+  c.fillStyle = mircColours99[1]
+  c.font = '13px Hack'
 
-              if (curBlock.char !== undefined) {
-                this.ctx.fillStyle = this.mircColours[curBlock.fg];
-                this.ctx.fillText(
-                  curBlock.char,
-                  x * blockWidth,
-                  y * blockHeight + blockHeight - 3
-                );
-              }
-            }
-          }
+  const blocks = brushBlocks.value
+  if (!blocks) return
+
+  const bw = getBlocksWidth(blocks)
+  const rw = renderBlockWidth.value
+  const rh = renderBlockHeight.value
+
+  for (let by = 0; by < blocks.length; by++) {
+    for (let bx = 0; bx < bw; bx++) {
+      if (blocks[by]?.[bx]) {
+        const curBlock = blocks[by][bx]
+
+        if (curBlock.bg !== undefined) {
+          c.fillStyle = mircColours99[curBlock.bg]
+          c.fillRect(bx * rw, by * rh, rw, rh)
         }
 
-        if (this.gridView) {
-          this.drawGrid();
+        c.fillStyle =
+          curBlock.fg !== undefined ? mircColours99[curBlock.fg] : '#FFFFFF'
+
+        if (curBlock.char !== undefined) {
+          c.fillText(curBlock.char, bx * rw, by * rh + rh - 3)
         }
       }
-    },
-    delayRedrawCanvas() {
-      if (this.redraw) {
-        this.redraw = false;
-        const _this = this;
-        setTimeout(function () {
-          requestAnimationFrame(() => {
-            _this.drawPreview();
-            _this.redraw = true;
-          });
-        }, 1000 / this.options.fps);
-      }
-    },
-    canvasMouseMove(e) {
-      if (this.canTool && (this.isErasing || this.isBrushing)) {
-        this.processClick(e);
-      }
-    },
-    addBlock() {
-      let block = { ...emptyBlock };
+    }
+  }
 
-      if (this.canBg) {
-        block["bg"] = this.currentBg;
-      }
+  if (gridView.value) {
+    drawGrid()
+  }
+}
 
-      if (this.canFg) {
-        block["fg"] = this.currentFg;
-      }
+function delayRedrawCanvas() {
+  if (redraw.value) {
+    redraw.value = false
+    setTimeout(() => {
+      requestAnimationFrame(() => {
+        drawPreview()
+        redraw.value = true
+      })
+    }, 1000 / store.options.fps)
+  }
+}
 
-      if (this.canText) {
-        block["char"] = this.currentChar;
-      }
+function canvasMouseMove(e: MouseEvent) {
+  if (canTool.value && (isErasing.value || isBrushing.value)) {
+    processClick(e)
+  }
+}
 
-      this.brushBlocks[this.y][this.x] = block;
-      this.delayRedrawCanvas();
-    },
-    eraseBlock() {
-      if (this.canBg && this.brushBlocks[this.y][this.x]["bg"] !== undefined) {
-        delete this.brushBlocks[this.y][this.x]["bg"];
-      }
+function addBlock() {
+  const block: Block = { ...emptyBlock }
 
-      if (this.canFg && this.brushBlocks[this.y][this.x]["fg"] !== undefined) {
-        delete this.brushBlocks[this.y][this.x]["fg"];
-      }
+  if (store.isTargettingBg) {
+    block.bg = store.currentBg
+  }
+  if (store.isTargettingFg) {
+    block.fg = store.currentFg
+  }
+  if (store.isTargettingChar) {
+    block.char = store.currentChar
+  }
 
-      if (this.canText && this.brushBlocks[this.y][this.x]["char"] !== undefined) {
-        delete this.brushBlocks[this.y][this.x]["char"];
-      }
+  brushBlocks.value[y.value][x.value] = block
+  delayRedrawCanvas()
+}
 
-      this.delayRedrawCanvas();
-    },
-    disableToolbarMoving() {
-      this.canTool = false;
-      this.store.changeToolBarDraggable(false);
-    },
-    enableToolbarMoving() {
-      this.canTool = false;
+function eraseBlock() {
+  const target = brushBlocks.value[y.value]?.[x.value]
+  if (!target) return
 
-      if ((this.isErasing || this.isBrushing) && this.hasChanged) {
-        this.store.setBrushBlocks(this.brushBlocks);
-        this.store.changeToolBarDraggable(true);
-        this.hasChanged = false;
-        this.toastShow(`Saved brush to Library`, {
-          type: "success",
-        });
-      }
-    },
-  },
-};
+  if (store.isTargettingBg && target.bg !== undefined) {
+    delete target.bg
+  }
+  if (store.isTargettingFg && target.fg !== undefined) {
+    delete target.fg
+  }
+  if (store.isTargettingChar && target.char !== undefined) {
+    delete target.char
+  }
+
+  delayRedrawCanvas()
+}
+
+function disableToolbarMoving() {
+  canTool.value = false
+  store.changeToolBarDraggable(false)
+}
+
+function enableToolbarMoving() {
+  canTool.value = false
+
+  if ((isErasing.value || isBrushing.value) && hasChanged.value) {
+    store.setBrushBlocks(brushBlocks.value)
+    store.changeToolBarDraggable(true)
+    hasChanged.value = false
+    toastShow('Saved brush to Library', { type: 'success' })
+  }
+}
+
+// ─── Expose for test compatibility ──────────────────────
+defineExpose({
+  // State
+  ctx,
+  redraw,
+  canvasRef,
+  canTool,
+  hasChanged,
+  x,
+  y,
+  // Computed (store passthroughs for test compat)
+  blockWidth: renderBlockWidth,
+  blockHeight: renderBlockHeight,
+  blockSizeMultiplier: computed(() => store.blockSizeMultiplier),
+  currentAscii: computed(() => store.currentAscii),
+  toolbarState: computed(() => store.toolbarState),
+  isTargettingBg: computed(() => store.isTargettingBg),
+  isTargettingFg: computed(() => store.isTargettingFg),
+  isTargettingChar: computed(() => store.isTargettingChar),
+  canFg: computed(() => store.isTargettingFg),
+  canBg: computed(() => store.isTargettingBg),
+  canText: computed(() => store.isTargettingChar),
+  currentFg: computed(() => store.currentFg),
+  currentBg: computed(() => store.currentBg),
+  currentChar: computed(() => store.currentChar),
+  brushSizeHeight: computed(() => store.brushSizeHeight),
+  brushSizeWidth: computed(() => store.brushSizeWidth),
+  brushSizeType: computed(() => store.brushSizeType),
+  options: computed(() => store.options),
+  mircColours: mircColours99,
+  brushBlocks,
+  gridView,
+  currentTool,
+  isDefault,
+  isBrushing,
+  isErasing,
+  hash,
+  blocksWidthHeight,
+  contextMenuRef,
+  // Methods
+  getBlocksWidth,
+  filterNullBlocks,
+  openContextMenu,
+  startExport,
+  saveToLibrary,
+  canvasToPng,
+  processClick,
+  drawGrid,
+  drawPreview,
+  delayRedrawCanvas,
+  canvasMouseMove,
+  addBlock,
+  eraseBlock,
+  disableToolbarMoving,
+  enableToolbarMoving,
+})
 </script>
