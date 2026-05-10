@@ -7,6 +7,7 @@
 import { defineStore } from 'pinia';
 import { cyrb53, getBlocksWidth } from '../ascii';
 import { compressData, decompressData } from '../utils/layers';
+import { idbPersistAdapter } from '../utils/idbPersistAdapter';
 import { useAsciiBirdStore } from './index';
 import type {
   Block,
@@ -255,7 +256,7 @@ export const useToolbarStore = defineStore('toolbar', {
 
   persist: {
     key: 'asciibird-toolbar',
-    storage: localStorage,
+    storage: idbPersistAdapter,
     serializer: {
       serialize: (value: Record<string, unknown>) => {
         const out: Record<string, unknown> = { ...value };

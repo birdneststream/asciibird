@@ -14,6 +14,7 @@ import {
   compressData,
   decompressData,
 } from '../utils/layers';
+import { idbPersistAdapter } from '../utils/idbPersistAdapter';
 import type { RootState } from '../types/store';
 import type {
   Block,
@@ -536,30 +537,13 @@ export const useAsciiBirdStore = defineStore('asciibird', {
   },
   persist: {
     key: 'vuex',
-    storage: localStorage,
+    storage: idbPersistAdapter,
     serializer: {
       serialize: (value: Record<string, unknown>) => {
         return JSON.stringify(value);
       },
       deserialize: (value: string) => {
         const parsed = JSON.parse(value);
-        // One-time migration: seed toolbar store from old vuex data
-        if (
-          parsed.toolbarState &&
-          !localStorage.getItem('asciibird-toolbar')
-        ) {
-          const toolbarData = {
-            toolbarState: parsed.toolbarState,
-            _brushBlocks: parsed._brushBlocks ?? parsed.brushBlocks ?? '',
-            brushHistory: parsed.brushHistory ?? [],
-            _selectBlocks: parsed._selectBlocks ?? parsed.selectBlocks ?? '',
-            brushLibrary: parsed.brushLibrary ?? [],
-          };
-          localStorage.setItem(
-            'asciibird-toolbar',
-            JSON.stringify(toolbarData),
-          );
-        }
         // Remove extracted state (now in separate stores)
         delete parsed.modalState;
         delete parsed.isKeyboardDisabled;
