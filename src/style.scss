@@ -133,18 +133,6 @@ body {
     @apply ml-1 w-1/3 mb-2 hover:bg-gray-800 hover:text-white transition-all;
 }
 
-.ab-tooltip {
-    @apply absolute opacity-0 invisible whitespace-nowrap z-50
-        text-xs text-white bg-gray-700 rounded px-2 py-1
-        left-full top-1/2 -translate-y-1/2 ml-2 pointer-events-none;
-    transition: opacity 0.2s ease, visibility 0.2s ease;
-    transition-delay: 0.6s;
-}
-
-.group:hover .ab-tooltip {
-    @apply visible opacity-100;
-}
-
 .ab-toolbar-button {
     @apply rounded-3xl w-9 h-9 mt-1 ml-1 transition-all;
 }

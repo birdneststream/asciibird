@@ -11,181 +11,156 @@
         </div>
 
         <div class="flex">
-          <label class="ab-checkbox-hover group">
-            <input
-              v-model="store.toolbarState.targetingFg"
-              type="checkbox"
-              class="form-checkbox h-5 w-5 text-blue-600"
-              name="targetingFg"
-              :disabled="!canBg && !canText"
-            >
-            <div class="inline-block relative">
+          <Tooltip content="Ignore Foreground when Editing">
+            <label class="ab-checkbox-hover">
+              <input
+                v-model="store.toolbarState.targetingFg"
+                type="checkbox"
+                class="form-checkbox h-5 w-5 text-blue-600"
+                name="targetingFg"
+                :disabled="!canBg && !canText"
+              >
               <span class="ab-checkbox-label">FG</span>
-              <div class="ab-tooltip">
-                Ignore Foreground when Editing
-              </div>
-            </div>
-          </label>
+            </label>
+          </Tooltip>
 
-          <label class="ab-checkbox-hover group">
-            <input
-              v-model="store.toolbarState.targetingBg"
-              type="checkbox"
-              class="ab-checkbox"
-              name="targetingBg"
-              :disabled="!canFg && !canText"
-            >
-            <div class="inline-block relative">
+          <Tooltip content="Ignore Background when Editing">
+            <label class="ab-checkbox-hover">
+              <input
+                v-model="store.toolbarState.targetingBg"
+                type="checkbox"
+                class="ab-checkbox"
+                name="targetingBg"
+                :disabled="!canFg && !canText"
+              >
               <span class="ab-checkbox-label">BG</span>
-              <div class="ab-tooltip">
-                Ignore Background when Editing
-              </div>
-            </div>
-          </label>
+            </label>
+          </Tooltip>
 
-          <label class="ab-checkbox-hover group">
-            <input
-              v-model="store.toolbarState.targetingChar"
-              type="checkbox"
-              class="ab-checkbox"
-              name="targetingChar"
-              :disabled="!canFg && !canBg"
-            >
-            <div class="inline-block relative">
+          <Tooltip content="Ignore Characters when Editing">
+            <label class="ab-checkbox-hover">
+              <input
+                v-model="store.toolbarState.targetingChar"
+                type="checkbox"
+                class="ab-checkbox"
+                name="targetingChar"
+                :disabled="!canFg && !canBg"
+              >
               <span class="ab-checkbox-label">Text</span>
-              <div class="ab-tooltip">
-                Ignore Characters when Editing
-              </div>
-            </div>
-          </label>
+            </label>
+          </Tooltip>
         </div>
 
         <div class="flex mb-3 border-t border-black border-opacity-10 pt-2">
-          <button
-            type="button"
-            :class="`ab-toolbar-button group ${
-              store.toolbarState.mirrorX
-                ? 'border-gray-900 bg-blue-800'
-                : 'border-gray-200 bg-gray-500'
-            }`"
-            @click="toggleMirrorX()"
-          >
-            <div class="inline-block relative">
+          <Tooltip content="Mirror X axis when Editing">
+            <button
+              type="button"
+              :class="`ab-toolbar-button ${
+                store.toolbarState.mirrorX
+                  ? 'border-gray-900 bg-blue-800'
+                  : 'border-gray-200 bg-gray-500'
+              }`"
+              @click="toggleMirrorX()"
+            >
               <span
                 class="material-icons"
                 aria-hidden="true"
               >more_vert</span>
-              <div class="ab-tooltip">
-                Mirror X axis when Editing
-              </div>
-            </div>
-          </button>
+            </button>
+          </Tooltip>
 
-          <button
-            type="button"
-            :class="`ab-toolbar-button group ${
-              store.toolbarState.mirrorY
-                ? 'border-gray-900 bg-blue-800'
-                : 'border-gray-200 bg-gray-500'
-            }`"
-            @click="toggleMirrorY()"
-          >
-            <div class="inline-block relative">
+          <Tooltip content="Mirror Y axis when Editing">
+            <button
+              type="button"
+              :class="`ab-toolbar-button ${
+                store.toolbarState.mirrorY
+                  ? 'border-gray-900 bg-blue-800'
+                  : 'border-gray-200 bg-gray-500'
+              }`"
+              @click="toggleMirrorY()"
+            >
               <span
                 class="material-icons"
                 aria-hidden="true"
               >more_horiz</span>
-              <div class="ab-tooltip">
-                Mirror Y axis when Editing
-              </div>
-            </div>
-          </button>
+            </button>
+          </Tooltip>
 
-          <button
-            type="button"
-            :class="`ab-toolbar-button group ${
-              store.toolbarState.updateBrush
-                ? 'border-gray-900 bg-blue-800'
-                : 'border-gray-200 bg-gray-500'
-            }`"
-            @click="toggleUpdateBrush()"
-          >
-            <div class="inline-block relative">
+          <Tooltip content="Update Brush Automatically when Colours or Char Changes">
+            <button
+              type="button"
+              :class="`ab-toolbar-button ${
+                store.toolbarState.updateBrush
+                  ? 'border-gray-900 bg-blue-800'
+                  : 'border-gray-200 bg-gray-500'
+              }`"
+              @click="toggleUpdateBrush()"
+            >
               <span
                 class="material-icons"
                 aria-hidden="true"
               >color_lens</span>
-              <div class="ab-tooltip">
-                Update Brush Automatically when Colours or Char Changes
-              </div>
-            </div>
-          </button>
+            </button>
+          </Tooltip>
 
-          <button
-            type="button"
-            :class="`ab-toolbar-button group ${
-              store.toolbarState.gridView
-                ? 'border-gray-900 bg-blue-800'
-                : 'border-gray-200 bg-gray-500'
-            }`"
-            @click="toggleGridView()"
-          >
-            <div class="inline-block relative">
+          <Tooltip content="Toggle Grid View">
+            <button
+              type="button"
+              :class="`ab-toolbar-button ${
+                store.toolbarState.gridView
+                  ? 'border-gray-900 bg-blue-800'
+                  : 'border-gray-200 bg-gray-500'
+              }`"
+              @click="toggleGridView()"
+            >
               <span
                 class="material-icons"
                 aria-hidden="true"
               >{{
                 !store.toolbarState.gridView ? "grid_on" : "grid_off"
               }}</span>
-              <div class="ab-tooltip">
-                Toggle Grid View
-              </div>
-            </div>
-          </button>
+            </button>
+          </Tooltip>
 
-          <button
-            type="button"
-            :class="`ab-toolbar-button group ${
-              store.toolbarState.halfBlockEditing
-                ? 'border-gray-900 bg-blue-800'
-                : 'border-gray-200 bg-gray-500'
-            }`"
-            @click="toggleHalfBlockEditing()"
-          >
-            <div class="inline-block relative">
+          <Tooltip content="Toggle Half Block Editing Mode">
+            <button
+              type="button"
+              :class="`ab-toolbar-button ${
+                store.toolbarState.halfBlockEditing
+                  ? 'border-gray-900 bg-blue-800'
+                  : 'border-gray-200 bg-gray-500'
+              }`"
+              @click="toggleHalfBlockEditing()"
+            >
               <span
                 class="material-icons"
                 aria-hidden="true"
               >grid_view</span>
-              <div class="ab-tooltip">
-                Toggle Half Block Editing Mode
-              </div>
-            </div>
-          </button>
+            </button>
+          </Tooltip>
         </div>
 
         <div class="border-t border-black border-opacity-10 pt-2">
-          <button
+          <Tooltip
             v-for="(value, keyToolbar) in toolbarIcons"
             :key="keyToolbar + 50"
-            type="button"
-            :class="`rounded-3xl w-10 h-10 mt-1 ml-1 transition-all group ${
-              currentTool.name === value.name
-                ? 'border-gray-900 bg-blue-500'
-                : 'border-gray-200 bg-gray-500'
-            }`"
-            @click="store.changeTool(keyToolbar)"
+            :content="tooltipName(value)"
           >
-            <div class="inline-block relative">
+            <button
+              type="button"
+              :class="`rounded-3xl w-10 h-10 mt-1 ml-1 transition-all ${
+                currentTool.name === value.name
+                  ? 'border-gray-900 bg-blue-500'
+                  : 'border-gray-200 bg-gray-500'
+              }`"
+              @click="store.changeTool(keyToolbar)"
+            >
               <span
                 class="material-icons"
                 aria-hidden="true"
               >{{ value.icon }}</span>
-              <div class="ab-tooltip">
-                {{ tooltipName(value) }}
-              </div>
-            </div>
-          </button>
+            </button>
+          </Tooltip>
         </div>
       </div>
     </div>
@@ -198,6 +173,7 @@ import { useDraggable } from '@vueuse/core';
 import { useAsciiBirdStore } from '../store';
 import { useToast } from '../composables/useToast';
 import Colours from "./Colours.vue";
+import Tooltip from './parts/Tooltip.vue';
 import { toolbarIcons } from "../ascii";
 import { tooltipName } from '../utils/toolbar';
 
