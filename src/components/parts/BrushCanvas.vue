@@ -5,7 +5,7 @@
         :style="`height: ${blocksWidthHeight.h}px;width: ${blocksWidthHeight.w}px;`"
       >
         <canvas
-          :ref="canvasName"
+          ref="canvasEl"
           :id="canvasName"
           class="previewcanvas"
           :width="blocksWidthHeight.w"
@@ -15,7 +15,7 @@
       </div>
 
       <context-menu
-        :ref="`block-menu-${hash}`"
+        ref="contextMenuRef"
         class="z-50"
       >
         <ul>
@@ -49,8 +49,9 @@
   </div>
 </template>
 
-
-<script>
+<script setup lang="ts">
+import { ref, computed, watch, onMounted } from 'vue'
+import type { Block } from '../../types'
 import {
   mircColours99,
   blockWidth,
@@ -58,275 +59,209 @@ import {
   cyrb53,
   getBlocksWidth,
   filterNullBlocks,
-  canvasToPng,
+  canvasToPng as canvasToPngUtil,
   exportMirc,
   downloadFile,
-} from "../../ascii";
-import ContextMenu from "./ContextMenu.vue";
-import { useAsciiBirdStore } from "../../store";
-import { useToast } from "../../composables/useToast";
-import { useClipboard } from "../../composables/useClipboard";
+} from '../../ascii'
+import ContextMenu from './ContextMenu.vue'
+import { useAsciiBirdStore } from '../../store'
+import { useToast } from '../../composables/useToast'
+import { useClipboard } from '../../composables/useClipboard'
 
-export default {
-  name: "BrushCanvas",
-  setup() {
-    const store = useAsciiBirdStore();
-    const { show: toastShow } = useToast();
-    const { copyText } = useClipboard();
-    return { store, toastShow, copyText };
-  },
-  created() {
-    window.addEventListener("load", () => {
-      this.delayRedrawCanvas();
-    });
-  },
-  mounted() {
-    this.ctx = this.$refs[this.canvasName].getContext("2d");
-    this.ctx.font = "13px Hack";
-    this.delayRedrawCanvas();
-  },
-  props: {
-    blocks: {
-      type: [Array, Boolean],
-      required: false,
-      default: false,
-    },
-  },
-  components: {
-    ContextMenu,
-  },
-  data: () => ({
-    ctx: null,
-    redraw: true,
-  }),
-  computed: {
-    blockWidth() {
-      return blockWidth * this.store.blockSizeMultiplier;
-    },
-    blockHeight() {
-      return blockHeight * this.store.blockSizeMultiplier;
-    },
-    blockSizeMultiplier() {
-      return this.store.blockSizeMultiplier;
-    },
-    currentAscii() {
-      return this.store.currentAscii;
-    },
-    toolbarState() {
-      return this.store.toolbarState;
-    },
-    isTargettingBg() {
-      return this.store.isTargettingBg;
-    },
-    isTargettingFg() {
-      return this.store.isTargettingFg;
-    },
-    isTargettingChar() {
-      return this.store.isTargettingChar;
-    },
-    currentFg() {
-      return this.store.currentFg;
-    },
-    currentBg() {
-      return this.store.currentBg;
-    },
-    currentChar() {
-      return this.store.currentChar;
-    },
-    brushSizeHeight() {
-      return this.store.brushSizeHeight;
-    },
-    brushSizeWidth() {
-      return this.store.brushSizeWidth;
-    },
-    brushSizeType() {
-      return this.store.brushSizeType;
-    },
-    options() {
-      return this.store.options;
-    },
-    hash() {
-      return cyrb53(JSON.stringify(this.getBlocks));
-    },
-    canvasName() {
-      return `${this.hash}-brush-canvas`;
-    },
-    getBlocks() {
-      return this.blocks === false
-        ? this.store.brushBlocks
-        : this.blocks;
-    },
-    isMainCanvas() {
-      return this.blocks === false;
-    },
-    blocksWidthHeight() {
-      return {
-        w: getBlocksWidth(this.getBlocks) * this.blockWidth,
-        h: this.getBlocks.length * this.blockHeight,
-      };
-    },
-    mircColours() {
-      return mircColours99;
-    },
-    canvasRef() {
-      return this.$refs[this.canvasName];
-    },
-  },
-  watch: {
-    blockSizeMultiplier() {
-      this.delayRedrawCanvas();
-    },
-    getBlocks() {
-      this.delayRedrawCanvas();
-    },
-    blocks() {
-      this.delayRedrawCanvas();
-    },
-    currentAscii() {
-      this.delayRedrawCanvas();
-    },
-    brushSizeHeight() {
-      this.delayRedrawCanvas();
-    },
-    brushSizeWidth() {
-      this.delayRedrawCanvas();
-    },
-    isTargettingBg() {
-      this.delayRedrawCanvas();
-    },
-    isTargettingFg() {
-      this.delayRedrawCanvas();
-    },
-    isTargettingChar() {
-      this.delayRedrawCanvas();
-    },
-    currentFg() {
-      this.delayRedrawCanvas();
-    },
-    currentBg() {
-      this.delayRedrawCanvas();
-    },
-    currentChar() {
-      this.delayRedrawCanvas();
-    },
-  },
-  methods: {
-    startExport(type) {
-      let ascii = exportMirc(this.getBlocks);
-      switch (type) {
-        case "clipboard":
-          this.copyText(ascii.output.join("")).then(
-            () => {
-              this.toastShow("Copied mIRC brush to clipboard!", {
-                type: "success",
-              });
-            },
-            () => {
-              this.toastShow("Error when copying mIRC to clipboard!", {
-                type: "error",
-              });
-            }
-          );
-          this.$refs[`block-menu-${this.hash}`].close();
-          break;
+// ─── Props ──────────────────────────────────────────────
+const props = withDefaults(
+  defineProps<{ blocks?: Block[][] | false }>(),
+  { blocks: false },
+)
 
-        default:
-        case "file":
-          downloadFile(
-            ascii.output.join(""),
-            `brush-${this.hash}.txt`,
-            "text/plain"
-          );
-          this.$refs[`block-menu-${this.hash}`].close();
-          break;
-      }
-    },
-    saveToLibrary() {
-      this.store.pushBrushLibrary(this.getBlocks);
-      this.toastShow(`Saved brush to Library`, {
-        type: "success",
-      });
-      this.$refs[`block-menu-${this.hash}`].close();
-    },
-    canvasToPng() {
-      canvasToPng(this.canvasRef, `brush-${this.hash}.png`);
-      this.$refs[`block-menu-${this.hash}`].close();
-    },
-    getBlocksWidth(blocks) {
-      return getBlocksWidth(blocks);
-    },
-    filterNullBlocks(blocks) {
-      return filterNullBlocks(blocks);
-    },
-    openContextMenu(e) {
-      e.preventDefault();
-      this.$refs[`block-menu-${this.hash}`].open({
-        pageX: e.layerX,
-        pageY: e.layerY,
-      });
-    },
-    drawPreview() {
-      if (!this.canvasRef) {
-        return;
-      }
+// ─── Composables ────────────────────────────────────────
+const store = useAsciiBirdStore()
+const { show: toastShow } = useToast()
+const { copyText } = useClipboard()
 
-      this.ctx.clearRect(0, 0, this.canvasRef.width, this.canvasRef.height);
-      this.ctx.fillStyle = this.mircColours[1];
+// ─── Refs ───────────────────────────────────────────────
+const canvasEl = ref<HTMLCanvasElement>()
+const contextMenuRef = ref<InstanceType<typeof ContextMenu>>()
+const ctx = ref<CanvasRenderingContext2D | null>(null)
+const redraw = ref(true)
 
-      this.ctx.font = "13px Hack";
+// ─── Computed ───────────────────────────────────────────
+const renderBlockWidth = computed(
+  () => blockWidth * store.blockSizeMultiplier,
+)
+const renderBlockHeight = computed(
+  () => blockHeight * store.blockSizeMultiplier,
+)
+const getBlocks = computed(() =>
+  props.blocks === false ? store.brushBlocks : props.blocks,
+)
+const isMainCanvas = computed(() => props.blocks === false)
+const hash = computed(() => cyrb53(JSON.stringify(getBlocks.value)))
+const canvasName = computed(() => `${hash.value}-brush-canvas`)
+const canvasRef = canvasEl
+const blocksWidthHeight = computed(() => ({
+  w: getBlocksWidth(getBlocks.value) * renderBlockWidth.value,
+  h: (getBlocks.value?.length ?? 0) * renderBlockHeight.value,
+}))
 
-      let y = 0;
-      let x = 0;
+// ─── Watcher (consolidated) ─────────────────────────────
+watch(
+  () => [
+    store.blockSizeMultiplier,
+    getBlocks.value,
+    store.currentAscii,
+    store.brushSizeHeight,
+    store.brushSizeWidth,
+    store.isTargettingBg,
+    store.isTargettingFg,
+    store.isTargettingChar,
+    store.currentFg,
+    store.currentBg,
+    store.currentChar,
+  ],
+  () => delayRedrawCanvas(),
+)
 
-      if (this.getBlocks) {
-        let blocksWidth = this.getBlocksWidth(this.getBlocks);
-        for (y = 0; y < this.getBlocks.length; y++) {
-          for (x = 0; x < blocksWidth; x++) {
-            if (this.getBlocks[y] && this.getBlocks[y][x]) {
-              const curBlock = this.getBlocks[y][x];
+// ─── Lifecycle ──────────────────────────────────────────
+onMounted(() => {
+  if (canvasEl.value) {
+    ctx.value = canvasEl.value.getContext('2d')
+  }
+  delayRedrawCanvas()
+})
 
-              if (curBlock.bg !== undefined) {
-                this.ctx.fillStyle = this.mircColours[curBlock.bg];
+// ─── Methods ────────────────────────────────────────────
+function openContextMenu(e: MouseEvent) {
+  e.preventDefault()
+  contextMenuRef.value?.open({
+    pageX: e.layerX,
+    pageY: e.layerY,
+  })
+}
 
-                this.ctx.fillRect(
-                  x * this.blockWidth,
-                  y * this.blockHeight,
-                  this.blockWidth,
-                  this.blockHeight
-                );
-              }
+function startExport(type: string) {
+  const ascii = exportMirc(getBlocks.value)
+  switch (type) {
+    case 'clipboard':
+      copyText(ascii.output.join('')).then(
+        () => {
+          toastShow('Copied mIRC brush to clipboard!', { type: 'success' })
+        },
+        () => {
+          toastShow('Error when copying mIRC to clipboard!', { type: 'error' })
+        },
+      )
+      contextMenuRef.value?.close()
+      break
 
-              if (curBlock.fg !== undefined) {
-                this.ctx.fillStyle = this.mircColours[curBlock.fg];
-              } else {
-                this.ctx.fillStyle = "#FFFFFF";
-              }
+    default:
+    case 'file':
+      downloadFile(
+        ascii.output.join(''),
+        `brush-${hash.value}.txt`,
+        'text/plain',
+      )
+      contextMenuRef.value?.close()
+      break
+  }
+}
 
-              if (curBlock.char !== undefined) {
-                this.ctx.fillStyle = this.mircColours[curBlock.fg];
-                this.ctx.fillText(
-                  curBlock.char,
-                  x * this.blockWidth,
-                  y * this.blockHeight + this.blockHeight - 3
-                );
-              }
-            }
-          }
+function saveToLibrary() {
+  store.pushBrushLibrary(getBlocks.value)
+  toastShow('Saved brush to Library', { type: 'success' })
+  contextMenuRef.value?.close()
+}
+
+function canvasToPng() {
+  if (!canvasEl.value) return
+  canvasToPngUtil(canvasEl.value, `brush-${hash.value}.png`)
+  contextMenuRef.value?.close()
+}
+
+function drawPreview() {
+  if (!canvasRef.value || !ctx.value) return
+
+  const c = ctx.value
+  c.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+  c.fillStyle = mircColours99[1]
+  c.font = '13px Hack'
+
+  const blocks = getBlocks.value
+  if (!blocks) return
+
+  const bw = getBlocksWidth(blocks)
+  const rw = renderBlockWidth.value
+  const rh = renderBlockHeight.value
+
+  for (let y = 0; y < blocks.length; y++) {
+    for (let x = 0; x < bw; x++) {
+      if (blocks[y]?.[x]) {
+        const curBlock = blocks[y][x]
+
+        if (curBlock.bg !== undefined) {
+          c.fillStyle = mircColours99[curBlock.bg]
+          c.fillRect(x * rw, y * rh, rw, rh)
+        }
+
+        c.fillStyle =
+          curBlock.fg !== undefined ? mircColours99[curBlock.fg] : '#FFFFFF'
+
+        if (curBlock.char !== undefined) {
+          c.fillText(curBlock.char, x * rw, y * rh + rh - 3)
         }
       }
-    },
-    delayRedrawCanvas() {
-      if (this.redraw) {
-        this.redraw = false;
-        const _this = this;
-        setTimeout(function () {
-          requestAnimationFrame(() => {
-            _this.drawPreview();
-            _this.redraw = true;
-          });
-        }, 1000 / this.options.fps);
-      }
-    },
-  },
-};
+    }
+  }
+}
+
+function delayRedrawCanvas() {
+  if (redraw.value) {
+    redraw.value = false
+    setTimeout(() => {
+      requestAnimationFrame(() => {
+        drawPreview()
+        redraw.value = true
+      })
+    }, 1000 / store.options.fps)
+  }
+}
+
+// ─── Expose for test compatibility ──────────────────────
+defineExpose({
+  // State
+  ctx,
+  redraw,
+  canvasRef,
+  // Computed
+  blockWidth: renderBlockWidth,
+  blockHeight: renderBlockHeight,
+  blockSizeMultiplier: computed(() => store.blockSizeMultiplier),
+  currentAscii: computed(() => store.currentAscii),
+  toolbarState: computed(() => store.toolbarState),
+  isTargettingBg: computed(() => store.isTargettingBg),
+  isTargettingFg: computed(() => store.isTargettingFg),
+  isTargettingChar: computed(() => store.isTargettingChar),
+  currentFg: computed(() => store.currentFg),
+  currentBg: computed(() => store.currentBg),
+  currentChar: computed(() => store.currentChar),
+  brushSizeHeight: computed(() => store.brushSizeHeight),
+  brushSizeWidth: computed(() => store.brushSizeWidth),
+  brushSizeType: computed(() => store.brushSizeType),
+  options: computed(() => store.options),
+  mircColours: mircColours99,
+  hash,
+  canvasName,
+  getBlocks,
+  isMainCanvas,
+  blocksWidthHeight,
+  // Methods
+  getBlocksWidth,
+  filterNullBlocks,
+  openContextMenu,
+  startExport,
+  saveToLibrary,
+  canvasToPng,
+  drawPreview,
+  delayRedrawCanvas,
+})
 </script>
