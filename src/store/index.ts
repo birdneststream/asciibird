@@ -40,10 +40,6 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       fps: 50,
     },
     tab: 0,
-    desktopState: {
-      menuBarVisible: true,
-      tabsVisible: true,
-    },
     asciibirdMeta: [] as AsciibirdMeta[],
     toolbarState: {
       currentColourFg: 0,
@@ -114,8 +110,6 @@ export const useAsciiBirdStore = defineStore('asciibird', {
   getters: {
     state: (state): RootState => state,
     debugPanel: (state) => state.debugPanelState,
-    tabsVisible: (state) => state.desktopState.tabsVisible,
-    menuBarVisible: (state) => state.desktopState.menuBarVisible,
     currentTool: (state) => state.toolbarState.currentTool,
     isTargettingBg: (state) => state.toolbarState.targetingBg,
     isTargettingFg: (state) => state.toolbarState.targetingFg,
@@ -246,12 +240,6 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     },
     changeTargetingChar(payload: boolean) {
       this.toolbarState.targetingChar = payload;
-    },
-    changeMenuBarVisible(payload: boolean) {
-      this.desktopState.menuBarVisible = payload;
-    },
-    changeTabsVisible(payload: boolean) {
-      this.desktopState.tabsVisible = payload;
     },
     newAsciibirdMeta(payload: AsciibirdMeta) {
       this.asciibirdMeta.push(payload);
@@ -866,6 +854,10 @@ export const useAsciiBirdStore = defineStore('asciibird', {
           parsed._selectBlocks = parsed.selectBlocks;
           delete parsed.selectBlocks;
         }
+        // Remove extracted state (now in separate stores)
+        delete parsed.modalState;
+        delete parsed.isKeyboardDisabled;
+        delete parsed.desktopState;
         return parsed;
       },
     },

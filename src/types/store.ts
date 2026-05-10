@@ -4,7 +4,6 @@ import type {
   AsciibirdMeta,
   BrushHistoryEntry,
   BrushLibraryEntry,
-  DesktopState,
   Options,
   PanelState,
   BrushLibraryState,
@@ -16,7 +15,6 @@ export interface RootState {
   ver: number;
   options: Options;
   tab: number;
-  desktopState: DesktopState;
   asciibirdMeta: AsciibirdMeta[];
   toolbarState: ToolbarState;
   debugPanelState: PanelState;

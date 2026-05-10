@@ -361,6 +361,7 @@ import {
 
 import { useAsciiBirdStore } from './store';
 import { useModalStore } from './store/modal';
+import { useDesktopStore } from './store/desktop';
 import { useToast } from './composables/useToast';
 import { useDialog } from './composables/useDialog';
 import { useClipboard } from './composables/useClipboard';
@@ -372,6 +373,7 @@ defineOptions({ name: 'Dashboard' });
 
 const store = useAsciiBirdStore();
 const modalStore = useModalStore();
+const desktopStore = useDesktopStore();
 const { messages: toasts, show: toastShow } = useToast();
 const { state: dialogState, confirm: dialogConfirm, prompt: dialogPrompt, ok: dialogOk, cancel: dialogCancel } = useDialog();
 const { copyText } = useClipboard();
@@ -472,8 +474,8 @@ const currentBg = computed(() => store.currentBg);
 const currentChar = computed(() => store.currentChar);
 const toolbarState = computed(() => store.toolbarState);
 const brushBlocks = computed(() => store.brushBlocks);
-const tabsVisible = computed(() => store.tabsVisible);
-const menuBarVisible = computed(() => store.menuBarVisible);
+const tabsVisible = computed(() => desktopStore.tabsVisible);
+const menuBarVisible = computed(() => desktopStore.menuBarVisible);
 const currentAsciiLayerBlocks = computed(() => currentSelectedLayer.value?.data ?? []);
 const currentAsciiLayers = computed(() => store.currentAsciiLayers);
 const selectedLayerIndex = computed(() => currentAscii.value?.selectedLayer ?? 0);
@@ -554,11 +556,11 @@ const menuBar = computed<AppMenuBar[]>(() => [
     items: [
       {
         text: menuBarVisible.value ? 'Hide Menu Bar' : 'Show Menu Bar',
-        click: () => store.changeMenuBarVisible(!menuBarVisible.value),
+        click: () => desktopStore.changeMenuBarVisible(!menuBarVisible.value),
       },
       {
         text: tabsVisible.value ? 'Hide Tabs' : 'Show Tabs',
-        click: () => store.changeTabsVisible(!tabsVisible.value),
+        click: () => desktopStore.changeTabsVisible(!tabsVisible.value),
       },
       {
         text: toolbarState.value.gridView ? 'Disable Grid' : 'Enable Grid',

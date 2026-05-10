@@ -10,6 +10,7 @@ import {
 } from '@/ascii';
 import { useAsciiBirdStore } from '@/store';
 import { useModalStore } from '@/store/modal';
+import { useDesktopStore } from '@/store/desktop';
 import type { Block, Layer, AsciibirdMeta, Options } from '@/types';
 import type { RootState } from '@/types/store';
 
@@ -68,11 +69,13 @@ function createTestMeta(
 describe('Pinia Store Actions', () => {
   let store: ReturnType<typeof useAsciiBirdStore>;
   let modalStore: ReturnType<typeof useModalStore>;
+  let desktopStore: ReturnType<typeof useDesktopStore>;
 
   beforeEach(() => {
     setActivePinia(createPinia());
     store = useAsciiBirdStore();
     modalStore = useModalStore();
+    desktopStore = useDesktopStore();
     store.newAsciibirdMeta(createTestMeta());
   });
 
@@ -195,17 +198,17 @@ describe('Pinia Store Actions', () => {
     });
   });
 
-  // ── Desktop state ────────────────────────────────────────────
+  // ── Desktop state (now in useDesktopStore) ────────────────────
 
   describe('desktop state actions', () => {
     it('changeMenuBarVisible', () => {
-      store.changeMenuBarVisible(false);
-      expect(store.desktopState.menuBarVisible).toBe(false);
+      desktopStore.changeMenuBarVisible(false);
+      expect(desktopStore.menuBarVisible).toBe(false);
     });
 
     it('changeTabsVisible', () => {
-      store.changeTabsVisible(false);
-      expect(store.desktopState.tabsVisible).toBe(false);
+      desktopStore.changeTabsVisible(false);
+      expect(desktopStore.tabsVisible).toBe(false);
     });
   });
 
@@ -857,11 +860,13 @@ describe('Pinia Store Actions', () => {
 describe('Pinia Store Getters', () => {
   let store: ReturnType<typeof useAsciiBirdStore>;
   let modalStore: ReturnType<typeof useModalStore>;
+  let desktopStore: ReturnType<typeof useDesktopStore>;
 
   beforeEach(() => {
     setActivePinia(createPinia());
     store = useAsciiBirdStore();
     modalStore = useModalStore();
+    desktopStore = useDesktopStore();
     store.newAsciibirdMeta(createTestMeta());
   });
 
@@ -1000,11 +1005,11 @@ describe('Pinia Store Getters', () => {
   });
 
   it('tabsVisible returns tabs visibility', () => {
-    expect(store.tabsVisible).toBe(true);
+    expect(desktopStore.tabsVisible).toBe(true);
   });
 
   it('menuBarVisible returns menu visibility', () => {
-    expect(store.menuBarVisible).toBe(true);
+    expect(desktopStore.menuBarVisible).toBe(true);
   });
 
   it('isTargettingFg returns targeting fg state', () => {
