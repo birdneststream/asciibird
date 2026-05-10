@@ -145,18 +145,18 @@
     />
 
     <input
+      ref="asciiInput"
       type="file"
       style="display: none"
-      ref="asciiInput"
       @change="onImport()"
     >
 
     <template v-if="asciibirdMeta.length">
       <div
-        class="bg-gray-500 relative z-auto"
-        ref="tabbar"
-        :style="toolbarString"
         v-if="tabsVisible"
+        ref="tabbar"
+        class="bg-gray-500 relative z-auto"
+        :style="toolbarString"
       >
         <span
           v-for="(value, key) in asciibirdMeta"
@@ -196,7 +196,6 @@
 
       <Toolbar
         v-show="toolbarState.visible"
-        :y-offset="scrollOffset"
       />
 
       <DebugPanel
@@ -238,7 +237,7 @@
         class="absolute left-1/2 transform -translate-x-1/2 text-center"
         @mouseup.right="openContextMenu"
       >
-        <BrushCanvas :blocks="splashAscii()" />
+        <BrushCanvas :blocks="getSplashAscii()" />
       </div>
     </template>
 
@@ -296,38 +295,40 @@
   </div>
 </template>
 
-<script>
-import LZString from "lz-string";
+<script setup lang="ts">
+import { computed, reactive, ref, watch, onUnmounted } from 'vue';
+import hotkeys from 'hotkeys-js';
+import LZString from 'lz-string';
 import {
   Menu,
   MenuButton,
   MenuItems,
   MenuItem,
-} from "@headlessui/vue";
-import { TransitionGroup } from "vue";
+} from '@headlessui/vue';
 
-import Toolbar from "./components/Toolbar.vue";
-import DebugPanel from "./components/DebugPanel.vue";
-import BrushLibrary from "./components/BrushLibrary.vue";
-import LayersLibrary from "./components/LayersLibrary.vue";
-import Editor from "./views/Editor.vue";
 
-import CharPicker from "./components/parts/CharPicker.vue";
-import ColourPicker from "./components/parts/ColourPicker.vue";
-import ContextMenu from "./components/parts/ContextMenu.vue";
+import Toolbar from './components/Toolbar.vue';
+import DebugPanel from './components/DebugPanel.vue';
+import BrushLibrary from './components/BrushLibrary.vue';
+import LayersLibrary from './components/LayersLibrary.vue';
+import Editor from './views/Editor.vue';
 
-import NewAscii from "./components/modals/NewAscii.vue";
-import Options from "./components/modals/Options.vue";
-import ImageOverlay from "./components/modals/ImageOverlay.vue";
-import EditAscii from "./components/modals/EditAscii.vue";
-import PasteAscii from "./components/modals/PasteAscii.vue";
-import About from "./components/modals/About.vue";
-import Help from "./components/modals/Help.vue";
-import ABModal from "./components/ABModal.vue";
+import CharPicker from './components/parts/CharPicker.vue';
+import ColourPicker from './components/parts/ColourPicker.vue';
+import ContextMenu from './components/parts/ContextMenu.vue';
 
-import BrushCanvas from "./components/parts/BrushCanvas.vue";
-import BrushPreview from "./components/parts/BrushPreview.vue";
-import KeyboardShortcuts from "./components/parts/KeyboardShortcuts.vue";
+import NewAscii from './components/modals/NewAscii.vue';
+import Options from './components/modals/Options.vue';
+import ImageOverlay from './components/modals/ImageOverlay.vue';
+import EditAscii from './components/modals/EditAscii.vue';
+import PasteAscii from './components/modals/PasteAscii.vue';
+import About from './components/modals/About.vue';
+import Help from './components/modals/Help.vue';
+import ABModal from './components/ABModal.vue';
+
+import BrushCanvas from './components/parts/BrushCanvas.vue';
+import BrushPreview from './components/parts/BrushPreview.vue';
+import KeyboardShortcuts from './components/parts/KeyboardShortcuts.vue';
 
 import {
   parseMircAscii,
@@ -337,610 +338,536 @@ import {
   checkForGetRequest,
   splashAscii,
   checkIrcByteLimits,
-} from "./ascii";
+} from './ascii';
 
-import { useAsciiBirdStore } from "./store";
-import { useToast } from "./composables/useToast";
-import { useDialog } from "./composables/useDialog";
-import { useClipboard } from "./composables/useClipboard";
+import { useAsciiBirdStore } from './store';
+import { useToast } from './composables/useToast';
+import { useDialog } from './composables/useDialog';
+import { useClipboard } from './composables/useClipboard';
 
-export default {
-  setup() {
-    const store = useAsciiBirdStore();
-    const { messages: toasts, show: toastShow } = useToast();
-    const { state: dialogState, confirm: dialogConfirm, prompt: dialogPrompt, ok: dialogOk, cancel: dialogCancel } = useDialog();
-    const { copyText } = useClipboard();
-    return {
-      store,
-      toasts,
-      toastShow,
-      dialogState,
-      dialogConfirm,
-      dialogPrompt,
-      dialogOk,
-      dialogCancel,
-      copyText,
+import type { Block } from './types';
+
+defineOptions({ name: 'Dashboard' });
+
+const store = useAsciiBirdStore();
+const { messages: toasts, show: toastShow } = useToast();
+const { state: dialogState, confirm: dialogConfirm, prompt: dialogPrompt, ok: dialogOk, cancel: dialogCancel } = useDialog();
+const { copyText } = useClipboard();
+
+// Template refs
+const menu = ref<InstanceType<typeof ContextMenu> | null>(null);
+const asciiInput = ref<HTMLInputElement | null>(null);
+const tabbar = ref<HTMLElement | null>(null);
+
+// Reactive state
+const canvasX = ref<number | null>(null);
+const canvasY = ref<number | null>(null);
+const importType = ref<string | null>(null);
+const selectedBlocks = ref<Block[][]>([]);
+const textEditing = ref<unknown>(null);
+const updateCanvas = ref(false);
+const selecting = ref({
+  startX: null as number | null,
+  startY: null as number | null,
+  endX: null as number | null,
+  endY: null as number | null,
+  canSelect: false,
+});
+const isInputtingBrushSize = ref(false);
+const scrollOffset = ref(0);
+const toolbarString = ref('top: 0px;');
+const lastPostURL = ref('');
+const drawBrush = ref(false);
+const resetSelect = ref(false);
+const diffBlocks = reactive({
+  l: 0,
+  old: [] as unknown[],
+  new: [] as unknown[],
+});
+const updateAscii = ref<unknown>(false);
+
+// Scroll handler (defined here so it can be referenced in onUnmounted)
+const scrollHandler = () => {
+  scrollOffset.value = window.scrollY;
+};
+
+// Lifecycle equivalent to created()
+checkForGetRequest();
+window.addEventListener('scroll', scrollHandler);
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', scrollHandler);
+});
+
+// Computed
+const isSelecting = computed(() => currentTool.value?.name === 'select');
+const currentTool = computed(() => toolbarIcons[store.currentTool] ?? null);
+
+const asciibirdMeta = computed(() => store.asciibirdMeta);
+const debugPanelState = computed(() => store.debugPanel);
+const currentAscii = computed(() => store.currentAscii);
+const currentTab = computed(() => store.currentTab);
+const selectBlocks = computed(() => store.selectBlocks);
+const modalState = computed(() => store.modalState);
+const isModalOpen = computed(() => store.isModalOpen);
+
+const isKeyboardDisabled = computed(() => store.isKeyboardDisabled);
+const selectedLayer = computed(() => store.selectedLayer);
+const canToggleLayer = computed(() => currentAsciiLayers.value.length > 1);
+const brushSizeHeight = computed(() => store.brushSizeHeight);
+const brushSizeWidth = computed(() => store.brushSizeWidth);
+const brushSizeType = computed(() => store.brushSizeType);
+const currentFg = computed(() => store.currentFg);
+const currentBg = computed(() => store.currentBg);
+const currentChar = computed(() => store.currentChar);
+const toolbarState = computed(() => store.toolbarState);
+const brushBlocks = computed(() => store.brushBlocks);
+const tabsVisible = computed(() => store.tabsVisible);
+const menuBarVisible = computed(() => store.menuBarVisible);
+const currentAsciiLayerBlocks = computed(() => currentSelectedLayer.value?.data ?? []);
+const currentAsciiLayers = computed(() => store.currentAsciiLayers);
+const selectedLayerIndex = computed(() => currentAscii.value?.selectedLayer ?? 0);
+const brushLibraryState = computed(() => store.brushLibraryState);
+const brushPreviewState = computed(() => store.brushPreviewState);
+const layersLibraryState = computed(() => store.layersLibraryState);
+const currentSelectedLayer = computed(() => currentAsciiLayers.value[currentAscii.value?.selectedLayer ?? 0]);
+const isBrushing = computed(() => currentTool.value?.name === 'brush');
+const isErasing = computed(() => currentTool.value?.name === 'eraser');
+const isSelected = computed(() =>
+  selecting.value.startX !== null &&
+  selecting.value.startY !== null &&
+  selecting.value.endX !== null &&
+  selecting.value.endY !== null
+);
+
+const menuBar = computed(() => [
+  {
+    label: 'File',
+    items: [
+      { text: 'New ASCII', click: () => store.openModal('new-ascii') },
+      { text: 'Import from File', click: () => startImport('mirc') },
+      { text: 'Import from Clipboard', click: () => store.openModal('paste-ascii') },
+      {
+        text: 'Export to File',
+        click: () => startExport('file'),
+        disabled: !asciibirdMeta.value.length,
+      },
+      {
+        text: 'Export to Clipboard',
+        click: () => startExport('clipboard'),
+        disabled: !asciibirdMeta.value.length,
+      },
+      {
+        text: 'Export to HTTP POST',
+        click: () => startExport('post'),
+        disabled: !asciibirdMeta.value.length,
+      },
+    ],
+  },
+  {
+    label: 'Edit',
+    items: [
+      {
+        text: 'Edit ASCII',
+        click: () => store.openModal('edit-ascii'),
+        disabled: !asciibirdMeta.value.length,
+      },
+      {
+        text: 'Undo',
+        click: () => store.undoBlocks(),
+        disabled: !asciibirdMeta.value.length,
+      },
+      {
+        text: 'Redo',
+        click: () => store.redoBlocks(),
+        disabled: !asciibirdMeta.value.length,
+      },
+    ],
+  },
+  {
+    label: 'View',
+    items: [
+      {
+        text: menuBarVisible.value ? 'Hide Menu Bar' : 'Show Menu Bar',
+        click: () => store.changeMenuBarVisible(!menuBarVisible.value),
+      },
+      {
+        text: tabsVisible.value ? 'Hide Tabs' : 'Show Tabs',
+        click: () => store.changeTabsVisible(!tabsVisible.value),
+      },
+      {
+        text: toolbarState.value.gridView ? 'Disable Grid' : 'Enable Grid',
+        click: () => store.toggleGridView(!toolbarState.value.gridView),
+        disabled: !asciibirdMeta.value.length,
+      },
+      {
+        text: debugPanelState.value.visible ? 'Hide Debug' : 'Show Debug',
+        click: () => store.toggleDebugPanel(!debugPanelState.value.visible),
+      },
+    ],
+  },
+  {
+    label: 'Tools',
+    items: [
+      { text: 'Options', click: () => store.openModal('options') },
+      { text: 'Image Overlay', click: () => store.openModal('overlay'), disabled: !asciibirdMeta.value.length },
+    ],
+  },
+  {
+    label: 'Help',
+    items: [
+      { text: 'About', click: () => store.openModal('about') },
+      { text: 'Help', click: () => store.openModal('help') },
+    ],
+  },
+]);
+
+// Watch
+watch(isModalOpen, (val) => {
+  if (val) {
+    hotkeys.deleteScope('all');
+  }
+});
+
+watch(isKeyboardDisabled, (val) => {
+  if (val) {
+    hotkeys.deleteScope('all');
+  }
+});
+
+watch(currentTool, (val, old) => {
+  if (old?.name === 'select') {
+    selectedBlocks.value = [];
+  }
+});
+
+// Methods
+function getSplashAscii() {
+  return splashAscii;
+}
+
+function updateAsciiDetails(widthHeight: unknown) {
+  updateAscii.value = widthHeight;
+}
+
+function dispatchBlocks() {
+  diffBlocks.old = (diffBlocks.old as unknown[][]).flat();
+  diffBlocks.new = (diffBlocks.new as unknown[][]).flat();
+
+  store.updateAsciiBlocksAsync({
+    blocks: currentAsciiLayerBlocks.value,
+    diff: { ...diffBlocks } as { l: number; old: unknown[]; new: unknown[] },
+  });
+
+  diffBlocks.l = selectedLayerIndex.value;
+  diffBlocks.new = [];
+  diffBlocks.old = [];
+}
+
+function storeDiffBlocks(x: number, y: number, oldBlock: Block, newBlock: Block) {
+  const oldArr = diffBlocks.old as unknown[][];
+  const newArr = diffBlocks.new as unknown[][];
+
+  if (!oldArr[y]) {
+    oldArr[y] = [];
+  }
+
+  if (!oldArr[y][x]) {
+    oldArr[y][x] = {
+      x,
+      y,
+      b: { ...oldBlock },
     };
-  },
-  async created() {
-    checkForGetRequest();
-    this.scrollHandler = () => {
-      this.scrollOffset = window.scrollY;
+  }
+
+  if (!newArr[y]) {
+    newArr[y] = [];
+  }
+
+  if (!newArr[y][x]) {
+    newArr[y][x] = {
+      x,
+      y,
+      b: { ...newBlock },
     };
-    window.addEventListener("scroll", this.scrollHandler);
-    this.mirror.x = this.toolbarState.mirrorX;
-    this.mirror.y = this.toolbarState.mirrorY;
-  },
-  unmounted() {
-    window.removeEventListener("scroll", this.scrollHandler);
-  },
-  components: {
-    Toolbar,
-    DebugPanel,
-    Editor,
-    CharPicker,
-    ColourPicker,
-    ContextMenu,
-    NewAscii,
-    EditAscii,
-    PasteAscii,
-    BrushLibrary,
-    BrushCanvas,
-    BrushPreview,
-    KeyboardShortcuts,
-    LayersLibrary,
-    Options,
-    ImageOverlay,
-    About,
-    Help,
-    ABModal,
-    'Menu': Menu,
-    'MenuButton': MenuButton,
-    'MenuItems': MenuItems,
-    'MenuItem': MenuItem,
-    TransitionGroup,
-  },
-  name: "Dashboard",
-  data: () => ({
-    canvasX: null,
-    canvasY: null,
-    dashboardX: 0,
-    dashboardY: 0,
-    scrollHandler: null,
-    importType: null,
-    showContextMenu: false,
-    selectedBlocks: [],
-    textEditing: null,
-    updateCanvas: false,
-    selecting: {
-      startX: null,
-      startY: null,
-      endX: null,
-      endY: null,
-      canSelect: false,
-    },
-    isInputtingBrushSize: false,
-    scrollOffset: 0,
-    toolbarString: "top: 0px;",
-    lastPostURL: "",
-    drawBrush: false,
-    happy: false,
-    resetSelect: false,
-    mirror: {
-      x: false,
-      y: false,
-    },
-    diffBlocks: {
-      l: 0,
-      old: [],
-      new: [],
-    },
-    updateAscii: false,
-  }),
-  computed: {
-    isMacLike: () => /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform),
-    isSelecting() {
-      return this.currentTool.name === "select";
-    },
-    currentTool() {
-      return toolbarIcons[this.store.currentTool] ?? null;
-    },
+  }
+}
 
-    asciibirdMeta() {
-      return this.store.asciibirdMeta;
-    },
-    debugPanelState() {
-      return this.store.debugPanel;
-    },
-    currentAscii() {
-      return this.store.currentAscii;
-    },
-    currentTab() {
-      return this.store.currentTab;
-    },
-    imageOverlay() {
-      return this.store.imageOverlay || false;
-    },
-    imageOverlayUrl() {
-      return this.imageOverlay.url
-        ? this.imageOverlay.url.split("/").pop()
-        : "";
-    },
-    selectBlocks() {
-      return this.store.selectBlocks;
-    },
-    modalState() {
-      return this.store.modalState;
-    },
-    isModalOpen() {
-      return this.store.isModalOpen;
-    },
-
-    asciiLayersMenu() {
-      let menu = [];
-
-      for (let i in [...this.currentAsciiLayers]) {
-        menu.push({
-          text: this.currentAsciiLayers[i].label,
-          click: () =>
-            this.store.changeLayer(
-              this.currentAsciiLayers.length - i
-            ),
-        });
-      }
-
-      return menu.reverse();
-    },
-    isKeyboardDisabled() {
-      return this.store.isKeyboardDisabled;
-    },
-    selectedLayer() {
-      return this.store.selectedLayer;
-    },
-    canToggleLayer() {
-      return this.currentAsciiLayers.length > 1;
-    },
-    brushSizeHeight() {
-      return this.store.brushSizeHeight;
-    },
-    brushSizeWidth() {
-      return this.store.brushSizeWidth;
-    },
-    brushSizeType() {
-      return this.store.brushSizeType;
-    },
-    gridView() {
-      return this.toolbarState.gridView;
-    },
-    canFg() {
-      return this.store.isTargettingFg;
-    },
-    canBg() {
-      return this.store.isTargettingBg;
-    },
-    canText() {
-      return this.store.isTargettingChar;
-    },
-    currentFg() {
-      return this.store.currentFg;
-    },
-    currentBg() {
-      return this.store.currentBg;
-    },
-    currentChar() {
-      return this.store.currentChar;
-    },
-    toolbarState() {
-      return this.store.toolbarState;
-    },
-    brushBlocks() {
-      return this.store.brushBlocks;
-    },
-    tabsVisible() {
-      return this.store.tabsVisible;
-    },
-    menuBarVisible() {
-      return this.store.menuBarVisible;
-    },
-    currentAsciiLayerBlocks() {
-      return this.currentSelectedLayer.data;
-    },
-    currentAsciiLayers() {
-      return this.store.currentAsciiLayers;
-    },
-    selectedLayerIndex() {
-      return this.currentAscii.selectedLayer || 0;
-    },
-    brushLibraryState() {
-      return this.store.brushLibraryState;
-    },
-    brushPreviewState() {
-      return this.store.brushPreviewState;
-    },
-    layersLibraryState() {
-      return this.store.layersLibraryState;
-    },
-    currentSelectedLayer() {
-      return this.currentAsciiLayers[this.currentAscii.selectedLayer];
-    },
-    isBrushing() {
-      return this.currentTool.name === "brush";
-    },
-    isErasing() {
-      return this.currentTool.name === "eraser";
-    },
-    isSelected() {
-      return (
-        this.selecting.startX !== null &&
-        this.selecting.startY !== null &&
-        this.selecting.endX !== null &&
-        this.selecting.endY !== null
-      );
-    },
-    // Menu bar definition for Headless UI Menu
-    menuBar() {
-      return [
-        {
-          label: "File",
-          items: [
-            { text: "New ASCII", click: () => this.store.openModal("new-ascii") },
-            { text: "Import from File", click: () => this.startImport("mirc") },
-            { text: "Import from Clipboard", click: () => this.store.openModal("paste-ascii") },
-            {
-              text: "Export to File",
-              click: () => this.startExport("file"),
-              disabled: !this.asciibirdMeta.length,
-            },
-            {
-              text: "Export to Clipboard",
-              click: () => this.startExport("clipboard"),
-              disabled: !this.asciibirdMeta.length,
-            },
-            {
-              text: "Export to HTTP POST",
-              click: () => this.startExport("post"),
-              disabled: !this.asciibirdMeta.length,
-            },
-          ],
-        },
-        {
-          label: "Edit",
-          items: [
-            {
-              text: "Edit ASCII",
-              click: () => this.store.openModal("edit-ascii"),
-              disabled: !this.asciibirdMeta.length,
-            },
-            {
-              text: "Undo",
-              click: () => this.store.undoBlocks(),
-              disabled: !this.asciibirdMeta.length,
-            },
-            {
-              text: "Redo",
-              click: () => this.store.redoBlocks(),
-              disabled: !this.asciibirdMeta.length,
-            },
-          ],
-        },
-        {
-          label: "View",
-          items: [
-            {
-              text: this.menuBarVisible ? "Hide Menu Bar" : "Show Menu Bar",
-              click: () => this.store.changeMenuBarVisible(!this.menuBarVisible),
-            },
-            {
-              text: this.tabsVisible ? "Hide Tabs" : "Show Tabs",
-              click: () => this.store.changeTabsVisible(!this.tabsVisible),
-            },
-            {
-              text: this.toolbarState.gridView ? "Disable Grid" : "Enable Grid",
-              click: () => this.store.toggleGridView(!this.toolbarState.gridView),
-              disabled: !this.asciibirdMeta.length,
-            },
-            {
-              text: this.debugPanelState.visible ? "Hide Debug" : "Show Debug",
-              click: () => this.store.toggleDebugPanel(!this.debugPanelState.visible),
-            },
-          ],
-        },
-        {
-          label: "Tools",
-          items: [
-            { text: "Options", click: () => this.store.openModal("options") },
-            { text: "Image Overlay", click: () => this.store.openModal("overlay"), disabled: !this.asciibirdMeta.length },
-          ],
-        },
-        {
-          label: "Help",
-          items: [
-            { text: "About", click: () => this.store.openModal("about") },
-            { text: "Help", click: () => this.store.openModal("help") },
-          ],
-        },
-      ];
-    },
-  },
-  watch: {
-    isModalOpen(val) {
-      if (val) {
-        hotkeys.deleteScope("all");
-      }
-    },
-    isKeyboardDisabled(val) {
-      if (val) {
-        hotkeys.deleteScope("all");
-      }
-    },
-    currentTool(val, old) {
-      if (old === "select") {
-        this.selectedBlocks = [];
-      }
-    },
-  },
-  methods: {
-    splashAscii() {
-      return splashAscii;
-    },
-    updateAsciiDetails(widthHeight) {
-      this.updateAscii = widthHeight;
-    },
-    dispatchBlocks() {
-      this.diffBlocks.old = this.diffBlocks.old.flat();
-      this.diffBlocks.new = this.diffBlocks.new.flat();
-
-      this.store.updateAsciiBlocksAsync({
-        blocks: this.currentAsciiLayerBlocks,
-        diff: { ...this.diffBlocks },
+function showLayerRename(key: number, label: string) {
+  store.toggleDisableKeyboard(true);
+  dialogPrompt({
+    title: 'Rename Layer',
+    text: 'Please input your new layer name',
+    inputValue: label,
+  }).then((result: { input: string; isOk: boolean }) => {
+    if (!result.input.length) {
+      toastShow('You must enter a layer name!', {
+        type: 'error',
       });
+      store.toggleDisableKeyboard(false);
+      return;
+    }
 
-      this.diffBlocks = {
-        l: this.selectedLayerIndex,
-        new: [],
-        old: [],
-      };
-    },
-    storeDiffBlocks(x, y, oldBlock, newBlock) {
-      if (!this.diffBlocks.old[y]) {
-        this.diffBlocks.old[y] = [];
-      }
+    if (result.isOk) {
+      updateLayerName(key, result.input);
+    }
 
-      if (!this.diffBlocks.old[y][x]) {
-        this.diffBlocks.old[y][x] = {
-          x: x,
-          y: y,
-          b: { ...oldBlock },
-        };
-      }
+    store.toggleDisableKeyboard(false);
+  });
+}
 
-      if (!this.diffBlocks.new[y]) {
-        this.diffBlocks.new[y] = [];
-      }
+function updateLayerName(key: number, label: string) {
+  store.updateLayerName({ key, label });
+}
 
-      if (!this.diffBlocks.new[y][x]) {
-        this.diffBlocks.new[y][x] = {
-          x: x,
-          y: y,
-          b: { ...newBlock },
-        };
-      }
-    },
-    showLayerRename(key, label) {
-      this.store.toggleDisableKeyboard(true);
-      this.dialogPrompt({
-        title: "Rename Layer",
-        text: "Please input your new layer name",
-        inputValue: label,
-      }).then((result) => {
-        if (!result.input.length) {
-          this.toastShow("You must enter a layer name!", {
-            type: "error",
+function triggerbrush() {
+  drawBrush.value = !drawBrush.value;
+}
+
+function inputtingbrush(val: boolean) {
+  isInputtingBrushSize.value = val;
+}
+
+function buttonStyle(key: number) {
+  return currentTab.value === key
+    ? 'text-sm pl-1 p-1 h-10 text-white border border-transparent shadow-sm hover:bg-blue-500 bg-gray-900'
+    : 'text-sm pl-1 p-1 h-10 text-white border border-transparent shadow-sm hover:bg-blue-500 bg-gray-400';
+}
+
+function openContextMenu(e: MouseEvent) {
+  e.preventDefault();
+  menu.value?.open(e);
+}
+
+function updateCoords(value: { x: number; y: number }) {
+  canvasX.value = value.x;
+  canvasY.value = value.y;
+}
+
+function selectedblocks(value: Block[][]) {
+  selectedBlocks.value = value;
+}
+
+function updateSelecting(value: typeof selecting.value) {
+  selecting.value = { ...value };
+}
+
+function textediting(value: unknown) {
+  textEditing.value = value;
+}
+
+function updatecanvas() {
+  updateCanvas.value = !updateCanvas.value;
+}
+
+async function onImport() {
+  const input = asciiInput.value;
+  if (!input) return;
+
+  const files = input.files;
+  if (!files || !files.length) return;
+
+  const filename = files[0].name;
+  const fileReader = new FileReader();
+
+  const fileType = importType.value;
+  fileReader.addEventListener('load', async () => {
+    switch (fileType) {
+      case 'asb':
+        importAsciibirdState(fileReader.result as string);
+        break;
+
+      default:
+      case 'mirc':
+        await parseMircAscii(fileReader.result as string, filename);
+        break;
+    }
+
+    // Reset input so the same file can be imported again
+    input.value = '';
+  });
+
+  fileReader.readAsText(files[0]);
+}
+
+function startImport(type: string) {
+  importType.value = type;
+  asciiInput.value?.click();
+}
+
+function importAsciibirdState(fileContents: string) {
+  try {
+    const contents = JSON.parse(
+      LZString.decompressFromEncodedURIComponent(fileContents)
+    );
+    store.changeState({ ...contents });
+  } catch {
+    toastShow('Failed to import ASCIIBIRD state. File may be corrupted.', {
+      type: 'error',
+    });
+  }
+}
+
+function exportAsciibirdState() {
+  try {
+    const output = LZString.compressToEncodedURIComponent(
+      JSON.stringify(store.state)
+    );
+
+    const today = new Date();
+    const y = today.getFullYear();
+    const m = today.getMonth() + 1;
+    const d = today.getDate();
+    const h = today.getHours();
+    const mi = today.getMinutes();
+    const s = today.getSeconds();
+
+    downloadFile(
+      output,
+      `asciibird-${y}-${m}-${d}-${h}-${mi}-${s}.asb`,
+      'application/gzip'
+    );
+  } catch (err) {
+    toastShow(String(err), { type: 'error' });
+  }
+}
+
+function startExport(type: string) {
+  const ascii = exportMirc();
+
+  const checkLines = checkIrcByteLimits(ascii.output.join(''));
+
+  if (checkLines.length) {
+    const displayLines = checkLines.join(', ');
+    toastShow(
+      `Line${checkLines.length > 1 ? 's' : ''} ${displayLines} may be too large for IRC.`,
+      { type: 'error', duration: 1200 }
+    );
+  }
+
+  switch (type) {
+    case 'clipboard':
+      copyText(ascii.output.join('')).then(
+        () => {
+          toastShow('Copied mIRC to clipboard!', { type: 'success' });
+        },
+        () => {
+          toastShow('Error when copying mIRC to clipboard!', {
+            type: 'error',
           });
-          this.store.toggleDisableKeyboard(false);
+        }
+      );
+      break;
+
+    default:
+    case 'file':
+      downloadFile(ascii.output.join(''), ascii.filename, 'text/plain');
+      break;
+
+    case 'post':
+      store.toggleDisableKeyboard(true);
+      dialogPrompt({
+        title: 'HTTP Post your Ascii',
+        text: 'Please input the URL for the HTTP Post sir',
+        inputValue: lastPostURL.value,
+      }).then((result: { input?: string; isOk: boolean }) => {
+        if (result.input === undefined) {
+          toastShow('Come on bro. Get it together.', {
+            type: 'error',
+          });
+          store.toggleDisableKeyboard(false);
           return;
         }
 
         if (result.isOk) {
-          this.updateLayerName(key, result.input);
-        }
-
-        this.store.toggleDisableKeyboard(false);
-      });
-    },
-    updateLayerName(key, label) {
-      this.store.updateLayerName({ key, label });
-    },
-    triggerbrush() {
-      this.drawBrush = !this.drawBrush;
-    },
-    inputtingbrush(val) {
-      this.isInputtingBrushSize = val;
-    },
-    buttonStyle(key) {
-      return this.currentTab === key
-        ? `text-sm pl-1 p-1 h-10 text-white border border-transparent shadow-sm hover:bg-blue-500 bg-gray-900`
-        : `text-sm pl-1 p-1 h-10 text-white border border-transparent shadow-sm hover:bg-blue-500 bg-gray-400`;
-    },
-    openContextMenu(e) {
-      e.preventDefault();
-      this.$refs.menu.open(e);
-    },
-    updateCoords(value) {
-      this.canvasX = value.x;
-      this.canvasY = value.y;
-    },
-    selectedblocks(value) {
-      this.selectedBlocks = value;
-    },
-    updateSelecting(value) {
-      this.selecting = value;
-    },
-    textediting(value) {
-      this.textEditing = value;
-    },
-    updatecanvas() {
-      this.updateCanvas = !this.updateCanvas;
-    },
-    async onImport() {
-      const { files } = this.$refs.asciiInput;
-      const filename = files[0].name;
-      const fileReader = new FileReader();
-
-      const fileType = this.importType;
-      fileReader.addEventListener("load", async () => {
-        switch (fileType) {
-          case "asb":
-            this.importAsciibirdState(fileReader.result, filename);
-            break;
-
-          default:
-          case "mirc":
-            await parseMircAscii(fileReader.result, filename);
-            break;
-        }
-      });
-
-      fileReader.readAsText(files[0]);
-    },
-    startImport(type) {
-      this.importType = type;
-      this.$refs.asciiInput.click();
-    },
-    importAsciibirdState(fileContents) {
-      try {
-        const contents = JSON.parse(
-          LZString.decompressFromEncodedURIComponent(fileContents)
-        );
-        this.store.changeState({ ...contents });
-      } catch {
-        this.toastShow("Failed to import ASCIIBIRD state. File may be corrupted.", {
-          type: "error",
-        });
-      }
-    },
-    exportAsciibirdState() {
-      let output;
-
-      try {
-        output = LZString.compressToEncodedURIComponent(
-          JSON.stringify(this.store.state)
-        );
-
-        const today = new Date();
-        const y = today.getFullYear();
-        const m = today.getMonth() + 1;
-        const d = today.getDate();
-        const h = today.getHours();
-        const mi = today.getMinutes();
-        const s = today.getSeconds();
-
-        downloadFile(
-          output,
-          `asciibird-${y}-${m}-${d}-${h}-${mi}-${s}.asb`,
-          "application/gzip"
-        );
-      } catch (err) {
-        this.toastShow(String(err), { type: "error" });
-      }
-    },
-    startExport(type) {
-      let ascii = exportMirc();
-
-      const checkLines = checkIrcByteLimits(ascii.output.join(""));
-
-      if (checkLines.length) {
-        const displayLines = checkLines.join(", ");
-        this.toastShow(
-          `Line${checkLines.length > 1 ? 's' : ''} ${displayLines} may be too large for IRC.`,
-          { type: "error", duration: 1200 }
-        );
-      }
-
-      switch (type) {
-        case "clipboard":
-          this.copyText(ascii.output.join("")).then(
-            () => {
-              this.toastShow("Copied mIRC to clipboard!", { type: "success" });
-            },
-            () => {
-              this.toastShow("Error when copying mIRC to clipboard!", {
-                type: "error",
+          const asciiPost = exportMirc();
+          lastPostURL.value = result.input;
+          const requestOptions = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/octet-stream' },
+            body: asciiPost.output.join(''),
+          };
+          fetch(lastPostURL.value, requestOptions)
+            .then((response) => {
+              if (response.status === 200 || response.status === 201) {
+                toastShow('POSTed ascii!', { type: 'success' });
+              } else {
+                toastShow(
+                  `Error: ${response.status} ${response.statusText}`,
+                  { type: 'error' }
+                );
+              }
+            })
+            .catch((error) => {
+              toastShow(`Error: ${JSON.stringify(error)}`, {
+                type: 'error',
               });
-            }
-          );
-          break;
-
-        default:
-        case "file":
-          downloadFile(ascii.output.join(""), ascii.filename, "text/plain");
-          break;
-        case "post":
-          this.store.toggleDisableKeyboard(true);
-          this.dialogPrompt({
-            title: "HTTP Post your Ascii",
-            text: "Please input the URL for the HTTP Post sir",
-            inputValue: this.lastPostURL,
-          }).then((result) => {
-            if (result.input === undefined) {
-              this.toastShow("Come on bro. Get it together.", {
-                type: "error",
-              });
-              this.store.toggleDisableKeyboard(false);
-              return;
-            }
-
-            if (result.isOk) {
-              let ascii = exportMirc();
-              this.lastPostURL = result.input;
-              const requestOptions = {
-                method: "POST",
-                headers: { "Content-Type": "application/octet-stream" },
-                body: ascii.output.join(""),
-              };
-              fetch(this.lastPostURL, requestOptions)
-                .then((response) => {
-                  if (response.status === 200 || response.status === 201) {
-                    this.toastShow("POSTed ascii!", { type: "success" });
-                  } else {
-                    this.toastShow(
-                      `Error: ${response.status} ${response.statusText}`,
-                      { type: "error" }
-                    );
-                  }
-                })
-                .catch((error) => {
-                  this.toastShow(`Error: ${JSON.stringify(error)}`, {
-                    type: "error",
-                  });
-                });
-            }
-
-            this.store.toggleDisableKeyboard(false);
-          });
-
-          break;
-      }
-    },
-    changeTab(key) {
-      this.store.changeTab(key);
-    },
-    closeTab(key) {
-      this.dialogConfirm({
-        title: `Close ${this.asciibirdMeta[key].title}?`,
-        text: "This action cannot be undone and the ASCII will be gone.",
-      }).then((result) => {
-        if (result.isOk) {
-          this.store.closeTab(key);
+            });
         }
+
+        store.toggleDisableKeyboard(false);
       });
-    },
-    captureMouse(event) {
-      this.dashboardX = event.pageX;
-      this.dashboardY = event.pageY;
-    },
-  },
-};
+
+      break;
+  }
+}
+
+function changeTab(key: number) {
+  store.changeTab(key);
+}
+
+function closeTab(key: number) {
+  dialogConfirm({
+    title: `Close ${asciibirdMeta.value[key]?.title ?? ''}?`,
+    text: 'This action cannot be undone and the ASCII will be gone.',
+  }).then((result: { isOk: boolean }) => {
+    if (result.isOk) {
+      store.closeTab(key);
+    }
+  });
+}
+
+// Expose for parent / external access
+// In <script setup>, top-level bindings are automatically exposed
+defineExpose({
+  dispatchBlocks,
+  storeDiffBlocks,
+  showLayerRename,
+  updateLayerName,
+  triggerbrush,
+  selectedBlocks,
+  textEditing,
+  drawBrush,
+  diffBlocks,
+  isBrushing,
+  isErasing,
+  isSelected,
+  currentTool,
+  currentFg,
+  currentBg,
+  currentChar,
+  toolbarState,
+  brushBlocks,
+  selectBlocks,
+  brushSizeWidth,
+  brushSizeHeight,
+  brushSizeType,
+  currentAsciiLayers,
+  currentSelectedLayer,
+  currentAsciiLayerBlocks,
+  canToggleLayer,
+  selectedLayer,
+  selectedLayerIndex,
+  isSelecting,
+  asciibirdMeta,
+  currentAscii,
+  currentTab,
+  updateCanvas,
+  updateAscii,
+  resetSelect,
+  selecting,
+  isInputtingBrushSize,
+});
 </script>
 
 <style scoped>

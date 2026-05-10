@@ -17,8 +17,6 @@ import BrushLibrary from '@/components/BrushLibrary.vue'
 import Toolbar from '@/components/Toolbar.vue'
 import {
   toolbarIcons,
-  blockWidth,
-  blockHeight,
   setStore,
 } from '@/ascii'
 import {
@@ -363,7 +361,7 @@ describe('Toolbar.vue', () => {
   it('mounts successfully', () => {
     const wrapper = shallowMount(
       Toolbar,
-      mountOpts({ propsData: { yOffset: 0 } }),
+      mountOpts(),
     )
     expect(wrapper.findComponent(Toolbar).exists()).toBe(true)
   })
@@ -371,7 +369,7 @@ describe('Toolbar.vue', () => {
   it('computed toolbarIcons returns ascii toolbar icons', () => {
     const wrapper = shallowMount(
       Toolbar,
-      mountOpts({ propsData: { yOffset: 0 } }),
+      mountOpts(),
     )
     expect(wrapper.vm.toolbarIcons).toEqual(toolbarIcons)
   })
@@ -379,7 +377,7 @@ describe('Toolbar.vue', () => {
   it('computed currentTool returns current tool object', () => {
     const wrapper = shallowMount(
       Toolbar,
-      mountOpts({ propsData: { yOffset: 0 } }),
+      mountOpts(),
     )
     expect(wrapper.vm.currentTool.name).toBe('default')
     expect(wrapper.vm.currentTool.icon).toBe('edit_off')
@@ -388,7 +386,7 @@ describe('Toolbar.vue', () => {
   it('computed canFg returns targeting fg state', () => {
     const wrapper = shallowMount(
       Toolbar,
-      mountOpts({ propsData: { yOffset: 0 } }),
+      mountOpts(),
     )
     expect(wrapper.vm.canFg).toBe(true)
   })
@@ -396,7 +394,7 @@ describe('Toolbar.vue', () => {
   it('computed canBg returns targeting bg state', () => {
     const wrapper = shallowMount(
       Toolbar,
-      mountOpts({ propsData: { yOffset: 0 } }),
+      mountOpts(),
     )
     expect(wrapper.vm.canBg).toBe(true)
   })
@@ -404,94 +402,32 @@ describe('Toolbar.vue', () => {
   it('computed canText returns targeting char state', () => {
     const wrapper = shallowMount(
       Toolbar,
-      mountOpts({ propsData: { yOffset: 0 } }),
+      mountOpts(),
     )
     expect(wrapper.vm.canText).toBe(true)
   })
 
-  it('computed mirrorX returns mirror state', () => {
-    const wrapper = shallowMount(
-      Toolbar,
-      mountOpts({ propsData: { yOffset: 0 } }),
-    )
-    expect(wrapper.vm.mirrorX).toBe(false)
-  })
-
-  it('computed mirrorY returns mirror state', () => {
-    const wrapper = shallowMount(
-      Toolbar,
-      mountOpts({ propsData: { yOffset: 0 } }),
-    )
-    expect(wrapper.vm.mirrorY).toBe(false)
-  })
-
-  it('computed gridView returns grid state', () => {
-    const wrapper = shallowMount(
-      Toolbar,
-      mountOpts({ propsData: { yOffset: 0 } }),
-    )
-    expect(wrapper.vm.gridView).toBe(false)
-  })
-
-  it('computed halfBlockEditing returns half block state', () => {
-    const wrapper = shallowMount(
-      Toolbar,
-      mountOpts({ propsData: { yOffset: 0 } }),
-    )
-    expect(wrapper.vm.halfBlockEditing).toBe(false)
-  })
-
-  it('computed updateBrush returns update brush state', () => {
-    const wrapper = shallowMount(
-      Toolbar,
-      mountOpts({ propsData: { yOffset: 0 } }),
-    )
-    expect(wrapper.vm.updateBrush).toBe(true)
-  })
-
-  it('tooltipName returns correct names for all tools', () => {
-    const wrapper = shallowMount(
-      Toolbar,
-      mountOpts({ propsData: { yOffset: 0 } }),
-    )
-    expect(wrapper.vm.tooltipName({ name: 'default' }))
-      .toBe('Default Mode')
-    expect(wrapper.vm.tooltipName({ name: 'select' }))
-      .toBe('Select Blocks')
-    expect(wrapper.vm.tooltipName({ name: 'text' }))
-      .toBe('Text Editing')
-    expect(wrapper.vm.tooltipName({ name: 'fill' }))
-      .toBe('Fill Blocks')
-    expect(wrapper.vm.tooltipName({ name: 'brush' }))
-      .toBe('Brush Blocks')
-    expect(wrapper.vm.tooltipName({ name: 'dropper' }))
-      .toBe('Block Picker')
-    expect(wrapper.vm.tooltipName({ name: 'eraser' }))
-      .toBe('Eraser Blocks')
-    expect(wrapper.vm.tooltipName({ name: 'fill-eraser' }))
-      .toBe('Fill Eraser Blocks')
-  })
-
-  it('updateMirror calls store.updateMirror', () => {
+  it('toggleMirrorX calls store.updateMirror with toggled x', () => {
     const spy = vi.spyOn(store, 'updateMirror')
     const wrapper = shallowMount(
       Toolbar,
-      mountOpts({ propsData: { yOffset: 0 } }),
+      mountOpts(),
     )
-    wrapper.vm.mirror = { x: true, y: false }
-    wrapper.vm.updateMirror()
-    expect(spy).toHaveBeenCalledWith({ x: true, y: false })
+    wrapper.vm.toggleMirrorX()
+    expect(spy).toHaveBeenCalledWith(
+      expect.objectContaining({ x: true, y: false }),
+    )
   })
 
-  it('onDragStop calls store.changeToolBarState', () => {
-    const spy = vi.spyOn(store, 'changeToolBarState')
+  it('toggleMirrorY calls store.updateMirror with toggled y', () => {
+    const spy = vi.spyOn(store, 'updateMirror')
     const wrapper = shallowMount(
       Toolbar,
-      mountOpts({ propsData: { yOffset: 0 } }),
+      mountOpts(),
     )
-    wrapper.vm.onDragStop(50, 60)
+    wrapper.vm.toggleMirrorY()
     expect(spy).toHaveBeenCalledWith(
-      expect.objectContaining({ x: 50, y: 60, visible: true }),
+      expect.objectContaining({ x: false, y: true }),
     )
   })
 })

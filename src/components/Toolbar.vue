@@ -13,10 +13,10 @@
         <div class="flex">
           <label class="ab-checkbox-hover group">
             <input
+              v-model="store.toolbarState.targetingFg"
               type="checkbox"
               class="form-checkbox h-5 w-5 text-blue-600"
               name="targetingFg"
-              v-model="toolbarState.targetingFg"
               :disabled="!canBg && !canText"
             >
             <div class="inline-block relative">
@@ -38,10 +38,10 @@
 
           <label class="ab-checkbox-hover group">
             <input
+              v-model="store.toolbarState.targetingBg"
               type="checkbox"
               class="ab-checkbox"
               name="targetingBg"
-              v-model="toolbarState.targetingBg"
               :disabled="!canFg && !canText"
             >
             <div class="inline-block relative">
@@ -63,10 +63,10 @@
 
           <label class="ab-checkbox-hover group">
             <input
+              v-model="store.toolbarState.targetingChar"
               type="checkbox"
               class="ab-checkbox"
               name="targetingChar"
-              v-model="toolbarState.targetingChar"
               :disabled="!canFg && !canBg"
             >
             <div class="inline-block relative">
@@ -89,15 +89,11 @@
           <button
             type="button"
             :class="`ab-toolbar-button group ${
-              mirror.x
+              store.toolbarState.mirrorX
                 ? 'border-gray-900 bg-blue-800'
                 : 'border-gray-200 bg-gray-500'
             }`"
-            @click="
-              mirror.x = !mirror.x;
-              updateMirror();
-              toastShow(`Mirror X ${mirror.x ? 'enabled' : 'disabled'}`);
-            "
+            @click="toggleMirrorX()"
           >
             <div class="inline-block relative">
               <span class="material-icons">more_vert</span>
@@ -119,15 +115,11 @@
           <button
             type="button"
             :class="`ab-toolbar-button group ${
-              mirror.y
+              store.toolbarState.mirrorY
                 ? 'border-gray-900 bg-blue-800'
                 : 'border-gray-200 bg-gray-500'
             }`"
-            @click="
-              mirror.y = !mirror.y;
-              updateMirror();
-              toastShow(`Mirror Y ${mirror.y ? 'enabled' : 'disabled'}`);
-            "
+            @click="toggleMirrorY()"
           >
             <div class="inline-block relative">
               <span class="material-icons">more_horiz</span>
@@ -149,19 +141,11 @@
           <button
             type="button"
             :class="`ab-toolbar-button group ${
-              toolbarState.updateBrush
+              store.toolbarState.updateBrush
                 ? 'border-gray-900 bg-blue-800'
                 : 'border-gray-200 bg-gray-500'
             }`"
-            @click="
-              store.toggleUpdateBrush(updateBrush);
-              toolbarState.updateBrush = !toolbarState.updateBrush;
-              toastShow(
-                `Update Brush when colours or char changes ${
-                  toolbarState.updateBrush ? 'enabled' : 'disabled'
-                }`
-              );
-            "
+            @click="toggleUpdateBrush()"
           >
             <div class="inline-block relative">
               <span class="material-icons">color_lens</span>
@@ -183,21 +167,15 @@
           <button
             type="button"
             :class="`ab-toolbar-button group ${
-              toolbarState.gridView
+              store.toolbarState.gridView
                 ? 'border-gray-900 bg-blue-800'
                 : 'border-gray-200 bg-gray-500'
             }`"
-            @click="
-              store.toggleGridView(gridView);
-              toolbarState.gridView = !toolbarState.gridView;
-              toastShow(
-                `Grid view ${toolbarState.gridView ? 'enabled' : 'disabled'}`
-              );
-            "
+            @click="toggleGridView()"
           >
             <div class="inline-block relative">
               <span class="material-icons">{{
-                !gridView ? "grid_on" : "grid_off"
+                !store.toolbarState.gridView ? "grid_on" : "grid_off"
               }}</span>
               <div
                 class="
@@ -210,7 +188,7 @@
                 "
               >
                 <span class="material-icons">{{
-                  !gridView ? "grid_on" : "grid_off"
+                  !store.toolbarState.gridView ? "grid_on" : "grid_off"
                 }}</span>
                 Toggle Grid View
               </div>
@@ -220,20 +198,11 @@
           <button
             type="button"
             :class="`ab-toolbar-button group ${
-              toolbarState.halfBlockEditing
+              store.toolbarState.halfBlockEditing
                 ? 'border-gray-900 bg-blue-800'
                 : 'border-gray-200 bg-gray-500'
             }`"
-            @click="
-              toolbarState.halfBlockEditing = !toolbarState.halfBlockEditing;
-              store.toggleHalfBlockEditing(toolbarState.halfBlockEditing);
-              toastShow(
-                `Half Block Editing Mode ${toolbarState.halfBlockEditing ? 'enabled' : 'disabled'}`
-              );
-              toastShow(
-                `WARNING THIS FEATURE IS STILL EXPERIMENTAL`
-              );
-            "
+            @click="toggleHalfBlockEditing()"
           >
             <div class="inline-block relative">
               <span class="material-icons">{{
@@ -260,9 +229,9 @@
 
         <div class="border-t border-black border-opacity-10 pt-2">
           <button
-            type="button"
             v-for="(value, keyToolbar) in toolbarIcons"
             :key="keyToolbar + 50"
+            type="button"
             :class="`rounded-3xl w-10 h-10 mt-1 ml-1 transition-all group ${
               currentTool.name === value.name
                 ? 'border-gray-900 bg-blue-500'
@@ -293,142 +262,71 @@
   </div>
 </template>
 
-<script>
-import { ref } from 'vue';
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue';
 import { useDraggable } from '@vueuse/core';
 import { useAsciiBirdStore } from '../store';
 import { useToast } from '../composables/useToast';
 import Colours from "./Colours.vue";
-import { toolbarIcons, blockWidth, blockHeight } from "../ascii";
+import { toolbarIcons } from "../ascii";
+import { tooltipName } from '../utils/toolbar';
 
-export default {
-  setup() {
-    const store = useAsciiBirdStore();
-    const { show: toastShow } = useToast();
+defineOptions({ name: 'Toolbar' });
 
-    const panelEl = ref(null);
-    const { style: panelStyle } = useDraggable(panelEl, {
-      initialValue: { x: store.toolbarState.x, y: store.toolbarState.y },
-    });
+const store = useAsciiBirdStore();
+const { show: toastShow } = useToast();
 
-    return { store, toastShow, panelEl, panelStyle };
-  },
-  name: "Toolbar",
-  components: { Colours },
-  props: { yOffset: { type: Number, default: 0 } },
-  data: () => ({
-    mirror: {
-      x: false,
-      y: false,
-    },
-  }),
-  created() {
-    this.mirror.x = this.mirrorX;
-    this.mirror.y = this.mirrorY;
-  },
-  computed: {
-    toolbarIcons() {
-      return toolbarIcons;
-    },
-    blockWidth() {
-      return blockWidth * this.blockSizeMultiplier;
-    },
-    blockHeight() {
-      return blockHeight * this.blockSizeMultiplier;
-    },
-    blockSizeMultiplier() {
-      return this.store.blockSizeMultiplier;
-    },
-    toolbarState() {
-      return this.store.toolbarState;
-    },
-    currentAscii() {
-      return this.store.currentAscii;
-    },
-    currentTool() {
-      return toolbarIcons[this.store.currentTool];
-    },
-    canFg() {
-      return this.store.isTargettingFg;
-    },
-    canBg() {
-      return this.store.isTargettingBg;
-    },
-    canText() {
-      return this.store.isTargettingChar;
-    },
-    currentFg() {
-      return this.store.currentFg;
-    },
-    currentBg() {
-      return this.store.currentBg;
-    },
-    currentChar() {
-      return this.store.currentChar;
-    },
-    draggable() {
-      return this.toolbarState.draggable;
-    },
-    gridView() {
-      return this.toolbarState.gridView;
-    },
-    halfBlockEditing() {
-      return this.toolbarState.halfBlockEditing;
-    },
-    updateBrush() {
-      return this.toolbarState.updateBrush;
-    },
-    mirrorX() {
-      return this.toolbarState.mirrorX;
-    },
-    mirrorY() {
-      return this.toolbarState.mirrorY;
-    },
-  },
-  watch: {
-    yOffset() {
-      // yOffset handling managed by useDraggable positioning
-    },
-    mirrorX(val) {
-      this.mirror.x = val;
-    },
-    mirrorY(val) {
-      this.mirror.y = val;
-    },
-  },
-  methods: {
-    tooltipName(value) {
-      switch (value.name) {
-        case "default":
-          return "Default Mode";
-        case "select":
-          return "Select Blocks";
-        case "text":
-          return "Text Editing";
-        case "fill":
-          return "Fill Blocks";
-        case "brush":
-          return "Brush Blocks";
-        case "dropper":
-          return "Block Picker";
-        case "eraser":
-          return "Eraser Blocks";
-        case "fill-eraser":
-          return "Fill Eraser Blocks";
-      }
-    },
-    updateMirror() {
-      this.store.updateMirror(this.mirror);
-    },
-    onDragStop(x, y) {
-      this.store.changeToolBarState({
-        x,
-        y,
-        w: this.toolbarState.w,
-        h: this.toolbarState.h,
-        visible: true,
-      });
-    },
-  },
-};
+const panelEl = ref<HTMLElement | null>(null);
+const { style: panelStyle, x: dragX, y: dragY } = useDraggable(panelEl, {
+  initialValue: { x: store.toolbarState.x, y: store.toolbarState.y },
+});
+
+// Sync drag position back to store
+watch([dragX, dragY], ([newX, newY]) => {
+  store.changeToolBarState({
+    x: newX,
+    y: newY,
+    w: store.toolbarState.w,
+    h: store.toolbarState.h,
+    visible: true,
+  });
+});
+
+const currentTool = computed(() => toolbarIcons[store.currentTool]);
+const canFg = computed(() => store.isTargettingFg);
+const canBg = computed(() => store.isTargettingBg);
+const canText = computed(() => store.isTargettingChar);
+
+function toggleMirrorX() {
+  const newVal = !store.toolbarState.mirrorX;
+  store.updateMirror({ x: newVal, y: store.toolbarState.mirrorY });
+  toastShow(`Mirror X ${newVal ? 'enabled' : 'disabled'}`);
+}
+
+function toggleMirrorY() {
+  const newVal = !store.toolbarState.mirrorY;
+  store.updateMirror({ x: store.toolbarState.mirrorX, y: newVal });
+  toastShow(`Mirror Y ${newVal ? 'enabled' : 'disabled'}`);
+}
+
+function toggleUpdateBrush() {
+  const newVal = !store.toolbarState.updateBrush;
+  store.toggleUpdateBrush(newVal);
+  toastShow(
+    `Update Brush when colours or char changes ${newVal ? 'enabled' : 'disabled'}`
+  );
+}
+
+function toggleGridView() {
+  const newVal = !store.toolbarState.gridView;
+  store.toggleGridView(newVal);
+  toastShow(`Grid view ${newVal ? 'enabled' : 'disabled'}`);
+}
+
+function toggleHalfBlockEditing() {
+  const newVal = !store.toolbarState.halfBlockEditing;
+  store.toggleHalfBlockEditing(newVal);
+  toastShow(`Half Block Editing Mode ${newVal ? 'enabled' : 'disabled'}`);
+  toastShow('WARNING THIS FEATURE IS STILL EXPERIMENTAL');
+}
 </script>
