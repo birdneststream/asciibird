@@ -27,7 +27,10 @@
       id="swapColour"
       @click="swapColours()"
     >
-      <span class="material-icons">swap_horiz</span>
+      <span
+        class="material-icons"
+        aria-hidden="true"
+      >swap_horiz</span>
     </button>
 
     <button

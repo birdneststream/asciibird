@@ -163,23 +163,31 @@
           :key="key"
           class="mr-2 z-40"
         >
-          <button
-            class="ab-button p-1 z-40"
+          <div
+            class="ab-button p-1 z-40 inline-flex items-center cursor-pointer"
             :class="buttonStyle(key)"
             @click="changeTab(key, value)"
           >
-            <span>
-              <span class="material-icons relative">insert_drive_file</span>
-              <span class="bottom-1 relative pl-1 pr-1">{{ value.title }}</span>
-              <button
-                class="ab-button relative bottom-1 z-40 rounded-3xl h-5"
-                @click="closeTab(key)"
-              ><span
+            <span
+              class="material-icons relative"
+              aria-hidden="true"
+            >insert_drive_file</span>
+            <span class="bottom-1 relative pl-1 pr-1">{{ value.title }}</span>
+            <span
+              class="ab-button relative bottom-0 z-40 rounded-3xl h-5 inline-flex items-center justify-center cursor-pointer"
+              role="button"
+              tabindex="0"
+              @click.stop="closeTab(key)"
+              @keydown.enter.stop="closeTab(key)"
+              @keydown.space.stop="closeTab(key)"
+            >
+              <span
                 class="material-icons"
                 style="font-size: 16px"
-              >close</span></button>
+                aria-hidden="true"
+              >close</span>
             </span>
-          </button>
+          </div>
         </span>
       </div>
 

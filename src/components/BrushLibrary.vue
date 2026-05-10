@@ -15,7 +15,10 @@
           }`"
           @click="changeTab(0)"
         >
-          <span class="material-icons relative top-2 pb-4">history</span>
+          <span
+            class="material-icons relative top-2 pb-4"
+            aria-hidden="true"
+          >history</span>
           History
         </button>
 
@@ -28,7 +31,10 @@
           }`"
           @click="changeTab(1)"
         >
-          <span class="material-icons relative top-2 pb-4">library_books</span>
+          <span
+            class="material-icons relative top-2 pb-4"
+            aria-hidden="true"
+          >library_books</span>
           Library {{ libraryCount }}
         </button>
 
@@ -48,14 +54,20 @@
                   class="ab-rounded-button ml-1 mt-1"
                   @click="saveToLibrary(decompressBlock(brush.blocks))"
                 >
-                  <span class="material-icons">save</span>
+                  <span
+                    class="material-icons"
+                    aria-hidden="true"
+                  >save</span>
                 </button>
                 <button
                   type="button"
                   class="ab-rounded-button ml-1 mt-1"
                   @click="reuseBlocks(decompressBlock(brush.blocks))"
                 >
-                  <span class="material-icons">brush</span>
+                  <span
+                    class="material-icons"
+                    aria-hidden="true"
+                  >brush</span>
                 </button>
 
                 <button
@@ -63,7 +75,10 @@
                   class="ab-rounded-button ml-1 mt-1"
                   @click="removeFromHistory(decompressBlock(brush.blocks))"
                 >
-                  <span class="material-icons">delete</span>
+                  <span
+                    class="material-icons"
+                    aria-hidden="true"
+                  >delete</span>
                 </button>
               </div>
             </div>
@@ -91,14 +106,20 @@
                   class="ab-rounded-button ml-1 mt-1"
                   @click="removeFromLibrary(decompressBlock(brush.blocks))"
                 >
-                  <span class="material-icons">delete</span>
+                  <span
+                    class="material-icons"
+                    aria-hidden="true"
+                  >delete</span>
                 </button>
                 <button
                   type="button"
                   class="ab-rounded-button ml-1 mt-1"
                   @click="reuseBlocks(decompressBlock(brush.blocks))"
                 >
-                  <span class="material-icons">brush</span>
+                  <span
+                    class="material-icons"
+                    aria-hidden="true"
+                  >brush</span>
                 </button>
 
                 <button
@@ -107,7 +128,10 @@
                   class="ab-rounded-button ml-1 mt-1"
                   @click="upBrush(key)"
                 >
-                  <span class="material-icons">arrow_upward</span>
+                  <span
+                    class="material-icons"
+                    aria-hidden="true"
+                  >arrow_upward</span>
                 </button>
 
                 <button
@@ -116,7 +140,10 @@
                   @click="downBrush(key)"
                   v-if="key !== brushLibrary.length-1"
                 >
-                  <span class="material-icons">arrow_downward</span>
+                  <span
+                    class="material-icons"
+                    aria-hidden="true"
+                  >arrow_downward</span>
                 </button>
               </div>
             </div>

@@ -71,7 +71,10 @@
             @click="toggleMirrorX()"
           >
             <div class="inline-block relative">
-              <span class="material-icons">more_vert</span>
+              <span
+                class="material-icons"
+                aria-hidden="true"
+              >more_vert</span>
               <div class="ab-tooltip">
                 Mirror X axis when Editing
               </div>
@@ -88,7 +91,10 @@
             @click="toggleMirrorY()"
           >
             <div class="inline-block relative">
-              <span class="material-icons">more_horiz</span>
+              <span
+                class="material-icons"
+                aria-hidden="true"
+              >more_horiz</span>
               <div class="ab-tooltip">
                 Mirror Y axis when Editing
               </div>
@@ -105,7 +111,10 @@
             @click="toggleUpdateBrush()"
           >
             <div class="inline-block relative">
-              <span class="material-icons">color_lens</span>
+              <span
+                class="material-icons"
+                aria-hidden="true"
+              >color_lens</span>
               <div class="ab-tooltip">
                 Update Brush Automatically when Colours or Char Changes
               </div>
@@ -122,7 +131,10 @@
             @click="toggleGridView()"
           >
             <div class="inline-block relative">
-              <span class="material-icons">{{
+              <span
+                class="material-icons"
+                aria-hidden="true"
+              >{{
                 !store.toolbarState.gridView ? "grid_on" : "grid_off"
               }}</span>
               <div class="ab-tooltip">
@@ -141,7 +153,10 @@
             @click="toggleHalfBlockEditing()"
           >
             <div class="inline-block relative">
-              <span class="material-icons">grid_view</span>
+              <span
+                class="material-icons"
+                aria-hidden="true"
+              >grid_view</span>
               <div class="ab-tooltip">
                 Toggle Half Block Editing Mode
               </div>
@@ -162,7 +177,10 @@
             @click="store.changeTool(keyToolbar)"
           >
             <div class="inline-block relative">
-              <span class="material-icons">{{ value.icon }}</span>
+              <span
+                class="material-icons"
+                aria-hidden="true"
+              >{{ value.icon }}</span>
               <div class="ab-tooltip">
                 {{ tooltipName(value) }}
               </div>

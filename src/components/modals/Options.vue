@@ -87,14 +87,20 @@
           type="button"
           class="ab-button"
         >
-          <span class="material-icons relative top-2 pb-4">cancel</span>
+          <span
+            class="material-icons relative top-2 pb-4"
+            aria-hidden="true"
+          >cancel</span>
           Cancel
         </button>
         <button
           type="button"
           class="ab-button"
         >
-          <span class="material-icons relative top-2 pb-4">save</span>
+          <span
+            class="material-icons relative top-2 pb-4"
+            aria-hidden="true"
+          >save</span>
           Ok
         </button>
       </div>

@@ -27,7 +27,10 @@
           class="ab-button"
           @click="store.closeModal('paste-ascii')"
         >
-          <span class="material-icons relative top-2 pb-4">cancel</span>
+          <span
+            class="material-icons relative top-2 pb-4"
+            aria-hidden="true"
+          >cancel</span>
           Cancel
         </button>
         <button
@@ -36,7 +39,10 @@
           @click="importPasteAscii()"
           :disabled="checkPasteContent"
         >
-          <span class="material-icons relative top-2 pb-4">save</span>
+          <span
+            class="material-icons relative top-2 pb-4"
+            aria-hidden="true"
+          >save</span>
           Import Clipboard
         </button>
       </div>

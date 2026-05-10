@@ -6,7 +6,10 @@
         class="ab-button"
         @click="addLayer()"
       >
-        <span class="material-icons relative top-2 pb-4">playlist_add</span> Add
+        <span
+          class="material-icons relative top-2 pb-4"
+          aria-hidden="true"
+        >playlist_add</span> Add
         Layer
       </button>
 
@@ -15,7 +18,10 @@
         class="ab-button"
         @click="mergeLayers()"
       >
-        <span class="material-icons relative top-2 pb-4">playlist_play</span>
+        <span
+          class="material-icons relative top-2 pb-4"
+          aria-hidden="true"
+        >playlist_play</span>
         Merge Layers
       </button>
     </div>
@@ -30,7 +36,10 @@
             class="ab-rounded-button"
             @click="updateImageOverlay"
           >
-            <span class="material-icons">{{
+            <span
+              class="material-icons"
+              aria-hidden="true"
+            >{{
               !imageOverlay.visible ? "remove_red_eye" : "panorama_fish_eye"
             }}</span>
           </button>
@@ -132,7 +141,10 @@
                 @click="toggleLayer(key)"
                 :disabled="!canToggleLayer"
               >
-                <span class="material-icons">{{
+                <span
+                  class="material-icons"
+                  aria-hidden="true"
+                >{{
                   layer.visible ? "remove_red_eye" : "panorama_fish_eye"
                 }}</span>
               </button><br>
@@ -143,7 +155,10 @@
                 @click="removeLayer(key)"
                 :disabled="!canToggleLayer"
               >
-                <span class="material-icons">delete</span>
+                <span
+                  class="material-icons"
+                  aria-hidden="true"
+                >delete</span>
               </button>
             </div>
 
@@ -167,7 +182,10 @@
                     @click="downLayer(key)"
                     :disabled="!canToggleLayer"
                   >
-                    <span class="material-icons">arrow_upward</span>
+                    <span
+                      class="material-icons"
+                      aria-hidden="true"
+                    >arrow_upward</span>
                   </button><br>
 
                   <button
@@ -176,7 +194,10 @@
                     @click="upLayer(key)"
                     :disabled="!canToggleLayer"
                   >
-                    <span class="material-icons">arrow_downward</span>
+                    <span
+                      class="material-icons"
+                      aria-hidden="true"
+                    >arrow_downward</span>
                   </button>
                 </div>
               </div>
