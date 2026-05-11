@@ -79,6 +79,13 @@ export type HistoryEntry =
       d: string; // LZ-String compressed JSON of LayerHistoryData
     };
 
+/** Type guard: checks if a HistoryEntry is a layer-change marker */
+export function isLayerHistoryEntry(
+  entry: HistoryEntry,
+): entry is { t: 'l'; d: string } {
+  return typeof entry !== 'string' && entry.t === 'l';
+}
+
 /** Modal state booleans */
 export interface ModalState {
   newAscii: boolean;

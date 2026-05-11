@@ -54,10 +54,8 @@
 import { ref, computed, watch } from 'vue';
 import { parseMircAscii } from '../../ascii';
 import ABModal from '../ABModal.vue';
-import { useAsciiBirdStore } from '../../store';
 import { useModalStore } from '../../store/modal';
 
-const store = useAsciiBirdStore();
 const modalStore = useModalStore();
 
 const pasteContent = ref('');

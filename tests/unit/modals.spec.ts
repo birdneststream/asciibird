@@ -27,6 +27,7 @@ import {
   createMockStore,
   createMockModalStore,
   globalStubs,
+  type TestWrapper,
 } from './helpers'
 
 let _mockStore: any = null
@@ -69,6 +70,13 @@ function mountOpts(extra: any = {}) {
   }
 }
 
+function stw<T extends abstract new (...args: any) => any>(
+  component: T,
+  opts: any,
+): TestWrapper {
+  return shallowMount(component as any, opts) as TestWrapper
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   store = createMockStore()
@@ -84,34 +92,34 @@ afterEach(() => {
 
 describe('PasteAscii.vue', () => {
   it('mounts successfully', () => {
-    const wrapper = shallowMount(PasteAscii, mountOpts())
+    const wrapper = stw(PasteAscii, mountOpts())
     expect(wrapper.findComponent(PasteAscii).exists()).toBe(true)
   })
 
   it('has default data values', () => {
-    const wrapper = shallowMount(PasteAscii, mountOpts())
+    const wrapper = stw(PasteAscii, mountOpts())
     expect(wrapper.vm.pasteContent).toBe('')
     expect(wrapper.vm.title).toBe('clipboard.txt')
   })
 
   it('checkPasteContent returns true when empty', () => {
-    const wrapper = shallowMount(PasteAscii, mountOpts())
+    const wrapper = stw(PasteAscii, mountOpts())
     expect(wrapper.vm.checkPasteContent).toBe(true)
   })
 
   it('checkPasteContent returns false when content exists', () => {
-    const wrapper = shallowMount(PasteAscii, mountOpts())
+    const wrapper = stw(PasteAscii, mountOpts())
     wrapper.vm.pasteContent = '\x031,0Hello'
     expect(wrapper.vm.checkPasteContent).toBe(false)
   })
 
   it('computed showPasteAscii reads from store', () => {
-    const wrapper = shallowMount(PasteAscii, mountOpts())
+    const wrapper = stw(PasteAscii, mountOpts())
     expect(wrapper.vm.showPasteAscii).toBe(false)
   })
 
   it('close resets data', () => {
-    const wrapper = shallowMount(PasteAscii, mountOpts())
+    const wrapper = stw(PasteAscii, mountOpts())
     wrapper.vm.pasteContent = 'some content'
     wrapper.vm.title = 'custom.txt'
     wrapper.vm.close()
@@ -122,7 +130,7 @@ describe('PasteAscii.vue', () => {
   it('importPasteAscii calls parseMircAscii and closes', async () => {
     setStore(store)
 
-    const wrapper = shallowMount(PasteAscii, mountOpts())
+    const wrapper = stw(PasteAscii, mountOpts())
     wrapper.vm.pasteContent = '\x031,0Test'
     wrapper.vm.title = 'test.txt'
 
@@ -137,7 +145,7 @@ describe('PasteAscii.vue', () => {
         options: false, overlay: false, about: false, help: false,
       },
     })
-    const wrapper = shallowMount(PasteAscii, mountOpts())
+    const wrapper = stw(PasteAscii, mountOpts())
     expect(wrapper.vm.showPasteAscii).toBe(true)
   })
 })
@@ -146,43 +154,43 @@ describe('PasteAscii.vue', () => {
 
 describe('EditAscii.vue', () => {
   it('mounts successfully', () => {
-    const wrapper = shallowMount(EditAscii, mountOpts())
+    const wrapper = stw(EditAscii, mountOpts())
     expect(wrapper.findComponent(EditAscii).exists()).toBe(true)
   })
 
   it('computed showEditAsciiModal reads from store', () => {
-    const wrapper = shallowMount(EditAscii, mountOpts())
+    const wrapper = stw(EditAscii, mountOpts())
     expect(wrapper.vm.showEditAsciiModal).toBe(false)
   })
 
   it('computed currentAsciiEditingTitle includes title', () => {
-    const wrapper = shallowMount(EditAscii, mountOpts())
+    const wrapper = stw(EditAscii, mountOpts())
     expect(wrapper.vm.currentAsciiEditingTitle).toContain(
       'Test ASCII',
     )
   })
 
   it('computed currentAsciiLayers returns decompressed layers', () => {
-    const wrapper = shallowMount(EditAscii, mountOpts())
+    const wrapper = stw(EditAscii, mountOpts())
     const layers = wrapper.vm.currentAsciiLayers
     expect(layers).toHaveLength(1)
     expect(layers[0].width).toBe(3)
   })
 
   it('computed selectedLayerIndex returns selected layer', () => {
-    const wrapper = shallowMount(EditAscii, mountOpts())
+    const wrapper = stw(EditAscii, mountOpts())
     expect(wrapper.vm.selectedLayerIndex).toBe(0)
   })
 
   it('computed currentSelectedLayer returns the selected layer', () => {
-    const wrapper = shallowMount(EditAscii, mountOpts())
+    const wrapper = stw(EditAscii, mountOpts())
     expect(wrapper.vm.currentSelectedLayer.label).toBe(
       'Test Layer',
     )
   })
 
   it('open sets layer data', () => {
-    const wrapper = shallowMount(EditAscii, mountOpts())
+    const wrapper = stw(EditAscii, mountOpts())
     wrapper.vm.open()
     expect(wrapper.vm.layer.width).toBe(3)
     expect(wrapper.vm.layer.height).toBe(3)
@@ -190,21 +198,21 @@ describe('EditAscii.vue', () => {
   })
 
   it('close resets layer', () => {
-    const wrapper = shallowMount(EditAscii, mountOpts())
+    const wrapper = stw(EditAscii, mountOpts())
     wrapper.vm.layer = { width: 10, height: 20, title: 'test' }
     wrapper.vm.close()
     expect(wrapper.vm.layer).toEqual({ width: 0, height: 0, title: '' })
   })
 
   it('currentAsciiWidth returns layer width or 0', () => {
-    const wrapper = shallowMount(EditAscii, mountOpts())
+    const wrapper = stw(EditAscii, mountOpts())
     expect(wrapper.vm.currentAsciiWidth).toBe(0)
     wrapper.vm.layer = { width: 5, height: 5, title: 'test' }
     expect(wrapper.vm.currentAsciiWidth).toBe(5)
   })
 
   it('currentAsciiHeight returns layer height or 0', () => {
-    const wrapper = shallowMount(EditAscii, mountOpts())
+    const wrapper = stw(EditAscii, mountOpts())
     expect(wrapper.vm.currentAsciiHeight).toBe(0)
     wrapper.vm.layer = { width: 5, height: 8, title: 'test' }
     expect(wrapper.vm.currentAsciiHeight).toBe(8)
@@ -214,7 +222,7 @@ describe('EditAscii.vue', () => {
     setStore(store)
 
     const spy = vi.spyOn(store, 'changeAsciiWidthHeight')
-    const wrapper = shallowMount(EditAscii, mountOpts())
+    const wrapper = stw(EditAscii, mountOpts())
     wrapper.vm.layer = { width: 5, height: 5, title: 'Test' }
 
     wrapper.vm.updateAscii()
@@ -230,7 +238,7 @@ describe('EditAscii.vue', () => {
     setStore(store)
 
     const titleSpy = vi.spyOn(store, 'updateAsciiTitle')
-    const wrapper = shallowMount(EditAscii, mountOpts())
+    const wrapper = stw(EditAscii, mountOpts())
     wrapper.vm.layer = { width: 5, height: 5, title: 'New Title' }
 
     wrapper.vm.updateAscii()
@@ -242,7 +250,7 @@ describe('EditAscii.vue', () => {
     setStore(store)
 
     const titleSpy = vi.spyOn(store, 'updateAsciiTitle')
-    const wrapper = shallowMount(EditAscii, mountOpts())
+    const wrapper = stw(EditAscii, mountOpts())
     wrapper.vm.layer = { width: 5, height: 5, title: 'Test ASCII' }
 
     wrapper.vm.updateAscii()
@@ -255,33 +263,33 @@ describe('EditAscii.vue', () => {
 
 describe('Options.vue', () => {
   it('mounts successfully', () => {
-    const wrapper = shallowMount(Options, mountOpts())
+    const wrapper = stw(Options, mountOpts())
     expect(wrapper.findComponent(Options).exists()).toBe(true)
   })
 
   it('computed showOptionsModal reads from store', () => {
-    const wrapper = shallowMount(Options, mountOpts())
+    const wrapper = stw(Options, mountOpts())
     expect(wrapper.vm.showOptionsModal).toBe(false)
   })
 
   it('computed options returns store options', () => {
-    const wrapper = shallowMount(Options, mountOpts())
+    const wrapper = stw(Options, mountOpts())
     expect(wrapper.vm.options).toEqual(store.options)
     expect(wrapper.vm.options.fps).toBe(50)
   })
 
   it('computed maxBrushHistory returns ascii constant', () => {
-    const wrapper = shallowMount(Options, mountOpts())
+    const wrapper = stw(Options, mountOpts())
     expect(wrapper.vm.maxBrushHistory).toBe(maxBrushHistory)
   })
 
   it('computed maxUndoHistory returns ascii constant', () => {
-    const wrapper = shallowMount(Options, mountOpts())
+    const wrapper = stw(Options, mountOpts())
     expect(wrapper.vm.maxUndoHistory).toBe(maxUndoHistory)
   })
 
   it('computed tabLimit returns ascii constant', () => {
-    const wrapper = shallowMount(Options, mountOpts())
+    const wrapper = stw(Options, mountOpts())
     expect(wrapper.vm.tabLimit).toBe(tabLimit)
   })
 
@@ -293,7 +301,7 @@ describe('Options.vue', () => {
       writable: true,
     })
 
-    const wrapper = shallowMount(Options, mountOpts())
+    const wrapper = stw(Options, mountOpts())
     wrapper.vm.clearCache()
 
     expect(clearSpy).toHaveBeenCalled()
@@ -304,7 +312,7 @@ describe('Options.vue', () => {
 
   it('updateOptions calls store.updateOptions', () => {
     const spy = vi.spyOn(store, 'updateOptions')
-    const wrapper = shallowMount(Options, mountOpts())
+    const wrapper = stw(Options, mountOpts())
     wrapper.vm.updateOptions()
     expect(spy).toHaveBeenCalledWith(
       expect.objectContaining({ fps: 50 }),
@@ -318,7 +326,7 @@ describe('Options.vue', () => {
         options: true, overlay: false, about: false, help: false,
       },
     })
-    const wrapper = shallowMount(Options, mountOpts())
+    const wrapper = stw(Options, mountOpts())
     expect(wrapper.vm.showOptionsModal).toBe(true)
   })
 })
@@ -327,17 +335,17 @@ describe('Options.vue', () => {
 
 describe('ImageOverlay.vue', () => {
   it('mounts successfully', () => {
-    const wrapper = shallowMount(ImageOverlay, mountOpts())
+    const wrapper = stw(ImageOverlay, mountOpts())
     expect(wrapper.findComponent(ImageOverlay).exists()).toBe(true)
   })
 
   it('computed showOverlayModal reads from store', () => {
-    const wrapper = shallowMount(ImageOverlay, mountOpts())
+    const wrapper = stw(ImageOverlay, mountOpts())
     expect(wrapper.vm.showOverlayModal).toBe(false)
   })
 
   it('computed imageOverlay returns overlay object from store', () => {
-    const wrapper = shallowMount(ImageOverlay, mountOpts())
+    const wrapper = stw(ImageOverlay, mountOpts())
     const overlay = wrapper.vm.imageOverlay
     expect(overlay).toBeDefined()
     expect(overlay.opacity).toBe(95)
@@ -348,7 +356,7 @@ describe('ImageOverlay.vue', () => {
   it('computed imageOverlay returns empty object when no meta', () => {
     _mockStore = createMockStore({ asciibirdMeta: [] })
     store = _mockStore
-    const wrapper = shallowMount(ImageOverlay, mountOpts())
+    const wrapper = stw(ImageOverlay, mountOpts())
     expect(wrapper.vm.imageOverlay).toEqual({})
   })
 
@@ -359,17 +367,17 @@ describe('ImageOverlay.vue', () => {
         options: false, overlay: true, about: false, help: false,
       },
     })
-    const wrapper = shallowMount(ImageOverlay, mountOpts())
+    const wrapper = stw(ImageOverlay, mountOpts())
     expect(wrapper.vm.showOverlayModal).toBe(true)
   })
 
   it('computed showOverlayModal returns false when store has overlay=false', () => {
-    const wrapper = shallowMount(ImageOverlay, mountOpts())
+    const wrapper = stw(ImageOverlay, mountOpts())
     expect(wrapper.vm.showOverlayModal).toBe(false)
   })
 
   it('imageOverlay computed returns overlay properties', () => {
-    const wrapper = shallowMount(ImageOverlay, mountOpts())
+    const wrapper = stw(ImageOverlay, mountOpts())
     const overlay = wrapper.vm.imageOverlay
     expect(overlay).toBeDefined()
     expect(typeof overlay.opacity).toBe('number')
@@ -377,7 +385,7 @@ describe('ImageOverlay.vue', () => {
   })
 
   it('renders ABModal component', () => {
-    const wrapper = shallowMount(ImageOverlay, mountOpts())
+    const wrapper = stw(ImageOverlay, mountOpts())
     expect(wrapper.find('.ab-modal').exists()).toBe(true)
   })
 })

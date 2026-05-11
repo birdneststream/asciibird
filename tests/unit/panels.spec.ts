@@ -28,6 +28,7 @@ import {
   createMockPanelStore,
   createMockToolbarStore,
   globalStubs,
+  type TestWrapper,
 } from './helpers'
 
 let _mockStore: any = null
@@ -90,6 +91,13 @@ function mountOpts(extra: Record<string, any> = {}) {
   }
 }
 
+function stw<T extends abstract new (...args: any) => any>(
+  component: T,
+  opts: any,
+): TestWrapper {
+  return shallowMount(component as any, opts) as TestWrapper
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   store = createMockStore()
@@ -107,7 +115,7 @@ afterEach(() => {
 
 describe('LayersLibrary.vue', () => {
   it('mounts successfully', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       LayersLibrary,
       mountOpts({ props: { yOffset: 0 } }),
     )
@@ -119,7 +127,7 @@ describe('LayersLibrary.vue', () => {
 
 describe('DebugPanel.vue', () => {
   it('mounts successfully', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       DebugPanel,
       mountOpts({ props: { canvasX: 0, canvasY: 0 } }),
     )
@@ -127,7 +135,7 @@ describe('DebugPanel.vue', () => {
   })
 
   it('computed getToolName returns current tool name', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       DebugPanel,
       mountOpts({ props: { canvasX: 0, canvasY: 0 } }),
     )
@@ -136,7 +144,7 @@ describe('DebugPanel.vue', () => {
 
   it('computed getToolName returns none for invalid tool', () => {
     _mockToolbarStore.toolbarState.currentTool = 99
-    const wrapper = shallowMount(
+    const wrapper = stw(
       DebugPanel,
       mountOpts({ props: { canvasX: 0, canvasY: 0 } }),
     )
@@ -144,7 +152,7 @@ describe('DebugPanel.vue', () => {
   })
 
   it('computed currentFg returns fg color', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       DebugPanel,
       mountOpts({ props: { canvasX: 0, canvasY: 0 } }),
     )
@@ -152,7 +160,7 @@ describe('DebugPanel.vue', () => {
   })
 
   it('computed currentBg returns bg color', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       DebugPanel,
       mountOpts({ props: { canvasX: 0, canvasY: 0 } }),
     )
@@ -160,7 +168,7 @@ describe('DebugPanel.vue', () => {
   })
 
   it('computed mirrorX returns mirror state', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       DebugPanel,
       mountOpts({ props: { canvasX: 0, canvasY: 0 } }),
     )
@@ -168,7 +176,7 @@ describe('DebugPanel.vue', () => {
   })
 
   it('computed mirrorY returns mirror state', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       DebugPanel,
       mountOpts({ props: { canvasX: 0, canvasY: 0 } }),
     )
@@ -176,7 +184,7 @@ describe('DebugPanel.vue', () => {
   })
 
   it('computed asciiStats returns state size string', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       DebugPanel,
       mountOpts({ props: { canvasX: 0, canvasY: 0 } }),
     )
@@ -189,7 +197,7 @@ describe('DebugPanel.vue', () => {
   it('copyUriToClipboard calls copyText with compressed data', async () => {
     setStore(store)
 
-    const wrapper = shallowMount(
+    const wrapper = stw(
       DebugPanel,
       mountOpts({ props: { canvasX: 0, canvasY: 0 } }),
     )
@@ -209,7 +217,7 @@ describe('DebugPanel.vue', () => {
 
 describe('BrushLibrary.vue', () => {
   it('mounts successfully', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       BrushLibrary,
       mountOpts({ props: { yOffset: 0 } }),
     )
@@ -217,7 +225,7 @@ describe('BrushLibrary.vue', () => {
   })
 
   it('computed brushHistory returns store history', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       BrushLibrary,
       mountOpts({ props: { yOffset: 0 } }),
     )
@@ -225,7 +233,7 @@ describe('BrushLibrary.vue', () => {
   })
 
   it('computed brushLibrary returns store library', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       BrushLibrary,
       mountOpts({ props: { yOffset: 0 } }),
     )
@@ -233,7 +241,7 @@ describe('BrushLibrary.vue', () => {
   })
 
   it('computed libraryCount returns empty string when no brushes', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       BrushLibrary,
       mountOpts({ props: { yOffset: 0 } }),
     )
@@ -243,7 +251,7 @@ describe('BrushLibrary.vue', () => {
   it('computed libraryCount returns count when brushes exist', () => {
     const blocks = [[{ fg: 1, bg: 0, char: 'A' }]]
     _mockToolbarStore.pushBrushLibrary(blocks)
-    const wrapper = shallowMount(
+    const wrapper = stw(
       BrushLibrary,
       mountOpts({ props: { yOffset: 0 } }),
     )
@@ -251,7 +259,7 @@ describe('BrushLibrary.vue', () => {
   })
 
   it('decompressBlock decompresses LZ-String data', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       BrushLibrary,
       mountOpts({ props: { yOffset: 0 } }),
     )
@@ -265,7 +273,7 @@ describe('BrushLibrary.vue', () => {
 
   it('saveToLibrary calls store.pushBrushLibrary', () => {
     const spy = vi.spyOn(_mockToolbarStore, 'pushBrushLibrary')
-    const wrapper = shallowMount(
+    const wrapper = stw(
       BrushLibrary,
       mountOpts({ props: { yOffset: 0 } }),
     )
@@ -277,7 +285,7 @@ describe('BrushLibrary.vue', () => {
 
   it('removeFromLibrary calls store.removeBrushLibrary', () => {
     const spy = vi.spyOn(_mockToolbarStore, 'removeBrushLibrary')
-    const wrapper = shallowMount(
+    const wrapper = stw(
       BrushLibrary,
       mountOpts({ props: { yOffset: 0 } }),
     )
@@ -288,7 +296,7 @@ describe('BrushLibrary.vue', () => {
 
   it('removeFromHistory calls store.removeBrushHistory', () => {
     const spy = vi.spyOn(_mockToolbarStore, 'removeBrushHistory')
-    const wrapper = shallowMount(
+    const wrapper = stw(
       BrushLibrary,
       mountOpts({ props: { yOffset: 0 } }),
     )
@@ -299,7 +307,7 @@ describe('BrushLibrary.vue', () => {
 
   it('reuseBlocks sets brushBlocks and calls changeTool', () => {
     const changeToolSpy = vi.spyOn(_mockToolbarStore, 'changeTool')
-    const wrapper = shallowMount(
+    const wrapper = stw(
       BrushLibrary,
       mountOpts({ props: { yOffset: 0 } }),
     )
@@ -312,7 +320,7 @@ describe('BrushLibrary.vue', () => {
 
   it('changeTab updates panel and calls panelStore', () => {
     const spy = vi.spyOn(_mockPanelStore, 'changeBrushLibraryState')
-    const wrapper = shallowMount(
+    const wrapper = stw(
       BrushLibrary,
       mountOpts({ props: { yOffset: 0 } }),
     )
@@ -330,7 +338,7 @@ describe('BrushLibrary.vue', () => {
     _mockToolbarStore.pushBrushLibrary(blocks2)
 
     const spy = vi.spyOn(_mockToolbarStore, 'upBrush')
-    const wrapper = shallowMount(
+    const wrapper = stw(
       BrushLibrary,
       mountOpts({ props: { yOffset: 0 } }),
     )
@@ -345,7 +353,7 @@ describe('BrushLibrary.vue', () => {
     _mockToolbarStore.pushBrushLibrary(blocks2)
 
     const spy = vi.spyOn(_mockToolbarStore, 'downBrush')
-    const wrapper = shallowMount(
+    const wrapper = stw(
       BrushLibrary,
       mountOpts({ props: { yOffset: 0 } }),
     )
@@ -355,7 +363,7 @@ describe('BrushLibrary.vue', () => {
 
   it('computed isBrushing returns true when tool is brush', () => {
     _mockToolbarStore.toolbarState.currentTool = 4
-    const wrapper = shallowMount(
+    const wrapper = stw(
       BrushLibrary,
       mountOpts({ props: { yOffset: 0 } }),
     )
@@ -365,7 +373,7 @@ describe('BrushLibrary.vue', () => {
 
   it('computed isErasing returns true when tool is eraser', () => {
     _mockToolbarStore.toolbarState.currentTool = 6
-    const wrapper = shallowMount(
+    const wrapper = stw(
       BrushLibrary,
       mountOpts({ props: { yOffset: 0 } }),
     )
@@ -378,7 +386,7 @@ describe('BrushLibrary.vue', () => {
 
 describe('Toolbar.vue', () => {
   it('mounts successfully', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       Toolbar,
       mountOpts(),
     )
@@ -386,7 +394,7 @@ describe('Toolbar.vue', () => {
   })
 
   it('computed toolbarIcons returns ascii toolbar icons', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       Toolbar,
       mountOpts(),
     )
@@ -394,7 +402,7 @@ describe('Toolbar.vue', () => {
   })
 
   it('computed currentTool returns current tool object', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       Toolbar,
       mountOpts(),
     )
@@ -403,7 +411,7 @@ describe('Toolbar.vue', () => {
   })
 
   it('computed canFg returns targeting fg state', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       Toolbar,
       mountOpts(),
     )
@@ -411,7 +419,7 @@ describe('Toolbar.vue', () => {
   })
 
   it('computed canBg returns targeting bg state', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       Toolbar,
       mountOpts(),
     )
@@ -419,7 +427,7 @@ describe('Toolbar.vue', () => {
   })
 
   it('computed canText returns targeting char state', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       Toolbar,
       mountOpts(),
     )
@@ -428,7 +436,7 @@ describe('Toolbar.vue', () => {
 
   it('toggleMirrorX calls store.updateMirror with toggled x', () => {
     const spy = vi.spyOn(_mockToolbarStore, 'updateMirror')
-    const wrapper = shallowMount(
+    const wrapper = stw(
       Toolbar,
       mountOpts(),
     )
@@ -440,7 +448,7 @@ describe('Toolbar.vue', () => {
 
   it('toggleMirrorY calls store.updateMirror with toggled y', () => {
     const spy = vi.spyOn(_mockToolbarStore, 'updateMirror')
-    const wrapper = shallowMount(
+    const wrapper = stw(
       Toolbar,
       mountOpts(),
     )

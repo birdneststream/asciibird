@@ -1,24 +1,23 @@
 import LZString from 'lz-string';
 import type { Block, Layer, ImageOverlay, AsciibirdMetaBuilder, MircExportResult, ToolbarIcon, CreateAsciiForm } from './types';
+import type { AsciiStoreAccess, ModalStoreAccess } from './types/store';
 
 // Lazy store references to break circular dependency
 // Store imports from ascii, ascii imports store
 // Using a getter ensures store is only accessed after initialization
- 
-let _store: any = null;
-let _modalStore: any = null;
 
- 
-export const setStore = (s: any): void => {
+let _store: AsciiStoreAccess | null = null;
+let _modalStore: ModalStoreAccess | null = null;
+
+export const setStore = (s: AsciiStoreAccess): void => {
   _store = s;
 };
 
-export const setModalStore = (s: any): void => {
+export const setModalStore = (s: ModalStoreAccess): void => {
   _modalStore = s;
 };
 
- 
-const getStore = (): any => {
+const getStore = (): AsciiStoreAccess => {
   if (!_store) {
     throw new Error(
       'Store not initialized. Import store before using ascii.ts functions.',
@@ -27,7 +26,7 @@ const getStore = (): any => {
   return _store;
 };
 
-const getModalStore = (): any => {
+const getModalStore = (): ModalStoreAccess => {
   if (!_modalStore) {
     throw new Error(
       'Modal store not initialized.',
@@ -415,7 +414,11 @@ export const exportMirc = (blocks: Block[][] | null = null): MircExportResult =>
 
   if (blocks === null) {
     // Export the entire main ascii
-    currentAscii = getStore().currentAscii;
+    const ascii = getStore().currentAscii;
+    if (!ascii) {
+      return { filename: 'empty.txt', output: [''] };
+    }
+    currentAscii = ascii;
     currentAsciiLayersWidthHeight = getStore().currentAsciiLayersWidthHeight;
     blocks = mergeLayers();
   } else {
@@ -860,7 +863,7 @@ export const mergeLayers = (): Block[][] => {
 };
 
 // Splash screen ascii encoded
-export const splashAscii: Layer[] = JSON.parse(
+export const splashAscii: Block[][] = JSON.parse(
   LZString.decompressFromEncodedURIComponent(
     'NrDeCIGMAsEMCdwC5wAJwF8A0EYOWpjlHIiutrqQRcXmYZSfuUVS43da0wEYDmyAIxZwAM0FIRzBrQgDhoiYpk02qnlw5yNndrPUKpSydPpq+kgOwnkN3TqP3lSe+c3zrt16Pd7wRtIuZtz+Tt5uoY5e4jF+0XYRvlGGMS6R2qmJsdnxWT45BXmW2enJmSUFZQ75znEplXW5DcThhRkGjUk1Xe3lna1p9RWDpcMDnmPNI5NV4xajc9MTAUPLC7NNRS2b3cWLWx0bq1PbMydLZytt1fu7fT0HezsXh-3HN-Mer8-nn+vff5XD6mbwhP6gwrg66Q4LvQFrYEI05HZGXVFhREYhLo+GYlRwx6zIKQu4XEkqMlA7G1X4wlF4nFvInksGM-IU4wsqmw0kvMkCl5GAAc3lF3P5kohBL55zulAVAF0sGAJXKpStBerpVzCTyGSzAmzDbzKULTVz9brZfTcSaDVbmVaACzeV32pDulzux10kEO83IcUucW+h5h26B61mnVOqNx2N+tEJ20p-1IYOSUNRznQ9Np5NJ-F2q259mVTNB8uLSsZ6uzWvZnVlj0F4ttplFnEABm8vdbXdp4fjg96kcTw4n49To6ek5n8-TLat-Zc-dLxo3UPrrO3A8XhYP7dn92nS83OYvzavC7Ph7vx6PnafQ4fz7fHJv573W71GuOWqapeP7-h4Co4BgyqqoB35-tqQHwQBwFwbeXzFsuI4vmOaHvjhn4gdeBG2hhOpepIPpRmRyAUaRbo7kYVGevR5F0R6jE0ba7HMVWhRNsRX5oo23F1rxwkkahAKPh+FZimJAnFkJ+7SXOymnnhlTiemilWtpyE2lpslKepKnGWpkm4eZr6mT8WEmZZ2H2XZSJSdZ1JyURsH6WimloqukjrnpMb8R53nyRZzk4j5LmOWZEX4Sh+YnruCWhSF0VxQ5GVOTSmU5dlwkdvFXn+DB3ylehYXqPKEFQfoSGIWVoEVWlkWVblBVJW5RkxTZqnJcV4V5bFQ39UF6ZcWxrEulNgWWrNeapSlzVLTiuk6mtwUrfkG0GaJHpRT2fbCX5yABTqJ1IGdto7YJhk6XdUY3QpD1Tq5WLCU9q0vRJWXDR1tl-d1v29W9PEhu5W0aW1iwHdt327eD+3Q8SyOjXNhGQ4sF1XZ5Y2LQNRV48tBNQy1Vk9V1Eag9G6ObSTMOo5TmF9Uzr0U+9SNk0w1WgOBvMQTVKp1Y1DUlfNEP04DVPszKROtVzDMKyjSuc5jytqxcE3TYUHG47TesLcTctw3t92m498P48bpMayKltG-rvlHarkto4b8u2xa7v5NjEvWzW9se67dvm+tgcm4jZuRxbod0-76vBxzv6JwGbPAyH0dpyNGdZsdztR7nHqfYTjsO97NspyJmfXeHMmxwjhcFzxTciS3fEG37pdB-HIMyyWzPU7DFc90aKusz92dJ+LaoTHzc+1TP9UIXHXfk+nU8Y5XQ+K571EzbROud+Xixa5R++cefHcuyPhfVw3RMAHoR43Md31bq912-z31+-x8NrXWN87TxXEAzeN9ZYfx3pXX219IGzBgW3D6AD-4-2-l-bucCLgIKjNgsBmDR67yri-PBf8LjF3akDSeEDSEEMruQgOqCvqMOfs3V+xCa7MM-uw++rdgFsNYWHThDD0EsN4SQo+EjKH-RZhvFeNCvbSOpoVChydwE01ITzJUQtF6-0kdLdeqc5F6Kahg+R1DhKnwPt6Cxl80SWKMbAsxRCBEcJEVwlxPD263SEQnNR9CUFuOEdw7xgSAnBLLsY86oDbS4IcSAwoOMQnhKYaEshyC0k+IyaknOHikm5LQckkuTjYnphKboou6ScliLiQPPuZSCn5JSYU9x1TPFIMyVUrxDTWl5J6d0rpTTGmiIGcM9p2Tb7NKCUMlpIyZljMmb4-BsjEoA17gY-u4jHGROXhsOegtoImKKdsq+qjMHlR0Kcpx9jxq2OLNcuxtzTHHN6bMqZfTBmlyfnMipHSJmP1GT88ZYMFlYOiScvhUSEnzOmW815YSYXwveQCxBgKQWdOhUi75lyMVwqyWi-yYKnZQq2R6epHzcXotRQivF1LKUovpfwzFsKcUspJQywRQLnFMsRRSv53K3asuxVS-ldLGW8uBbShRUjpX6KoRsieii+7b0WRonYWiDmbKFVqiFNTNU6puYfSahrtbWKNaak1LE2X6vKey1x+KJUir5eKrlzr-E0sdQ611lSnWCrFb6jl9qXX+rtZKz1wbwUBtDeo8NLyY39LjeShNyK-XCq9b8sNqak1YpTbatpmb825tjQWnNJbI0eqDcWstabOVutFXq+tuqFUytqes5R+Vm0NqXrshetC1HKoFR2xtEaL7GrPqOqxlqLV7zNZOsd5q52zs7Ta0tIby21l1igAA6qIjd4AAASO68QAHlk1Vqzcyytq7q2BtrXyw2AAeU9V7z08pfe651-a63PsvXmwt8af1Fr-YmgD-6gNPt-Su4dEGz0geA2B7NS7QOQcA8hpDMH4MXow6+2D4Hl1Z0Va2zqyz7xKKI4YrtYEe1Su1fhq1iGcT3LuY8-IjGGPMcqKxlj7GT7cdmJx4eSyM1YffRi3dAA5Q9ugACikm-AyZabugAIrJ0IABlFTZalMaYYAAWW0wQAAKrhtD37hNfug6Z1DTycMIcs+hqzxm4MOdsxZ1zKGy2Gy+Zh5z3n7N+bswFtzJmgtOf8yFo5NnfOBfc9F4LMXwstMNgAPkc6lgTTi21SxbXKzLayctJXlFR8xg6oMPPHSO+dE7p1TqYjO6rC76tVdqzV3dbHyulYicK3d26FN4gPb16T+mUASYGy3XdABNIb4AT2jdCAAVSmx83d-W3m7oAIJTYAGpTfk1FhLe34uHbi8d0LQ68Nnc6zRi71mrsdZu9ak7aWDuPZc0d07+3sNmeow997b2nsqrfeZv7r2XvPfu2F4HYP-sDtuyRvuuXx4rJkeRkWs8ivRroxVxdWPGs4+aw1-HTXWtcfa2VyrePiccd45ranvbBMY7G8eqbAAFHbU2RurbxAAISm+p2bHBlMg9+6Dz7PnRcQ5FyJ4VD7odA8l3L4XivZc+si+L2LSuhfK6E2LqXX3tcS41285LWuK169Nz9iLZvb36-Vyb635uDd2+9Tbj7uudcK8t9lgj+XVmI-OxRvQkFtF06ubTy15ODUR7J9jyPMfo+49jwn+PhOKc2NJ0x9P4PrtTYANRTYAGJTYAJZTcQPzhgABTAvU2AD2U2AAenv6NN+z5rtvUP29q9dx7zvbvHe957x3ofXfIcj-lyrq3zuHe24HxP93c-+-D77zPpfIfAcL5X2Pw3W+nfpun93jfB+Xej5hxblRXuSv+6v2LGYQfVQMTD9OqPGfn9tdfyT9-VPM8f7jy-3-b--8f8k8-9gCADQCW87td8a0p9P1vtm90t19itYdLsz8oE+1GY4DW80D6dYCkDUCAdMdICEDCDr8s8iDsCnFcCGd8DT94CKDnkUC6CCDkCyDSCqoaC18SDx9j9uD98T9B8d9Z8eDt9l8j8+DGDbQAAmbwaQrg1giQgPOQeeYPTAxPFPNQynHjb-L-T-LQ3QvjR-WrfQmnbQvQwAnQ8wsw8Aiw6w+g6XPER9IQ8Q+QlwiAtg4glgtwhQ9wuwzwjwnBQlYsMlH2QIw6YleJNcPOcIgI6Ipg0FWImJUIkIhI0pJIyoYI9ItIwBFIolSI0lLI+BAo+IvIiIglfInI7wyo1w-wuIvw1fQ-HwwQ+o4QqA4qFLJw+3ToqfLovfe3Kg2QlwWQq0AYyQIYjg1Q1HXZAWfmXmBeOo5ggnTQgw0w5Y4wh-FYkwtY8PSw1YnYzYvY9YrYp-A4iY3gnozlKgy4jAvAuIzg+Y2grAhY24046o7IkomI94yFT4xIiosI741I34rwv4so0o06KI-43IkEj4qEr4mEn4iEoIooowDIt4uEgEhE14p4x4h48grE3EnExo0Q-ghoqo1oqNc4m9boqk3o6k6AvfK4seF4oE5kmonZMCaY9VPEwku48Ym41POrdQ5PJY-Y2w3Y0UkUwUkAyUsA6Ulk3w+fB1GXJwhkwhFUrea46g54vk-EnkrUzU7E5EpEsojE5Ik0zIwE1knU40tEyEsE8os01Eu00Ey6cEm0xEi0x0l0uQuUrk0ky07kpk-0v0+UvUik8k2kykmkqMukmMyM2M8M+kjUkY5AMYnUZMpAVMqQmQhgzEgk4M4WG-bEzROYw5bmXk-Uq0448Uw4k4qs2Umw+sqwxssU5siU4Ums6swM5o5wsk8tNU9Axk7UgMoc-MvM3M3Ug0rs308cqcscn0ucoMmckcpcis4c1c0cicys9clc-snAjU3cyg-cjUsMtdCMhM+M0udo7sk869c8uM+8u8qNA8nM9g2otVDkj82Y7Rc5V8tkwsrc5870jSdMoQTMpcECsC7yCCsSaC-aWC0seC8swCyfRMwcnsxc+czctc5CpCo8tCnCvUgiyc5czC2crCjcsiyikijCmikM4i7c0i6iuigCvCwhG8xA9C68s8086Mh8nii8j9Vi9UtCvo1GH83vcSrQIstVEs0WC5HXSS6cxihisswixC5sdS4iTS8CsESC9CbS7CoSgctimAoy+nUS-Csyw8yymy1Uqyl82ipSxytstPI4lS5ioU1y2s9ypyjyiipi3ywKhcvync+y1XIks47i28-ivi6KuKjioili2yuhUylWTRT8vZGYu-As3MxSnRf8wytK0skK5S0C3SmC8quCyqhC6qnMAy-S2qwisK+48ilciyuy5K4ylK3ip85qxYryzsus9s7Ywany4KoKjs1sya4aoagaqaka+agK8a5a1q0qvqxfJozaiKkQgQ7ak3RKtc9q4Sjqky1Ck612PK4Te4vK1a1StHb84qnK38-Em6qisa26qSpK86rqn6vc-C+qyKAGjkIG4CxqrSsGnSqEPStq1K76v606i49a+iqg-jJsmaow7y1Gls9GrGlyoCtGuanGww3G6awmsm-Giat6g6-y96kkna0Y7Mj0dM6G-ajUhHYjdKH3ZHWmlo5yj6p6u6xQ+c9KrKjK-ZAWz6yYwky6x6-K+SuS56qWgq5W0K-6iGqC9WhqqGiq7Wqq3Wmq-WuqzWwG424G02vmqm482G46m2366yuG+222+Gp2x2u2hykqi2pa-mvaz2nmzira3awOy2tC5m4SUOpmxmlq4OwhdmlHGm-tGWhWwWpW+Wv81OoW5y+YzkzKnOsW0W-O3OguvOwuku4usuouiu0uyu8uqu2umu+u2YxUIAA',
   ),

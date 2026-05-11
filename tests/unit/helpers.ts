@@ -79,7 +79,7 @@ export function setupHotkeysMocks() {
       capturedHandlers.set(key, [])
     }
     capturedHandlers.get(key)!.push(handler)
-  })
+  }) as any
 
   hotkeysFn.filter = vi.fn(() => true)
   hotkeysFn.setScope = vi.fn()
@@ -956,3 +956,13 @@ export function createMountOptions(extra: any = {}) {
     ...extra,
   }
 }
+
+// ─── Vue Test Wrapper type for <script setup> components ────────
+// VTU cannot type wrapper.vm for <script setup> components because
+// the component's exposed interface is opaque. This type provides
+// a permissive vm so tests can access computed properties and
+// methods without type errors.
+
+import type { VueWrapper } from '@vue/test-utils'
+
+export type TestWrapper = VueWrapper<Record<string, any>>

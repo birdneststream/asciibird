@@ -1503,11 +1503,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useAsciiBirdStore } from '../../store';
 import { useModalStore } from '../../store/modal';
 import ABModal from '../ABModal.vue';
 
-const store = useAsciiBirdStore();
 const modalStore = useModalStore();
 
 const showHelpModal = computed(() => modalStore.modalState.help);

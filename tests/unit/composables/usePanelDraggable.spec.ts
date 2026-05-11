@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ref, nextTick, defineComponent, h } from 'vue';
-import { mount } from '@vue/test-utils';
+import { mount, type VueWrapper } from '@vue/test-utils';
 import { usePanelDraggable } from '@/composables/usePanelDraggable';
 
 // jsdom doesn't have PointerEvent in some environments
@@ -21,12 +21,18 @@ const TestComponent = defineComponent({
   },
 });
 
+type TestVm = { x: number; y: number; style: any; isDragging: boolean; el: HTMLElement | null }
+
 describe('usePanelDraggable', () => {
-  let wrapper: ReturnType<typeof mount>;
+  let wrapper: VueWrapper<any>;
 
   beforeEach(() => {
     wrapper = mount(TestComponent);
   });
+
+  function vm(): TestVm {
+    return wrapper.vm as unknown as TestVm;
+  }
 
   afterEach(() => {
     wrapper.unmount();
@@ -34,12 +40,12 @@ describe('usePanelDraggable', () => {
 
   describe('initial state', () => {
     it('returns correct initial position', () => {
-      expect(wrapper.vm.x).toBe(10);
-      expect(wrapper.vm.y).toBe(20);
+      expect(vm().x).toBe(10);
+      expect(vm().y).toBe(20);
     });
 
     it('starts not dragging', () => {
-      expect(wrapper.vm.isDragging).toBe(false);
+      expect(vm().isDragging).toBe(false);
     });
   });
 
@@ -55,7 +61,7 @@ describe('usePanelDraggable', () => {
         }),
       );
       await nextTick();
-      expect(wrapper.vm.isDragging).toBe(false);
+      expect(vm().isDragging).toBe(false);
     });
 
     it('does not start drag on middle click', async () => {
@@ -69,7 +75,7 @@ describe('usePanelDraggable', () => {
         }),
       );
       await nextTick();
-      expect(wrapper.vm.isDragging).toBe(false);
+      expect(vm().isDragging).toBe(false);
     });
   });
 
