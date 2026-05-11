@@ -120,7 +120,7 @@ import {
   checkIrcByteLimits,
 } from '../ascii';
 
-import { getMirrorPositions } from '../utils/mirror';
+import { getMirrorPositions, applyMirrored } from '../utils/mirror';
 import { bresenhamLine } from '../utils/bresenham';
 import { storeDiffBlocks as storeDiffBlockFn } from '../utils/diffBlocks';
 import type { DiffBlocks } from '../utils/diffBlocks';
@@ -689,50 +689,18 @@ async function canvasKeyDown(char: string) {
           );
         }
 
-        if (mirrorX.value) {
-          targetBlock =
-            currentAsciiLayerBlocks.value[textEditing.value.startY!][
-              currentAsciiWidth.value - textEditing.value.startX!
-            ];
-          oldBlock = { ...targetBlock };
-          delete targetBlock['char'];
-          recordDiff(
-            textEditing.value.startX!,
-            textEditing.value.startY!,
-            oldBlock,
-            targetBlock,
-          );
-        }
-
-        if (mirrorY.value) {
-          targetBlock =
-            currentAsciiLayerBlocks.value[
-              currentAsciiHeight.value - textEditing.value.startY!
-            ][textEditing.value.startX!];
-          oldBlock = { ...targetBlock };
-          delete targetBlock['char'];
-          recordDiff(
-            textEditing.value.startX!,
-            textEditing.value.startY!,
-            oldBlock,
-            targetBlock,
-          );
-        }
-
-        if (mirrorY.value && mirrorX.value) {
-          targetBlock =
-            currentAsciiLayerBlocks.value[
-              currentAsciiHeight.value - textEditing.value.startY!
-            ][currentAsciiWidth.value - textEditing.value.startX!];
-          oldBlock = { ...targetBlock };
-          delete targetBlock['char'];
-          recordDiff(
-            textEditing.value.startX!,
-            textEditing.value.startY!,
-            oldBlock,
-            targetBlock,
-          );
-        }
+        applyMirrored(
+          textEditing.value.startX!, textEditing.value.startY!,
+          currentAsciiWidth.value, currentAsciiHeight.value,
+          mirrorX.value, mirrorY.value,
+          (mx, my) => {
+            const block = currentAsciiLayerBlocks.value[my]?.[mx];
+            if (!block) return;
+            oldBlock = { ...block };
+            delete block['char'];
+            recordDiff(mx, my, oldBlock, block);
+          },
+        );
 
         break;
 
@@ -799,61 +767,21 @@ async function canvasKeyDown(char: string) {
             targetBlock,
           );
 
-          const theX = currentAsciiWidth.value - textEditing.value.startX!;
-          if (mirrorX.value) {
-            targetBlock =
-              currentAsciiLayerBlocks.value[textEditing.value.startY!][theX];
-
-            oldBlock = { ...targetBlock };
-
-            if (canFg.value) {
-              targetBlock.fg = currentFg.value;
-            }
-
-            targetBlock.char = char;
-
-            recordDiff(
-              theX,
-              textEditing.value.startY!,
-              oldBlock,
-              targetBlock,
-            );
-          }
-
-          const theY = currentAsciiHeight.value - textEditing.value.startY!;
-          if (mirrorY.value) {
-            targetBlock =
-              currentAsciiLayerBlocks.value[theY][textEditing.value.startX!];
-
-            oldBlock = { ...targetBlock };
-
-            if (canFg.value) {
-              targetBlock.fg = currentFg.value;
-            }
-
-            targetBlock.char = char;
-
-            recordDiff(
-              textEditing.value.startX!,
-              theY,
-              oldBlock,
-              targetBlock,
-            );
-          }
-
-          if (mirrorY.value && mirrorX.value) {
-            targetBlock = currentAsciiLayerBlocks.value[theY][theX];
-
-            oldBlock = { ...targetBlock };
-
-            if (canFg.value) {
-              targetBlock.fg = currentFg.value;
-            }
-
-            targetBlock.char = char;
-
-            recordDiff(theX, theY, oldBlock, targetBlock);
-          }
+          applyMirrored(
+            textEditing.value.startX!, textEditing.value.startY!,
+            currentAsciiWidth.value, currentAsciiHeight.value,
+            mirrorX.value, mirrorY.value,
+            (mx, my) => {
+              const block = currentAsciiLayerBlocks.value[my]?.[mx];
+              if (!block) return;
+              oldBlock = { ...block };
+              if (canFg.value) {
+                block.fg = currentFg.value;
+              }
+              block.char = char;
+              recordDiff(mx, my, oldBlock, block);
+            },
+          );
 
           if (
             currentAsciiLayerBlocks.value[textEditing.value.startY!]?.[
@@ -1469,23 +1397,15 @@ async function drawBrushBlocks(
     toolCtx.fillStyle = mircColours.value[indicatorColour];
     toolCtx.fillRect(brushX, brushY, blockWidth, blockHeight);
 
-    if (mirrorX.value) {
-      toolCtx.fillRect(
-        (asciiWidth - arrayX) * blockWidth, brushY, blockWidth, blockHeight,
-      );
-    }
-    if (mirrorY.value) {
-      toolCtx.fillRect(
-        brushX, (asciiHeight - arrayY) * blockHeight, blockWidth, blockHeight,
-      );
-    }
-    if (mirrorY.value && mirrorX.value) {
-      toolCtx.fillRect(
-        (asciiWidth - arrayX) * blockWidth,
-        (asciiHeight - arrayY) * blockHeight,
-        blockWidth, blockHeight,
-      );
-    }
+    applyMirrored(
+      arrayX, arrayY, asciiWidth, asciiHeight,
+      mirrorX.value, mirrorY.value,
+      (mx, my) => {
+        toolCtx.fillRect(
+          mx * blockWidth, my * blockHeight, blockWidth, blockHeight,
+        );
+      },
+    );
     return;
   }
 
@@ -1512,72 +1432,37 @@ async function drawBrushBlocks(
           : '#FFFFFF';
         toolCtx.fillText(brushBlock.char, brushX, brushY + blockHeight - 3);
 
-        if (mirrorX.value) {
-          toolCtx.fillText(
-            brushBlock.char,
-            (asciiWidth - arrayX) * blockWidth,
-            brushY + blockHeight - 4,
-          );
-        }
-        if (mirrorY.value) {
-          toolCtx.fillText(
-            brushBlock.char,
-            brushX,
-            (asciiHeight - arrayY) * blockHeight + 10,
-          );
-        }
-        if (mirrorY.value && mirrorX.value) {
-          toolCtx.fillText(
-            brushBlock.char,
-            (asciiWidth - arrayX) * blockWidth,
-            (asciiHeight - arrayY) * blockHeight + 10,
-          );
-        }
+        applyMirrored(
+          arrayX, arrayY, asciiWidth, asciiHeight,
+          mirrorX.value, mirrorY.value,
+          (mx, my) => {
+            toolCtx.fillText(
+              brushBlock.char!,
+              mx * blockWidth,
+              my * blockHeight + blockHeight - 3,
+            );
+          },
+        );
       }
 
       if (canText.value && canTool.value) {
         tBlock['char'] = brushBlock['char'];
 
-        const charX = asciiWidth - arrayX;
-        const charY = asciiHeight - arrayY;
-        let charOb: Block = {};
-
-        if (
-          mirrorX.value &&
-          currentAsciiLayerBlocks.value[arrayY] &&
-          currentAsciiLayerBlocks.value[arrayY][charX] &&
-          (x.value !== charX || y.value !== arrayY)
-        ) {
-          charOb = { ...currentAsciiLayerBlocks.value[arrayY][charX] };
-          currentAsciiLayerBlocks.value[arrayY][charX].char =
-            brushBlock.char;
-          await recordDiff(charX, arrayY, charOb, brushBlock);
-        }
-
-        if (
-          mirrorY.value &&
-          currentAsciiLayerBlocks.value[charY] &&
-          currentAsciiLayerBlocks.value[charY][arrayX] &&
-          (x.value !== arrayX || y.value !== charY)
-        ) {
-          charOb = { ...currentAsciiLayerBlocks.value[charY][arrayX] };
-          currentAsciiLayerBlocks.value[charY][arrayX].char =
-            brushBlock.char;
-          await recordDiff(arrayX, charY, charOb, brushBlock);
-        }
-
-        if (
-          mirrorY.value &&
-          mirrorX.value &&
-          currentAsciiLayerBlocks.value[charY] &&
-          currentAsciiLayerBlocks.value[charY][charX] &&
-          (x.value !== charX || y.value !== charY)
-        ) {
-          charOb = { ...currentAsciiLayerBlocks.value[charY][charX] };
-          currentAsciiLayerBlocks.value[charY][charX].char =
-            brushBlock.char;
-          await recordDiff(charX, charY, charOb, brushBlock);
-        }
+        applyMirrored(
+          arrayX, arrayY, asciiWidth, asciiHeight,
+          mirrorX.value, mirrorY.value,
+          (mx, my) => {
+            if (
+              currentAsciiLayerBlocks.value[my] &&
+              currentAsciiLayerBlocks.value[my][mx] &&
+              (x.value !== mx || y.value !== my)
+            ) {
+              const charOb = { ...currentAsciiLayerBlocks.value[my][mx] };
+              currentAsciiLayerBlocks.value[my][mx].char = brushBlock.char;
+              recordDiff(mx, my, charOb, brushBlock);
+            }
+          },
+        );
       }
 
       return;
@@ -1588,82 +1473,39 @@ async function drawBrushBlocks(
     toolCtx.strokeRect(brushX, brushY, blockWidth, blockHeight);
     toolCtx.fillRect(brushX, brushY, blockWidth, blockHeight);
 
-    if (mirrorX.value) {
-      toolCtx.fillRect(
-        (asciiWidth - arrayX) * blockWidth, brushY, blockWidth, blockHeight,
-      );
-      toolCtx.setLineDash([1, 2]);
-      toolCtx.strokeRect(
-        (asciiWidth - arrayX) * blockWidth, brushY, blockWidth, blockHeight,
-      );
-    }
-    if (mirrorY.value) {
-      toolCtx.fillRect(
-        brushX, (asciiHeight - arrayY) * blockHeight, blockWidth, blockHeight,
-      );
-      toolCtx.setLineDash([1, 2]);
-      toolCtx.strokeRect(
-        brushX, (asciiHeight - arrayY) * blockHeight, blockWidth, blockHeight,
-      );
-    }
-    if (mirrorY.value && mirrorX.value) {
-      toolCtx.fillRect(
-        (asciiWidth - arrayX) * blockWidth,
-        (asciiHeight - arrayY) * blockHeight,
-        blockWidth, blockHeight,
-      );
-      toolCtx.setLineDash([1, 2]);
-      toolCtx.strokeRect(
-        (asciiWidth - arrayX) * blockWidth,
-        (asciiHeight - arrayY) * blockHeight,
-        blockWidth, blockHeight,
-      );
-    }
+    applyMirrored(
+      arrayX, arrayY, asciiWidth, asciiHeight,
+      mirrorX.value, mirrorY.value,
+      (mx, my) => {
+        toolCtx.fillRect(
+          mx * blockWidth, my * blockHeight, blockWidth, blockHeight,
+        );
+        toolCtx.setLineDash([1, 2]);
+        toolCtx.strokeRect(
+          mx * blockWidth, my * blockHeight, blockWidth, blockHeight,
+        );
+      },
+    );
   }
 
   if (canTool.value && brushBlock[target!] !== undefined) {
     tBlock[target!] = brushBlock[target!];
 
-    const theX = asciiWidth - arrayX;
-    const theY = asciiHeight - arrayY;
-    let ob: Block = {};
-
-    if (
-      mirrorX.value &&
-      currentAsciiLayerBlocks.value[arrayY] &&
-      currentAsciiLayerBlocks.value[arrayY][theX] &&
-      (x.value !== theX || y.value !== arrayY)
-    ) {
-      ob = { ...currentAsciiLayerBlocks.value[arrayY][theX] };
-      currentAsciiLayerBlocks.value[arrayY][theX][target!] =
-        brushBlock[target!];
-      await recordDiff(theX, arrayY, ob, brushBlock);
-    }
-
-    if (
-      mirrorY.value &&
-      currentAsciiLayerBlocks.value[theY] &&
-      currentAsciiLayerBlocks.value[theY][arrayX] &&
-      (x.value !== arrayX || y.value !== theY)
-    ) {
-      ob = { ...currentAsciiLayerBlocks.value[theY][arrayX] };
-      currentAsciiLayerBlocks.value[theY][arrayX][target!] =
-        brushBlock[target!];
-      await recordDiff(arrayX, theY, ob, brushBlock);
-    }
-
-    if (
-      mirrorY.value &&
-      mirrorX.value &&
-      currentAsciiLayerBlocks.value[theY] &&
-      currentAsciiLayerBlocks.value[theY][theX] &&
-      (x.value !== theX || y.value !== theY)
-    ) {
-      ob = { ...currentAsciiLayerBlocks.value[theY][theX] };
-      currentAsciiLayerBlocks.value[theY][theX][target!] =
-        brushBlock[target!];
-      await recordDiff(theX, theY, ob, brushBlock);
-    }
+    applyMirrored(
+      arrayX, arrayY, asciiWidth, asciiHeight,
+      mirrorX.value, mirrorY.value,
+      (mx, my) => {
+        if (
+          currentAsciiLayerBlocks.value[my] &&
+          currentAsciiLayerBlocks.value[my][mx] &&
+          (x.value !== mx || y.value !== my)
+        ) {
+          const ob = { ...currentAsciiLayerBlocks.value[my][mx] };
+          currentAsciiLayerBlocks.value[my][mx][target!] = brushBlock[target!];
+          recordDiff(mx, my, ob, brushBlock);
+        }
+      },
+    );
   }
 
   toolCtx.restore();
@@ -1835,73 +1677,26 @@ async function eraser() {
 
         recordDiff(arrayX, arrayY, ob, tBlock);
 
-        const theX = currentAsciiWidth.value - arrayX;
-        if (mirrorX.value) {
-          if (
-            currentAsciiLayerBlocks.value[arrayY] &&
-            currentAsciiLayerBlocks.value[arrayY][theX]
-          ) {
-            const mBlock = currentAsciiLayerBlocks.value[arrayY][theX];
-            const mOb = { ...currentAsciiLayerBlocks.value[arrayY][theX] };
-
-            if (canFg.value && mBlock.fg !== undefined) {
-              delete mBlock['fg'];
+        applyMirrored(
+          arrayX, arrayY,
+          currentAsciiWidth.value, currentAsciiHeight.value,
+          mirrorX.value, mirrorY.value,
+          (mx, my) => {
+            const block = currentAsciiLayerBlocks.value[my]?.[mx];
+            if (!block) return;
+            const mOb = { ...block };
+            if (canFg.value && block.fg !== undefined) {
+              delete block['fg'];
             }
-            if (canBg.value && mBlock.bg !== undefined) {
-              delete mBlock['bg'];
+            if (canBg.value && block.bg !== undefined) {
+              delete block['bg'];
             }
-            if (canText.value && mBlock.char !== undefined) {
-              delete mBlock['char'];
+            if (canText.value && block.char !== undefined) {
+              delete block['char'];
             }
-
-            recordDiff(theX, arrayY, mOb, mBlock);
-          }
-        }
-
-        const theY = currentAsciiHeight.value - arrayY;
-        if (mirrorY.value) {
-          if (
-            currentAsciiLayerBlocks.value[theY] &&
-            currentAsciiLayerBlocks.value[theY][arrayX]
-          ) {
-            const mBlock = currentAsciiLayerBlocks.value[theY][arrayX];
-            const mOb = { ...currentAsciiLayerBlocks.value[theY][arrayX] };
-
-            if (canFg.value && mBlock.fg !== undefined) {
-              delete mBlock['fg'];
-            }
-            if (canBg.value && mBlock.bg !== undefined) {
-              delete mBlock['bg'];
-            }
-            if (canText.value && mBlock.char !== undefined) {
-              delete mBlock['char'];
-            }
-
-            recordDiff(arrayX, theY, mOb, mBlock);
-          }
-        }
-
-        if (mirrorY.value && mirrorX.value) {
-          if (
-            currentAsciiLayerBlocks.value[theY] &&
-            currentAsciiLayerBlocks.value[theY][theX]
-          ) {
-            const mBlock = currentAsciiLayerBlocks.value[theY][theX];
-            const mOb = { ...currentAsciiLayerBlocks.value[theY][theX] };
-
-            if (canFg.value && mBlock.fg !== undefined) {
-              delete mBlock['fg'];
-            }
-            if (canBg.value && mBlock.bg !== undefined) {
-              delete mBlock['bg'];
-            }
-            if (canText.value && mBlock.char !== undefined) {
-              delete mBlock['char'];
-            }
-
-            recordDiff(theX, theY, mOb, mBlock);
-          }
-        }
+            recordDiff(mx, my, mOb, block);
+          },
+        );
       }
     }
   }
