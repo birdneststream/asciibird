@@ -122,6 +122,8 @@ import {
 
 import { getMirrorPositions } from '../utils/mirror';
 import { bresenhamLine } from '../utils/bresenham';
+import { storeDiffBlocks as storeDiffBlockFn } from '../utils/diffBlocks';
+import type { DiffBlocks } from '../utils/diffBlocks';
 import type { Block } from '../types';
 
 defineOptions({ name: 'Editor' });
@@ -202,7 +204,7 @@ const selecting = ref({
 });
 const isMouseOnCanvas = ref(false);
 const selectedBlocks = ref<Block[][]>([]);
-const diffBlocks = reactive<{ l: number; old: any[]; new: any[] }>({
+const diffBlocks = reactive<DiffBlocks>({
   l: 0,
   old: [],
   new: [],
@@ -629,7 +631,7 @@ async function canvasKeyDown(char: string) {
       currentAsciiLayerBlocks.value[textEditing.value.startY!][
         textEditing.value.startX!
       ];
-    let oldBlock: Record<string, any> = {};
+    let oldBlock: Block = {};
 
     switch (char) {
       case 'Backspace':
@@ -649,7 +651,7 @@ async function canvasKeyDown(char: string) {
             textEditing.value.startX! - 1
           ]['char'];
 
-          storeDiffBlocks(
+          recordDiff(
             textEditing.value.startX!,
             textEditing.value.startY!,
             oldBlock,
@@ -679,7 +681,7 @@ async function canvasKeyDown(char: string) {
             textEditing.value.startX!
           ]['char'];
 
-          storeDiffBlocks(
+          recordDiff(
             textEditing.value.startX!,
             textEditing.value.startY!,
             oldBlock,
@@ -694,7 +696,7 @@ async function canvasKeyDown(char: string) {
             ];
           oldBlock = { ...targetBlock };
           delete targetBlock['char'];
-          storeDiffBlocks(
+          recordDiff(
             textEditing.value.startX!,
             textEditing.value.startY!,
             oldBlock,
@@ -709,7 +711,7 @@ async function canvasKeyDown(char: string) {
             ][textEditing.value.startX!];
           oldBlock = { ...targetBlock };
           delete targetBlock['char'];
-          storeDiffBlocks(
+          recordDiff(
             textEditing.value.startX!,
             textEditing.value.startY!,
             oldBlock,
@@ -724,7 +726,7 @@ async function canvasKeyDown(char: string) {
             ][currentAsciiWidth.value - textEditing.value.startX!];
           oldBlock = { ...targetBlock };
           delete targetBlock['char'];
-          storeDiffBlocks(
+          recordDiff(
             textEditing.value.startX!,
             textEditing.value.startY!,
             oldBlock,
@@ -790,7 +792,7 @@ async function canvasKeyDown(char: string) {
             targetBlock.fg = currentFg.value;
           }
 
-          storeDiffBlocks(
+          recordDiff(
             textEditing.value.startX!,
             textEditing.value.startY!,
             oldBlock,
@@ -810,7 +812,7 @@ async function canvasKeyDown(char: string) {
 
             targetBlock.char = char;
 
-            storeDiffBlocks(
+            recordDiff(
               theX,
               textEditing.value.startY!,
               oldBlock,
@@ -831,7 +833,7 @@ async function canvasKeyDown(char: string) {
 
             targetBlock.char = char;
 
-            storeDiffBlocks(
+            recordDiff(
               textEditing.value.startX!,
               theY,
               oldBlock,
@@ -850,7 +852,7 @@ async function canvasKeyDown(char: string) {
 
             targetBlock.char = char;
 
-            storeDiffBlocks(theX, theY, oldBlock, targetBlock);
+            recordDiff(theX, theY, oldBlock, targetBlock);
           }
 
           if (
@@ -1343,7 +1345,7 @@ function filterNullBlocksFn(blocks: Block[][]) {
 async function processSelect() {
   let sx = 0;
   let sy = 0;
-  let curBlock: Record<string, any> = {};
+  let curBlock: Block = {};
   selectedBlocks.value = [];
 
   if (selecting.value.endY! < selecting.value.startY!) {
@@ -1447,7 +1449,7 @@ async function drawTextIndicator() {
 async function drawBrushBlocks(
   brushX: number,
   brushY: number,
-  brushBlock: Record<string, any>,
+  brushBlock: Block,
   target: string | null = null,
   plain = false,
 ) {
@@ -1538,7 +1540,7 @@ async function drawBrushBlocks(
 
         const charX = asciiWidth - arrayX;
         const charY = asciiHeight - arrayY;
-        let charOb: Record<string, any> = {};
+        let charOb: Block = {};
 
         if (
           mirrorX.value &&
@@ -1549,7 +1551,7 @@ async function drawBrushBlocks(
           charOb = { ...currentAsciiLayerBlocks.value[arrayY][charX] };
           currentAsciiLayerBlocks.value[arrayY][charX].char =
             brushBlock.char;
-          await storeDiffBlocks(charX, arrayY, charOb, brushBlock);
+          await recordDiff(charX, arrayY, charOb, brushBlock);
         }
 
         if (
@@ -1561,7 +1563,7 @@ async function drawBrushBlocks(
           charOb = { ...currentAsciiLayerBlocks.value[charY][arrayX] };
           currentAsciiLayerBlocks.value[charY][arrayX].char =
             brushBlock.char;
-          await storeDiffBlocks(arrayX, charY, charOb, brushBlock);
+          await recordDiff(arrayX, charY, charOb, brushBlock);
         }
 
         if (
@@ -1574,7 +1576,7 @@ async function drawBrushBlocks(
           charOb = { ...currentAsciiLayerBlocks.value[charY][charX] };
           currentAsciiLayerBlocks.value[charY][charX].char =
             brushBlock.char;
-          await storeDiffBlocks(charX, charY, charOb, brushBlock);
+          await recordDiff(charX, charY, charOb, brushBlock);
         }
       }
 
@@ -1624,7 +1626,7 @@ async function drawBrushBlocks(
 
     const theX = asciiWidth - arrayX;
     const theY = asciiHeight - arrayY;
-    let ob: Record<string, any> = {};
+    let ob: Block = {};
 
     if (
       mirrorX.value &&
@@ -1635,7 +1637,7 @@ async function drawBrushBlocks(
       ob = { ...currentAsciiLayerBlocks.value[arrayY][theX] };
       currentAsciiLayerBlocks.value[arrayY][theX][target!] =
         brushBlock[target!];
-      await storeDiffBlocks(theX, arrayY, ob, brushBlock);
+      await recordDiff(theX, arrayY, ob, brushBlock);
     }
 
     if (
@@ -1647,7 +1649,7 @@ async function drawBrushBlocks(
       ob = { ...currentAsciiLayerBlocks.value[theY][arrayX] };
       currentAsciiLayerBlocks.value[theY][arrayX][target!] =
         brushBlock[target!];
-      await storeDiffBlocks(arrayX, theY, ob, brushBlock);
+      await recordDiff(arrayX, theY, ob, brushBlock);
     }
 
     if (
@@ -1660,7 +1662,7 @@ async function drawBrushBlocks(
       ob = { ...currentAsciiLayerBlocks.value[theY][theX] };
       currentAsciiLayerBlocks.value[theY][theX][target!] =
         brushBlock[target!];
-      await storeDiffBlocks(theX, theY, ob, brushBlock);
+      await recordDiff(theX, theY, ob, brushBlock);
     }
   }
 
@@ -1704,7 +1706,7 @@ async function drawHalfBlocks(brushX: number, brushY: number) {
       tBlock['char'] = atTopHalf.value ? topChar : bottomChar;
     }
 
-    await storeDiffBlocks(arrayX, arrayY, ob, tBlock);
+    await recordDiff(arrayX, arrayY, ob, tBlock);
   }
 
   toolCtx.restore();
@@ -1773,7 +1775,7 @@ async function drawBrush(plain = false) {
           }
 
           if (canTool.value) {
-            await storeDiffBlocks(arrayX, arrayY, ob, brushBlock);
+            await recordDiff(arrayX, arrayY, ob, brushBlock);
           }
         } else if (isErasing.value) {
           await drawBrushBlocks(brushX, brushY, brushBlock, null, true);
@@ -1783,25 +1785,13 @@ async function drawBrush(plain = false) {
   }
 }
 
-async function storeDiffBlocks(
+function recordDiff(
   sx: number,
   sy: number,
-  oldBlock: any,
-  newBlock: any,
-) {
-  if (!diffBlocks.old[sy]) {
-    diffBlocks.old[sy] = [];
-  }
-  if (!diffBlocks.old[sy][sx]) {
-    diffBlocks.old[sy][sx] = { x: sx, y: sy, b: { ...oldBlock } };
-  }
-
-  if (!diffBlocks.new[sy]) {
-    diffBlocks.new[sy] = [];
-  }
-  if (!diffBlocks.new[sy][sx]) {
-    diffBlocks.new[sy][sx] = { x: sx, y: sy, b: { ...newBlock } };
-  }
+  oldBlock: Block,
+  newBlock: Block,
+): void {
+  storeDiffBlockFn(diffBlocks, sx, sy, oldBlock, newBlock);
 }
 
 async function eraser() {
@@ -1843,7 +1833,7 @@ async function eraser() {
           delete tBlock['char'];
         }
 
-        storeDiffBlocks(arrayX, arrayY, ob, tBlock);
+        recordDiff(arrayX, arrayY, ob, tBlock);
 
         const theX = currentAsciiWidth.value - arrayX;
         if (mirrorX.value) {
@@ -1864,7 +1854,7 @@ async function eraser() {
               delete mBlock['char'];
             }
 
-            storeDiffBlocks(theX, arrayY, mOb, mBlock);
+            recordDiff(theX, arrayY, mOb, mBlock);
           }
         }
 
@@ -1887,7 +1877,7 @@ async function eraser() {
               delete mBlock['char'];
             }
 
-            storeDiffBlocks(arrayX, theY, mOb, mBlock);
+            recordDiff(arrayX, theY, mOb, mBlock);
           }
         }
 
@@ -1909,7 +1899,7 @@ async function eraser() {
               delete mBlock['char'];
             }
 
-            storeDiffBlocks(theX, theY, mOb, mBlock);
+            recordDiff(theX, theY, mOb, mBlock);
           }
         }
       }
@@ -1918,7 +1908,7 @@ async function eraser() {
 }
 
 function fill(eraser = false) {
-  const fillColor: Record<string, any> = {
+  const fillColor: Block = {
     bg: currentBg.value,
     fg: currentFg.value,
     char: currentChar.value,
@@ -1953,7 +1943,7 @@ function fill(eraser = false) {
       change.old.fg !== change.new.fg ||
       change.old.char !== change.new.char
     ) {
-      storeDiffBlocks(change.x, change.y, change.old, change.new);
+      recordDiff(change.x, change.y, change.old, change.new);
     }
   }
 }
@@ -2052,7 +2042,7 @@ defineExpose({
   drawBrushBlocks,
   drawHalfBlocks,
   drawBrush,
-  storeDiffBlocks,
+  recordDiff,
   eraser,
   fill,
   // Template refs
