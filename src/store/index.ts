@@ -22,7 +22,11 @@ import type {
   Layer,
   Options,
   AsciibirdMeta,
+  HistoryDiff,
+  LayerHistoryData,
+  HistoryEntry,
 } from '../types';
+import { isLayerHistoryEntry } from '../types';
 
 export const useAsciiBirdStore = defineStore('asciibird', {
   state: (): RootState => ({
@@ -369,14 +373,11 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         this.asciibirdMeta[this.tab].historyIndex;
 
       if (this.asciibirdMeta[this.tab].history[historyIndex - 1]) {
-        const prev =
+        const prev: HistoryEntry =
           this.asciibirdMeta[this.tab].history[historyIndex - 1];
 
-        if (
-          (prev as { t: string }).t !== undefined &&
-          (prev as { t: string }).t === 'l'
-        ) {
-          const data = decompressData((prev as { d: string }).d);
+        if (isLayerHistoryEntry(prev)) {
+          const data = decompressData<LayerHistoryData>(prev.d);
 
           this.asciibirdMeta[this.tab].layers =
             compressLayers(data.old);
@@ -399,10 +400,8 @@ export const useAsciiBirdStore = defineStore('asciibird', {
           return;
         }
 
-        const prevData = decompressData(
-          this.asciibirdMeta[this.tab].history[
-            historyIndex - 1
-          ] as string,
+        const prevData = decompressData<HistoryDiff>(
+          prev as string,
         );
 
         const tempLayers: Layer[] = decompressLayers(
@@ -412,8 +411,8 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         if (prevData.old) {
           for (const change in prevData.old) {
             const data = prevData.old[change];
-            if (tempLayers[prevData.l] !== undefined) {
-              tempLayers[prevData.l].data[data.y][data.x] = {
+            if (tempLayers[prevData.l!] !== undefined) {
+              tempLayers[prevData.l!].data[data.y][data.x] = {
                 ...data.b,
               };
             }
@@ -438,16 +437,12 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       const historyIndex =
         this.asciibirdMeta[this.tab].historyIndex;
 
-      let prev: any;
-
       if (this.asciibirdMeta[this.tab].history[historyIndex]) {
-        prev = this.asciibirdMeta[this.tab].history[historyIndex];
+        const prev: HistoryEntry =
+          this.asciibirdMeta[this.tab].history[historyIndex];
 
-        if (
-          (prev as { t: string }).t !== undefined &&
-          (prev as { t: string }).t === 'l'
-        ) {
-          const data = decompressData((prev as { d: string }).d);
+        if (isLayerHistoryEntry(prev)) {
+          const data = decompressData<LayerHistoryData>(prev.d);
 
           this.asciibirdMeta[this.tab].layers =
             compressLayers(data.new);
@@ -470,21 +465,19 @@ export const useAsciiBirdStore = defineStore('asciibird', {
           return;
         }
 
-        prev = decompressData(
-          this.asciibirdMeta[this.tab].history[
-            historyIndex
-          ] as string,
+        const redoData = decompressData<HistoryDiff>(
+          prev as string,
         );
 
         const tempLayers: Layer[] = decompressLayers(
           this.asciibirdMeta[this.tab].layers,
         );
 
-        if (prev.new && prev.l !== undefined) {
-          for (const change in prev.new) {
-            if (tempLayers[prev.l] !== undefined) {
-              const data = prev.new[change];
-              tempLayers[prev.l].data[data.y][data.x] = {
+        if (redoData.new && redoData.l !== undefined) {
+          for (const change in redoData.new) {
+            if (tempLayers[redoData.l] !== undefined) {
+              const data = redoData.new[change];
+              tempLayers[redoData.l].data[data.y][data.x] = {
                 ...data.b,
               };
             }
