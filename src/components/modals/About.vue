@@ -47,10 +47,8 @@ import { computed } from 'vue';
 import LZString from 'lz-string';
 import BrushCanvas from '../parts/BrushCanvas.vue';
 import ABModal from '../ABModal.vue';
-import { useAsciiBirdStore } from '../../store';
 import { useModalStore } from '../../store/modal';
 
-const store = useAsciiBirdStore();
 const modalStore = useModalStore();
 
 const showAboutModal = computed(() => modalStore.modalState.about);
