@@ -612,7 +612,7 @@ function canvasToPng() {
 
 function openContextMenu(e: MouseEvent) {
   e.preventDefault();
-  editorMenu.value?.open(e);
+  editorMenu.value?.open({ clientX: e.clientX, clientY: e.clientY });
 }
 
 async function canvasKeyDown(char: string) {

@@ -30,11 +30,25 @@ function close() {
   top.value = 0;
 }
 
-function open(evt: { pageX: number; pageY: number }) {
-  left.value = evt.pageX;
-  top.value = evt.pageY - window.pageYOffset;
+function clampToViewport() {
+  if (!contextEl.value) return;
+  const rect = contextEl.value.getBoundingClientRect();
+  const maxX = window.innerWidth - rect.width;
+  const maxY = window.innerHeight - rect.height;
+  if (left.value < 0) left.value = 0;
+  if (top.value < 0) top.value = 0;
+  if (left.value > maxX) left.value = Math.max(0, maxX);
+  if (top.value > maxY) top.value = Math.max(0, maxY);
+}
+
+function open(evt: { clientX: number; clientY: number }) {
+  left.value = evt.clientX;
+  top.value = evt.clientY;
   show.value = true;
-  nextTick(() => contextEl.value?.focus());
+  nextTick(() => {
+    clampToViewport();
+    contextEl.value?.focus();
+  });
 }
 
 defineExpose({ open, close, show, contextStyle });

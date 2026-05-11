@@ -141,8 +141,8 @@ onMounted(() => {
 function openContextMenu(e: MouseEvent) {
   e.preventDefault()
   contextMenuRef.value?.open({
-    pageX: e.layerX,
-    pageY: e.layerY,
+    clientX: e.clientX,
+    clientY: e.clientY,
   })
 }
 

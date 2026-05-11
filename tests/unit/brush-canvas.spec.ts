@@ -256,7 +256,7 @@ describe('BrushCanvas.vue', () => {
       const wrapper = mountBrushCanvas({
         props: { blocks: [[{ ...emptyBlock }]] },
       })
-      const event = { preventDefault: vi.fn(), layerX: 10, layerY: 20 }
+      const event = { preventDefault: vi.fn(), clientX: 10, clientY: 20 }
       expect(() => wrapper.vm.openContextMenu(event)).not.toThrow()
       expect(event.preventDefault).toHaveBeenCalled()
     })

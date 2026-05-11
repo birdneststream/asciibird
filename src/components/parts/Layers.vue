@@ -266,8 +266,8 @@ watch(selectedLayer, () => {
 function openContextMenu(e: MouseEvent) {
   e.preventDefault();
   layersMenu.value?.open({
-    pageX: (e as MouseEvent & { layerX: number }).layerX,
-    pageY: (e as MouseEvent & { layerY: number }).layerY,
+    clientX: e.clientX,
+    clientY: e.clientY,
   });
 }
 

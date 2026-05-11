@@ -266,7 +266,7 @@ describe('Layers.vue', () => {
 
   it('openContextMenu prevents default', () => {
     const wrapper = createWrapper()
-    const mockEvent = { preventDefault: vi.fn(), layerX: 10, layerY: 20 }
+    const mockEvent = { preventDefault: vi.fn(), clientX: 10, clientY: 20 }
     wrapper.vm.openContextMenu(mockEvent)
     expect(mockEvent.preventDefault).toHaveBeenCalled()
   })

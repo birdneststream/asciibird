@@ -281,7 +281,7 @@ describe('MainBrushCanvas.vue', () => {
 
     it('openContextMenu prevents default', () => {
       const wrapper = mountMainBrushCanvas()
-      const event = { preventDefault: vi.fn(), layerX: 10, layerY: 20 }
+      const event = { preventDefault: vi.fn(), clientX: 10, clientY: 20 }
 
       try {
         wrapper.vm.openContextMenu(event)

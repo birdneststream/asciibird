@@ -716,7 +716,7 @@ function buttonStyle(key: number) {
 
 function openContextMenu(e: MouseEvent) {
   e.preventDefault();
-  menu.value?.open(e);
+  menu.value?.open({ clientX: e.clientX, clientY: e.clientY });
 }
 
 function updateCoords(value: { x: number; y: number }) {

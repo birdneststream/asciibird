@@ -496,7 +496,7 @@ describe('ContextMenu.vue', () => {
     const wrapper = shallowMount(ContextMenu, {
       global: { stubs: globalStubs },
     })
-    wrapper.vm.open({ pageX: 100, pageY: 200 })
+    wrapper.vm.open({ clientX: 100, clientY: 200 })
     const style = wrapper.vm.contextStyle
     expect(style.left).toContain('100')
     expect(style.top).toContain('200')
@@ -506,7 +506,7 @@ describe('ContextMenu.vue', () => {
     const wrapper = shallowMount(ContextMenu, {
       global: { stubs: globalStubs },
     })
-    wrapper.vm.open({ pageX: 100, pageY: 200 })
+    wrapper.vm.open({ clientX: 100, clientY: 200 })
     wrapper.vm.close()
     expect(wrapper.vm.show).toBe(false)
   })

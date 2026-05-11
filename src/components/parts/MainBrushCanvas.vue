@@ -153,7 +153,7 @@ onMounted(() => {
 // ─── Methods ────────────────────────────────────────────
 function openContextMenu(e: MouseEvent) {
   e.preventDefault()
-  contextMenuRef.value?.open({ pageX: e.layerX, pageY: e.layerY })
+  contextMenuRef.value?.open({ clientX: e.clientX, clientY: e.clientY })
 }
 
 function startExport(type: string) {
