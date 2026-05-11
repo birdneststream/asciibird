@@ -1704,6 +1704,203 @@ describe('iterativeFill', () => {
   });
 });
 
+// ─── Half-block import/export (Bug #23 investigation) ────────────
+
+describe('Half-block import and export (Bug #23)', () => {
+  let mockStore: ReturnType<typeof createMockStore>;
+
+  beforeEach(() => {
+    mockStore = createMockStore();
+    setStore(mockStore);
+    setModalStore(mockStore);
+  });
+
+  // Per mIRC spec (modern.ircdocs.horse):
+  //   \x03FG       — sets fg, bg stays the same (preserves)
+  //   \x03FG,BG    — sets both fg and bg
+  //   \x03         — resets both fg and bg
+
+  it('parses half-block ▀ with fg and bg', async () => {
+    const mirc = '\x030,1\u2580'; // ▀ fg=0(white), bg=1(black)
+
+    await parseMircAscii(mirc, 'halfblock.txt');
+
+    const payload = getLastNewAsciiMetaPayload(mockStore);
+    const layers = decompressLayers(payload.layers);
+    expect(layers[0].data[0][0]).toEqual({ fg: 0, bg: 1, char: '\u2580' });
+  });
+
+  it('parses half-block ▄ with fg and bg', async () => {
+    const mirc = '\x031,0\u2584'; // ▄ fg=1(black), bg=0(white)
+
+    await parseMircAscii(mirc, 'halfblock2.txt');
+
+    const payload = getLastNewAsciiMetaPayload(mockStore);
+    const layers = decompressLayers(payload.layers);
+    expect(layers[0].data[0][0]).toEqual({ fg: 1, bg: 0, char: '\u2584' });
+  });
+
+  it('fg-only code after fg+bg preserves bg per mIRC spec', async () => {
+    // \x030,1▀\x031▄ — after \x031, bg should stay 1 from previous
+    const mirc = '\x030,1\u2580\x031\u2584';
+
+    await parseMircAscii(mirc, 'fgonly.txt');
+
+    const payload = getLastNewAsciiMetaPayload(mockStore);
+    const layers = decompressLayers(payload.layers);
+
+    // Block 0: ▀ with fg=0, bg=1
+    expect(layers[0].data[0][0]).toEqual({ fg: 0, bg: 1, char: '\u2580' });
+
+    // Block 1: ▄ with fg=1, bg=1 (bg preserved per mIRC spec)
+    expect(layers[0].data[0][1]).toEqual({ fg: 1, bg: 1, char: '\u2584' });
+  });
+
+  it('continuous half-blocks with same colors share bg', async () => {
+    // \x030,1▀▀▀▀▀ — all 5 should have fg=0, bg=1
+    const mirc = '\x030,1\u2580\u2580\u2580\u2580\u2580';
+
+    await parseMircAscii(mirc, 'continuous.txt');
+
+    const payload = getLastNewAsciiMetaPayload(mockStore);
+    const layers = decompressLayers(payload.layers);
+
+    expect(layers[0].width).toBe(5);
+    for (let i = 0; i < 5; i++) {
+      expect(layers[0].data[0][i]).toEqual({ fg: 0, bg: 1, char: '\u2580' });
+    }
+  });
+
+  it('alternating half-blocks with different colors', async () => {
+    // \x030,1▀\x031,0▄\x030,1▀
+    const mirc = '\x030,1\u2580\x031,0\u2584\x030,1\u2580';
+
+    await parseMircAscii(mirc, 'alternating.txt');
+
+    const payload = getLastNewAsciiMetaPayload(mockStore);
+    const layers = decompressLayers(payload.layers);
+
+    expect(layers[0].data[0][0]).toEqual({ fg: 0, bg: 1, char: '\u2580' });
+    expect(layers[0].data[0][1]).toEqual({ fg: 1, bg: 0, char: '\u2584' });
+    expect(layers[0].data[0][2]).toEqual({ fg: 0, bg: 1, char: '\u2580' });
+  });
+
+  it('soft reset between half-blocks clears bg', async () => {
+    // \x030,1▀\x03\x030▄ — reset clears bg, then fg-only has null bg
+    const mirc = '\x030,1\u2580\x03\x030\u2584';
+
+    await parseMircAscii(mirc, 'reset.txt');
+
+    const payload = getLastNewAsciiMetaPayload(mockStore);
+    const layers = decompressLayers(payload.layers);
+
+    // Block 0: fg=0, bg=1
+    expect(layers[0].data[0][0]).toEqual({ fg: 0, bg: 1, char: '\u2580' });
+    // Block 1: after reset (null fg/bg) then \x030 sets fg=0, bg stays null
+    expect(layers[0].data[0][1].fg).toBe(0);
+    expect(layers[0].data[0][1].bg).toBeNull();
+    expect(layers[0].data[0][1].char).toBe('\u2584');
+  });
+
+  it('multi-row half-block pairs for two-color art', async () => {
+    // Row 0: \x030,1▀▀ (upper=white, lower=black)
+    // Row 1: \x031,0▄▄ (lower=black, upper=white)
+    const mirc = '\x030,1\u2580\u2580\n\x031,0\u2584\u2584';
+
+    await parseMircAscii(mirc, 'tworow.txt');
+
+    const payload = getLastNewAsciiMetaPayload(mockStore);
+    const layers = decompressLayers(payload.layers);
+
+    expect(layers[0].height).toBe(2);
+    expect(layers[0].width).toBe(2);
+
+    // Row 0: both ▀ with fg=0, bg=1
+    expect(layers[0].data[0][0]).toEqual({ fg: 0, bg: 1, char: '\u2580' });
+    expect(layers[0].data[0][1]).toEqual({ fg: 0, bg: 1, char: '\u2580' });
+
+    // Row 1: both ▄ with fg=1, bg=0
+    expect(layers[0].data[1][0]).toEqual({ fg: 1, bg: 0, char: '\u2584' });
+    expect(layers[0].data[1][1]).toEqual({ fg: 1, bg: 0, char: '\u2584' });
+  });
+
+  it('export→import round-trip preserves half-block colors', async () => {
+    // Create blocks with half-blocks and export
+    const blocks: Block[][] = [
+      [
+        { fg: 0, bg: 1, char: '\u2580' },
+        { fg: 1, bg: 0, char: '\u2584' },
+      ],
+    ];
+
+    const exported = exportMirc(blocks);
+    const mircStr = exported.output.join('');
+
+    // Re-import
+    await parseMircAscii(mircStr, 'roundtrip.txt');
+
+    const payload = getLastNewAsciiMetaPayload(mockStore);
+    const layers = decompressLayers(payload.layers);
+
+    // Round-trip should preserve colors
+    expect(layers[0].data[0][0].fg).toBe(0);
+    expect(layers[0].data[0][0].bg).toBe(1);
+    expect(layers[0].data[0][0].char).toBe('\u2580');
+
+    expect(layers[0].data[0][1].fg).toBe(1);
+    expect(layers[0].data[0][1].bg).toBe(0);
+    expect(layers[0].data[0][1].char).toBe('\u2584');
+  });
+
+  it('export optimizes half-block with same fg/bg to space', () => {
+    const blocks: Block[][] = [
+      [{ fg: 1, bg: 1, char: '\u2580' }], // ▀ with same fg/bg
+    ];
+
+    const result = exportMirc(blocks);
+    const joined = result.output.join('');
+
+    // Should be optimized to space with fg=0
+    expect(joined).toContain(' ');
+    // Should NOT contain ▀
+    expect(joined).not.toContain('\u2580');
+  });
+
+  it('export handles half-block with fg-only (no bg)', () => {
+    const blocks: Block[][] = [
+      [{ fg: 1, char: '\u2580' }], // ▀ with fg only, no bg
+    ];
+
+    const result = exportMirc(blocks);
+    const joined = result.output.join('');
+
+    // Should output fg-only color code (no comma)
+    expect(joined).toContain('\x03');
+    expect(joined).toContain('\u2580');
+    // Should NOT have comma in the color code for this block
+    // (bg is undefined, so export uses fg-only format)
+  });
+
+  it('export→import round-trip for blocks with no bg', async () => {
+    // Block with fg-only, no bg — this tests the export format
+    const blocks: Block[][] = [
+      [{ fg: 1, char: 'A' }],
+    ];
+
+    const exported = exportMirc(blocks);
+    const mircStr = exported.output.join('');
+
+    await parseMircAscii(mircStr, 'nobg.txt');
+
+    const payload = getLastNewAsciiMetaPayload(mockStore);
+    const layers = decompressLayers(payload.layers);
+
+    // fg should be preserved
+    expect(layers[0].data[0][0].fg).toBe(1);
+    expect(layers[0].data[0][0].char).toBe('A');
+  });
+});
+
 // ─── checkForGetRequest ─────────────────────────────────────────
 
 describe('checkForGetRequest', () => {

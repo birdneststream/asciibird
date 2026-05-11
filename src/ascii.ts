@@ -261,9 +261,10 @@ export const parseMircAscii = async (
   filename: string,
 ): Promise<boolean> => {
   // The current state of the Colours
+  // Note: Do NOT collapse \x03\x03 — the first \x03 is a valid soft reset
+  // that clears fg/bg. Collapsing destroys the reset and causes bg to
+  // incorrectly persist across half-block boundaries (Bug #23).
   contents = contents
-    .split('\u0003\u0003')
-    .join('\u0003')
     .split('\u000F').join('')
     .split('\u0003\n').join('\n')
     .split('\u0002\u0003').join('\u0003')
