@@ -95,6 +95,7 @@ import { useToolbarStore } from '../store/toolbar';
 import { useToast } from '../composables/useToast';
 import { useClipboard } from '../composables/useClipboard';
 import { useCanvasPanel } from '../composables/useCanvasPanel';
+import { useMainCanvasRenderer } from '../composables/useMainCanvasRenderer';
 import hotkeys from 'hotkeys-js';
 
 import ContextMenu from '../components/parts/ContextMenu.vue';
@@ -164,6 +165,7 @@ const panelStore = usePanelStore();
 const toolbarStore = useToolbarStore();
 const { show: toastShow } = useToast();
 const { copyText } = useClipboard();
+const { renderBlock, clearMainCanvas } = useMainCanvasRenderer();
 
 // ─── Template Refs ──────────────────────────────────────────────
 const canvasRef = ref<HTMLCanvasElement | null>(null);
@@ -971,7 +973,7 @@ async function redrawCanvas(force = false) {
     let cy = 0;
     let canvasXVal = 0;
     let canvasYVal = 0;
-    let curBlock: Record<string, any> = {};
+    let curBlock = {} as Block;
 
     if (
       diffBlocks.new.length &&
@@ -997,28 +999,22 @@ async function redrawCanvas(force = false) {
           }
         }
 
-        if (curBlock.bg !== undefined && curBlock.bg !== null && canBg.value) {
-          ctx.fillStyle = mircColours.value[curBlock.bg];
-          ctx.fillRect(canvasXVal, canvasYVal, blockWidth, blockHeight);
-        }
-
-        if (curBlock.char !== undefined && curBlock.char !== null) {
-          if (curBlock.fg !== undefined && curBlock.fg !== null && canFg.value) {
-            ctx.fillStyle = mircColours.value[curBlock.fg];
-          } else {
-            ctx.fillStyle = mircColours.value[0];
-          }
-
-          if (canText.value) {
-            ctx.fillText(curBlock.char, canvasXVal, canvasYVal + blockHeight - 3);
-          } else {
-            ctx.fillText(
+        renderBlock(
+          ctx,
+          curBlock,
+          canvasXVal,
+          canvasYVal,
+          blockWidth,
+          blockHeight,
+          mircColours.value,
+          {
+            canBg: canBg.value,
+            canFg: canFg.value,
+            canText: canText.value,
+            fallbackChar:
               currentAsciiLayerBlocks.value[entry.y][entry.x].char || ' ',
-              canvasXVal,
-              canvasYVal + blockHeight - 3,
-            );
-          }
-        }
+          },
+        );
       }
 
       diffBlocks.l = selectedLayerIndex.value;
@@ -1035,14 +1031,7 @@ async function redrawCanvas(force = false) {
       }
 
       canvasHash.value = tempHash;
-      ctx.save();
-      const canvas = canvasRef.value;
-      if (canvas) {
-        // eslint-disable-next-line no-self-assign
-        canvas.width = canvas.width;
-      }
-      ctx.clearRect(0, 0, canvasSize.width, canvasSize.height);
-      ctx.font = '13px Hack';
+      clearMainCanvas(ctx, canvasRef.value, canvasSize.width, canvasSize.height);
 
       for (cy = 0; cy < currentAsciiHeight.value + 1; cy++) {
         canvasYVal = blockHeight * cy;
@@ -1060,25 +1049,18 @@ async function redrawCanvas(force = false) {
 
           curBlock = { ...merged[cy][cx] };
 
-          if (curBlock.bg !== undefined && curBlock.bg !== null) {
-            ctx.fillStyle = mircColours.value[curBlock.bg];
-            ctx.fillRect(canvasXVal, canvasYVal, blockWidth, blockHeight);
-          }
-
-          if (curBlock.char !== undefined && curBlock.char !== null) {
-            if (curBlock.fg !== undefined && curBlock.fg !== null) {
-              ctx.fillStyle = mircColours.value[curBlock.fg];
-            } else {
-              ctx.fillStyle = '#FFFFFF';
-            }
-
-            ctx.fillText(curBlock.char, canvasXVal, canvasYVal + blockHeight - 3);
-          }
+          renderBlock(
+            ctx,
+            curBlock,
+            canvasXVal,
+            canvasYVal,
+            blockWidth,
+            blockHeight,
+            mircColours.value,
+          );
         }
       }
     }
-
-    ctx.restore();
   }
 }
 
