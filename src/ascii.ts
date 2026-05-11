@@ -1,24 +1,23 @@
 import LZString from 'lz-string';
 import type { Block, Layer, ImageOverlay, AsciibirdMetaBuilder, MircExportResult, ToolbarIcon, CreateAsciiForm } from './types';
+import type { AsciiStoreAccess, ModalStoreAccess } from './types/store';
 
 // Lazy store references to break circular dependency
 // Store imports from ascii, ascii imports store
 // Using a getter ensures store is only accessed after initialization
- 
-let _store: any = null;
-let _modalStore: any = null;
 
- 
-export const setStore = (s: any): void => {
+let _store: AsciiStoreAccess | null = null;
+let _modalStore: ModalStoreAccess | null = null;
+
+export const setStore = (s: AsciiStoreAccess): void => {
   _store = s;
 };
 
-export const setModalStore = (s: any): void => {
+export const setModalStore = (s: ModalStoreAccess): void => {
   _modalStore = s;
 };
 
- 
-const getStore = (): any => {
+const getStore = (): AsciiStoreAccess => {
   if (!_store) {
     throw new Error(
       'Store not initialized. Import store before using ascii.ts functions.',
@@ -27,7 +26,7 @@ const getStore = (): any => {
   return _store;
 };
 
-const getModalStore = (): any => {
+const getModalStore = (): ModalStoreAccess => {
   if (!_modalStore) {
     throw new Error(
       'Modal store not initialized.',
@@ -415,7 +414,11 @@ export const exportMirc = (blocks: Block[][] | null = null): MircExportResult =>
 
   if (blocks === null) {
     // Export the entire main ascii
-    currentAscii = getStore().currentAscii;
+    const ascii = getStore().currentAscii;
+    if (!ascii) {
+      return { filename: 'empty.txt', output: [''] };
+    }
+    currentAscii = ascii;
     currentAsciiLayersWidthHeight = getStore().currentAsciiLayersWidthHeight;
     blocks = mergeLayers();
   } else {
