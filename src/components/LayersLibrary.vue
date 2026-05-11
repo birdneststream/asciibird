@@ -14,7 +14,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
-import { useDraggable } from '@vueuse/core';
+import { usePanelDraggable } from '../composables/usePanelDraggable';
 import { usePanelStore } from '../store/panels';
 import Layers from './parts/Layers.vue';
 
@@ -22,7 +22,7 @@ const props = defineProps<{ yOffset?: number }>();
 const panelStore = usePanelStore();
 const panelEl = ref<HTMLElement | null>(null);
 
-const { style: panelStyle } = useDraggable(panelEl, {
+const { style: panelStyle } = usePanelDraggable(panelEl, {
   initialValue: {
     x: panelStore.layersLibrary.x,
     y: panelStore.layersLibrary.y,

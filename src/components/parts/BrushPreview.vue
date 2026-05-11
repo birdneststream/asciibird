@@ -62,7 +62,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { useDraggable } from '@vueuse/core';
+import { usePanelDraggable } from '../../composables/usePanelDraggable';
 import { emptyBlock, maxBrushSize } from '../../ascii';
 import { useToolbarStore } from '../../store/toolbar';
 import { usePanelStore } from '../../store/panels';
@@ -77,7 +77,7 @@ const toolbarStore = useToolbarStore();
 const panelStore = usePanelStore();
 const panelEl = ref<HTMLElement | null>(null);
 
-const { style: panelStyle } = useDraggable(panelEl, {
+const { style: panelStyle } = usePanelDraggable(panelEl, {
   initialValue: {
     x: panelStore.brushPreview.x,
     y: panelStore.brushPreview.y,

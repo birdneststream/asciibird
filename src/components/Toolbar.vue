@@ -169,7 +169,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
-import { useDraggable } from '@vueuse/core';
+import { usePanelDraggable } from '../composables/usePanelDraggable';
 import { useToolbarStore } from '../store/toolbar';
 import { useToast } from '../composables/useToast';
 import Colours from "./Colours.vue";
@@ -183,7 +183,7 @@ const toolbarStore = useToolbarStore();
 const { show: toastShow } = useToast();
 
 const panelEl = ref<HTMLElement | null>(null);
-const { style: panelStyle, x: dragX, y: dragY } = useDraggable(panelEl, {
+const { style: panelStyle, x: dragX, y: dragY } = usePanelDraggable(panelEl, {
   initialValue: { x: toolbarStore.toolbarState.x, y: toolbarStore.toolbarState.y },
 });
 

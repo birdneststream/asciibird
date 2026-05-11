@@ -167,7 +167,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch, onUnmounted } from 'vue';
 import LZString from 'lz-string';
-import { useDraggable } from '@vueuse/core';
+import { usePanelDraggable } from '../composables/usePanelDraggable';
 import { toolbarIcons } from '../ascii';
 import { useToolbarStore } from '../store/toolbar';
 import { usePanelStore } from '../store/panels';
@@ -182,7 +182,7 @@ const panelStore = usePanelStore();
 const { show: toastShow } = useToast();
 const panelEl = ref<HTMLElement | null>(null);
 
-const { style: panelStyle } = useDraggable(panelEl, {
+const { style: panelStyle } = usePanelDraggable(panelEl, {
   initialValue: {
     x: panelStore.brushLibrary.x,
     y: panelStore.brushLibrary.y,

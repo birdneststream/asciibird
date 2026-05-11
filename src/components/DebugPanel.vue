@@ -38,7 +38,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import LZString from 'lz-string';
-import { useDraggable } from '@vueuse/core';
+import { usePanelDraggable } from '../composables/usePanelDraggable';
 import { toolbarIcons, mergeLayers } from '../ascii';
 import { useAsciiBirdStore } from '../store';
 import { useToolbarStore } from '../store/toolbar';
@@ -58,7 +58,7 @@ const { show: toastShow } = useToast();
 const { copyText } = useClipboard();
 const panelEl = ref<HTMLElement | null>(null);
 
-const { style: panelStyle } = useDraggable(panelEl, {
+const { style: panelStyle } = usePanelDraggable(panelEl, {
   initialValue: {
     x: panelStore.debugPanel.x,
     y: panelStore.debugPanel.y,

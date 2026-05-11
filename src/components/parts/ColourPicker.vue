@@ -24,7 +24,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useDraggable } from '@vueuse/core';
+import { usePanelDraggable } from '../../composables/usePanelDraggable';
 import { mircColours99 } from '../../ascii';
 import { useToolbarStore } from '../../store/toolbar';
 
@@ -32,7 +32,7 @@ const props = defineProps<{ yOffset?: number }>();
 const toolbarStore = useToolbarStore();
 const el = ref<HTMLElement | null>(null);
 
-const { style } = useDraggable(el, {
+const { style } = usePanelDraggable(el, {
   initialValue: { x: 100, y: 100 + (props.yOffset || 0) },
 });
 
