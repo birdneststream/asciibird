@@ -103,22 +103,26 @@ In no particular order, future development goals and bug fixes.
 
 ## Known Bugs
 
-* If you hide layers it wont select the next best visible layer
-* Importing a half block with continued background will persist the background
 * Clear the URL after GET file import
 * Bug with hotkey brush switching, if make a new ascii hotkeys are broke - something to do with the hotkey function
-* If you drag a panel, then right click you can't drag it anymore
- * Sometimes panels can get stuck
-* FLOOD FILL - For now the older recursive function is there, but will hit the recursion limit on larger ASCIIs.
 * Editing ascii does not update title
-* Fix brush tool for seamless lines when drawing fast
 * Context menus inside the panels can be way off sometimes
 * The context menu for the background doesn't work when scrolled down
-* Brush blocks larger than 1x1 can leave undoable blocks in mirror mode
-  
-## Mobile / Touch Screen support
 
-Doesn't exist at the moment. While the underlying functions and code is compatible with mobile browsers from *babel*, the touch canvas events and text will need to be reviewed to work better with touch screens. For example while you can brush once, you cannot move the brush around.
+## Fixed Bugs
+
+The following issues have been resolved in recent updates:
+
+* ✅ **Layer auto-select** — Hiding a layer now automatically selects the next visible layer
+* ✅ **Half-block import** — Background colors correctly persist during half-block (`▀▄█`) import/export
+* ✅ **Flood fill recursion** — Replaced recursive fill with iterative algorithm using explicit stack; no more stack overflow on large ASCIIs
+* ✅ **Panel drag stuck** — Added safety nets (`pointercancel`, `blur`, `visibilitychange`, `contextmenu`) to prevent drag state from getting stuck after right-click or focus loss
+* ✅ **Brush line interpolation** — Fast brush strokes now use Bresenham's line algorithm to fill gaps between sparse `mousemove` events
+* ✅ **Mirror mode undo** — Duplicate-position guard prevents leaving undoable blocks in mirror mode
+
+## Mobile / Touch Screen Support
+
+Limited touch support is present but not fully functional. Touch events are wired on the canvas but mobile browsers have not been thoroughly tested. Full touch support is a future enhancement.
 
 # What Chatters are saying about ASCIIBIRD
 

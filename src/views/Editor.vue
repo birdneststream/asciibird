@@ -63,8 +63,8 @@
           @mouseup.left="canvasMouseUp"
           @mouseup.right="openContextMenu"
           @touchmove="canvasMouseMove"
-          @touchend="canvasMouseDown"
-          @touchstart="canvasMouseUp"
+          @touchend="canvasMouseUp"
+          @touchstart="canvasMouseDown"
         />
 
         <!-- Resize handles — visible only with default tool -->

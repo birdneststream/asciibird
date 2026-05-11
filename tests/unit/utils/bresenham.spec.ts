@@ -156,4 +156,25 @@ describe('bresenhamLine', () => {
     // Should be exactly 3 points
     expect(points.length).toBe(3);
   });
+
+  it('handles fast diagonal stroke (simulates sparse mousemove)', () => {
+    // Simulate a fast brush stroke: mouse moves 20 pixels in one event
+    const points = bresenhamLine(0, 0, 20, 15);
+    expect(points.length).toBeGreaterThan(20);
+    expect(points[0]).toEqual({ x: 0, y: 0 });
+    expect(points[points.length - 1]).toEqual({ x: 20, y: 15 });
+    // No gaps — every step is adjacent
+    for (let i = 1; i < points.length; i++) {
+      expect(Math.abs(points[i].x - points[i - 1].x)).toBeLessThanOrEqual(1);
+      expect(Math.abs(points[i].y - points[i - 1].y)).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it('handles long horizontal stroke (simulates fast horizontal drag)', () => {
+    const points = bresenhamLine(0, 5, 50, 5);
+    expect(points).toHaveLength(51);
+    for (let i = 0; i <= 50; i++) {
+      expect(points[i]).toEqual({ x: i, y: 5 });
+    }
+  });
 });

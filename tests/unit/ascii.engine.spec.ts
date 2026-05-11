@@ -1678,6 +1678,26 @@ describe('iterativeFill', () => {
     expect(elapsed).toBeLessThan(500);
   });
 
+  it('completes 200x200 fill without stack overflow (regression test)', () => {
+    const grid = makeGrid(200, 200);
+    const start = performance.now();
+    const changes = iterativeFill(
+      grid,
+      100,
+      100,
+      { bg: 1 },
+      { bg: 5 },
+      true,
+      false,
+      false,
+      false,
+    );
+    const elapsed = performance.now() - start;
+    expect(changes).toHaveLength(40_000);
+    // 4x the cells of 100×100; allow 4x the time
+    expect(elapsed).toBeLessThan(2000);
+  });
+
   it('returns changes that map directly to BlockDiff format', () => {
     const grid = makeGrid(2, 2);
     const changes = iterativeFill(

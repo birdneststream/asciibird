@@ -191,13 +191,25 @@ Migrated from localStorage (~5MB limit) to IndexedDB for the two largest Pinia s
 
 **Verification**: Build ✅ Tests ✅ (792/792) TypeScript ✅ Browser ✅
 
-## Known Issues (from README)
-- Flood fill hits recursion limit on large ASCIIs
-- Hidden layers don't auto-select next visible layer
-- Half-block import background persistence bug
-- Panel dragging can get stuck after right-click
-- Brush tool needs seamless line interpolation for fast drawing
-- No mobile/touch support
+## Known Issues
+
+The following bugs from the README have been **verified and fixed**:
+
+| Issue | Status | Fix Location |
+|-------|--------|--------------|
+| Flood fill recursion limit on large ASCIIs | ✅ Fixed | `src/ascii.ts` — `iterativeFill()` with explicit stack + visited Set |
+| Hidden layers don't auto-select next visible layer | ✅ Fixed | `src/utils/layers.ts` — `findNextVisibleLayer()` + store integration |
+| Half-block import background persistence bug | ✅ Fixed | `src/ascii.ts` — import logic + 10 round-trip tests |
+| Panel dragging can get stuck after right-click | ✅ Fixed | `src/composables/usePanelDraggable.ts` — `PointerEvent` dispatch + safety nets |
+| Brush tool needs seamless line interpolation | ✅ Fixed | `src/utils/bresenham.ts` + `src/views/Editor.vue` — Bresenham interpolation |
+| No mobile/touch support | 🔧 Future | Touch events wired in Editor.vue but not fully tested |
+
+### Remaining Unverified Issues (from README)
+- Clear URL after GET file import
+- Hotkey brush switching breaks after new ASCII
+- Editing ASCII does not update title
+- Context menu positioning issues
+- Context menu for background when scrolled down
 
 ## Dependencies
 

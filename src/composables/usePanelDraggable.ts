@@ -1,5 +1,4 @@
 import { useDraggable, useEventListener } from '@vueuse/core';
-import { toValue } from 'vue';
 import type { MaybeRefOrGetter } from 'vue';
 import type { UseDraggableOptions, UseDraggableReturn } from '@vueuse/core';
 
@@ -25,18 +24,29 @@ export function usePanelDraggable(
 
   /**
    * Force-end a stuck drag by dispatching a synthetic pointerup event.
-   * useDraggable listens for pointerup on window; a bubbling pointerup
-   * from the element will reach that listener and reset pressedDelta.
    *
-   * This depends on @vueuse/core's internal event wiring. If a future
-   * version changes listener targets, the safety net may need updating.
+   * VueUse's useDraggable attaches a capture-phase `pointerup` listener on
+   * `window` (or `draggingElement`). We dispatch directly on `window` to
+   * ensure the synthetic event reaches that listener and resets
+   * `pressedDelta`, which drives `isDragging`.
+   *
+   * Uses `PointerEvent` when available (real browsers) and falls back to
+   * generic `Event` for jsdom test environments.
    */
   function forceEndDrag() {
-    const element = toValue(el);
-    if (element && draggable.isDragging.value) {
-      // Use generic Event constructor — PointerEvent may not exist in jsdom
-      element.dispatchEvent(new Event('pointerup', { bubbles: true }));
-    }
+    if (!draggable.isDragging.value) return;
+
+    const hasPointerEvent = typeof PointerEvent !== 'undefined';
+    const EventConstructor = hasPointerEvent ? PointerEvent : Event;
+
+    window.dispatchEvent(
+      new EventConstructor('pointerup', {
+        bubbles: true,
+        ...(hasPointerEvent
+          ? { button: 0, buttons: 0, pointerId: 1, pointerType: 'mouse' }
+          : {}),
+      } as EventInit),
+    );
   }
 
   // Safety net: browser cancels the pointer stream
@@ -49,6 +59,11 @@ export function usePanelDraggable(
   useEventListener(document, 'visibilitychange', () => {
     forceEndDrag();
   });
+
+  // Safety net: right-click context menu during drag — pointerup does not fire.
+  // Use capture phase so this always runs before consumer handlers can stop
+  // propagation.
+  useEventListener(window, 'contextmenu', forceEndDrag, { capture: true });
 
   return draggable;
 }
