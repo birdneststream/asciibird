@@ -1504,37 +1504,45 @@ async function drawBrushBlocks(
       if (canText.value && canTool.value) {
         tBlock['char'] = brushBlock['char'];
 
+        const charX = asciiWidth - arrayX;
+        const charY = asciiHeight - arrayY;
+        let charOb: Record<string, any> = {};
+
         if (
           mirrorX.value &&
           currentAsciiLayerBlocks.value[arrayY] &&
-          currentAsciiLayerBlocks.value[arrayY][asciiWidth - arrayX]
+          currentAsciiLayerBlocks.value[arrayY][charX] &&
+          (x.value !== charX || y.value !== arrayY)
         ) {
-          currentAsciiLayerBlocks.value[arrayY][
-            asciiWidth - arrayX
-          ].char = brushBlock.char;
+          charOb = { ...currentAsciiLayerBlocks.value[arrayY][charX] };
+          currentAsciiLayerBlocks.value[arrayY][charX].char =
+            brushBlock.char;
+          await storeDiffBlocks(charX, arrayY, charOb, brushBlock);
         }
 
         if (
           mirrorY.value &&
-          currentAsciiLayerBlocks.value[asciiHeight - arrayY] &&
-          currentAsciiLayerBlocks.value[asciiHeight - arrayY][arrayX]
+          currentAsciiLayerBlocks.value[charY] &&
+          currentAsciiLayerBlocks.value[charY][arrayX] &&
+          (x.value !== arrayX || y.value !== charY)
         ) {
-          currentAsciiLayerBlocks.value[asciiHeight - arrayY][
-            arrayX
-          ].char = brushBlock.char;
+          charOb = { ...currentAsciiLayerBlocks.value[charY][arrayX] };
+          currentAsciiLayerBlocks.value[charY][arrayX].char =
+            brushBlock.char;
+          await storeDiffBlocks(arrayX, charY, charOb, brushBlock);
         }
 
         if (
           mirrorY.value &&
           mirrorX.value &&
-          currentAsciiLayerBlocks.value[asciiHeight - arrayY] &&
-          currentAsciiLayerBlocks.value[asciiHeight - arrayY][
-            asciiWidth - arrayX
-          ]
+          currentAsciiLayerBlocks.value[charY] &&
+          currentAsciiLayerBlocks.value[charY][charX] &&
+          (x.value !== charX || y.value !== charY)
         ) {
-          currentAsciiLayerBlocks.value[asciiHeight - arrayY][
-            asciiWidth - arrayX
-          ].char = brushBlock.char;
+          charOb = { ...currentAsciiLayerBlocks.value[charY][charX] };
+          currentAsciiLayerBlocks.value[charY][charX].char =
+            brushBlock.char;
+          await storeDiffBlocks(charX, charY, charOb, brushBlock);
         }
       }
 
