@@ -8,13 +8,11 @@ const TestPointerEvent = typeof PointerEvent !== 'undefined'
   : MouseEvent;
 
 describe('useCanvasPanel', () => {
-  let mockTarget: { value: HTMLElement | null };
   let dragStopCb: any;
   let dragMoveCb: any;
   let resizeStopCb: any;
 
   beforeEach(() => {
-    mockTarget = { value: document.createElement('div') };
     dragStopCb = vi.fn<(_x: number, _y: number) => void>();
     dragMoveCb = vi.fn<(_x: number, _y: number) => void>();
     resizeStopCb = vi.fn<(_x: number, _y: number, _width: number, _height: number) => void>();

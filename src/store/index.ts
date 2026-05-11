@@ -402,7 +402,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         }
 
         const prevData = decompressData<HistoryDiff>(
-          prev as string,
+          prev,
         );
 
         const tempLayers: Layer[] = decompressLayers(
@@ -467,7 +467,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         }
 
         const redoData = decompressData<HistoryDiff>(
-          prev as string,
+          prev,
         );
 
         const tempLayers: Layer[] = decompressLayers(
