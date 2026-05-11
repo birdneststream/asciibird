@@ -212,15 +212,15 @@ const libraryCount = computed(() =>
 );
 
 const hotkeyBrushes = computed(() => {
-  let hotkeyString = '';
+  const keys: string[] = [];
   for (let i = 0; i <= 9; i++) {
-    hotkeyString = `${hotkeyString}ctrl+${i},`;
+    keys.push(`ctrl+${i}`);
   }
-  return hotkeyString;
+  return keys.join(',');
 });
 
-// Register hotkeys for brush selection
-hotkeys(hotkeyBrushes.value, (event) => {
+// Register hotkeys for brush selection in 'editor' scope
+hotkeys(hotkeyBrushes.value, 'editor', (event) => {
   event.preventDefault();
 
   if (isBrushing.value || isErasing.value) {
@@ -247,7 +247,7 @@ watch(
 );
 
 onUnmounted(() => {
-  hotkeys.unbind(hotkeyBrushes.value);
+  hotkeys.unbind(hotkeyBrushes.value, 'editor');
 });
 
 function changeTab(tab: number) {
