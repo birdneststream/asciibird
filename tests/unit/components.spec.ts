@@ -8,7 +8,7 @@ import {
   beforeEach,
   afterEach,
 } from 'vitest'
-import { mount, shallowMount } from '@vue/test-utils'
+import { mount, shallowMount, type VueWrapper } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import Colours from '@/components/Colours.vue'
 import CharPicker from '@/components/parts/CharPicker.vue'
@@ -27,6 +27,7 @@ import {
   copyTextMock,
   globalStubs,
   setupHotkeysMocks,
+  type TestWrapper,
 } from './helpers'
 
 let _mockStore: any = null
@@ -72,6 +73,20 @@ function mountOpts(extra: any = {}) {
   }
 }
 
+function tw<T extends abstract new (...args: any) => any>(
+  component: T,
+  opts: any,
+): TestWrapper {
+  return mount(component as any, opts) as TestWrapper
+}
+
+function stw<T extends abstract new (...args: any) => any>(
+  component: T,
+  opts: any,
+): TestWrapper {
+  return shallowMount(component as any, opts) as TestWrapper
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   store = createMockStore()
@@ -87,12 +102,12 @@ afterEach(() => {
 // ─── Colours.vue ─────────────────────────────
 describe('Colours.vue', () => {
   it('mounts successfully', () => {
-    const wrapper = shallowMount(Colours, mountOpts())
+    const wrapper = stw(Colours, mountOpts())
     expect(wrapper.findComponent(Colours).exists()).toBe(true)
   })
 
   it('renders FG and BG buttons with correct colours', () => {
-    const wrapper = mount(Colours, mountOpts())
+    const wrapper = tw(Colours, mountOpts())
 
     const fgBtn = wrapper.find('#currentColourFg')
     const bgBtn = wrapper.find('#currentColourBg')
@@ -108,19 +123,19 @@ describe('Colours.vue', () => {
   })
 
   it('clicking FG button toggles isChoosingFg', () => {
-    const wrapper = mount(Colours, mountOpts())
+    const wrapper = tw(Colours, mountOpts())
     wrapper.find('#currentColourFg').trigger('click')
     expect(_mockToolbarStore.toolbarState.isChoosingFg).toBe(true)
   })
 
   it('clicking BG button toggles isChoosingBg', () => {
-    const wrapper = mount(Colours, mountOpts())
+    const wrapper = tw(Colours, mountOpts())
     wrapper.find('#currentColourBg').trigger('click')
     expect(_mockToolbarStore.toolbarState.isChoosingBg).toBe(true)
   })
 
   it('swapColours swaps FG and BG', () => {
-    const wrapper = mount(Colours, mountOpts())
+    const wrapper = tw(Colours, mountOpts())
     expect(_mockToolbarStore.toolbarState.currentColourFg).toBe(0)
     expect(_mockToolbarStore.toolbarState.currentColourBg).toBe(1)
 
@@ -131,17 +146,17 @@ describe('Colours.vue', () => {
   })
 
   it('renders the swap button', () => {
-    const wrapper = mount(Colours, mountOpts())
+    const wrapper = tw(Colours, mountOpts())
     expect(wrapper.find('#swapColour').exists()).toBe(true)
   })
 
   it('shows SP for space character', () => {
-    const wrapper = mount(Colours, mountOpts())
+    const wrapper = tw(Colours, mountOpts())
     expect(wrapper.find('#currentChar').text()).toContain('SP')
   })
 
   it('clicking char button toggles isChoosingChar', () => {
-    const wrapper = mount(Colours, mountOpts())
+    const wrapper = tw(Colours, mountOpts())
     wrapper.find('#currentChar').trigger('click')
     expect(_mockToolbarStore.toolbarState.isChoosingChar).toBe(true)
   })
@@ -150,7 +165,7 @@ describe('Colours.vue', () => {
 // ─── CharPicker.vue ──────────────────────────
 describe('CharPicker.vue', () => {
   it('mounts successfully with required props', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       CharPicker,
       mountOpts({
         props: {
@@ -164,7 +179,7 @@ describe('CharPicker.vue', () => {
   })
 
   it('provides charCodes from ascii module', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       CharPicker,
       mountOpts({
         props: {
@@ -178,7 +193,7 @@ describe('CharPicker.vue', () => {
   })
 
   it('provides mircColours from ascii module', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       CharPicker,
       mountOpts({
         props: {
@@ -192,7 +207,7 @@ describe('CharPicker.vue', () => {
   })
 
   it('onCharChange calls store.changeChar', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       CharPicker,
       mountOpts({
         props: {
@@ -214,7 +229,7 @@ describe('CharPicker.vue', () => {
     _mockToolbarStore = createMockToolbarStore({
       toolbarState: { currentColourFg: 5, currentColourBg: 5 },
     })
-    const wrapper = shallowMount(
+    const wrapper = stw(
       CharPicker,
       mountOpts({
         props: {
@@ -230,7 +245,7 @@ describe('CharPicker.vue', () => {
   })
 
   it('outline is empty when fg and bg differ', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       CharPicker,
       mountOpts({
         props: {
@@ -247,7 +262,7 @@ describe('CharPicker.vue', () => {
 // ─── ColourPicker.vue ────────────────────────
 describe('ColourPicker.vue', () => {
   it('mounts successfully with required props', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       ColourPicker,
       mountOpts({
         props: { yOffset: 0 },
@@ -257,7 +272,7 @@ describe('ColourPicker.vue', () => {
   })
 
   it('provides mircColours from ascii module', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       ColourPicker,
       mountOpts({
         props: { yOffset: 0 },
@@ -274,7 +289,7 @@ describe('ColourPicker.vue', () => {
     _mockToolbarStore = createMockToolbarStore({
       toolbarState: { isChoosingFg: true, isChoosingBg: false },
     })
-    const wrapper = shallowMount(
+    const wrapper = stw(
       ColourPicker,
       mountOpts({
         props: { yOffset: 0 },
@@ -292,7 +307,7 @@ describe('ColourPicker.vue', () => {
     _mockToolbarStore = createMockToolbarStore({
       toolbarState: { isChoosingFg: false, isChoosingBg: true },
     })
-    const wrapper = shallowMount(
+    const wrapper = stw(
       ColourPicker,
       mountOpts({
         props: { yOffset: 0 },
@@ -303,7 +318,7 @@ describe('ColourPicker.vue', () => {
   })
 
   it('onColourChange does nothing when neither fg nor bg choosing', () => {
-    const wrapper = shallowMount(
+    const wrapper = stw(
       ColourPicker,
       mountOpts({
         props: { yOffset: 0 },
@@ -320,12 +335,12 @@ describe('ColourPicker.vue', () => {
 // ─── NewAscii.vue ────────────────────────────
 describe('NewAscii.vue', () => {
   it('mounts successfully', () => {
-    const wrapper = shallowMount(NewAscii, mountOpts())
+    const wrapper = stw(NewAscii, mountOpts())
     expect(wrapper.findComponent(NewAscii).exists()).toBe(true)
   })
 
   it('has default form values after close reset', () => {
-    const wrapper = shallowMount(NewAscii, mountOpts())
+    const wrapper = stw(NewAscii, mountOpts())
     wrapper.vm.close()
     expect(wrapper.vm.forms.createAscii.width).toBe(80)
     expect(wrapper.vm.forms.createAscii.height).toBe(30)
@@ -333,7 +348,7 @@ describe('NewAscii.vue', () => {
   })
 
   it('open method sets title', () => {
-    const wrapper = shallowMount(NewAscii, mountOpts())
+    const wrapper = stw(NewAscii, mountOpts())
     wrapper.vm.open()
     expect(wrapper.vm.forms.createAscii.title).toContain(
       'New ASCII',
@@ -341,7 +356,7 @@ describe('NewAscii.vue', () => {
   })
 
   it('close method resets form', () => {
-    const wrapper = shallowMount(NewAscii, mountOpts())
+    const wrapper = stw(NewAscii, mountOpts())
     wrapper.vm.forms.createAscii.width = 100
     wrapper.vm.forms.createAscii.height = 50
     wrapper.vm.forms.createAscii.title = 'modified'
@@ -353,7 +368,7 @@ describe('NewAscii.vue', () => {
   })
 
   it('computed showNewAsciiModal reads from store', () => {
-    const wrapper = shallowMount(NewAscii, mountOpts())
+    const wrapper = stw(NewAscii, mountOpts())
     expect(wrapper.vm.showNewAsciiModal).toBe(false)
   })
 
@@ -365,12 +380,12 @@ describe('NewAscii.vue', () => {
       },
     })
     store = _mockStore
-    const wrapper = shallowMount(NewAscii, mountOpts())
+    const wrapper = stw(NewAscii, mountOpts())
     expect(wrapper.vm.forms.createAscii.title).toContain('New ASCII')
   })
 
   it('watch showNewAsciiModal calls open on true', async () => {
-    const wrapper = shallowMount(NewAscii, mountOpts())
+    const wrapper = stw(NewAscii, mountOpts())
     store.modalState.newAscii = true
     await wrapper.vm.$nextTick()
     expect(wrapper.vm.forms.createAscii.title).toContain('New ASCII')
@@ -384,7 +399,7 @@ describe('NewAscii.vue', () => {
       },
     })
     store = _mockStore
-    const wrapper = shallowMount(NewAscii, mountOpts())
+    const wrapper = stw(NewAscii, mountOpts())
     store.modalState.newAscii = false
     await wrapper.vm.$nextTick()
     expect(wrapper.vm.forms.createAscii.width).toBe(80)
@@ -395,7 +410,7 @@ describe('NewAscii.vue', () => {
     const asciiMock = vi.fn()
     vi.doMock('@/ascii', () => ({ default: asciiMock }))
 
-    const wrapper = shallowMount(NewAscii, mountOpts())
+    const wrapper = stw(NewAscii, mountOpts())
     wrapper.vm.forms.createAscii.width = '100'
     wrapper.vm.forms.createAscii.height = '50'
     wrapper.vm.forms.createAscii.title = 'Test ASCII'
@@ -414,7 +429,7 @@ describe('NewAscii.vue', () => {
   })
 
   it('initiateNewAscii handles string dimensions via parseInt', () => {
-    const wrapper = shallowMount(NewAscii, mountOpts())
+    const wrapper = stw(NewAscii, mountOpts())
     wrapper.vm.forms.createAscii.width = '40'
     wrapper.vm.forms.createAscii.height = '15'
     try {
@@ -430,19 +445,19 @@ describe('NewAscii.vue', () => {
 // ─── About.vue ───────────────────────────────
 describe('About.vue', () => {
   it('mounts successfully', () => {
-    const wrapper = shallowMount(About, mountOpts())
+    const wrapper = stw(About, mountOpts())
     expect(wrapper.findComponent(About).exists()).toBe(true)
   })
 
   it('aboutAscii computed decompresses to an array', () => {
-    const wrapper = shallowMount(About, mountOpts())
+    const wrapper = stw(About, mountOpts())
     const ascii = wrapper.vm.aboutAscii
     expect(ascii).toBeDefined()
     expect(Array.isArray(ascii)).toBe(true)
   })
 
   it('computed showAboutModal reads modalState.about', () => {
-    const wrapper = shallowMount(About, mountOpts())
+    const wrapper = stw(About, mountOpts())
     expect(wrapper.vm.showAboutModal).toBe(false)
   })
 
@@ -453,12 +468,12 @@ describe('About.vue', () => {
         options: false, overlay: false, about: true, help: false,
       },
     })
-    const wrapper = shallowMount(About, mountOpts())
+    const wrapper = stw(About, mountOpts())
     expect(wrapper.vm.showAboutModal).toBe(true)
   })
 
   it('computed showAboutModal returns false when store has about=false', () => {
-    const wrapper = shallowMount(About, mountOpts())
+    const wrapper = stw(About, mountOpts())
     expect(wrapper.vm.showAboutModal).toBe(false)
   })
 })
@@ -466,12 +481,12 @@ describe('About.vue', () => {
 // ─── Help.vue ────────────────────────────────
 describe('Help.vue', () => {
   it('mounts successfully', () => {
-    const wrapper = shallowMount(Help, mountOpts())
+    const wrapper = stw(Help, mountOpts())
     expect(wrapper.findComponent(Help).exists()).toBe(true)
   })
 
   it('computed showHelpModal reads modalState.help', () => {
-    const wrapper = shallowMount(Help, mountOpts())
+    const wrapper = stw(Help, mountOpts())
     expect(wrapper.vm.showHelpModal).toBe(false)
   })
 })
@@ -479,21 +494,21 @@ describe('Help.vue', () => {
 // ─── ContextMenu.vue ─────────────────────────
 describe('ContextMenu.vue', () => {
   it('mounts successfully', () => {
-    const wrapper = shallowMount(ContextMenu, {
+    const wrapper = stw(ContextMenu, {
       global: { stubs: globalStubs },
     })
     expect(wrapper.exists()).toBe(true)
   })
 
   it('hidden by default (show=false)', () => {
-    const wrapper = shallowMount(ContextMenu, {
+    const wrapper = stw(ContextMenu, {
       global: { stubs: globalStubs },
     })
     expect(wrapper.vm.show).toBe(false)
   })
 
   it('style returns left and top positions after open', () => {
-    const wrapper = shallowMount(ContextMenu, {
+    const wrapper = stw(ContextMenu, {
       global: { stubs: globalStubs },
     })
     wrapper.vm.open({ clientX: 100, clientY: 200 })
@@ -503,7 +518,7 @@ describe('ContextMenu.vue', () => {
   })
 
   it('close sets show to false', () => {
-    const wrapper = shallowMount(ContextMenu, {
+    const wrapper = stw(ContextMenu, {
       global: { stubs: globalStubs },
     })
     wrapper.vm.open({ clientX: 100, clientY: 200 })
@@ -515,7 +530,7 @@ describe('ContextMenu.vue', () => {
 // ─── Layers.vue ──────────────────────────────
 describe('Layers.vue', () => {
   it('mounts successfully', () => {
-    const wrapper = shallowMount(Layers, mountOpts())
+    const wrapper = stw(Layers, mountOpts())
     expect(wrapper.exists()).toBe(true)
   })
 })

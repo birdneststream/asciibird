@@ -1113,7 +1113,9 @@ describe('Pinia Store Getters', () => {
   });
 
   it('currentAscii returns current ASCII metadata', () => {
-    expect(store.currentAscii.title).toBe('Test');
+    const ascii = store.currentAscii;
+    expect(ascii).not.toBe(false);
+    if (ascii) expect(ascii.title).toBe('Test');
   });
 
   it('currentAsciiLayers decompresses layers correctly', () => {

@@ -16,6 +16,7 @@ import {
   createMockModalStore,
   toastedMock,
   globalStubs,
+  type TestWrapper,
 } from './helpers'
 
 let _mockStore: any = null
@@ -45,7 +46,7 @@ vi.mock('../../src/composables/useDialog', () => ({
 
 let store: any
 
-function createWrapper(extra: any = {}) {
+function createWrapper(extra: any = {}): TestWrapper {
   return shallowMount(Layers, {
     global: {
       plugins: [createPinia()],

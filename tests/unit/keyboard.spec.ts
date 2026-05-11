@@ -18,6 +18,7 @@ import {
   createMockToolbarStore,
   createToolbarState,
   globalStubs,
+  type TestWrapper,
 } from './helpers'
 
 let _mockStore: any = null
@@ -42,7 +43,7 @@ vi.mock('hotkeys-js', () => {
     }
     // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
     ;(capturedHandlers as Map<string, Function[]>).get(key)!.push(handler)
-  })
+  }) as any
   fn.filter = vi.fn(() => true)
   fn.setScope = vi.fn()
   fn.deleteScope = vi.fn()
@@ -83,6 +84,10 @@ function mountOpts(extra: any = {}) {
   }
 }
 
+function stw(opts: any): TestWrapper {
+  return shallowMount(KeyboardShortcuts, opts) as TestWrapper
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   capturedHandlers.clear()
@@ -114,24 +119,24 @@ function createEvent(overrides: Record<string, any> = {}) {
 
 describe('KeyboardShortcuts.vue', () => {
   it('mounts successfully', () => {
-    const wrapper = shallowMount(KeyboardShortcuts, mountOpts())
+    const wrapper = stw(mountOpts())
     expect(wrapper.findComponent(KeyboardShortcuts).exists()).toBe(true)
   })
 
   it('registers wildcard handler in editor scope on created', () => {
-    shallowMount(KeyboardShortcuts, mountOpts())
+    stw(mountOpts())
     const handler = getHandler('editor:*')
     expect(handler).toBeDefined()
   })
 
   it('registers escape handler in editor scope on created', () => {
-    shallowMount(KeyboardShortcuts, mountOpts())
+    stw(mountOpts())
     const handler = getHandler('editor:Escape')
     expect(handler).toBeDefined()
   })
 
   it('sets scope to editor when disableKeyboard is false', () => {
-    shallowMount(KeyboardShortcuts, mountOpts())
+    stw(mountOpts())
     expect((hotkeys as any).setScope).toHaveBeenCalledWith(
       'editor',
     )
@@ -139,7 +144,7 @@ describe('KeyboardShortcuts.vue', () => {
 
   it('sets scope to modals when disableKeyboard is true', () => {
     _mockModalStore = createMockModalStore({ isKeyboardDisabled: true })
-    shallowMount(KeyboardShortcuts, mountOpts())
+    stw(mountOpts())
     expect((hotkeys as any).setScope).toHaveBeenCalledWith(
       'modals',
     )
@@ -147,7 +152,7 @@ describe('KeyboardShortcuts.vue', () => {
 
   it('disableKeyboard computed reads from store', () => {
     _mockModalStore = createMockModalStore({ isKeyboardDisabled: true })
-    shallowMount(KeyboardShortcuts, mountOpts())
+    stw(mountOpts())
     expect((hotkeys as any).setScope).toHaveBeenCalledWith(
       'modals',
     )
@@ -165,7 +170,7 @@ describe('KeyboardShortcuts.vue', () => {
       _mockToolbarStore = createMockToolbarStore({
         toolbarState: { isChoosingChar: true, persistCharPanel: false },
       })
-      shallowMount(KeyboardShortcuts, mountOpts())
+      stw(mountOpts())
       const spy = vi.spyOn(_mockToolbarStore, 'changeChar')
       const handler = getHandler('editor:*')
       const event = createEvent({ key: 'a' })
@@ -174,7 +179,7 @@ describe('KeyboardShortcuts.vue', () => {
     })
 
   it('wildcard handler calls changeTool for alt+number', () => {
-    shallowMount(KeyboardShortcuts, mountOpts())
+    stw(mountOpts())
     const spy = vi.spyOn(_mockToolbarStore, 'changeTool')
     const handler = getHandler('editor:*')
     const event = createEvent({ key: '3', altKey: true })
@@ -183,7 +188,7 @@ describe('KeyboardShortcuts.vue', () => {
   })
 
   it('wildcard handler emits updatecanvas for alt+number', () => {
-    const wrapper = shallowMount(KeyboardShortcuts, mountOpts())
+    const wrapper = stw(mountOpts())
     const handler = getHandler('editor:*')
     const event = createEvent({ key: '5', altKey: true })
     handler!(event, {})
@@ -198,7 +203,7 @@ describe('KeyboardShortcuts.vue', () => {
     _mockToolbarStore = createMockToolbarStore({
       toolbarState: { isChoosingFg: true },
     })
-    shallowMount(KeyboardShortcuts, mountOpts())
+    stw(mountOpts())
     const spy = vi.spyOn(_mockToolbarStore, 'changeColourFg')
     const handler = getHandler('editor:*')
     const event = createEvent({ key: '5' })
@@ -214,7 +219,7 @@ describe('KeyboardShortcuts.vue', () => {
     _mockToolbarStore = createMockToolbarStore({
       toolbarState: { isChoosingBg: true },
     })
-    shallowMount(KeyboardShortcuts, mountOpts())
+    stw(mountOpts())
     const spy = vi.spyOn(_mockToolbarStore, 'changeColourBg')
     const handler = getHandler('editor:*')
     const event = createEvent({ key: '7' })
@@ -231,7 +236,7 @@ describe('KeyboardShortcuts.vue', () => {
       _mockToolbarStore = createMockToolbarStore({
         toolbarState: { isChoosingChar: true },
       })
-      shallowMount(KeyboardShortcuts, mountOpts())
+      stw(mountOpts())
       const fgSpy = vi.spyOn(_mockToolbarStore, 'changeIsUpdatingFg')
       const bgSpy = vi.spyOn(_mockToolbarStore, 'changeIsUpdatingBg')
       const charSpy = vi.spyOn(_mockToolbarStore, 'changeIsUpdatingChar')
@@ -251,7 +256,7 @@ describe('KeyboardShortcuts.vue', () => {
     _mockToolbarStore = createMockToolbarStore({
       toolbarState: { currentTool: 2 },
     })
-    shallowMount(KeyboardShortcuts, mountOpts())
+    stw(mountOpts())
     const spy = vi.spyOn(_mockToolbarStore, 'changeTool')
     const handler = getHandler('editor:Escape')
     const event = createEvent({})
@@ -260,19 +265,19 @@ describe('KeyboardShortcuts.vue', () => {
   })
 
   it('isDefault returns true when currentTool is 0', () => {
-    const wrapper = shallowMount(KeyboardShortcuts, mountOpts())
+    const wrapper = stw(mountOpts())
     expect(wrapper.vm.isDefault).toBe(true)
   })
 
   it('haveOpenTabs returns true when currentAscii exists', () => {
-    const wrapper = shallowMount(KeyboardShortcuts, mountOpts())
+    const wrapper = stw(mountOpts())
     expect(wrapper.vm.haveOpenTabs).toBe(true)
   })
 
   it('haveOpenTabs returns false when no currentAscii', () => {
     store = createMockStore({ asciibirdMeta: [] })
     _mockStore = store
-    const wrapper = shallowMount(KeyboardShortcuts, mountOpts())
+    const wrapper = stw(mountOpts())
     expect(wrapper.vm.haveOpenTabs).toBe(false)
   })
 
@@ -295,7 +300,7 @@ describe('KeyboardShortcuts.vue', () => {
   })
 
   it('wildcard handler does not preventDefault for unhandled keys', () => {
-    shallowMount(KeyboardShortcuts, mountOpts())
+    stw(mountOpts())
     const handler = getHandler('editor:*')
     const event = createEvent({ key: 'z', ctrlKey: true })
     handler!(event, {})
@@ -313,7 +318,7 @@ describe('KeyboardShortcuts.vue', () => {
     _mockToolbarStore = createMockToolbarStore({
       toolbarState: { isChoosingChar: true, persistCharPanel: false },
     })
-    shallowMount(KeyboardShortcuts, mountOpts())
+    stw(mountOpts())
     const handler = getHandler('editor:*')
     const event = createEvent({ key: 'a' })
     handler!(event, {})
@@ -321,7 +326,7 @@ describe('KeyboardShortcuts.vue', () => {
   })
 
   it('cleanup uses unbind instead of deleteScope on unmount', () => {
-    const wrapper = shallowMount(KeyboardShortcuts, mountOpts())
+    const wrapper = stw(mountOpts())
     wrapper.unmount()
     expect((hotkeys as any).unbind).toHaveBeenCalledWith('*', 'editor')
     expect((hotkeys as any).unbind).toHaveBeenCalledWith('Escape', 'editor')

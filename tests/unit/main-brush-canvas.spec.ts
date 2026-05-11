@@ -27,6 +27,7 @@ import {
   toastedMock,
   copyTextMock,
   globalStubs,
+  type TestWrapper,
 } from './helpers'
 
 let _mockStore: any = null
@@ -69,7 +70,7 @@ function createTestBlocks(
   return blocks
 }
 
-function mountMainBrushCanvas(extra: any = {}) {
+function mountMainBrushCanvas(extra: any = {}): TestWrapper {
   return mount(MainBrushCanvas, {
     global: {
       plugins: [createPinia()],

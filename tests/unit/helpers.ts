@@ -10,6 +10,7 @@ import {
   emptyBlock,
   cyrb53,
 } from '@/ascii'
+import type { AsciiStoreAccess, ModalStoreAccess } from '@/types/store'
 
 // ─── Shared component stubs ──────────────────────────────────────
 
@@ -79,7 +80,7 @@ export function setupHotkeysMocks() {
       capturedHandlers.set(key, [])
     }
     capturedHandlers.get(key)!.push(handler)
-  })
+  }) as any
 
   hotkeysFn.filter = vi.fn(() => true)
   hotkeysFn.setScope = vi.fn()
@@ -955,4 +956,36 @@ export function createMountOptions(extra: any = {}) {
     },
     ...extra,
   }
+}
+
+// ─── Type-safe store accessors ────────────────────────────────────
+// These helpers bridge the gap between mock store objects (typed as
+// Record<string, any>) and the strict AsciiStoreAccess/ModalStoreAccess
+// interfaces that ascii.ts requires. The mock objects implement the
+// interfaces structurally but TypeScript can't verify index signatures
+// against named interface properties.
+
+/** Cast a mock store to AsciiStoreAccess for setStore() calls */
+export function asAsciiStore(mock: ReturnType<typeof createMockStore>): AsciiStoreAccess {
+  return mock as unknown as AsciiStoreAccess
+}
+
+/** Cast a mock store to ModalStoreAccess for setModalStore() calls */
+export function asModalStore(mock: ReturnType<typeof createMockStore>): ModalStoreAccess {
+  return mock as unknown as ModalStoreAccess
+}
+
+// ─── Vue Test Wrapper type for <script setup> components ────────
+// VTU cannot type wrapper.vm for <script setup> components because
+// the component's exposed interface is opaque. This helper provides
+// a permissive vm type so tests can access computed properties and
+// methods without type errors.
+
+import type { VueWrapper } from '@vue/test-utils'
+
+export type TestWrapper = VueWrapper<Record<string, any>>
+
+/** Mount a component and return a wrapper with permissive vm typing */
+export function wrapComponent(wrapper: VueWrapper<any>): TestWrapper {
+  return wrapper as TestWrapper
 }

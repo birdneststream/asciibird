@@ -19,6 +19,7 @@ import { idbPersistAdapter } from '../utils/idbPersistAdapter';
 import type { RootState } from '../types/store';
 import type {
   Block,
+  BlockDiff,
   Layer,
   Options,
   AsciibirdMeta,
@@ -100,7 +101,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     },
     updateAsciiBlocks(
       payload: {
-        diff: { new: Block[]; old: Block[] };
+        diff: { new: BlockDiff[]; old: BlockDiff[] };
         blocks: Block[][];
       },
     ) {
@@ -517,7 +518,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     },
     updateAsciiBlocksAsync(
       data: {
-        diff: { new: Block[]; old: Block[] };
+        diff: { new: BlockDiff[]; old: BlockDiff[] };
         blocks: Block[][];
       },
     ) {

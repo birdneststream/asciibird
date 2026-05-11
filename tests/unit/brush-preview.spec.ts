@@ -23,6 +23,7 @@ import {
   createToolbarState,
   toastedMock,
   globalStubs,
+  type TestWrapper,
 } from './helpers'
 
 let _mockStore: any = null
@@ -54,7 +55,7 @@ vi.mock('@vueuse/core', async (importOriginal) => {
 
 let store: any
 
-function mountBrushPreview(extra: any = {}) {
+function mountBrushPreview(extra: any = {}): TestWrapper {
   return mount(BrushPreview, {
     global: {
       plugins: [createPinia()],
@@ -217,7 +218,7 @@ describe('BrushPreview.vue', () => {
       w: number,
       h: number,
       type: string,
-    ) {
+    ): TestWrapper {
       store = createMockStore({
         toolbarState: createToolbarState({
           brushSizeWidth: w,

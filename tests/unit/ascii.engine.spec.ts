@@ -2,7 +2,7 @@
 
 // Not tested (network dependent): checkForGetRequest
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import LZString from 'lz-string';
 import {
   mircColours99,
@@ -34,6 +34,7 @@ import {
   canvasToPng,
 } from '@/ascii';
 import type { Block, Layer } from '@/types';
+import type { AsciiStoreAccess, ModalStoreAccess } from '@/types/store';
 
 // ─── Helper: extract action call payload from mock store ──────────
 
@@ -74,7 +75,9 @@ interface MockStoreConfig {
   title?: string;
 }
 
-function createMockStore(config: MockStoreConfig = {}) {
+function createMockStore(config: MockStoreConfig = {}):
+  Record<string, any> & AsciiStoreAccess & ModalStoreAccess
+{
   const layers = config.layers || [{
     label: 'Test Layer',
     visible: true,
@@ -134,7 +137,7 @@ function createMockStore(config: MockStoreConfig = {}) {
   const newAsciibirdMetaCalls: any[] = [];
   const closeModalCalls: any[] = [];
 
-  const store: Record<string, any> = {
+  const store: Record<string, any> & AsciiStoreAccess & ModalStoreAccess = {
     // State
     get tab() { return state.tab },
     set tab(v) { state.tab = v },

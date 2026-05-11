@@ -25,6 +25,7 @@ import {
   setupHotkeysMocks,
   toastedMock,
   copyTextMock,
+  type TestWrapper,
 } from './helpers'
 import LZString from 'lz-string'
 
@@ -55,7 +56,7 @@ vi.mock('@/composables/useClipboard', () => ({
 
 let store: any
 
-function mountEditor(extra: any = {}) {
+function mountEditor(extra: any = {}): TestWrapper {
   return mount(Editor, {
     global: {
       plugins: [createPinia()],

@@ -27,6 +27,7 @@ import {
   toastedMock,
   copyTextMock,
   globalStubs,
+  type TestWrapper,
 } from './helpers'
 
 let _mockStore: any = null
@@ -61,7 +62,7 @@ vi.mock('@/composables/useClipboard', () => ({
 let store: any
 let mockCanvasRef: ReturnType<typeof createMockCanvasRef>
 
-function mountBrushCanvas(extra: any = {}) {
+function mountBrushCanvas(extra: any = {}): TestWrapper {
   return mount(BrushCanvas, {
     global: {
       plugins: [createPinia()],
