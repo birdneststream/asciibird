@@ -28,6 +28,7 @@ import {
   exportMirc,
   parseMircAscii,
   mergeLayers,
+  checkForGetRequest,
   splashAscii,
   downloadFile,
   canvasToPng,
@@ -576,7 +577,7 @@ describe('downloadFile', () => {
     expect(revokeObjectURLSpy).toHaveBeenCalledWith('blob:test');
 
     clickSpy.mockRestore();
-    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 });
 
@@ -600,7 +601,7 @@ describe('canvasToPng', () => {
 
     toBlobSpy.mockRestore();
     clickSpy.mockRestore();
-    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it('handles null blob gracefully', () => {
@@ -1700,5 +1701,25 @@ describe('iterativeFill', () => {
       expect(c.old).toHaveProperty('bg');
       expect(c.new).toHaveProperty('bg');
     }
+  });
+});
+
+// ─── checkForGetRequest ─────────────────────────────────────────
+
+describe('checkForGetRequest', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('does nothing when no import params present', async () => {
+    const replaceSpy = vi.spyOn(history, 'replaceState');
+    // Default jsdom location has no haxAscii/birdhole params
+    await checkForGetRequest();
+
+    expect(replaceSpy).not.toHaveBeenCalled();
   });
 });

@@ -540,31 +540,39 @@ export function canvasToPng(
 }
 
 export const checkForGetRequest = async (): Promise<void> => {
-  const haxAscii = new URL(location.href).searchParams.get('haxAscii');
-  const birdhole = new URL(location.href).searchParams.get('birdhole');
+  const url = new URL(location.href);
+  const haxAscii = url.searchParams.get('haxAscii');
+  const birdhole = url.searchParams.get('birdhole');
 
-  if (haxAscii) {
-    const res = await fetch(`https://art.shrews.xyz/${haxAscii}`, {
-      method: 'GET',
-      headers: { Accept: 'text/plain' },
-    });
+  if (!haxAscii && !birdhole) return;
 
-    const asciiName = haxAscii.split('/').pop();
-    const asciiData = await res.text();
-    parseMircAscii(asciiData, asciiName || 'imported');
-  }
-
-  if (birdhole) {
-    const res = await fetch(
-      `https://hole.birdnest.live/derived/${birdhole}.png/${birdhole}.txt`,
-      {
+  try {
+    if (haxAscii) {
+      const res = await fetch(`https://art.shrews.xyz/${haxAscii}`, {
         method: 'GET',
         headers: { Accept: 'text/plain' },
-      },
-    );
+      });
 
-    const asciiData = await res.text();
-    parseMircAscii(asciiData, `${birdhole}.txt`);
+      const asciiName = haxAscii.split('/').pop();
+      const asciiData = await res.text();
+      parseMircAscii(asciiData, asciiName || 'imported');
+    }
+
+    if (birdhole) {
+      const res = await fetch(
+        `https://hole.birdnest.live/derived/${birdhole}.png/${birdhole}.txt`,
+        {
+          method: 'GET',
+          headers: { Accept: 'text/plain' },
+        },
+      );
+
+      const asciiData = await res.text();
+      parseMircAscii(asciiData, `${birdhole}.txt`);
+    }
+  } finally {
+    url.search = '';
+    history.replaceState({}, '', url.toString());
   }
 };
 
