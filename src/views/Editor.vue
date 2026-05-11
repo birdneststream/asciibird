@@ -120,6 +120,7 @@ import {
 } from '../ascii';
 
 import { getMirrorPositions } from '../utils/mirror';
+import { bresenhamLine } from '../utils/bresenham';
 import type { Block } from '../types';
 
 defineOptions({ name: 'Editor' });
@@ -206,6 +207,8 @@ const diffBlocks = reactive<{ l: number; old: any[]; new: any[] }>({
 });
 const isUsingKeyboard = ref(false);
 const canvasHash = ref<number | null>(null);
+const lastBrushX = ref(-1);
+const lastBrushY = ref(-1);
 
 // ─── Computed ───────────────────────────────────────────────────
 const blockSizeMultiplier = computed(() => store.blockSizeMultiplier);
@@ -1100,12 +1103,10 @@ async function canvasMouseUp() {
 
   switch (currentTool.value.name) {
     case 'brush':
-      canTool.value = false;
-      await dispatchBlocks(true);
-      break;
-
     case 'eraser':
       canTool.value = false;
+      lastBrushX.value = -1;
+      lastBrushY.value = -1;
       await dispatchBlocks(true);
       break;
 
@@ -1153,11 +1154,15 @@ async function canvasMouseDown() {
 
       case 'brush':
         canTool.value = true;
+        lastBrushX.value = x.value;
+        lastBrushY.value = y.value;
         await drawBrush();
         break;
 
       case 'eraser':
         canTool.value = true;
+        lastBrushX.value = x.value;
+        lastBrushY.value = y.value;
         await eraser();
         break;
 
@@ -1182,6 +1187,45 @@ async function canvasMouseDown() {
         toolbarStore.changeTool(0);
         break;
     }
+  }
+}
+
+/**
+ * Bresenham interpolation: fill gaps from fast mouse movement.
+ * Applies the given function at each intermediate grid cell between the
+ * last brush position and the current x/y. Skips first (already painted)
+ * and last (handled by the final draw call after this returns).
+ *
+ * Note: Temporarily mutates x/y refs during interpolation. This is safe
+ * because no watchers in this component depend on x/y, and the only
+ * computed (asciiBlockAtXy) correctly recalculates for intermediate
+ * positions to check grid bounds.
+ */
+async function interpolateStroke(
+  applyFn: () => Promise<void>,
+): Promise<void> {
+  if (
+    !canTool.value ||
+    lastBrushX.value < 0 ||
+    lastBrushY.value < 0 ||
+    (lastBrushX.value === x.value && lastBrushY.value === y.value)
+  ) {
+    return;
+  }
+
+  const points = bresenhamLine(
+    lastBrushX.value, lastBrushY.value,
+    x.value, y.value,
+  );
+
+  for (let i = 1; i < points.length - 1; i++) {
+    const savedX = x.value;
+    const savedY = y.value;
+    x.value = points[i].x;
+    y.value = points[i].y;
+    await applyFn();
+    x.value = savedX;
+    y.value = savedY;
   }
 }
 
@@ -1212,18 +1256,24 @@ async function canvasMouseMove(e: MouseEvent) {
     switch (currentTool.value.name) {
       case 'brush':
         if (isMouseOnCanvas.value) {
+          await interpolateStroke(drawBrush);
           await clearToolCanvas();
           await drawBrush();
           await delayRedrawCanvas();
+          lastBrushX.value = x.value;
+          lastBrushY.value = y.value;
         }
         break;
 
       case 'eraser':
         await clearToolCanvas();
         if (isMouseOnCanvas.value) {
+          await interpolateStroke(eraser);
           await drawBrush(true);
           await delayRedrawCanvas();
           await eraser();
+          lastBrushX.value = x.value;
+          lastBrushY.value = y.value;
         }
         break;
 
