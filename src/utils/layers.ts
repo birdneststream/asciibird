@@ -49,3 +49,27 @@ export function compressData<T>(data: T): string {
 export function decompressData<T>(compressed: string): T {
   return JSON.parse(LZString.decompressFromUTF16(compressed));
 }
+
+/**
+ * Find the index of the next visible layer, searching forward then backward.
+ * Returns -1 if no visible layer is found.
+ *
+ * @param layers      Array of layers to search
+ * @param fromIndex   Starting index for the search
+ */
+export function findNextVisibleLayer(
+  layers: Layer[],
+  fromIndex: number,
+): number {
+  if (fromIndex < 0 || fromIndex >= layers.length) return -1;
+
+  // Forward search
+  for (let i = fromIndex; i < layers.length; i++) {
+    if (layers[i].visible) return i;
+  }
+  // Backward search
+  for (let i = fromIndex - 1; i >= 0; i--) {
+    if (layers[i].visible) return i;
+  }
+  return -1;
+}

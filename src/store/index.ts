@@ -13,6 +13,7 @@ import {
   createEmptyLayer,
   compressData,
   decompressData,
+  findNextVisibleLayer,
 } from '../utils/layers';
 import { idbPersistAdapter } from '../utils/idbPersistAdapter';
 import type { RootState } from '../types/store';
@@ -218,7 +219,24 @@ export const useAsciiBirdStore = defineStore('asciibird', {
 
       const oldLayer = JSON.parse(JSON.stringify(tempLayers));
 
+      // Check if we're about to hide the currently selected layer
+      const wasVisible = tempLayers[payload].visible;
+      const wasSelectedLayer =
+        payload === this.asciibirdMeta[this.tab].selectedLayer;
+
       tempLayers[payload].visible = !tempLayers[payload].visible;
+
+      // If we hid the selected layer, auto-select another visible layer.
+      // Note: selectedLayer changes are intentionally NOT stored in the
+      // undo history (type 'l') to match removeLayer behavior. The undo
+      // system restores layer visibility/order but uses a heuristic to
+      // pick the selected layer. This is a pre-existing design decision.
+      if (wasVisible && wasSelectedLayer) {
+        const nextVisible = findNextVisibleLayer(tempLayers, payload);
+        if (nextVisible !== -1) {
+          this.asciibirdMeta[this.tab].selectedLayer = nextVisible;
+        }
+      }
 
       this.asciibirdMeta[this.tab].layers =
         compressLayers(tempLayers);
@@ -244,33 +262,11 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         tempLayers.splice(payload, 1);
 
         if (wasSelectedLayer) {
-          let selectedLayer = Math.min(
-            payload,
-            tempLayers.length - 1,
-          );
+          const searchFrom = Math.min(payload, tempLayers.length - 1);
+          const nextVisible = findNextVisibleLayer(tempLayers, searchFrom);
 
-          if (!tempLayers[selectedLayer]?.visible) {
-            let found = -1;
-            for (let i = selectedLayer; i < tempLayers.length; i++) {
-              if (tempLayers[i].visible) {
-                found = i;
-                break;
-              }
-            }
-            if (found === -1) {
-              for (let i = selectedLayer - 1; i >= 0; i--) {
-                if (tempLayers[i].visible) {
-                  found = i;
-                  break;
-                }
-              }
-            }
-            if (found !== -1) {
-              selectedLayer = found;
-            }
-          }
-
-          this.asciibirdMeta[this.tab].selectedLayer = selectedLayer;
+          this.asciibirdMeta[this.tab].selectedLayer =
+            nextVisible !== -1 ? nextVisible : searchFrom;
         } else if (payload < this.asciibirdMeta[this.tab].selectedLayer) {
           this.asciibirdMeta[this.tab].selectedLayer--;
         }

@@ -13,6 +13,7 @@ import { useModalStore } from '@/store/modal';
 import { useDesktopStore } from '@/store/desktop';
 import { usePanelStore } from '@/store/panels';
 import { useToolbarStore } from '@/store/toolbar';
+import { findNextVisibleLayer } from '@/utils/layers';
 import type { Block, Layer, AsciibirdMeta, Options } from '@/types';
 
 // Mock mergeLayers for mergeAllLayers action tests
@@ -352,35 +353,145 @@ describe('Pinia Store Actions', () => {
       expect(store.asciibirdMeta[0].selectedLayer).toBe(1);
     });
 
-    it('toggleLayer toggles visibility', () => {
-      store.toggleLayer(0);
-      const layers = JSON.parse(
-        LZString.decompressFromUTF16(store.asciibirdMeta[0].layers),
-      );
-      expect(layers[0].visible).toBe(false);
+    describe('toggleLayer', () => {
+      it('toggles visibility', () => {
+        store.toggleLayer(0);
+        const layers = JSON.parse(
+          LZString.decompressFromUTF16(store.asciibirdMeta[0].layers),
+        );
+        expect(layers[0].visible).toBe(false);
+      });
+
+      it('hiding non-selected layer does not change selectedLayer', () => {
+        store.addLayer();
+        expect(store.asciibirdMeta[0].selectedLayer).toBe(1);
+        store.toggleLayer(0);
+        expect(store.asciibirdMeta[0].selectedLayer).toBe(1);
+      });
+
+      it('hiding selected layer auto-selects next visible layer', () => {
+        store.addLayer();
+        store.addLayer();
+        // 3 layers: 0, 1, 2. Select layer 1.
+        store.changeLayer(1);
+        expect(store.asciibirdMeta[0].selectedLayer).toBe(1);
+        store.toggleLayer(1);
+        // Should auto-select layer 2 (next visible forward)
+        expect(store.asciibirdMeta[0].selectedLayer).toBe(2);
+      });
+
+      it('hiding selected layer falls back to previous visible layer', () => {
+        store.addLayer();
+        store.addLayer();
+        // 3 layers. Hide layer 2, then select layer 1.
+        store.toggleLayer(2);
+        store.changeLayer(1);
+        expect(store.asciibirdMeta[0].selectedLayer).toBe(1);
+        // Hide layer 1 — layer 2 is already hidden, so fall back to 0
+        store.toggleLayer(1);
+        expect(store.asciibirdMeta[0].selectedLayer).toBe(0);
+      });
+
+      it('hiding selected layer skips hidden layers in forward search', () => {
+        store.addLayer();
+        store.addLayer();
+        // 3 layers. Hide layer 1.
+        store.toggleLayer(1);
+        store.changeLayer(0);
+        expect(store.asciibirdMeta[0].selectedLayer).toBe(0);
+        // Hide layer 0 — forward search skips hidden layer 1, finds layer 2
+        store.toggleLayer(0);
+        expect(store.asciibirdMeta[0].selectedLayer).toBe(2);
+      });
+
+      it('hiding last visible layer keeps selection when no other visible', () => {
+        // Only 1 layer exists
+        expect(store.asciibirdMeta[0].selectedLayer).toBe(0);
+        store.toggleLayer(0);
+        // No other visible layer to select, so keep at 0
+        expect(store.asciibirdMeta[0].selectedLayer).toBe(0);
+      });
+
+      it('showing a hidden layer does not change selectedLayer', () => {
+        store.addLayer();
+        store.toggleLayer(0);
+        store.changeLayer(1);
+        expect(store.asciibirdMeta[0].selectedLayer).toBe(1);
+        // Show layer 0 — selectedLayer should stay at 1
+        store.toggleLayer(0);
+        expect(store.asciibirdMeta[0].selectedLayer).toBe(1);
+      });
     });
 
-    it('removeLayer removes a layer when more than 1 exist', () => {
-      store.addLayer();
-      expect(
-        JSON.parse(LZString.decompressFromUTF16(
-          store.asciibirdMeta[0].layers,
-        )).length,
-      ).toBe(2);
+    describe('removeLayer', () => {
+      it('removes a layer when more than 1 exist', () => {
+        store.addLayer();
+        expect(
+          JSON.parse(LZString.decompressFromUTF16(
+            store.asciibirdMeta[0].layers,
+          )).length,
+        ).toBe(2);
 
-      store.removeLayer(1);
-      const layers = JSON.parse(
-        LZString.decompressFromUTF16(store.asciibirdMeta[0].layers),
-      );
-      expect(layers).toHaveLength(1);
-    });
+        store.removeLayer(1);
+        const layers = JSON.parse(
+          LZString.decompressFromUTF16(store.asciibirdMeta[0].layers),
+        );
+        expect(layers).toHaveLength(1);
+      });
 
-    it('removeLayer does nothing when only 1 layer exists', () => {
-      store.removeLayer(0);
-      const layers = JSON.parse(
-        LZString.decompressFromUTF16(store.asciibirdMeta[0].layers),
-      );
-      expect(layers).toHaveLength(1); // Should not remove last layer
+      it('does nothing when only 1 layer exists', () => {
+        store.removeLayer(0);
+        const layers = JSON.parse(
+          LZString.decompressFromUTF16(store.asciibirdMeta[0].layers),
+        );
+        expect(layers).toHaveLength(1); // Should not remove last layer
+      });
+
+      it('auto-selects next visible layer when removing selected', () => {
+        store.addLayer();
+        store.addLayer();
+        // 3 layers. Select layer 1.
+        store.changeLayer(1);
+        expect(store.asciibirdMeta[0].selectedLayer).toBe(1);
+        store.removeLayer(1);
+        // Should auto-select layer 1 (was layer 2, now shifted)
+        expect(store.asciibirdMeta[0].selectedLayer).toBe(1);
+      });
+
+      it('auto-selects previous visible when no forward visible exists', () => {
+        store.addLayer();
+        store.addLayer();
+        // 3 layers. Hide layer 2, select layer 1.
+        store.toggleLayer(2);
+        store.changeLayer(1);
+        expect(store.asciibirdMeta[0].selectedLayer).toBe(1);
+        store.removeLayer(1);
+        // Layer 2 was hidden, so fall back to layer 0
+        expect(store.asciibirdMeta[0].selectedLayer).toBe(0);
+      });
+
+      it('skips hidden layers in forward search after removal', () => {
+        store.addLayer();
+        store.addLayer();
+        // 3 layers. Hide layer 1, select layer 0.
+        store.toggleLayer(1);
+        store.changeLayer(0);
+        expect(store.asciibirdMeta[0].selectedLayer).toBe(0);
+        store.removeLayer(0);
+        // After removing layer 0, only layers [1,2] remain.
+        // Layer 1 (was index 1) is hidden, so select layer 2 (was index 2).
+        expect(store.asciibirdMeta[0].selectedLayer).toBe(1);
+      });
+
+      it('adjusts selectedLayer when removing layer below selection', () => {
+        store.addLayer();
+        store.addLayer();
+        store.changeLayer(2);
+        expect(store.asciibirdMeta[0].selectedLayer).toBe(2);
+        store.removeLayer(0);
+        // Removed layer 0, so layer 2 becomes layer 1
+        expect(store.asciibirdMeta[0].selectedLayer).toBe(1);
+      });
     });
 
     it('changeLayer updates selectedLayer', () => {
@@ -428,6 +539,80 @@ describe('Pinia Store Actions', () => {
       );
       expect(mergedLayers).toHaveLength(1);
       expect(store.asciibirdMeta[0].selectedLayer).toBe(0);
+    });
+  });
+
+  // ── findNextVisibleLayer utility ─────────────────────────────
+
+  describe('findNextVisibleLayer', () => {
+    it('returns -1 when no layers are visible', () => {
+      const layers: Layer[] = [
+        { label: 'A', visible: false, width: 1, height: 1, data: [] },
+        { label: 'B', visible: false, width: 1, height: 1, data: [] },
+      ];
+      expect(findNextVisibleLayer(layers, 0)).toBe(-1);
+    });
+
+    it('finds next visible layer in forward direction', () => {
+      const layers: Layer[] = [
+        { label: 'A', visible: false, width: 1, height: 1, data: [] },
+        { label: 'B', visible: true, width: 1, height: 1, data: [] },
+        { label: 'C', visible: true, width: 1, height: 1, data: [] },
+      ];
+      expect(findNextVisibleLayer(layers, 0)).toBe(1);
+    });
+
+    it('finds previous visible layer when none forward', () => {
+      const layers: Layer[] = [
+        { label: 'A', visible: true, width: 1, height: 1, data: [] },
+        { label: 'B', visible: false, width: 1, height: 1, data: [] },
+        { label: 'C', visible: false, width: 1, height: 1, data: [] },
+      ];
+      expect(findNextVisibleLayer(layers, 2)).toBe(0);
+    });
+
+    it('skips hidden layers in forward search', () => {
+      const layers: Layer[] = [
+        { label: 'A', visible: false, width: 1, height: 1, data: [] },
+        { label: 'B', visible: false, width: 1, height: 1, data: [] },
+        { label: 'C', visible: true, width: 1, height: 1, data: [] },
+      ];
+      expect(findNextVisibleLayer(layers, 0)).toBe(2);
+    });
+
+    it('skips hidden layers in backward search', () => {
+      const layers: Layer[] = [
+        { label: 'A', visible: true, width: 1, height: 1, data: [] },
+        { label: 'B', visible: false, width: 1, height: 1, data: [] },
+        { label: 'C', visible: false, width: 1, height: 1, data: [] },
+      ];
+      expect(findNextVisibleLayer(layers, 1)).toBe(0);
+    });
+
+    it('prefers forward over backward when both have visible layers', () => {
+      const layers: Layer[] = [
+        { label: 'A', visible: true, width: 1, height: 1, data: [] },
+        { label: 'B', visible: false, width: 1, height: 1, data: [] },
+        { label: 'C', visible: true, width: 1, height: 1, data: [] },
+      ];
+      expect(findNextVisibleLayer(layers, 1)).toBe(2);
+    });
+
+    it('returns same index when it is visible', () => {
+      const layers: Layer[] = [
+        { label: 'A', visible: false, width: 1, height: 1, data: [] },
+        { label: 'B', visible: true, width: 1, height: 1, data: [] },
+        { label: 'C', visible: false, width: 1, height: 1, data: [] },
+      ];
+      expect(findNextVisibleLayer(layers, 1)).toBe(1);
+    });
+
+    it('handles single visible layer', () => {
+      const layers: Layer[] = [
+        { label: 'A', visible: false, width: 1, height: 1, data: [] },
+        { label: 'B', visible: true, width: 1, height: 1, data: [] },
+      ];
+      expect(findNextVisibleLayer(layers, 0)).toBe(1);
     });
   });
 
