@@ -153,6 +153,10 @@ function updateAscii() {
   const layers = fillNullBlocks(canvasBlockHeight, canvasBlockWidth);
   store.changeAsciiWidthHeight({ layers: [...layers] });
 
+  if (layer.value.title && layer.value.title !== currentAscii.value.title) {
+    store.updateAsciiTitle(layer.value.title);
+  }
+
   close();
 }
 

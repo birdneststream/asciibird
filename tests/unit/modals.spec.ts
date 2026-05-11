@@ -225,6 +225,30 @@ describe('EditAscii.vue', () => {
       }),
     )
   })
+
+  it('updateAscii calls updateAsciiTitle when title changes', () => {
+    setStore(store)
+
+    const titleSpy = vi.spyOn(store, 'updateAsciiTitle')
+    const wrapper = shallowMount(EditAscii, mountOpts())
+    wrapper.vm.layer = { width: 5, height: 5, title: 'New Title' }
+
+    wrapper.vm.updateAscii()
+
+    expect(titleSpy).toHaveBeenCalledWith('New Title')
+  })
+
+  it('updateAscii skips updateAsciiTitle when title unchanged', () => {
+    setStore(store)
+
+    const titleSpy = vi.spyOn(store, 'updateAsciiTitle')
+    const wrapper = shallowMount(EditAscii, mountOpts())
+    wrapper.vm.layer = { width: 5, height: 5, title: 'Test ASCII' }
+
+    wrapper.vm.updateAscii()
+
+    expect(titleSpy).not.toHaveBeenCalled()
+  })
 })
 
 // ─── Options.vue ─────────────────────────────────────────────────

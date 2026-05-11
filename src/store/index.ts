@@ -364,6 +364,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     },
     updateAsciiTitle(payload: string) {
       this.asciibirdMeta[this.tab].title = payload;
+      document.title = `asciibird - ${payload}`;
     },
 
     // BLOCKS — undo/redo
