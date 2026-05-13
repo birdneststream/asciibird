@@ -34,9 +34,9 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { toolbarIcons } from '../ascii';
-import { useAsciiBirdStore } from '../store';
-import { useToolbarStore } from '../store/toolbar';
+import { toolbarIcons } from '../../ascii';
+import { useAsciiBirdStore } from '../../store';
+import { useToolbarStore } from '../../store/toolbar';
 
 const store = useAsciiBirdStore();
 const toolbarStore = useToolbarStore();
