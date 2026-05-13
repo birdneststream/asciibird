@@ -3,33 +3,63 @@
     <div
       ref="panelEl"
       :style="panelStyle"
-      class="fixed"
+      class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-48 z-40"
     >
-      <div class="ab-card h-full">
-        <span class="ml-5">Tool: {{ getToolName }}</span> <br>
-        <span class="ml-5">FgColour: {{ currentFg }}</span> <br>
-        <span class="ml-5">BgColor: {{ currentBg }}</span> <br>
-        <span class="ml-5">Char: {{ currentChar }}</span> <br>
+      <PanelHeader
+        title="Debug"
+        show-status
+      />
 
-        <span class="ml-5">canvasX: {{ canvasX }}</span> <br>
-        <span class="ml-5">canvasY: {{ canvasY }}</span> <br>
-
-        <span class="ml-5">mirrorX: {{ mirrorX }}</span> <br>
-        <span class="ml-5">mirrorY: {{ mirrorY }}</span>
-
-        <br>
-
-        <span class="ml-5">State Internal Size: {{ asciiStats.stateSize }}</span>
-        <br>
-
-        <div class="mb-4 border-t-2">
-          <div
-            class="mt-1 p-2 bg-red-300 rounded-md cursor-pointer"
-            @click="copyUriToClipboard()"
-          >
-            Copy URI Encoded String
+      <div class="p-sm flex flex-col gap-1 overflow-y-auto custom-scrollbar">
+        <div class="font-label-mono text-label-mono space-y-1">
+          <div class="flex justify-between">
+            <span class="text-on-surface-variant">Tool:</span>
+            <span class="text-on-surface">{{ getToolName }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-on-surface-variant">Fg:</span>
+            <span class="text-on-surface">{{ currentFg }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-on-surface-variant">Bg:</span>
+            <span class="text-on-surface">{{ currentBg }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-on-surface-variant">Char:</span>
+            <span class="text-on-surface">{{ currentChar }}</span>
+          </div>
+          <hr class="border-outline-variant/30 my-1">
+          <div class="flex justify-between">
+            <span class="text-on-surface-variant">X:</span>
+            <span class="text-on-surface">{{ canvasX ?? '-' }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-on-surface-variant">Y:</span>
+            <span class="text-on-surface">{{ canvasY ?? '-' }}</span>
+          </div>
+          <hr class="border-outline-variant/30 my-1">
+          <div class="flex justify-between">
+            <span class="text-on-surface-variant">mirrorX:</span>
+            <span class="text-on-surface">{{ mirrorX }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-on-surface-variant">mirrorY:</span>
+            <span class="text-on-surface">{{ mirrorY }}</span>
+          </div>
+          <hr class="border-outline-variant/30 my-1">
+          <div class="flex justify-between">
+            <span class="text-on-surface-variant">Size:</span>
+            <span class="text-on-surface">{{ asciiStats.stateSize }}</span>
           </div>
         </div>
+
+        <button
+          type="button"
+          class="mt-2 w-full py-2 px-3 rounded bg-error-container text-on-error-container font-label-mono text-label-mono hover:brightness-110 transition-all"
+          @click="copyUriToClipboard()"
+        >
+          Copy URI Encoded String
+        </button>
       </div>
     </div>
   </div>
@@ -45,6 +75,7 @@ import { useToolbarStore } from '../store/toolbar';
 import { usePanelStore } from '../store/panels';
 import { useToast } from '../composables/useToast';
 import { useClipboard } from '../composables/useClipboard';
+import PanelHeader from './parts/PanelHeader.vue';
 
 defineProps<{
   canvasX?: number | null;

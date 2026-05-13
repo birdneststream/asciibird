@@ -3,9 +3,14 @@
     <div
       ref="panelEl"
       :style="panelStyle"
-      class="fixed"
+      class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-panel-width max-h-[80%] z-40"
     >
-      <div class="ab-card h-full overflow-y-auto overflow-x-hidden">
+      <PanelHeader
+        title="Layers"
+        show-status
+      />
+
+      <div class="p-sm flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
         <Layers />
       </div>
     </div>
@@ -17,6 +22,7 @@ import { ref, watch } from 'vue';
 import { usePanelDraggable } from '../composables/usePanelDraggable';
 import { usePanelStore } from '../store/panels';
 import Layers from './parts/Layers.vue';
+import PanelHeader from './parts/PanelHeader.vue';
 
 const props = defineProps<{ yOffset?: number }>();
 const panelStore = usePanelStore();

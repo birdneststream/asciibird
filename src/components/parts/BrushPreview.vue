@@ -3,10 +3,15 @@
     <div
       ref="panelEl"
       :style="panelStyle"
-      class="fixed"
+      class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-48 z-40"
     >
-      <div class="ab-card h-full">
-        <div class="flex w-full">
+      <PanelHeader
+        title="Brush"
+        show-status
+      />
+
+      <div class="p-sm flex flex-col gap-xs overflow-y-auto custom-scrollbar">
+        <div class="flex w-full gap-1">
           <div class="w-1/2">
             <input
               type="number"
@@ -67,6 +72,7 @@ import { emptyBlock, maxBrushSize } from '../../ascii';
 import { useToolbarStore } from '../../store/toolbar';
 import { usePanelStore } from '../../store/panels';
 import MainBrushCanvas from './MainBrushCanvas.vue';
+import PanelHeader from './PanelHeader.vue';
 
 const props = defineProps<{ yOffset?: number }>();
 const emit = defineEmits<{
@@ -456,5 +462,5 @@ defineExpose({
   updateBrushSize,
   createBlocks,
   fillTool,
-})
+});
 </script>
