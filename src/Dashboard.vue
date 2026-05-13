@@ -273,7 +273,7 @@
     </template>
 
     <!-- Toast notifications -->
-    <div class="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center gap-2">
+    <div class="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center gap-2">
       <TransitionGroup name="toast">
         <div
           v-for="msg in toasts"
@@ -327,6 +327,14 @@
         </div>
       </template>
     </ABModal>
+
+    <!-- Status Bar -->
+    <template v-if="asciibirdMeta.length">
+      <StatusBar
+        :canvas-x="canvasX"
+        :canvas-y="canvasY"
+      />
+    </template>
   </div>
 </template>
 
@@ -363,6 +371,7 @@ import ABModal from './components/ABModal.vue';
 import BrushCanvas from './components/parts/BrushCanvas.vue';
 import BrushPreview from './components/parts/BrushPreview.vue';
 import KeyboardShortcuts from './components/parts/KeyboardShortcuts.vue';
+import StatusBar from './components/parts/StatusBar.vue';
 
 import {
   parseMircAscii,
