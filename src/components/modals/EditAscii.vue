@@ -61,11 +61,11 @@
       <div class="flex justify-between">
         <button
           type="button"
-          class="ab-button"
+          class="ab-button inline-flex items-center gap-2"
           @click="modalStore.closeModal('edit-ascii')"
         >
           <span
-            class="material-icons relative top-2 pb-4"
+            class="material-icons text-sm"
             aria-hidden="true"
           >cancel</span>
           Cancel
@@ -73,10 +73,10 @@
         <button
           type="button"
           @click.stop="updateAscii()"
-          class="ab-button"
+          class="ab-button inline-flex items-center gap-2"
         >
           <span
-            class="material-icons relative top-2 pb-4"
+            class="material-icons text-sm"
             aria-hidden="true"
           >save</span>
           Update
