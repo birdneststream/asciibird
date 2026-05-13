@@ -1,42 +1,45 @@
 <template>
-  <div>
-    <button
-      type="button"
-      :style="`background-color: ${mircColours[currentFg]} !important;`"
-      class="ab-button border-gray-200 w-14 h-14 text-2xl"
-      id="currentColourFg"
-      @click="toolbarStore.changeIsUpdatingFg(!toolbarState.isChoosingFg)"
-    >
-      FG
-    </button>
+  <div class="flex items-center gap-2">
+    <!-- FG / BG swatches with swap button -->
+    <div class="relative flex items-center">
+      <button
+        type="button"
+        :style="{ backgroundColor: mircColours[currentFg] }"
+        class="w-14 h-14 rounded border border-outline-variant flex items-center justify-center text-sm font-label-mono transition-transform active:scale-95"
+        id="currentColourFg"
+        @click="toolbarStore.changeIsUpdatingFg(!toolbarState.isChoosingFg)"
+      >
+        FG
+      </button>
 
-    <button
-      type="button"
-      :style="`background-color: ${mircColours[currentBg]} !important;`"
-      class="ab-button border-gray-200 w-14 h-14 text-2xl ml-2"
-      id="currentColourBg"
-      @click="toolbarStore.changeIsUpdatingBg(!toolbarState.isChoosingBg)"
-    >
-      BG
-    </button>
+      <button
+        type="button"
+        :style="{ backgroundColor: mircColours[currentBg] }"
+        class="w-14 h-14 rounded border border-outline-variant flex items-center justify-center text-sm font-label-mono -ml-2 transition-transform active:scale-95"
+        id="currentColourBg"
+        @click="toolbarStore.changeIsUpdatingBg(!toolbarState.isChoosingBg)"
+      >
+        BG
+      </button>
 
-    <button
-      type="button"
-      class="ab-button rounded-3xl w-7 h-7"
-      style="margin-left: -86px; margin-top: 12px"
-      id="swapColour"
-      @click="swapColours()"
-    >
-      <span
-        class="material-icons"
-        aria-hidden="true"
-      >swap_horiz</span>
-    </button>
+      <button
+        type="button"
+        class="absolute -top-2 -right-2 w-8 h-8 rounded bg-surface-container-highest border border-outline-variant flex items-center justify-center hover:bg-surface-variant transition-colors z-10"
+        id="swapColour"
+        @click="swapColours()"
+      >
+        <span
+          class="material-icons text-sm"
+          aria-hidden="true"
+        >swap_horiz</span>
+      </button>
+    </div>
 
+    <!-- Character button -->
     <button
       type="button"
-      :style="`background-color: ${mircColours[currentBg]} !important;color: ${mircColours[currentFg]};${outline}`"
-      class="ab-button border-gray-200 w-14 h-14 text-2xl ml-14"
+      :style="charButtonStyle"
+      class="w-14 h-14 rounded border border-outline-variant flex items-center justify-center text-sm font-label-mono transition-transform active:scale-95"
       id="currentChar"
       :disabled="halfBlockEditing"
       @click="toolbarStore.changeIsUpdatingChar(!toolbarState.isChoosingChar)"
@@ -61,11 +64,24 @@ const currentBg = computed(() => toolbarStore.currentBg);
 const halfBlockEditing = computed(() => toolbarState.value.halfBlockEditing);
 
 const outline = computed(() => {
-  let outlineColor = currentBg.value === 0 ? 'black' : 'white';
+  const outlineColor = currentBg.value === 0 ? 'black' : 'white';
   if (currentFg.value === currentBg.value) {
-    return `-webkit-text-stroke-width: 0.5px;-webkit-text-stroke-color: ${outlineColor};`;
+    return `0.5px ${outlineColor}`;
   }
   return '';
+});
+
+const charButtonStyle = computed(() => {
+  const style: Record<string, string> = {
+    backgroundColor: mircColours[currentBg.value],
+    color: mircColours[currentFg.value],
+  };
+  const stroke = outline.value;
+  if (stroke) {
+    style.webkitTextStrokeWidth = stroke.split(' ')[0];
+    style.webkitTextStrokeColor = stroke.split(' ')[1];
+  }
+  return style;
 });
 
 function swapColours() {
