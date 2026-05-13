@@ -3,20 +3,28 @@
     <div
       ref="panelEl"
       :style="panelStyle"
-      class="fixed"
+      class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-panel-width z-40"
     >
-      <div class="h-full ab-card">
-        <div class="flex mb-2">
+      <PanelHeader
+        title="Toolbar"
+        show-status
+        @mousedown="$event.stopPropagation()"
+      />
+
+      <div class="p-sm flex flex-col gap-xs overflow-y-auto custom-scrollbar">
+        <!-- Colour swatches -->
+        <div class="flex mb-2 justify-center">
           <Colours />
         </div>
 
-        <div class="flex">
+        <!-- Targeting checkboxes -->
+        <div class="flex justify-center gap-2 mb-2">
           <Tooltip content="Ignore Foreground when Editing">
-            <label class="ab-checkbox-hover">
+            <label class="flex items-center gap-1 cursor-pointer ab-checkbox-hover">
               <input
                 v-model="toolbarStore.toolbarState.targetingFg"
                 type="checkbox"
-                class="form-checkbox h-5 w-5 text-blue-600"
+                class="ab-checkbox"
                 name="targetingFg"
                 :disabled="!canBg && !canText"
               >
@@ -25,7 +33,7 @@
           </Tooltip>
 
           <Tooltip content="Ignore Background when Editing">
-            <label class="ab-checkbox-hover">
+            <label class="flex items-center gap-1 cursor-pointer ab-checkbox-hover">
               <input
                 v-model="toolbarStore.toolbarState.targetingBg"
                 type="checkbox"
@@ -38,7 +46,7 @@
           </Tooltip>
 
           <Tooltip content="Ignore Characters when Editing">
-            <label class="ab-checkbox-hover">
+            <label class="flex items-center gap-1 cursor-pointer ab-checkbox-hover">
               <input
                 v-model="toolbarStore.toolbarState.targetingChar"
                 type="checkbox"
@@ -51,19 +59,19 @@
           </Tooltip>
         </div>
 
-        <div class="flex mb-3 border-t border-black border-opacity-10 pt-2">
+        <!-- Utility buttons -->
+        <div class="flex justify-center gap-1 mb-2 pt-2 border-t border-outline-variant/30">
           <Tooltip content="Mirror X axis when Editing">
             <button
               type="button"
-              :class="`ab-toolbar-button ${
-                toolbarStore.toolbarState.mirrorX
-                  ? 'border-gray-900 bg-blue-800'
-                  : 'border-gray-200 bg-gray-500'
-              }`"
+              class="w-9 h-9 rounded flex items-center justify-center transition-colors duration-150"
+              :class="toolbarStore.toolbarState.mirrorX
+                ? 'bg-primary-container text-on-primary-container ring-2 ring-primary'
+                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
               @click="toggleMirrorX()"
             >
               <span
-                class="material-icons"
+                class="material-icons text-sm"
                 aria-hidden="true"
               >more_vert</span>
             </button>
@@ -72,15 +80,14 @@
           <Tooltip content="Mirror Y axis when Editing">
             <button
               type="button"
-              :class="`ab-toolbar-button ${
-                toolbarStore.toolbarState.mirrorY
-                  ? 'border-gray-900 bg-blue-800'
-                  : 'border-gray-200 bg-gray-500'
-              }`"
+              class="w-9 h-9 rounded flex items-center justify-center transition-colors duration-150"
+              :class="toolbarStore.toolbarState.mirrorY
+                ? 'bg-primary-container text-on-primary-container ring-2 ring-primary'
+                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
               @click="toggleMirrorY()"
             >
               <span
-                class="material-icons"
+                class="material-icons text-sm"
                 aria-hidden="true"
               >more_horiz</span>
             </button>
@@ -89,15 +96,14 @@
           <Tooltip content="Update Brush Automatically when Colours or Char Changes">
             <button
               type="button"
-              :class="`ab-toolbar-button ${
-                toolbarStore.toolbarState.updateBrush
-                  ? 'border-gray-900 bg-blue-800'
-                  : 'border-gray-200 bg-gray-500'
-              }`"
+              class="w-9 h-9 rounded flex items-center justify-center transition-colors duration-150"
+              :class="toolbarStore.toolbarState.updateBrush
+                ? 'bg-primary-container text-on-primary-container ring-2 ring-primary'
+                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
               @click="toggleUpdateBrush()"
             >
               <span
-                class="material-icons"
+                class="material-icons text-sm"
                 aria-hidden="true"
               >color_lens</span>
             </button>
@@ -106,41 +112,40 @@
           <Tooltip content="Toggle Grid View">
             <button
               type="button"
-              :class="`ab-toolbar-button ${
-                toolbarStore.toolbarState.gridView
-                  ? 'border-gray-900 bg-blue-800'
-                  : 'border-gray-200 bg-gray-500'
-              }`"
+              class="w-9 h-9 rounded flex items-center justify-center transition-colors duration-150"
+              :class="toolbarStore.toolbarState.gridView
+                ? 'bg-primary-container text-on-primary-container ring-2 ring-primary'
+                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
               @click="toggleGridView()"
             >
               <span
-                class="material-icons"
+                class="material-icons text-sm"
                 aria-hidden="true"
-              >{{
-                !toolbarStore.toolbarState.gridView ? "grid_on" : "grid_off"
-              }}</span>
+              >
+                {{ !toolbarStore.toolbarState.gridView ? "grid_on" : "grid_off" }}
+              </span>
             </button>
           </Tooltip>
 
           <Tooltip content="Toggle Half Block Editing Mode">
             <button
               type="button"
-              :class="`ab-toolbar-button ${
-                toolbarStore.toolbarState.halfBlockEditing
-                  ? 'border-gray-900 bg-blue-800'
-                  : 'border-gray-200 bg-gray-500'
-              }`"
+              class="w-9 h-9 rounded flex items-center justify-center transition-colors duration-150"
+              :class="toolbarStore.toolbarState.halfBlockEditing
+                ? 'bg-primary-container text-on-primary-container ring-2 ring-primary'
+                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
               @click="toggleHalfBlockEditing()"
             >
               <span
-                class="material-icons"
+                class="material-icons text-sm"
                 aria-hidden="true"
               >grid_view</span>
             </button>
           </Tooltip>
         </div>
 
-        <div class="border-t border-black border-opacity-10 pt-2">
+        <!-- Main tool buttons -->
+        <div class="grid grid-cols-4 gap-1 pt-2 border-t border-outline-variant/30">
           <Tooltip
             v-for="(value, keyToolbar) in toolbarIcons"
             :key="keyToolbar + 50"
@@ -148,15 +153,14 @@
           >
             <button
               type="button"
-              :class="`rounded-3xl w-10 h-10 mt-1 ml-1 transition-all ${
-                currentTool.name === value.name
-                  ? 'border-gray-900 bg-blue-500'
-                  : 'border-gray-200 bg-gray-500'
-              }`"
+              class="w-10 h-10 rounded flex items-center justify-center transition-all duration-150"
+              :class="currentTool.name === value.name
+                ? 'bg-primary-container text-on-primary-container shadow-md ring-2 ring-primary'
+                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
               @click="toolbarStore.changeTool(keyToolbar)"
             >
               <span
-                class="material-icons"
+                class="material-icons text-sm"
                 aria-hidden="true"
               >{{ value.icon }}</span>
             </button>
@@ -172,9 +176,10 @@ import { computed, ref, watch } from 'vue';
 import { usePanelDraggable } from '../composables/usePanelDraggable';
 import { useToolbarStore } from '../store/toolbar';
 import { useToast } from '../composables/useToast';
-import Colours from "./Colours.vue";
+import Colours from './Colours.vue';
+import PanelHeader from './parts/PanelHeader.vue';
 import Tooltip from './parts/Tooltip.vue';
-import { toolbarIcons } from "../ascii";
+import { toolbarIcons } from '../ascii';
 import { tooltipName } from '../utils/toolbar';
 
 defineOptions({ name: 'Toolbar' });
