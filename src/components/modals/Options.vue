@@ -4,79 +4,84 @@
     @close="modalStore.closeModal('options')"
     title="ASCIIBIRD Options"
   >
-    <div class="mt-6 lg:mt-0 rounded">
-      <div class="mb-4">
-        <label class="ml-1">
-          <span class="text-sm">FPS</span>
-          <input
-            type="range"
-            class="ab-range mt-10"
-            v-model="options.fps"
-            @change="updateOptions"
-            min="1"
-            max="1000"
-          >
+    <div>
+      <div class="grid grid-cols-[120px_1fr] gap-sm items-center mb-4">
+        <label class="text-on-surface-variant font-label-mono">
+          FPS
         </label>
+        <input
+          type="range"
+          class="ab-range"
+          v-model="options.fps"
+          @change="updateOptions"
+          min="1"
+          max="1000"
+        >
       </div>
 
       <div class="mb-4">
-        <label class="ml-1">
-          <span class="text-lg">Render Offscreen Blocks</span><br>
+        <label class="flex items-center gap-2 cursor-pointer">
           <input
             type="checkbox"
-            class="ab-checkbox m-1"
+            class="ab-checkbox"
             name="renderOffScreen"
             v-model="options.renderOffScreen"
             @change="updateOptions"
           >
-          <small>ASCIIBIRD will avoid rendering blocks off screen to speed things
-            up.
-          </small>
+          <span class="text-on-surface-variant font-label-mono">
+            Render Offscreen Blocks
+          </span>
         </label>
+        <p class="mt-1 ml-6 text-on-surface-variant text-body-sm">
+          ASCIIBIRD will avoid rendering blocks off screen to speed things up.
+        </p>
       </div>
 
-      <div class="mb-4">
-        <label class="ml-1">
-          <span class="text-sm">Brush History Limit</span>
-          <input
-            type="range"
-            class="ab-range mt-10"
-            v-model="options.brushLimit"
-            @change="updateOptions"
-            min="1"
-            :max="maxBrushHistory"
-          >
+      <div class="grid grid-cols-[120px_1fr] gap-sm items-center mb-4">
+        <label class="text-on-surface-variant font-label-mono">
+          Brush Limit
         </label>
+        <input
+          type="range"
+          class="ab-range"
+          v-model="options.brushLimit"
+          @change="updateOptions"
+          min="1"
+          :max="maxBrushHistory"
+        >
       </div>
 
-      <div class="mb-4">
-        <label class="ml-1">
-          <span class="text-sm">Undo/Redo History Limit</span>
-          <input
-            type="range"
-            class="ab-range mt-10"
-            v-model="options.undoLimit"
-            @change="updateOptions"
-            min="1"
-            :max="maxUndoHistory"
-          >
+      <div class="grid grid-cols-[120px_1fr] gap-sm items-center mb-4">
+        <label class="text-on-surface-variant font-label-mono">
+          Undo Limit
         </label>
+        <input
+          type="range"
+          class="ab-range"
+          v-model="options.undoLimit"
+          @change="updateOptions"
+          min="1"
+          :max="maxUndoHistory"
+        >
       </div>
 
-      <div
-        class="mb-4 border-t-2 border-outline-variant"
-      >
-        <label class="ml-1">
-          <span class="text-lg">Reset ASCIIBIRD state</span><br>
-          <small>This will clear all data and start asciibird from a fresh
-            state.</small><br>
-          <div
-            class="mt-1 p-2 rounded-md cursor-pointer bg-error-container text-on-error-container"
-            @click="clearCache()"
-          >
-            Clear and Reset ASCIIBIRD
-          </div>
+      <div class="mb-4 pt-4 border-t border-outline-variant">
+        <label class="block mb-2">
+          <span class="text-on-surface-variant font-label-mono">
+            Reset ASCIIBIRD state
+          </span>
         </label>
+        <p class="text-on-surface-variant text-body-sm mb-2">
+          This will clear all data and start asciibird from a fresh state.
+        </p>
+        <!-- TODO: also clear IDB stores (main + toolbar) -->
+        <button
+          type="button"
+          class="px-3 py-2 rounded text-sm font-label-mono cursor-pointer transition-colors bg-error-container text-on-error-container hover:brightness-110"
+          @click="clearCache()"
+        >
+          Clear and Reset ASCIIBIRD
+        </button>
       </div>
     </div>
 

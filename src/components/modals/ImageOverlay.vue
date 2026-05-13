@@ -4,217 +4,158 @@
     @close="modalStore.closeModal('overlay')"
     title="ASCIIBIRD Nance Trace Mode"
   >
-    <!--Card-->
     <div>
-      <div class="md:flex mb-6">
-        <div class="md:w-1/3">
-          <label
-            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
-            for="my-textarea"
-          >
-            URL
-          </label>
-        </div>
-        <div class="md:w-2/3">
+      <div class="grid grid-cols-[140px_1fr] gap-sm items-center mb-4">
+        <label class="text-on-surface-variant font-label-mono">
+          URL
+        </label>
+        <div>
           <input
             type="text"
             name="url"
             class="ab-input"
             v-model="imageOverlay.url"
           >
-
-          <p class="py-2 text-sm text-outline">
+          <p class="py-1 text-body-sm text-outline">
             Note: ASCIIBIRD only supports URL images
           </p>
         </div>
       </div>
 
-      <div class="md:flex mb-6">
-        <div class="md:w-1/3">
-          <label
-            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
-            for="my-textfield"
-          >
-            Visibility
-          </label>
-        </div>
-        <div class="md:w-1/3">
-          <label class="ml-1 w-1/3">
-            <input
-              type="checkbox"
-              class="ab-checkbox m-1"
-              name="visible"
-              v-model="imageOverlay.visible"
-            >
-            <span class="text-sm">Visible</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="md:flex mb-6">
-        <div class="md:w-1/3">
-          <label
-            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
-            for="my-textfield"
-          >
-            Overlay Transparency
-          </label>
-        </div>
-        <div class="md:w-1/2">
+      <div class="grid grid-cols-[140px_1fr] gap-sm items-center mb-4">
+        <label class="text-on-surface-variant font-label-mono">
+          Visibility
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
           <input
-            type="range"
-            class="ab-range m-1"
-            v-model="imageOverlay.opacity"
-            min="1"
-            max="100"
+            type="checkbox"
+            class="ab-checkbox"
+            name="visible"
+            v-model="imageOverlay.visible"
           >
-        </div>
+          <span class="text-on-surface-variant font-label-mono">Visible</span>
+        </label>
       </div>
 
-      <div class="md:flex mb-6">
-        <div class="md:w-1/3">
-          <label
-            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
-            for="my-textfield"
-          >
-            ASCII Transparency
-          </label>
-        </div>
-        <div class="md:w-1/2">
-          <input
-            type="range"
-            class="ab-range m-1"
-            v-model="imageOverlay.asciiOpacity"
-            min="1"
-            max="100"
-          >
-        </div>
+      <div class="grid grid-cols-[140px_1fr] gap-sm items-center mb-4">
+        <label class="text-on-surface-variant font-label-mono">
+          Overlay Opacity
+        </label>
+        <input
+          type="range"
+          class="ab-range"
+          v-model="imageOverlay.opacity"
+          min="1"
+          max="100"
+        >
       </div>
 
-      <div class="md:flex mb-6">
-        <div class="md:w-1/3">
-          <label
-            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
-            for="my-textfield"
-          >
-            Image Scale
-          </label>
-        </div>
-        <div class="md:w-1/2">
-          <input
-            type="range"
-            class="ab-range m-1"
-            v-model="imageOverlay.size"
-            min="10"
-            max="100"
-          >
-        </div>
+      <div class="grid grid-cols-[140px_1fr] gap-sm items-center mb-4">
+        <label class="text-on-surface-variant font-label-mono">
+          ASCII Opacity
+        </label>
+        <input
+          type="range"
+          class="ab-range"
+          v-model="imageOverlay.asciiOpacity"
+          min="1"
+          max="100"
+        >
       </div>
 
-      <div class="md:flex mb-6">
-        <div class="md:w-1/3">
-          <label
-            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
-            for="my-textfield"
-          >
-            Left
-          </label>
-        </div>
-        <div class="md:w-1/2">
-          <input
-            type="range"
-            class="ab-range m-1"
-            v-model="imageOverlay.left"
-            min="-100"
-            max="100"
-          >
-        </div>
+      <div class="grid grid-cols-[140px_1fr] gap-sm items-center mb-4">
+        <label class="text-on-surface-variant font-label-mono">
+          Image Scale
+        </label>
+        <input
+          type="range"
+          class="ab-range"
+          v-model="imageOverlay.size"
+          min="10"
+          max="100"
+        >
       </div>
 
-      <div class="md:flex mb-6">
-        <div class="md:w-1/3">
-          <label
-            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
-            for="my-textfield"
-          >
-            Top
-          </label>
-        </div>
-        <div class="md:w-1/2">
-          <input
-            type="range"
-            class="ab-range m-1"
-            v-model="imageOverlay.top"
-            min="-100"
-            max="100"
-          >
-        </div>
+      <div class="grid grid-cols-[140px_1fr] gap-sm items-center mb-4">
+        <label class="text-on-surface-variant font-label-mono">
+          Left
+        </label>
+        <input
+          type="range"
+          class="ab-range"
+          v-model="imageOverlay.left"
+          min="-100"
+          max="100"
+        >
       </div>
 
-      <div class="md:flex mb-6">
-        <div class="md:w-1/3">
-          <label
-            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
-            for="my-textfield"
-          >
-            Fit To
-          </label>
-        </div>
-        <div class="md:w-1/2">
-          <label class="items-center">
+      <div class="grid grid-cols-[140px_1fr] gap-sm items-center mb-4">
+        <label class="text-on-surface-variant font-label-mono">
+          Top
+        </label>
+        <input
+          type="range"
+          class="ab-range"
+          v-model="imageOverlay.top"
+          min="-100"
+          max="100"
+        >
+      </div>
+
+      <div class="grid grid-cols-[140px_1fr] gap-sm items-center mb-4">
+        <label class="text-on-surface-variant font-label-mono">
+          Fit To
+        </label>
+        <div class="flex gap-sm">
+          <label class="flex items-center gap-2 cursor-pointer">
             <input
               type="radio"
-              name="options"
+              class="ab-checkbox"
+              name="fitTo"
               :value="true"
               v-model="imageOverlay.stretched"
             >
-            <span class="ml-2 text-sm">ASCII</span>
+            <span class="text-on-surface-variant font-label-mono">ASCII</span>
           </label>
-          <label class="items-center ml-2">
+          <label class="flex items-center gap-2 cursor-pointer">
             <input
               type="radio"
-              name="options"
+              class="ab-checkbox"
+              name="fitTo"
               :value="false"
               v-model="imageOverlay.stretched"
             >
-            <span class="ml-2 text-sm">Image Size</span>
+            <span class="text-on-surface-variant font-label-mono">Image Size</span>
           </label>
         </div>
       </div>
 
-      <div class="md:flex mb-6">
-        <div class="md:w-1/3">
-          <label
-            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
-            for="my-textfield"
-          >
-            Repeat
-          </label>
-        </div>
-        <div class="md:w-1/2">
-          <label class="ml-1 w-1/3">
+      <div class="grid grid-cols-[140px_1fr] gap-sm items-center mb-4">
+        <label class="text-on-surface-variant font-label-mono">
+          Repeat
+        </label>
+        <div class="flex gap-sm">
+          <label class="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
-              class="ab-checkbox m-1"
+              class="ab-checkbox"
               name="repeatx"
               v-model="imageOverlay.repeatx"
             >
-            <span class="text-sm">X</span>
+            <span class="text-on-surface-variant font-label-mono">X</span>
           </label>
-
-          <label class="ml-1 w-1/3 pl-4">
+          <label class="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"
-              class="ab-checkbox m-1"
-              name="repeatx"
+              class="ab-checkbox"
+              name="repeaty"
               v-model="imageOverlay.repeaty"
             >
-            <span class="text-sm">Y</span>
+            <span class="text-on-surface-variant font-label-mono">Y</span>
           </label>
         </div>
       </div>
     </div>
-    <!--/Card-->
 
     <template #footer>
       <div
