@@ -18,7 +18,7 @@
         leave-from="opacity-100"
         leave-to="opacity-0"
       >
-        <div class="fixed inset-0 bg-black bg-opacity-50" />
+        <div class="fixed inset-0 bg-black/60" />
       </TransitionChild>
 
       <div class="fixed inset-0 overflow-y-auto">
@@ -37,7 +37,7 @@
             >
               <div
                 v-if="title"
-                class="border-b border-outline-variant p-3 font-bold"
+                class="border-b border-outline-variant p-3 font-label-mono uppercase tracking-wider text-on-surface"
               >
                 {{ title }}
               </div>
@@ -45,7 +45,7 @@
                 <slot />
               </div>
               <div
-                class="p-1 rounded-b-lg bg-surface-container-highest"
+                class="p-sm rounded-b-lg bg-surface-container-highest"
               >
                 <slot name="footer" />
               </div>
