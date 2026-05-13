@@ -172,40 +172,43 @@
       <div
         v-if="tabsVisible"
         ref="tabbar"
-        class="relative z-auto border-b bg-surface-container-low border-outline-variant"
+        class="relative z-auto border-b bg-surface-container-low border-outline-variant h-9 flex items-stretch px-xs gap-px overflow-x-auto custom-scrollbar"
         :style="toolbarString"
       >
-        <span
+        <div
           v-for="(value, key) in asciibirdMeta"
           :key="key"
-          class="mr-2 z-40"
+          class="h-9 flex items-center gap-sm px-md cursor-pointer transition-colors duration-150 min-w-[160px] group"
+          :class="tabClass(key)"
+          @click="changeTab(key)"
         >
-          <div
-            class="ab-button p-1 z-40 inline-flex items-center cursor-pointer"
-            :class="buttonStyle(key)"
-            @click="changeTab(key, value)"
+          <span
+            class="material-icons text-sm"
+            :class="key === currentTab ? 'text-primary' : 'text-outline group-hover:text-on-surface-variant'"
+            aria-hidden="true"
           >
-            <span
-              class="material-icons relative"
-              aria-hidden="true"
-            >insert_drive_file</span>
-            <span class="bottom-1 relative pl-1 pr-1">{{ value.title }}</span>
-            <span
-              class="ab-button relative bottom-0 z-40 rounded h-5 inline-flex items-center justify-center cursor-pointer"
-              role="button"
-              tabindex="0"
-              @click.stop="closeTab(key)"
-              @keydown.enter.stop="closeTab(key)"
-              @keydown.space.stop="closeTab(key)"
-            >
-              <span
-                class="material-icons"
-                style="font-size: 16px"
-                aria-hidden="true"
-              >close</span>
-            </span>
-          </div>
-        </span>
+            insert_drive_file
+          </span>
+          <span
+            class="font-label-mono text-label-mono truncate flex-1"
+            :class="key === currentTab ? 'text-on-surface' : 'text-on-surface-variant group-hover:text-on-surface'"
+          >
+            {{ value.title }}
+          </span>
+          <button
+            class="material-icons text-sm inline-flex items-center justify-center transition-opacity"
+            :class="[
+              key === currentTab
+                ? 'text-on-surface-variant hover:text-on-surface'
+                : 'text-on-surface-variant hover:text-on-surface opacity-0 group-hover:opacity-100 focus:opacity-100',
+            ]"
+            style="font-size: 14px"
+            aria-label="Close tab"
+            @click.stop="closeTab(key)"
+          >
+            close
+          </button>
+        </div>
       </div>
 
       <Editor
@@ -713,10 +716,10 @@ function inputtingbrush(val: boolean) {
   isInputtingBrushSize.value = val;
 }
 
-function buttonStyle(key: number) {
+function tabClass(key: number) {
   return currentTab.value === key
-    ? 'text-sm pl-1 p-1 h-10 border-b-2 border-primary bg-surface-container-highest'
-    : 'text-sm pl-1 p-1 h-10 border-b-2 border-transparent';
+    ? 'bg-surface-container-highest border-t-2 border-primary'
+    : 'border-t-2 border-transparent hover:bg-surface-variant/30';
 }
 
 function openContextMenu(e: MouseEvent) {
