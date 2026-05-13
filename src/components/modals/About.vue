@@ -4,28 +4,34 @@
     @close="modalStore.closeModal('about')"
     title=""
   >
-    <div class="mt-6 lg:mt-0 rounded text-center">
+    <div class="rounded text-center flex flex-col items-center gap-2">
       <BrushCanvas
         :blocks="aboutAscii"
-        class="w-32 -right-40 relative"
+        class="w-32"
       />
 
-      <span class="p-2"><small
-        class="cursor-pointer text-primary"
-      ><a
+      <a
         href="https://github.com/birdneststream/asciibird"
         target="_blank"
-      >Github</a></small></span>
-      <h1 class="p-2 font-extrabold">
+        class="text-primary hover:text-primary-fixed underline cursor-pointer"
+      >
+        Github
+      </a>
+
+      <h1 class="text-headline-lg font-bold text-on-surface pt-2">
         Big Shout Outs to Patrons
       </h1>
-      <span>shrew, octopus, j-hex, nes, mouse, dingo, eraser, pancakes</span>
+      <span class="text-on-surface-variant text-body-sm">
+        shrew, octopus, j-hex, nes, mouse, dingo, eraser, pancakes
+      </span>
 
-      <h5 class="p-2 font-extrabold">
+      <h2 class="text-headline-md font-bold text-on-surface pt-2">
         Special Thanks to
-      </h5>
-      <span class="text-sm">special thanks to slime aka botmaster slime for the wonderful bot integration with
-        asciibird</span>
+      </h2>
+      <span class="text-on-surface-variant text-body-sm">
+        special thanks to slime aka botmaster slime for the wonderful bot
+        integration with asciibird
+      </span>
     </div>
 
     <template #footer>
