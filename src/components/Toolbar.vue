@@ -60,7 +60,7 @@
         </div>
 
         <!-- Utility buttons -->
-        <div class="grid grid-cols-4 gap-1 pt-2 border-t border-outline-variant/30">
+        <div class="grid grid-cols-2 gap-1 pt-2 border-t border-outline-variant/30">
           <Tooltip content="Mirror X axis when Editing">
             <button
               type="button"
@@ -145,7 +145,7 @@
         </div>
 
         <!-- Main tool buttons -->
-        <div class="grid grid-cols-4 gap-1 pt-2 border-t border-outline-variant/30">
+        <div class="grid grid-cols-2 gap-1 pt-2 border-t border-outline-variant/30">
           <Tooltip
             v-for="(value, keyToolbar) in toolbarIcons"
             :key="keyToolbar + 50"
