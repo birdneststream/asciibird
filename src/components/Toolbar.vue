@@ -60,11 +60,11 @@
         </div>
 
         <!-- Utility buttons -->
-        <div class="flex justify-center gap-1 mb-2 pt-2 border-t border-outline-variant/30">
+        <div class="grid grid-cols-4 gap-1 pt-2 border-t border-outline-variant/30">
           <Tooltip content="Mirror X axis when Editing">
             <button
               type="button"
-              class="w-9 h-9 rounded flex items-center justify-center transition-colors duration-150"
+              class="w-10 h-10 rounded flex items-center justify-center transition-colors duration-150"
               :class="toolbarStore.toolbarState.mirrorX
                 ? 'bg-primary-container text-on-primary-container ring-2 ring-primary'
                 : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
@@ -80,7 +80,7 @@
           <Tooltip content="Mirror Y axis when Editing">
             <button
               type="button"
-              class="w-9 h-9 rounded flex items-center justify-center transition-colors duration-150"
+              class="w-10 h-10 rounded flex items-center justify-center transition-colors duration-150"
               :class="toolbarStore.toolbarState.mirrorY
                 ? 'bg-primary-container text-on-primary-container ring-2 ring-primary'
                 : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
@@ -96,7 +96,7 @@
           <Tooltip content="Update Brush Automatically when Colours or Char Changes">
             <button
               type="button"
-              class="w-9 h-9 rounded flex items-center justify-center transition-colors duration-150"
+              class="w-10 h-10 rounded flex items-center justify-center transition-colors duration-150"
               :class="toolbarStore.toolbarState.updateBrush
                 ? 'bg-primary-container text-on-primary-container ring-2 ring-primary'
                 : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
@@ -112,7 +112,7 @@
           <Tooltip content="Toggle Grid View">
             <button
               type="button"
-              class="w-9 h-9 rounded flex items-center justify-center transition-colors duration-150"
+              class="w-10 h-10 rounded flex items-center justify-center transition-colors duration-150"
               :class="toolbarStore.toolbarState.gridView
                 ? 'bg-primary-container text-on-primary-container ring-2 ring-primary'
                 : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
@@ -130,7 +130,7 @@
           <Tooltip content="Toggle Half Block Editing Mode">
             <button
               type="button"
-              class="w-9 h-9 rounded flex items-center justify-center transition-colors duration-150"
+              class="w-10 h-10 rounded flex items-center justify-center transition-colors duration-150"
               :class="toolbarStore.toolbarState.halfBlockEditing
                 ? 'bg-primary-container text-on-primary-container ring-2 ring-primary'
                 : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
