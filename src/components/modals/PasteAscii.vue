@@ -4,21 +4,30 @@
     @close="modalStore.closeModal('paste-ascii')"
     title="Import from Clipboard"
   >
-    Title
-    <input
-      type="text"
-      name="title"
-      class="ab-input"
-      v-model="title"
-      max="128"
-    >
+    <div class="grid grid-cols-[120px_1fr] gap-sm items-center mb-4">
+      <label class="text-on-surface-variant font-label-mono">
+        Title
+      </label>
+      <input
+        type="text"
+        name="title"
+        class="ab-input"
+        v-model="title"
+        max="128"
+      >
+    </div>
 
-    <textarea
-      class="ab-input"
-      v-model="pasteContent"
-      name="paste-ascii"
-      rows="10"
-    />
+    <div class="mb-2">
+      <label class="block text-on-surface-variant font-label-mono mb-1">
+        Paste mIRC ASCII
+      </label>
+      <textarea
+        class="ab-input"
+        v-model="pasteContent"
+        name="paste-ascii"
+        rows="10"
+      />
+    </div>
 
     <template #footer>
       <div class="flex justify-between">

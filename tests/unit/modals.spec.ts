@@ -293,7 +293,7 @@ describe('Options.vue', () => {
     expect(wrapper.vm.tabLimit).toBe(tabLimit)
   })
 
-  it('clearCache clears localStorage and reloads', () => {
+  it('clearCache clears IDB and localStorage then reloads', async () => {
     const clearSpy = vi.spyOn(Storage.prototype, 'clear')
     const reloadSpy = vi.fn()
     Object.defineProperty(window, 'location', {
@@ -301,12 +301,17 @@ describe('Options.vue', () => {
       writable: true,
     })
 
-    const wrapper = stw(Options, mountOpts())
-    wrapper.vm.clearCache()
+    const { idbPersistAdapter } = await import('../../src/utils/idbPersistAdapter')
+    const idbClearSpy = vi.spyOn(idbPersistAdapter, 'clearAll').mockResolvedValue()
 
+    const wrapper = stw(Options, mountOpts())
+    await wrapper.vm.clearCache()
+
+    expect(idbClearSpy).toHaveBeenCalled()
     expect(clearSpy).toHaveBeenCalled()
     expect(reloadSpy).toHaveBeenCalled()
 
+    idbClearSpy.mockRestore()
     clearSpy.mockRestore()
   })
 

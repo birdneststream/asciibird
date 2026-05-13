@@ -59,14 +59,10 @@ body {
 
 /* ── Context menu ──────────────────────────────────────────────────── */
 .context-menu {
-    position: fixed;
-    background: #2a2a2a;
-    color: #e5e2e1;
-    outline: none;
-    border: 1px solid #414755;
-    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    @apply fixed bg-surface-container-high text-on-surface border border-outline-variant shadow-panel;
     border-radius: 4px;
     cursor: pointer;
+    outline: none;
 }
 
 /* ── Layout helpers ────────────────────────────────────────────────── */
@@ -164,12 +160,21 @@ body {
     color: #adc6ff;
 }
 
-.ab-checkbox:checked {
+.ab-radio {
+    @apply h-4 w-4 rounded-full;
+    background: #0e0e0e;
+    border-color: #414755;
+    color: #adc6ff;
+}
+
+.ab-checkbox:checked,
+.ab-radio:checked {
     background: #adc6ff;
     border-color: #adc6ff;
 }
 
-.ab-checkbox:focus {
+.ab-checkbox:focus,
+.ab-radio:focus {
     box-shadow: 0 0 0 2px rgba(173, 198, 255, 0.3);
 }
 
@@ -193,12 +198,11 @@ body {
 }
 
 .ab-context-menu-item {
-    @apply ml-1 transition-colors duration-150;
+    @apply px-3 py-1.5 text-sm transition-colors duration-150 text-on-surface-variant;
 }
 
 .ab-context-menu-item:hover {
-    background: #353534;
-    color: #e5e2e1;
+    @apply bg-surface-container-highest text-on-surface;
 }
 
 .ab-range {

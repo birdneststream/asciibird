@@ -4,58 +4,42 @@
     @close="modalStore.closeModal('edit-ascii')"
     :title="currentAsciiEditingTitle"
   >
-    <!--Card-->
     <div>
-      <div class="md:flex mb-6">
-        <div class="md:w-1/3">
-          <label
-            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
-            for="my-textarea"
-          >
-            Title
-          </label>
-        </div>
-        <div class="md:w-2/3">
-          <input
-            type="text"
-            name="title"
-            class="ab-input block w-full"
-            v-model="layer.title"
-            max="128"
-          >
-        </div>
+      <div class="grid grid-cols-[120px_1fr] gap-sm items-center mb-4">
+        <label class="text-on-surface-variant font-label-mono">
+          Title
+        </label>
+        <input
+          type="text"
+          name="title"
+          class="ab-input"
+          v-model="layer.title"
+          max="128"
+        >
       </div>
 
-      <div class="md:flex mb-6">
-        <div class="md:w-1/3">
-          <label
-            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
-            for="my-textfield"
-          >
-            Width and Height
-          </label>
-        </div>
-        <div class="md:w-1/3">
+      <div class="grid grid-cols-[120px_1fr] gap-sm items-center mb-4">
+        <label class="text-on-surface-variant font-label-mono">
+          Width and Height
+        </label>
+        <div class="flex gap-sm">
           <input
             type="number"
             name="width"
-            class="ab-input block w-full"
+            class="ab-input w-full"
             v-model="layer.width"
             min="1"
           >
-        </div>
-        <div class="md:w-1/3">
           <input
             type="number"
             name="height"
-            class="ab-input block w-full"
+            class="ab-input w-full"
             v-model="layer.height"
             min="1"
           >
         </div>
       </div>
     </div>
-    <!--/Card-->
 
     <template #footer>
       <div class="flex justify-between">
