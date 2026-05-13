@@ -2,22 +2,17 @@
   <div
     ref="el"
     :style="style"
-    class="fixed z-50"
+    class="fixed z-50 floating-panel rounded-lg overflow-hidden p-sm"
   >
-    <div class="ab-card w-full h-full">
-      <span
+    <div class="grid grid-cols-10 gap-1">
+      <button
         v-for="(value, keyColours) in mircColours"
         :key="keyColours"
-      >
-        <hr v-if="keyColours === 16">
-
-        <button
-          type="button"
-          :style="`background-color: ${mircColours[keyColours]} !important;`"
-          class="ab-button border-gray-200 p-3"
-          @click="onColourChange(keyColours)"
-        />
-      </span>
+        type="button"
+        :style="{ backgroundColor: mircColours[keyColours] }"
+        class="w-6 h-6 rounded border border-outline-variant hover:ring-2 hover:ring-primary transition-all"
+        @click="onColourChange(keyColours)"
+      />
     </div>
   </div>
 </template>

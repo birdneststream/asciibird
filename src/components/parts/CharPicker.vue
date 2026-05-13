@@ -2,28 +2,31 @@
   <div
     ref="el"
     :style="style"
-    class="fixed z-50"
+    class="fixed z-50 floating-panel rounded-lg overflow-hidden"
   >
-    <div class="ab-card w-full h-full">
-      <div class="p-1">
+    <div class="p-sm">
+      <label class="flex items-center gap-2 mb-2 cursor-pointer">
         <input
           type="checkbox"
           class="ab-checkbox"
           name="leave-open"
           v-model="persistChars"
           @click="changePersistChars"
-        > <small>Persist this panel after character changes</small>
+        >
+        <span class="text-body-sm text-on-surface-variant">Persist after character changes</span>
+      </label>
+      <div class="grid grid-cols-8 gap-1">
+        <button
+          type="button"
+          v-for="(char, keyChar) in charCodes"
+          :key="keyChar"
+          :style="charButtonStyle"
+          class="rounded border border-outline-variant flex items-center justify-center font-label-mono text-xs hover:ring-2 hover:ring-primary transition-all"
+          @click="onCharChange(char)"
+        >
+          {{ char === " " ? "SP" : char }}
+        </button>
       </div>
-      <button
-        type="button"
-        v-for="(char, keyChar) in charCodes"
-        :key="keyChar"
-        :style="`background-color: ${mircColours[currentBg]} !important;color: ${mircColours[currentFg]} !important;${outline};font-size: 13px;width: ${charBlockWidth}px;height: ${charBlockHeight}px;`"
-        class="ab-button m-0.5"
-        @click="onCharChange(char)"
-      >
-        {{ char === " " ? "SP" : char }}
-      </button>
     </div>
   </div>
 </template>
@@ -66,6 +69,26 @@ const outline = computed(() => {
     return `-webkit-text-stroke-width: 0.5px;-webkit-text-stroke-color: ${outlineColor};`;
   }
   return '';
+});
+
+const charButtonStyle = computed(() => {
+  const style: Record<string, string> = {
+    backgroundColor: mircColours[currentBg.value],
+    color: mircColours[currentFg.value],
+    width: `${charBlockWidth.value}px`,
+    height: `${charBlockHeight.value}px`,
+  };
+  if (outline.value) {
+    const parts = outline.value.split(';');
+    parts.forEach((part) => {
+      const [key, val] = part.split(':');
+      if (key && val) {
+        const camelKey = key.trim().replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+        style[camelKey] = val.trim();
+      }
+    });
+  }
+  return style;
 });
 
 function onCharChange(char: string) {
