@@ -74,7 +74,6 @@
         <p class="text-on-surface-variant text-body-sm mb-2">
           This will clear all data and start asciibird from a fresh state.
         </p>
-        <!-- TODO: also clear IDB stores (main + toolbar) -->
         <button
           type="button"
           class="px-3 py-2 rounded text-sm font-label-mono cursor-pointer transition-colors bg-error-container text-on-error-container hover:brightness-110"
@@ -121,6 +120,7 @@ import { maxBrushHistory, maxUndoHistory, tabLimit } from '../../ascii';
 import ABModal from '../ABModal.vue';
 import { useAsciiBirdStore } from '../../store';
 import { useModalStore } from '../../store/modal';
+import { idbPersistAdapter } from '../../utils/idbPersistAdapter';
 
 const store = useAsciiBirdStore();
 const modalStore = useModalStore();
@@ -128,7 +128,8 @@ const modalStore = useModalStore();
 const showOptionsModal = computed(() => modalStore.modalState.options);
 const options = computed(() => store.options);
 
-function clearCache() {
+async function clearCache() {
+  await idbPersistAdapter.clearAll();
   localStorage.clear();
   window.location.reload();
 }

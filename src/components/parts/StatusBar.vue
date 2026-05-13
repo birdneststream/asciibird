@@ -44,6 +44,9 @@ const toolbarStore = useToolbarStore();
 const props = defineProps<{
   canvasX: number | null;
   canvasY: number | null;
+  layerLabel: string | null;
+  layerIndex: number;
+  layerCount: number;
 }>();
 
 const coordsX = computed(() => props.canvasX ?? '-');
@@ -61,12 +64,7 @@ const projectTitle = computed(() => {
 });
 
 const layerInfo = computed(() => {
-  const ascii = store.currentAscii;
-  if (!ascii) return null;
-  const layers = store.currentAsciiLayers;
-  const idx = ascii.selectedLayer ?? 0;
-  const layer = layers[idx];
-  if (!layer) return null;
-  return `${idx + 1}/${layers.length} ${layer.label}`;
+  if (!props.layerLabel || props.layerCount === 0) return null;
+  return `${props.layerIndex + 1}/${props.layerCount} ${props.layerLabel}`;
 });
 </script>

@@ -20,6 +20,7 @@ import {
   setMany,
   entries,
   createStore,
+  clear,
 } from 'idb-keyval';
 import type { UseStore } from 'idb-keyval';
 import type { StorageLike } from 'pinia-plugin-persistedstate';
@@ -252,6 +253,29 @@ class IdbPersistAdapter implements StorageLike {
     this.writeScheduled = false;
     this.initialized = false;
     this.useFallback = false;
+  }
+
+  /**
+   * Clear all persisted data (cache + IDB + WAL).
+   * Used by the "Clear and Reset ASCIIBIRD" action.
+   */
+  async clearAll(): Promise<void> {
+    this.cache.clear();
+    this.writeQueue.clear();
+    this.deleteQueue.clear();
+    this.writeScheduled = false;
+
+    if (!this.useFallback) {
+      try {
+        await clear(customStore);
+      } catch {
+        // best effort
+      }
+    }
+
+    for (const key of PERSISTED_KEYS) {
+      localStorage.removeItem(`_idb_wal_${key}`);
+    }
   }
 
   /** Schedule a microtask to drain the write queue. */

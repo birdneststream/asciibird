@@ -333,6 +333,9 @@
       <StatusBar
         :canvas-x="canvasX"
         :canvas-y="canvasY"
+        :layer-label="currentSelectedLayer?.label ?? null"
+        :layer-index="selectedLayerIndex"
+        :layer-count="currentAsciiLayers.length"
       />
     </template>
   </div>

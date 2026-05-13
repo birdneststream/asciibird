@@ -160,12 +160,21 @@ body {
     color: #adc6ff;
 }
 
-.ab-checkbox:checked {
+.ab-radio {
+    @apply h-4 w-4 rounded-full;
+    background: #0e0e0e;
+    border-color: #414755;
+    color: #adc6ff;
+}
+
+.ab-checkbox:checked,
+.ab-radio:checked {
     background: #adc6ff;
     border-color: #adc6ff;
 }
 
-.ab-checkbox:focus {
+.ab-checkbox:focus,
+.ab-radio:focus {
     box-shadow: 0 0 0 2px rgba(173, 198, 255, 0.3);
 }
 

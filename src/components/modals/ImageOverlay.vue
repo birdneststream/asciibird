@@ -110,7 +110,7 @@
           <label class="flex items-center gap-2 cursor-pointer">
             <input
               type="radio"
-              class="ab-checkbox"
+              class="ab-radio"
               name="fitTo"
               :value="true"
               v-model="imageOverlay.stretched"
@@ -120,7 +120,7 @@
           <label class="flex items-center gap-2 cursor-pointer">
             <input
               type="radio"
-              class="ab-checkbox"
+              class="ab-radio"
               name="fitTo"
               :value="false"
               v-model="imageOverlay.stretched"
