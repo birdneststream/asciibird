@@ -6,9 +6,12 @@
     <div v-show="menuBarVisible">
       <div
         v-if="!isKeyboardDisabled"
-        class="flex text-sm border-b bg-surface-container text-on-surface border-outline-variant"
+        class="flex items-center border-b bg-surface-container text-on-surface border-outline-variant"
         @mouseleave="onMenuBarMouseLeave"
       >
+        <h1 class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight px-md select-none">
+          ASCIIBIRD
+        </h1>
         <Menu
           v-for="(menuItem, index) in menuBar"
           :key="menuItem.label"
@@ -17,7 +20,7 @@
         >
           <MenuButton
             :ref="(el: any) => menuButtonRefs[index] = el?.$el ?? el"
-            class="px-3 py-1 transition-colors duration-150 hover:bg-surface-container-highest text-on-surface-variant"
+            class="px-3 py-1.5 text-sm transition-colors duration-150 hover:bg-surface-container-highest text-on-surface-variant"
             @mouseenter="onMenuButtonMouseEnter(index)"
           >
             {{ menuItem.label }}
