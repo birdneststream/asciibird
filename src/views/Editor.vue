@@ -12,19 +12,19 @@
         <ul>
           <li
             @click="canvasToPng()"
-            class="ml-1 text-sm hover:bg-gray-400"
+            class="ab-context-menu-item"
           >
             Save as PNG
           </li>
           <li
             @click="startExport('clipboard')"
-            class="ml-1 text-sm hover:bg-gray-400"
+            class="ab-context-menu-item"
           >
             Export ASCII to mIRC Clipboard
           </li>
           <li
             @click="startExport('file')"
-            class="ml-1 text-sm hover:bg-gray-400"
+            class="ab-context-menu-item"
           >
             Export ASCII to mIRC File
           </li>
