@@ -33,18 +33,20 @@
             leave-to="opacity-0 scale-95"
           >
             <DialogPanel
-              class="w-full max-w-lg transform overflow-visible rounded bg-white shadow transition-all"
+              class="w-full max-w-lg transform overflow-visible rounded-lg shadow-panel border transition-all bg-surface-container-high border-outline-variant text-on-surface"
             >
               <div
                 v-if="title"
-                class="border-b p-3 font-bold"
+                class="border-b border-outline-variant p-3 font-bold"
               >
                 {{ title }}
               </div>
               <div class="p-3">
                 <slot />
               </div>
-              <div class="p-1 rounded-b bg-gray-100">
+              <div
+                class="p-1 rounded-b-lg bg-surface-container-highest"
+              >
                 <slot name="footer" />
               </div>
             </DialogPanel>

@@ -1,0 +1,14 @@
+- generic [ref=e5]:
+  - generic [ref=e6]:
+    - button "File" [expanded] [ref=e7] [cursor=pointer]
+    - menu "File" [active] [ref=e22]:
+      - menuitem "New ASCII" [ref=e23] [cursor=pointer]
+      - menuitem "Import from File" [ref=e24] [cursor=pointer]
+      - menuitem "Import from Clipboard" [ref=e25] [cursor=pointer]
+      - menuitem "Export to File" [disabled] [ref=e26]
+      - menuitem "Export to Clipboard" [disabled] [ref=e27]
+      - menuitem "Export to HTTP POST" [disabled] [ref=e28]
+  - button "Edit" [ref=e9] [cursor=pointer]
+  - button "View" [ref=e11] [cursor=pointer]
+  - button "Tools" [ref=e13] [cursor=pointer]
+  - button "Help" [ref=e15] [cursor=pointer]

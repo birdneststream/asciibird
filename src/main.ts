@@ -8,6 +8,11 @@ import { useModalStore } from './store/modal';
 import { useDesktopStore } from './store/desktop';
 import { usePanelStore } from './store/panels';
 import { idbPersistAdapter } from './utils/idbPersistAdapter';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/500.css';
+import '@fontsource/inter/600.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/500.css';
 import 'material-icons/iconfont/material-icons.css';
 import './style.scss';
 

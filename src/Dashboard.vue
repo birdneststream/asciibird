@@ -6,7 +6,7 @@
     <div v-show="menuBarVisible">
       <div
         v-if="!isKeyboardDisabled"
-        class="flex bg-gray-800 text-white text-sm"
+        class="flex text-sm border-b bg-surface-container text-on-surface border-outline-variant"
         @mouseleave="onMenuBarMouseLeave"
       >
         <Menu
@@ -17,13 +17,13 @@
         >
           <MenuButton
             :ref="(el: any) => menuButtonRefs[index] = el?.$el ?? el"
-            class="px-3 py-1 hover:bg-gray-600"
+            class="px-3 py-1 transition-colors duration-150 hover:bg-surface-container-highest text-on-surface-variant"
             @mouseenter="onMenuButtonMouseEnter(index)"
           >
             {{ menuItem.label }}
           </MenuButton>
           <MenuItems
-            class="absolute mt-0 bg-gray-900 shadow-lg rounded-b min-w-48 z-50"
+            class="absolute mt-0 shadow-panel rounded-b min-w-48 z-50 border bg-surface-container-high border-outline-variant"
             @focus="onMenuItemsOpen(index)"
           >
             <MenuItem
@@ -34,16 +34,17 @@
             >
               <button
                 :class="[
-                  active ? 'bg-gray-700' : '',
+                  active ? 'bg-surface-container-highest' : '',
                   disabled ? 'opacity-50 cursor-not-allowed' : '',
-                  'flex w-full items-center justify-between px-4 py-1 text-sm text-white',
+                  'flex w-full items-center justify-between px-4 py-1 text-sm',
                 ]"
+                class="text-on-surface"
                 @click="item.click"
               >
                 <span>{{ item.text }}</span>
                 <span
                   v-if="item.shortcut"
-                  class="ml-4 text-gray-400 text-xs"
+                  class="ml-4 text-xs text-outline"
                 >{{ item.shortcut }}</span>
               </button>
             </MenuItem>
@@ -93,14 +94,14 @@
         </li>
         <li
           @click="closeTab(currentTab)"
-          class="ab-context-menu-item border-b"
+          class="ab-context-menu-item border-b border-outline-variant"
           v-if="asciibirdMeta.length"
         >
           Close Ascii
         </li>
         <li
           @click="modalStore.openModal('options')"
-          class="ab-context-menu-item border-b"
+          class="ab-context-menu-item border-b border-outline-variant"
           v-if="asciibirdMeta.length"
         >
           Options
@@ -114,7 +115,7 @@
         </li>
         <li
           @click="startExport('file')"
-          class="ab-context-menu-item border-b"
+          class="ab-context-menu-item border-b border-outline-variant"
           v-if="asciibirdMeta.length"
         >
           Export to File
@@ -133,7 +134,7 @@
           Export to Clipboard
         </li>
         <li
-          class="ab-context-menu-item border-b"
+          class="ab-context-menu-item border-b border-outline-variant"
           @click="startExport('post')"
           v-if="asciibirdMeta.length"
         >
@@ -171,7 +172,7 @@
       <div
         v-if="tabsVisible"
         ref="tabbar"
-        class="bg-gray-500 relative z-auto"
+        class="relative z-auto border-b bg-surface-container-low border-outline-variant"
         :style="toolbarString"
       >
         <span
@@ -190,7 +191,7 @@
             >insert_drive_file</span>
             <span class="bottom-1 relative pl-1 pr-1">{{ value.title }}</span>
             <span
-              class="ab-button relative bottom-0 z-40 rounded-3xl h-5 inline-flex items-center justify-center cursor-pointer"
+              class="ab-button relative bottom-0 z-40 rounded h-5 inline-flex items-center justify-center cursor-pointer"
               role="button"
               tabindex="0"
               @click.stop="closeTab(key)"
@@ -272,8 +273,12 @@
           v-for="msg in toasts"
           :key="msg.id"
           :class="[
-            'px-4 py-2 rounded shadow-lg text-white text-sm',
-            msg.type === 'error' ? 'bg-red-500' : msg.type === 'success' ? 'bg-green-500' : 'bg-blue-500',
+            'px-4 py-2 rounded shadow-lg text-sm',
+            msg.type === 'error'
+              ? 'bg-error text-on-error'
+              : msg.type === 'success'
+                ? 'bg-secondary-container text-on-secondary'
+                : 'bg-primary-container text-white',
           ]"
         >
           {{ msg.text }}
@@ -308,7 +313,7 @@
             Cancel
           </button>
           <button
-            class="ab-button bg-blue-500 hover:bg-blue-600"
+            class="ab-button bg-primary-container"
             @click="dialogOk"
           >
             OK
@@ -710,8 +715,8 @@ function inputtingbrush(val: boolean) {
 
 function buttonStyle(key: number) {
   return currentTab.value === key
-    ? 'text-sm pl-1 p-1 h-10 text-white border border-transparent shadow-sm hover:bg-blue-500 bg-gray-900'
-    : 'text-sm pl-1 p-1 h-10 text-white border border-transparent shadow-sm hover:bg-blue-500 bg-gray-400';
+    ? 'text-sm pl-1 p-1 h-10 border-b-2 border-primary bg-surface-container-highest'
+    : 'text-sm pl-1 p-1 h-10 border-b-2 border-transparent';
 }
 
 function openContextMenu(e: MouseEvent) {

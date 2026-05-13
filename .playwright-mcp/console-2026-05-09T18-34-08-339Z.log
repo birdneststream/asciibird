@@ -1,0 +1,4 @@
+[      28ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Outdated Optimize Dep) @ http://localhost:5180/node_modules/.vite/deps/pinia.js?v=4b643f18:0
+[      30ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Outdated Optimize Dep) @ http://localhost:5180/node_modules/.vite/deps/pinia-plugin-persistedstate.js?v=ba1aacdf:0
+[      48ms] ReferenceError: __BUNDLED_DEV__ is not defined
+    at http://localhost:5180/@vite/client:837:22

@@ -26,10 +26,12 @@
       </button>
     </div>
 
-    <hr>
+    <hr class="border-outline-variant">
 
-    <div class="w-full bg-white rounded-lg shadow">
-      <ul class="divide-y-2 divide-gray-100 mb-2">
+    <div class="w-full rounded-lg">
+      <ul
+        class="divide-y-2 divide-outline-variant mb-2"
+      >
         <div class="flex p-1">
           <button
             type="button"
@@ -49,7 +51,9 @@
           >
             <div class="flex text-right">
               <div class="w-full">
-                <div class="ab-card w-full pl-2 hover:bg-gray-300 cursor-pointer">
+                <div
+                  class="ab-card w-full pl-2 cursor-pointer"
+                >
                   <span>{{ imageOverlayUrl || "Image Overlay" }}</span>
                 </div>
               </div>
@@ -118,7 +122,7 @@
       </context-menu>
 
       <ul
-        class="divide-y-2 divide-gray-100 reverseorder"
+        class="divide-y-2 divide-outline-variant reverseorder"
         @mouseup.right="openContextMenu"
       >
         <li
@@ -168,7 +172,7 @@
                   class="w-full"
                   @click="changeLayer(key)"
                 >
-                  <div class="ab-card w-full hover:bg-gray-300 cursor-pointer">
+                  <div class="ab-card w-full hover:bg-surface-container-highest cursor-pointer">
                     <span @dblclick="showLayerRename(key, layer.label)">{{
                       layer.label
                     }}</span>
@@ -287,14 +291,14 @@ function selectBestLayer() {
 
 function selectedLayerClass(key: number) {
   if (!currentAsciiLayers.value[key]?.visible) {
-    return 'bg-red-200';
+    return 'bg-error-container/30';
   }
 
   if (key === selectedLayer.value) {
-    return 'bg-blue-200';
+    return 'bg-primary-container/30';
   }
 
-  return 'bg-gray-200';
+  return '';
 }
 
 function showLayerRename(key: number, label: string) {

@@ -1,0 +1,58 @@
+- generic [ref=e32]:
+  - generic [ref=e34]:
+    - button "File" [ref=e36] [cursor=pointer]
+    - button "Edit" [ref=e38] [cursor=pointer]
+    - button "View" [ref=e40] [cursor=pointer]
+    - button "Tools" [ref=e42] [cursor=pointer]
+    - button "Help" [ref=e44] [cursor=pointer]
+  - button "insert_drive_fileNew ASCII 1 close" [ref=e47] [cursor=pointer]:
+    - generic [ref=e48]:
+      - text: insert_drive_fileNew ASCII 1
+      - button "close" [ref=e49]
+  - generic [ref=e54]:
+    - generic [ref=e56]:
+      - button "FG" [ref=e57] [cursor=pointer]
+      - button "BG" [ref=e58] [cursor=pointer]
+      - button "swap_horiz" [ref=e59] [cursor=pointer]
+      - button "SP" [ref=e60] [cursor=pointer]
+    - generic [ref=e61]:
+      - generic [ref=e62]:
+        - checkbox "FG" [checked] [ref=e63]
+        - generic [ref=e64]: FG
+      - generic [ref=e65]:
+        - checkbox "BG" [checked] [ref=e66]
+        - generic [ref=e67]: BG
+      - generic [ref=e68]:
+        - checkbox "Text" [checked] [ref=e69]
+        - generic [ref=e70]: Text
+    - generic [ref=e71]:
+      - button "more_vert" [ref=e72] [cursor=pointer]:
+        - generic [ref=e73]: more_vert
+      - button "more_horiz" [ref=e74] [cursor=pointer]:
+        - generic [ref=e75]: more_horiz
+      - button "color_lens" [ref=e76] [cursor=pointer]:
+        - generic [ref=e77]: color_lens
+      - button "grid_on" [ref=e78] [cursor=pointer]:
+        - generic [ref=e79]: grid_on
+      - button "grid_view" [ref=e80] [cursor=pointer]:
+        - generic [ref=e81]: grid_view
+    - generic [ref=e82]:
+      - button "edit_off" [ref=e83] [cursor=pointer]:
+        - generic [ref=e84]: edit_off
+      - button "photo_size_select_small" [ref=e85] [cursor=pointer]:
+        - generic [ref=e86]: photo_size_select_small
+      - button "text_rotation_none" [ref=e87] [cursor=pointer]:
+        - generic [ref=e88]: text_rotation_none
+      - button "format_color_fill" [ref=e89] [cursor=pointer]:
+        - generic [ref=e90]: format_color_fill
+      - button "brush" [ref=e91] [cursor=pointer]:
+        - generic [ref=e92]: brush
+      - button "colorize" [ref=e93] [cursor=pointer]:
+        - generic [ref=e94]: colorize
+      - button "remove_circle_outline" [ref=e95] [cursor=pointer]:
+        - generic [ref=e96]: remove_circle_outline
+      - button "auto_fix_off" [ref=e97] [cursor=pointer]:
+        - generic [ref=e98]: auto_fix_off
+  - generic [ref=e100]:
+    - button "history History" [ref=e101] [cursor=pointer]
+    - button "library_books Library" [ref=e102] [cursor=pointer]

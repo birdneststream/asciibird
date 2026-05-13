@@ -1,0 +1,7 @@
+[     105ms] The requested module '/node_modules/vue-color/dist/vue-color.min.js?v=dda865f6' does not provide an export named 'default'
+[  995394ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5180/@vite/client:559
+[  995397ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5180/:0
+[  997064ms] The requested module '/node_modules/vue-color/dist/vue-color.min.js?v=4f20e3ea' does not provide an export named 'default'
+[ 1003509ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5180/@vite/client:559
+[ 1003512ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5180/:0
+[ 1004131ms] The requested module '/node_modules/vue-color/dist/vue-color.min.js?v=8d87c658' does not provide an export named 'default'

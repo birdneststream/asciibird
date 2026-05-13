@@ -11,7 +11,7 @@
       <div
         v-if="visible"
         ref="tooltipEl"
-        class="fixed z-[9999] pointer-events-none bg-gray-700 text-white text-xs rounded px-2 py-1 shadow-lg whitespace-nowrap"
+        class="fixed z-[9999] pointer-events-none text-xs rounded px-2 py-1 shadow-lg whitespace-nowrap border bg-surface-container-highest text-on-surface border-outline-variant"
         :style="tooltipStyle"
       >
         {{ content }}

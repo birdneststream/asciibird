@@ -9,7 +9,7 @@
       <div class="md:flex mb-6">
         <div class="md:w-1/3">
           <label
-            class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4"
+            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
             for="my-textarea"
           >
             URL
@@ -23,7 +23,7 @@
             v-model="imageOverlay.url"
           >
 
-          <p class="py-2 text-sm text-gray-600">
+          <p class="py-2 text-sm text-outline">
             Note: ASCIIBIRD only supports URL images
           </p>
         </div>
@@ -32,7 +32,7 @@
       <div class="md:flex mb-6">
         <div class="md:w-1/3">
           <label
-            class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4"
+            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
             for="my-textfield"
           >
             Visibility
@@ -42,7 +42,7 @@
           <label class="ml-1 w-1/3">
             <input
               type="checkbox"
-              class="form-checkbox m-1"
+              class="ab-checkbox m-1"
               name="visible"
               v-model="imageOverlay.visible"
             >
@@ -54,7 +54,7 @@
       <div class="md:flex mb-6">
         <div class="md:w-1/3">
           <label
-            class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4"
+            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
             for="my-textfield"
           >
             Overlay Transparency
@@ -74,7 +74,7 @@
       <div class="md:flex mb-6">
         <div class="md:w-1/3">
           <label
-            class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4"
+            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
             for="my-textfield"
           >
             ASCII Transparency
@@ -94,7 +94,7 @@
       <div class="md:flex mb-6">
         <div class="md:w-1/3">
           <label
-            class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4"
+            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
             for="my-textfield"
           >
             Image Scale
@@ -114,7 +114,7 @@
       <div class="md:flex mb-6">
         <div class="md:w-1/3">
           <label
-            class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4"
+            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
             for="my-textfield"
           >
             Left
@@ -134,7 +134,7 @@
       <div class="md:flex mb-6">
         <div class="md:w-1/3">
           <label
-            class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4"
+            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
             for="my-textfield"
           >
             Top
@@ -154,7 +154,7 @@
       <div class="md:flex mb-6">
         <div class="md:w-1/3">
           <label
-            class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4"
+            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
             for="my-textfield"
           >
             Fit To
@@ -185,7 +185,7 @@
       <div class="md:flex mb-6">
         <div class="md:w-1/3">
           <label
-            class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4"
+            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
             for="my-textfield"
           >
             Repeat
@@ -195,7 +195,7 @@
           <label class="ml-1 w-1/3">
             <input
               type="checkbox"
-              class="form-checkbox m-1"
+              class="ab-checkbox m-1"
               name="repeatx"
               v-model="imageOverlay.repeatx"
             >
@@ -205,7 +205,7 @@
           <label class="ml-1 w-1/3 pl-4">
             <input
               type="checkbox"
-              class="form-checkbox m-1"
+              class="ab-checkbox m-1"
               name="repeatx"
               v-model="imageOverlay.repeaty"
             >

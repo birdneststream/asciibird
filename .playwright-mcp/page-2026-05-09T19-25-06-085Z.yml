@@ -1,0 +1,96 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - button [ref=e131] [cursor=pointer]:
+      - generic [ref=e20]:
+        - text: insert_drive_fileNew ASCII 1
+        - button [ref=e132]: close
+    - generic [ref=e26]:
+      - generic [ref=e28]:
+        - button [ref=e133] [cursor=pointer]: FG
+        - button [ref=e134] [cursor=pointer]: BG
+        - button [ref=e135] [cursor=pointer]: swap_horiz
+        - button [ref=e136] [cursor=pointer]: SP
+      - generic [ref=e33]:
+        - generic [ref=e34]:
+          - checkbox [checked] [ref=e137]
+          - generic [ref=e36]: FG
+        - generic [ref=e37]:
+          - checkbox [checked] [ref=e138]
+          - generic [ref=e39]: BG
+        - generic [ref=e40]:
+          - checkbox [checked] [ref=e139]
+          - generic [ref=e42]: Text
+      - generic [ref=e43]:
+        - button [ref=e140] [cursor=pointer]:
+          - generic [ref=e45]: more_vert
+        - button [ref=e141] [cursor=pointer]:
+          - generic [ref=e47]: more_horiz
+        - button [ref=e142] [cursor=pointer]:
+          - generic [ref=e49]: color_lens
+        - button [ref=e143] [cursor=pointer]:
+          - generic [ref=e51]: grid_on
+        - button [ref=e144] [cursor=pointer]:
+          - generic [ref=e53]: grid_view
+      - generic [ref=e54]:
+        - button [ref=e145] [cursor=pointer]:
+          - generic [ref=e56]: edit_off
+        - button [ref=e146] [cursor=pointer]:
+          - generic [ref=e58]: photo_size_select_small
+        - button [ref=e147] [cursor=pointer]:
+          - generic [ref=e60]: text_rotation_none
+        - button [ref=e148] [cursor=pointer]:
+          - generic [ref=e62]: format_color_fill
+        - button [ref=e149] [cursor=pointer]:
+          - generic [ref=e64]: brush
+        - button [ref=e150] [cursor=pointer]:
+          - generic [ref=e66]: colorize
+        - button [ref=e151] [cursor=pointer]:
+          - generic [ref=e68]: remove_circle_outline
+        - button [ref=e152] [cursor=pointer]:
+          - generic [ref=e70]: auto_fix_off
+    - generic [ref=e72]:
+      - button [ref=e153] [cursor=pointer]: history History
+      - button [ref=e154] [cursor=pointer]: library_books Library
+      - generic [ref=e78]:
+        - button [ref=e155] [cursor=pointer]: save
+        - button [ref=e156] [cursor=pointer]: brush
+        - button [ref=e157] [cursor=pointer]: delete
+    - generic [ref=e87]:
+      - generic [ref=e88]:
+        - spinbutton [ref=e90]: "1"
+        - spinbutton [ref=e92]: "1"
+      - combobox [ref=e94]
+    - generic [ref=e102]:
+      - generic [ref=e103]:
+        - button [ref=e158] [cursor=pointer]: playlist_add Add Layer
+        - button [ref=e159] [cursor=pointer]: playlist_play Merge Layers
+      - separator [ref=e106]
+      - generic [ref=e107]:
+        - list [ref=e108]:
+          - generic [ref=e109]:
+            - button [ref=e160] [cursor=pointer]: remove_red_eye
+            - generic [ref=e114] [cursor=pointer]: Image Overlay
+        - list [ref=e115]:
+          - listitem [ref=e116]:
+            - generic [ref=e117]:
+              - generic [ref=e118]:
+                - button [disabled] [ref=e161]: remove_red_eye
+                - button [disabled] [ref=e162]: delete
+              - generic [ref=e122]:
+                - generic [ref=e124] [cursor=pointer]: New ASCII 1
+                - generic [ref=e125]:
+                  - button [disabled] [ref=e163]: arrow_upward
+                  - button [disabled] [ref=e164]: arrow_downward
+  - generic:
+    - generic:
+      - generic:
+        - dialog:
+          - generic [ref=e168]:
+            - generic [ref=e170]:
+              - link "Github" [active] [ref=e177] [cursor=pointer]:
+                - /url: https://github.com/birdneststream/asciibird
+              - heading "Big Shout Outs to Patrons" [level=1] [ref=e178]
+              - text: shrew, octopus, j-hex, nes, mouse, dingo, eraser, pancakes
+              - heading "Special Thanks to" [level=5] [ref=e179]
+              - text: special thanks to slime aka botmaster slime for the wonderful bot integration with asciibird
+            - button "Ok" [ref=e182] [cursor=pointer]

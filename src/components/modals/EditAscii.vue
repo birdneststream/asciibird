@@ -9,7 +9,7 @@
       <div class="md:flex mb-6">
         <div class="md:w-1/3">
           <label
-            class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4"
+            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
             for="my-textarea"
           >
             Title
@@ -19,7 +19,7 @@
           <input
             type="text"
             name="title"
-            class="ab-input form-input block w-full focus:bg-white"
+            class="ab-input block w-full"
             v-model="layer.title"
             max="128"
           >
@@ -29,7 +29,7 @@
       <div class="md:flex mb-6">
         <div class="md:w-1/3">
           <label
-            class="block text-gray-600 font-bold md:text-left mb-3 md:mb-0 pr-4"
+            class="block font-bold md:text-left mb-3 md:mb-0 pr-4 text-on-surface-variant"
             for="my-textfield"
           >
             Width and Height
@@ -39,7 +39,7 @@
           <input
             type="number"
             name="width"
-            class="ab-input form-input block w-full focus:bg-white"
+            class="ab-input block w-full"
             v-model="layer.width"
             min="1"
           >
@@ -48,7 +48,7 @@
           <input
             type="number"
             name="height"
-            class="ab-input form-input block w-full focus:bg-white"
+            class="ab-input block w-full"
             v-model="layer.height"
             min="1"
           >

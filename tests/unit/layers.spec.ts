@@ -225,25 +225,26 @@ describe('Layers.vue', () => {
     )
   })
 
-  it('selectedLayerClass returns bg-red-200 for invisible layer',
+  it('selectedLayerClass returns bg-error-container/30 for invisible layer',
     () => {
       store.toggleLayer(0)
       const wrapper = createWrapper()
-      expect(wrapper.vm.selectedLayerClass(0)).toBe('bg-red-200')
-    })
+      expect(wrapper.vm.selectedLayerClass(0)).toBe('bg-error-container/30')
 
-  it('selectedLayerClass returns bg-blue-200 for selected layer',
+  })
+
+  it('selectedLayerClass returns bg-primary-container/30 for selected layer',
     () => {
       const wrapper = createWrapper()
-      expect(wrapper.vm.selectedLayerClass(0)).toBe('bg-blue-200')
+      expect(wrapper.vm.selectedLayerClass(0)).toBe('bg-primary-container/30')
     })
 
-  it('selectedLayerClass returns bg-gray-200 for unselected visible',
+  it('selectedLayerClass returns empty string for unselected visible',
     () => {
       store.addLayer()
       store.changeLayer(0)
       const wrapper = createWrapper()
-      expect(wrapper.vm.selectedLayerClass(1)).toBe('bg-gray-200')
+      expect(wrapper.vm.selectedLayerClass(1)).toBe('')
     })
 
   it('selectBestLayer toggles first layer when all invisible', () => {

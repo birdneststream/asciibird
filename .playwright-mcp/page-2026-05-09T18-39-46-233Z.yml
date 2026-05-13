@@ -1,0 +1,9 @@
+- generic "Create new ASCII" [ref=e29]:
+  - generic [ref=e30]:
+    - generic [ref=e31]:
+      - generic [ref=e33]: Title
+      - textbox [ref=e35]: New ASCII 1
+    - generic [ref=e36]:
+      - generic [ref=e38]: Width and Height
+      - spinbutton [ref=e40]: "80"
+      - spinbutton [ref=e42]: "30"

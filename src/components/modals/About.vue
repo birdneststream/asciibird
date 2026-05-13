@@ -4,13 +4,15 @@
     @close="modalStore.closeModal('about')"
     title=""
   >
-    <div class="mt-6 lg:mt-0 rounded shadow bg-white text-center ">
+    <div class="mt-6 lg:mt-0 rounded text-center">
       <BrushCanvas
         :blocks="aboutAscii"
         class="w-32 -right-40 relative"
       />
 
-      <span class="p-2"><small class="text-blue-400 cursor-pointer"><a
+      <span class="p-2"><small
+        class="cursor-pointer text-primary"
+      ><a
         href="https://github.com/birdneststream/asciibird"
         target="_blank"
       >Github</a></small></span>

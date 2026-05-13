@@ -1,0 +1,202 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - button [ref=e589] [cursor=pointer]:
+      - generic [ref=e8]:
+        - text: insert_drive_fileNew ASCII 1
+        - button [ref=e590]: close
+    - generic [ref=e14]:
+      - generic [ref=e16]:
+        - button [ref=e591] [cursor=pointer]: FG
+        - button [ref=e592] [cursor=pointer]: BG
+        - button [ref=e593] [cursor=pointer]: swap_horiz
+        - button [ref=e594] [cursor=pointer]: SP
+      - generic [ref=e21]:
+        - generic [ref=e22]:
+          - checkbox [checked] [ref=e595]
+          - generic [ref=e24]: FG
+        - generic [ref=e25]:
+          - checkbox [checked] [ref=e596]
+          - generic [ref=e27]: BG
+        - generic [ref=e28]:
+          - checkbox [checked] [ref=e597]
+          - generic [ref=e30]: Text
+      - generic [ref=e31]:
+        - button [ref=e598] [cursor=pointer]:
+          - generic [ref=e33]: more_vert
+        - button [ref=e599] [cursor=pointer]:
+          - generic [ref=e35]: more_horiz
+        - button [ref=e600] [cursor=pointer]:
+          - generic [ref=e37]: color_lens
+        - button [ref=e601] [cursor=pointer]:
+          - generic [ref=e39]: grid_on
+        - button [ref=e602] [cursor=pointer]:
+          - generic [ref=e41]: grid_view
+      - generic [ref=e42]:
+        - button [ref=e603] [cursor=pointer]:
+          - generic [ref=e44]: edit_off
+        - button [ref=e604] [cursor=pointer]:
+          - generic [ref=e46]: photo_size_select_small
+        - button [ref=e605] [cursor=pointer]:
+          - generic [ref=e48]: text_rotation_none
+        - button [ref=e606] [cursor=pointer]:
+          - generic [ref=e50]: format_color_fill
+        - button [ref=e607] [cursor=pointer]:
+          - generic [ref=e52]: brush
+        - button [ref=e608] [cursor=pointer]:
+          - generic [ref=e54]: colorize
+        - button [ref=e609] [cursor=pointer]:
+          - generic [ref=e56]: remove_circle_outline
+        - button [ref=e610] [cursor=pointer]:
+          - generic [ref=e58]: auto_fix_off
+    - generic [ref=e60]:
+      - button [ref=e611] [cursor=pointer]: history History
+      - button [ref=e612] [cursor=pointer]: library_books Library
+      - generic [ref=e66]:
+        - button [ref=e613] [cursor=pointer]: save
+        - button [ref=e614] [cursor=pointer]: brush
+        - button [ref=e615] [cursor=pointer]: delete
+    - generic [ref=e75]:
+      - generic [ref=e76]:
+        - spinbutton [ref=e78]: "1"
+        - spinbutton [ref=e80]: "1"
+      - combobox [ref=e82]
+    - generic [ref=e90]:
+      - generic [ref=e91]:
+        - button [ref=e616] [cursor=pointer]: playlist_add Add Layer
+        - button [ref=e617] [cursor=pointer]: playlist_play Merge Layers
+      - separator [ref=e94]
+      - generic [ref=e95]:
+        - list [ref=e96]:
+          - generic [ref=e97]:
+            - button [ref=e618] [cursor=pointer]: remove_red_eye
+            - generic [ref=e102] [cursor=pointer]: Image Overlay
+        - list [ref=e103]:
+          - listitem [ref=e104]:
+            - generic [ref=e105]:
+              - generic [ref=e106]:
+                - button [disabled] [ref=e619]: remove_red_eye
+                - button [disabled] [ref=e620]: delete
+              - generic [ref=e110]:
+                - generic [ref=e112] [cursor=pointer]: New ASCII 1
+                - generic [ref=e113]:
+                  - button [disabled] [ref=e621]: arrow_upward
+                  - button [disabled] [ref=e622]: arrow_downward
+    - generic [ref=e382]:
+      - button [ref=e384] [cursor=pointer]
+      - button [ref=e386] [cursor=pointer]
+      - button [ref=e388] [cursor=pointer]
+      - button [ref=e390] [cursor=pointer]
+      - button [ref=e392] [cursor=pointer]
+      - button [ref=e394] [cursor=pointer]
+      - button [ref=e396] [cursor=pointer]
+      - button [ref=e398] [cursor=pointer]
+      - button [ref=e400] [cursor=pointer]
+      - button [ref=e402] [cursor=pointer]
+      - button [ref=e404] [cursor=pointer]
+      - button [ref=e406] [cursor=pointer]
+      - button [ref=e408] [cursor=pointer]
+      - button [ref=e410] [cursor=pointer]
+      - button [ref=e412] [cursor=pointer]
+      - button [ref=e414] [cursor=pointer]
+      - generic [ref=e415]:
+        - separator [ref=e416]
+        - button [ref=e417] [cursor=pointer]
+      - button [ref=e419] [cursor=pointer]
+      - button [ref=e421] [cursor=pointer]
+      - button [ref=e423] [cursor=pointer]
+      - button [ref=e425] [cursor=pointer]
+      - button [ref=e427] [cursor=pointer]
+      - button [ref=e429] [cursor=pointer]
+      - button [ref=e431] [cursor=pointer]
+      - button [ref=e433] [cursor=pointer]
+      - button [ref=e435] [cursor=pointer]
+      - button [ref=e437] [cursor=pointer]
+      - button [ref=e439] [cursor=pointer]
+      - button [ref=e441] [cursor=pointer]
+      - button [ref=e443] [cursor=pointer]
+      - button [ref=e445] [cursor=pointer]
+      - button [ref=e447] [cursor=pointer]
+      - button [ref=e449] [cursor=pointer]
+      - button [ref=e451] [cursor=pointer]
+      - button [ref=e453] [cursor=pointer]
+      - button [ref=e455] [cursor=pointer]
+      - button [ref=e457] [cursor=pointer]
+      - button [ref=e459] [cursor=pointer]
+      - button [ref=e461] [cursor=pointer]
+      - button [ref=e463] [cursor=pointer]
+      - button [ref=e465] [cursor=pointer]
+      - button [ref=e467] [cursor=pointer]
+      - button [ref=e469] [cursor=pointer]
+      - button [ref=e471] [cursor=pointer]
+      - button [ref=e473] [cursor=pointer]
+      - button [ref=e475] [cursor=pointer]
+      - button [ref=e477] [cursor=pointer]
+      - button [ref=e479] [cursor=pointer]
+      - button [ref=e481] [cursor=pointer]
+      - button [ref=e483] [cursor=pointer]
+      - button [ref=e485] [cursor=pointer]
+      - button [ref=e487] [cursor=pointer]
+      - button [ref=e489] [cursor=pointer]
+      - button [ref=e491] [cursor=pointer]
+      - button [ref=e493] [cursor=pointer]
+      - button [ref=e495] [cursor=pointer]
+      - button [ref=e497] [cursor=pointer]
+      - button [ref=e499] [cursor=pointer]
+      - button [ref=e501] [cursor=pointer]
+      - button [ref=e503] [cursor=pointer]
+      - button [ref=e505] [cursor=pointer]
+      - button [ref=e507] [cursor=pointer]
+      - button [ref=e509] [cursor=pointer]
+      - button [ref=e511] [cursor=pointer]
+      - button [ref=e513] [cursor=pointer]
+      - button [ref=e515] [cursor=pointer]
+      - button [ref=e517] [cursor=pointer]
+      - button [ref=e519] [cursor=pointer]
+      - button [ref=e521] [cursor=pointer]
+      - button [ref=e523] [cursor=pointer]
+      - button [ref=e525] [cursor=pointer]
+      - button [ref=e527] [cursor=pointer]
+      - button [ref=e529] [cursor=pointer]
+      - button [ref=e531] [cursor=pointer]
+      - button [ref=e533] [cursor=pointer]
+      - button [ref=e535] [cursor=pointer]
+      - button [ref=e537] [cursor=pointer]
+      - button [ref=e539] [cursor=pointer]
+      - button [ref=e541] [cursor=pointer]
+      - button [ref=e543] [cursor=pointer]
+      - button [ref=e545] [cursor=pointer]
+      - button [ref=e547] [cursor=pointer]
+      - button [ref=e549] [cursor=pointer]
+      - button [ref=e551] [cursor=pointer]
+      - button [ref=e553] [cursor=pointer]
+      - button [ref=e555] [cursor=pointer]
+      - button [ref=e557] [cursor=pointer]
+      - button [ref=e559] [cursor=pointer]
+      - button [ref=e561] [cursor=pointer]
+      - button [ref=e563] [cursor=pointer]
+      - button [ref=e565] [cursor=pointer]
+      - button [ref=e567] [cursor=pointer]
+      - button [ref=e569] [cursor=pointer]
+      - button [ref=e571] [cursor=pointer]
+      - button [ref=e573] [cursor=pointer]
+      - button [ref=e575] [cursor=pointer]
+      - button [ref=e577] [cursor=pointer]
+      - button [ref=e579] [cursor=pointer]
+      - button [ref=e581] [cursor=pointer]
+  - generic:
+    - generic:
+      - generic:
+        - dialog:
+          - generic [ref=e626]:
+            - generic [ref=e627]: Create new ASCII
+            - generic [ref=e629]:
+              - generic [ref=e630]:
+                - generic [ref=e632]: Title
+                - textbox [active] [ref=e634]: New ASCII 2
+              - generic [ref=e635]:
+                - generic [ref=e637]: Width and Height
+                - spinbutton [ref=e639]: "80"
+                - spinbutton [ref=e641]: "30"
+            - generic [ref=e643]:
+              - button "cancel Cancel" [ref=e644] [cursor=pointer]
+              - button "save Create" [ref=e645] [cursor=pointer]

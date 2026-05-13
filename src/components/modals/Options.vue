@@ -4,7 +4,7 @@
     @close="modalStore.closeModal('options')"
     title="ASCIIBIRD Options"
   >
-    <div class="mt-6 lg:mt-0 rounded shadow bg-white">
+    <div class="mt-6 lg:mt-0 rounded">
       <div class="mb-4">
         <label class="ml-1">
           <span class="text-sm">FPS</span>
@@ -24,7 +24,7 @@
           <span class="text-lg">Render Offscreen Blocks</span><br>
           <input
             type="checkbox"
-            class="form-checkbox m-1"
+            class="ab-checkbox m-1"
             name="renderOffScreen"
             v-model="options.renderOffScreen"
             @change="updateOptions"
@@ -63,13 +63,15 @@
         </label>
       </div>
 
-      <div class="mb-4 border-t-2">
+      <div
+        class="mb-4 border-t-2 border-outline-variant"
+      >
         <label class="ml-1">
           <span class="text-lg">Reset ASCIIBIRD state</span><br>
           <small>This will clear all data and start asciibird from a fresh
             state.</small><br>
           <div
-            class="mt-1 p-2 bg-red-300 rounded-md cursor-pointer"
+            class="mt-1 p-2 rounded-md cursor-pointer bg-error-container text-on-error-container"
             @click="clearCache()"
           >
             Clear and Reset ASCIIBIRD

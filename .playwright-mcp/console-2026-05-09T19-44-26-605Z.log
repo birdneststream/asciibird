@@ -1,0 +1,31 @@
+[  612827ms] [WARNING] [Vue warn]: Unhandled error during execution of setup function 
+  at <BrushPreview onInputtingbrush=fn<bound inputtingbrush> y-offset=0 > 
+  at <Dashboard> @ http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:1752
+[  612827ms] [WARNING] [Vue warn]: Unhandled error during execution of scheduler flush 
+  at <BrushPreview onInputtingbrush=fn<bound inputtingbrush> y-offset=0 > 
+  at <Dashboard> @ http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:1752
+[  612844ms] ReferenceError: toolbarState is not defined
+    at setup (http://localhost:5180/src/components/parts/BrushPreview.vue?t=1778356479262:297:4)
+    at callWithErrorHandling (http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:1890:17)
+    at setupStatefulComponent (http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:6737:23)
+    at setupComponent (http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:6713:35)
+    at mountComponent (http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:5509:3)
+    at processComponent (http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:5499:8)
+    at patch (http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:5294:28)
+    at patchKeyedChildren (http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:5765:41)
+    at patchChildren (http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:5665:54)
+    at processFragment (http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:5494:10)
+[  812724ms] [WARNING] [Vue warn]: Unhandled error during execution of scheduler flush 
+  at <BrushPreview onInputtingbrush=fn<bound inputtingbrush> y-offset=0 > 
+  at <Dashboard> @ http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:1752
+[  812732ms] TypeError: Cannot read properties of null (reading 'flags')
+    at http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:2142:23
+    at callWithErrorHandling (http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:1890:31)
+    at flushJobs (http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:2039:5)
+[  851007ms] [WARNING] [Vue warn]: Unhandled error during execution of scheduler flush 
+  at <BrushPreview onInputtingbrush=fn<bound inputtingbrush> y-offset=0 > 
+  at <Dashboard> @ http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:1752
+[  851015ms] TypeError: Cannot read properties of null (reading 'flags')
+    at http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:2142:23
+    at callWithErrorHandling (http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:1890:31)
+    at flushJobs (http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:2039:5)

@@ -1,0 +1,18 @@
+- generic:
+  - generic:
+    - generic:
+      - generic:
+        - dialog:
+          - generic [ref=e10]:
+            - generic [ref=e11]: Create new ASCII
+            - generic [ref=e13]:
+              - generic [ref=e14]:
+                - generic [ref=e16]: Title
+                - textbox [active] [ref=e18]: New ASCII 1
+              - generic [ref=e19]:
+                - generic [ref=e21]: Width and Height
+                - spinbutton [ref=e23]: "80"
+                - spinbutton [ref=e25]: "30"
+            - generic [ref=e27]:
+              - button "cancel Cancel" [ref=e28] [cursor=pointer]
+              - button "save Create" [ref=e29] [cursor=pointer]

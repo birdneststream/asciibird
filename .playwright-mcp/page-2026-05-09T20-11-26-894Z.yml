@@ -1,0 +1,101 @@
+- generic [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e5]:
+      - button [ref=e1199] [cursor=pointer]:
+        - generic [ref=e8]:
+          - text: insert_drive_fileNew ASCII 1
+          - button [ref=e1200]: close
+      - button [ref=e1201] [cursor=pointer]:
+        - generic [ref=e661]:
+          - text: insert_drive_fileNew ASCII 2
+          - button [ref=e1202]: close
+    - generic [ref=e14]:
+      - generic [ref=e16]:
+        - button [ref=e1203] [cursor=pointer]: FG
+        - button [ref=e1204] [cursor=pointer]: BG
+        - button [ref=e1205] [cursor=pointer]: swap_horiz
+        - button [ref=e1206] [cursor=pointer]: SP
+      - generic [ref=e21]:
+        - generic [ref=e22]:
+          - checkbox [checked] [ref=e1207]
+          - generic [ref=e24]: FG
+        - generic [ref=e25]:
+          - checkbox [checked] [ref=e1208]
+          - generic [ref=e27]: BG
+        - generic [ref=e28]:
+          - checkbox [checked] [ref=e1209]
+          - generic [ref=e30]: Text
+      - generic [ref=e31]:
+        - button [ref=e1210] [cursor=pointer]:
+          - generic [ref=e33]: more_vert
+        - button [ref=e1211] [cursor=pointer]:
+          - generic [ref=e35]: more_horiz
+        - button [ref=e1212] [cursor=pointer]:
+          - generic [ref=e37]: color_lens
+        - button [ref=e1213] [cursor=pointer]:
+          - generic [ref=e39]: grid_on
+        - button [ref=e1214] [cursor=pointer]:
+          - generic [ref=e41]: grid_view
+      - generic [ref=e42]:
+        - button [ref=e1215] [cursor=pointer]:
+          - generic [ref=e44]: edit_off
+        - button [ref=e1216] [cursor=pointer]:
+          - generic [ref=e46]: photo_size_select_small
+        - button [ref=e1217] [cursor=pointer]:
+          - generic [ref=e48]: text_rotation_none
+        - button [ref=e1218] [cursor=pointer]:
+          - generic [ref=e50]: format_color_fill
+        - button [ref=e1219] [cursor=pointer]:
+          - generic [ref=e52]: brush
+        - button [ref=e1220] [cursor=pointer]:
+          - generic [ref=e54]: colorize
+        - button [ref=e1221] [cursor=pointer]:
+          - generic [ref=e56]: remove_circle_outline
+        - button [ref=e1222] [cursor=pointer]:
+          - generic [ref=e58]: auto_fix_off
+    - generic [ref=e60]:
+      - button [ref=e1223] [cursor=pointer]: history History
+      - button [ref=e1224] [cursor=pointer]: library_books Library
+      - generic [ref=e66]:
+        - button [ref=e1225] [cursor=pointer]: save
+        - button [ref=e1226] [cursor=pointer]: brush
+        - button [ref=e1227] [cursor=pointer]: delete
+    - generic [ref=e75]:
+      - generic [ref=e76]:
+        - spinbutton [ref=e78]: "1"
+        - spinbutton [ref=e80]: "1"
+      - combobox [ref=e82]
+    - generic [ref=e90]:
+      - generic [ref=e91]:
+        - button [ref=e1228] [cursor=pointer]: playlist_add Add Layer
+        - button [ref=e1229] [cursor=pointer]: playlist_play Merge Layers
+      - separator [ref=e94]
+      - generic [ref=e95]:
+        - list [ref=e96]:
+          - generic [ref=e97]:
+            - button [ref=e1230] [cursor=pointer]: remove_red_eye
+            - generic [ref=e102] [cursor=pointer]: Image Overlay
+        - list [ref=e103]:
+          - listitem [ref=e104]:
+            - generic [ref=e105]:
+              - generic [ref=e106]:
+                - button [disabled] [ref=e1231]: remove_red_eye
+                - button [disabled] [ref=e1232]: delete
+              - generic [ref=e110]:
+                - generic [ref=e112] [cursor=pointer]: New ASCII 2
+                - generic [ref=e113]:
+                  - button [disabled] [ref=e1233]: arrow_upward
+                  - button [disabled] [ref=e1234]: arrow_downward
+  - generic:
+    - generic:
+      - generic:
+        - dialog:
+          - generic [ref=e1238]:
+            - generic [ref=e1239]: Import from Clipboard
+            - generic [ref=e1240]:
+              - text: Title
+              - textbox [active] [ref=e1241]: clipboard.txt
+              - textbox [ref=e1242]
+            - generic [ref=e1244]:
+              - button "cancel Cancel" [ref=e1245] [cursor=pointer]
+              - button "save Import Clipboard" [disabled] [ref=e1246]

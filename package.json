@@ -13,6 +13,8 @@
     "lint": "eslint src/"
   },
   "dependencies": {
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/jetbrains-mono": "^5.2.8",
     "@headlessui/vue": "^1.7",
     "@tailwindcss/forms": "^0.5.7",
     "@vueuse/core": "^14",

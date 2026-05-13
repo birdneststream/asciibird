@@ -1,0 +1,101 @@
+- generic [ref=e3]:
+  - generic [ref=e5]:
+    - button "File" [ref=e7] [cursor=pointer]
+    - button "Edit" [ref=e9] [cursor=pointer]
+    - button "View" [ref=e11] [cursor=pointer]
+    - button "Tools" [ref=e13] [cursor=pointer]
+    - generic [ref=e14]:
+      - button "Help" [expanded] [ref=e15] [cursor=pointer]
+      - menu "Help" [active] [ref=e128]:
+        - menuitem "About" [ref=e129] [cursor=pointer]
+        - menuitem "Help" [ref=e130] [cursor=pointer]
+  - button "insert_drive_fileNew ASCII 1 close" [ref=e19] [cursor=pointer]:
+    - generic [ref=e20]:
+      - text: insert_drive_fileNew ASCII 1
+      - button "close" [ref=e21]
+  - generic [ref=e26]:
+    - generic [ref=e28]:
+      - button "FG" [ref=e29] [cursor=pointer]
+      - button "BG" [ref=e30] [cursor=pointer]
+      - button "swap_horiz" [ref=e31] [cursor=pointer]
+      - button "SP" [ref=e32] [cursor=pointer]
+    - generic [ref=e33]:
+      - generic [ref=e34]:
+        - checkbox "FG" [checked] [ref=e35]
+        - generic [ref=e36]: FG
+      - generic [ref=e37]:
+        - checkbox "BG" [checked] [ref=e38]
+        - generic [ref=e39]: BG
+      - generic [ref=e40]:
+        - checkbox "Text" [checked] [ref=e41]
+        - generic [ref=e42]: Text
+    - generic [ref=e43]:
+      - button "more_vert" [ref=e44] [cursor=pointer]:
+        - generic [ref=e45]: more_vert
+      - button "more_horiz" [ref=e46] [cursor=pointer]:
+        - generic [ref=e47]: more_horiz
+      - button "color_lens" [ref=e48] [cursor=pointer]:
+        - generic [ref=e49]: color_lens
+      - button "grid_on" [ref=e50] [cursor=pointer]:
+        - generic [ref=e51]: grid_on
+      - button "grid_view" [ref=e52] [cursor=pointer]:
+        - generic [ref=e53]: grid_view
+    - generic [ref=e54]:
+      - button "edit_off" [ref=e55] [cursor=pointer]:
+        - generic [ref=e56]: edit_off
+      - button "photo_size_select_small" [ref=e57] [cursor=pointer]:
+        - generic [ref=e58]: photo_size_select_small
+      - button "text_rotation_none" [ref=e59] [cursor=pointer]:
+        - generic [ref=e60]: text_rotation_none
+      - button "format_color_fill" [ref=e61] [cursor=pointer]:
+        - generic [ref=e62]: format_color_fill
+      - button "brush" [ref=e63] [cursor=pointer]:
+        - generic [ref=e64]: brush
+      - button "colorize" [ref=e65] [cursor=pointer]:
+        - generic [ref=e66]: colorize
+      - button "remove_circle_outline" [ref=e67] [cursor=pointer]:
+        - generic [ref=e68]: remove_circle_outline
+      - button "auto_fix_off" [ref=e69] [cursor=pointer]:
+        - generic [ref=e70]: auto_fix_off
+  - generic [ref=e72]:
+    - button "history History" [ref=e73] [cursor=pointer]
+    - button "library_books Library" [ref=e74] [cursor=pointer]
+    - generic [ref=e78]:
+      - button "save" [ref=e83] [cursor=pointer]
+      - button "brush" [ref=e84] [cursor=pointer]
+      - button "delete" [ref=e85] [cursor=pointer]
+  - generic [ref=e87]:
+    - generic [ref=e88]:
+      - spinbutton [ref=e90]: "1"
+      - spinbutton [ref=e92]: "1"
+    - combobox [ref=e94]:
+      - option "Square"
+      - option "Circle"
+      - option "Cross"
+      - option "Grid"
+      - option "Inverted Grid"
+      - option "H lines"
+      - option "V lines"
+  - generic [ref=e102]:
+    - generic [ref=e103]:
+      - button "playlist_add Add Layer" [ref=e104] [cursor=pointer]
+      - button "playlist_play Merge Layers" [ref=e105] [cursor=pointer]
+    - separator [ref=e106]
+    - generic [ref=e107]:
+      - list [ref=e108]:
+        - generic [ref=e109]:
+          - button "remove_red_eye" [ref=e110] [cursor=pointer]
+          - generic [ref=e114] [cursor=pointer]: Image Overlay
+      - list:
+        - listitem
+      - list [ref=e115]:
+        - listitem [ref=e116]:
+          - generic [ref=e117]:
+            - generic [ref=e118]:
+              - button "remove_red_eye" [disabled] [ref=e119]
+              - button "delete" [disabled] [ref=e120]
+            - generic [ref=e122]:
+              - generic [ref=e124] [cursor=pointer]: New ASCII 1
+              - generic [ref=e125]:
+                - button "arrow_upward" [disabled] [ref=e126]
+                - button "arrow_downward" [disabled] [ref=e127]

@@ -4,7 +4,7 @@
     @close="modalStore.closeModal('help')"
     title=""
   >
-    <div class="mt-6 rounded shadow bg-white">
+    <div class="mt-6 rounded">
       <h1
         class="help-h1"
         id="asciibird-help-and-documentation"
