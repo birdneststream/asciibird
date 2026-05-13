@@ -78,6 +78,7 @@ export default {
         ui: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
         canvas: ['JetBrains Mono', 'Hack', 'monospace'],
+        'label-mono': ['JetBrains Mono', 'monospace'],
       },
       fontSize: {
         'headline-lg': [
