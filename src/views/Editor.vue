@@ -67,6 +67,13 @@
               <span class="ab-shortcut">R</span>
             </li>
           </template>
+          <li class="ab-context-menu-separator" />
+          <li
+            @click="openBorderGenerator()"
+            class="ab-context-menu-item"
+          >
+            Add Border...
+          </li>
         </ul>
       </context-menu>
 
@@ -151,6 +158,7 @@ import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useAsciiBirdStore } from '../store';
 import { usePanelStore } from '../store/panels';
 import { useToolbarStore } from '../store/toolbar';
+import { useModalStore } from '../store/modal';
 import { useToast } from '../composables/useToast';
 import { useCanvasPanel } from '../composables/useCanvasPanel';
 import { useMainCanvasRenderer } from '../composables/useMainCanvasRenderer';
@@ -229,6 +237,7 @@ const emit = defineEmits<{
 const store = useAsciiBirdStore();
 const panelStore = usePanelStore();
 const toolbarStore = useToolbarStore();
+const modalStore = useModalStore();
 const { show: toastShow } = useToast();
 const { renderBlock, clearMainCanvas } = useMainCanvasRenderer();
 const { startExport } = useExportAscii({
@@ -804,21 +813,26 @@ function canvasToPng() {
   editorMenu.value?.open({ clientX: e.clientX, clientY: e.clientY });
  }
 
-/**
- * Context menu "Replace Color in Selection" handler.
- * Uses the block under cursor as source, current FG/BG as target,
- * scoped to the current selection bounds.
- */
-function contextMenuReplaceColor() {
-  const block = asciiBlockAtXy.value;
-  if (!block) return;
-  const bounds = getSelectionBounds();
-  if (bounds) {
-    contextMenuReplace(block, bounds);
-  } else {
-    contextMenuReplace(block);
-  }
-}
+ /**
+  * Context menu "Replace Color in Selection" handler.
+  * Uses the block under cursor as source, current FG/BG as target,
+  * scoped to the current selection bounds.
+  */
+ function contextMenuReplaceColor() {
+   const block = asciiBlockAtXy.value;
+   if (!block) return;
+   const bounds = getSelectionBounds();
+   if (bounds) {
+     contextMenuReplace(block, bounds);
+   } else {
+     contextMenuReplace(block);
+   }
+ }
+
+ /** Open the border generator modal from context menu */
+ function openBorderGenerator() {
+   modalStore.openModal('border-generator');
+ }
 
 async function canvasKeyDown(char: string) {
   if (
