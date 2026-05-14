@@ -6,87 +6,12 @@
  * suitable for terminal display.
  */
 
-import { mircColours99, mergeLayers, downloadFile } from '../ascii';
+import { mergeLayers, downloadFile } from '../ascii';
+import { IRC_TO_ANSI } from './ansiColors';
 import type { Block } from '../types';
 
-// ─── ANSI 256-color helpers ────────────────────────────────────
-
-/** Parse color string to [r, g, b]. Handles #hex and rgb() formats. */
-function parseColor(color: string): [number, number, number] {
-  const hex = color.replace('#', '');
-  if (hex.length === 6 && !hex.startsWith('rgb')) {
-    return [
-      Number.parseInt(hex.slice(0, 2), 16),
-      Number.parseInt(hex.slice(2, 4), 16),
-      Number.parseInt(hex.slice(4, 6), 16),
-    ];
-  }
-  // Handle rgb(r,g,b) or rgb(r, g, b)
-  const match = color.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
-  if (match) {
-    return [
-      Number.parseInt(match[1], 10),
-      Number.parseInt(match[2], 10),
-      Number.parseInt(match[3], 10),
-    ];
-  }
-  return [0, 0, 0];
-}
-
-/** Get RGB for an ANSI 256-color index */
-function ansiToRgb(index: number): [number, number, number] {
-  if (index < 16) {
-    const standard16: [number, number, number][] = [
-      [0, 0, 0], [128, 0, 0], [0, 128, 0], [128, 128, 0],
-      [0, 0, 128], [128, 0, 128], [0, 128, 128], [192, 192, 192],
-      [128, 128, 128], [255, 0, 0], [0, 255, 0], [255, 255, 0],
-      [0, 0, 255], [255, 0, 255], [0, 255, 255], [255, 255, 255],
-    ];
-    return standard16[index] ?? [0, 0, 0];
-  }
-  if (index < 232) {
-    // 6x6x6 color cube
-    const i = index - 16;
-    const b = i % 6;
-    const g = Math.floor(i / 6) % 6;
-    const r = Math.floor(i / 36) % 6;
-    const cube = [0, 95, 135, 175, 215, 255];
-    return [cube[r], cube[g], cube[b]];
-  }
-  // Grayscale (232-255)
-  const gray = 8 + (index - 232) * 10;
-  return [gray, gray, gray];
-}
-
-/** Euclidean RGB distance */
-function colorDistance(
-  a: [number, number, number],
-  b: [number, number, number],
-): number {
-  return (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
-}
-
-/** Find the closest ANSI 256-color for an RGB value */
-function closestAnsiColor(rgb: [number, number, number]): number {
-  let bestIndex = 0;
-  let bestDist = Infinity;
-  for (let i = 0; i < 256; i++) {
-    const d = colorDistance(rgb, ansiToRgb(i));
-    if (d < bestDist) {
-      bestDist = d;
-      bestIndex = i;
-    }
-  }
-  return bestIndex;
-}
-
-// ─── Pre-computed IRC→ANSI color mapping ───────────────────────
-
-/** Maps each of the 99 mIRC color indices to the closest ANSI 256-color */
-export const IRC_TO_ANSI: number[] = mircColours99.map(color => {
-  const rgb = parseColor(color);
-  return closestAnsiColor(rgb);
-});
+// Re-export for backward compatibility with existing imports
+export { IRC_TO_ANSI } from './ansiColors';
 
 // ─── Half-block characters ─────────────────────────────────────
 
