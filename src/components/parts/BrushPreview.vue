@@ -85,6 +85,8 @@
         <select
           class="ab-input w-full"
           v-model="brushSizeTypeInput"
+          @pointerdown.stop
+          @mousedown.stop
         >
           <option
             v-for="opt in brushOptions"

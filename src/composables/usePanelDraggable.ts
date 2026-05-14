@@ -4,12 +4,17 @@ import type { UseDraggableOptions, UseDraggableReturn } from '@vueuse/core';
 
 /**
  * Wrapper around @vueuse/core's useDraggable with safety nets to prevent
- * drag state from getting stuck.
+ * drag state from getting stuck and to exclude interactive form elements.
  *
  * Supports a `handle` option to restrict drag initiation to a specific
  * element (e.g. the PanelHeader). This prevents interactive elements
  * like <select>, <input>, and <textarea> inside the panel from
  * accidentally triggering a drag.
+ *
+ * Additionally intercepts `pointerdown` on the target element and cancels
+ * the drag if the event originated from a form control (<select>,
+ * <input>, <textarea>, or <button>). This prevents native dropdown
+ * interactions from leaving the panel in a dragging state.
  *
  * @vueuse/core 14.x already defaults `buttons: [0]`, which filters out
  * right-clicks. However, a left-click drag can still get stuck if the
@@ -18,6 +23,15 @@ import type { UseDraggableOptions, UseDraggableReturn } from '@vueuse/core';
  * (`pointercancel`, `window.blur`, `visibilitychange`) to force-end any
  * active drag.
  */
+
+/** CSS selector for interactive form elements that should NOT start a drag. */
+const FORM_ELEMENT_SELECTOR = 'select, input, textarea, button';
+
+function isFormElement(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return target.matches(FORM_ELEMENT_SELECTOR);
+}
+
 export function usePanelDraggable(
   el: MaybeRefOrGetter<HTMLElement | SVGElement | null | undefined>,
   options: UseDraggableOptions = {},
@@ -69,6 +83,22 @@ export function usePanelDraggable(
   // Use capture phase so this always runs before consumer handlers can stop
   // propagation.
   useEventListener(window, 'contextmenu', forceEndDrag, { capture: true });
+
+  // Safety net: pointerdown on a form element inside the panel target should
+  // NOT start a drag. Even with the `handle` option restricting drag to the
+  // panel header, native <select> dropdown interactions can leave the panel
+  // in a stuck dragging state. Intercept in capture phase and stop immediate
+  // propagation so VueUse's useDraggable never sees the event.
+  useEventListener(
+    el,
+    'pointerdown',
+    (e: PointerEvent) => {
+      if (isFormElement(e.target as EventTarget | null)) {
+        e.stopImmediatePropagation();
+      }
+    },
+    { capture: true },
+  );
 
   return draggable;
 }
