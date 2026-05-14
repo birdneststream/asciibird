@@ -19,6 +19,13 @@ export const setModalStore = (s: ModalStoreAccess): void => {
   _modalStore = s;
 };
 
+/** @internal Test-only — resets lazy store references to prevent
+ *  cross-test contamination when running the full suite. */
+export const resetStoreRefs = (): void => {
+  _store = null;
+  _modalStore = null;
+};
+
 const getStore = (): AsciiStoreAccess => {
   if (!_store) {
     throw new Error(

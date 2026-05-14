@@ -28,6 +28,7 @@ export function useFpsThrottle(
   let pendingTimeout: ReturnType<typeof setTimeout> | null = null;
   let pendingFrame: number | null = null;
   const canRedraw = ref(true);
+  let disposed = false;
 
   function cancelRedraw() {
     if (pendingTimeout !== null) {
@@ -49,8 +50,18 @@ export function useFpsThrottle(
 
       pendingTimeout = setTimeout(() => {
         pendingTimeout = null;
+        // Guard: skip if component was unmounted between schedule
+        // and timeout firing (prevents stale store access in tests)
+        if (disposed) {
+          canRedraw.value = true;
+          return;
+        }
         pendingFrame = requestAnimationFrame(async () => {
           pendingFrame = null;
+          if (disposed) {
+            canRedraw.value = true;
+            return;
+          }
           try {
             await drawFn(force);
           } finally {
@@ -63,6 +74,7 @@ export function useFpsThrottle(
 
   // Auto-cleanup on unmount
   onUnmounted(() => {
+    disposed = true;
     cancelRedraw();
   });
 

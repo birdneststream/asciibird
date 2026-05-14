@@ -6,6 +6,7 @@ import {
   expect,
   vi,
   beforeEach,
+  afterEach,
 } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
@@ -17,6 +18,7 @@ import {
   mircColours99,
   toolbarIcons,
   maxBrushSize,
+  resetStoreRefs,
 } from '@/ascii'
 import {
   createMockStore,
@@ -55,15 +57,22 @@ vi.mock('@/composables/useClipboard', () => ({
 }))
 
 let store: any
+let lastWrapper: TestWrapper | null = null
 
 function mountEditor(extra: any = {}): TestWrapper {
-  return mount(Editor, {
+  // Unmount previous wrapper to trigger onUnmounted cleanup
+  if (lastWrapper) {
+    lastWrapper.unmount()
+    lastWrapper = null
+  }
+  lastWrapper = mount(Editor, {
     global: {
       plugins: [createPinia()],
       stubs: globalStubs,
     },
     ...extra,
   })
+  return lastWrapper
 }
 
 setupHotkeysMocks()
@@ -73,6 +82,17 @@ beforeEach(() => {
   store = createMockStore()
   _mockStore = store
   _mockModalStore = createMockModalStore()
+})
+
+afterEach(() => {
+  // Unmount any mounted Editor to trigger onUnmounted cleanup,
+  // which cancels pending redraw timers and prevents async
+  // callbacks from accessing stale store references.
+  if (lastWrapper) {
+    lastWrapper.unmount()
+    lastWrapper = null
+  }
+  resetStoreRefs()
 })
 
 describe('Editor.vue', () => {
