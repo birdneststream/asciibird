@@ -1,5 +1,5 @@
 // Tests for src/utils/diffBlocks.ts
-// storeDiffBlocks and dispatchBlocks — undo/redo diff tracking utilities
+// storeDiffBlocks — undo/redo diff accumulation utility
 
 import { describe, it, expect } from 'vitest';
 import { storeDiffBlocks } from '@/utils/diffBlocks';
