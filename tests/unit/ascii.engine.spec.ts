@@ -22,8 +22,9 @@ import {
    filterNullBlocks,
    checkVisible,
    fillNullBlocks,
-   iterativeFill,
-   setStore,
+  iterativeFill,
+  iterativeFillHalfBlock,
+  setStore,
    setModalStore,
    createNewAscii,
   exportMirc,
@@ -2043,5 +2044,185 @@ describe('checkForGetRequest', () => {
     await checkForGetRequest();
 
     expect(replaceSpy).not.toHaveBeenCalled();
+  });
+});
+
+// ─── iterativeFillHalfBlock ─────────────────────────────────────────
+
+describe('iterativeFillHalfBlock', () => {
+  /** Create a grid of uniform space blocks */
+  function makeGrid(
+    h: number,
+    w: number,
+    bg = 1,
+    fg = 0,
+  ): Block[][] {
+    return Array.from({ length: h }, () =>
+      Array.from({ length: w }, () => ({ fg, bg, char: ' ' })),
+    );
+  }
+
+  /** Create a grid with ▀ blocks (half-block representation) */
+  function makeHalfBlockGrid(
+    h: number,
+    w: number,
+    topColour: number,
+    bottomColour: number,
+  ): Block[][] {
+    return Array.from({ length: h }, () =>
+      Array.from({ length: w }, () => ({
+        fg: topColour,
+        bg: bottomColour,
+        char: '▀',
+      })),
+    );
+  }
+
+  it('returns empty array on empty grid', () => {
+    const changes = iterativeFillHalfBlock([], 0, 0, 5);
+    expect(changes).toEqual([]);
+  });
+
+  it('returns empty array when fill colour matches target (no-op)', () => {
+    const grid = makeGrid(2, 2, 3);
+    const changes = iterativeFillHalfBlock(grid, 0, 0, 3);
+    expect(changes).toEqual([]);
+  });
+
+  it('fills a single cell top half and spreads to bottom → collapse', () => {
+    const grid = makeGrid(1, 1, 1);
+    const changes = iterativeFillHalfBlock(grid, 0, 0, 5);
+
+    expect(changes).toHaveLength(1);
+    expect(changes[0].old).toEqual({ fg: 0, bg: 1, char: ' ' });
+    // Both halves get colour 5 → collapses to space block
+    expect(changes[0].new).toEqual({ fg: 0, bg: 5, char: ' ' });
+  });
+
+  it('fills bottom half only when top half is different colour', () => {
+    // ▀ block with different top/bottom: top=5, bottom=7
+    const grid: Block[][] = [
+      [{ fg: 5, bg: 7, char: '▀' }],
+    ];
+    // Fill starting from bottom half (odd halfY)
+    const changes = iterativeFillHalfBlock(grid, 1, 0, 3);
+
+    expect(changes).toHaveLength(1);
+    expect(changes[0].old).toEqual({ fg: 5, bg: 7, char: '▀' });
+    // Bottom half set: bg=3
+    expect(changes[0].new).toEqual({ fg: 5, bg: 3, char: '▀' });
+  });
+
+  it('fills both halves of same cell → single change with correct old/new', () => {
+    // 1x1 grid, fill from top half should spread to bottom half too
+    const grid = makeGrid(1, 1, 1);
+    const changes = iterativeFillHalfBlock(grid, 0, 0, 5);
+
+    expect(changes).toHaveLength(1);
+    // Old is the original block before any mutation
+    expect(changes[0].old).toEqual({ fg: 0, bg: 1, char: ' ' });
+    // New is after both halves filled → same colour → collapses to space
+    expect(changes[0].new).toEqual({ fg: 0, bg: 5, char: ' ' });
+  });
+
+  it('fills a region bounded by different colours', () => {
+    // 3x3 grid, centre row has different bg
+    const grid = makeGrid(3, 3, 1);
+    // Set centre row (y=1) to different bg
+    for (let x = 0; x < 3; x++) {
+      grid[1][x] = { fg: 0, bg: 9, char: ' ' };
+    }
+
+    const changes = iterativeFillHalfBlock(grid, 0, 1, 5);
+
+    // Should only fill row 0 (3 cells × 2 halves = 6 half-blocks)
+    // All in row 0 → 3 cell changes
+    expect(changes).toHaveLength(3);
+    for (const c of changes) {
+      expect(c.y).toBe(0);
+    }
+  });
+
+  it('stops at grid boundaries', () => {
+    const grid = makeGrid(2, 2, 1);
+    // Fill from top-left corner
+    const changes = iterativeFillHalfBlock(grid, 0, 0, 5);
+
+    // All 4 cells should be filled
+    expect(changes).toHaveLength(4);
+    // Verify no changes reference out-of-bounds cells
+    for (const c of changes) {
+      expect(c.x).toBeGreaterThanOrEqual(0);
+      expect(c.x).toBeLessThan(2);
+      expect(c.y).toBeGreaterThanOrEqual(0);
+      expect(c.y).toBeLessThan(2);
+    }
+  });
+
+  it('erases by filling with colour 99 (EMPTY_COLOUR)', () => {
+    // All blocks have same top AND bottom colour so fill spreads everywhere
+    const grid = makeHalfBlockGrid(2, 2, 5, 5);
+    const changes = iterativeFillHalfBlock(grid, 0, 0, 99);
+
+    expect(changes).toHaveLength(4);
+    for (const c of changes) {
+      // Both halves 99 → collapses to space with bg=99
+      expect(c.new.char).toBe(' ');
+      expect(c.new.bg).toBe(99);
+    }
+  });
+
+  it('works with existing ▀ blocks (normalises ▄ before fill)', () => {
+    // Create a grid with ▄ blocks (lower-half representation)
+    const grid: Block[][] = [
+      [{ fg: 5, bg: 3, char: '▄' }],
+    ];
+    const changes = iterativeFillHalfBlock(grid, 0, 0, 7);
+
+    expect(changes).toHaveLength(1);
+    expect(changes[0].old).toEqual({ fg: 5, bg: 3, char: '▄' });
+    // After fill, top half colour changes to 7
+    expect(changes[0].new.fg).toBe(7);
+    expect(changes[0].new.char).toBe('▀');
+  });
+
+  it('completes 50x50 fill efficiently without stack overflow', () => {
+    const grid = makeGrid(50, 50, 1);
+    const changes = iterativeFillHalfBlock(grid, 0, 0, 5);
+
+    expect(changes).toHaveLength(50 * 50);
+  });
+
+  it('handles 1x1 grid edge case', () => {
+    const grid = makeGrid(1, 1, 1);
+    const changes = iterativeFillHalfBlock(grid, 0, 0, 5);
+
+    expect(changes).toHaveLength(1);
+  });
+
+  it('deduplicates changes when both halves of cell are visited', () => {
+    // Create 2x1 grid where both halves of each cell are same colour
+    const grid = makeGrid(2, 1, 4);
+    const changes = iterativeFillHalfBlock(grid, 0, 0, 7);
+
+    // 2 cells, 1 column each
+    expect(changes).toHaveLength(2);
+    // Each change should appear exactly once per cell
+    const cellKeys = changes.map(c => `${c.x},${c.y}`);
+    const uniqueKeys = new Set(cellKeys);
+    expect(uniqueKeys.size).toBe(cellKeys.length);
+  });
+
+  it('correctly mutates grid in-place', () => {
+    const grid = makeGrid(2, 2, 1);
+    iterativeFillHalfBlock(grid, 0, 0, 8);
+
+    // All cells should be collapsed space blocks with bg=8
+    // (because all halves get colour 8 → collapse)
+    for (let y = 0; y < 2; y++) {
+      for (let x = 0; x < 2; x++) {
+        expect(grid[y][x]).toEqual({ fg: 0, bg: 8, char: ' ' });
+      }
+    }
   });
 });

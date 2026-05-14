@@ -1,6 +1,7 @@
 import LZString from 'lz-string';
 import type { Block, Layer, ImageOverlay, AsciibirdMetaBuilder, MircExportResult, ToolbarIcon, CreateAsciiForm } from './types';
 import type { AsciiStoreAccess, ModalStoreAccess } from './types/store';
+import { HalfBlockGrid } from './utils/halfBlockGrid';
 
 // Lazy store references to break circular dependency
 // Store imports from ascii, ascii imports store
@@ -822,6 +823,89 @@ export const iterativeFill = (
     stack.push({ x: pos.x + 1, y: pos.y });
     stack.push({ x: pos.x, y: pos.y - 1 });
     stack.push({ x: pos.x, y: pos.y + 1 });
+  }
+
+  return changes;
+};
+
+/**
+ * Half-block-aware iterative flood fill.
+ *
+ * Operates at double Y resolution using HalfBlockGrid.
+ * Each half-block has a single colour property. The fill connects
+ * half-blocks through the 4-connected neighbor graph provided by
+ * HalfBlockGrid.getNeighbors().
+ *
+ * Returns FillChange[] at full-block granularity for undo compatibility.
+ * Multiple changes for the same block cell are deduplicated — only the
+ * first old/new pair for each cell is kept.
+ */
+export const iterativeFillHalfBlock = (
+  blocks: Block[][],
+  startHalfY: number,
+  startX: number,
+  fillColour: number,
+): FillChange[] => {
+  const grid = new HalfBlockGrid(blocks);
+  const changes: FillChange[] = [];
+  const cellChanges = new Map<string, { old: Block; new: Block }>();
+  const visited = new Set<string>();
+  const stack: Array<{ x: number; y: number }> = [
+    { x: startX, y: startHalfY },
+  ];
+
+  const targetColour = grid.getColour(startX, startHalfY);
+
+  // Don't fill if target is same as fill colour
+  if (targetColour === fillColour) return changes;
+
+  while (stack.length > 0) {
+    const pos = stack.pop()!;
+    const key = `${pos.x},${pos.y}`;
+
+    if (visited.has(key)) continue;
+    if (pos.x < 0 || pos.x >= grid.width || pos.y < 0 || pos.y >= grid.height) {
+      continue;
+    }
+
+    const currentColour = grid.getColour(pos.x, pos.y);
+    if (currentColour !== targetColour) continue;
+    visited.add(key);
+
+    // Record change at full-block level
+    const blockY = Math.floor(pos.y / 2);
+    const cellKey = `${pos.x},${blockY}`;
+
+    // Only snapshot old block once per cell (before first mutation)
+    if (!cellChanges.has(cellKey)) {
+      cellChanges.set(cellKey, {
+        old: { ...blocks[blockY][pos.x] },
+        new: {} as Block, // will be filled after all mutations
+      });
+    }
+
+    // Apply fill — mutate in-place
+    grid.setColour(pos.x, pos.y, fillColour);
+
+    // Push neighbors using HalfBlockGrid connectivity
+    for (const n of grid.getNeighbors(pos.x, pos.y)) {
+      if (!visited.has(`${n.x},${n.y}`)) {
+        stack.push(n);
+      }
+    }
+  }
+
+  // Build final changes with updated blocks
+  for (const [cellKey, data] of cellChanges) {
+    const [xStr, yStr] = cellKey.split(',');
+    const cx = Number(xStr);
+    const cy = Number(yStr);
+    changes.push({
+      x: cx,
+      y: cy,
+      old: data.old,
+      new: { ...blocks[cy][cx] },
+    });
   }
 
   return changes;

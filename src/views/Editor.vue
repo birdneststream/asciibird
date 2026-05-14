@@ -169,6 +169,7 @@ import {
   emptyBlock,
   isEmptyBlock,
   iterativeFill,
+  iterativeFillHalfBlock,
 } from '../ascii';
 
 import { getMirrorPositions, applyMirrored } from '../utils/mirror';
@@ -1775,7 +1776,35 @@ async function eraser() {
 }
 
 function fill(eraser = false) {
-  // Bail early if no fill targets selected
+  // Half-block fill path
+  if (toolbarState.value.halfBlockEditing) {
+    const bh = blockHeightComp.value;
+    const halfY = Math.floor(
+      (y.value * bh + (atTopHalf.value ? 0 : bh / 2)) / (bh / 2),
+    );
+    // 99 = EMPTY_COLOUR (transparent) — acts as eraser in half-block mode
+    const fillColour = eraser ? 99 : currentFg.value;
+
+    const changes = iterativeFillHalfBlock(
+      currentAsciiLayerBlocks.value,
+      halfY,
+      x.value,
+      fillColour,
+    );
+
+    for (const change of changes) {
+      if (
+        change.old.bg !== change.new.bg ||
+        change.old.fg !== change.new.fg ||
+        change.old.char !== change.new.char
+      ) {
+        recordDiff(change.x, change.y, change.old, change.new);
+      }
+    }
+    return;
+  }
+
+  // Standard full-block fill path
   if (!canBg.value && !canFg.value && !canText.value) {
     toastShow('Select at least one fill target (FG/BG/Text)', {
       type: 'error',
