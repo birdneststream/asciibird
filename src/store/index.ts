@@ -83,7 +83,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     },
     changeTab(payload: number) {
       this.tab = payload;
-      document.title = `asciibird - ${this.asciibirdMeta[payload].title}`;
+      this.updateDocumentTitle();
     },
     updateImageOverlay(payload: AsciibirdMeta['imageOverlay']) {
       this.asciibirdMeta[this.tab].imageOverlay = payload;
@@ -99,9 +99,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     newAsciibirdMeta(payload: AsciibirdMeta) {
       this.asciibirdMeta.push(payload);
       this.tab = this.asciibirdMeta.length - 1;
-      document.title = `asciibird - ${
-        this.asciibirdMeta[this.tab].title
-      }`;
+      this.updateDocumentTitle();
     },
     updateAsciiBlocks(
       payload: {
@@ -155,221 +153,177 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       }
     },
 
-    // LAYERS
-    addLayer() {
-      const tempLayers: Layer[] = decompressLayers(
-          this.asciibirdMeta[this.tab].layers,
-        );
+    // ── Private helpers ──────────────────────────────────────────
 
-      const oldLayer = cloneLayers(tempLayers);
+    /** Set document.title to match current tab */
+    updateDocumentTitle() {
+      const meta = this.asciibirdMeta[this.tab];
+      document.title = meta
+        ? `asciibird - ${meta.title}`
+        : 'asciibird';
+    },
 
-      const newLayer = createEmptyLayer(
-        tempLayers[0].width,
-        tempLayers[0].height,
-        'Layer ' + tempLayers.length,
+    /**
+     * Decompress layers, clone for undo, apply mutation, compress,
+     * and push to layer history.
+     * @param mutate - modify layers in-place
+     * @param afterCommit - optional callback after history is recorded
+     *   (e.g. to update selectedLayer)
+     */
+    withLayerMutation(
+      mutate: (layers: Layer[]) => void,
+      afterCommit?: () => void,
+    ): void {
+      const layers = decompressLayers(
+        this.asciibirdMeta[this.tab].layers,
       );
-
-      tempLayers.push(newLayer);
-
+      const oldLayer = cloneLayers(layers);
+      mutate(layers);
       this.asciibirdMeta[this.tab].layers =
-        compressLayers(tempLayers);
-
+        compressLayers(layers);
       this.asciibirdMeta[this.tab].history.push({
         t: 'l',
-        d: compressData({ new: tempLayers, old: oldLayer }),
+        d: compressData({ new: layers, old: oldLayer }),
       });
-
       this.asciibirdMeta[this.tab].historyIndex =
         this.asciibirdMeta[this.tab].history.length;
+      afterCommit?.();
+    },
 
-      this.asciibirdMeta[this.tab].selectedLayer =
-        tempLayers.length - 1;
+    // ── Layers ──────────────────────────────────────────────────
+
+    addLayer() {
+      this.withLayerMutation(
+        (layers) => {
+          layers.push(createEmptyLayer(
+            layers[0].width,
+            layers[0].height,
+            'Layer ' + layers.length,
+          ));
+        },
+        () => {
+          const layers = decompressLayers(
+            this.asciibirdMeta[this.tab].layers,
+          );
+          this.asciibirdMeta[this.tab].selectedLayer =
+            layers.length - 1;
+        },
+      );
     },
     mergeAllLayers() {
-      const tempLayers: Layer[] = decompressLayers(
-          this.asciibirdMeta[this.tab].layers,
-        );
-
-      const oldLayer = cloneLayers(tempLayers);
-
-      const width = tempLayers[0].width;
-      const height = tempLayers[0].height;
-      const label =
-        tempLayers[this.asciibirdMeta[this.tab].selectedLayer].label;
-
-      const mergedLayersData = mergeLayers();
-      const merged: Layer[] = [{
-        visible: true,
-        width,
-        height,
-        label,
-        data: mergedLayersData,
-      }];
-
-      this.asciibirdMeta[this.tab].selectedLayer = 0;
-      this.asciibirdMeta[this.tab].layers =
-        compressLayers(merged);
-
-      this.asciibirdMeta[this.tab].history.push({
-        t: 'l',
-        d: compressData({ new: merged, old: oldLayer }),
-      });
-
-      this.asciibirdMeta[this.tab].historyIndex =
-        this.asciibirdMeta[this.tab].history.length;
+      this.withLayerMutation(
+        (layers) => {
+          const width = layers[0].width;
+          const height = layers[0].height;
+          const label =
+            layers[this.asciibirdMeta[this.tab].selectedLayer].label;
+          const mergedLayersData = mergeLayers();
+          const merged: Layer[] = [{
+            visible: true,
+            width,
+            height,
+            label,
+            data: mergedLayersData,
+          }];
+          layers.length = 0;
+          layers.push(...merged);
+        },
+        () => {
+          this.asciibirdMeta[this.tab].selectedLayer = 0;
+        },
+      );
     },
     changeLayer(payload: number) {
       this.asciibirdMeta[this.tab].selectedLayer = payload;
     },
     toggleLayer(payload: number) {
-      const tempLayers: Layer[] = decompressLayers(
-          this.asciibirdMeta[this.tab].layers,
-        );
-
-      const oldLayer = cloneLayers(tempLayers);
-
-      // Check if we're about to hide the currently selected layer
-      const wasVisible = tempLayers[payload].visible;
+      const wasVisible = decompressLayers(
+        this.asciibirdMeta[this.tab].layers,
+      )[payload].visible;
       const wasSelectedLayer =
         payload === this.asciibirdMeta[this.tab].selectedLayer;
 
-      tempLayers[payload].visible = !tempLayers[payload].visible;
-
-      // If we hid the selected layer, auto-select another visible layer.
-      // Note: selectedLayer changes are intentionally NOT stored in the
-      // undo history (type 'l') to match removeLayer behavior. The undo
-      // system restores layer visibility/order but uses a heuristic to
-      // pick the selected layer. This is a pre-existing design decision.
-      if (wasVisible && wasSelectedLayer) {
-        const nextVisible = findNextVisibleLayer(tempLayers, payload);
-        if (nextVisible !== -1) {
-          this.asciibirdMeta[this.tab].selectedLayer = nextVisible;
-        }
-      }
-
-      this.asciibirdMeta[this.tab].layers =
-        compressLayers(tempLayers);
-
-      this.asciibirdMeta[this.tab].history.push({
-        t: 'l',
-        d: compressData({ new: tempLayers, old: oldLayer }),
-      });
-
-      this.asciibirdMeta[this.tab].historyIndex =
-        this.asciibirdMeta[this.tab].history.length;
+      this.withLayerMutation(
+        (layers) => {
+          layers[payload].visible = !layers[payload].visible;
+        },
+        () => {
+          if (wasVisible && wasSelectedLayer) {
+            const layers = decompressLayers(
+              this.asciibirdMeta[this.tab].layers,
+            );
+            const next = findNextVisibleLayer(layers, payload);
+            if (next !== -1) {
+              this.asciibirdMeta[this.tab].selectedLayer = next;
+            }
+          }
+        },
+      );
     },
     removeLayer(payload: number) {
-      const tempLayers: Layer[] = decompressLayers(
-          this.asciibirdMeta[this.tab].layers,
-        );
+      const tempLayers = decompressLayers(
+        this.asciibirdMeta[this.tab].layers,
+      );
+      if (tempLayers.length <= 1) return;
 
-      if (tempLayers.length > 1) {
-        const oldLayer = cloneLayers(tempLayers);
-        const wasSelectedLayer =
-          payload === this.asciibirdMeta[this.tab].selectedLayer;
+      const wasSelectedLayer =
+        payload === this.asciibirdMeta[this.tab].selectedLayer;
 
-        tempLayers.splice(payload, 1);
-
-        if (wasSelectedLayer) {
-          const searchFrom = Math.min(payload, tempLayers.length - 1);
-          const nextVisible = findNextVisibleLayer(tempLayers, searchFrom);
-
-          this.asciibirdMeta[this.tab].selectedLayer =
-            nextVisible !== -1 ? nextVisible : searchFrom;
-        } else if (payload < this.asciibirdMeta[this.tab].selectedLayer) {
-          this.asciibirdMeta[this.tab].selectedLayer--;
-        }
-
-        this.asciibirdMeta[this.tab].layers =
-          compressLayers(tempLayers);
-
-        this.asciibirdMeta[this.tab].history.push({
-          t: 'l',
-          d: compressData({ new: tempLayers, old: oldLayer }),
-        });
-
-        this.asciibirdMeta[this.tab].historyIndex =
-          this.asciibirdMeta[this.tab].history.length;
-      }
+      this.withLayerMutation(
+        (layers) => {
+          layers.splice(payload, 1);
+        },
+        () => {
+          const layers = decompressLayers(
+            this.asciibirdMeta[this.tab].layers,
+          );
+          if (wasSelectedLayer) {
+            const searchFrom = Math.min(payload, layers.length - 1);
+            const next = findNextVisibleLayer(layers, searchFrom);
+            this.asciibirdMeta[this.tab].selectedLayer =
+              next !== -1 ? next : searchFrom;
+          } else if (payload < this.asciibirdMeta[this.tab].selectedLayer) {
+            this.asciibirdMeta[this.tab].selectedLayer--;
+          }
+        },
+      );
     },
     downLayer(payload: number) {
-      const tempLayers: Layer[] = decompressLayers(
-          this.asciibirdMeta[this.tab].layers,
-        );
-
-      if (tempLayers[payload + 1]) {
-        const oldLayer = cloneLayers(tempLayers);
-
-        const swap1 = tempLayers[payload + 1];
-        const swap = tempLayers[payload];
-
-        tempLayers[payload + 1] = swap;
-        tempLayers[payload] = swap1;
-
-        this.asciibirdMeta[this.tab].layers =
-          compressLayers(tempLayers);
-
-        this.asciibirdMeta[this.tab].history.push({
-          t: 'l',
-          d: compressData({ new: tempLayers, old: oldLayer }),
-        });
-        this.asciibirdMeta[this.tab].historyIndex =
-          this.asciibirdMeta[this.tab].history.length;
-
-        this.asciibirdMeta[this.tab].selectedLayer = payload + 1;
-      }
+      this.withLayerMutation(
+        (layers) => {
+          if (!layers[payload + 1]) return;
+          const swap = layers[payload + 1];
+          layers[payload + 1] = layers[payload];
+          layers[payload] = swap;
+        },
+        () => {
+          this.asciibirdMeta[this.tab].selectedLayer = payload + 1;
+        },
+      );
     },
     upLayer(payload: number) {
-      const tempLayers: Layer[] = decompressLayers(
-          this.asciibirdMeta[this.tab].layers,
-        );
-
-      if (tempLayers[payload - 1]) {
-        const oldLayer = cloneLayers(tempLayers);
-
-        const swap1 = tempLayers[payload - 1];
-        const swap = tempLayers[payload];
-
-        tempLayers[payload - 1] = swap;
-        tempLayers[payload] = swap1;
-
-        this.asciibirdMeta[this.tab].layers =
-          compressLayers(tempLayers);
-
-        this.asciibirdMeta[this.tab].history.push({
-          t: 'l',
-          d: compressData({ new: tempLayers, old: oldLayer }),
-        });
-        this.asciibirdMeta[this.tab].historyIndex =
-          this.asciibirdMeta[this.tab].history.length;
-
-        this.asciibirdMeta[this.tab].selectedLayer = payload - 1;
-      }
+      this.withLayerMutation(
+        (layers) => {
+          if (!layers[payload - 1]) return;
+          const swap = layers[payload - 1];
+          layers[payload - 1] = layers[payload];
+          layers[payload] = swap;
+        },
+        () => {
+          this.asciibirdMeta[this.tab].selectedLayer = payload - 1;
+        },
+      );
     },
     updateLayerName(payload: { key: number; label: string }) {
-      const tempLayers: Layer[] = decompressLayers(
-          this.asciibirdMeta[this.tab].layers,
-        );
-
-      if (tempLayers[payload.key]) {
-        const oldLayer = cloneLayers(tempLayers);
-        tempLayers[payload.key].label = payload.label;
-        const newLayers = compressLayers(tempLayers);
-
-        this.asciibirdMeta[this.tab].layers = newLayers;
-
-        this.asciibirdMeta[this.tab].history.push({
-          t: 'l',
-          d: compressData({ new: tempLayers, old: oldLayer }),
-        });
-
-        this.asciibirdMeta[this.tab].historyIndex =
-          this.asciibirdMeta[this.tab].history.length;
-      }
+      this.withLayerMutation((layers) => {
+        if (layers[payload.key]) {
+          layers[payload.key].label = payload.label;
+        }
+      });
     },
     updateAsciiTitle(payload: string) {
       this.asciibirdMeta[this.tab].title = payload;
-      document.title = `asciibird - ${payload}`;
+      this.updateDocumentTitle();
     },
 
     // BLOCKS — undo/redo
@@ -512,13 +466,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         this.tab = this.asciibirdMeta.length - 1;
       }
 
-      if (this.asciibirdMeta.length) {
-        document.title = `asciibird - ${
-          this.asciibirdMeta[this.tab].title
-        }`;
-      } else {
-        document.title = 'asciibird';
-      }
+      this.updateDocumentTitle();
     },
   },
   persist: {
