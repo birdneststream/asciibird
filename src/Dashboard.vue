@@ -669,6 +669,14 @@ const menuBar = computed<AppMenuBar[]>(() => [
         disabled: !asciibirdMeta.value.length,
         shortcut: 'Ctrl+0',
       },
+      {
+        text: 'Reset Layout',
+        click: () => {
+          panelStore.resetAllPanelPositions();
+          toolbarStore.resetToolbarPosition();
+          store.resetCanvasPosition();
+        },
+      },
     ],
   },
   {

@@ -96,6 +96,13 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       this.asciibirdMeta[this.tab].x = payload.x;
       this.asciibirdMeta[this.tab].y = payload.y;
     },
+    resetCanvasPosition() {
+      const meta = this.asciibirdMeta[this.tab];
+      if (meta) {
+        meta.x = 236;
+        meta.y = 56;
+      }
+    },
     newAsciibirdMeta(payload: AsciibirdMeta) {
       this.asciibirdMeta.push(payload);
       this.tab = this.asciibirdMeta.length - 1;

@@ -76,8 +76,8 @@ describe('Editor.vue', () => {
     expect(meta.title).toBe('New Test ASCII')
     expect(meta.history).toStrictEqual([])
     expect(meta.historyIndex).toBe(0)
-    expect(meta.x).toBe(247)
-    expect(meta.y).toBe(24)
+    expect(meta.x).toBe(236)
+    expect(meta.y).toBe(56)
     expect(meta.selectedLayer).toBe(0)
     expect(meta.imageOverlay).toStrictEqual({
       url: null,

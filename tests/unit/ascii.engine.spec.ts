@@ -108,8 +108,8 @@ function createMockStore(config: MockStoreConfig = {}):
       },
       history: [] as any[],
       historyIndex: 0,
-      x: 247,
-      y: 24,
+      x: 236,
+      y: 56,
     }],
     toolbarState: {
       currentColourFg: 0, currentColourBg: 1,
@@ -733,8 +733,8 @@ describe('createNewAscii', () => {
     });
 
     const payload = getLastNewAsciiMetaPayload(mockStore);
-    expect(payload.x).toBe(247);
-    expect(payload.y).toBe(24);
+    expect(payload.x).toBe(236);
+    expect(payload.y).toBe(56);
   });
 
   it('initializes empty history', () => {

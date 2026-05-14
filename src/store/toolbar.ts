@@ -47,10 +47,10 @@ export const useToolbarStore = defineStore('toolbar', {
       targetingChar: true,
       mirrorX: false,
       mirrorY: false,
-      x: 16, // blockWidth * 2
-      y: 30, // blockHeight * 2
-      h: 285, // blockHeight * 19
-      w: 200, // blockWidth * 25
+      x: 8,
+      y: 364,
+      h: 285,
+      w: 200,
       draggable: true,
       updateBrush: true,
       gridView: false,
@@ -256,8 +256,8 @@ export const useToolbarStore = defineStore('toolbar', {
       }
     },
     resetToolbarPosition() {
-      this.toolbarState.x = 16; // blockWidth * 2
-      this.toolbarState.y = 30; // blockHeight * 2
+      this.toolbarState.x = 8;
+      this.toolbarState.y = 364;
     },
   },
 

@@ -61,8 +61,8 @@ function createTestMeta(
     },
     history: [],
     historyIndex: 0,
-    x: 247,
-    y: 24,
+    x: 236,
+    y: 56,
   };
 }
 
@@ -346,8 +346,8 @@ describe('Pinia Store Actions', () => {
       toolbarStore.toolbarState.x = 999;
       toolbarStore.toolbarState.y = 888;
       toolbarStore.resetToolbarPosition();
-      expect(toolbarStore.toolbarState.x).toBe(16);
-      expect(toolbarStore.toolbarState.y).toBe(30);
+      expect(toolbarStore.toolbarState.x).toBe(8);
+      expect(toolbarStore.toolbarState.y).toBe(364);
     });
 
     it('updateMirror', () => {
