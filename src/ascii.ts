@@ -238,6 +238,7 @@ export const toolbarIcons: ToolbarIcon[] = [
   { name: 'fill-eraser', icon: 'auto_fix_off' },
   { name: 'replace-color', icon: 'format_paint' },
   { name: 'gradient', icon: 'gradient' },
+  { name: 'shapes', icon: 'pentool' },
 ];
 
 export const emptyBlock: Block = {};

@@ -60,6 +60,7 @@ export const useToolbarStore = defineStore('toolbar', {
       visible: true,
       halfBlockEditing: false,
       minimized: false,
+      shapeType: 'line',
     },
     _brushBlocks: '',
     brushHistory: [],
@@ -178,6 +179,18 @@ export const useToolbarStore = defineStore('toolbar', {
     },
     toggleUpdateBrush(payload: boolean) {
       this.toolbarState.updateBrush = payload;
+    },
+    changeShapeType(payload: ToolbarState['shapeType']) {
+      this.toolbarState.shapeType = payload;
+    },
+    cycleShapeType() {
+      const types: ToolbarState['shapeType'][] = [
+        'line', 'rectOutline', 'rectFilled',
+        'ellipseOutline', 'ellipseFilled',
+      ];
+      const current = this.toolbarState.shapeType;
+      const idx = types.indexOf(current);
+      this.toolbarState.shapeType = types[(idx + 1) % types.length];
     },
     /**
      * Transform the current brush blocks (flip or rotate).

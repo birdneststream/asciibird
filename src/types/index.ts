@@ -136,6 +136,12 @@ export interface ToolbarState {
     | 'x pattern'
     | 'checkerboard'
     | 'sparse';
+  shapeType:
+    | 'line'
+    | 'rectOutline'
+    | 'rectFilled'
+    | 'ellipseOutline'
+    | 'ellipseFilled';
   selectedFg: number;
   selectedBg: number;
   selectedChar: string;
