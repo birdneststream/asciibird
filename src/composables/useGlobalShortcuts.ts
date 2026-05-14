@@ -160,6 +160,14 @@ export function useGlobalShortcuts() {
       if (!store.asciibirdMeta.length || modalStore.isModalOpen) return;
       store.duplicateLayer();
     },
+
+    // Shape type cycling (when shapes tool is active)
+    'shift+s': () => {
+      const toolName = toolbarIcons[toolbarStore.currentTool]?.name;
+      if (toolName === 'shapes' && !modalStore.isModalOpen) {
+        toolbarStore.cycleShapeType();
+      }
+    },
   };
 
   // Register all menu shortcuts in scope 'all'
@@ -201,6 +209,7 @@ export function useGlobalShortcuts() {
       }
     },
     'r': () => toolbarStore.changeTool(8), // replace-color
+    'l': () => toolbarStore.changeTool(10), // shapes
   };
 
   for (const [key, handler] of Object.entries(toolShortcuts)) {
