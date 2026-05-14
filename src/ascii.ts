@@ -769,7 +769,8 @@ export const iterativeFill = (
   }
 
   // Check if starting block matches current
-  const startBlock = blocks[startY][startX];
+  const startBlock = blocks[startY]?.[startX];
+  if (!startBlock) return changes; // ragged array guard
   if (canBg && startBlock.bg !== current.bg) return changes;
   if (canText && startBlock.char !== current.char) return changes;
 
@@ -787,7 +788,8 @@ export const iterativeFill = (
       continue;
     }
 
-    const block = blocks[pos.y][pos.x];
+    const block = blocks[pos.y]?.[pos.x];
+    if (!block) continue; // ragged array — skip missing cells
 
     // Check if this block matches the current color pattern
     if (canBg && block.bg !== current.bg) continue;
@@ -877,9 +879,11 @@ export const iterativeFillHalfBlock = (
     const cellKey = `${pos.x},${blockY}`;
 
     // Only snapshot old block once per cell (before first mutation)
+    const sourceBlock = blocks[blockY]?.[pos.x];
+    if (!sourceBlock) continue; // ragged array — skip missing cells
     if (!cellChanges.has(cellKey)) {
       cellChanges.set(cellKey, {
-        old: { ...blocks[blockY][pos.x] },
+        old: { ...sourceBlock },
         new: {} as Block, // will be filled after all mutations
       });
     }
@@ -900,11 +904,13 @@ export const iterativeFillHalfBlock = (
     const [xStr, yStr] = cellKey.split(',');
     const cx = Number(xStr);
     const cy = Number(yStr);
+    const finalBlock = blocks[cy]?.[cx];
+    if (!finalBlock) continue; // ragged array — skip missing cells
     changes.push({
       x: cx,
       y: cy,
       old: data.old,
-      new: { ...blocks[cy][cx] },
+      new: { ...finalBlock },
     });
   }
 

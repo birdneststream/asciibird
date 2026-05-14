@@ -59,7 +59,8 @@ export class HalfBlockGrid {
   getColour(x: number, y: number): number {
     if (!this.inBounds(x, y)) return EMPTY_COLOUR;
 
-    const block = this.blocks[Math.floor(y / 2)][x];
+    const block = this.blocks[Math.floor(y / 2)]?.[x];
+    if (!block) return EMPTY_COLOUR; // ragged array guard
     const isTop = y % 2 === 0;
 
     // Collapsed space block: bg holds the solid colour
@@ -98,7 +99,8 @@ export class HalfBlockGrid {
     if (!this.inBounds(x, y)) return;
 
     const blockY = Math.floor(y / 2);
-    const block = this.blocks[blockY][x];
+    const block = this.blocks[blockY]?.[x];
+    if (!block) return; // ragged array guard
     const isTop = y % 2 === 0;
 
     // Normalise ▄ → ▀ so fg=top, bg=bottom consistently

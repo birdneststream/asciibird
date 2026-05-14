@@ -1828,6 +1828,122 @@ describe('iterativeFill', () => {
       expect(c.new.fg).toBe(3);
     }
   });
+
+  // ─── Ragged array safety (Gitea #56) ────────────────────────────
+
+  it('does not crash on ragged array — shorter row than first row', () => {
+    // Row 0 has 3 columns, row 1 has only 1 — ragged
+    const grid: Block[][] = [
+      [
+        { fg: 0, bg: 1, char: ' ' },
+        { fg: 0, bg: 1, char: ' ' },
+        { fg: 0, bg: 1, char: ' ' },
+      ],
+      [{ fg: 0, bg: 1, char: ' ' }],
+    ];
+    // Fill from a position that exists in row 0 — should not crash
+    const changes = iterativeFill(
+      grid,
+      0,
+      0,
+      { bg: 1, fg: 0, char: ' ' },
+      { bg: 5 },
+      true,
+      false,
+      false,
+      false,
+    );
+    // Should fill row 0 (3 cells) + row 1 col 0 (1 cell) = 4 cells
+    // Row 1 col 1,2 are missing but fill skips them gracefully
+    expect(changes).toHaveLength(4);
+    for (const c of changes) {
+      expect(c.new.bg).toBe(5);
+    }
+  });
+
+  it('does not crash on ragged array — fill starts in valid area', () => {
+    // Row 0 has 2 columns, row 1 has 2 columns — NOT ragged, but row 2
+    // has only 1 column
+    const grid: Block[][] = [
+      [
+        { fg: 0, bg: 1, char: ' ' },
+        { fg: 0, bg: 1, char: ' ' },
+      ],
+      [
+        { fg: 0, bg: 1, char: ' ' },
+        { fg: 0, bg: 1, char: ' ' },
+      ],
+      [{ fg: 0, bg: 1, char: ' ' }],
+    ];
+    const changes = iterativeFill(
+      grid,
+      1,
+      0,
+      { bg: 1, fg: 0, char: ' ' },
+      { bg: 7 },
+      true,
+      false,
+      false,
+      false,
+    );
+    // Should fill row 1 (2 cells) + row 0 (2 cells) + row 2 (1 cell)
+    // because fill spreads through all connected matching cells
+    expect(changes.length).toBeGreaterThan(0);
+    for (const c of changes) {
+      expect(c.new.bg).toBe(7);
+    }
+  });
+
+  it('handles empty row in the middle of the grid', () => {
+    const grid: Block[][] = [
+      [{ fg: 0, bg: 1, char: ' ' }],
+      [], // empty row
+      [{ fg: 0, bg: 1, char: ' ' }],
+    ];
+    // Fill from row 0 — should fill only row 0 (empty row blocks spread)
+    const changes = iterativeFill(
+      grid,
+      0,
+      0,
+      { bg: 1, fg: 0, char: ' ' },
+      { bg: 5 },
+      true,
+      false,
+      false,
+      false,
+    );
+    // Row 0 should be filled; empty row blocks spreading
+    expect(changes.length).toBeGreaterThan(0);
+    expect(changes[0].new.bg).toBe(5);
+  });
+
+  it('does not crash when start position is in a shorter row', () => {
+    // Row 0 has 3 cols, row 1 has 1 col — start at row 1, col 2 (missing)
+    // width=3 (from row 0), startX=2 < width passes bounds check
+    // but blocks[1][2] is undefined
+    const grid: Block[][] = [
+      [
+        { fg: 0, bg: 1, char: ' ' },
+        { fg: 0, bg: 1, char: ' ' },
+        { fg: 0, bg: 1, char: ' ' },
+      ],
+      [{ fg: 0, bg: 1, char: ' ' }],
+    ];
+    // Start at row 1, col 2 — this cell doesn't exist (ragged)
+    const changes = iterativeFill(
+      grid,
+      1,
+      2,
+      { bg: 1, fg: 0, char: ' ' },
+      { bg: 5 },
+      true,
+      false,
+      false,
+      false,
+    );
+    // Should return empty — start block doesn't exist
+    expect(changes).toEqual([]);
+  });
 });
 
 // ─── Half-block import/export (Bug #23 investigation) ────────────
@@ -2224,5 +2340,36 @@ describe('iterativeFillHalfBlock', () => {
         expect(grid[y][x]).toEqual({ fg: 0, bg: 8, char: ' ' });
       }
     }
+  });
+
+  // ─── Ragged array safety (Gitea #56) ────────────────────────────
+
+  it('does not crash on ragged array — shorter row', () => {
+    // Row 0 has 2 cols, row 1 has 1 col — ragged
+    const grid: Block[][] = [
+      [
+        { fg: 0, bg: 1, char: ' ' },
+        { fg: 0, bg: 1, char: ' ' },
+      ],
+      [{ fg: 0, bg: 1, char: ' ' }],
+    ];
+    // Fill from (0, 0) — should not crash
+    const changes = iterativeFillHalfBlock(grid, 0, 0, 5);
+    // Row 0 cells should be filled
+    expect(changes.length).toBeGreaterThan(0);
+    for (const c of changes) {
+      expect(c.new.bg).toBe(5);
+    }
+  });
+
+  it('does not crash on ragged array — empty row in middle', () => {
+    const grid: Block[][] = [
+      [{ fg: 0, bg: 1, char: ' ' }],
+      [], // empty row
+      [{ fg: 0, bg: 1, char: ' ' }],
+    ];
+    // Fill from row 0 top half — should not crash
+    const changes = iterativeFillHalfBlock(grid, 0, 0, 5);
+    expect(changes.length).toBeGreaterThan(0);
   });
 });

@@ -262,4 +262,63 @@ describe('Half-block integration', () => {
       expect(grid.getColour(0, 1)).toBe(5);
     });
   });
+
+  // ─── Ragged array safety (Gitea #56) ────────────────────────────
+
+  describe('ragged array safety', () => {
+    it('getColour returns EMPTY_COLOUR for missing cell in shorter row', () => {
+      // Row 0 has 2 cols, row 1 has 1 col
+      const blocks: Block[][] = [
+        [{ fg: 0, bg: 1, char: ' ' }, { fg: 0, bg: 1, char: ' ' }],
+        [{ fg: 0, bg: 1, char: ' ' }],
+      ];
+      const grid = new HalfBlockGrid(blocks);
+
+      // Valid cell: space block → bg holds colour
+      expect(grid.getColour(0, 0)).toBe(1); // top half of (0,0) → bg=1
+      // Missing cell (row 1, col 1)
+      expect(grid.getColour(1, 2)).toBe(99); // top half of (1,1) — missing
+    });
+
+    it('getColour returns EMPTY_COLOUR for empty row', () => {
+      const blocks: Block[][] = [
+        [{ fg: 0, bg: 1, char: ' ' }],
+        [], // empty row
+      ];
+      const grid = new HalfBlockGrid(blocks);
+
+      // Valid cell in row 0: space block → bg holds colour
+      expect(grid.getColour(0, 0)).toBe(1);
+      // Missing cell in empty row 1
+      expect(grid.getColour(0, 2)).toBe(99);
+    });
+
+    it('setColour is a no-op for missing cell', () => {
+      const blocks: Block[][] = [
+        [{ fg: 0, bg: 1, char: ' ' }],
+        [], // empty row
+      ];
+      const grid = new HalfBlockGrid(blocks);
+
+      // Should not throw
+      grid.setColour(0, 2, 5); // row 1 is empty
+
+      // Original block unchanged
+      expect(blocks[0][0]).toEqual({ fg: 0, bg: 1, char: ' ' });
+    });
+
+    it('setColour is a no-op for shorter row out-of-bounds', () => {
+      const blocks: Block[][] = [
+        [{ fg: 0, bg: 1, char: ' ' }],
+        [{ fg: 0, bg: 1, char: ' ' }],
+      ];
+      const grid = new HalfBlockGrid(blocks);
+
+      // Col 5 doesn't exist — inBounds() catches this (x >= width)
+      // so setColour returns at the bounds check before reaching the guard
+      grid.setColour(5, 0, 5);
+      // No crash, no mutation
+      expect(blocks[0][0]).toEqual({ fg: 0, bg: 1, char: ' ' });
+    });
+  });
 });
