@@ -32,6 +32,32 @@
       <span class="font-label-mono text-body-sm text-on-surface-variant">
         X: {{ coordsX }} | Y: {{ coordsY }}
       </span>
+      <span class="text-outline-variant">|</span>
+      <span
+        class="font-label-mono text-body-sm flex items-center gap-0.5"
+        :class="undoCount > 0 ? 'text-on-surface-variant' : 'text-on-surface-variant/50'"
+        :title="`${undoCount} undo steps, ${redoCount} redo steps available`"
+      >
+        <span
+          class="material-icons"
+          style="font-size: 14px"
+          aria-hidden="true"
+        >undo</span>
+        {{ undoCount }}
+      </span>
+      <template v-if="redoCount > 0">
+        <span class="text-outline-variant">|</span>
+        <span
+          class="font-label-mono text-body-sm text-on-surface-variant flex items-center gap-0.5"
+        >
+          <span
+            class="material-icons"
+            style="font-size: 14px"
+            aria-hidden="true"
+          >redo</span>
+          {{ redoCount }}
+        </span>
+      </template>
       <span
         v-if="toolName"
         class="font-label-mono text-body-sm text-on-surface-variant"
@@ -123,6 +149,22 @@ const props = defineProps<{
 
 const coordsX = computed(() => props.canvasX ?? '-');
 const coordsY = computed(() => props.canvasY ?? '-');
+
+const currentMeta = computed(() =>
+  store.asciibirdMeta[store.tab] ?? null,
+);
+
+const undoCount = computed(() => {
+  const meta = currentMeta.value;
+  if (!meta) return 0;
+  return meta.historyIndex;
+});
+
+const redoCount = computed(() => {
+  const meta = currentMeta.value;
+  if (!meta?.history) return 0;
+  return meta.history.length - meta.historyIndex;
+});
 
 const toolName = computed(() => {
   const tool = toolbarIcons[toolbarStore.currentTool];
