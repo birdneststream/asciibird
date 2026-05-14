@@ -342,7 +342,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch, onUnmounted, nextTick } from 'vue';
+import { computed, ref, watch, onUnmounted, nextTick } from 'vue';
 import LZString from 'lz-string';
 import {
   Menu,
@@ -394,9 +394,6 @@ import { useToast } from './composables/useToast';
 import { useDialog } from './composables/useDialog';
 import { useExportAscii } from './composables/useExportAscii';
 import { useGlobalShortcuts } from './composables/useGlobalShortcuts';
-import { storeDiffBlocks as storeDiffBlockFn } from './utils/diffBlocks';
-import type { DiffBlocks } from './utils/diffBlocks';
-
 import type { Block, AppMenuBar } from './types';
 
 defineOptions({ name: 'Dashboard' });
@@ -436,14 +433,8 @@ const isInputtingBrushSize = ref(false);
 const scrollOffset = ref(0);
 const toolbarString = ref('top: 0px;');
 const lastPostURL = ref('');
-const drawBrush = ref(false);
 const resetSelect = ref(false);
-const diffBlocks = reactive<DiffBlocks>({
-  l: 0,
-  old: [],
-  new: [],
-});
-const updateAscii = ref<unknown>(false);
+const updateAscii = ref(false);
 
 // Menu hover cascading state
 const menuButtonRefs = ref<(HTMLButtonElement | null)[]>([]);
@@ -502,43 +493,23 @@ onUnmounted(() => {
 });
 
 // Computed
-const isSelecting = computed(() => currentTool.value?.name === 'select');
 const currentTool = computed(() => toolbarIcons[toolbarStore.currentTool] ?? null);
 
 const asciibirdMeta = computed(() => store.asciibirdMeta);
 const debugPanelState = computed(() => panelStore.debugPanel);
 const currentAscii = computed(() => store.currentAscii);
 const currentTab = computed(() => store.currentTab);
-const selectBlocks = computed(() => toolbarStore.selectBlocks);
 const modalState = computed(() => modalStore.modalState);
 const isKeyboardDisabled = computed(() => modalStore.isKeyboardDisabled);
-const selectedLayer = computed(() => store.selectedLayer);
-const canToggleLayer = computed(() => currentAsciiLayers.value.length > 1);
-const brushSizeHeight = computed(() => toolbarStore.brushSizeHeight);
-const brushSizeWidth = computed(() => toolbarStore.brushSizeWidth);
-const brushSizeType = computed(() => toolbarStore.brushSizeType);
-const currentFg = computed(() => toolbarStore.currentFg);
-const currentBg = computed(() => toolbarStore.currentBg);
-const currentChar = computed(() => toolbarStore.currentChar);
 const toolbarState = computed(() => toolbarStore.toolbarState);
-const brushBlocks = computed(() => toolbarStore.brushBlocks);
 const tabsVisible = computed(() => desktopStore.tabsVisible);
 const menuBarVisible = computed(() => desktopStore.menuBarVisible);
-const currentAsciiLayerBlocks = computed(() => currentSelectedLayer.value?.data ?? []);
 const currentAsciiLayers = computed(() => store.currentAsciiLayers);
 const selectedLayerIndex = computed(() => currentAscii.value?.selectedLayer ?? 0);
 const brushLibraryState = computed(() => panelStore.brushLibrary);
 const brushPreviewState = computed(() => panelStore.brushPreview);
 const layersLibraryState = computed(() => panelStore.layersLibrary);
 const currentSelectedLayer = computed(() => currentAsciiLayers.value[currentAscii.value?.selectedLayer ?? 0]);
-const isBrushing = computed(() => currentTool.value?.name === 'brush');
-const isErasing = computed(() => currentTool.value?.name === 'eraser');
-const isSelected = computed(() =>
-  selecting.value.startX !== null &&
-  selecting.value.startY !== null &&
-  selecting.value.endX !== null &&
-  selecting.value.endY !== null
-);
 
 const menuBar = computed<AppMenuBar[]>(() => [
   {
@@ -666,62 +637,8 @@ function getSplashAscii() {
   return splashAscii;
 }
 
-function updateAsciiDetails(widthHeight: unknown) {
-  updateAscii.value = widthHeight;
-}
-
-function dispatchBlocks() {
-  diffBlocks.old = diffBlocks.old.flat();
-  diffBlocks.new = diffBlocks.new.flat();
-
-  store.updateAsciiBlocks({
-    blocks: currentAsciiLayerBlocks.value,
-    diff: { ...diffBlocks },
-  });
-
-  diffBlocks.l = selectedLayerIndex.value;
-  diffBlocks.new = [];
-  diffBlocks.old = [];
-}
-
-function storeDiffBlocks(
-  x: number,
-  y: number,
-  oldBlock: Block,
-  newBlock: Block,
-) {
-  storeDiffBlockFn(diffBlocks, x, y, oldBlock, newBlock);
-}
-
-function showLayerRename(key: number, label: string) {
-  modalStore.toggleDisableKeyboard(true);
-  dialogPrompt({
-    title: 'Rename Layer',
-    text: 'Please input your new layer name',
-    inputValue: label,
-  }).then((result: { input: string; isOk: boolean }) => {
-    if (!result.input.length) {
-      toastShow('You must enter a layer name!', {
-        type: 'error',
-      });
-      modalStore.toggleDisableKeyboard(false);
-      return;
-    }
-
-    if (result.isOk) {
-      updateLayerName(key, result.input);
-    }
-
-    modalStore.toggleDisableKeyboard(false);
-  });
-}
-
-function updateLayerName(key: number, label: string) {
-  store.updateLayerName({ key, label });
-}
-
-function triggerbrush() {
-  drawBrush.value = !drawBrush.value;
+function updateAsciiDetails(_widthHeight: unknown) {
+  // Signal the Editor component to update via prop
 }
 
 function inputtingbrush(val: boolean) {
@@ -896,46 +813,20 @@ function closeTab(key: number) {
   });
 }
 
-// Expose for parent / external access
-// In <script setup>, top-level bindings are automatically exposed
+// Expose — minimal surface for external access
+// Dashboard is the root component; nothing currently accesses these
+// but keeping a small subset for potential future use
 defineExpose({
-  dispatchBlocks,
-  storeDiffBlocks,
-  showLayerRename,
-  updateLayerName,
-  triggerbrush,
-  selectedBlocks,
-  textEditing,
-  drawBrush,
-  diffBlocks,
-  isBrushing,
-  isErasing,
-  isSelected,
-  currentTool,
-  currentFg,
-  currentBg,
-  currentChar,
-  toolbarState,
-  brushBlocks,
-  selectBlocks,
-  brushSizeWidth,
-  brushSizeHeight,
-  brushSizeType,
-  currentAsciiLayers,
-  currentSelectedLayer,
-  currentAsciiLayerBlocks,
-  canToggleLayer,
-  selectedLayer,
-  selectedLayerIndex,
-  isSelecting,
   asciibirdMeta,
-  currentAscii,
   currentTab,
   updateCanvas,
-  updateAscii,
   resetSelect,
   selecting,
   isInputtingBrushSize,
+  selectedBlocks,
+  textEditing,
+  canvasX,
+  canvasY,
 });
 </script>
 
