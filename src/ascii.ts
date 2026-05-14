@@ -705,9 +705,14 @@ export interface FillChange {
  * Selectively targets only the properties enabled by canBg/canFg/canText.
  * Returns an array of changes for efficient undo diff construction.
  *
- * Note: canFg matching is intentionally not used in the boundary check
- * to match the original recursive fillTool behavior where fg matching
- * was commented out.
+ * Boundary checks: Only bg and char are used as boundary conditions.
+ * Fg matching is intentionally excluded to match the original recursive
+ * fillTool behavior — fg-only fills traverse all blocks matching the
+ * bg/char pattern and change only the foreground colour.
+ *
+ * When ALL targeting flags (canBg, canFg, canText) are false, the fill
+ * has no boundary and no effect — it returns early to prevent filling
+ * the entire grid.
  */
 export const iterativeFill = (
   blocks: Block[][],
@@ -721,6 +726,11 @@ export const iterativeFill = (
   eraser: boolean,
 ): FillChange[] => {
   const changes: FillChange[] = [];
+
+  // If no targeting flags are active, nothing to fill — bail early
+  // to prevent filling the entire grid without boundary checks
+  if (!canBg && !canFg && !canText) return changes;
+
   const height = blocks.length;
   if (height === 0) return changes;
   const width = blocks[0]?.length ?? 0;

@@ -446,6 +446,9 @@ function fill() {
 }
 
 function fillTool(startY: number, startX: number) {
+  // If no targeting flags are active, nothing to fill
+  if (!canFg.value && !canBg.value && !canText.value) return;
+
   const maxY = brushSizeHeight.value;
   const maxX = brushSizeWidth.value;
   if (startY >= maxY || startX >= maxX) return;

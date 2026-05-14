@@ -1725,6 +1725,77 @@ describe('iterativeFill', () => {
       expect(c.new).toHaveProperty('bg');
     }
   });
+
+  it('returns empty array when all targeting flags are false', () => {
+    const grid = makeGrid(3, 3);
+    const changes = iterativeFill(
+      grid,
+      1,
+      1,
+      { bg: 1, fg: 0, char: ' ' },
+      { bg: 5, fg: 3, char: 'X' },
+      false, // canBg
+      false, // canFg
+      false, // canText
+      false, // eraser
+    );
+    expect(changes).toEqual([]);
+    // Verify grid is untouched
+    expect(grid[0][0]).toEqual({ fg: 0, bg: 1, char: ' ' });
+  });
+
+  it('fills based on bg boundary when only canFg is true', () => {
+    const grid = makeGrid(2, 2, 0, 1, ' ');
+    const changes = iterativeFill(
+      grid,
+      0,
+      0,
+      { bg: 1, fg: 0, char: ' ' },
+      { fg: 5 },
+      false, // canBg — no bg change, no bg boundary
+      true,  // canFg — change fg only
+      false, // canText
+      false, // eraser
+    );
+    // With canBg=false, there is no boundary check, so ALL blocks are
+    // visited. But since canFg=true, only fg is changed.
+    // Wait — when canBg=false AND canText=false, there's NO boundary
+    // check, so the fill traverses everything. But we already bailed
+    // for all-false above. Here canFg=true so we don't bail.
+    // Boundary: canBg=false (skip) + canText=false (skip) = no boundary
+    // This fills all blocks.
+    expect(changes).toHaveLength(4);
+    for (const c of changes) {
+      expect(c.new.fg).toBe(5);
+      expect(c.new.bg).toBe(1); // unchanged
+    }
+  });
+
+  it('fills based on bg boundary only when canBg and canFg are true', () => {
+    // Grid with two bg regions: bg=1 (top row) and bg=2 (bottom row)
+    const grid: Block[][] = [
+      [{ fg: 0, bg: 1, char: ' ' }, { fg: 0, bg: 1, char: ' ' }],
+      [{ fg: 0, bg: 2, char: ' ' }, { fg: 0, bg: 2, char: ' ' }],
+    ];
+    const changes = iterativeFill(
+      grid,
+      0,
+      0,
+      { bg: 1, fg: 0, char: ' ' },
+      { bg: 5, fg: 3 },
+      true,  // canBg — bg boundary check
+      true,  // canFg — change fg
+      false, // canText
+      false, // eraser
+    );
+    // Only the top row (bg=1) should be filled
+    expect(changes).toHaveLength(2);
+    for (const c of changes) {
+      expect(c.y).toBe(0);
+      expect(c.new.bg).toBe(5);
+      expect(c.new.fg).toBe(3);
+    }
+  });
 });
 
 // ─── Half-block import/export (Bug #23 investigation) ────────────

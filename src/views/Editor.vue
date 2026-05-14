@@ -1703,6 +1703,14 @@ async function eraser() {
 }
 
 function fill(eraser = false) {
+  // Bail early if no fill targets selected
+  if (!canBg.value && !canFg.value && !canText.value) {
+    toastShow('Select at least one fill target (FG/BG/Text)', {
+      type: 'error',
+    });
+    return;
+  }
+
   const fillColor: Block = {
     bg: currentBg.value,
     fg: currentFg.value,
