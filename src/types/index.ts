@@ -115,7 +115,14 @@ export interface ToolbarState {
   persistCharPanel: boolean;
   brushSizeWidth: number;
   brushSizeHeight: number;
-  brushSizeType: 'square' | 'circle' | 'cross';
+  brushSizeType:
+    | 'square'
+    | 'circle'
+    | 'cross'
+    | 'grid'
+    | 'inverted grid'
+    | 'h lines'
+    | 'v lines';
   selectedFg: number;
   selectedBg: number;
   selectedChar: string;
