@@ -123,13 +123,6 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       },
     ) {
       if (payload.diff && payload.diff.new && payload.diff.new.length) {
-        if (
-          this.asciibirdMeta[this.tab].history.length
-          >= this.options.undoLimit
-        ) {
-          this.asciibirdMeta[this.tab].history.shift();
-        }
-
         const tempLayers: Layer[] = decompressLayers(
           this.asciibirdMeta[this.tab].layers,
         );
@@ -140,31 +133,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         this.asciibirdMeta[this.tab].layers =
           compressLayers(tempLayers);
 
-        const historyIndex =
-          this.asciibirdMeta[this.tab].historyIndex;
-
-        if (
-          this.asciibirdMeta[this.tab].history.length !== historyIndex
-        ) {
-          this.asciibirdMeta[this.tab].history.splice(
-            historyIndex,
-            this.asciibirdMeta[this.tab].history.length,
-          );
-        }
-
-        this.asciibirdMeta[this.tab].history.push(
-          compressData(payload.diff),
-        );
-
-        this.asciibirdMeta[this.tab].historyIndex =
-          this.asciibirdMeta[this.tab].history.length;
-
-        if (
-          historyIndex > this.asciibirdMeta[this.tab].history.length
-        ) {
-          this.asciibirdMeta[this.tab].historyIndex =
-            this.asciibirdMeta[this.tab].history.length;
-        }
+        this.pushLegacyDiff(payload.diff);
       }
     },
 
@@ -245,23 +214,11 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         meta.layers = compressLayers(layers);
 
         // Record single undo diff
-        const diff: HistoryDiff = {
+        this.pushHistoryDiff({
           old: oldDiffs,
           new: newDiffs,
           l: meta.selectedLayer,
-        };
-
-        if (meta.history.length >= this.options.undoLimit) {
-          meta.history.shift();
-        }
-
-        // Trim future history (discard redo stack)
-        if (meta.history.length !== meta.historyIndex) {
-          meta.history.splice(meta.historyIndex);
-        }
-
-        meta.history.push(compressData(diff));
-        meta.historyIndex = meta.history.length;
+        });
       }
 
       return changed;
@@ -313,23 +270,11 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         meta.layers = compressLayers(layers);
 
         // Record single undo diff
-        const diff: HistoryDiff = {
+        this.pushHistoryDiff({
           old: oldDiffs,
           new: newDiffs,
           l: meta.selectedLayer,
-        };
-
-        if (meta.history.length >= this.options.undoLimit) {
-          meta.history.shift();
-        }
-
-        // Trim future history (discard redo stack)
-        if (meta.history.length !== meta.historyIndex) {
-          meta.history.splice(meta.historyIndex);
-        }
-
-        meta.history.push(compressData(diff));
-        meta.historyIndex = meta.history.length;
+        });
       }
 
       return { matches, replaced: oldDiffs.length };
@@ -343,6 +288,47 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       document.title = meta
         ? `asciibird - ${meta.title}`
         : 'asciibird';
+    },
+
+    /**
+     * Push a compressed HistoryDiff onto the undo stack.
+     * Handles: undo limit enforcement, future history trimming,
+     * push, and historyIndex update.
+     */
+    pushHistoryDiff(diff: HistoryDiff): void {
+      const meta = this.asciibirdMeta[this.tab];
+      if (!meta) return;
+
+      if (meta.history.length >= this.options.undoLimit) {
+        meta.history.shift();
+      }
+
+      if (meta.history.length !== meta.historyIndex) {
+        meta.history.splice(meta.historyIndex);
+      }
+
+      meta.history.push(compressData(diff));
+      meta.historyIndex = meta.history.length;
+    },
+
+    /**
+     * Push a legacy block diff (no layer index) onto the undo stack.
+     * Same as pushHistoryDiff but for the legacy BlockDiff format.
+     */
+    pushLegacyDiff(diff: { new: BlockDiff[]; old: BlockDiff[] }): void {
+      const meta = this.asciibirdMeta[this.tab];
+      if (!meta) return;
+
+      if (meta.history.length >= this.options.undoLimit) {
+        meta.history.shift();
+      }
+
+      if (meta.history.length !== meta.historyIndex) {
+        meta.history.splice(meta.historyIndex);
+      }
+
+      meta.history.push(compressData(diff));
+      meta.historyIndex = meta.history.length;
     },
 
     /**
