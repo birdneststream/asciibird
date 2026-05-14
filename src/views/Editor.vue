@@ -1,7 +1,9 @@
 <template>
   <div>
     <div
+      ref="scrollContainerRef"
       id="canvas-area"
+      class="overflow-auto"
       @mouseleave="isMouseOnCanvas = false"
       @mouseenter="isMouseOnCanvas = true"
     >
@@ -122,13 +124,15 @@
           class="canvastools"
           :width="currentAsciiWidth * blockWidthComp"
           :height="currentAsciiHeight * blockHeightComp"
-          @mousemove="canvasMouseMove"
+          @mousemove="onCanvasMouseMove"
           @mousedown.left="canvasMouseDown"
           @mouseup.left="canvasMouseUp"
           @mouseup.right="openContextMenu"
+          @mousedown.middle.prevent="startPan"
           @touchmove="canvasMouseMove"
           @touchend="canvasMouseUp"
           @touchstart="canvasMouseDown"
+          :style="panCursorStyle"
         />
 
         <!-- Resize handles — visible only with default tool -->
@@ -172,9 +176,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useAsciiBirdStore } from '../store';
-import { usePanelStore } from '../store/panels';
 import { useToolbarStore } from '../store/toolbar';
 import { useModalStore } from '../store/modal';
 import { useToast } from '../composables/useToast';
@@ -187,23 +190,19 @@ import { useColorReplace } from '../composables/useColorReplace';
 import { useGradientTool } from '../composables/useGradientTool';
 import { useShapeTool } from '../composables/useShapeTool';
 import { useMatchHighlight } from '../composables/useMatchHighlight';
+import { useEditorState } from '../composables/useEditorState';
+import { useEditorRendering } from '../composables/useEditorRendering';
 import hotkeys from 'hotkeys-js';
 
 import ContextMenu from '../components/parts/ContextMenu.vue';
 
 import {
-  toolbarIcons,
   mircColours99,
-  filterNullBlocks,
-  blockWidth,
-  blockHeight,
   maxBrushSize,
   fillNullBlocks,
   getBlocksWidth,
-  checkVisible,
-  mergeLayers,
+  filterNullBlocks,
   canvasToPng as canvasToPngUtil,
-  cyrb53,
   emptyBlock,
   isEmptyBlock,
   eraseBlockProperties,
@@ -212,14 +211,13 @@ import {
   iterativeFillHalfBlock,
 } from '../ascii';
 
-import { getMirrorPositions, applyMirrored, applyMirroredHalfBlock } from '../utils/mirror';
+import { applyMirrored, applyMirroredHalfBlock } from '../utils/mirror';
 import { bresenhamLine } from '../utils/bresenham';
 import { storeDiffBlocks as storeDiffBlockFn } from '../utils/diffBlocks';
 import { getCanvasFont } from '../utils/canvasFont';
 import { drawShapePreview } from '../utils/shapePreview';
 import { downloadHtml } from '../utils/htmlExport';
 import { HalfBlockGrid } from '../utils/halfBlockGrid';
-import type { DiffBlocks } from '../utils/diffBlocks';
 import type { Block } from '../types';
 import type { TransformType } from '../utils/transformBlocks';
 
@@ -254,7 +252,6 @@ const emit = defineEmits<{
 
 // ─── Store & Composables ────────────────────────────────────────
 const store = useAsciiBirdStore();
-const panelStore = usePanelStore();
 const toolbarStore = useToolbarStore();
 const modalStore = useModalStore();
 const { show: toastShow } = useToast();
@@ -275,131 +272,64 @@ const {
 // ─── Match Highlight (Find & Replace) ──────────────────────────
 const { drawHighlights: drawMatchHighlights } = useMatchHighlight();
 
+// ─── Shared Editor State ───────────────────────────────────────
+const state = useEditorState();
+
+// Destructure for template/method access
+const {
+  canvasSize, x, y, isTopHalf, top, canTool,
+  textEditing, selecting, isMouseOnCanvas,
+  selectedBlocks, diffBlocks, canvasHash,
+  lastBrushX, lastBrushY,
+  blockSizeMultiplier, blockWidthComp, blockHeightComp,
+  currentAscii, currentAsciiLayers, selectedLayerIndex,
+  currentSelectedLayer, currentAsciiLayerBlocks,
+  currentTool, canFg, canBg, canText,
+  currentFg, currentBg, currentChar,
+  isTextEditing, isEraserFill, isFill, isTextEditingValues,
+  isSelecting, isDefault, isBrushing, isErasing, isSelected,
+  brushBlocks, canvasX, canvasY,
+  toolbarState, mirrorX, mirrorY,
+  debugPanelState, selectBlocks, options, haveSelectBlocks,
+  brushLibraryState, gridView, halfBlockEditing,
+  asciiBlockAtXy, currentAsciiWidth, currentAsciiHeight,
+} = state;
+
 // ─── Template Refs ──────────────────────────────────────────────
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const canvastoolsRef = ref<HTMLCanvasElement | null>(null);
 const editorMenu = ref<InstanceType<typeof ContextMenu> | null>(null);
 const editorPanel = ref<HTMLElement | null>(null);
+const scrollContainerRef = ref<HTMLElement | null>(null);
 
-// ─── Canvas Contexts (NOT reactive — performance critical) ──────
-let ctx: CanvasRenderingContext2D | null = null;
-let toolCtx: CanvasRenderingContext2D | null = null;
+// ─── Y-offset from props (not in useEditorState) ────────────────
+const yOffsetComp = computed(() => props.yOffset);
 
-// ─── FPS-Throttled Redraw ─────────────────────────────────────────
-// (useFpsThrottle handles its own timer cleanup on unmount)
-
-// ─── Reactive State ─────────────────────────────────────────────
-const canvasSize = reactive({ width: 512, height: 512 });
-const x = ref(0);
-const y = ref(0);
-const isTopHalf = ref(true);
-const top = ref<number | false>(false);
-const canTool = ref(false);
-const textEditing = ref<{ startX: number | null; startY: number | null }>({
-  startX: null,
-  startY: null,
-});
-const selecting = ref({
-  startX: null as number | null,
-  startY: null as number | null,
-  endX: null as number | null,
-  endY: null as number | null,
-  canSelect: false,
-});
-const isMouseOnCanvas = ref(false);
-const selectedBlocks = ref<Block[][]>([]);
-const diffBlocks = reactive<DiffBlocks>({
-  l: 0,
-  old: [],
-  new: [],
-});
-const canvasHash = ref<number | null>(null);
-const lastBrushX = ref(-1);
-const lastBrushY = ref(-1);
-
-// ─── Computed ───────────────────────────────────────────────────
-const blockSizeMultiplier = computed(() => store.blockSizeMultiplier);
-const blockWidthComp = computed(() => blockWidth * blockSizeMultiplier.value);
-const blockHeightComp = computed(() => blockHeight * blockSizeMultiplier.value);
-
-const currentAscii = computed(() => store.currentAscii);
-const currentAsciiLayers = computed(() => store.currentAsciiLayers);
-const selectedLayerIndex = computed(
-  () => currentAscii.value.selectedLayer || 0,
-);
-const currentSelectedLayer = computed(
-  () => currentAsciiLayers.value[selectedLayerIndex.value] || [],
-);
-const currentAsciiLayerBlocks = computed(
-  () => currentSelectedLayer.value.data,
+// ─── Editor Rendering Composable ───────────────────────────────
+const rendering = useEditorRendering(
+  { ...state, yOffset: yOffsetComp },
+  {
+    canvasRef,
+    canvastoolsRef,
+    renderBlock,
+    clearMainCanvas,
+    drawHighlights: drawMatchHighlights,
+  },
 );
 
-const currentTool = computed(() => toolbarIcons[toolbarStore.currentTool]);
-const canFg = computed(() => toolbarStore.isTargettingFg);
-const canBg = computed(() => toolbarStore.isTargettingBg);
-const canText = computed(() => toolbarStore.isTargettingChar);
-const currentFg = computed(() => toolbarStore.currentFg);
-const currentBg = computed(() => toolbarStore.currentBg);
-const currentChar = computed(() => toolbarStore.currentChar);
-
-const isTextEditing = computed(() => currentTool.value.name === 'text');
-const isEraserFill = computed(() => currentTool.value.name === 'fill-eraser');
-const isFill = computed(() => currentTool.value.name === 'fill');
-const isTextEditingValues = computed(
-  () => textEditing.value.startX !== null && textEditing.value.startY !== null,
-);
-const isSelecting = computed(() => currentTool.value.name === 'select');
-const isDefault = computed(() => currentTool.value.name === 'default');
-const isBrushing = computed(() => currentTool.value.name === 'brush');
-const isErasing = computed(() => currentTool.value.name === 'eraser');
-const isSelected = computed(
-  () =>
-    selecting.value.startX !== null &&
-    selecting.value.startY !== null &&
-    selecting.value.endX !== null &&
-    selecting.value.endY !== null,
-);
-
-const brushBlocks = computed(() => toolbarStore.brushBlocks);
-const canvasX = computed(() => x.value * blockWidthComp.value);
-const canvasY = computed(() => y.value * blockHeightComp.value);
-const toolbarState = computed(() => toolbarStore.toolbarState);
-const mirrorX = computed(() => toolbarState.value.mirrorX);
-const mirrorY = computed(() => toolbarState.value.mirrorY);
-const debugPanelState = computed(() => panelStore.debugPanel);
-const selectBlocks = computed(() => toolbarStore.selectBlocks);
-const options = computed(() => store.options);
-const haveSelectBlocks = computed(() => !!selectBlocks.value.length);
-const brushLibraryState = computed(() => panelStore.brushLibrary);
-const gridView = computed(() => toolbarState.value.gridView);
-const halfBlockEditing = computed(() => toolbarState.value.halfBlockEditing);
+const {
+  redrawCanvas, clearToolCanvas, drawGrid,
+  drawIndicator, drawTextIndicator,
+  drawRectangleBlock, redrawSelect,
+} = rendering;
 
 // ─── FPS-Throttled Canvas Redraw ─────────────────────────────────
-// redrawCanvas is a hoisted async function declaration — safe to
-// reference directly before the definition appears in source order.
 const { scheduleRedraw: delayRedrawCanvas, cancelRedraw } = useFpsThrottle(
   redrawCanvas,
   () => options.value.fps,
 );
 
-const asciiBlockAtXy = computed(() => {
-  return currentAsciiLayerBlocks.value[y.value] &&
-    currentAsciiLayerBlocks.value[y.value][x.value]
-    ? currentAsciiLayerBlocks.value[y.value][x.value]
-    : false;
-});
-
-const currentAsciiWidth = computed(
-  () => currentSelectedLayer.value.width,
-);
-const currentAsciiHeight = computed(() =>
-  currentSelectedLayer.value.height > 2184
-    ? 2184
-    : currentSelectedLayer.value.height,
-);
-
 // ─── Gradient Tool ────────────────────────────────────────────────
-// Must be after currentAsciiLayerBlocks/Width/Height computed definitions.
 const {
   gradientStart,
   isGradientPicking,
@@ -426,8 +356,6 @@ const {
 });
 
 // ─── Selection Transform ─────────────────────────────────────────
-// useSelectionTransform provides rotate/flip operations on the
-// selected area. It references hoisted function declarations.
 const selectionTransform = useSelectionTransform({
   selecting,
   selectedBlocks,
@@ -530,6 +458,48 @@ const canvasPanel = useCanvasPanel({
 
 const panelStyle = computed(() => canvasPanel.style.value);
 
+// ─── Middle-Click Pan State ─────────────────────────────────────
+const isPanning = ref(false);
+const panLastX = ref(0);
+const panLastY = ref(0);
+const panCursorStyle = computed(() =>
+  isPanning.value ? 'cursor: grabbing;' : '',
+);
+
+function startPan(e: MouseEvent) {
+  isPanning.value = true;
+  panLastX.value = e.clientX;
+  panLastY.value = e.clientY;
+  // Listen for mouseup at document level so pan ends even
+  // if the mouse is released outside the canvas element.
+  const onMouseUp = () => {
+    isPanning.value = false;
+    document.removeEventListener('mouseup', onMouseUp);
+  };
+  document.addEventListener('mouseup', onMouseUp);
+}
+
+function doPan(e: MouseEvent) {
+  if (!isPanning.value) return;
+  const dx = panLastX.value - e.clientX;
+  const dy = panLastY.value - e.clientY;
+  panLastX.value = e.clientX;
+  panLastY.value = e.clientY;
+  const el = scrollContainerRef.value;
+  if (el) {
+    el.scrollBy(dx, dy);
+  }
+}
+
+/** Canvas mousemove dispatcher: delegates to pan or tool handler */
+function onCanvasMouseMove(e: MouseEvent) {
+  if (isPanning.value) {
+    doPan(e);
+    return;
+  }
+  canvasMouseMove(e);
+}
+
 // ─── Watchers ───────────────────────────────────────────────────
 watch(currentAsciiHeight, (val) => {
   canvasSize.height = val * blockHeightComp.value;
@@ -539,9 +509,6 @@ watch(currentAsciiWidth, (val) => {
   canvasSize.width = val * blockWidthComp.value;
 });
 
-// Watch tab index for tab switches — resets panel position from stored x/y.
-// Canvas redraws are handled by currentAsciiLayerBlocks watcher (L410).
-// Canvas resize is handled by currentAsciiWidth/currentAsciiHeight watchers (L376-382).
 watch(() => store.tab, (newTab) => {
     const meta = store.asciibirdMeta[newTab];
     if (!meta) return;
@@ -570,7 +537,6 @@ watch(currentAsciiLayerBlocks, async () => {
   await delayRedrawCanvas();
 });
 
-// Re-layout canvas when zoom multiplier changes
 watch(blockSizeMultiplier, () => {
   canvasSize.width = currentAsciiWidth.value * blockWidthComp.value;
   canvasSize.height = currentAsciiHeight.value * blockHeightComp.value;
@@ -578,13 +544,13 @@ watch(blockSizeMultiplier, () => {
     currentAsciiWidth.value * blockWidthComp.value,
     currentAsciiHeight.value * blockHeightComp.value,
   );
+  rendering.updateCanvasFont();
   delayRedrawCanvas(true);
 });
 
 watch(currentTool, async () => {
   warnInvisibleLayer();
 
-  // Half-block mode: block text, select, and gradient tools
   if (halfBlockEditing.value) {
     if (currentTool.value.name === 'text') {
       toastShow('Text mode is not available in half-block editing mode');
@@ -684,29 +650,23 @@ watch(currentAsciiLayers, async () => {
 
 watch(halfBlockEditing, async (active) => {
   if (active) {
-    // Entering half-block mode — enforce constraints
-
-    // Force brush to 1×1
     toolbarStore.updateBrushSize({
       brushSizeWidth: 1,
       brushSizeHeight: 1,
       brushSizeType: 'square',
     });
 
-    // If text tool is active, switch to default
     if (currentTool.value.name === 'text') {
       toolbarStore.changeTool(0);
       textEditing.value.startX = null;
       textEditing.value.startY = null;
     }
 
-    // If select tool is active, reset selection and switch to default
     if (currentTool.value.name === 'select') {
       toolbarStore.changeTool(0);
       resetSelectTool();
     }
 
-    // Ensure FG targeting is on
     if (!canFg.value) {
       toolbarStore.changeTargetingFg(true);
     }
@@ -727,11 +687,10 @@ hotkeys('*', 'editor', async function (event) {
     return;
   }
 
-  // Shift+Arrow: nudge selection by 1 block
   if (
-    event.shiftKey &&
-    isSelected.value &&
-    selectedBlocks.value.length > 0
+    event.shiftKey
+    && isSelected.value
+    && selectedBlocks.value.length > 0
   ) {
     switch (event.key) {
       case 'ArrowUp':
@@ -749,20 +708,17 @@ hotkeys('*', 'editor', async function (event) {
     }
   }
 
-  // Escape: cancel replace-color pick state
   if (event.key === 'Escape' && isReplacePicking.value) {
     resetReplace();
     return;
   }
 
-  // Escape: cancel gradient pick state
   if (event.key === 'Escape' && isGradientPicking.value) {
     cancelGradient();
     await clearToolCanvas();
     return;
   }
 
-  // Escape: cancel shape pick state
   if (event.key === 'Escape' && isShapePicking.value) {
     cancelShape();
     await clearToolCanvas();
@@ -802,30 +758,13 @@ hotkeys('*', 'editor', async function (event) {
 });
 
 // ─── Lifecycle ──────────────────────────────────────────────────
-// Ctrl+Scroll zoom handler — hoisted to setup scope for cleanup
 let wheelHandler: ((e: WheelEvent) => void) | null = null;
-
-// Selection transform event handler
 let selectionTransformHandler: ((e: Event) => void) | null = null;
-
-// Scroll-to handler for Find & Replace navigation
 let scrollToHandler: ((e: Event) => void) | null = null;
 
 onMounted(async () => {
-  const canvas = canvasRef.value;
-  if (canvas) {
-    // willReadFrequently: canvas reset pattern (canvas.width = canvas.width)
-    // triggers implicit readback; hint avoids repeated Chrome warnings.
-    ctx = canvas.getContext('2d', { willReadFrequently: true });
-    if (ctx) ctx.font = getCanvasFont(store.blockSizeMultiplier);
-  }
-  const tools = canvastoolsRef.value;
-  if (tools) {
-    // willReadFrequently: tools canvas also uses width-reset clear pattern.
-    toolCtx = tools.getContext('2d', { willReadFrequently: true });
-  }
+  rendering.initContexts();
 
-  // Ctrl+Scroll zoom — passive:false needed to preventDefault browser zoom
   wheelHandler = (e: WheelEvent) => {
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
@@ -833,9 +772,10 @@ onMounted(async () => {
       store.setBlockMultiplier(store.blockSizeMultiplier + delta);
     }
   };
-  editorPanel.value?.addEventListener('wheel', wheelHandler, { passive: false });
+  editorPanel.value?.addEventListener(
+    'wheel', wheelHandler, { passive: false },
+  );
 
-  // Selection transform shortcuts (dispatched from useGlobalShortcuts)
   selectionTransformHandler = (e: Event) => {
     const type = (e as CustomEvent).detail as TransformType;
     if (isSelecting.value && isSelected.value) {
@@ -847,7 +787,6 @@ onMounted(async () => {
     selectionTransformHandler,
   );
 
-  // Find & Replace scroll-to handler
   scrollToHandler = (e: Event) => {
     const detail = (e as CustomEvent).detail;
     if (detail.x !== undefined && detail.y !== undefined) {
@@ -865,6 +804,7 @@ onUnmounted(() => {
   hotkeys.unbind('*', 'editor');
   canvasPanel.cleanup();
   cancelRedraw();
+  rendering.disposeContexts();
   if (wheelHandler) {
     editorPanel.value?.removeEventListener('wheel', wheelHandler);
     wheelHandler = null;
@@ -882,81 +822,73 @@ onUnmounted(() => {
   }
 });
 
-// ─── Init (equivalent to created() — runs during setup) ─────────
+// ─── Init (equivalent to created()) ────────────────────────────
 if (currentAsciiLayerBlocks.value) {
   canvasSize.width = currentAsciiWidth.value * blockWidthComp.value;
   canvasSize.height = currentAsciiHeight.value * blockHeightComp.value;
-  // delayRedrawCanvas will be called in onMounted
 }
 
-// ─── Methods ────────────────────────────────────────────────────
-// startExport is provided by useExportAscii composable
+// ─── Methods: Context Menu & Export ────────────────────────────
 
 function canvasToPng() {
   const canvas = canvasRef.value;
   if (canvas) {
-    canvasToPngUtil(canvas, currentAscii.value.title);
+    canvasToPngUtil(canvas, (currentAscii.value as { title: string })?.title ?? 'ascii');
   }
 }
 
- function openContextMenu(e: MouseEvent) {
+function openContextMenu(e: MouseEvent) {
   e.preventDefault();
   editorMenu.value?.open({ clientX: e.clientX, clientY: e.clientY });
- }
+}
 
- /**
-  * Context menu "Replace Color in Selection" handler.
-  * Uses the block under cursor as source, current FG/BG as target,
-  * scoped to the current selection bounds.
-  */
- function contextMenuReplaceColor() {
-   const block = asciiBlockAtXy.value;
-   if (!block) return;
-   const bounds = getSelectionBounds();
-   if (bounds) {
-     contextMenuReplace(block, bounds);
-   } else {
-     contextMenuReplace(block);
-   }
- }
-
-  /** Open the border generator modal from context menu */
-  function openBorderGenerator() {
-    modalStore.openModal('border-generator');
+function contextMenuReplaceColor() {
+  const block = asciiBlockAtXy.value;
+  if (!block) return;
+  const bounds = getSelectionBounds();
+  if (bounds) {
+    contextMenuReplace(block, bounds);
+  } else {
+    contextMenuReplace(block);
   }
+}
 
-  /** Crop canvas to content bounds from context menu */
-  function cropToContent() {
-    const cropped = store.cropToContentAction();
-    if (cropped) {
-      toastShow('Canvas cropped to content!', { type: 'success' });
-    } else {
-      toastShow('Nothing to crop — content already fills edges.', {
-        type: 'info',
-      });
-    }
-  }
+function openBorderGenerator() {
+  modalStore.openModal('border-generator');
+}
 
-  /** Export plain text to clipboard from context menu */
-  function exportPlainTextClipboard() {
-    try {
-      const lines = exportPlainText();
-      navigator.clipboard.writeText(lines.join('\n'));
-      toastShow('Plain text copied to clipboard!', { type: 'success' });
-    } catch {
-      toastShow('Failed to copy plain text.', { type: 'error' });
-    }
+function cropToContent() {
+  const cropped = store.cropToContentAction();
+  if (cropped) {
+    toastShow('Canvas cropped to content!', { type: 'success' });
+  } else {
+    toastShow('Nothing to crop — content already fills edges.', {
+      type: 'info',
+    });
   }
+}
 
-  function exportHtmlFile() {
-    try {
-      const title = currentAscii.value?.title ?? 'ascii';
-      downloadHtml(title);
-      toastShow('Exported HTML file!', { type: 'success' });
-    } catch {
-      toastShow('Failed to export HTML.', { type: 'error' });
-    }
+function exportPlainTextClipboard() {
+  try {
+    const lines = exportPlainText();
+    navigator.clipboard.writeText(lines.join('\n'));
+    toastShow('Plain text copied to clipboard!', { type: 'success' });
+  } catch {
+    toastShow('Failed to copy plain text.', { type: 'error' });
   }
+}
+
+function exportHtmlFile() {
+  try {
+    const title = (currentAscii.value as { title: string })?.title ?? 'ascii';
+    downloadHtml(title);
+    toastShow('Exported HTML file!', { type: 'success' });
+  } catch {
+    toastShow('Failed to export HTML.', { type: 'error' });
+  }
+}
+
+// ─── Methods: Text Editing ─────────────────────────────────────
 
 async function canvasKeyDown(char: string) {
   const rawX = textEditing.value.startX;
@@ -1094,6 +1026,8 @@ async function canvasKeyDown(char: string) {
   await delayRedrawCanvas();
 }
 
+// ─── Methods: Helpers ──────────────────────────────────────────
+
 function warnInvisibleLayer() {
   if (!currentSelectedLayer.value.visible) {
     toastShow('You are trying to edit an invisible layer!!', {
@@ -1102,10 +1036,6 @@ function warnInvisibleLayer() {
       singleton: true,
     });
   }
-}
-
-function checkVisibleFn(topVal: number) {
-  return checkVisible(topVal, topVal - blockHeightComp.value);
 }
 
 function undo() {
@@ -1129,200 +1059,34 @@ async function resetSelectTool() {
   emit('selecting', selecting.value);
 }
 
-async function redrawSelect() {
-  if (currentAsciiLayerBlocks.value.length && isSelected.value && toolCtx) {
-    await clearToolCanvas();
-    toolCtx.fillStyle = mircColours99[0];
+/**
+ * Get the current selection bounds as grid coordinates.
+ * Returns null if no valid selection exists.
+ */
+function getSelectionBounds(): {
+  x: number; y: number; w: number; h: number;
+} | null {
+  if (!isSelected.value || !isSelecting.value) return null;
 
-    toolCtx.fillRect(
-      selecting.value.startX!,
-      selecting.value.startY!,
-      selecting.value.endX! - selecting.value.startX!,
-      selecting.value.endY! - selecting.value.startY!,
-    );
-
-    toolCtx.setLineDash([6]);
-    toolCtx.strokeRect(
-      selecting.value.startX!,
-      selecting.value.startY!,
-      selecting.value.endX! - selecting.value.startX!,
-      selecting.value.endY! - selecting.value.startY!,
-    );
-  }
-}
-
-function mergeLayersFn() {
-  return mergeLayers();
-}
-
-function drawGrid() {
-  if (!toolCtx) return;
-  const bw = blockWidthComp.value;
-  const bh = blockHeightComp.value;
-  const w = canvasSize.width;
-  const h = canvasSize.height;
-
-  toolCtx.beginPath();
-
-  for (let gx = 1; gx <= w; gx += bw) {
-    toolCtx.moveTo(gx, 0);
-    toolCtx.lineTo(gx, h);
-  }
-
-  toolCtx.strokeStyle = 'rgba(40, 40, 40, 1)';
-  toolCtx.lineWidth = 1;
-  toolCtx.setLineDash([1]);
-
-  toolCtx.stroke();
-
-  toolCtx.beginPath();
-  for (let gy = 1; gy <= h; gy += halfBlockEditing.value ? (bh / 2) : bh) {
-    toolCtx.moveTo(0, gy);
-    toolCtx.lineTo(w, gy);
-  }
-
-  toolCtx.stroke();
-}
-
-async function redrawCanvas(force = false) {
-  if (!ctx) return;
   const bw = blockWidthComp.value;
   const bh = blockHeightComp.value;
 
-  if (currentAsciiLayers.value.length) {
-    let cx = 0;
-    let cy = 0;
-    let canvasXVal = 0;
-    let canvasYVal = 0;
-    let curBlock = {} as Block;
+  const startX = Math.floor(selecting.value.startX! / bw);
+  const startY = Math.floor(selecting.value.startY! / bh);
+  const endX = Math.ceil(selecting.value.endX! / bw);
+  const endY = Math.ceil(selecting.value.endY! / bh);
 
-    if (
-      diffBlocks.new.length &&
-      !canTool.value &&
-      !isTextEditing.value &&
-      !isFill.value &&
-      !isBrushing.value
-    ) {
-      outer: for (const i in diffBlocks.new) {
-        const entry = diffBlocks.new[i];
-        canvasXVal = bw * entry.x;
-        canvasYVal = bh * entry.y;
-        curBlock = { ...entry.b };
+  const x1 = Math.max(0, Math.min(startX, endX));
+  const y1 = Math.max(0, Math.min(startY, endY));
+  const x2 = Math.min(currentAsciiWidth.value, Math.max(startX, endX));
+  const y2 = Math.min(currentAsciiHeight.value, Math.max(startY, endY));
 
-        for (
-          let j = currentAsciiLayers.value.length - 1;
-          j >= diffBlocks.l;
-          j--
-        ) {
-          const layer = currentAsciiLayers.value[j];
-          if (layer.data[entry.y][entry.x] && j !== diffBlocks.l) {
-            continue outer;
-          }
-        }
+  if (x2 <= x1 || y2 <= y1) return null;
 
-        renderBlock(
-          ctx,
-          curBlock,
-          canvasXVal,
-          canvasYVal,
-          bw,
-          bh,
-          mircColours99,
-          {
-            canBg: canBg.value,
-            canFg: canFg.value,
-            canText: canText.value,
-            fallbackChar:
-              currentAsciiLayerBlocks.value[entry.y][entry.x].char || ' ',
-          },
-        );
-      }
-
-      diffBlocks.l = selectedLayerIndex.value;
-      diffBlocks.new = [];
-      diffBlocks.old = [];
-
-      canvasHash.value = cyrb53(JSON.stringify(mergeLayersFn()));
-    } else {
-      const merged = mergeLayersFn();
-      const tempHash = cyrb53(JSON.stringify(merged));
-
-      if (tempHash === canvasHash.value && !force) {
-        return;
-      }
-
-      canvasHash.value = tempHash;
-      clearMainCanvas(ctx, canvasRef.value, canvasSize.width, canvasSize.height, blockSizeMultiplier.value);
-
-      for (cy = 0; cy < currentAsciiHeight.value + 1; cy++) {
-        canvasYVal = bh * cy;
-
-        if (
-          options.value.renderOffScreen &&
-          top.value !== false &&
-          !checkVisibleFn(top.value + canvasYVal - props.yOffset!)
-        ) {
-          continue;
-        }
-
-        for (cx = 0; cx < currentAsciiWidth.value + 1; cx++) {
-          canvasXVal = bw * cx;
-
-          curBlock = { ...merged[cy][cx] };
-
-          renderBlock(
-            ctx,
-            curBlock,
-            canvasXVal,
-            canvasYVal,
-            bw,
-            bh,
-            mircColours99,
-          );
-        }
-      }
-    }
-  }
-
-  // Draw Find & Replace match highlights on the tool canvas
-  if (toolCtx && canvastoolsRef.value) {
-    drawMatchHighlights(
-      toolCtx,
-      0,
-      0,
-      canvastoolsRef.value.width,
-      canvastoolsRef.value.height,
-      bw,
-      bh,
-    );
-  }
+  return { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
 }
 
-async function dispatchBlocks(clearDiff = false) {
-  diffBlocks.old = diffBlocks.old.flat();
-  diffBlocks.new = diffBlocks.new.flat();
-
-  // Record colors used for the recent colors strip
-  if (diffBlocks.new.length > 0) {
-    const fg = toolbarStore.currentFg;
-    const bg = toolbarStore.currentBg;
-    toolbarStore.addRecentColor(fg);
-    if (bg !== fg) {
-      toolbarStore.addRecentColor(bg);
-    }
-  }
-
-  store.updateAsciiBlocks({
-    blocks: currentAsciiLayerBlocks.value,
-    diff: { ...diffBlocks },
-  });
-
-  if (clearDiff) {
-    diffBlocks.l = selectedLayerIndex.value;
-    diffBlocks.new = [];
-    diffBlocks.old = [];
-  }
-}
+// ─── Methods: Mouse Event Handlers ─────────────────────────────
 
 async function canvasMouseUp() {
   if (isDefault.value) return;
@@ -1351,31 +1115,6 @@ async function canvasMouseUp() {
       textEditing.value.startY = y.value;
       break;
   }
-}
-
-/**
- * Get the current selection bounds as grid coordinates {x, y, w, h}.
- * Returns null if no valid selection exists.
- */
-function getSelectionBounds(): { x: number; y: number; w: number; h: number } | null {
-  if (!isSelected.value || !isSelecting.value) return null;
-
-  const bw = blockWidthComp.value;
-  const bh = blockHeightComp.value;
-
-  const startX = Math.floor(selecting.value.startX! / bw);
-  const startY = Math.floor(selecting.value.startY! / bh);
-  const endX = Math.ceil(selecting.value.endX! / bw);
-  const endY = Math.ceil(selecting.value.endY! / bh);
-
-  const x1 = Math.max(0, Math.min(startX, endX));
-  const y1 = Math.max(0, Math.min(startY, endY));
-  const x2 = Math.min(currentAsciiWidth.value, Math.max(startX, endX));
-  const y2 = Math.min(currentAsciiHeight.value, Math.max(startY, endY));
-
-  if (x2 <= x1 || y2 <= y1) return null;
-
-  return { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
 }
 
 async function canvasMouseDown() {
@@ -1419,7 +1158,6 @@ async function canvasMouseDown() {
 
       case 'dropper':
         if (toolbarState.value.halfBlockEditing) {
-          // Half-block mode: sample colour at specific half
           const halfY = y.value * 2 + (isTopHalf.value ? 0 : 1);
           const grid = new HalfBlockGrid(currentAsciiLayerBlocks.value);
           const sampledColour = grid.getColour(x.value, halfY);
@@ -1429,15 +1167,18 @@ async function canvasMouseDown() {
             toolbarStore.changeColourBg(sampledColour);
           }
         } else {
-          // Standard full-block dropper
           if (canFg.value) {
             toolbarStore.changeColourFg(
-              targetBlock.fg === undefined ? currentFg.value : targetBlock.fg,
+              targetBlock.fg === undefined
+                ? currentFg.value
+                : targetBlock.fg,
             );
           }
           if (canBg.value) {
             toolbarStore.changeColourBg(
-              targetBlock.bg === undefined ? currentBg.value : targetBlock.bg,
+              targetBlock.bg === undefined
+                ? currentBg.value
+                : targetBlock.bg,
             );
           }
           if (canText.value) {
@@ -1453,16 +1194,15 @@ async function canvasMouseDown() {
 
       case 'replace-color':
         if (toolbarState.value.halfBlockEditing) {
-          toastShow('Color replace is not available in half-block mode', {
-            type: 'error',
-          });
+          toastShow(
+            'Color replace is not available in half-block mode',
+            { type: 'error' },
+          );
           break;
         }
         if (!isReplacePicking.value) {
-          // Click 1: pick source colors from the clicked block
           pickSource(targetBlock);
         } else {
-          // Click 2: apply replacement
           const selection = getSelectionBounds();
           applyReplace(selection ?? undefined);
         }
@@ -1470,17 +1210,19 @@ async function canvasMouseDown() {
 
       case 'gradient':
         if (toolbarState.value.halfBlockEditing) {
-          toastShow('Gradient fill is not available in half-block mode', {
-            type: 'error',
-          });
+          toastShow(
+            'Gradient fill is not available in half-block mode',
+            { type: 'error' },
+          );
           break;
         }
         if (!isGradientPicking.value) {
-          // Click 1: set start point
           setStartPoint(x.value, y.value);
         } else {
-          // Click 2: apply gradient from start to current position
-          applyGradient(x.value, y.value, currentAsciiLayerBlocks.value);
+          applyGradient(
+            x.value, y.value,
+            currentAsciiLayerBlocks.value,
+          );
           canTool.value = false;
           await dispatchBlocks(true);
           await delayRedrawCanvas(true);
@@ -1489,17 +1231,19 @@ async function canvasMouseDown() {
 
       case 'shapes':
         if (toolbarState.value.halfBlockEditing) {
-          toastShow('Shape tools are not available in half-block mode', {
-            type: 'error',
-          });
+          toastShow(
+            'Shape tools are not available in half-block mode',
+            { type: 'error' },
+          );
           break;
         }
         if (!isShapePicking.value) {
-          // Click 1: set start point
           setShapeStart(x.value, y.value);
         } else {
-          // Click 2: apply shape from start to current position
-          applyShape(x.value, y.value, currentAsciiLayerBlocks.value);
+          applyShape(
+            x.value, y.value,
+            currentAsciiLayerBlocks.value,
+          );
           canTool.value = false;
           await dispatchBlocks(true);
           await delayRedrawCanvas(true);
@@ -1509,25 +1253,14 @@ async function canvasMouseDown() {
   }
 }
 
-/**
- * Bresenham interpolation: fill gaps from fast mouse movement.
- * Applies the given function at each intermediate grid cell between the
- * last brush position and the current x/y. Skips first (already painted)
- * and last (handled by the final draw call after this returns).
- *
- * Note: Temporarily mutates x/y refs during interpolation. This is safe
- * because no watchers in this component depend on x/y, and the only
- * computed (asciiBlockAtXy) correctly recalculates for intermediate
- * positions to check grid bounds.
- */
 async function interpolateStroke(
   applyFn: () => Promise<void>,
 ): Promise<void> {
   if (
-    !canTool.value ||
-    lastBrushX.value < 0 ||
-    lastBrushY.value < 0 ||
-    (lastBrushX.value === x.value && lastBrushY.value === y.value)
+    !canTool.value
+    || lastBrushX.value < 0
+    || lastBrushY.value < 0
+    || (lastBrushX.value === x.value && lastBrushY.value === y.value)
   ) {
     return;
   }
@@ -1559,7 +1292,9 @@ async function canvasMouseMove(e: MouseEvent) {
   }
   if (e.offsetY >= 0) {
     y.value = e.offsetY;
-    isTopHalf.value = Math.floor(e.offsetY / (blockHeightComp.value / 2)) % 2 === 0;
+    isTopHalf.value = Math.floor(
+      e.offsetY / (blockHeightComp.value / 2),
+    ) % 2 === 0;
   }
 
   x.value = Math.floor(x.value / blockWidthComp.value);
@@ -1572,6 +1307,7 @@ async function canvasMouseMove(e: MouseEvent) {
   emit('coordsupdate', { x: x.value, y: y.value });
 
   if (asciiBlockAtXy.value) {
+    const toolCtx = rendering.getToolCtx();
     switch (currentTool.value.name) {
       case 'brush':
         if (isMouseOnCanvas.value) {
@@ -1629,10 +1365,10 @@ async function canvasMouseMove(e: MouseEvent) {
       case 'replace-color':
         await clearToolCanvas();
         await drawIndicator();
-        // Show source color indicator when pick is active
-        if (isReplacePicking.value && replaceColorSource.value && toolCtx) {
+        if (isReplacePicking.value
+          && replaceColorSource.value
+          && toolCtx) {
           const bw = blockWidthComp.value;
-          // Draw source FG color swatch above cursor
           if (replaceColorSource.value.fg !== null) {
             toolCtx.fillStyle = mircColours99[replaceColorSource.value.fg];
             toolCtx.fillRect(
@@ -1640,7 +1376,6 @@ async function canvasMouseMove(e: MouseEvent) {
               bw / 2, 4,
             );
           }
-          // Draw source BG color swatch above cursor
           if (replaceColorSource.value.bg !== null) {
             toolCtx.fillStyle = mircColours99[replaceColorSource.value.bg];
             toolCtx.fillRect(
@@ -1654,8 +1389,9 @@ async function canvasMouseMove(e: MouseEvent) {
       case 'gradient':
         await clearToolCanvas();
         await drawIndicator();
-        // Show bounding rectangle from start point to cursor
-        if (isGradientPicking.value && gradientStart.value && toolCtx) {
+        if (isGradientPicking.value
+          && gradientStart.value
+          && toolCtx) {
           const bw = blockWidthComp.value;
           const bh = blockHeightComp.value;
           const sx = gradientStart.value.x * bw;
@@ -1669,19 +1405,21 @@ async function canvasMouseMove(e: MouseEvent) {
             Math.abs(canvasX.value - sx) + bw,
             Math.abs(canvasY.value - sy) + bh,
           );
-          // Draw start color swatch
           toolCtx.fillStyle = mircColours99[toolbarStore.currentFg];
           toolCtx.fillRect(sx, sy, bw, bh);
           toolCtx.fillStyle = mircColours99[toolbarStore.currentBg];
-          toolCtx.fillRect(canvasX.value, canvasY.value, bw, bh);
+          toolCtx.fillRect(
+            canvasX.value, canvasY.value, bw, bh,
+          );
         }
         break;
 
       case 'shapes':
         await clearToolCanvas();
         await drawIndicator();
-        // Show shape preview from start point to cursor
-        if (isShapePicking.value && shapeStart.value && toolCtx) {
+        if (isShapePicking.value
+          && shapeStart.value
+          && toolCtx) {
           drawShapePreview({
             ctx: toolCtx,
             shapeType: toolbarStore.toolbarState.shapeType,
@@ -1699,142 +1437,43 @@ async function canvasMouseMove(e: MouseEvent) {
   }
 }
 
-async function clearToolCanvas() {
-  if (toolCtx) {
-    toolCtx.clearRect(0, 0, canvasSize.width, canvasSize.height);
-    const tools = canvastoolsRef.value;
-    if (tools) {
-      // eslint-disable-next-line no-self-assign
-      tools.width = tools.width;
-    }
-    if (gridView.value) {
-      await drawGrid();
-    }
-  }
-}
+// ─── Methods: Dispatch & Diff ──────────────────────────────────
 
-// delayRedrawCanvas is provided by useFpsThrottle composable
+async function dispatchBlocks(clearDiff = false) {
+  diffBlocks.old = diffBlocks.old.flat();
+  diffBlocks.new = diffBlocks.new.flat();
 
-async function processSelect() {
-  let sx = 0;
-  let sy = 0;
-  let curBlock: Block = {};
-  selectedBlocks.value = [];
-
-  if (selecting.value.endY! < selecting.value.startY!) {
-    const end = selecting.value.endY!;
-    const start = selecting.value.startY!;
-    selecting.value.startY = end;
-    selecting.value.endY = start;
-  }
-
-  if (selecting.value.endX! < selecting.value.startX!) {
-    const end = selecting.value.endX!;
-    const start = selecting.value.startX!;
-    selecting.value.startX = end;
-    selecting.value.endX = start;
-  }
-
-  for (sy = 0; sy < currentAsciiHeight.value; sy++) {
-    if (
-      sy > Math.floor(selecting.value.startY! / blockHeightComp.value) - 1 &&
-      sy < Math.floor(selecting.value.endY! / blockHeightComp.value)
-    ) {
-      if (!selectedBlocks.value[sy]) {
-        selectedBlocks.value[sy] = [];
-      }
-
-      for (sx = 0; sx < currentAsciiWidth.value; sx++) {
-        if (
-          sx > Math.ceil(selecting.value.startX! / blockWidthComp.value) - 1 &&
-          sx <= Math.ceil(selecting.value.endX! / blockWidthComp.value) - 1
-        ) {
-          if (
-            currentAsciiLayerBlocks.value[sy] &&
-            currentAsciiLayerBlocks.value[sy][sx]
-          ) {
-            if (currentAsciiLayerBlocks.value[sy][sx].bg === null) {
-              delete currentAsciiLayerBlocks.value[sy][sx]['bg'];
-            }
-            if (currentAsciiLayerBlocks.value[sy][sx].fg === null) {
-              delete currentAsciiLayerBlocks.value[sy][sx]['fg'];
-            }
-            if (currentAsciiLayerBlocks.value[sy][sx].char === null) {
-              delete currentAsciiLayerBlocks.value[sy][sx]['char'];
-            }
-
-            curBlock = { ...currentAsciiLayerBlocks.value[sy][sx] };
-
-            if (!selectedBlocks.value[sy][sx]) {
-              selectedBlocks.value[sy][sx] = { ...curBlock };
-            }
-          }
-        }
-      }
+  if (diffBlocks.new.length > 0) {
+    const fg = toolbarStore.currentFg;
+    const bg = toolbarStore.currentBg;
+    toolbarStore.addRecentColor(fg);
+    if (bg !== fg) {
+      toolbarStore.addRecentColor(bg);
     }
   }
 
-  emit('selectedblocks', selectedBlocks.value);
-  emit('selecting', selecting.value);
-}
+  store.updateAsciiBlocks({
+    blocks: currentAsciiLayerBlocks.value,
+    diff: { ...diffBlocks },
+  });
 
-function drawRectangleBlock(rx: number, ry: number) {
-  if (!toolCtx) return;
-  const bw = blockWidthComp.value;
-  const bh = blockHeightComp.value;
-  const block = asciiBlockAtXy.value as Block | false;
-  let indicatorColour = 1;
-
-  if (block && typeof block === 'object') {
-    indicatorColour = block.bg === 0 ? 1 : 0;
-    if (block.bg === 8) {
-      indicatorColour = 1;
-    }
-  }
-
-  // Half-block mode: draw half-height indicator
-  if (toolbarState.value.halfBlockEditing) {
-    const halfH = bh / 2;
-    const yOff = isTopHalf.value ? 0 : halfH;
-    toolCtx.fillStyle = mircColours99[indicatorColour];
-    toolCtx.fillRect(rx * bw, ry * bh + yOff, bw, halfH);
-    toolCtx.setLineDash([1, 2]);
-    toolCtx.strokeRect(rx * bw, ry * bh + yOff, bw, halfH);
-    return;
-  }
-
-  toolCtx.fillStyle = mircColours99[indicatorColour];
-  toolCtx.fillRect(rx * bw, ry * bh, bw, bh);
-  toolCtx.setLineDash([1, 2]);
-  toolCtx.strokeRect(rx * bw, ry * bh, bw, bh);
-}
-
-function drawIndicator() {
-  const positions = getMirrorPositions(
-    x.value, y.value,
-    currentAsciiWidth.value, currentAsciiHeight.value,
-    mirrorX.value && isTextEditing.value,
-    mirrorY.value && isTextEditing.value,
-  );
-  for (const pos of positions) {
-    drawRectangleBlock(pos.x, pos.y);
+  if (clearDiff) {
+    diffBlocks.l = selectedLayerIndex.value;
+    diffBlocks.new = [];
+    diffBlocks.old = [];
   }
 }
 
-function drawTextIndicator() {
-  const tx = textEditing.value.startX;
-  const ty = textEditing.value.startY;
-  if (tx === null || ty === null) return;
-
-  const positions = getMirrorPositions(
-    tx, ty,
-    currentAsciiWidth.value, currentAsciiHeight.value,
-    mirrorX.value, mirrorY.value,
-  );
-  for (const pos of positions) {
-    drawRectangleBlock(pos.x, pos.y);
-  }
+function recordDiff(
+  sx: number,
+  sy: number,
+  oldBlock: Block,
+  newBlock: Block,
+): void {
+  storeDiffBlockFn(diffBlocks, sx, sy, oldBlock, newBlock);
 }
+
+// ─── Methods: Tool Logic ───────────────────────────────────────
 
 function drawBrushBlocks(
   brushX: number,
@@ -1843,6 +1482,7 @@ function drawBrushBlocks(
   target: string | null = null,
   plain = false,
 ) {
+  const toolCtx = rendering.getToolCtx();
   if (!toolCtx) return;
   const bw = blockWidthComp.value;
   const bh = blockHeightComp.value;
@@ -1894,7 +1534,9 @@ function drawBrushBlocks(
         toolCtx.fillStyle = canFg.value
           ? mircColours99[brushBlock.fg]
           : '#FFFFFF';
-        toolCtx.fillText(brushBlock.char, brushX, brushY + bh - 3);
+        toolCtx.fillText(
+          brushBlock.char, brushX, brushY + bh - 3,
+        );
 
         applyMirrored(
           arrayX, arrayY, asciiWidth, asciiHeight,
@@ -1917,11 +1559,13 @@ function drawBrushBlocks(
           mirrorX.value, mirrorY.value,
           (mx, my) => {
             if (
-              currentAsciiLayerBlocks.value[my] &&
-              currentAsciiLayerBlocks.value[my][mx] &&
-              (x.value !== mx || y.value !== my)
+              currentAsciiLayerBlocks.value[my]
+              && currentAsciiLayerBlocks.value[my][mx]
+              && (x.value !== mx || y.value !== my)
             ) {
-              const charOb = { ...currentAsciiLayerBlocks.value[my][mx] };
+              const charOb = {
+                ...currentAsciiLayerBlocks.value[my][mx],
+              };
               currentAsciiLayerBlocks.value[my][mx].char = brushBlock.char;
               recordDiff(mx, my, charOb, brushBlock);
             }
@@ -1960,11 +1604,13 @@ function drawBrushBlocks(
       mirrorX.value, mirrorY.value,
       (mx, my) => {
         if (
-          currentAsciiLayerBlocks.value[my] &&
-          currentAsciiLayerBlocks.value[my][mx] &&
-          (x.value !== mx || y.value !== my)
+          currentAsciiLayerBlocks.value[my]
+          && currentAsciiLayerBlocks.value[my][mx]
+          && (x.value !== mx || y.value !== my)
         ) {
-          const ob = { ...currentAsciiLayerBlocks.value[my][mx] };
+          const ob = {
+            ...currentAsciiLayerBlocks.value[my][mx],
+          };
           currentAsciiLayerBlocks.value[my][mx][target!] = brushBlock[target!];
           recordDiff(mx, my, ob, brushBlock);
         }
@@ -1976,27 +1622,25 @@ function drawBrushBlocks(
 }
 
 async function drawHalfBlocks(brushX: number, brushY: number) {
+  const toolCtx = rendering.getToolCtx();
   if (!toolCtx) return;
   const bw = blockWidthComp.value;
   const bh = blockHeightComp.value;
 
-  // Compute half-block coordinates from pixel position
   const coord = HalfBlockGrid.fromPixels(brushX, brushY, bw, bh);
   const blockY = Math.floor(coord.y / 2);
   const blockX = coord.x;
 
   if (
-    !currentAsciiLayerBlocks.value[blockY] ||
-    !currentAsciiLayerBlocks.value[blockY][blockX]
+    !currentAsciiLayerBlocks.value[blockY]
+    || !currentAsciiLayerBlocks.value[blockY][blockX]
   ) {
     toolCtx.restore();
     return;
   }
 
-  // Snapshot old block before mutation
   const ob = { ...currentAsciiLayerBlocks.value[blockY][blockX] };
 
-  // Draw canvas preview
   toolCtx.font = getCanvasFont(blockSizeMultiplier.value);
   toolCtx.fillStyle = mircColours99[currentFg.value];
   toolCtx.fillText(
@@ -2006,13 +1650,14 @@ async function drawHalfBlocks(brushX: number, brushY: number) {
   );
 
   if (canTool.value) {
-    // Use HalfBlockGrid to set the colour at half-block granularity
     const grid = new HalfBlockGrid(currentAsciiLayerBlocks.value);
     grid.setColour(coord.x, coord.y, currentFg.value);
 
-    recordDiff(blockX, blockY, ob, currentAsciiLayerBlocks.value[blockY][blockX]);
+    recordDiff(
+      blockX, blockY, ob,
+      currentAsciiLayerBlocks.value[blockY][blockX],
+    );
 
-    // Mirror positions at half-block granularity
     applyMirroredHalfBlock(
       coord.x, coord.y,
       currentAsciiWidth.value, currentAsciiHeight.value,
@@ -2039,21 +1684,25 @@ async function drawBrush(plain = false) {
 
   for (let i = 0; i <= brushBlocks.value.length; i++) {
     if (brushBlocks.value[i] && xLength === false) {
-      brushDiffX = Math.floor(brushBlocks.value[i].length / 2) * bw;
+      brushDiffX = Math.floor(
+        brushBlocks.value[i].length / 2,
+      ) * bw;
       xLength = brushBlocks.value[i].length;
       break;
     }
   }
 
-  const brushDiffY = Math.floor(brushBlocks.value.length / 2) * bh;
+  const brushDiffY = Math.floor(
+    brushBlocks.value.length / 2,
+  ) * bh;
 
   for (let by = 0; by < brushBlocks.value.length; by++) {
     if (!brushBlocks.value[by]) continue;
 
     for (let bx = 0; bx < xLength; bx++) {
       if (
-        !brushBlocks.value[by][bx] ||
-        isEmptyBlock(brushBlocks.value[by][bx])
+        !brushBlocks.value[by][bx]
+        || isEmptyBlock(brushBlocks.value[by][bx])
       ) {
         continue;
       }
@@ -2061,10 +1710,10 @@ async function drawBrush(plain = false) {
       const brushBlock = brushBlocks.value[by][bx];
 
       if (
-        brushBlock.char !== undefined &&
-        brushBlock.char === ' ' &&
-        brushBlock.bg === undefined &&
-        brushBlock.fg === undefined
+        brushBlock.char !== undefined
+        && brushBlock.char === ' '
+        && brushBlock.bg === undefined
+        && brushBlock.fg === undefined
       ) {
         continue;
       }
@@ -2076,42 +1725,43 @@ async function drawBrush(plain = false) {
       const arrayX = brushX / bw;
 
       if (
-        currentAsciiLayerBlocks.value[arrayY] &&
-        currentAsciiLayerBlocks.value[arrayY][arrayX]
+        currentAsciiLayerBlocks.value[arrayY]
+        && currentAsciiLayerBlocks.value[arrayY][arrayX]
       ) {
-        const ob = { ...currentAsciiLayerBlocks.value[arrayY][arrayX] };
+        const ob = {
+          ...currentAsciiLayerBlocks.value[arrayY][arrayX],
+        };
 
         if (!plain) {
           if (toolbarState.value.halfBlockEditing) {
             await drawHalfBlocks(brushX, brushY);
           } else {
             if (canBg.value) {
-              await drawBrushBlocks(brushX, brushY, brushBlock, 'bg');
+              await drawBrushBlocks(
+                brushX, brushY, brushBlock, 'bg',
+              );
             }
             if (canFg.value) {
-              await drawBrushBlocks(brushX, brushY, brushBlock, 'fg');
+              await drawBrushBlocks(
+                brushX, brushY, brushBlock, 'fg',
+              );
             }
-            await drawBrushBlocks(brushX, brushY, brushBlock, null);
+            await drawBrushBlocks(
+              brushX, brushY, brushBlock, null,
+            );
           }
 
           if (canTool.value && !toolbarState.value.halfBlockEditing) {
             recordDiff(arrayX, arrayY, ob, brushBlock);
           }
         } else if (isErasing.value) {
-          await drawBrushBlocks(brushX, brushY, brushBlock, null, true);
+          await drawBrushBlocks(
+            brushX, brushY, brushBlock, null, true,
+          );
         }
       }
     }
   }
-}
-
-function recordDiff(
-  sx: number,
-  sy: number,
-  oldBlock: Block,
-  newBlock: Block,
-): void {
-  storeDiffBlockFn(diffBlocks, sx, sy, oldBlock, newBlock);
 }
 
 function eraser() {
@@ -2119,12 +1769,10 @@ function eraser() {
     const bw = blockWidthComp.value;
     const bh = blockHeightComp.value;
 
-    // ── Half-block eraser path ──
     if (toolbarState.value.halfBlockEditing) {
       const grid = new HalfBlockGrid(currentAsciiLayerBlocks.value);
       const halfY = y.value * 2 + (isTopHalf.value ? 0 : 1);
 
-      // Primary erase position
       const row = currentAsciiLayerBlocks.value[y.value];
       if (row && row[x.value] !== undefined) {
         const ob = { ...row[x.value] };
@@ -2132,7 +1780,6 @@ function eraser() {
         recordDiff(x.value, y.value, ob, row[x.value]);
       }
 
-      // Mirror positions
       applyMirroredHalfBlock(
         x.value, halfY,
         currentAsciiWidth.value, currentAsciiHeight.value,
@@ -2148,7 +1795,6 @@ function eraser() {
       return;
     }
 
-    // ── Standard full-block eraser path ──
     const brushDiffX =
       Math.floor(brushBlocks.value[0].length / 2) * bw;
     const brushDiffY =
@@ -2167,14 +1813,16 @@ function eraser() {
         if (currentAsciiLayerBlocks.value[arrayY] === undefined) continue;
 
         if (
-          currentAsciiLayerBlocks.value[arrayY][arrayX] === undefined ||
-          isEmptyBlock(brushBlocks.value[ey][ex])
+          currentAsciiLayerBlocks.value[arrayY][arrayX] === undefined
+          || isEmptyBlock(brushBlocks.value[ey][ex])
         ) {
           continue;
         }
 
         const tBlock = currentAsciiLayerBlocks.value[arrayY][arrayX];
-        const ob = { ...currentAsciiLayerBlocks.value[arrayY][arrayX] };
+        const ob = {
+          ...currentAsciiLayerBlocks.value[arrayY][arrayX],
+        };
 
         eraseBlockProperties(tBlock, {
           fg: canFg.value,
@@ -2206,13 +1854,11 @@ function eraser() {
 }
 
 function fill(eraser = false) {
-  // Half-block fill path
   if (toolbarState.value.halfBlockEditing) {
     const bh = blockHeightComp.value;
     const halfY = Math.floor(
       (y.value * bh + (isTopHalf.value ? 0 : bh / 2)) / (bh / 2),
     );
-    // 99 = EMPTY_COLOUR (transparent) — acts as eraser in half-block mode
     const fillColour = eraser ? 99 : currentFg.value;
 
     const changes = iterativeFillHalfBlock(
@@ -2224,9 +1870,9 @@ function fill(eraser = false) {
 
     for (const change of changes) {
       if (
-        change.old.bg !== change.new.bg ||
-        change.old.fg !== change.new.fg ||
-        change.old.char !== change.new.char
+        change.old.bg !== change.new.bg
+        || change.old.fg !== change.new.fg
+        || change.old.char !== change.new.char
       ) {
         recordDiff(change.x, change.y, change.old, change.new);
       }
@@ -2234,7 +1880,6 @@ function fill(eraser = false) {
     return;
   }
 
-  // Standard full-block fill path
   if (!canBg.value && !canFg.value && !canText.value) {
     toastShow('Select at least one fill target (FG/BG/Text)', {
       type: 'error',
@@ -2248,6 +1893,7 @@ function fill(eraser = false) {
     char: currentChar.value,
   };
   const current = { ...(asciiBlockAtXy.value as Block) };
+
   if (!canBg.value) {
     delete fillColor['bg'];
   }
@@ -2270,19 +1916,91 @@ function fill(eraser = false) {
     eraser,
   );
 
-  // Only record diffs for cells that actually changed
   for (const change of changes) {
     if (
-      change.old.bg !== change.new.bg ||
-      change.old.fg !== change.new.fg ||
-      change.old.char !== change.new.char
+      change.old.bg !== change.new.bg
+      || change.old.fg !== change.new.fg
+      || change.old.char !== change.new.char
     ) {
       recordDiff(change.x, change.y, change.old, change.new);
     }
   }
 }
 
-// ─── Expose for test compatibility ──────────────────────────────
+async function processSelect() {
+  let sx = 0;
+  let sy = 0;
+  let curBlock: Block = {};
+  selectedBlocks.value = [];
+
+  if (selecting.value.endY! < selecting.value.startY!) {
+    const end = selecting.value.endY!;
+    const start = selecting.value.startY!;
+    selecting.value.startY = end;
+    selecting.value.endY = start;
+  }
+
+  if (selecting.value.endX! < selecting.value.startX!) {
+    const end = selecting.value.endX!;
+    const start = selecting.value.startX!;
+    selecting.value.startX = end;
+    selecting.value.endX = start;
+  }
+
+  for (sy = 0; sy < currentAsciiHeight.value; sy++) {
+    if (
+      sy > Math.floor(
+        selecting.value.startY! / blockHeightComp.value,
+      ) - 1
+      && sy < Math.floor(
+        selecting.value.endY! / blockHeightComp.value,
+      )
+    ) {
+      if (!selectedBlocks.value[sy]) {
+        selectedBlocks.value[sy] = [];
+      }
+
+      for (sx = 0; sx < currentAsciiWidth.value; sx++) {
+        if (
+          sx > Math.ceil(
+            selecting.value.startX! / blockWidthComp.value,
+          ) - 1
+          && sx <= Math.ceil(
+            selecting.value.endX! / blockWidthComp.value,
+          ) - 1
+        ) {
+          if (
+            currentAsciiLayerBlocks.value[sy]
+            && currentAsciiLayerBlocks.value[sy][sx]
+          ) {
+            if (currentAsciiLayerBlocks.value[sy][sx].bg === null) {
+              delete currentAsciiLayerBlocks.value[sy][sx]['bg'];
+            }
+            if (currentAsciiLayerBlocks.value[sy][sx].fg === null) {
+              delete currentAsciiLayerBlocks.value[sy][sx]['fg'];
+            }
+            if (currentAsciiLayerBlocks.value[sy][sx].char === null) {
+              delete currentAsciiLayerBlocks.value[sy][sx]['char'];
+            }
+
+            curBlock = {
+              ...currentAsciiLayerBlocks.value[sy][sx],
+            };
+
+            if (!selectedBlocks.value[sy][sx]) {
+              selectedBlocks.value[sy][sx] = { ...curBlock };
+            }
+          }
+        }
+      }
+    }
+  }
+
+  emit('selectedblocks', selectedBlocks.value);
+  emit('selecting', selecting.value);
+}
+
+// ─── Expose for test compatibility ─────────────────────────────
 defineExpose({
   // Reactive state
   x,
@@ -2351,12 +2069,12 @@ defineExpose({
   openContextMenu,
   canvasKeyDown,
   warnInvisibleLayer,
-  checkVisible: checkVisibleFn,
+  checkVisible: rendering.checkVisibleFn,
   undo,
   redo,
   resetSelectTool,
   redrawSelect,
-  mergeLayers: mergeLayersFn,
+  mergeLayers: rendering.mergeLayersFn,
   drawGrid,
   redrawCanvas,
   dispatchBlocks,
