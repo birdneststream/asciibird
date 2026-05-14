@@ -104,7 +104,18 @@ async function bootstrap() {
     );
   }
 
-  // ── Step 3: Create Pinia, stores, and mount ──────────────────────
+  // ── Step 3: Suppress browser zoom globally ──────────────────────────
+  // Ctrl+Scroll and Ctrl+/- keyboard zoom would conflict with the
+  // ASCII block zoom feature (blockSizeMultiplier). Prevent the browser
+  // from zooming the page — only our canvas block zoom should respond.
+  // Pattern used by Google Maps, Figma, and similar canvas apps.
+  document.addEventListener('wheel', (e) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  // ── Step 4: Create Pinia, stores, and mount ──────────────────────
   const pinia = createPinia();
   pinia.use(createPersistedState());
 
