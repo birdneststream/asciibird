@@ -342,7 +342,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch, onUnmounted } from 'vue';
+import { computed, reactive, ref, watch, onUnmounted, nextTick } from 'vue';
 import LZString from 'lz-string';
 import {
   Menu,
@@ -450,9 +450,15 @@ const activeMenuIndex = ref<number | null>(null);
 
 function onMenuButtonMouseEnter(index: number) {
   // If a menu is already open and user hovers a different button,
-  // click the new button to trigger Headless UI's menu switch
+  // close the active menu by simulating an outside click (mousedown on
+  // body triggers HUI's outside-click handler), then open the new menu.
   if (activeMenuIndex.value !== null && activeMenuIndex.value !== index) {
-    menuButtonRefs.value[index]?.click();
+    document.body.dispatchEvent(
+      new MouseEvent('mousedown', { bubbles: true }),
+    );
+    nextTick(() => {
+      menuButtonRefs.value[index]?.click();
+    });
   }
 }
 
