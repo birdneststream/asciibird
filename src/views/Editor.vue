@@ -382,20 +382,21 @@ watch(currentAsciiWidth, (val) => {
   canvasSize.width = val * blockWidth;
 });
 
-watch(currentAscii, async (val, old) => {
-    if (JSON.stringify(val) !== JSON.stringify(old)) {
-      canvasSize.width = currentAsciiWidth.value * blockWidth;
-      canvasSize.height = currentAsciiHeight.value * blockHeight;
+// Watch tab index for tab switches — resets panel position from stored x/y.
+// Canvas redraws are handled by currentAsciiLayerBlocks watcher (L410).
+// Canvas resize is handled by currentAsciiWidth/currentAsciiHeight watchers (L376-382).
+watch(() => store.tab, (newTab) => {
+    const meta = store.asciibirdMeta[newTab];
+    if (!meta) return;
 
-      // Reset panel position on tab switch
-      canvasPanel.setPosition(val?.x ?? 0, val?.y ?? 0);
-      canvasPanel.setDimensions(
-        currentAsciiWidth.value * blockWidthComp.value,
-        currentAsciiHeight.value * blockHeightComp.value,
-      );
+    canvasSize.width = currentAsciiWidth.value * blockWidth;
+    canvasSize.height = currentAsciiHeight.value * blockHeight;
 
-      await delayRedrawCanvas();
-    }
+    canvasPanel.setPosition(meta.x ?? 0, meta.y ?? 0);
+    canvasPanel.setDimensions(
+      currentAsciiWidth.value * blockWidthComp.value,
+      currentAsciiHeight.value * blockHeightComp.value,
+    );
   });
 
 watch(() => props.resetSelect, () => {
