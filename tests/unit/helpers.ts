@@ -825,6 +825,12 @@ export function createMockStore(
     redoBlocks() {
       // Simplified mock for keyboard shortcut tests
     },
+    updateAsciiBlocks(_payload: any) {
+      // Simplified mock for selection transform
+    },
+    setBlockMultiplier(val: number) {
+      state.blockSizeMultiplier = Math.max(0.5, Math.min(4, val))
+    },
     changeIsUpdatingFg(val: boolean) {
       state.toolbarState.isChoosingFg = val
     },

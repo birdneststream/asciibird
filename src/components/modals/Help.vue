@@ -570,6 +570,23 @@
             </li>
           </ul>
         </li>
+        <li class="text-body-sm text-on-surface-variant ml-[5%]">
+          Selection transforms (available via right-click context menu or shortcuts):
+          <ul>
+            <li class="text-body-sm text-on-surface-variant ml-[5%]">
+              Ctrl + Shift + &gt; — Rotate selection 90° clockwise
+            </li>
+            <li class="text-body-sm text-on-surface-variant ml-[5%]">
+              Ctrl + Shift + &lt; — Rotate selection 90° counter-clockwise
+            </li>
+            <li class="text-body-sm text-on-surface-variant ml-[5%]">
+              Ctrl + Shift + H — Flip selection horizontally
+            </li>
+            <li class="text-body-sm text-on-surface-variant ml-[5%]">
+              Ctrl + Shift + X — Flip selection vertically
+            </li>
+          </ul>
+        </li>
       </ul>
       <h2
         class="text-headline-md font-bold text-on-surface pt-2 pb-1"

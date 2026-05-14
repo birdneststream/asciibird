@@ -230,6 +230,14 @@ button {
     @apply bg-surface-container-highest text-on-surface;
 }
 
+.ab-context-menu-separator {
+    @apply my-1 border-t border-outline-variant;
+}
+
+.ab-context-menu-item .ab-shortcut {
+    @apply float-right ml-4 text-on-surface-variant opacity-50;
+}
+
 .ab-range {
     @apply w-full h-2 rounded appearance-none cursor-pointer;
     background: #201f1f;

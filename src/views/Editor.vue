@@ -28,6 +28,37 @@
           >
             Export ASCII to mIRC File
           </li>
+          <template v-if="isSelected && isSelecting">
+            <li class="ab-context-menu-separator" />
+            <li
+              @click="applySelectionTransform('rotate-cw')"
+              class="ab-context-menu-item"
+            >
+              Rotate 90° CW
+              <span class="ab-shortcut">Ctrl+Shift+&gt;</span>
+            </li>
+            <li
+              @click="applySelectionTransform('rotate-ccw')"
+              class="ab-context-menu-item"
+            >
+              Rotate 90° CCW
+              <span class="ab-shortcut">Ctrl+Shift+&lt;</span>
+            </li>
+            <li
+              @click="applySelectionTransform('flip-h')"
+              class="ab-context-menu-item"
+            >
+              Flip Horizontal
+              <span class="ab-shortcut">Ctrl+Shift+H</span>
+            </li>
+            <li
+              @click="applySelectionTransform('flip-v')"
+              class="ab-context-menu-item"
+            >
+              Flip Vertical
+              <span class="ab-shortcut">Ctrl+Shift+X</span>
+            </li>
+          </template>
         </ul>
       </context-menu>
 
@@ -117,6 +148,7 @@ import { useCanvasPanel } from '../composables/useCanvasPanel';
 import { useMainCanvasRenderer } from '../composables/useMainCanvasRenderer';
 import { useExportAscii } from '../composables/useExportAscii';
 import { useFpsThrottle } from '../composables/useFpsThrottle';
+import { useSelectionTransform } from '../composables/useSelectionTransform';
 import hotkeys from 'hotkeys-js';
 
 import ContextMenu from '../components/parts/ContextMenu.vue';
@@ -145,6 +177,7 @@ import { storeDiffBlocks as storeDiffBlockFn } from '../utils/diffBlocks';
 import { getCanvasFont } from '../utils/canvasFont';
 import type { DiffBlocks } from '../utils/diffBlocks';
 import type { Block } from '../types';
+import type { TransformType } from '../utils/transformBlocks';
 
 defineOptions({ name: 'Editor' });
 
@@ -315,6 +348,30 @@ const currentAsciiHeight = computed(() =>
     ? 2184
     : currentSelectedLayer.value.height,
 );
+
+// ─── Selection Transform ─────────────────────────────────────────
+// useSelectionTransform provides rotate/flip operations on the
+// selected area. It references hoisted function declarations.
+const selectionTransform = useSelectionTransform({
+  selecting,
+  selectedBlocks,
+  blockWidthComp,
+  blockHeightComp,
+  currentAsciiWidth,
+  currentAsciiHeight,
+  currentAsciiLayerBlocks,
+  selectedLayerIndex,
+  updateAsciiBlocks: store.updateAsciiBlocks.bind(store),
+  setSelectBlocks: toolbarStore.setSelectBlocks.bind(toolbarStore),
+  redrawCanvas: async () => { await delayRedrawCanvas(true); },
+  clearToolCanvas,
+  redrawSelect,
+});
+
+/** Apply a transform to the current selection (context menu + shortcuts) */
+async function applySelectionTransform(type: TransformType) {
+  await selectionTransform.applyTransform(type);
+}
 
 const imageOverlay = computed(() => store.imageOverlay);
 
@@ -579,6 +636,9 @@ hotkeys('*', 'editor', async function (event) {
 // Ctrl+Scroll zoom handler — hoisted to setup scope for cleanup
 let wheelHandler: ((e: WheelEvent) => void) | null = null;
 
+// Selection transform event handler
+let selectionTransformHandler: ((e: Event) => void) | null = null;
+
 onMounted(async () => {
   const canvas = canvasRef.value;
   if (canvas) {
@@ -603,6 +663,18 @@ onMounted(async () => {
   };
   editorPanel.value?.addEventListener('wheel', wheelHandler, { passive: false });
 
+  // Selection transform shortcuts (dispatched from useGlobalShortcuts)
+  selectionTransformHandler = (e: Event) => {
+    const type = (e as CustomEvent).detail as TransformType;
+    if (isSelecting.value && isSelected.value) {
+      applySelectionTransform(type);
+    }
+  };
+  window.addEventListener(
+    'asciibird:selection-transform',
+    selectionTransformHandler,
+  );
+
   await delayRedrawCanvas();
 });
 
@@ -613,6 +685,13 @@ onUnmounted(() => {
   if (wheelHandler) {
     editorPanel.value?.removeEventListener('wheel', wheelHandler);
     wheelHandler = null;
+  }
+  if (selectionTransformHandler) {
+    window.removeEventListener(
+      'asciibird:selection-transform',
+      selectionTransformHandler,
+    );
+    selectionTransformHandler = null;
   }
 });
 
@@ -1853,6 +1932,8 @@ defineExpose({
   recordDiff,
   eraser,
   fill,
+  applySelectionTransform,
+  selectionTransform,
   // Template refs
   canvasRef,
   canvastoolsRef,

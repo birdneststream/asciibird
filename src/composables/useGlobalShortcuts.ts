@@ -115,6 +115,36 @@ export function useGlobalShortcuts() {
     'ctrl+0': () => {
       store.setBlockMultiplier(1);
     },
+
+    // Selection transforms (only when select tool active + selection exists)
+    'ctrl+shift+.': () => {
+      if (!modalStore.isModalOpen) {
+        window.dispatchEvent(
+          new CustomEvent('asciibird:selection-transform', { detail: 'rotate-cw' }),
+        );
+      }
+    },
+    'ctrl+shift+,'  : () => {
+      if (!modalStore.isModalOpen) {
+        window.dispatchEvent(
+          new CustomEvent('asciibird:selection-transform', { detail: 'rotate-ccw' }),
+        );
+      }
+    },
+    'ctrl+shift+h': () => {
+      if (!modalStore.isModalOpen) {
+        window.dispatchEvent(
+          new CustomEvent('asciibird:selection-transform', { detail: 'flip-h' }),
+        );
+      }
+    },
+    'ctrl+shift+x': () => {
+      if (!modalStore.isModalOpen) {
+        window.dispatchEvent(
+          new CustomEvent('asciibird:selection-transform', { detail: 'flip-v' }),
+        );
+      }
+    },
   };
 
   // Register all menu shortcuts in scope 'all'
