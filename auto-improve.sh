@@ -541,6 +541,16 @@ After ALL tasks are done and committed on the feature branch:
 3. Push: git push origin asciibird-v2
 4. Delete the feature branch: git branch -d <actual-branch-name>
 
+IMPORTANT — Close fixed Gitea issues:
+After merging and pushing, close any Gitea issues that were fixed in this iteration. For each issue addressed:
+- Verify the fix works in the browser (no console errors, correct behavior)
+- Close the issue via gitea_issue_write with method 'update' and state 'closed'
+- Add a comment noting the fix commit hash
+
+Use the gitea MCP tools:
+- gitea_issue_write(method='update', owner='hughbord', repo='asciibird', index=ISSUE_NUMBER, state='closed')
+- gitea_issue_write(method='add_comment', owner='hughbord', repo='asciibird', index=ISSUE_NUMBER, body='Fixed in commit HASH. Verified in browser.')
+
 Code review: You will be reviewed by 2 reviewers (GLM + Hy3). Address all critical issues before proceeding.
 
 This is fully autonomous — no user interaction needed. Follow the per-task cycle from your agent instructions exactly. You MUST merge to asciibird-v2 and push before finishing."
