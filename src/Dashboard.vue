@@ -190,6 +190,7 @@
       ref="asciiInput"
       type="file"
       style="display: none"
+      accept=".txt,.asb,.ans"
       @change="onImport()"
     >
 
@@ -427,6 +428,7 @@ import {
 
 import { downloadAnsi } from './utils/ansiExport';
 import { downloadHtml, exportHtmlFragment } from './utils/htmlExport';
+import { parseAnsiAscii } from './utils/ansiImport';
 
 import { useAsciiBirdStore } from './store';
 import { useModalStore } from './store/modal';
@@ -484,7 +486,7 @@ const tabbar = ref<HTMLElement | null>(null);
 // Reactive state
 const canvasX = ref<number | null>(null);
 const canvasY = ref<number | null>(null);
-const importType = ref<'mirc' | 'asb' | null>(null);
+const importType = ref<'mirc' | 'asb' | 'ansi' | null>(null);
 const selectedBlocks = ref<Block[][]>([]);
 const textEditing = ref<{
   startX: number | null;
@@ -596,6 +598,10 @@ const menuBar = computed<AppMenuBar[]>(() => [
         text: 'Import from File',
         click: () => startImport('mirc'),
         shortcut: 'Ctrl+Shift+O',
+      },
+      {
+        text: 'Import ANSI from File',
+        click: () => startImport('ansi'),
       },
       {
         text: 'Import from Clipboard',
@@ -844,6 +850,10 @@ async function onImport() {
         importAsciibirdState(fileReader.result as string);
         break;
 
+      case 'ansi':
+        await parseAnsiAscii(fileReader.result as string, filename);
+        break;
+
       default:
       case 'mirc':
         await parseMircAscii(fileReader.result as string, filename);
@@ -857,7 +867,7 @@ async function onImport() {
   fileReader.readAsText(files[0]);
 }
 
-function startImport(type: 'mirc' | 'asb') {
+function startImport(type: 'mirc' | 'asb' | 'ansi') {
   importType.value = type;
   asciiInput.value?.click();
 }

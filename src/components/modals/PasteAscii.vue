@@ -19,14 +19,21 @@
 
     <div class="mb-2">
       <label class="block text-on-surface-variant font-label-mono mb-1">
-        Paste mIRC ASCII
+        {{ detectedFormat === 'ansi' ? 'Paste ANSI ASCII' : 'Paste mIRC ASCII' }}
       </label>
       <textarea
         class="ab-input"
         v-model="pasteContent"
         name="paste-ascii"
         rows="10"
+        @input="detectFormat"
       />
+      <p
+        v-if="detectedFormat"
+        class="mt-1 text-xs text-outline font-label-mono"
+      >
+        Detected: {{ detectedFormat === 'ansi' ? 'ANSI' : 'mIRC' }} format
+      </p>
     </div>
 
     <template #footer>
@@ -62,6 +69,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { parseMircAscii } from '../../ascii';
+import { parseAnsiAscii, isAnsiContent } from '../../utils/ansiImport';
 import ABModal from '../ABModal.vue';
 import { useModalStore } from '../../store/modal';
 
@@ -69,6 +77,7 @@ const modalStore = useModalStore();
 
 const pasteContent = ref('');
 const title = ref('clipboard.txt');
+const detectedFormat = ref<'mirc' | 'ansi' | ''>('');
 
 const showPasteAscii = computed(() => modalStore.modalState.pasteAscii);
 const checkPasteContent = computed(() => !pasteContent.value.length);
@@ -76,10 +85,30 @@ const checkPasteContent = computed(() => !pasteContent.value.length);
 function close() {
   pasteContent.value = '';
   title.value = 'clipboard.txt';
+  detectedFormat.value = '';
+}
+
+function detectFormat() {
+  const content = pasteContent.value;
+  if (!content) {
+    detectedFormat.value = '';
+    return;
+  }
+  if (isAnsiContent(content)) {
+    detectedFormat.value = 'ansi';
+  } else if (content.includes('\x03')) {
+    detectedFormat.value = 'mirc';
+  } else {
+    detectedFormat.value = 'mirc'; // default to mIRC parser
+  }
 }
 
 async function importPasteAscii() {
-  await parseMircAscii(pasteContent.value, title.value);
+  if (detectedFormat.value === 'ansi') {
+    await parseAnsiAscii(pasteContent.value, title.value);
+  } else {
+    await parseMircAscii(pasteContent.value, title.value);
+  }
   close();
 }
 
@@ -94,6 +123,7 @@ defineExpose({
   pasteContent,
   title,
   checkPasteContent,
+  detectedFormat,
   importPasteAscii,
   close,
 });
