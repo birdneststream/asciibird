@@ -628,10 +628,10 @@
           Main tool to brush ascii blocks.
         </li>
         <li class="text-body-sm text-on-surface-variant ml-[5%]">
-          E - will horizontal flip the brush.
+          Shift+E - will horizontal flip the brush.
         </li>
         <li class="text-body-sm text-on-surface-variant ml-[5%]">
-          Q - will vertical flip the brush.
+          Shift+Q - will vertical flip the brush.
         </li>
         <li class="text-body-sm text-on-surface-variant ml-[5%]">
           You can also edit the brush library preview with this tool.
@@ -1363,10 +1363,10 @@
           Ctrl + [ - Decrease both brush sizes by 1
         </li>
         <li class="text-body-sm text-on-surface-variant ml-[5%]">
-          e - rotate brush
+          Shift+E - flip brush horizontally
         </li>
         <li class="text-body-sm text-on-surface-variant ml-[5%]">
-          q - flip brush
+          Shift+Q - rotate brush vertically
         </li>
       </ul>
       <h2
