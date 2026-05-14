@@ -116,6 +116,7 @@ import {
   downloadFile,
   cyrb53,
   emptyBlock,
+  isEmptyBlock,
   iterativeFill,
   checkIrcByteLimits,
 } from '../ascii';
@@ -1575,7 +1576,7 @@ async function drawBrush(plain = false) {
     for (let bx = 0; bx < xLength; bx++) {
       if (
         !brushBlocks.value[by][bx] ||
-        JSON.stringify(brushBlocks.value[by][bx]) === '{}'
+        isEmptyBlock(brushBlocks.value[by][bx])
       ) {
         continue;
       }
@@ -1657,7 +1658,7 @@ async function eraser() {
 
         if (
           currentAsciiLayerBlocks.value[arrayY][arrayX] === undefined ||
-          JSON.stringify(brushBlocks.value[ey][ex]) === '{}'
+          isEmptyBlock(brushBlocks.value[ey][ex])
         ) {
           continue;
         }

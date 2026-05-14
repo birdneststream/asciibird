@@ -221,6 +221,15 @@ export const toolbarIcons: ToolbarIcon[] = [
 
 export const emptyBlock: Block = {};
 
+/**
+ * Check if a block has no properties set.
+ * Semantically equivalent to `JSON.stringify(block) === '{}'`
+ * because the codebase uses `delete` (not `= undefined`) to reset blocks.
+ */
+export function isEmptyBlock(block: Block): boolean {
+  return Object.keys(block).length === 0;
+}
+
 export const create2DArray = (rows: number): Block[][] => {
   const arr: Block[][] = [];
 

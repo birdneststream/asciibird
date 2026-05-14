@@ -9,6 +9,7 @@ import {
   charCodes,
   toolbarIcons,
   emptyBlock,
+  isEmptyBlock,
   create2DArray,
   blockWidth,
   blockHeight,
@@ -268,6 +269,36 @@ describe('ascii.ts constants', () => {
   it('emptyBlock is an empty object', () => {
     expect(emptyBlock).toEqual({});
     expect(Object.keys(emptyBlock)).toHaveLength(0);
+  });
+
+  describe('isEmptyBlock', () => {
+    it('returns true for empty object', () => {
+      expect(isEmptyBlock({})).toBe(true);
+    });
+
+    it('returns false for block with fg', () => {
+      expect(isEmptyBlock({ fg: 0 })).toBe(false);
+    });
+
+    it('returns false for block with char null', () => {
+      expect(isEmptyBlock({ char: null })).toBe(false);
+    });
+
+    it('returns false for full block', () => {
+      expect(isEmptyBlock({ fg: 1, bg: 2, char: 'X' })).toBe(false);
+    });
+
+    it('returns true after delete', () => {
+      const block: Block = { fg: 1, bg: 2, char: 'X' };
+      delete block['fg'];
+      delete block['bg'];
+      delete block['char'];
+      expect(isEmptyBlock(block)).toBe(true);
+    });
+
+    it('returns true for emptyBlock constant', () => {
+      expect(isEmptyBlock(emptyBlock)).toBe(true);
+    });
   });
 });
 
