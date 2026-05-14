@@ -122,6 +122,7 @@ import {
 import { getMirrorPositions, applyMirrored } from '../utils/mirror';
 import { bresenhamLine } from '../utils/bresenham';
 import { storeDiffBlocks as storeDiffBlockFn } from '../utils/diffBlocks';
+import { getCanvasFont } from '../utils/canvasFont';
 import type { DiffBlocks } from '../utils/diffBlocks';
 import type { Block } from '../types';
 
@@ -563,7 +564,7 @@ onMounted(async () => {
     // willReadFrequently: canvas reset pattern (canvas.width = canvas.width)
     // triggers implicit readback; hint avoids repeated Chrome warnings.
     ctx = canvas.getContext('2d', { willReadFrequently: true });
-    if (ctx) ctx.font = '13px Hack';
+    if (ctx) ctx.font = getCanvasFont(store.blockSizeMultiplier);
   }
   const tools = canvastoolsRef.value;
   if (tools) {
@@ -960,7 +961,7 @@ async function redrawCanvas(force = false) {
       }
 
       canvasHash.value = tempHash;
-      clearMainCanvas(ctx, canvasRef.value, canvasSize.width, canvasSize.height);
+      clearMainCanvas(ctx, canvasRef.value, canvasSize.width, canvasSize.height, blockSizeMultiplier.value);
 
       for (cy = 0; cy < currentAsciiHeight.value + 1; cy++) {
         canvasYVal = bh * cy;
@@ -1405,7 +1406,7 @@ async function drawBrushBlocks(
 
     default:
       if (canText.value && brushBlock.char !== undefined) {
-        toolCtx.font = 'Hack 13px';
+        toolCtx.font = getCanvasFont(blockSizeMultiplier.value);
         toolCtx.fillStyle = canFg.value
           ? mircColours99[brushBlock.fg]
           : '#FFFFFF';
@@ -1503,7 +1504,7 @@ async function drawHalfBlocks(brushX: number, brushY: number) {
   const bottomChar = '\u2584'; // ▄
   const fullChar = ' ';
 
-  toolCtx.font = 'Hack 13px';
+  toolCtx.font = getCanvasFont(blockSizeMultiplier.value);
   toolCtx.fillStyle = mircColours99[currentFg.value];
   toolCtx.fillText(
     atTopHalf.value ? topChar : bottomChar,

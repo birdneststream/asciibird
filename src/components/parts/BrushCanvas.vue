@@ -67,6 +67,7 @@ import { useToolbarStore } from '../../store/toolbar'
 import { useToast } from '../../composables/useToast'
 import { useExportAscii } from '../../composables/useExportAscii'
 import { useFpsThrottle } from '../../composables/useFpsThrottle'
+import { getCanvasFont } from '../../utils/canvasFont'
 
 // ─── Props ──────────────────────────────────────────────
 const props = withDefaults(
@@ -175,7 +176,7 @@ function drawPreview() {
   const c = ctx.value
   c.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
   c.fillStyle = mircColours99[1]
-  c.font = '13px Hack'
+  c.font = getCanvasFont(store.blockSizeMultiplier)
 
   const blocks = getBlocks.value
   if (!blocks) return
