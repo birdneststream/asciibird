@@ -2,6 +2,7 @@ import LZString from 'lz-string';
 import type { Block, Layer, ImageOverlay, AsciibirdMetaBuilder, MircExportResult, ToolbarIcon, CreateAsciiForm } from './types';
 import type { AsciiStoreAccess, ModalStoreAccess } from './types/store';
 import { HalfBlockGrid } from './utils/halfBlockGrid';
+import { CANVAS_DEFAULT_X, CANVAS_DEFAULT_Y } from './store/panels';
 
 // Lazy store references to break circular dependency
 // Store imports from ascii, ascii imports store
@@ -394,8 +395,8 @@ export const createNewAscii = (forms: CreateAsciiForm): boolean => {
     title: forms.createAscii.title,
     history: [],
     historyIndex: 0,
-    x: 236,
-    y: 56,
+    x: CANVAS_DEFAULT_X,
+    y: CANVAS_DEFAULT_Y,
     layers: initialLayers,
     imageOverlay: defaultImageOverlay(),
     selectedLayer: 0,

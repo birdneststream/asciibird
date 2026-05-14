@@ -672,6 +672,7 @@ const menuBar = computed<AppMenuBar[]>(() => [
         click: () => {
           panelStore.resetAllPanelPositions();
           toolbarStore.resetToolbarPosition();
+          toolbarStore.pickerPos = null;
           store.resetCanvasPosition();
         },
       },

@@ -8,6 +8,10 @@ import {
   mergeLayers,
 } from '../ascii';
 import {
+  CANVAS_DEFAULT_X,
+  CANVAS_DEFAULT_Y,
+} from './panels';
+import {
   compressLayers,
   decompressLayers,
   createEmptyLayer,
@@ -99,8 +103,8 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     resetCanvasPosition() {
       const meta = this.asciibirdMeta[this.tab];
       if (meta) {
-        meta.x = 236;
-        meta.y = 56;
+        meta.x = CANVAS_DEFAULT_X;
+        meta.y = CANVAS_DEFAULT_Y;
       }
     },
     newAsciibirdMeta(payload: AsciibirdMeta) {
