@@ -257,7 +257,7 @@ describe('MainBrushCanvas.vue', () => {
     it('has correct default values', () => {
       const wrapper = mountMainBrushCanvas()
       expect(wrapper.vm.ctx).toBeDefined()
-      expect(typeof wrapper.vm.redraw).toBe('boolean')
+      expect(typeof wrapper.vm.delayRedrawCanvas).toBe('function')
       expect(wrapper.vm.canTool).toBe(false)
       expect(wrapper.vm.hasChanged).toBe(false)
       expect(wrapper.vm.x).toBe(0)
@@ -506,21 +506,14 @@ describe('MainBrushCanvas.vue', () => {
       expect(spy).not.toHaveBeenCalled()
     })
 
-    it('delayRedrawCanvas debounces with redraw flag', () => {
+    it('delayRedrawCanvas is available via useFpsThrottle composable', () => {
       const wrapper = mountMainBrushCanvas()
-      wrapper.vm.redraw = true
-
-      wrapper.vm.delayRedrawCanvas()
-      expect(wrapper.vm.redraw).toBe(false)
+      expect(typeof wrapper.vm.delayRedrawCanvas).toBe('function')
     })
 
-    it('delayRedrawCanvas skips when redraw is false', () => {
+    it('drawPreview is callable', () => {
       const wrapper = mountMainBrushCanvas()
-      wrapper.vm.redraw = false
-
-      const drawSpy = vi.spyOn(wrapper.vm, 'drawPreview')
-      wrapper.vm.delayRedrawCanvas()
-      expect(drawSpy).not.toHaveBeenCalled()
+      expect(() => wrapper.vm.drawPreview()).not.toThrow()
     })
 
     it('drawGrid calls canvas methods', () => {

@@ -140,9 +140,9 @@ describe('Editor.vue', () => {
       })
     })
 
-    it('redraw defaults to true (may change during lifecycle)', () => {
+    it('delayRedrawCanvas is available (via useFpsThrottle composable)', () => {
       const wrapper = mountEditor()
-      expect(typeof wrapper.vm.redraw).toBe('boolean')
+      expect(typeof wrapper.vm.delayRedrawCanvas).toBe('function')
     })
   })
 

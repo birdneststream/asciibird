@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import type { Block } from '../../types'
 import {
   mircColours99,
@@ -66,6 +66,7 @@ import { useAsciiBirdStore } from '../../store'
 import { useToolbarStore } from '../../store/toolbar'
 import { useToast } from '../../composables/useToast'
 import { useExportAscii } from '../../composables/useExportAscii'
+import { useFpsThrottle } from '../../composables/useFpsThrottle'
 
 // ─── Props ──────────────────────────────────────────────
 const props = withDefaults(
@@ -90,11 +91,13 @@ const { startExport } = useExportAscii({
 const canvasEl = ref<HTMLCanvasElement>()
 const contextMenuRef = ref<InstanceType<typeof ContextMenu>>()
 const ctx = ref<CanvasRenderingContext2D | null>(null)
-const redraw = ref(true)
 
-// Timer IDs for delayRedrawCanvas cleanup
-let pendingTimeout: ReturnType<typeof setTimeout> | null = null
-let pendingFrame: number | null = null
+// ─── FPS-Throttled Redraw ─────────────────────────────────
+let drawPreviewFn: () => void = () => {}
+const { scheduleRedraw: delayRedrawCanvas } = useFpsThrottle(
+  () => drawPreviewFn(),
+  () => store.options.fps,
+)
 
 // ─── Computed ───────────────────────────────────────────
 const renderBlockWidth = computed(
@@ -166,6 +169,7 @@ function canvasToPng() {
 }
 
 function drawPreview() {
+  drawPreviewFn = drawPreview
   if (!canvasRef.value || !ctx.value) return
 
   const c = ctx.value
@@ -201,45 +205,13 @@ function drawPreview() {
   }
 }
 
-function delayRedrawCanvas() {
-  if (redraw.value) {
-    redraw.value = false
-
-    // Cancel any previous pending redraw
-    if (pendingTimeout !== null) {
-      clearTimeout(pendingTimeout)
-    }
-    if (pendingFrame !== null) {
-      cancelAnimationFrame(pendingFrame)
-    }
-
-    pendingTimeout = setTimeout(() => {
-      pendingTimeout = null
-      pendingFrame = requestAnimationFrame(() => {
-        pendingFrame = null
-        drawPreview()
-        redraw.value = true
-      })
-    }, 1000 / store.options.fps)
-  }
-}
-
-onUnmounted(() => {
-  if (pendingTimeout !== null) {
-    clearTimeout(pendingTimeout)
-    pendingTimeout = null
-  }
-  if (pendingFrame !== null) {
-    cancelAnimationFrame(pendingFrame)
-    pendingFrame = null
-  }
-})
+// delayRedrawCanvas is provided by useFpsThrottle composable
+// cleanup handled automatically by onUnmounted in the composable
 
 // ─── Expose for test compatibility ──────────────────────
 defineExpose({
   // State
   ctx,
-  redraw,
   canvasRef,
   // Computed
   blockWidth: renderBlockWidth,

@@ -96,6 +96,7 @@ import { useToast } from '../composables/useToast';
 import { useCanvasPanel } from '../composables/useCanvasPanel';
 import { useMainCanvasRenderer } from '../composables/useMainCanvasRenderer';
 import { useExportAscii } from '../composables/useExportAscii';
+import { useFpsThrottle } from '../composables/useFpsThrottle';
 import hotkeys from 'hotkeys-js';
 
 import ContextMenu from '../components/parts/ContextMenu.vue';
@@ -180,9 +181,8 @@ const editorPanel = ref<HTMLElement | null>(null);
 let ctx: CanvasRenderingContext2D | null = null;
 let toolCtx: CanvasRenderingContext2D | null = null;
 
-// Timer IDs for delayRedrawCanvas cleanup
-let pendingTimeout: ReturnType<typeof setTimeout> | null = null;
-let pendingFrame: number | null = null;
+// ─── FPS-Throttled Redraw ─────────────────────────────────────────
+// (useFpsThrottle handles its own timer cleanup on unmount)
 
 // ─── Reactive State ─────────────────────────────────────────────
 const canvasSize = reactive({ width: 512, height: 512 });
@@ -190,7 +190,6 @@ const x = ref(0);
 const y = ref(0);
 const atTopHalf = ref(0);
 const top = ref<number | false>(false);
-const redraw = ref(true);
 const canTool = ref(false);
 const textEditing = ref<{ startX: number | null; startY: number | null }>({
   startX: null,
@@ -271,6 +270,14 @@ const haveSelectBlocks = computed(() => !!selectBlocks.value.length);
 const brushLibraryState = computed(() => panelStore.brushLibrary);
 const gridView = computed(() => toolbarState.value.gridView);
 const halfBlockEditing = computed(() => toolbarState.value.halfBlockEditing);
+
+// ─── FPS-Throttled Canvas Redraw ─────────────────────────────────
+// redrawCanvas is defined below — use a deferred reference
+let redrawCanvasFn: (force?: boolean) => Promise<void> = async () => {};
+const { scheduleRedraw: delayRedrawCanvas, cancelRedraw } = useFpsThrottle(
+  (force) => redrawCanvasFn(force),
+  () => options.value.fps,
+);
 
 const asciiBlockAtXy = computed(() => {
   return currentAsciiLayerBlocks.value[y.value] &&
@@ -555,16 +562,7 @@ onMounted(async () => {
 onUnmounted(() => {
   hotkeys.unbind('*', 'editor');
   canvasPanel.cleanup();
-
-  // Clean up pending canvas redraw timers
-  if (pendingTimeout !== null) {
-    clearTimeout(pendingTimeout);
-    pendingTimeout = null;
-  }
-  if (pendingFrame !== null) {
-    cancelAnimationFrame(pendingFrame);
-    pendingFrame = null;
-  }
+  cancelRedraw();
 });
 
 // ─── Init (equivalent to created() — runs during setup) ─────────
@@ -864,6 +862,9 @@ async function drawGrid() {
 }
 
 async function redrawCanvas(force = false) {
+  // Wire deferred reference for useFpsThrottle
+  redrawCanvasFn = redrawCanvas;
+
   if (!ctx) return;
   if (currentAsciiLayers.value.length) {
     let cx = 0;
@@ -1203,31 +1204,7 @@ async function clearToolCanvas() {
   }
 }
 
-async function delayRedrawCanvas(force = false) {
-  if (redraw.value) {
-    redraw.value = false;
-
-    // Cancel any previous pending redraw
-    if (pendingTimeout !== null) {
-      clearTimeout(pendingTimeout);
-    }
-    if (pendingFrame !== null) {
-      cancelAnimationFrame(pendingFrame);
-    }
-
-    pendingTimeout = setTimeout(() => {
-      pendingTimeout = null;
-      pendingFrame = requestAnimationFrame(async () => {
-        pendingFrame = null;
-        try {
-          await redrawCanvas(force);
-        } finally {
-          redraw.value = true;
-        }
-      });
-    }, 1000 / options.value.fps);
-  }
-}
+// delayRedrawCanvas is provided by useFpsThrottle composable
 
 function getBlocksWidthFn(blocks: Block[][]) {
   return getBlocksWidth(blocks);
@@ -1725,7 +1702,6 @@ defineExpose({
   y,
   atTopHalf,
   top,
-  redraw,
   canTool,
   textEditing,
   selecting,
