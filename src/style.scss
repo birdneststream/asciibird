@@ -16,6 +16,18 @@
 }
 
 /* ── Body ──────────────────────────────────────────────────────────── */
+html,
+body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+}
+
+#app {
+    height: 100%;
+    overflow: hidden;
+}
+
 body {
     background: #131313;
     color: #e5e2e1;
@@ -26,6 +38,19 @@ body {
     -webkit-touch-callout: none;
     -khtml-user-select: none;
     user-select: none;
+}
+
+/* ── Font consistency — form elements inherit global font ──────────── */
+input,
+select,
+textarea,
+button {
+    font-family: inherit;
+}
+
+/* Headless UI Menu components need explicit font override */
+[role="menu"] {
+    font-family: 'Inter', system-ui, sans-serif;
 }
 
 /* ── Canvas classes ────────────────────────────────────────────────── */
