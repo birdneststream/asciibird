@@ -32,13 +32,19 @@ function isFormElement(target: EventTarget | null): boolean {
   return target.matches(FORM_ELEMENT_SELECTOR);
 }
 
+export interface UsePanelDraggableOptions extends UseDraggableOptions {
+  /** Called when the panel receives a pointerdown (for z-index stacking) */
+  onBringToFront?: () => void;
+}
+
 export function usePanelDraggable(
   el: MaybeRefOrGetter<HTMLElement | SVGElement | null | undefined>,
-  options: UseDraggableOptions = {},
+  options: UsePanelDraggableOptions = {},
 ): UseDraggableReturn {
+  const { onBringToFront, ...draggableOptions } = options;
   const draggable = useDraggable(el, {
-    ...options,
-    buttons: options.buttons ?? [0],
+    ...draggableOptions,
+    buttons: draggableOptions.buttons ?? [0],
   });
 
   /**
@@ -96,6 +102,8 @@ export function usePanelDraggable(
       if (isFormElement(e.target as EventTarget | null)) {
         e.stopImmediatePropagation();
       }
+      // Bring panel to front on any pointerdown (click, drag start)
+      onBringToFront?.();
     },
     { capture: true },
   );

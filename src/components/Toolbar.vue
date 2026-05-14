@@ -2,8 +2,8 @@
   <div>
     <div
       ref="panelEl"
-      :style="panelStyle"
-      class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-[220px] z-40"
+      class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-[220px]"
+      :style="[panelStyle, { zIndex: panelStore.panelZIndex('toolbar') }]"
     >
       <PanelHeader
         ref="handleRef"
@@ -136,6 +136,7 @@
 import { computed, ref, watch } from 'vue';
 import { usePanelDraggable } from '../composables/usePanelDraggable';
 import { useToolbarStore } from '../store/toolbar';
+import { usePanelStore } from '../store/panels';
 import { useToast } from '../composables/useToast';
 import PanelHeader from './parts/PanelHeader.vue';
 import Tooltip from './parts/Tooltip.vue';
@@ -145,6 +146,7 @@ import { tooltipName, toolLabel } from '../utils/toolbar';
 defineOptions({ name: 'Toolbar' });
 
 const toolbarStore = useToolbarStore();
+const panelStore = usePanelStore();
 const { show: toastShow } = useToast();
 
 const panelEl = ref<HTMLElement | null>(null);
@@ -152,6 +154,7 @@ const handleRef = ref<InstanceType<typeof PanelHeader> | null>(null);
 const { style: panelStyle, x: dragX, y: dragY } = usePanelDraggable(panelEl, {
   initialValue: { x: toolbarStore.toolbarState.x, y: toolbarStore.toolbarState.y },
   handle: computed(() => handleRef.value?.headerEl ?? null),
+  onBringToFront: () => panelStore.bringToFront('toolbar'),
 });
 
 // Sync drag position back to store

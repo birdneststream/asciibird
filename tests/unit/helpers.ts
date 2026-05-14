@@ -410,6 +410,16 @@ export function createMockPanelStore(
 
   return {
     ...state,
+    zCounter: 100,
+    zIndices: {} as Record<string, number>,
+    panelZIndex: (key: string) => (state as any).zIndices?.[key] ?? 100,
+    bringToFront(key: string) {
+      const s = state as any
+      if (!s.zIndices) s.zIndices = {}
+      if (!s.zCounter) s.zCounter = 100
+      s.zCounter++
+      s.zIndices[key] = s.zCounter
+    },
     changeDebugPanelState(p: any) { Object.assign(state.debugPanel, p) },
     toggleDebugPanel(v: boolean) { state.debugPanel.visible = v },
     changeBrushLibraryState(p: any) { Object.assign(state.brushLibrary, p) },

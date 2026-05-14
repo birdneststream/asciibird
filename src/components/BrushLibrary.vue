@@ -2,8 +2,8 @@
   <div>
     <div
       ref="panelEl"
-      :style="panelStyle"
-      class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-panel-width max-h-[80%] z-40"
+      class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-panel-width max-h-[80%]"
+      :style="[panelStyle, { zIndex: panelStore.panelZIndex('brushLibrary') }]"
     >
       <PanelHeader
         ref="handleRef"
@@ -195,6 +195,7 @@ const { style: panelStyle, x: dragX, y: dragY } = usePanelDraggable(panelEl, {
     y: panelStore.brushLibrary.y,
   },
   handle: computed(() => handleRef.value?.headerEl ?? null),
+  onBringToFront: () => panelStore.bringToFront('brushLibrary'),
 });
 
 // Sync drag position back to store for persistence
