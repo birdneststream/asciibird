@@ -70,16 +70,36 @@
         <!-- Resize handles — visible only with default tool -->
         <template v-if="isDefault">
           <div
-            class="ab-resize-handle ab-resize-handle-br"
-            @pointerdown.stop="canvasPanel.startResize('br')($event)"
+            class="ab-resize-handle ab-resize-handle-tl"
+            @pointerdown.stop="canvasPanel.startResize('tl')($event)"
+          />
+          <div
+            class="ab-resize-handle ab-resize-handle-tm"
+            @pointerdown.stop="canvasPanel.startResize('tm')($event)"
+          />
+          <div
+            class="ab-resize-handle ab-resize-handle-tr"
+            @pointerdown.stop="canvasPanel.startResize('tr')($event)"
+          />
+          <div
+            class="ab-resize-handle ab-resize-handle-ml"
+            @pointerdown.stop="canvasPanel.startResize('ml')($event)"
+          />
+          <div
+            class="ab-resize-handle ab-resize-handle-mr"
+            @pointerdown.stop="canvasPanel.startResize('mr')($event)"
+          />
+          <div
+            class="ab-resize-handle ab-resize-handle-bl"
+            @pointerdown.stop="canvasPanel.startResize('bl')($event)"
           />
           <div
             class="ab-resize-handle ab-resize-handle-bm"
             @pointerdown.stop="canvasPanel.startResize('bm')($event)"
           />
           <div
-            class="ab-resize-handle ab-resize-handle-mr"
-            @pointerdown.stop="canvasPanel.startResize('mr')($event)"
+            class="ab-resize-handle ab-resize-handle-br"
+            @pointerdown.stop="canvasPanel.startResize('br')($event)"
           />
         </template>
       </div>
@@ -1867,6 +1887,33 @@ defineExpose({
   cursor: nwse-resize;
 }
 
+/* Bottom-left corner */
+.ab-resize-handle-bl {
+  left: -4px;
+  bottom: -4px;
+  width: 10px;
+  height: 10px;
+  cursor: nesw-resize;
+}
+
+/* Top-right corner */
+.ab-resize-handle-tr {
+  right: -4px;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  cursor: nesw-resize;
+}
+
+/* Top-left corner */
+.ab-resize-handle-tl {
+  left: -4px;
+  top: -4px;
+  width: 10px;
+  height: 10px;
+  cursor: nwse-resize;
+}
+
 /* Bottom-middle edge */
 .ab-resize-handle-bm {
   left: 50%;
@@ -1877,9 +1924,29 @@ defineExpose({
   cursor: ns-resize;
 }
 
+/* Top-middle edge */
+.ab-resize-handle-tm {
+  left: 50%;
+  top: -4px;
+  width: 20px;
+  height: 8px;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
 /* Middle-right edge */
 .ab-resize-handle-mr {
   right: -4px;
+  top: 50%;
+  width: 8px;
+  height: 20px;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+
+/* Middle-left edge */
+.ab-resize-handle-ml {
+  left: -4px;
   top: 50%;
   width: 8px;
   height: 20px;
