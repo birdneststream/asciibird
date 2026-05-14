@@ -287,8 +287,8 @@ describe('ascii.ts constants', () => {
     expect(allChars).toContain('─');
   });
 
-  it('toolbarIcons has 9 tool entries', () => {
-    expect(toolbarIcons).toHaveLength(9);
+  it('toolbarIcons has 10 tool entries', () => {
+    expect(toolbarIcons).toHaveLength(10);
   });
 
   it('toolbarIcons each have name and icon', () => {

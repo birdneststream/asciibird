@@ -166,6 +166,7 @@ import { useExportAscii } from '../composables/useExportAscii';
 import { useFpsThrottle } from '../composables/useFpsThrottle';
 import { useSelectionTransform } from '../composables/useSelectionTransform';
 import { useColorReplace } from '../composables/useColorReplace';
+import { useGradientTool } from '../composables/useGradientTool';
 import hotkeys from 'hotkeys-js';
 
 import ContextMenu from '../components/parts/ContextMenu.vue';
@@ -376,6 +377,21 @@ const currentAsciiHeight = computed(() =>
     : currentSelectedLayer.value.height,
 );
 
+// ─── Gradient Tool ────────────────────────────────────────────────
+// Must be after currentAsciiLayerBlocks/Width/Height computed definitions.
+const {
+  gradientStart,
+  isGradientPicking,
+  setStartPoint,
+  applyGradient,
+  cancelGradient,
+} = useGradientTool({
+  currentAsciiLayerBlocks,
+  currentAsciiWidth,
+  currentAsciiHeight,
+  recordDiff,
+});
+
 // ─── Selection Transform ─────────────────────────────────────────
 // useSelectionTransform provides rotate/flip operations on the
 // selected area. It references hoisted function declarations.
@@ -535,7 +551,7 @@ watch(blockSizeMultiplier, () => {
 watch(currentTool, async () => {
   warnInvisibleLayer();
 
-  // Half-block mode: block text and select tools
+  // Half-block mode: block text, select, and gradient tools
   if (halfBlockEditing.value) {
     if (currentTool.value.name === 'text') {
       toastShow('Text mode is not available in half-block editing mode');
@@ -544,6 +560,11 @@ watch(currentTool, async () => {
     }
     if (currentTool.value.name === 'select') {
       toastShow('Selection is not available in half-block editing mode');
+      toolbarStore.changeTool(0);
+      return;
+    }
+    if (currentTool.value.name === 'gradient') {
+      toastShow('Gradient fill is not available in half-block editing mode');
       toolbarStore.changeTool(0);
       return;
     }
@@ -693,6 +714,13 @@ hotkeys('*', 'editor', async function (event) {
   // Escape: cancel replace-color pick state
   if (event.key === 'Escape' && isReplacePicking.value) {
     resetReplace();
+    return;
+  }
+
+  // Escape: cancel gradient pick state
+  if (event.key === 'Escape' && isGradientPicking.value) {
+    cancelGradient();
+    await clearToolCanvas();
     return;
   }
 
@@ -1380,6 +1408,25 @@ async function canvasMouseDown() {
           applyReplace(selection ?? undefined);
         }
         break;
+
+      case 'gradient':
+        if (toolbarState.value.halfBlockEditing) {
+          toastShow('Gradient fill is not available in half-block mode', {
+            type: 'error',
+          });
+          break;
+        }
+        if (!isGradientPicking.value) {
+          // Click 1: set start point
+          setStartPoint(x.value, y.value);
+        } else {
+          // Click 2: apply gradient from start to current position
+          applyGradient(x.value, y.value, currentAsciiLayerBlocks.value);
+          canTool.value = false;
+          await dispatchBlocks(true);
+          await delayRedrawCanvas(true);
+        }
+        break;
     }
   }
 }
@@ -1523,6 +1570,32 @@ async function canvasMouseMove(e: MouseEvent) {
               bw / 2, 4,
             );
           }
+        }
+        break;
+
+      case 'gradient':
+        await clearToolCanvas();
+        await drawIndicator();
+        // Show bounding rectangle from start point to cursor
+        if (isGradientPicking.value && gradientStart.value && toolCtx) {
+          const bw = blockWidthComp.value;
+          const bh = blockHeightComp.value;
+          const sx = gradientStart.value.x * bw;
+          const sy = gradientStart.value.y * bh;
+          toolCtx.strokeStyle = mircColours99[toolbarStore.currentFg];
+          toolCtx.lineWidth = 2;
+          toolCtx.setLineDash([4, 4]);
+          toolCtx.strokeRect(
+            Math.min(sx, canvasX.value),
+            Math.min(sy, canvasY.value),
+            Math.abs(canvasX.value - sx) + bw,
+            Math.abs(canvasY.value - sy) + bh,
+          );
+          // Draw start color swatch
+          toolCtx.fillStyle = mircColours99[toolbarStore.currentFg];
+          toolCtx.fillRect(sx, sy, bw, bh);
+          toolCtx.fillStyle = mircColours99[toolbarStore.currentBg];
+          toolCtx.fillRect(canvasX.value, canvasY.value, bw, bh);
         }
         break;
     }

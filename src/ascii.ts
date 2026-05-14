@@ -230,6 +230,7 @@ export const toolbarIcons: ToolbarIcon[] = [
   { name: 'eraser', icon: 'remove_circle_outline' },
   { name: 'fill-eraser', icon: 'auto_fix_off' },
   { name: 'replace-color', icon: 'format_paint' },
+  { name: 'gradient', icon: 'gradient' },
 ];
 
 export const emptyBlock: Block = {};
