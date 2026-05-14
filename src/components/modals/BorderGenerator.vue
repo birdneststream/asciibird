@@ -136,7 +136,7 @@ import {
   getBorderMinimumSize,
 } from '../../utils/borderGenerator';
 import type { BorderStyle, BorderStyleChars } from '../../utils/borderGenerator';
-import { fillNullBlocks } from '../../ascii';
+import { fillNullBlocks, emptyBlock } from '../../ascii';
 
 defineOptions({ name: 'BorderGenerator' });
 
@@ -296,9 +296,6 @@ function apply() {
 
   modalStore.closeModal('border-generator');
 }
-
-// Need to import emptyBlock for the expand logic
-import { emptyBlock } from '../../ascii';
 
 defineExpose({
   showModal,

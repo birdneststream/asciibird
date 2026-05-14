@@ -207,16 +207,10 @@ defineOptions({ name: 'Editor' });
 const props = withDefaults(defineProps<{
   updateCanvas?: boolean;
   yOffset?: number;
-  canvasxy?: string;
-  brush?: boolean;
-  updateascii?: boolean;
   resetSelect?: boolean;
 }>(), {
   updateCanvas: false,
   yOffset: 0,
-  canvasxy: '',
-  brush: false,
-  updateascii: false,
   resetSelect: false,
 });
 
@@ -886,78 +880,50 @@ function canvasToPng() {
  }
 
 async function canvasKeyDown(char: string) {
-  if (
-    currentAsciiLayerBlocks.value[textEditing.value.startY!] &&
-    currentAsciiLayerBlocks.value[textEditing.value.startY!][textEditing.value.startX!]
-  ) {
-    let targetBlock =
-      currentAsciiLayerBlocks.value[textEditing.value.startY!][
-        textEditing.value.startX!
-      ];
+  const rawX = textEditing.value.startX;
+  const rawY = textEditing.value.startY;
+  if (rawX === null || rawY === null) return;
+
+  let sx = rawX;
+  let sy = rawY;
+
+  const data = currentAsciiLayerBlocks.value;
+  if (data[sy] && data[sy][sx]) {
+    let targetBlock = data[sy][sx];
     let oldBlock: Block = {};
 
     switch (char) {
       case 'Backspace':
-        if (
-          currentAsciiLayerBlocks.value[textEditing.value.startY!][
-            textEditing.value.startX! - 1
-          ]
-        ) {
-          targetBlock =
-            currentAsciiLayerBlocks.value[textEditing.value.startY!][
-              textEditing.value.startX! - 1
-            ];
+        if (data[sy][sx - 1]) {
+          targetBlock = data[sy][sx - 1];
 
           oldBlock = { ...targetBlock };
 
-          delete currentAsciiLayerBlocks.value[textEditing.value.startY!][
-            textEditing.value.startX! - 1
-          ]['char'];
+          delete data[sy][sx - 1]['char'];
 
-          recordDiff(
-            textEditing.value.startX!,
-            textEditing.value.startY!,
-            oldBlock,
-            currentAsciiLayerBlocks.value[textEditing.value.startY!][
-              textEditing.value.startX! - 1
-            ],
-          );
+          recordDiff(sx, sy, oldBlock, data[sy][sx - 1]);
 
-          textEditing.value.startX! -= 1;
+          sx -= 1;
         }
 
       // eslint-disable-next-line no-fallthrough
       case 'Delete':
-        if (
-          currentAsciiLayerBlocks.value[textEditing.value.startY!][
-            textEditing.value.startX!
-          ]
-        ) {
-          targetBlock =
-            currentAsciiLayerBlocks.value[textEditing.value.startY!][
-              textEditing.value.startX!
-            ];
+        if (data[sy][sx]) {
+          targetBlock = data[sy][sx];
 
           oldBlock = { ...targetBlock };
 
-          delete currentAsciiLayerBlocks.value[textEditing.value.startY!][
-            textEditing.value.startX!
-          ]['char'];
+          delete data[sy][sx]['char'];
 
-          recordDiff(
-            textEditing.value.startX!,
-            textEditing.value.startY!,
-            oldBlock,
-            targetBlock,
-          );
+          recordDiff(sx, sy, oldBlock, targetBlock);
         }
 
         applyMirrored(
-          textEditing.value.startX!, textEditing.value.startY!,
+          sx, sy,
           currentAsciiWidth.value, currentAsciiHeight.value,
           mirrorX.value, mirrorY.value,
           (mx, my) => {
-            const block = currentAsciiLayerBlocks.value[my]?.[mx];
+            const block = data[my]?.[mx];
             if (!block) return;
             oldBlock = { ...block };
             delete block['char'];
@@ -968,49 +934,33 @@ async function canvasKeyDown(char: string) {
         break;
 
       case 'Enter':
-        if (currentAsciiLayerBlocks.value[textEditing.value.startY! + 1]?.[0]) {
-          textEditing.value.startX = 0;
-          textEditing.value.startY! += 1;
+        if (data[sy + 1]?.[0]) {
+          sx = 0;
+          sy += 1;
         }
         break;
 
       case 'ArrowUp':
-        if (
-          currentAsciiLayerBlocks.value[textEditing.value.startY! - 1]?.[
-            textEditing.value.startX!
-          ]
-        ) {
-          textEditing.value.startY! -= 1;
+        if (data[sy - 1]?.[sx]) {
+          sy -= 1;
         }
         break;
 
       case 'ArrowDown':
-        if (
-          currentAsciiLayerBlocks.value[textEditing.value.startY! + 1]?.[
-            textEditing.value.startX!
-          ]
-        ) {
-          textEditing.value.startY! += 1;
+        if (data[sy + 1]?.[sx]) {
+          sy += 1;
         }
         break;
 
       case 'ArrowLeft':
-        if (
-          currentAsciiLayerBlocks.value[textEditing.value.startY!]?.[
-            textEditing.value.startX! - 1
-          ]
-        ) {
-          textEditing.value.startX! -= 1;
+        if (data[sy]?.[sx - 1]) {
+          sx -= 1;
         }
         break;
 
       case 'ArrowRight':
-        if (
-          currentAsciiLayerBlocks.value[textEditing.value.startY!]?.[
-            textEditing.value.startX! + 1
-          ]
-        ) {
-          textEditing.value.startX! += 1;
+        if (data[sy]?.[sx + 1]) {
+          sx += 1;
         }
         break;
 
@@ -1023,19 +973,14 @@ async function canvasKeyDown(char: string) {
             targetBlock.fg = currentFg.value;
           }
 
-          recordDiff(
-            textEditing.value.startX!,
-            textEditing.value.startY!,
-            oldBlock,
-            targetBlock,
-          );
+          recordDiff(sx, sy, oldBlock, targetBlock);
 
           applyMirrored(
-            textEditing.value.startX!, textEditing.value.startY!,
+            sx, sy,
             currentAsciiWidth.value, currentAsciiHeight.value,
             mirrorX.value, mirrorY.value,
             (mx, my) => {
-              const block = currentAsciiLayerBlocks.value[my]?.[mx];
+              const block = data[my]?.[mx];
               if (!block) return;
               oldBlock = { ...block };
               if (canFg.value) {
@@ -1046,17 +991,13 @@ async function canvasKeyDown(char: string) {
             },
           );
 
-          if (
-            currentAsciiLayerBlocks.value[textEditing.value.startY!]?.[
-              textEditing.value.startX! + 1
-            ]
-          ) {
-            textEditing.value.startX!++;
+          if (data[sy]?.[sx + 1]) {
+            sx += 1;
           } else {
-            textEditing.value.startX = 0;
+            sx = 0;
 
-            if (textEditing.value.startY! < currentAsciiHeight.value) {
-              textEditing.value.startY!++;
+            if (sy < currentAsciiHeight.value) {
+              sy += 1;
             }
           }
         }
@@ -1064,6 +1005,9 @@ async function canvasKeyDown(char: string) {
         break;
     }
   }
+
+  textEditing.value.startX = sx;
+  textEditing.value.startY = sy;
 
   await clearToolCanvas();
   await drawTextIndicator();
@@ -1132,7 +1076,7 @@ function mergeLayersFn() {
   return mergeLayers();
 }
 
-async function drawGrid() {
+function drawGrid() {
   if (!toolCtx) return;
   const bw = blockWidthComp.value;
   const bh = blockHeightComp.value;
@@ -1717,7 +1661,7 @@ async function processSelect() {
   emit('selecting', selecting.value);
 }
 
-async function drawRectangleBlock(rx: number, ry: number) {
+function drawRectangleBlock(rx: number, ry: number) {
   if (!toolCtx) return;
   const bw = blockWidthComp.value;
   const bh = blockHeightComp.value;
@@ -1748,7 +1692,7 @@ async function drawRectangleBlock(rx: number, ry: number) {
   toolCtx.strokeRect(rx * bw, ry * bh, bw, bh);
 }
 
-async function drawIndicator() {
+function drawIndicator() {
   const positions = getMirrorPositions(
     x.value, y.value,
     currentAsciiWidth.value, currentAsciiHeight.value,
@@ -1760,9 +1704,13 @@ async function drawIndicator() {
   }
 }
 
-async function drawTextIndicator() {
+function drawTextIndicator() {
+  const tx = textEditing.value.startX;
+  const ty = textEditing.value.startY;
+  if (tx === null || ty === null) return;
+
   const positions = getMirrorPositions(
-    textEditing.value.startX!, textEditing.value.startY!,
+    tx, ty,
     currentAsciiWidth.value, currentAsciiHeight.value,
     mirrorX.value, mirrorY.value,
   );
@@ -1771,7 +1719,7 @@ async function drawTextIndicator() {
   }
 }
 
-async function drawBrushBlocks(
+function drawBrushBlocks(
   brushX: number,
   brushY: number,
   brushBlock: Block,
@@ -2049,7 +1997,7 @@ function recordDiff(
   storeDiffBlockFn(diffBlocks, sx, sy, oldBlock, newBlock);
 }
 
-async function eraser() {
+function eraser() {
   if (canTool.value) {
     const bw = blockWidthComp.value;
     const bh = blockHeightComp.value;

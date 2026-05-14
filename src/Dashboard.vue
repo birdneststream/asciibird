@@ -257,7 +257,6 @@
         :update-canvas="updateCanvas"
         @selecting="updateSelecting"
         :y-offset="scrollOffset"
-        :updateascii="updateAscii"
         :reset-select="resetSelect"
       />
 
@@ -500,7 +499,6 @@ const isInputtingBrushSize = ref(false);
 const scrollOffset = ref(0);
 const lastPostURL = ref('');
 const resetSelect = ref(false);
-const updateAscii = ref(false);
 
 // Menu hover cascading state
 const menuButtonRefs = ref<(HTMLButtonElement | null)[]>([]);

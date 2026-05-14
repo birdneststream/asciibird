@@ -571,9 +571,6 @@ describe('Editor.vue', () => {
         props: {
           updateCanvas: false,
           yOffset: 0,
-          canvasxy: null,
-          brush: null,
-          updateascii: false,
           resetSelect: false,
         },
       })
