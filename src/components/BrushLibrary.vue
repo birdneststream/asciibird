@@ -174,6 +174,7 @@ import { ref, reactive, computed, watch, onUnmounted } from 'vue';
 import LZString from 'lz-string';
 import { usePanelDraggable } from '../composables/usePanelDraggable';
 import { toolbarIcons } from '../ascii';
+import type { Block } from '../types';
 import { useToolbarStore } from '../store/toolbar';
 import { usePanelStore } from '../store/panels';
 import { useToast } from '../composables/useToast';
@@ -275,23 +276,23 @@ function decompressBlock(item: string) {
   return JSON.parse(LZString.decompressFromUTF16(item));
 }
 
-function reuseBlocks(value: unknown[][]) {
+function reuseBlocks(value: Block[][]) {
   toolbarStore.setBrushBlocks(value);
   toolbarStore.changeTool(4);
   toastShow('Applied brush from Library', { type: 'success' });
 }
 
-function saveToLibrary(value: unknown[][]) {
+function saveToLibrary(value: Block[][]) {
   toolbarStore.pushBrushLibrary(value);
   toastShow('Saved brush to Library', { type: 'success' });
 }
 
-function removeFromLibrary(value: unknown[][]) {
+function removeFromLibrary(value: Block[][]) {
   toolbarStore.removeBrushLibrary(value);
   toastShow('Removed brush from Library');
 }
 
-function removeFromHistory(value: unknown[][]) {
+function removeFromHistory(value: Block[][]) {
   toolbarStore.removeBrushHistory(value);
   toastShow('Removed brush from History');
 }

@@ -114,6 +114,7 @@
 import { ref, computed, watch } from 'vue';
 import { usePanelDraggable } from '../../composables/usePanelDraggable';
 import { emptyBlock, maxBrushSize } from '../../ascii';
+import type { Block } from '../../types';
 import { useToolbarStore } from '../../store/toolbar';
 import { usePanelStore } from '../../store/panels';
 import MainBrushCanvas from './MainBrushCanvas.vue';
@@ -152,7 +153,7 @@ const brushSizeHeightInput = ref(1);
 const brushSizeWidthInput = ref(1);
 const brushSizeTypeInput = ref('square');
 const isInputtingBrushSize = ref(false);
-const blocks = ref<Record<string, unknown>[][]>([]);
+const blocks = ref<Block[][]>([]);
 
 const brushOptions = [
   'Square',

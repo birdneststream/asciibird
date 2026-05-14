@@ -19,7 +19,7 @@
           class="relative"
         >
           <MenuButton
-            :ref="(el: any) => menuButtonRefs[index] = el?.$el ?? el"
+            :ref="(el: ComponentPublicInstance | Element | null) => menuButtonRefs[index] = (el as ComponentPublicInstance)?.$el ?? el"
             class="px-3 py-1.5 text-sm transition-colors duration-150 hover:bg-surface-container-highest text-on-surface-variant"
             @mouseenter="onMenuButtonMouseEnter(index)"
           >
@@ -342,7 +342,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onUnmounted, nextTick } from 'vue';
+import { computed, ref, watch, onUnmounted, nextTick, type ComponentPublicInstance } from 'vue';
 import LZString from 'lz-string';
 import {
   Menu,
@@ -418,7 +418,7 @@ const tabbar = ref<HTMLElement | null>(null);
 // Reactive state
 const canvasX = ref<number | null>(null);
 const canvasY = ref<number | null>(null);
-const importType = ref<string | null>(null);
+const importType = ref<'mirc' | 'asb' | null>(null);
 const selectedBlocks = ref<Block[][]>([]);
 const textEditing = ref<unknown>(null);
 const updateCanvas = ref(false);

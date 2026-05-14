@@ -15,6 +15,7 @@ import {
   decompressData,
   findNextVisibleLayer,
 } from '../utils/layers';
+import { cloneLayers } from '../utils/clone';
 import { idbPersistAdapter } from '../utils/idbPersistAdapter';
 import type { RootState } from '../types/store';
 import type {
@@ -157,7 +158,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
           this.asciibirdMeta[this.tab].layers,
         );
 
-      const oldLayer = JSON.parse(JSON.stringify(tempLayers));
+      const oldLayer = cloneLayers(tempLayers);
 
       const newLayer = createEmptyLayer(
         tempLayers[0].width,
@@ -186,7 +187,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
           this.asciibirdMeta[this.tab].layers,
         );
 
-      const oldLayer = JSON.parse(JSON.stringify(tempLayers));
+      const oldLayer = cloneLayers(tempLayers);
 
       const width = tempLayers[0].width;
       const height = tempLayers[0].height;
@@ -222,7 +223,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
           this.asciibirdMeta[this.tab].layers,
         );
 
-      const oldLayer = JSON.parse(JSON.stringify(tempLayers));
+      const oldLayer = cloneLayers(tempLayers);
 
       // Check if we're about to hide the currently selected layer
       const wasVisible = tempLayers[payload].visible;
@@ -260,7 +261,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         );
 
       if (tempLayers.length > 1) {
-        const oldLayer = JSON.parse(JSON.stringify(tempLayers));
+        const oldLayer = cloneLayers(tempLayers);
         const wasSelectedLayer =
           payload === this.asciibirdMeta[this.tab].selectedLayer;
 
@@ -294,7 +295,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         );
 
       if (tempLayers[payload + 1]) {
-        const oldLayer = JSON.parse(JSON.stringify(tempLayers));
+        const oldLayer = cloneLayers(tempLayers);
 
         const swap1 = tempLayers[payload + 1];
         const swap = tempLayers[payload];
@@ -321,7 +322,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         );
 
       if (tempLayers[payload - 1]) {
-        const oldLayer = JSON.parse(JSON.stringify(tempLayers));
+        const oldLayer = cloneLayers(tempLayers);
 
         const swap1 = tempLayers[payload - 1];
         const swap = tempLayers[payload];
@@ -348,7 +349,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         );
 
       if (tempLayers[payload.key]) {
-        const oldLayer = JSON.parse(JSON.stringify(tempLayers));
+        const oldLayer = cloneLayers(tempLayers);
         tempLayers[payload.key].label = payload.label;
         const newLayers = compressLayers(tempLayers);
 
