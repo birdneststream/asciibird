@@ -280,6 +280,17 @@ describe('Pinia Store Actions', () => {
       expect(panelStore.debugPanel.minimized).toBe(false);
     });
 
+    it('togglePanelMinimize restores hidden panel to visible', () => {
+      // Start with hidden panel (visible=false)
+      expect(panelStore.brushPreview.visible).toBe(true);
+      panelStore.brushPreview.visible = false;
+      panelStore.brushPreview.minimized = false;
+      // Toggle should restore hidden panel
+      panelStore.togglePanelMinimize('brushPreview');
+      expect(panelStore.brushPreview.visible).toBe(true);
+      expect(panelStore.brushPreview.minimized).toBe(false);
+    });
+
     it('resetPanelPosition resets x/y to initial defaults', () => {
       panelStore.brushPreview.x = 9999;
       panelStore.brushPreview.y = 8888;
@@ -320,6 +331,14 @@ describe('Pinia Store Actions', () => {
       toolbarStore.toggleToolbarMinimize();
       expect(toolbarStore.toolbarState.minimized).toBe(true);
       toolbarStore.toggleToolbarMinimize();
+      expect(toolbarStore.toolbarState.minimized).toBe(false);
+    });
+
+    it('toggleToolbarMinimize restores hidden toolbar to visible', () => {
+      toolbarStore.toolbarState.visible = false;
+      toolbarStore.toolbarState.minimized = false;
+      toolbarStore.toggleToolbarMinimize();
+      expect(toolbarStore.toolbarState.visible).toBe(true);
       expect(toolbarStore.toolbarState.minimized).toBe(false);
     });
 

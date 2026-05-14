@@ -103,4 +103,16 @@ describe('usePanelRegistry', () => {
     expect(layers.minimized).toBe(false)
     expect(layers.isShowing).toBe(false)
   })
+
+  it('toggle restores a hidden panel to visible', () => {
+    const { panels, hide, toggle } = usePanelRegistry()
+    hide('layersLibrary')
+    const layers = panels.value.find((p) => p.id === 'layersLibrary')!
+    expect(layers.visible).toBe(false)
+    toggle('layersLibrary')
+    const restored = panels.value.find((p) => p.id === 'layersLibrary')!
+    expect(restored.visible).toBe(true)
+    expect(restored.minimized).toBe(false)
+    expect(restored.isShowing).toBe(true)
+  })
 })

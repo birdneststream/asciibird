@@ -1,10 +1,34 @@
 <template>
   <footer class="fixed bottom-0 left-0 right-0 z-40 h-7 bg-surface-container border-t border-outline-variant px-md flex items-center justify-between select-none">
     <div class="flex items-center gap-sm">
-      <div class="flex items-center gap-xs">
-        <span class="w-2 h-2 rounded-full bg-secondary-fixed-dim shadow-[0_0_8px_rgba(171,214,0,0.5)]" />
-        <span class="font-label-mono text-body-sm uppercase text-on-surface-variant tracking-wider">Ready</span>
+      <!-- Panel task bar — shows all panels including hidden (dimmed) -->
+      <div
+        class="flex items-center gap-px"
+        role="toolbar"
+        aria-label="Panel task bar"
+      >
+        <button
+          v-for="panel in panels"
+          :key="panel.id"
+          type="button"
+          class="w-6 h-6 rounded-sm flex items-center justify-center transition-colors duration-150"
+          :class="taskBarBtnClass(panel)"
+          :aria-label="taskBarLabel(panel)"
+          :aria-pressed="panel.isShowing ? 'true' : 'false'"
+          :title="panel.name"
+          @click="onTaskBarClick(panel)"
+          @contextmenu.stop.prevent="onTaskBarRightClick($event, panel)"
+        >
+          <span
+            class="material-icons"
+            style="font-size: 14px"
+            aria-hidden="true"
+          >{{ panel.icon }}</span>
+        </button>
       </div>
+
+      <span class="text-outline-variant">|</span>
+
       <span class="font-label-mono text-body-sm text-on-surface-variant">
         X: {{ coordsX }} | Y: {{ coordsY }}
       </span>
@@ -34,16 +58,54 @@
       </span>
     </div>
   </footer>
+
+  <!-- Context menu for task bar right-click -->
+  <context-menu
+    ref="taskBarMenu"
+    class="z-50"
+  >
+    <ul>
+      <li
+        class="ab-context-menu-item"
+        @click="onResetPosition"
+      >
+        Reset Position
+      </li>
+      <li
+        v-if="contextPanel?.visible"
+        class="ab-context-menu-item"
+        @click="onHidePanel"
+      >
+        Hide Panel
+      </li>
+      <li
+        v-if="contextPanel && !contextPanel.visible"
+        class="ab-context-menu-item"
+        @click="onShowPanel"
+      >
+        Show Panel
+      </li>
+    </ul>
+  </context-menu>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { toolbarIcons } from '../../ascii';
 import { useAsciiBirdStore } from '../../store';
 import { useToolbarStore } from '../../store/toolbar';
+import {
+  usePanelRegistry,
+  type PanelInfo,
+} from '../../composables/usePanelRegistry';
+import ContextMenu from './ContextMenu.vue';
 
 const store = useAsciiBirdStore();
 const toolbarStore = useToolbarStore();
+const { panels, toggle, resetPosition, hide } = usePanelRegistry();
+
+const taskBarMenu = ref<InstanceType<typeof ContextMenu> | null>(null);
+const contextPanel = ref<PanelInfo | null>(null);
 
 const props = defineProps<{
   canvasX: number | null;
@@ -71,4 +133,61 @@ const layerInfo = computed(() => {
   if (!props.layerLabel || props.layerCount === 0) return null;
   return `${props.layerIndex + 1}/${props.layerCount} ${props.layerLabel}`;
 });
+
+/** Style class for task bar button based on panel state */
+function taskBarBtnClass(panel: PanelInfo): string {
+  if (panel.minimized) {
+    return 'bg-surface-container-low text-on-surface-variant/60 hover:text-on-surface hover:bg-surface-variant';
+  }
+  if (panel.isShowing) {
+    return 'bg-surface-container-high text-on-surface hover:bg-surface-variant';
+  }
+  // Hidden panel — dimmed appearance, click to show
+  return 'text-on-surface-variant/30 hover:text-on-surface-variant hover:bg-surface-container-low';
+}
+
+/** Accessible label for task bar button */
+function taskBarLabel(panel: PanelInfo): string {
+  if (panel.minimized) return `Restore ${panel.name}`;
+  if (panel.isShowing) return `Minimize ${panel.name}`;
+  return `Show ${panel.name}`;
+}
+
+/** Click: toggle minimize/restore, or show hidden panel */
+function onTaskBarClick(panel: PanelInfo) {
+  toggle(panel.id);
+}
+
+/** Right-click: open context menu */
+function onTaskBarRightClick(event: MouseEvent, panel: PanelInfo) {
+  contextPanel.value = panel;
+  taskBarMenu.value?.open({
+    clientX: event.clientX,
+    clientY: event.clientY,
+  });
+}
+
+function onResetPosition() {
+  if (contextPanel.value) {
+    resetPosition(contextPanel.value.id);
+  }
+  taskBarMenu.value?.close();
+  contextPanel.value = null;
+}
+
+function onHidePanel() {
+  if (contextPanel.value) {
+    hide(contextPanel.value.id);
+  }
+  taskBarMenu.value?.close();
+  contextPanel.value = null;
+}
+
+function onShowPanel() {
+  if (contextPanel.value) {
+    toggle(contextPanel.value.id);
+  }
+  taskBarMenu.value?.close();
+  contextPanel.value = null;
+}
 </script>

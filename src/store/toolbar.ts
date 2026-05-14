@@ -266,6 +266,10 @@ export const useToolbarStore = defineStore('toolbar', {
         this.toolbarState.minimized = false;
       } else if (this.toolbarState.visible) {
         this.toolbarState.minimized = true;
+      } else {
+        // Hidden toolbar — restore to visible
+        this.toolbarState.visible = true;
+        this.toolbarState.minimized = false;
       }
     },
     resetToolbarPosition() {

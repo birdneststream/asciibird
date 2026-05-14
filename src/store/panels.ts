@@ -119,12 +119,15 @@ export const usePanelStore = defineStore('panel', {
     /** Toggle between minimized and restored */
     togglePanelMinimize(key: PanelKey) {
       const panel = this[key] as PanelState;
-      if (panel) {
-        if (panel.minimized) {
-          panel.minimized = false;
-        } else if (panel.visible) {
-          panel.minimized = true;
-        }
+      if (!panel) return;
+      if (panel.minimized) {
+        panel.minimized = false;
+      } else if (panel.visible) {
+        panel.minimized = true;
+      } else {
+        // Hidden panel — restore to visible
+        panel.visible = true;
+        panel.minimized = false;
       }
     },
   },
