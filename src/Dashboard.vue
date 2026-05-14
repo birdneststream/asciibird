@@ -395,6 +395,8 @@ import { useToast } from './composables/useToast';
 import { useDialog } from './composables/useDialog';
 import { useClipboard } from './composables/useClipboard';
 import { useGlobalShortcuts } from './composables/useGlobalShortcuts';
+import { storeDiffBlocks as storeDiffBlockFn } from './utils/diffBlocks';
+import type { DiffBlocks } from './utils/diffBlocks';
 
 import type { Block, AppMenuBar } from './types';
 
@@ -437,10 +439,10 @@ const toolbarString = ref('top: 0px;');
 const lastPostURL = ref('');
 const drawBrush = ref(false);
 const resetSelect = ref(false);
-const diffBlocks = reactive({
+const diffBlocks = reactive<DiffBlocks>({
   l: 0,
-  old: [] as unknown[],
-  new: [] as unknown[],
+  old: [],
+  new: [],
 });
 const updateAscii = ref<unknown>(false);
 
@@ -670,12 +672,12 @@ function updateAsciiDetails(widthHeight: unknown) {
 }
 
 function dispatchBlocks() {
-  diffBlocks.old = (diffBlocks.old as unknown[][]).flat();
-  diffBlocks.new = (diffBlocks.new as unknown[][]).flat();
+  diffBlocks.old = diffBlocks.old.flat();
+  diffBlocks.new = diffBlocks.new.flat();
 
-  store.updateAsciiBlocksAsync({
+  store.updateAsciiBlocks({
     blocks: currentAsciiLayerBlocks.value,
-    diff: { ...diffBlocks } as { l: number; old: unknown[]; new: unknown[] },
+    diff: { ...diffBlocks },
   });
 
   diffBlocks.l = selectedLayerIndex.value;
@@ -683,33 +685,13 @@ function dispatchBlocks() {
   diffBlocks.old = [];
 }
 
-function storeDiffBlocks(x: number, y: number, oldBlock: Block, newBlock: Block) {
-  const oldArr = diffBlocks.old as unknown[][];
-  const newArr = diffBlocks.new as unknown[][];
-
-  if (!oldArr[y]) {
-    oldArr[y] = [];
-  }
-
-  if (!oldArr[y][x]) {
-    oldArr[y][x] = {
-      x,
-      y,
-      b: { ...oldBlock },
-    };
-  }
-
-  if (!newArr[y]) {
-    newArr[y] = [];
-  }
-
-  if (!newArr[y][x]) {
-    newArr[y][x] = {
-      x,
-      y,
-      b: { ...newBlock },
-    };
-  }
+function storeDiffBlocks(
+  x: number,
+  y: number,
+  oldBlock: Block,
+  newBlock: Block,
+) {
+  storeDiffBlockFn(diffBlocks, x, y, oldBlock, newBlock);
 }
 
 function showLayerRename(key: number, label: string) {
