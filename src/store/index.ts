@@ -516,15 +516,6 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         document.title = 'asciibird';
       }
     },
-    updateAsciiBlocksAsync(
-      data: {
-        diff: { new: BlockDiff[]; old: BlockDiff[] };
-        blocks: Block[][];
-      },
-    ) {
-      this.updateAsciiBlocks(data);
-      return Promise.resolve();
-    },
   },
   persist: {
     key: 'vuex',

@@ -1330,34 +1330,4 @@ describe('Pinia Store Getters', () => {
   });
 });
 
-// ─── Async Actions ────────────────────────────────────────────────
-
-describe('Pinia Store Async Actions', () => {
-  let store: ReturnType<typeof useAsciiBirdStore>;
-
-  beforeEach(() => {
-    setActivePinia(createPinia());
-    store = useAsciiBirdStore();
-    store.newAsciibirdMeta(createTestMeta());
-  });
-
-  describe('updateAsciiBlocksAsync', () => {
-    it('calls updateAsciiBlocks and resolves', async () => {
-      const layers = JSON.parse(
-        LZString.decompressFromUTF16(store.asciibirdMeta[0].layers),
-      );
-      const blocks = layers[0].data;
-      blocks[0][0] = { fg: 4, bg: 1, char: 'X' };
-
-      await store.updateAsciiBlocksAsync({
-        diff: {
-          new: [{ x: 0, y: 0, b: { fg: 4, bg: 1, char: 'X' } }],
-          old: [{ x: 0, y: 0, b: {} }],
-        },
-        blocks,
-      });
-
-      expect(store.asciibirdMeta[0].history).toHaveLength(1);
-    });
-  });
-});
+// ─── Async Actions (removed — updateAsciiBlocksAsync was dead code) ───
