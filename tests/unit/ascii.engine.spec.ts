@@ -11,6 +11,7 @@ import {
   toolbarIcons,
   emptyBlock,
   isEmptyBlock,
+  eraseBlockProperties,
   create2DArray,
   blockWidth,
   blockHeight,
@@ -369,6 +370,56 @@ describe('ascii.ts constants', () => {
 
     it('returns true for emptyBlock constant', () => {
       expect(isEmptyBlock(emptyBlock)).toBe(true);
+    });
+  });
+
+  describe('eraseBlockProperties', () => {
+    it('erases fg when flag is true and fg exists', () => {
+      const block: Block = { fg: 1, bg: 2, char: 'X' };
+      eraseBlockProperties(block, { fg: true, bg: false, char: false });
+      expect(block).toEqual({ bg: 2, char: 'X' });
+    });
+
+    it('erases bg when flag is true and bg exists', () => {
+      const block: Block = { fg: 1, bg: 2, char: 'X' };
+      eraseBlockProperties(block, { fg: false, bg: true, char: false });
+      expect(block).toEqual({ fg: 1, char: 'X' });
+    });
+
+    it('erases char when flag is true and char exists', () => {
+      const block: Block = { fg: 1, bg: 2, char: 'X' };
+      eraseBlockProperties(block, { fg: false, bg: false, char: true });
+      expect(block).toEqual({ fg: 1, bg: 2 });
+    });
+
+    it('erases all three when all flags are true', () => {
+      const block: Block = { fg: 1, bg: 2, char: 'X' };
+      eraseBlockProperties(block, { fg: true, bg: true, char: true });
+      expect(isEmptyBlock(block)).toBe(true);
+    });
+
+    it('does nothing when all flags are false', () => {
+      const block: Block = { fg: 1, bg: 2, char: 'X' };
+      eraseBlockProperties(block, { fg: false, bg: false, char: false });
+      expect(block).toEqual({ fg: 1, bg: 2, char: 'X' });
+    });
+
+    it('does not erase fg when flag is true but property is missing', () => {
+      const block: Block = { bg: 2 };
+      eraseBlockProperties(block, { fg: true, bg: false, char: false });
+      expect(block).toEqual({ bg: 2 });
+    });
+
+    it('handles empty block gracefully', () => {
+      const block: Block = {};
+      eraseBlockProperties(block, { fg: true, bg: true, char: true });
+      expect(isEmptyBlock(block)).toBe(true);
+    });
+
+    it('handles partial block with selective erase', () => {
+      const block: Block = { fg: 5, char: 'A' };
+      eraseBlockProperties(block, { fg: true, bg: true, char: false });
+      expect(block).toEqual({ char: 'A' });
     });
   });
 });

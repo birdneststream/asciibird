@@ -68,6 +68,7 @@ import {
   filterNullBlocks,
   toolbarIcons,
   emptyBlock,
+  eraseBlockProperties,
   canvasToPng as canvasToPngUtil,
   cyrb53,
 } from '../../ascii'
@@ -319,15 +320,11 @@ function eraseBlock() {
   const target = brushBlocks.value[y.value]?.[x.value]
   if (!target) return
 
-  if (toolbarStore.isTargettingBg && target.bg !== undefined) {
-    delete target.bg
-  }
-  if (toolbarStore.isTargettingFg && target.fg !== undefined) {
-    delete target.fg
-  }
-  if (toolbarStore.isTargettingChar && target.char !== undefined) {
-    delete target.char
-  }
+  eraseBlockProperties(target, {
+    fg: toolbarStore.isTargettingFg,
+    bg: toolbarStore.isTargettingBg,
+    char: toolbarStore.isTargettingChar,
+  })
 
   delayRedrawCanvas()
 }

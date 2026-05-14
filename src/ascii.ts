@@ -251,6 +251,27 @@ export function isEmptyBlock(block: Block): boolean {
   return Object.keys(block).length === 0;
 }
 
+/**
+ * Conditionally erase block properties based on target flags.
+ * Deletes `fg`, `bg`, `char` from the block when the corresponding
+ * flag is `true` and the property exists on the block.
+ * Mutates the block in-place (callers should snapshot first for undo).
+ */
+export function eraseBlockProperties(
+  block: Block,
+  opts: { fg: boolean; bg: boolean; char: boolean },
+): void {
+  if (opts.fg && block.fg !== undefined) {
+    delete block['fg'];
+  }
+  if (opts.bg && block.bg !== undefined) {
+    delete block['bg'];
+  }
+  if (opts.char && block.char !== undefined) {
+    delete block['char'];
+  }
+}
+
 export const create2DArray = (rows: number): Block[][] => {
   const arr: Block[][] = [];
 

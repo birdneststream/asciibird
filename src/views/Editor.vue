@@ -187,6 +187,7 @@ import {
   cyrb53,
   emptyBlock,
   isEmptyBlock,
+  eraseBlockProperties,
   iterativeFill,
   iterativeFillHalfBlock,
 } from '../ascii';
@@ -2110,15 +2111,11 @@ async function eraser() {
         const tBlock = currentAsciiLayerBlocks.value[arrayY][arrayX];
         const ob = { ...currentAsciiLayerBlocks.value[arrayY][arrayX] };
 
-        if (canFg.value && tBlock.fg !== undefined) {
-          delete tBlock['fg'];
-        }
-        if (canBg.value && tBlock.bg !== undefined) {
-          delete tBlock['bg'];
-        }
-        if (canText.value && tBlock.char !== undefined) {
-          delete tBlock['char'];
-        }
+        eraseBlockProperties(tBlock, {
+          fg: canFg.value,
+          bg: canBg.value,
+          char: canText.value,
+        });
 
         recordDiff(arrayX, arrayY, ob, tBlock);
 
@@ -2130,15 +2127,11 @@ async function eraser() {
             const block = currentAsciiLayerBlocks.value[my]?.[mx];
             if (!block) return;
             const mOb = { ...block };
-            if (canFg.value && block.fg !== undefined) {
-              delete block['fg'];
-            }
-            if (canBg.value && block.bg !== undefined) {
-              delete block['bg'];
-            }
-            if (canText.value && block.char !== undefined) {
-              delete block['char'];
-            }
+            eraseBlockProperties(block, {
+              fg: canFg.value,
+              bg: canBg.value,
+              char: canText.value,
+            });
             recordDiff(mx, my, mOb, block);
           },
         );
