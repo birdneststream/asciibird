@@ -164,6 +164,105 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       }
     },
 
+    /**
+     * Replace colors across the active layer's canvas.
+     * Iterates over target blocks, replaces matching fg/bg, records
+     * a single undo diff for all changes.
+     *
+     * @returns Number of blocks changed
+     */
+    replaceColor(params: {
+      sourceFg: number | null;
+      sourceBg: number | null;
+      targetFg: number;
+      targetBg: number;
+      replaceFg: boolean;
+      replaceBg: boolean;
+      selection?: { x: number; y: number; w: number; h: number };
+    }): number {
+      const meta = this.asciibirdMeta[this.tab];
+      if (!meta) return 0;
+
+      const layers = decompressLayers(meta.layers);
+      const layer = layers[meta.selectedLayer];
+      if (!layer) return 0;
+
+      const data = layer.data;
+      const oldDiffs: BlockDiff[] = [];
+      const newDiffs: BlockDiff[] = [];
+      let changed = 0;
+
+      const minY = params.selection?.y ?? 0;
+      const maxY = params.selection
+        ? Math.min(params.selection.y + params.selection.h, data.length)
+        : data.length;
+
+      for (let y = minY; y < maxY; y++) {
+        const row = data[y];
+        if (!row) continue;
+
+        const minX = params.selection?.x ?? 0;
+        const maxX = params.selection
+          ? Math.min(params.selection.x + params.selection.w, row.length)
+          : row.length;
+
+        for (let x = minX; x < maxX; x++) {
+          const block = row[x];
+          if (!block) continue;
+
+          let modified = false;
+          const oldBlock = { ...block };
+
+          if (params.replaceFg && params.sourceFg !== null) {
+            if (block.fg === params.sourceFg) {
+              block.fg = params.targetFg;
+              modified = true;
+            }
+          }
+
+          if (params.replaceBg && params.sourceBg !== null) {
+            if (block.bg === params.sourceBg) {
+              block.bg = params.targetBg;
+              modified = true;
+            }
+          }
+
+          if (modified) {
+            oldDiffs.push({ x, y, b: oldBlock });
+            newDiffs.push({ x, y, b: { ...block } });
+            changed++;
+          }
+        }
+      }
+
+      if (changed > 0) {
+        // Update layer data
+        layers[meta.selectedLayer].data = data;
+        meta.layers = compressLayers(layers);
+
+        // Record single undo diff
+        const diff: HistoryDiff = {
+          old: oldDiffs,
+          new: newDiffs,
+          l: meta.selectedLayer,
+        };
+
+        if (meta.history.length >= this.options.undoLimit) {
+          meta.history.shift();
+        }
+
+        // Trim future history (discard redo stack)
+        if (meta.history.length !== meta.historyIndex) {
+          meta.history.splice(meta.historyIndex);
+        }
+
+        meta.history.push(compressData(diff));
+        meta.historyIndex = meta.history.length;
+      }
+
+      return changed;
+    },
+
     // ── Private helpers ──────────────────────────────────────────
 
     /** Set document.title to match current tab */
