@@ -15,6 +15,7 @@ export const useModalStore = defineStore('modal', {
       overlay: false,
       about: false,
       help: false,
+      borderGenerator: false,
     } as ModalState,
     isKeyboardDisabled: false,
   }),
@@ -52,6 +53,9 @@ export const useModalStore = defineStore('modal', {
         case 'help':
           this.modalState.help = true;
           break;
+        case 'border-generator':
+          this.modalState.borderGenerator = true;
+          break;
       }
     },
     closeModal(type: string) {
@@ -76,6 +80,9 @@ export const useModalStore = defineStore('modal', {
           break;
         case 'help':
           this.modalState.help = false;
+          break;
+        case 'border-generator':
+          this.modalState.borderGenerator = false;
           break;
       }
     },

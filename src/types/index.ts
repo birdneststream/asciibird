@@ -92,6 +92,7 @@ export interface ModalState {
   overlay: boolean;
   about: boolean;
   help: boolean;
+  borderGenerator: boolean;
 }
 
 /** App options */
