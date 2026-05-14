@@ -7,9 +7,6 @@ export interface Block {
   char?: string | null;
 }
 
-/** An empty block (no properties set) */
-export type EmptyBlock = {};
-
 /** A layer in the ASCII document */
 export interface Layer {
   label: string;

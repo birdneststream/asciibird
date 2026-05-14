@@ -48,42 +48,4 @@ export function storeDiffBlocks(
   }
 }
 
-/**
- * Dispatch accumulated diff blocks to the store.
- * Flattens old/new arrays and commits/ dispatches the update.
- *
- * @param store - Pinia store instance
- * @param diffBlocks - The diff accumulation object
- * @param currentLayerBlocks - The current layer blocks data
- * @param selectedLayerIndex - Index of the selected layer
- * @param clearDiff - Whether to reset the diff after dispatching
- * @param useAsync - If true, uses dispatch (async action). If false, uses commit (sync mutation).
- */
-export function dispatchBlocks(
-  store: any,
-  diffBlocks: { l: number; old: any[]; new: any[] },
-  currentLayerBlocks: Block[][],
-  selectedLayerIndex: number,
-  clearDiff: boolean,
-  useAsync: boolean,
-): void {
-  diffBlocks.old = diffBlocks.old.flat();
-  diffBlocks.new = diffBlocks.new.flat();
 
-  const data = {
-    blocks: currentLayerBlocks,
-    diff: { ...diffBlocks },
-  };
-
-  if (useAsync) {
-    store.dispatch('updateAsciiBlocksAsync', data);
-  } else {
-    store.commit('updateAsciiBlocks', data);
-  }
-
-  if (clearDiff) {
-    diffBlocks.l = selectedLayerIndex;
-    diffBlocks.new = [];
-    diffBlocks.old = [];
-  }
-}

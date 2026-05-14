@@ -1,11 +1,8 @@
 // Tests for src/utils/diffBlocks.ts
 // storeDiffBlocks and dispatchBlocks — undo/redo diff tracking utilities
 
-import { describe, it, expect, vi } from 'vitest';
-import {
-  storeDiffBlocks,
-  dispatchBlocks,
-} from '@/utils/diffBlocks';
+import { describe, it, expect } from 'vitest';
+import { storeDiffBlocks } from '@/utils/diffBlocks';
 import type { DiffBlocks } from '@/utils/diffBlocks';
 import type { Block } from '@/types';
 
@@ -110,128 +107,5 @@ describe('storeDiffBlocks', () => {
 
     expect(diff.old[0][0].b).toEqual({});
     expect(diff.new[0][0].b).toEqual({ fg: 1 });
-  });
-});
-
-// ─── dispatchBlocks ──────────────────────────────────────────────
-
-describe('dispatchBlocks', () => {
-  it('calls store.commit with updateAsciiBlocks when useAsync is false', () => {
-    const commit = vi.fn();
-    const dispatch = vi.fn();
-    const store = { commit, dispatch };
-    const diff = makeDiff();
-    const blocks: Block[][] = [[makeBlock()]];
-
-    storeDiffBlocks(diff, 0, 0, makeBlock(1, 1, 'A'), makeBlock(2, 2, 'B'));
-    dispatchBlocks(store, diff, blocks, 0, false, false);
-
-    expect(commit).toHaveBeenCalledWith('updateAsciiBlocks', expect.objectContaining({
-      blocks,
-      diff: expect.objectContaining({ l: 0 }),
-    }));
-    expect(dispatch).not.toHaveBeenCalled();
-  });
-
-  it('calls store.dispatch with updateAsciiBlocksAsync when useAsync is true', () => {
-    const commit = vi.fn();
-    const dispatch = vi.fn();
-    const store = { commit, dispatch };
-    const diff = makeDiff();
-    const blocks: Block[][] = [[makeBlock()]];
-
-    storeDiffBlocks(diff, 0, 0, makeBlock(), makeBlock());
-    dispatchBlocks(store, diff, blocks, 0, false, true);
-
-    expect(dispatch).toHaveBeenCalledWith('updateAsciiBlocksAsync', expect.objectContaining({
-      blocks,
-    }));
-    expect(commit).not.toHaveBeenCalled();
-  });
-
-  it('flattens old and new arrays before dispatching', () => {
-    const commit = vi.fn();
-    const store = { commit, dispatch: vi.fn() };
-    const diff = makeDiff();
-
-    storeDiffBlocks(diff, 0, 0, makeBlock(), makeBlock());
-    storeDiffBlocks(diff, 1, 0, makeBlock(), makeBlock());
-
-    // Before dispatch: 2D sparse arrays
-    expect(Array.isArray(diff.old[0])).toBe(true);
-
-    dispatchBlocks(store, diff, [[]], 0, false, false);
-
-    // After dispatch: flattened
-    const callData = commit.mock.calls[0][1];
-    expect(Array.isArray(callData.diff.old)).toBe(true);
-    expect(callData.diff.old.length).toBeGreaterThan(0);
-    // Should not contain nested arrays
-    expect(callData.diff.old.every((item: any) => !Array.isArray(item))).toBe(true);
-  });
-
-  it('clears diff when clearDiff is true', () => {
-    const store = { commit: vi.fn(), dispatch: vi.fn() };
-    const diff = makeDiff(5);
-
-    storeDiffBlocks(diff, 2, 3, makeBlock(), makeBlock());
-    dispatchBlocks(store, diff, [[]], 7, true, false);
-
-    expect(diff.l).toBe(7);
-    expect(diff.old).toEqual([]);
-    expect(diff.new).toEqual([]);
-  });
-
-  it('does not clear diff when clearDiff is false', () => {
-    const store = { commit: vi.fn(), dispatch: vi.fn() };
-    const diff = makeDiff(5);
-
-    storeDiffBlocks(diff, 2, 3, makeBlock(), makeBlock());
-    dispatchBlocks(store, diff, [[]], 7, false, false);
-
-    expect(diff.l).toBe(5); // unchanged
-    // old/new have been flattened but not cleared
-    expect(diff.old.length).toBeGreaterThan(0);
-  });
-
-  it('passes the layer index in the diff data', () => {
-    const store = { commit: vi.fn(), dispatch: vi.fn() };
-    const diff = makeDiff(3);
-
-    dispatchBlocks(store, diff, [[]], 0, false, false);
-
-    const callData = store.commit.mock.calls[0][1];
-    expect(callData.diff.l).toBe(3);
-  });
-
-  it('handles empty diff (no blocks stored)', () => {
-    const store = { commit: vi.fn(), dispatch: vi.fn() };
-    const diff = makeDiff();
-
-    dispatchBlocks(store, diff, [[]], 0, false, false);
-
-    expect(store.commit).toHaveBeenCalledWith('updateAsciiBlocks', expect.objectContaining({
-      diff: expect.objectContaining({
-        old: [],
-        new: [],
-      }),
-    }));
-  });
-
-  it('handles multiple stored blocks across rows', () => {
-    const store = { commit: vi.fn(), dispatch: vi.fn() };
-    const diff = makeDiff();
-
-    storeDiffBlocks(diff, 0, 0, makeBlock(1, 1, 'A'), makeBlock(2, 2, 'B'));
-    storeDiffBlocks(diff, 1, 1, makeBlock(3, 3, 'C'), makeBlock(4, 4, 'D'));
-
-    dispatchBlocks(store, diff, [[], []], 0, true, false);
-
-    const callData = store.commit.mock.calls[0][1];
-    // Should have 2 entries after flattening
-    const oldFlat = callData.diff.old;
-    const newFlat = callData.diff.new;
-    expect(oldFlat.filter((x: any) => x).length).toBe(2);
-    expect(newFlat.filter((x: any) => x).length).toBe(2);
   });
 });
