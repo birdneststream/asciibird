@@ -28,6 +28,12 @@
           >
             Export ASCII to mIRC File
           </li>
+          <li
+            @click="exportPlainTextClipboard()"
+            class="ab-context-menu-item"
+          >
+            Export Plain Text to Clipboard
+          </li>
           <template v-if="isSelected && isSelecting">
             <li class="ab-context-menu-separator" />
             <li
@@ -188,6 +194,7 @@ import {
   emptyBlock,
   isEmptyBlock,
   eraseBlockProperties,
+  exportPlainText,
   iterativeFill,
   iterativeFillHalfBlock,
 } from '../ascii';
@@ -874,10 +881,21 @@ function canvasToPng() {
    }
  }
 
- /** Open the border generator modal from context menu */
- function openBorderGenerator() {
-   modalStore.openModal('border-generator');
- }
+  /** Open the border generator modal from context menu */
+  function openBorderGenerator() {
+    modalStore.openModal('border-generator');
+  }
+
+  /** Export plain text to clipboard from context menu */
+  function exportPlainTextClipboard() {
+    try {
+      const lines = exportPlainText();
+      navigator.clipboard.writeText(lines.join('\n'));
+      toastShow('Plain text copied to clipboard!', { type: 'success' });
+    } catch {
+      toastShow('Failed to copy plain text.', { type: 'error' });
+    }
+  }
 
 async function canvasKeyDown(char: string) {
   const rawX = textEditing.value.startX;

@@ -418,6 +418,7 @@ import {
   parseMircAscii,
   toolbarIcons,
   exportMirc,
+  exportPlainText,
   downloadFile,
   checkForGetRequest,
   splashAscii,
@@ -617,6 +618,16 @@ const menuBar = computed<AppMenuBar[]>(() => [
       {
         text: 'Export to ANSI File',
         click: () => handleExportAnsi(),
+        disabled: !asciibirdMeta.value.length,
+      },
+      {
+        text: 'Export Plain Text to Clipboard',
+        click: () => handleExportPlainText('clipboard'),
+        disabled: !asciibirdMeta.value.length,
+      },
+      {
+        text: 'Export Plain Text to File',
+        click: () => handleExportPlainText('file'),
         disabled: !asciibirdMeta.value.length,
       },
     ],
@@ -932,6 +943,25 @@ function handleExportAnsi() {
     toastShow('Exported ANSI file!', { type: 'success' });
   } catch (err) {
     toastShow(`ANSI export error: ${String(err)}`, { type: 'error' });
+  }
+}
+
+function handleExportPlainText(target: 'clipboard' | 'file') {
+  try {
+    const lines = exportPlainText();
+    const text = lines.join('\n');
+    const title = store.currentAscii?.title ?? 'ascii';
+
+    if (target === 'clipboard') {
+      navigator.clipboard.writeText(text);
+      toastShow('Plain text copied to clipboard!', { type: 'success' });
+    } else {
+      const filename = title.endsWith('.txt') ? title : `${title}.txt`;
+      downloadFile(text, filename, 'text/plain');
+      toastShow('Exported plain text file!', { type: 'success' });
+    }
+  } catch (err) {
+    toastShow(`Plain text export error: ${String(err)}`, { type: 'error' });
   }
 }
 

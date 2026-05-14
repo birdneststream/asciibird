@@ -564,6 +564,41 @@ export const exportMirc = (blocks: Block[][] | null = null): MircExportResult =>
   return { filename, output };
 };
 
+/**
+ * Export ASCII blocks as plain text (no color codes).
+ * Strips all fg/bg, outputs just the character for each cell.
+ * Trailing spaces and empty trailing lines are trimmed.
+ */
+export const exportPlainText = (blocks: Block[][] | null = null): string[] => {
+  if (blocks === null) {
+    blocks = mergeLayers();
+  }
+
+  if (!blocks || blocks.length === 0) return [];
+
+  const output: string[] = [];
+
+  for (let y = 0; y < blocks.length; y++) {
+    const row = blocks[y];
+    if (!row) continue;
+
+    let line = '';
+    for (let x = 0; x < row.length; x++) {
+      const block = row[x];
+      line += (block?.char && block.char !== null) ? block.char : ' ';
+    }
+
+    output.push(line.trimEnd());
+  }
+
+  // Strip trailing empty lines
+  while (output.length > 0 && output[output.length - 1] === '') {
+    output.pop();
+  }
+
+  return output;
+};
+
 // Download a string to a file with a filename
 export const downloadFile = (
   content: string,

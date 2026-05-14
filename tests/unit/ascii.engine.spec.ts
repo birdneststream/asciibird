@@ -30,8 +30,9 @@ import {
   setStore,
    setModalStore,
    createNewAscii,
-  exportMirc,
-  parseMircAscii,
+   exportMirc,
+   exportPlainText,
+   parseMircAscii,
   mergeLayers,
   checkForGetRequest,
   splashAscii,
@@ -2636,5 +2637,89 @@ describe('calculateMircLineBytes', () => {
     ];
     const result = calculateMircLineBytes(blocks);
     expect(result.lineByteLengths[0]).toBeGreaterThan(1);
+  });
+});
+
+// ─── exportPlainText ─────────────────────────────────────────────────
+
+describe('exportPlainText', () => {
+  it('extracts characters from blocks', () => {
+    const blocks: Block[][] = [
+      [{ char: 'H' }, { char: 'i' }, { char: '!' }],
+    ];
+    const result = exportPlainText(blocks);
+    expect(result).toEqual(['Hi!']);
+  });
+
+  it('uses space for empty blocks', () => {
+    const blocks: Block[][] = [
+      [{ char: 'A' }, {}, { char: 'B' }],
+    ];
+    const result = exportPlainText(blocks);
+    expect(result).toEqual(['A B']);
+  });
+
+  it('uses space for null char blocks', () => {
+    const blocks: Block[][] = [
+      [{ char: 'X' }, { char: null as any }, { char: 'Y' }],
+    ];
+    const result = exportPlainText(blocks);
+    expect(result).toEqual(['X Y']);
+  });
+
+  it('strips trailing spaces from each line', () => {
+    const blocks: Block[][] = [
+      [{ char: 'A' }, {}, {}, {}],
+    ];
+    const result = exportPlainText(blocks);
+    expect(result).toEqual(['A']);
+  });
+
+  it('strips trailing empty lines', () => {
+    const blocks: Block[][] = [
+      [{ char: 'A' }],
+      [{}],
+      [{}],
+    ];
+    const result = exportPlainText(blocks);
+    expect(result).toEqual(['A']);
+  });
+
+  it('preserves half-block characters', () => {
+    const blocks: Block[][] = [
+      [{ char: '▀' }, { char: '▄' }, { char: '█' }],
+    ];
+    const result = exportPlainText(blocks);
+    expect(result).toEqual(['▀▄█']);
+  });
+
+  it('handles multi-line ASCII', () => {
+    const blocks: Block[][] = [
+      [{ char: 'A' }, { char: 'B' }],
+      [{ char: 'C' }, { char: 'D' }],
+    ];
+    const result = exportPlainText(blocks);
+    expect(result).toEqual(['AB', 'CD']);
+  });
+
+  it('handles empty input', () => {
+    const result = exportPlainText([]);
+    expect(result).toEqual([]);
+  });
+
+  it('ignores color properties', () => {
+    const blocks: Block[][] = [
+      [{ fg: 5, bg: 2, char: 'X' }],
+    ];
+    const result = exportPlainText(blocks);
+    expect(result).toEqual(['X']);
+  });
+
+  it('handles single row', () => {
+    const blocks: Block[][] = [
+      [{ char: 'H' }, { char: 'e' }, { char: 'l' }, { char: 'l' }, { char: 'o' }],
+    ];
+    const result = exportPlainText(blocks);
+    expect(result).toEqual(['Hello']);
   });
 });
