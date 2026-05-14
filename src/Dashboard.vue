@@ -226,29 +226,29 @@
       />
 
       <Toolbar
-        v-show="toolbarState.visible"
+        v-show="toolbarState.visible && !toolbarState.minimized"
       />
 
       <DebugPanel
         :canvas-x="canvasX"
         :canvas-y="canvasY"
-        v-if="debugPanelState.visible"
+        v-show="debugPanelState.visible && !debugPanelState.minimized"
         :y-offset="scrollOffset"
       />
 
       <BrushLibrary
-        v-show="brushLibraryState.visible"
+        v-show="brushLibraryState.visible && !brushLibraryState.minimized"
         :y-offset="scrollOffset"
       />
 
       <BrushPreview
         @inputtingbrush="inputtingbrush"
         :y-offset="scrollOffset"
-        v-show="brushPreviewState.visible"
+        v-show="brushPreviewState.visible && !brushPreviewState.minimized"
       />
 
       <LayersLibrary
-        v-show="layersLibraryState.visible"
+        v-show="layersLibraryState.visible && !layersLibraryState.minimized"
         :y-offset="scrollOffset"
       />
 
