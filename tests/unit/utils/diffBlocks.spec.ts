@@ -6,16 +6,17 @@ import {
   storeDiffBlocks,
   dispatchBlocks,
 } from '@/utils/diffBlocks';
+import type { DiffBlocks } from '@/utils/diffBlocks';
 import type { Block } from '@/types';
 
 // ─── Helpers ──────────────────────────────────────────────────────
 
 const makeBlock = (fg = 0, bg = 1, char = 'X'): Block => ({ fg, bg, char });
 
-const makeDiff = (l = 0) => ({
+const makeDiff = (l = 0): DiffBlocks => ({
   l,
-  old: [] as any[],
-  new: [] as any[],
+  old: [],
+  new: [],
 });
 
 // ─── storeDiffBlocks ─────────────────────────────────────────────

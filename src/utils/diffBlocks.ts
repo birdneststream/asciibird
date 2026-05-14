@@ -17,7 +17,7 @@ export interface DiffBlocks {
  * not an intermediate state.
  */
 export function storeDiffBlocks(
-  diffBlocks: { l: number; old: any[]; new: any[] },
+  diffBlocks: DiffBlocks,
   x: number,
   y: number,
   oldBlock: Block,
