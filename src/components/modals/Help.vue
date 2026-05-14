@@ -520,13 +520,21 @@
       </h2>
       <ul>
         <li class="text-body-sm text-on-surface-variant ml-[5%]">
-          Experimental half block mode, at the moment works best with a 1x1 brush size.
+          Half block mode doubles the vertical resolution by treating the
+          upper and lower halves of each block independently.
         </li>
         <li class="text-body-sm text-on-surface-variant ml-[5%]">
-          Eraser and fill tool are coming soon for this mode.
+          The brush, fill, eraser, and dropper tools all support half block mode.
         </li>
         <li class="text-body-sm text-on-surface-variant ml-[5%]">
-          This will also reflect half block sizes if the grid mode is enabled.
+          Works with any brush size. A 1×1 brush gives the most precise control.
+        </li>
+        <li class="text-body-sm text-on-surface-variant ml-[5%]">
+          The cursor indicator shows a half-height rectangle to indicate which
+          half will be affected.
+        </li>
+        <li class="text-body-sm text-on-surface-variant ml-[5%]">
+          Half block sizes also reflect in grid mode.
         </li>
       </ul>
       <h2
@@ -1441,7 +1449,12 @@
       >
         Half Block editing Mode
       </h1>
-      <p>This is still experimental and at the moment the brush tool will work with half block mode only.</p>
+      <p>
+        Half block editing mode doubles vertical resolution by treating each
+        block's top and bottom halves independently. All tools (brush, fill,
+        eraser, dropper) support half block mode. The cursor indicator shows a
+        half-height rectangle to indicate which half will be affected.
+      </p>
       <h1
         class="text-headline-lg font-bold text-on-surface pt-3 pb-1"
         id="context-menus-right-click-menus"
