@@ -581,10 +581,10 @@ This is fully autonomous — no user interaction needed. Follow the per-task cyc
         log "${YELLOW}[Git]${NC} Push failed or nothing to push"
 
     # ========================================================================
-    # Step 3: Visual QA (every 3rd iteration — verify the app still works)
+    # Step 3: Visual QA (every 5th iteration — verify the app still works)
     # ========================================================================
 
-    if [ $((COUNT % 3)) -eq 0 ]; then
+    if [ $((COUNT % 5)) -eq 0 ]; then
         log "${MAGENTA}[VisualQA]${NC} Running visual QA check..."
 
         read -r -d '' QA_PROMPT <<QA_EOF
@@ -669,7 +669,7 @@ QA_EOF
             log "${RED}[VisualQA]${NC} Iteration ${COUNT} QA FAILED (exit $?)"
         fi
     else
-        log "${YELLOW}[VisualQA]${NC} Skipping this iteration (every 3rd)"
+        log "${YELLOW}[VisualQA]${NC} Skipping this iteration (every 5th)"
     fi
 
     # ========================================================================
