@@ -2,7 +2,11 @@
 // getMirrorPositions — mirror-aware position calculation utility
 
 import { describe, it, expect } from 'vitest';
-import { getMirrorPositions } from '@/utils/mirror';
+import {
+  getMirrorPositions,
+  applyMirrored,
+  applyMirroredHalfBlock,
+} from '@/utils/mirror';
 import type { Position } from '@/utils/mirror';
 
 // ─── No mirroring ─────────────────────────────────────────────────
@@ -215,5 +219,104 @@ describe('getMirrorPositions — edge cases', () => {
     const keys = result.map(p => `${p.x},${p.y}`);
     const uniqueKeys = new Set(keys);
     expect(uniqueKeys.size).toBe(result.length);
+  });
+});
+
+// ─── Half-Block Mirror ───────────────────────────────────────────
+
+describe('applyMirroredHalfBlock', () => {
+  it('does nothing when both mirrors are off', () => {
+    const positions: Array<[number, number, number]> = [];
+    applyMirroredHalfBlock(5, 3, 80, 25, false, false, (mx, mHalfY, mBlockY) => {
+      positions.push([mx, mHalfY, mBlockY]);
+    });
+    expect(positions).toHaveLength(0);
+  });
+
+  it('mirrors X at half-block level', () => {
+    const positions: Array<[number, number, number]> = [];
+    applyMirroredHalfBlock(5, 3, 80, 25, true, false, (mx, mHalfY, mBlockY) => {
+      positions.push([mx, mHalfY, mBlockY]);
+    });
+    // Mirror X: x=80-5=75, halfY stays 3, blockY=1
+    expect(positions).toHaveLength(1);
+    expect(positions[0]).toEqual([75, 3, 1]);
+  });
+
+  it('mirrors Y at double resolution', () => {
+    const positions: Array<[number, number, number]> = [];
+    // height=25, halfHeight=50, halfY=3 → mirrored: 50-3-1=46
+    applyMirroredHalfBlock(5, 3, 80, 25, false, true, (mx, mHalfY, mBlockY) => {
+      positions.push([mx, mHalfY, mBlockY]);
+    });
+    expect(positions).toHaveLength(1);
+    expect(positions[0]).toEqual([5, 46, 23]);
+  });
+
+  it('mirrors both X and Y at half-block level', () => {
+    const positions: Array<[number, number, number]> = [];
+    applyMirroredHalfBlock(5, 3, 80, 25, true, true, (mx, mHalfY, mBlockY) => {
+      positions.push([mx, mHalfY, mBlockY]);
+    });
+    // MirrorX: (75, 3, 1)
+    // MirrorY: (5, 46, 23)
+    // Both:    (75, 46, 23)
+    expect(positions).toHaveLength(3);
+    expect(positions).toContainEqual([75, 3, 1]);
+    expect(positions).toContainEqual([5, 46, 23]);
+    expect(positions).toContainEqual([75, 46, 23]);
+  });
+
+  it('deduplicates when original is at center', () => {
+    const positions: Array<[number, number, number]> = [];
+    // 80-wide canvas center at x=40
+    // 25-high canvas → halfHeight=50, center at halfY=24/25
+    applyMirroredHalfBlock(40, 25, 80, 25, true, true, (mx, mHalfY, mBlockY) => {
+      positions.push([mx, mHalfY, mBlockY]);
+    });
+    // MirrorX: 80-40=40 (same x) → deduped
+    // MirrorY: 50-25-1=24 (different halfY)
+    // Both:    (40, 24) — same as mirrorY deduped
+    expect(positions).toHaveLength(1);
+    expect(positions[0]).toEqual([40, 24, 12]);
+  });
+
+  it('skips out-of-bounds mirror positions', () => {
+    const positions: Array<[number, number, number]> = [];
+    // x=0 on width 1 → mirrorX = 1-0=1, which is out of bounds (>=1)
+    applyMirroredHalfBlock(0, 0, 1, 1, true, true, (mx, mHalfY, mBlockY) => {
+      positions.push([mx, mHalfY, mBlockY]);
+    });
+    // MirrorX: (1, 0) → x=1 >= width=1, skip
+    // MirrorY: (0, 1) → halfY=1, blockY=0, valid (0 < height=1 * 2)
+    // Both: (1, 1) → x=1 >= width, skip
+    expect(positions).toHaveLength(1);
+    expect(positions[0]).toEqual([0, 1, 0]);
+  });
+
+  it('correctly computes blockY from halfY', () => {
+    const positions: Array<[number, number, number]> = [];
+    // halfY=0 → blockY=0 (top half of row 0)
+    // halfY=1 → blockY=0 (bottom half of row 0)
+    // halfY=2 → blockY=1 (top half of row 1)
+    // halfY=3 → blockY=1 (bottom half of row 1)
+    applyMirroredHalfBlock(5, 0, 80, 25, false, true, (mx, mHalfY, mBlockY) => {
+      positions.push([mx, mHalfY, mBlockY]);
+    });
+    // MirrorY: halfHeight=50, mirrored=50-0-1=49, blockY=24
+    expect(positions).toHaveLength(1);
+    expect(positions[0]).toEqual([5, 49, 24]);
+  });
+
+  it('handles top-half painting at row 0 with mirror Y', () => {
+    const positions: Array<[number, number, number]> = [];
+    // Painting top half of row 0: halfY=0
+    // MirrorY: 50-0-1=49 → bottom half of row 24
+    applyMirroredHalfBlock(5, 0, 80, 25, false, true, (mx, mHalfY, mBlockY) => {
+      positions.push([mx, mHalfY, mBlockY]);
+    });
+    expect(positions).toHaveLength(1);
+    expect(positions[0][1]).toBe(49); // bottom half of last row
+    expect(positions[0][2]).toBe(24); // last block row
   });
 });

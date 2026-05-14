@@ -1822,7 +1822,7 @@ async function drawHalfBlocks(brushX: number, brushY: number) {
     const grid = new HalfBlockGrid(currentAsciiLayerBlocks.value);
     grid.setColour(coord.x, coord.y, currentFg.value);
 
-    await recordDiff(blockX, blockY, ob, currentAsciiLayerBlocks.value[blockY][blockX]);
+    recordDiff(blockX, blockY, ob, currentAsciiLayerBlocks.value[blockY][blockX]);
 
     // Mirror positions at half-block granularity
     applyMirroredHalfBlock(
@@ -1907,7 +1907,7 @@ async function drawBrush(plain = false) {
           }
 
           if (canTool.value && !toolbarState.value.halfBlockEditing) {
-            await recordDiff(arrayX, arrayY, ob, brushBlock);
+            recordDiff(arrayX, arrayY, ob, brushBlock);
           }
         } else if (isErasing.value) {
           await drawBrushBlocks(brushX, brushY, brushBlock, null, true);

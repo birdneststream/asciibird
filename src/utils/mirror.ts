@@ -6,8 +6,8 @@ export interface Position {
   y: number;
 }
 
-/** Half-block position with double-Y resolution coordinate */
-export interface HalfBlockPosition {
+/** Half-block position with double-Y resolution coordinate (internal) */
+interface HalfBlockPosition {
   x: number;
   halfY: number;
 }

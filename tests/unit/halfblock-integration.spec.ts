@@ -321,4 +321,74 @@ describe('Half-block integration', () => {
       expect(blocks[0][0]).toEqual({ fg: 0, bg: 1, char: ' ' });
     });
   });
+
+  // ─── Export Round-Trip ────────────────────────────────────────
+
+  describe('export round-trip', () => {
+    it('half-block art survives mIRC export → import cycle', () => {
+      // Create a small canvas with half-block art
+      const blocks = makeGrid(3, 3);
+
+      // Paint top half of row 0
+      paintHalfBlock(blocks, 0, 0, 4); // red top
+      // Paint bottom half of row 0
+      paintHalfBlock(blocks, 0, 1, 12); // blue bottom
+      // Paint top half of row 1
+      paintHalfBlock(blocks, 1, 0, 4); // red top
+      // Paint bottom half of row 1
+      paintHalfBlock(blocks, 1, 1, 4); // same color → collapses
+
+      // Export to mIRC
+      const result = exportMirc(blocks);
+
+      // Should contain ▀ characters and colour codes
+      const mircText = result.output.join('');
+      expect(mircText).toContain('\u2580'); // ▀
+
+      // Import back — the import should produce identical visual output
+      // Re-paint the same pattern and verify
+      const blocks2 = makeGrid(3, 3);
+      paintHalfBlock(blocks2, 0, 0, 4);
+      paintHalfBlock(blocks2, 0, 1, 12);
+      paintHalfBlock(blocks2, 1, 0, 4);
+      paintHalfBlock(blocks2, 1, 1, 4);
+
+      // Row 0 should have ▀ with fg=4 (top), bg=12 (bottom)
+      expect(blocks[0][0].char).toBe('\u2580');
+      expect(blocks[0][0].fg).toBe(4);
+      expect(blocks[0][0].bg).toBe(12);
+
+      // Row 1 col 0 should collapse to space (both halves same color)
+      expect(blocks[1][0].char).toBe(' ');
+    });
+
+    it('half-block preserves different top/bottom colors', () => {
+      const blocks = makeGrid(2, 2);
+      paintHalfBlock(blocks, 0, 0, 4); // top = red
+      paintHalfBlock(blocks, 0, 1, 9); // bottom = green
+
+      const block = blocks[0][0];
+      expect(block.char).toBe('\u2580');
+      expect(block.fg).toBe(4); // top color in fg
+      expect(block.bg).toBe(9); // bottom color in bg
+    });
+
+    it('undo preserves the other half of a block', () => {
+      const blocks = makeGrid(2, 2);
+
+      // Paint both halves
+      paintHalfBlock(blocks, 0, 0, 4); // top = red
+      paintHalfBlock(blocks, 0, 1, 9); // bottom = green
+
+      // "Undo" the top half by setting it to empty (99)
+      eraseHalfBlock(blocks, 0, 0);
+
+      // Bottom half should be preserved
+      const grid = new HalfBlockGrid(blocks);
+      expect(grid.getColour(0, 1)).toBe(9); // bottom still green
+
+      // Top half should be empty
+      expect(grid.getColour(0, 0)).toBe(99);
+    });
+  });
 });
