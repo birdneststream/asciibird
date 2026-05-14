@@ -6,12 +6,16 @@
 // but sufficient for IRC art.
 
 import type { Block } from '../types';
-import { mircColours99 } from '../ascii';
 import type { FillChange } from '../ascii';
+import {
+  MIRC_RGB,
+  closestMircColor,
+  parseColor,
+} from './ansiColors';
 
-// ─── Color Parsing ──────────────────────────────────────────────
+// ─── Color Types ────────────────────────────────────────────────
 
-/** RGB color tuple */
+/** RGB color object used for gradient interpolation */
 export interface RgbColor {
   r: number;
   g: number;
@@ -19,60 +23,23 @@ export interface RgbColor {
 }
 
 /**
- * Parse a CSS color string from mircColours99 to RGB values.
- * Supports "rgb(r,g,b)" and "#hex" formats.
+ * Parse a CSS color string to RgbColor.
+ * Delegates to parseColor from ansiColors and converts tuple to object.
+ * Kept for backward compatibility with tests.
  */
 export function parseCssColor(colorStr: string): RgbColor {
-  // "rgb(r,g,b)" format (most entries in mircColours99)
-  const rgbMatch = colorStr.match(
-    /rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/,
-  );
-  if (rgbMatch) {
-    return {
-      r: Number.parseInt(rgbMatch[1], 10),
-      g: Number.parseInt(rgbMatch[2], 10),
-      b: Number.parseInt(rgbMatch[3], 10),
-    };
-  }
-
-  // "#hex" format (fallback)
-  const hex = colorStr.replace('#', '');
-  return {
-    r: Number.parseInt(hex.substring(0, 2), 16),
-    g: Number.parseInt(hex.substring(2, 4), 16),
-    b: Number.parseInt(hex.substring(4, 6), 16),
-  };
+  const [r, g, b] = parseColor(colorStr);
+  return { r, g, b };
 }
-
-// ─── Pre-parsed palette for performance ─────────────────────────
-
-/** Pre-parsed RGB values for the 99-color mIRC palette */
-const paletteRgb: RgbColor[] = mircColours99.map(parseCssColor);
 
 // ─── Color Interpolation ────────────────────────────────────────
 
 /**
  * Find the closest color index in the 99-color mIRC palette.
- * Uses Euclidean distance in RGB space.
- * Returns the palette index (0-98) of the closest match.
+ * Delegates to the shared closestMircColor in ansiColors.
  */
 export function findClosestMircColor(r: number, g: number, b: number): number {
-  let bestIdx = 0;
-  let bestDist = Infinity;
-
-  for (let i = 0; i < paletteRgb.length; i++) {
-    const p = paletteRgb[i];
-    const dr = r - p.r;
-    const dg = g - p.g;
-    const db = b - p.b;
-    const dist = dr * dr + dg * dg + db * db;
-    if (dist < bestDist) {
-      bestDist = dist;
-      bestIdx = i;
-    }
-  }
-
-  return bestIdx;
+  return closestMircColor([r, g, b]);
 }
 
 /**
@@ -171,9 +138,11 @@ export function gradientFill(opts: GradientFillOptions): FillChange[] {
   const direction = opts.direction
     ?? detectGradientDirection(startX, startY, endX, endY);
 
-  // Get RGB values for start and end colors
-  const startRgb = paletteRgb[startColorIdx] ?? paletteRgb[0];
-  const endRgb = paletteRgb[endColorIdx] ?? paletteRgb[0];
+  // Get RGB values for start and end colors (from shared palette)
+  const startTuple = MIRC_RGB[startColorIdx] ?? MIRC_RGB[0];
+  const endTuple = MIRC_RGB[endColorIdx] ?? MIRC_RGB[0];
+  const startRgb: RgbColor = { r: startTuple[0], g: startTuple[1], b: startTuple[2] };
+  const endRgb: RgbColor = { r: endTuple[0], g: endTuple[1], b: endTuple[2] };
 
   // Compute interpolation ranges based on direction
   const rangeW = x2 - x1;
