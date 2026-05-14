@@ -1178,22 +1178,35 @@ async function canvasMouseDown() {
         break;
 
       case 'dropper':
-        if (canFg.value) {
-          toolbarStore.changeColourFg(
-            targetBlock.fg === undefined ? currentFg.value : targetBlock.fg,
-          );
-        }
-        if (canBg.value) {
-          toolbarStore.changeColourBg(
-            targetBlock.bg === undefined ? currentBg.value : targetBlock.bg,
-          );
-        }
-        if (canText.value) {
-          toolbarStore.changeChar(
-            targetBlock.char === undefined
-              ? currentChar.value
-              : targetBlock.char,
-          );
+        if (toolbarState.value.halfBlockEditing) {
+          // Half-block mode: sample colour at specific half
+          const halfY = y.value * 2 + (atTopHalf.value ? 0 : 1);
+          const grid = new HalfBlockGrid(currentAsciiLayerBlocks.value);
+          const sampledColour = grid.getColour(x.value, halfY);
+          if (canFg.value) {
+            toolbarStore.changeColourFg(sampledColour);
+          } else if (canBg.value) {
+            toolbarStore.changeColourBg(sampledColour);
+          }
+        } else {
+          // Standard full-block dropper
+          if (canFg.value) {
+            toolbarStore.changeColourFg(
+              targetBlock.fg === undefined ? currentFg.value : targetBlock.fg,
+            );
+          }
+          if (canBg.value) {
+            toolbarStore.changeColourBg(
+              targetBlock.bg === undefined ? currentBg.value : targetBlock.bg,
+            );
+          }
+          if (canText.value) {
+            toolbarStore.changeChar(
+              targetBlock.char === undefined
+                ? currentChar.value
+                : targetBlock.char,
+            );
+          }
         }
         toolbarStore.changeTool(0);
         break;
@@ -1412,6 +1425,17 @@ async function drawRectangleBlock(rx: number, ry: number) {
     if (block.bg === 8) {
       indicatorColour = 1;
     }
+  }
+
+  // Half-block mode: draw half-height indicator
+  if (toolbarState.value.halfBlockEditing) {
+    const halfH = bh / 2;
+    const yOff = atTopHalf.value ? 0 : halfH;
+    toolCtx.fillStyle = mircColours99[indicatorColour];
+    toolCtx.fillRect(rx * bw, ry * bh + yOff, bw, halfH);
+    toolCtx.setLineDash([1, 2]);
+    toolCtx.strokeRect(rx * bw, ry * bh + yOff, bw, halfH);
+    return;
   }
 
   toolCtx.fillStyle = mircColours99[indicatorColour];
@@ -1711,6 +1735,42 @@ async function eraser() {
   if (canTool.value) {
     const bw = blockWidthComp.value;
     const bh = blockHeightComp.value;
+
+    // ── Half-block eraser path ──
+    if (toolbarState.value.halfBlockEditing) {
+      const brushRows = brushBlocks.value.length;
+      const brushCols = brushBlocks.value[0].length;
+      const brushDiffX = Math.floor(brushCols / 2) * bw;
+      const brushDiffY = Math.floor(brushRows / 2) * bh;
+      const grid = new HalfBlockGrid(currentAsciiLayerBlocks.value);
+
+      for (let ey = 0; ey < brushRows; ey++) {
+        for (let ex = 0; ex < brushCols; ex++) {
+          if (isEmptyBlock(brushBlocks.value[ey][ex])) continue;
+
+          const pixelX = x.value * bw + ex * bw - brushDiffX;
+          const pixelY = y.value * bh + ey * bh - brushDiffY;
+
+          const arrayX = pixelX / bw;
+          const arrayY = pixelY / bh;
+
+          const row = currentAsciiLayerBlocks.value[arrayY];
+          if (!row || row[arrayX] === undefined) continue;
+
+          // All brush cells use cursor's atTopHalf to determine
+          // which half to erase
+          const halfY = arrayY * 2 + (atTopHalf.value ? 0 : 1);
+
+          const ob = { ...row[arrayX] };
+          grid.setColour(arrayX, halfY, 99);
+          recordDiff(arrayX, arrayY, ob, row[arrayX]);
+        }
+      }
+      // TODO: half-block mirror support (applyMirrored)
+      return;
+    }
+
+    // ── Standard full-block eraser path ──
     const brushDiffX =
       Math.floor(brushBlocks.value[0].length / 2) * bw;
     const brushDiffY =
