@@ -181,25 +181,25 @@
         <div
           v-for="(value, key) in asciibirdMeta"
           :key="key"
-          class="h-9 flex items-center gap-sm px-md cursor-pointer transition-colors duration-150 min-w-[160px] group"
+          class="h-9 flex items-center gap-xs px-sm cursor-pointer transition-colors duration-150 min-w-[120px] max-w-[200px] group select-none"
           :class="tabClass(key)"
           @click="changeTab(key)"
         >
           <span
-            class="material-icons text-sm"
+            class="material-icons text-sm flex-shrink-0"
             :class="key === currentTab ? 'text-primary' : 'text-outline group-hover:text-on-surface-variant'"
             aria-hidden="true"
           >
             insert_drive_file
           </span>
           <span
-            class="font-label-mono text-label-mono truncate flex-1"
+            class="font-label-mono text-label-mono truncate flex-1 min-w-0"
             :class="key === currentTab ? 'text-on-surface' : 'text-on-surface-variant group-hover:text-on-surface'"
           >
             {{ value.title }}
           </span>
           <button
-            class="material-icons text-sm inline-flex items-center justify-center transition-opacity"
+            class="material-icons text-sm inline-flex items-center justify-center transition-opacity flex-shrink-0"
             :class="[
               key === currentTab
                 ? 'text-on-surface-variant hover:text-on-surface'
@@ -733,7 +733,7 @@ function inputtingbrush(val: boolean) {
 
 function tabClass(key: number) {
   return currentTab.value === key
-    ? 'bg-surface-container-highest border-t-2 border-primary'
+    ? 'bg-surface-container-highest border-t-2 border-primary shadow-[inset_0_1px_0_rgba(173,198,255,0.1)]'
     : 'border-t-2 border-transparent hover:bg-surface-variant/30';
 }
 

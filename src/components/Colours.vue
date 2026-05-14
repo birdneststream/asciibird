@@ -4,7 +4,7 @@
     <button
       type="button"
       :style="{ backgroundColor: mircColours[currentFg] }"
-      class="w-14 h-14 rounded border border-outline-variant flex items-center justify-center text-sm font-label-mono transition-transform active:scale-95"
+      class="w-12 h-12 rounded border border-outline-variant flex items-center justify-center text-xs font-label-mono transition-transform active:scale-95"
       id="currentColourFg"
       @click="toolbarStore.changeIsUpdatingFg(!toolbarState.isChoosingFg)"
     >
@@ -29,7 +29,7 @@
       <button
         type="button"
         :style="{ backgroundColor: mircColours[currentBg] }"
-        class="w-14 h-14 rounded border border-outline-variant flex items-center justify-center text-sm font-label-mono transition-transform active:scale-95"
+        class="w-12 h-12 rounded border border-outline-variant flex items-center justify-center text-xs font-label-mono transition-transform active:scale-95"
         id="currentColourBg"
         @click="toolbarStore.changeIsUpdatingBg(!toolbarState.isChoosingBg)"
       >
@@ -39,7 +39,7 @@
       <button
         type="button"
         :style="charButtonStyle"
-        class="w-14 h-14 rounded border border-outline-variant flex items-center justify-center text-sm font-label-mono transition-transform active:scale-95"
+        class="w-12 h-12 rounded border border-outline-variant flex items-center justify-center text-xs font-label-mono transition-transform active:scale-95"
         id="currentChar"
         :disabled="halfBlockEditing"
         @click="toolbarStore.changeIsUpdatingChar(!toolbarState.isChoosingChar)"

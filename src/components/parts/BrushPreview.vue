@@ -13,12 +13,12 @@
 
       <div class="p-sm flex flex-col gap-xs overflow-y-auto custom-scrollbar">
         <!-- Colour swatches -->
-        <div class="flex mb-2 justify-start">
-          <Colours />
+        <div class="flex justify-center">
+          <Colours class="w-full" />
         </div>
 
         <!-- Targeting checkboxes -->
-        <div class="flex justify-center gap-2 mb-2">
+        <div class="flex justify-between px-1">
           <Tooltip content="Ignore Foreground when Editing">
             <label class="flex items-center gap-1 cursor-pointer ab-checkbox-hover">
               <input
@@ -59,48 +59,41 @@
           </Tooltip>
         </div>
 
-        <div class="flex w-full gap-1">
-          <div class="w-1/2">
-            <input
-              type="number"
-              name="width"
-              class="ab-input"
-              v-model="brushSizeWidthInput"
-              min="1"
-              :max="maxBrushSize"
-              @focus="isInputtingBrushSize = true"
-              @blur="isInputtingBrushSize = false"
-            >
-          </div>
-
-          <div class="w-1/2">
-            <input
-              type="number"
-              name="height"
-              class="ab-input"
-              v-model="brushSizeHeightInput"
-              min="1"
-              :max="maxBrushSize"
-              @focus="isInputtingBrushSize = true"
-              @blur="isInputtingBrushSize = false"
-            >
-          </div>
-        </div>
-
-        <div class="w-full">
-          <select
-            class="ab-input"
-            v-model="brushSizeTypeInput"
+        <div class="flex w-full gap-xs">
+          <input
+            type="number"
+            name="width"
+            class="ab-input w-1/2"
+            v-model="brushSizeWidthInput"
+            min="1"
+            :max="maxBrushSize"
+            @focus="isInputtingBrushSize = true"
+            @blur="isInputtingBrushSize = false"
           >
-            <option
-              v-for="opt in brushOptions"
-              :key="opt"
-              :value="opt"
-            >
-              {{ opt }}
-            </option>
-          </select>
+          <input
+            type="number"
+            name="height"
+            class="ab-input w-1/2"
+            v-model="brushSizeHeightInput"
+            min="1"
+            :max="maxBrushSize"
+            @focus="isInputtingBrushSize = true"
+            @blur="isInputtingBrushSize = false"
+          >
         </div>
+
+        <select
+          class="ab-input w-full"
+          v-model="brushSizeTypeInput"
+        >
+          <option
+            v-for="opt in brushOptions"
+            :key="opt"
+            :value="opt"
+          >
+            {{ opt }}
+          </option>
+        </select>
 
         <div
           @mouseenter="canDrag = false"

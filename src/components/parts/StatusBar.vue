@@ -1,30 +1,34 @@
 <template>
-  <footer class="fixed bottom-0 left-0 right-0 z-40 h-6 bg-surface-container border-t border-outline-variant px-md flex items-center justify-between">
-    <div class="flex items-center gap-lg">
+  <footer class="fixed bottom-0 left-0 right-0 z-40 h-7 bg-surface-container border-t border-outline-variant px-md flex items-center justify-between select-none">
+    <div class="flex items-center gap-sm">
       <div class="flex items-center gap-xs">
         <span class="w-2 h-2 rounded-full bg-secondary-fixed-dim shadow-[0_0_8px_rgba(171,214,0,0.5)]" />
-        <span class="font-label-mono text-[10px] uppercase text-on-surface-variant">Ready</span>
+        <span class="font-label-mono text-body-sm uppercase text-on-surface-variant tracking-wider">Ready</span>
       </div>
-      <span class="font-label-mono text-[10px] text-on-surface-variant">
+      <span class="font-label-mono text-body-sm text-on-surface-variant">
         X: {{ coordsX }} | Y: {{ coordsY }}
       </span>
       <span
         v-if="toolName"
-        class="font-label-mono text-[10px] text-on-surface-variant"
+        class="font-label-mono text-body-sm text-on-surface-variant"
       >
         Tool: {{ toolName }}
       </span>
     </div>
-    <div class="flex items-center gap-md">
+    <div class="flex items-center gap-sm">
       <span
         v-if="projectTitle"
-        class="font-label-mono text-[10px] text-on-surface-variant"
+        class="font-label-mono text-body-sm text-on-surface-variant truncate max-w-[200px]"
       >
         Project: {{ projectTitle }}
       </span>
       <span
+        v-if="projectTitle && layerInfo"
+        class="text-outline-variant"
+      >|</span>
+      <span
         v-if="layerInfo"
-        class="font-label-mono text-[10px] text-on-surface-variant"
+        class="font-label-mono text-body-sm text-on-surface-variant"
       >
         Layer: {{ layerInfo }}
       </span>
