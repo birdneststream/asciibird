@@ -31,8 +31,6 @@ import type { Block, BlockDiff } from '../types';
 export interface UsePasteModeOptions {
   /** Pixel-coordinate selection rectangle from Editor */
   selecting: Ref<SelectionRect>;
-  /** Selected blocks from Editor (2D Block array) */
-  selectedBlocks: Ref<Block[][]>;
   /** Block width in pixels (computed from multiplier) */
   blockWidthComp: ComputedRef<number>;
   /** Block height in pixels (computed from multiplier) */

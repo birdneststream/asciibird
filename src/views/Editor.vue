@@ -315,7 +315,7 @@ const {
   canvasSize, x, y, isTopHalf, top, canTool,
   textEditing, selecting, isMouseOnCanvas,
   selectedBlocks, diffBlocks, canvasHash,
-  lastBrushX, lastBrushY, isPasteMode,
+  lastBrushX, lastBrushY,
   blockSizeMultiplier, blockWidthComp, blockHeightComp,
   currentAscii, currentAsciiLayers, selectedLayerIndex,
   currentSelectedLayer, currentAsciiLayerBlocks,
@@ -393,7 +393,6 @@ const {
 // ─── Paste Mode ──────────────────────────────────────────────────
 const pasteMode = usePasteMode({
   selecting,
-  selectedBlocks,
   blockWidthComp,
   blockHeightComp,
   currentAsciiWidth,
@@ -775,7 +774,7 @@ hotkeys('*', 'editor', async function (event) {
     return;
   }
 
-  if (event.key === 'Escape' && isPasteMode.value) {
+  if (event.key === 'Escape' && pasteMode.isPasteMode.value) {
     pasteMode.cancelPasteMode();
     await clearToolCanvas();
     await delayRedrawCanvas();
@@ -827,7 +826,6 @@ let selectionTransformHandler: ((e: Event) => void) | null = null;
 let scrollToHandler: ((e: Event) => void) | null = null;
 let pasteBlocksHandler: ((e: Event) => void) | null = null;
 let cutBlocksHandler: ((e: Event) => void) | null = null;
-let deleteSelectionHandler: ((e: Event) => void) | null = null;
 
 onMounted(async () => {
   rendering.initContexts();
@@ -881,16 +879,6 @@ onMounted(async () => {
     'asciibird:cut-blocks', cutBlocksHandler,
   );
 
-  deleteSelectionHandler = () => {
-    if (isSelecting.value && isSelected.value) {
-      pasteMode.deleteSelection();
-      delayRedrawCanvas(true);
-    }
-  };
-  window.addEventListener(
-    'asciibird:delete-selection', deleteSelectionHandler,
-  );
-
   await delayRedrawCanvas();
 });
 
@@ -925,12 +913,6 @@ onUnmounted(() => {
       'asciibird:cut-blocks', cutBlocksHandler,
     );
     cutBlocksHandler = null;
-  }
-  if (deleteSelectionHandler) {
-    window.removeEventListener(
-      'asciibird:delete-selection', deleteSelectionHandler,
-    );
-    deleteSelectionHandler = null;
   }
 });
 
@@ -1253,7 +1235,7 @@ async function canvasMouseUp() {
 
 async function canvasMouseDown() {
   // Paste mode: confirm paste at cursor position
-  if (isPasteMode.value) {
+  if (pasteMode.isPasteMode.value) {
     pasteMode.confirmPaste(x.value, y.value);
     await delayRedrawCanvas(true);
     return;
@@ -1440,8 +1422,7 @@ async function canvasMouseMove(e: MouseEvent) {
   x.value = Math.floor(x.value / blockWidthComp.value);
   y.value = Math.floor(y.value / blockHeightComp.value);
 
-  // Paste mode: draw ghost preview
-  if (isPasteMode.value) {
+  if (pasteMode.isPasteMode.value) {
     const toolCtx = rendering.getToolCtx();
     if (toolCtx) {
       await clearToolCanvas();
@@ -2218,7 +2199,7 @@ defineExpose({
   imageOverlayStyle,
   canvasTransparent,
   emptyBlock,
-  isPasteMode,
+  isPasteMode: pasteMode.isPasteMode,
   updateCanvas: props.updateCanvas ?? false,
   // Methods
   startExport,
