@@ -210,12 +210,8 @@ export function useSelectionTransform(deps: SelectionTransformDeps) {
         if (Object.keys(newBlock).length > 0) {
           layerBlocks[gy][gx] = { ...newBlock };
         } else {
-          // Clear the cell by deleting all properties
-          if (layerBlocks[gy][gx]) {
-            delete (layerBlocks[gy][gx] as any).fg;
-            delete (layerBlocks[gy][gx] as any).bg;
-            delete (layerBlocks[gy][gx] as any).char;
-          }
+          // Clear the cell by replacing with empty block
+          layerBlocks[gy][gx] = {};
         }
 
         newDiffs.push({ x: gx, y: gy, b: { ...layerBlocks[gy][gx] } });
@@ -235,11 +231,9 @@ export function useSelectionTransform(deps: SelectionTransformDeps) {
 
           if (gy < deps.currentAsciiHeight.value &&
               gx < deps.currentAsciiWidth.value) {
-            if (layerBlocks[gy]?.[gx]) {
-              delete (layerBlocks[gy][gx] as any).fg;
-              delete (layerBlocks[gy][gx] as any).bg;
-              delete (layerBlocks[gy][gx] as any).char;
-            }
+            layerBlocks[gy][gx] = {};
+            // Record the cleared state for redo correctness
+            newDiffs.push({ x: gx, y: gy, b: {} });
           }
         }
       }
@@ -270,16 +264,16 @@ export function useSelectionTransform(deps: SelectionTransformDeps) {
     };
 
     // Update selected blocks for paste (Ctrl+V)
-    const newSelectedBlocks = extractSelectionBlocks(
-      layerBlocks,
-      selectionToGridRect(
-        deps.selecting.value, bw, bh,
-        deps.currentAsciiWidth.value,
-        deps.currentAsciiHeight.value,
-      )!,
+    const newRect = selectionToGridRect(
+      deps.selecting.value, bw, bh,
+      deps.currentAsciiWidth.value,
+      deps.currentAsciiHeight.value,
     );
-    deps.selectedBlocks.value = newSelectedBlocks;
-    deps.setSelectBlocks(newSelectedBlocks);
+    if (newRect) {
+      const newSelectedBlocks = extractSelectionBlocks(layerBlocks, newRect);
+      deps.selectedBlocks.value = newSelectedBlocks;
+      deps.setSelectBlocks(newSelectedBlocks);
+    }
 
     // Redraw
     await deps.clearToolCanvas();

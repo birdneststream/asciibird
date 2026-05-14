@@ -11,7 +11,7 @@ import {
   rotate90CCW,
   rotate180,
   transformBlocks,
-  isHalfBlockChar,
+  isSpecialBlockChar,
 } from '@/utils/transformBlocks';
 import type { Block } from '@/types';
 
@@ -377,36 +377,36 @@ describe('transformBlocks', () => {
   });
 });
 
-// ─── isHalfBlockChar ──────────────────────────────────────────────
+// ─── isSpecialBlockChar ──────────────────────────────────────────
 
-describe('isHalfBlockChar', () => {
+describe('isSpecialBlockChar', () => {
   it('recognises ▀', () => {
-    expect(isHalfBlockChar('\u2580')).toBe(true);
+    expect(isSpecialBlockChar('\u2580')).toBe(true);
   });
 
   it('recognises ▄', () => {
-    expect(isHalfBlockChar('\u2584')).toBe(true);
+    expect(isSpecialBlockChar('\u2584')).toBe(true);
   });
 
   it('recognises ▌', () => {
-    expect(isHalfBlockChar('\u258C')).toBe(true);
+    expect(isSpecialBlockChar('\u258C')).toBe(true);
   });
 
   it('recognises ▐', () => {
-    expect(isHalfBlockChar('\u2590')).toBe(true);
+    expect(isSpecialBlockChar('\u2590')).toBe(true);
   });
 
   it('recognises █', () => {
-    expect(isHalfBlockChar('\u2588')).toBe(true);
+    expect(isSpecialBlockChar('\u2588')).toBe(true);
   });
 
   it('returns false for regular characters', () => {
-    expect(isHalfBlockChar('A')).toBe(false);
+    expect(isSpecialBlockChar('A')).toBe(false);
   });
 
   it('returns false for null/undefined', () => {
-    expect(isHalfBlockChar(null)).toBe(false);
-    expect(isHalfBlockChar(undefined)).toBe(false);
+    expect(isSpecialBlockChar(null)).toBe(false);
+    expect(isSpecialBlockChar(undefined)).toBe(false);
   });
 });
 

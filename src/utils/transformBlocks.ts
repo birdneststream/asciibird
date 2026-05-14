@@ -241,10 +241,10 @@ export function transformBlocks(
 }
 
 /**
- * Check if a block contains a half-block character that needs
- * special transform handling.
+ * Check if a character is a block element that needs
+ * special transform handling (half-block or full-block chars).
  */
-export function isHalfBlockChar(char: string | null | undefined): boolean {
+export function isSpecialBlockChar(char: string | null | undefined): boolean {
   return char === UPPER_HALF
     || char === LOWER_HALF
     || char === LEFT_HALF
