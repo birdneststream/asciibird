@@ -12,6 +12,30 @@
       />
 
       <div class="p-sm flex flex-col gap-xs overflow-y-auto custom-scrollbar">
+        <!-- Main tool buttons -->
+        <div class="grid grid-cols-2 gap-1">
+          <Tooltip
+            v-for="(value, keyToolbar) in toolbarIcons"
+            :key="keyToolbar + 50"
+            :content="tooltipName(value)"
+          >
+            <button
+              type="button"
+              class="w-full h-10 rounded flex items-center justify-center gap-1 transition-all duration-150"
+              :class="currentTool.name === value.name
+                ? 'bg-primary-container text-on-primary-container shadow-md ring-2 ring-primary'
+                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
+              @click="toolbarStore.changeTool(keyToolbar)"
+            >
+              <span
+                class="material-icons text-sm"
+                aria-hidden="true"
+              >{{ value.icon }}</span>
+              <span class="text-[10px] font-label-mono">{{ toolLabel(value) }}</span>
+            </button>
+          </Tooltip>
+        </div>
+
         <!-- Utility buttons -->
         <div class="grid grid-cols-2 gap-1 pt-2 border-t border-outline-variant/30">
           <Tooltip content="Mirror X axis when Editing">
@@ -97,31 +121,7 @@
                 class="material-icons text-sm"
                 aria-hidden="true"
               >grid_view</span>
-              <span class="text-[10px] font-label-mono">Half</span>
-            </button>
-          </Tooltip>
-        </div>
-
-        <!-- Main tool buttons -->
-        <div class="grid grid-cols-2 gap-1 pt-2 border-t border-outline-variant/30">
-          <Tooltip
-            v-for="(value, keyToolbar) in toolbarIcons"
-            :key="keyToolbar + 50"
-            :content="tooltipName(value)"
-          >
-            <button
-              type="button"
-              class="w-full h-10 rounded flex items-center justify-center gap-1 transition-all duration-150"
-              :class="currentTool.name === value.name
-                ? 'bg-primary-container text-on-primary-container shadow-md ring-2 ring-primary'
-                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
-              @click="toolbarStore.changeTool(keyToolbar)"
-            >
-              <span
-                class="material-icons text-sm"
-                aria-hidden="true"
-              >{{ value.icon }}</span>
-              <span class="text-[10px] font-label-mono">{{ toolLabel(value) }}</span>
+              <span class="text-[10px] font-label-mono">Halfblocks</span>
             </button>
           </Tooltip>
         </div>

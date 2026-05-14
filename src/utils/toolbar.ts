@@ -32,7 +32,7 @@ export function tooltipName(value: ToolbarIcon): string {
 export function toolLabel(value: ToolbarIcon): string {
   switch (value.name) {
     case 'default':
-      return 'Select';
+      return 'Default';
     case 'select':
       return 'Select';
     case 'text':
