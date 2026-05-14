@@ -6,6 +6,7 @@
 
 import type { Block } from '../types';
 import { emptyBlock } from '../ascii';
+import { cloneBlocks } from './transformBlocks';
 
 // ─── Border Style Definitions ──────────────────────────────────
 
@@ -97,13 +98,6 @@ export function getBorderMinimumSize(padding: number): {
     minW: margin * 2 + 1, // left margin + 1 content + right margin
     minH: margin * 2 + 1,
   };
-}
-
-/**
- * Deep-clone a block grid.
- */
-function cloneBlocks(blocks: Block[][]): Block[][] {
-  return blocks.map(row => row.map(block => ({ ...block })));
 }
 
 /**

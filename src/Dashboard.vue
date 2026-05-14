@@ -63,7 +63,6 @@
     <Help v-if="modalState.help" />
     <EditAscii
       v-if="asciibirdMeta.length && modalState.editAscii"
-      @update-ascii="() => {}"
     />
     <PasteAscii v-if="modalState.pasteAscii" />
     <ImageOverlay v-if="asciibirdMeta.length && modalState.overlay" />
@@ -197,7 +196,6 @@
     <template v-if="asciibirdMeta.length">
       <div
         v-if="tabsVisible"
-        ref="tabbar"
         class="relative z-auto border-b bg-surface-container-low border-outline-variant h-9 flex items-stretch px-xs gap-px overflow-x-auto custom-scrollbar"
         style="top: 0px"
       >
@@ -302,7 +300,7 @@
         class="absolute left-1/2 transform -translate-x-1/2 text-center"
         @mouseup.right="openContextMenu"
       >
-        <BrushCanvas :blocks="getSplashAscii()" />
+        <BrushCanvas :blocks="splashAscii" />
       </div>
     </template>
 
@@ -462,7 +460,6 @@ useGlobalShortcuts();
 
 // Tab inline rename composable
 const {
-  editingKey: _tabEditingKey,
   editingName: tabEditingName,
   startEdit: startTabEdit,
   commitEdit: commitTabEdit,
@@ -481,7 +478,6 @@ const menu = ref<InstanceType<typeof ContextMenu> | null>(null);
 const tabMenu = ref<InstanceType<typeof ContextMenu> | null>(null);
 const tabMenuTarget = ref<number>(0);
 const asciiInput = ref<HTMLInputElement | null>(null);
-const tabbar = ref<HTMLElement | null>(null);
 
 // Reactive state
 const canvasX = ref<number | null>(null);
@@ -779,10 +775,6 @@ watch(currentTool, (val, old) => {
 });
 
 // Methods
-function getSplashAscii() {
-  return splashAscii;
-}
-
 function inputtingbrush(val: boolean) {
   isInputtingBrushSize.value = val;
 }

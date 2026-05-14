@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { cleanBlock, getBrushOffset } from '../../../src/utils/blocks';
+import { cleanBlock, getBrushOffset } from '../../../src/utils/transformBlocks';
 import type { Block } from '../../../src/types';
 
 describe('cleanBlock', () => {
