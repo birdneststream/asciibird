@@ -547,8 +547,13 @@ export function canvasToPng(
   canvas.toBlob(function (blob: Blob | null) {
     if (!blob) return;
     const url = URL.createObjectURL(blob);
-    downloadLink.setAttribute('href', url);
-    downloadLink.click();
+    try {
+      downloadLink.setAttribute('href', url);
+      downloadLink.click();
+    } finally {
+      // Revoke after a delay to allow the download to start
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    }
   });
 }
 
@@ -566,9 +571,15 @@ export const checkForGetRequest = async (): Promise<void> => {
         headers: { Accept: 'text/plain' },
       });
 
-      const asciiName = haxAscii.split('/').pop();
-      const asciiData = await res.text();
-      parseMircAscii(asciiData, asciiName || 'imported');
+      if (!res.ok) {
+        console.warn(
+          `[asciibird] Failed to fetch haxAscii: ${res.status}`,
+        );
+      } else {
+        const asciiName = haxAscii.split('/').pop();
+        const asciiData = await res.text();
+        parseMircAscii(asciiData, asciiName || 'imported');
+      }
     }
 
     if (birdhole) {
@@ -580,8 +591,14 @@ export const checkForGetRequest = async (): Promise<void> => {
         },
       );
 
-      const asciiData = await res.text();
-      parseMircAscii(asciiData, `${birdhole}.txt`);
+      if (!res.ok) {
+        console.warn(
+          `[asciibird] Failed to fetch birdhole: ${res.status}`,
+        );
+      } else {
+        const asciiData = await res.text();
+        parseMircAscii(asciiData, `${birdhole}.txt`);
+      }
     }
   } finally {
     url.search = '';

@@ -156,7 +156,8 @@ export const useToolbarStore = defineStore('toolbar', {
       this.toolbarState.updateBrush = payload;
     },
     flipRotateBlocks(payload: { type: string }) {
-      let tempBlocks: Block[][] = decompressData(this._brushBlocks);
+      let tempBlocks: Block[][] | null = decompressData(this._brushBlocks);
+      if (!tempBlocks || !tempBlocks.length) return;
       const parsedBlocks: Block[][] = [];
 
       switch (payload.type) {

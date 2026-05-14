@@ -102,4 +102,26 @@ describe('compressData / decompressData', () => {
     const restored = decompressData<null>(compressData(null));
     expect(restored).toBeNull();
   });
+
+  it('returns empty array for corrupted data', () => {
+    const result = decompressLayers('not-valid-compressed-data');
+    expect(result).toEqual([]);
+  });
+
+  it('returns empty array for empty string', () => {
+    const result = decompressLayers('');
+    expect(result).toEqual([]);
+  });
+});
+
+describe('decompressData error handling', () => {
+  it('returns null for corrupted data', () => {
+    const result = decompressData('garbage-data');
+    expect(result).toBeNull();
+  });
+
+  it('returns null for empty string', () => {
+    const result = decompressData('');
+    expect(result).toBeNull();
+  });
 });

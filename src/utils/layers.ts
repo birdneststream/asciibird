@@ -14,9 +14,17 @@ export function compressLayers(layers: Layer[]): string {
 
 /**
  * Decompress and parse an LZ-String UTF-16 string back to a Layer array.
+ * Returns an empty array if data is corrupted or cannot be parsed.
  */
 export function decompressLayers(compressed: string): Layer[] {
-  return JSON.parse(LZString.decompressFromUTF16(compressed));
+  try {
+    const raw = LZString.decompressFromUTF16(compressed);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch (e) {
+    console.warn('[asciibird] Failed to decompress layers:', e);
+    return [];
+  }
 }
 
 /**
@@ -45,9 +53,18 @@ export function compressData<T>(data: T): string {
 
 /**
  * Decompress and parse arbitrary LZ-String compressed data.
+ * Returns null if data is corrupted or cannot be parsed,
+ * allowing callers to use `|| fallback` patterns.
  */
-export function decompressData<T>(compressed: string): T {
-  return JSON.parse(LZString.decompressFromUTF16(compressed));
+export function decompressData<T>(compressed: string): T | null {
+  try {
+    const raw = LZString.decompressFromUTF16(compressed);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    console.warn('[asciibird] Failed to decompress data:', e);
+    return null;
+  }
 }
 
 /**
