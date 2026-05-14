@@ -18,7 +18,7 @@ import About from '@/components/modals/About.vue'
 import Help from '@/components/modals/Help.vue'
 import Layers from '@/components/parts/Layers.vue'
 import ContextMenu from '@/components/parts/ContextMenu.vue'
-import { mircColours99, charCodes } from '@/ascii'
+import { mircColours99, charCodes, charGroups } from '@/ascii'
 import {
   createMockStore,
   createMockModalStore,
@@ -178,7 +178,7 @@ describe('CharPicker.vue', () => {
     expect(wrapper.findComponent(CharPicker).exists()).toBe(true)
   })
 
-  it('provides charCodes from ascii module', () => {
+  it('provides charGroups from ascii module', () => {
     const wrapper = stw(
       CharPicker,
       mountOpts({
@@ -189,7 +189,7 @@ describe('CharPicker.vue', () => {
         },
       }),
     )
-    expect(wrapper.vm.charCodes).toEqual(charCodes)
+    expect(wrapper.vm.charGroups).toEqual(charGroups)
   })
 
   it('provides mircColours from ascii module', () => {

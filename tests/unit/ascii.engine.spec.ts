@@ -7,6 +7,7 @@ import LZString from 'lz-string';
 import {
   mircColours99,
   charCodes,
+  charGroups,
   toolbarIcons,
   emptyBlock,
   isEmptyBlock,
@@ -219,6 +220,71 @@ describe('ascii.ts constants', () => {
   it('charCodes starts with space and bang', () => {
     expect(charCodes[0]).toBe(' ');
     expect(charCodes[1]).toBe('!');
+  });
+
+  // ─── charGroups ───────────────────────────────────────────────
+
+  it('charGroups is a non-empty array of groups', () => {
+    expect(Array.isArray(charGroups)).toBe(true);
+    expect(charGroups.length).toBeGreaterThan(0);
+  });
+
+  it('each charGroup has a label and non-empty chars', () => {
+    for (const group of charGroups) {
+      expect(group).toHaveProperty('label');
+      expect(group).toHaveProperty('chars');
+      expect(typeof group.label).toBe('string');
+      expect(Array.isArray(group.chars)).toBe(true);
+      expect(group.chars.length).toBeGreaterThan(0);
+    }
+  });
+
+  it('charGroups has expected group labels', () => {
+    const labels = charGroups.map(g => g.label);
+    expect(labels).toContain('Basic');
+    expect(labels).toContain('Block Elements');
+    expect(labels).toContain('Box Drawing');
+    expect(labels).toContain('Arrows & Symbols');
+    expect(labels).toContain('Math & Special');
+  });
+
+  it('charCodes is a flat superset of all charGroups chars', () => {
+    const allGroupChars = charGroups.flatMap(g => g.chars);
+    expect(charCodes).toEqual(allGroupChars);
+  });
+
+  it('charGroups has no duplicate characters across groups', () => {
+    const seen = new Set<string>();
+    for (const group of charGroups) {
+      for (const char of group.chars) {
+        expect(seen.has(char)).toBe(false);
+        seen.add(char);
+      }
+    }
+  });
+
+  it('charGroups Basic section starts with space', () => {
+    const basic = charGroups.find(g => g.label === 'Basic');
+    expect(basic).toBeDefined();
+    expect(basic!.chars[0]).toBe(' ');
+  });
+
+  it('charGroups includes useful IRC art characters', () => {
+    const allChars = charGroups.flatMap(g => g.chars);
+    // Arrows
+    expect(allChars).toContain('←');
+    expect(allChars).toContain('→');
+    // Shapes
+    expect(allChars).toContain('★');
+    expect(allChars).toContain('●');
+    // Card suits
+    expect(allChars).toContain('♥');
+    // Block elements
+    expect(allChars).toContain('█');
+    expect(allChars).toContain('▄');
+    // Box drawing
+    expect(allChars).toContain('┌');
+    expect(allChars).toContain('─');
   });
 
   it('toolbarIcons has 8 tool entries', () => {

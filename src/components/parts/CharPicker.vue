@@ -15,17 +15,25 @@
         >
         <span class="text-body-sm text-on-surface-variant">Persist after character changes</span>
       </label>
-      <div class="grid grid-cols-8 gap-1">
-        <button
-          type="button"
-          v-for="(char, keyChar) in charCodes"
-          :key="keyChar"
-          :style="charButtonStyle"
-          class="rounded border border-outline-variant flex items-center justify-center font-label-mono text-xs hover:ring-2 hover:ring-primary transition-all"
-          @click="onCharChange(char)"
+      <div class="grid grid-cols-16 gap-0">
+        <template
+          v-for="group in charGroups"
+          :key="group.label"
         >
-          {{ char === " " ? "SP" : char }}
-        </button>
+          <div class="col-span-16 text-xs font-semibold text-on-surface-variant/60 py-1 px-0.5 border-b border-outline-variant/30">
+            {{ group.label }}
+          </div>
+          <button
+            type="button"
+            v-for="(char, keyChar) in group.chars"
+            :key="group.label + '-' + keyChar"
+            :style="charButtonStyle"
+            class="flex items-center justify-center font-label-mono text-xs hover:ring-1 hover:ring-primary transition-all border border-outline-variant/20"
+            @click="onCharChange(char)"
+          >
+            {{ char === " " ? "SP" : char }}
+          </button>
+        </template>
       </div>
     </div>
   </div>
@@ -35,7 +43,7 @@
 import { ref, computed, watch } from 'vue';
 import { usePanelDraggable } from '../../composables/usePanelDraggable';
 import {
-  charCodes,
+  charGroups,
   mircColours99,
   blockWidth,
   blockHeight,
@@ -53,7 +61,7 @@ const initialPos = computed(() => {
   if (toolbarStore.pickerPos) return toolbarStore.pickerPos;
   const bp = panelStore.brushPreview;
   const vpWidth = window?.innerWidth ?? 1280;
-  const PICKER_W = 260;
+  const PICKER_W = 420;
   const rightEdge = bp.x + bp.w + 8 + PICKER_W;
   if (rightEdge > vpWidth) {
     return { x: bp.x, y: bp.y + bp.h + 8 };
