@@ -448,8 +448,13 @@ function onMenuButtonMouseEnter(index: number) {
     document.body.dispatchEvent(
       new MouseEvent('mousedown', { bubbles: true }),
     );
+    // Double nextTick ensures Headless UI processes the close before
+    // we trigger the open. Single nextTick is too early because HUI
+    // needs to update its internal state from the outside-click.
     nextTick(() => {
-      menuButtonRefs.value[index]?.click();
+      nextTick(() => {
+        menuButtonRefs.value[index]?.click();
+      });
     });
   }
 }
