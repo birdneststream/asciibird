@@ -9,6 +9,8 @@
         ref="handleRef"
         title="Layers"
         show-status
+        minimizable
+        @minimize="panelStore.minimizePanel('layersLibrary')"
       />
 
       <div class="p-sm flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">

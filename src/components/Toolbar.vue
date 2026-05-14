@@ -9,6 +9,8 @@
         ref="handleRef"
         title="Toolbar"
         show-status
+        minimizable
+        @minimize="toolbarStore.minimizeToolbar()"
       />
 
       <div class="p-sm flex flex-col gap-xs overflow-y-auto custom-scrollbar">

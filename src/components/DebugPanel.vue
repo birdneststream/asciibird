@@ -9,6 +9,8 @@
         ref="handleRef"
         title="Debug"
         show-status
+        minimizable
+        @minimize="panelStore.minimizePanel('debugPanel')"
       />
 
       <div class="p-sm flex flex-col gap-1 overflow-y-auto custom-scrollbar">

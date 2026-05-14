@@ -9,6 +9,8 @@
         ref="handleRef"
         title="Brushes"
         show-status
+        minimizable
+        @minimize="panelStore.minimizePanel('brushLibrary')"
       />
 
       <div class="p-sm flex flex-col gap-xs overflow-y-auto custom-scrollbar">
