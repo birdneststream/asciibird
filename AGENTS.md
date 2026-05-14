@@ -2,7 +2,14 @@
 
 ## Project Overview
 
-ASCIIBIRD is a browser-based IRC ASCII art editor for creating and editing mIRC art. It renders a grid-based canvas where each cell ("block") has a foreground color, background color, and character. The app is 100% client-side and persists state to localStorage.
+ASCIIBIRD is a browser-based IRC ASCII art editor for creating and editing mIRC art. It renders a grid-based canvas where each cell ("block") has a foreground color, background color, and character. The art is **static** — it gets copied and pasted into IRC channels. There are **no animations, no server-side API, no real-time collaboration**. Everything runs client-side and persists to IndexedDB.
+
+When considering new features, remember:
+- **IRC output is the priority** — every feature must produce better IRC paste output
+- **No animations or motion** — static art only
+- **No server-side features** — figlet insertions, cloud storage, etc. are future API work
+- **Focus on QoL improvements** — making it faster/easier to create, edit, and export IRC art
+- **All client-side** — no API keys, no external services, no network requests
 
 - **Live site**: https://asciibird.birdnest.live/
 - **Branch**: `asciibird-v2` (based off `master`)
@@ -149,6 +156,7 @@ yarn test --coverage  # Vitest with coverage report
 - **State mutations**: Pinia actions directly mutate `this`
 - **Compression**: LZ-String used heavily for layers and brush data in the store
 - **CSS**: Tailwind utility classes in templates, SCSS for global styles
+- **Fonts**: **JetBrains Mono** for all UI (menu bar, inputs, buttons, panels), **Hack** for canvas rendering only. DO NOT change the canvas font.
 
 ## Modernization Roadmap
 
@@ -291,5 +299,6 @@ When you need to look something up online:
 
 - **CRITICAL: Fix everything you find.** Even if an issue was not introduced by your changes, if you encounter a bug, typo, code smell, missing error handling, or any other problem — fix it on the spot. Do not leave known issues for "later". Do not log it and move on. Fix it. This applies to ALL phases, ALL files, ALL the time. If you see `var` that should be `const`, fix it. If you see a missing null check, add it. If you see a typo in a variable name, correct it. The codebase gets cleaner with every single change.
 - **CRITICAL: Browser verification is mandatory.** See "Mandatory Browser Verification" section above. A clean `yarn build` and `yarn test` does NOT mean the app works. You MUST check the browser console and render output. **Use Chrome DevTools MCP (`chrome-devtools_*`) — NOT frontend-debugger** — to navigate to the dev server, check console for errors, and take screenshots to verify rendering.
+- **CRITICAL: Feature scope.** ASCIIBIRD produces static IRC art that gets pasted into IRC channels. Features must improve the creation/editing/export workflow for IRC art. No animations, no server-side features, no external APIs. Figlet insertions and cloud features are deferred to a future server-side API.
 - LZ-String compression is used extensively for performance — large ASCII documents can be memory-intensive. Keep this pattern during any further changes.
-- **IndexedDB migration (Phase 5+):** The app currently uses localStorage (via `pinia-plugin-persistedstate`) for all persistence. localStorage has a ~5MB limit, which is tight for multi-tab ASCII art with compressed layers and undo history. Migrate all storage to IndexedDB using a library like `idb` or `Dexie.js`. This removes the 5MB ceiling, handles large documents gracefully, and supports binary storage for PNG exports. The Pinia persistence plugin should target IndexedDB instead of localStorage.
+- **Font decision (locked):** JetBrains Mono for ALL UI elements. Hack for canvas rendering only. DO NOT change the canvas font (`src/composables/useMainCanvasRenderer.ts` must stay `13px Hack`). Any font-related changes should ONLY affect UI elements.

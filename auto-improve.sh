@@ -8,7 +8,7 @@ set -uo pipefail
 # Zero user interaction. Self-iterating with quality gates and code review.
 #
 # Flow per iteration (GLM only):
-#   GLM Plan → GLM Build (reviewed by GLM + Hy3)
+#   GLM Plan → GLM Build (reviewed by GLM + Qwen + Hy3)
 #   Gitea issues feed back into next planner iteration
 #
 # Migration phases (strict order):
@@ -254,7 +254,7 @@ ensure_git_repo() {
 # ============================================================================
 
 ITERATIONS="${1:-0}"
-DEFAULT_PROMPT="ASCIIBIRD Phase 7: Fixes, Refactoring, and New Features. Read AGENTS.md FIRST for current status, tech stack, data model, code conventions. ALL previous phases (1-6) are COMPLETE (Vite, TypeScript, Tests, Refactoring, Vue 3 migration, UI Polish). The UI is now solid with the Obsidian Creative System design. Focus on: (1) FIX all open bugs and regressions from Gitea issues — always top priority, every iteration. (2) REVIEW and REFACTOR the codebase — simplify complex functions, improve type safety, remove dead code, consolidate duplicates, improve performance — while PRESERVING all existing functionality. Do NOT change any user-facing behavior during refactoring. (3) If there are ZERO open issues, propose and implement NEW FEATURES that would be a good fit for an IRC ASCII art editor. Good feature candidates: improved brush tools (rotate/flip), better layer management, keyboard shortcut improvements, accessibility enhancements, canvas zoom/pan, undo/redo improvements, export format options, template library, etc. The design/ folder has the Obsidian Creative System spec and reference layouts — maintain visual consistency with the existing design. Use tailwind.config.js Obsidian palette for any new UI elements."
+DEFAULT_PROMPT="ASCIIBIRD Phase 7: Fixes, Refactoring, and New Features. Read AGENTS.md FIRST for current status, tech stack, data model, code conventions. ALL previous phases (1-6) are COMPLETE (Vite, TypeScript, Tests, Refactoring, Vue 3 migration, UI Polish). The UI is now solid with the Obsidian Creative System design. Focus on: (1) FIX all open bugs and regressions from Gitea issues — always top priority, every iteration. (2) REVIEW and REFACTOR the codebase — simplify complex functions, improve type safety, remove dead code, consolidate duplicates, improve performance — while PRESERVING all existing functionality. Do NOT change any user-facing behavior during refactoring. (3) If there are ZERO open issues, propose and implement NEW FEATURES that improve the editor. IMPORTANT: This is an IRC ASCII art editor — output gets pasted into IRC channels as static text. No animations. No server-side features (figlet etc. are future API work). Focus on QoL improvements that make creating/editing/exporting IRC art faster and easier. Fonts: JetBrains Mono for all UI, Hack for canvas only — DO NOT change canvas font. The design/ folder has the Obsidian Creative System spec and reference layouts — maintain visual consistency with the existing design. Use tailwind.config.js Obsidian palette for any new UI elements."
 USER_PROMPT="${2:-$DEFAULT_PROMPT}"
 COUNT=0
 LOG_FILE="auto-improve.log"
@@ -401,7 +401,7 @@ ${changes}
 log "${CYAN}========================================${NC}"
 log "${CYAN}  ASCIIBIRD Auto-Improve Loop${NC}"
 log "${CYAN}  Iterations: $( [ "$ITERATIONS" -gt 0 ] && echo "$ITERATIONS" || echo "infinite" )${NC}"
-log "${CYAN}  Flow: GLM Plan → GLM Build (reviewed by GLM + Hy3)${NC}"
+log "${CYAN}  Flow: GLM Plan → GLM Build (reviewed by GLM + Qwen + Hy3)${NC}"
 log "${CYAN}  Phases: 1-Vite → 2-TS → 3-Tests → 4-Refactor → 5-Vue3 → 6-UI Polish → 7-Fixes/Features${NC}"
 log "${CYAN}  Focus: Bugs → Gitea issues → Refactor → New features${NC}"
 log "${CYAN}  Issues: ${GITEA_URL}/${GITEA_REPO}/issues${NC}"
@@ -422,7 +422,7 @@ while true; do
 
     log "${GREEN}============================================${NC}"
     log "${GREEN}  Iteration ${COUNT} — ${AGENT_LABEL}${NC}"
-    log "${GREEN}  Plan: ${PLAN_AGENT} | Build: ${BUILD_AGENT} | Review: GLM + Hy3${NC}"
+    log "${GREEN}  Plan: ${PLAN_AGENT} | Build: ${BUILD_AGENT} | Review: GLM + Qwen + Hy3${NC}"
     log "${GREEN}============================================${NC}"
 
     # Health checks
@@ -471,15 +471,30 @@ Based on the current state, create a plan. STRICT priority order:
 5. NEVER change user-facing behavior during refactoring
 6. Every change MUST be verified in the browser via Chrome DevTools MCP
 
-Good feature candidates for an IRC ASCII art editor:
-- Improved brush tools (rotate/flip)
-- Better layer management
-- Keyboard shortcut improvements
-- Accessibility enhancements
-- Canvas zoom/pan
-- Undo/redo improvements
-- Export format options
-- Template library
+Good feature candidates for an IRC ASCII art editor (QoL only, all client-side):
+- Selection tools: select regions, move/copy/paste/rotate/flip selections
+- Brush improvements: custom brush shapes, brush rotate/flip, eraser size
+- Canvas navigation: zoom in/out, pan with middle-click, minimap
+- Export improvements: ANSI export, plain text export, HTML export, line-wrapped mIRC
+- Import improvements: better mIRC paste handling, ANSI import, plain text import
+- Editor tools: line drawing, rectangle drawing, circle/ellipse drawing
+- Grid helpers: coordinate display, ruler, character count, IRC line length indicator
+- Layer improvements: merge layers, duplicate layer, layer opacity
+- Undo/redo: visual history browser, branch/fork undo states
+- Templates: starter art templates, border templates, logo templates
+- Find and replace: search for characters, colors, or patterns across canvas
+- Color tools: shade picker (lighter/darker), complementary color suggester
+- Alignment: center text, left/right justify within selection
+- Canvas resize: preserve content when resizing, crop to content
+- Keyboard shortcuts: customizable hotkeys, vim-like modal editing
+- Accessibility: screen reader support, high-contrast mode, keyboard-only editing
+
+BAD feature candidates (do NOT propose):
+- Animations or motion effects (IRC art is static)
+- Server-side features (figlet, cloud storage, collaboration) — future API work
+- External API integrations (no API keys, no network requests)
+- Real-time anything (no websockets, no live sharing)
+- Mobile-first redesign (desktop editor, mobile is future work)
 
 Check .llm/ for existing plans/progress. Key files:
   - src/ascii.ts — Core engine (colors, parsing, export, canvas rendering)
@@ -551,7 +566,7 @@ Use the gitea MCP tools:
 - gitea_issue_write(method='update', owner='hughbord', repo='asciibird', index=ISSUE_NUMBER, state='closed')
 - gitea_issue_write(method='add_comment', owner='hughbord', repo='asciibird', index=ISSUE_NUMBER, body='Fixed in commit HASH. Verified in browser.')
 
-Code review: You will be reviewed by 2 reviewers (GLM + Hy3). Address all critical issues before proceeding.
+Code review: You will be reviewed by 3 reviewers (GLM + Qwen + Hy3). Address all critical issues before proceeding.
 
 This is fully autonomous — no user interaction needed. Follow the per-task cycle from your agent instructions exactly. You MUST merge to asciibird-v2 and push before finishing."
 
