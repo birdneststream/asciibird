@@ -32,7 +32,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { usePanelDraggable } from '../../composables/usePanelDraggable';
 import {
   charCodes,
@@ -41,19 +41,35 @@ import {
   blockHeight,
 } from '../../ascii';
 import { useToolbarStore } from '../../store/toolbar';
-
-const props = defineProps<{
-  canvasX?: number | null;
-  canvasY?: number | null;
-  yOffset?: number;
-}>();
+import { usePanelStore } from '../../store/panels';
 
 const toolbarStore = useToolbarStore();
+const panelStore = usePanelStore();
 const el = ref<HTMLElement | null>(null);
 const persistChars = ref(false);
 
-const { style } = usePanelDraggable(el, {
-  initialValue: { x: 170, y: 100 + (props.yOffset || 0) },
+/** Smart default position: adjacent to brush panel with bounds check */
+const initialPos = computed(() => {
+  if (toolbarStore.pickerPos) return toolbarStore.pickerPos;
+  const bp = panelStore.brushPreview;
+  const vpWidth = window?.innerWidth ?? 1280;
+  const PICKER_W = 260;
+  const rightEdge = bp.x + bp.w + 8 + PICKER_W;
+  if (rightEdge > vpWidth) {
+    return { x: bp.x, y: bp.y + bp.h + 8 };
+  }
+  return { x: bp.x + bp.w + 8, y: bp.y };
+});
+
+const { style, x, y, isDragging } = usePanelDraggable(el, {
+  initialValue: initialPos.value,
+});
+
+// Only persist position on drag-end, not every pixel
+watch(isDragging, (dragging) => {
+  if (!dragging) {
+    toolbarStore.setPickerPos({ x: x.value, y: y.value });
+  }
 });
 
 const mircColours = mircColours99;

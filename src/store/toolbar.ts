@@ -26,6 +26,7 @@ export const useToolbarStore = defineStore('toolbar', {
     brushHistory: BrushHistoryEntry[];
     _selectBlocks: string;
     brushLibrary: BrushLibraryEntry[];
+    pickerPos: { x: number; y: number } | null;
   } => ({
     toolbarState: {
       currentColourFg: 0,
@@ -62,6 +63,7 @@ export const useToolbarStore = defineStore('toolbar', {
     brushHistory: [],
     _selectBlocks: '',
     brushLibrary: [],
+    pickerPos: null,
   }),
 
   getters: {
@@ -258,6 +260,9 @@ export const useToolbarStore = defineStore('toolbar', {
     resetToolbarPosition() {
       this.toolbarState.x = 8;
       this.toolbarState.y = 364;
+    },
+    setPickerPos(pos: { x: number; y: number }) {
+      this.pickerPos = pos;
     },
   },
 

@@ -289,12 +289,10 @@
       <CharPicker
         v-show="toolbarState.isChoosingChar"
         class="z-picker"
-        :y-offset="scrollOffset"
       />
       <ColourPicker
         v-if="toolbarState.isChoosingFg || toolbarState.isChoosingBg"
         class="z-picker"
-        :y-offset="scrollOffset"
       />
     </template>
     <template v-else>
