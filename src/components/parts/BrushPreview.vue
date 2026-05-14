@@ -133,12 +133,21 @@ const toolbarStore = useToolbarStore();
 const panelStore = usePanelStore();
 const panelEl = ref<HTMLElement | null>(null);
 const handleRef = ref<InstanceType<typeof PanelHeader> | null>(null);
-const { style: panelStyle } = usePanelDraggable(panelEl, {
+const { style: panelStyle, x: dragX, y: dragY } = usePanelDraggable(panelEl, {
   initialValue: {
     x: panelStore.brushPreview.x,
     y: panelStore.brushPreview.y,
   },
   handle: computed(() => handleRef.value?.headerEl ?? null),
+});
+
+// Sync drag position back to store for persistence
+watch([dragX, dragY], ([newX, newY]) => {
+  panelStore.changeBrushPreviewState({
+    ...panelStore.brushPreview,
+    x: newX,
+    y: newY,
+  });
 });
 
 const canDrag = ref(true);

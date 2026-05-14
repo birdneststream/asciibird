@@ -67,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import LZString from 'lz-string';
 import { usePanelDraggable } from '../composables/usePanelDraggable';
 import { toolbarIcons, mergeLayers } from '../ascii';
@@ -91,12 +91,21 @@ const { copyText } = useClipboard();
 const panelEl = ref<HTMLElement | null>(null);
 const handleRef = ref<InstanceType<typeof PanelHeader> | null>(null);
 
-const { style: panelStyle } = usePanelDraggable(panelEl, {
+const { style: panelStyle, x: dragX, y: dragY } = usePanelDraggable(panelEl, {
   initialValue: {
     x: panelStore.debugPanel.x,
     y: panelStore.debugPanel.y,
   },
   handle: computed(() => handleRef.value?.headerEl ?? null),
+});
+
+// Sync drag position back to store for persistence
+watch([dragX, dragY], ([newX, newY]) => {
+  panelStore.changeDebugPanelState({
+    ...panelStore.debugPanel,
+    x: newX,
+    y: newY,
+  });
 });
 
 const getToolName = computed(() =>
