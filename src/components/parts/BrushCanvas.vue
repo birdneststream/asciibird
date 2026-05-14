@@ -60,14 +60,12 @@ import {
   getBlocksWidth,
   filterNullBlocks,
   canvasToPng as canvasToPngUtil,
-  exportMirc,
-  downloadFile,
 } from '../../ascii'
 import ContextMenu from './ContextMenu.vue'
 import { useAsciiBirdStore } from '../../store'
 import { useToolbarStore } from '../../store/toolbar'
 import { useToast } from '../../composables/useToast'
-import { useClipboard } from '../../composables/useClipboard'
+import { useExportAscii } from '../../composables/useExportAscii'
 
 // ─── Props ──────────────────────────────────────────────
 const props = withDefaults(
@@ -79,7 +77,14 @@ const props = withDefaults(
 const store = useAsciiBirdStore()
 const toolbarStore = useToolbarStore()
 const { show: toastShow } = useToast()
-const { copyText } = useClipboard()
+
+const { startExport } = useExportAscii({
+  getBlocks: () => getBlocks.value,
+  getFilename: () => `brush-${hash.value}.txt`,
+  label: 'mIRC brush',
+  checkLimits: false,
+  closeMenu: () => contextMenuRef.value?.close(),
+})
 
 // ─── Refs ───────────────────────────────────────────────
 const canvasEl = ref<HTMLCanvasElement>()
@@ -146,32 +151,7 @@ function openContextMenu(e: MouseEvent) {
   })
 }
 
-function startExport(type: string) {
-  const ascii = exportMirc(getBlocks.value)
-  switch (type) {
-    case 'clipboard':
-      copyText(ascii.output.join('')).then(
-        () => {
-          toastShow('Copied mIRC brush to clipboard!', { type: 'success' })
-        },
-        () => {
-          toastShow('Error when copying mIRC to clipboard!', { type: 'error' })
-        },
-      )
-      contextMenuRef.value?.close()
-      break
-
-    default:
-    case 'file':
-      downloadFile(
-        ascii.output.join(''),
-        `brush-${hash.value}.txt`,
-        'text/plain',
-      )
-      contextMenuRef.value?.close()
-      break
-  }
-}
+// startExport provided by useExportAscii composable
 
 function saveToLibrary() {
   toolbarStore.pushBrushLibrary(getBlocks.value)

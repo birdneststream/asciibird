@@ -117,7 +117,7 @@
           Import from File
         </li>
         <li
-          @click="startExport('file')"
+          @click="handleExport('file')"
           class="ab-context-menu-item border-b border-outline-variant"
           v-if="asciibirdMeta.length"
         >
@@ -131,14 +131,14 @@
         </li>
         <li
           class="ab-context-menu-item"
-          @click="startExport('clipboard')"
+          @click="handleExport('clipboard')"
           v-if="asciibirdMeta.length"
         >
           Export to Clipboard
         </li>
         <li
           class="ab-context-menu-item border-b border-outline-variant"
-          @click="startExport('post')"
+          @click="handleExport('post')"
           v-if="asciibirdMeta.length"
         >
           Export to HTTP POST
@@ -383,7 +383,6 @@ import {
   downloadFile,
   checkForGetRequest,
   splashAscii,
-  checkIrcByteLimits,
 } from './ascii';
 
 import { useAsciiBirdStore } from './store';
@@ -393,7 +392,7 @@ import { usePanelStore } from './store/panels';
 import { useToolbarStore } from './store/toolbar';
 import { useToast } from './composables/useToast';
 import { useDialog } from './composables/useDialog';
-import { useClipboard } from './composables/useClipboard';
+import { useExportAscii } from './composables/useExportAscii';
 import { useGlobalShortcuts } from './composables/useGlobalShortcuts';
 import { storeDiffBlocks as storeDiffBlockFn } from './utils/diffBlocks';
 import type { DiffBlocks } from './utils/diffBlocks';
@@ -409,7 +408,7 @@ const panelStore = usePanelStore();
 const toolbarStore = useToolbarStore();
 const { messages: toasts, show: toastShow } = useToast();
 const { state: dialogState, confirm: dialogConfirm, prompt: dialogPrompt, ok: dialogOk, cancel: dialogCancel } = useDialog();
-const { copyText } = useClipboard();
+const { startExport } = useExportAscii({ checkLimits: true });
 
 // Register global keyboard shortcuts (menu + tool shortcuts)
 useGlobalShortcuts();
@@ -562,17 +561,17 @@ const menuBar = computed<AppMenuBar[]>(() => [
       },
       {
         text: 'Export to File',
-        click: () => startExport('file'),
+        click: () => handleExport('file'),
         disabled: !asciibirdMeta.value.length,
       },
       {
         text: 'Export to Clipboard',
-        click: () => startExport('clipboard'),
+        click: () => handleExport('clipboard'),
         disabled: !asciibirdMeta.value.length,
       },
       {
         text: 'Export to HTTP POST',
-        click: () => startExport('post'),
+        click: () => handleExport('post'),
         disabled: !asciibirdMeta.value.length,
       },
     ],
@@ -833,83 +832,52 @@ function exportAsciibirdState() {
   }
 }
 
-function startExport(type: string) {
-  const ascii = exportMirc();
-
-  const checkLines = checkIrcByteLimits(ascii.output.join(''));
-
-  if (checkLines.length) {
-    const displayLines = checkLines.join(', ');
-    toastShow(
-      `Line${checkLines.length > 1 ? 's' : ''} ${displayLines} may be too large for IRC.`,
-      { type: 'error', duration: 1200 }
-    );
-  }
-
-  switch (type) {
-    case 'clipboard':
-      copyText(ascii.output.join('')).then(
-        () => {
-          toastShow('Copied mIRC to clipboard!', { type: 'success' });
-        },
-        () => {
-          toastShow('Error when copying mIRC to clipboard!', {
-            type: 'error',
-          });
-        }
-      );
-      break;
-
-    default:
-    case 'file':
-      downloadFile(ascii.output.join(''), ascii.filename, 'text/plain');
-      break;
-
-    case 'post':
-      modalStore.toggleDisableKeyboard(true);
-      dialogPrompt({
-        title: 'HTTP Post your Ascii',
-        text: 'Please input the URL for the HTTP Post sir',
-        inputValue: lastPostURL.value,
-      }).then((result: { input?: string; isOk: boolean }) => {
-        if (result.input === undefined) {
-          toastShow('Come on bro. Get it together.', {
-            type: 'error',
-          });
-          modalStore.toggleDisableKeyboard(false);
-          return;
-        }
-
-        if (result.isOk) {
-          const asciiPost = exportMirc();
-          lastPostURL.value = result.input;
-          const requestOptions = {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/octet-stream' },
-            body: asciiPost.output.join(''),
-          };
-          fetch(lastPostURL.value, requestOptions)
-            .then((response) => {
-              if (response.status === 200 || response.status === 201) {
-                toastShow('POSTed ascii!', { type: 'success' });
-              } else {
-                toastShow(
-                  `Error: ${response.status} ${response.statusText}`,
-                  { type: 'error' }
-                );
-              }
-            })
-            .catch((error) => {
-              toastShow(`Error: ${JSON.stringify(error)}`, {
-                type: 'error',
-              });
-            });
-        }
-
+function handleExport(type: string) {
+  if (type === 'post') {
+    modalStore.toggleDisableKeyboard(true);
+    dialogPrompt({
+      title: 'HTTP Post your Ascii',
+      text: 'Please input the URL for the HTTP Post sir',
+      inputValue: lastPostURL.value,
+    }).then((result: { input?: string; isOk: boolean }) => {
+      if (result.input === undefined) {
+        toastShow('Come on bro. Get it together.', {
+          type: 'error',
+        });
         modalStore.toggleDisableKeyboard(false);
-      });
+        return;
+      }
 
-      break;
+      if (result.isOk) {
+        const asciiText = exportMirc().output.join('');
+        lastPostURL.value = result.input;
+        const requestOptions = {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/octet-stream' },
+          body: asciiText,
+        };
+        fetch(lastPostURL.value, requestOptions)
+          .then((response) => {
+            if (response.status === 200 || response.status === 201) {
+              toastShow('POSTed ascii!', { type: 'success' });
+            } else {
+              toastShow(
+                `Error: ${response.status} ${response.statusText}`,
+                { type: 'error' },
+              );
+            }
+          })
+          .catch((error) => {
+            toastShow(`Error: ${JSON.stringify(error)}`, {
+              type: 'error',
+            });
+          });
+      }
+
+      modalStore.toggleDisableKeyboard(false);
+    });
+  } else {
+    startExport(type as 'clipboard' | 'file');
   }
 }
 

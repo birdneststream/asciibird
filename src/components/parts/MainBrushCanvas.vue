@@ -60,7 +60,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import type { Block } from '../../types'
-import ContextMenu from './ContextMenu.vue'
 import {
   mircColours99,
   blockWidth,
@@ -71,19 +70,25 @@ import {
   emptyBlock,
   canvasToPng as canvasToPngUtil,
   cyrb53,
-  exportMirc,
-  downloadFile,
 } from '../../ascii'
+import ContextMenu from './ContextMenu.vue'
 import { useAsciiBirdStore } from '../../store'
 import { useToolbarStore } from '../../store/toolbar'
 import { useToast } from '../../composables/useToast'
-import { useClipboard } from '../../composables/useClipboard'
+import { useExportAscii } from '../../composables/useExportAscii'
 
 // ─── Composables ────────────────────────────────────────
 const store = useAsciiBirdStore()
 const toolbarStore = useToolbarStore()
 const { show: toastShow } = useToast()
-const { copyText } = useClipboard()
+
+const { startExport } = useExportAscii({
+  getBlocks: () => brushBlocks.value,
+  getFilename: () => `brush-${hash.value}.txt`,
+  label: 'mIRC brush',
+  checkLimits: false,
+  closeMenu: () => contextMenuRef.value?.close(),
+})
 
 // ─── Refs ───────────────────────────────────────────────
 const brushcanvas = ref<HTMLCanvasElement>()
@@ -156,32 +161,7 @@ function openContextMenu(e: MouseEvent) {
   contextMenuRef.value?.open({ clientX: e.clientX, clientY: e.clientY })
 }
 
-function startExport(type: string) {
-  const ascii = exportMirc(brushBlocks.value)
-  switch (type) {
-    case 'clipboard':
-      copyText(ascii.output.join('')).then(
-        () => {
-          toastShow('Copied mIRC brush to clipboard!', { type: 'success' })
-        },
-        () => {
-          toastShow('Error when copying mIRC to clipboard!', { type: 'error' })
-        },
-      )
-      contextMenuRef.value?.close()
-      break
-
-    default:
-    case 'file':
-      downloadFile(
-        ascii.output.join(''),
-        `brush-${hash.value}.txt`,
-        'text/plain',
-      )
-      contextMenuRef.value?.close()
-      break
-  }
-}
+// startExport provided by useExportAscii composable
 
 function saveToLibrary() {
   toolbarStore.pushBrushLibrary(brushBlocks.value)

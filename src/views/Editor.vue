@@ -93,9 +93,9 @@ import { useAsciiBirdStore } from '../store';
 import { usePanelStore } from '../store/panels';
 import { useToolbarStore } from '../store/toolbar';
 import { useToast } from '../composables/useToast';
-import { useClipboard } from '../composables/useClipboard';
 import { useCanvasPanel } from '../composables/useCanvasPanel';
 import { useMainCanvasRenderer } from '../composables/useMainCanvasRenderer';
+import { useExportAscii } from '../composables/useExportAscii';
 import hotkeys from 'hotkeys-js';
 
 import ContextMenu from '../components/parts/ContextMenu.vue';
@@ -112,13 +112,10 @@ import {
   checkVisible,
   mergeLayers,
   canvasToPng as canvasToPngUtil,
-  exportMirc,
-  downloadFile,
   cyrb53,
   emptyBlock,
   isEmptyBlock,
   iterativeFill,
-  checkIrcByteLimits,
 } from '../ascii';
 
 import { getMirrorPositions, applyMirrored } from '../utils/mirror';
@@ -167,8 +164,11 @@ const store = useAsciiBirdStore();
 const panelStore = usePanelStore();
 const toolbarStore = useToolbarStore();
 const { show: toastShow } = useToast();
-const { copyText } = useClipboard();
 const { renderBlock, clearMainCanvas } = useMainCanvasRenderer();
+const { startExport } = useExportAscii({
+  checkLimits: true,
+  label: 'mIRC',
+});
 
 // ─── Template Refs ──────────────────────────────────────────────
 const canvasRef = ref<HTMLCanvasElement | null>(null);
@@ -575,39 +575,7 @@ if (currentAsciiLayerBlocks.value) {
 }
 
 // ─── Methods ────────────────────────────────────────────────────
-function startExport(type: string) {
-  const ascii = exportMirc();
-
-  const checkLines = checkIrcByteLimits(ascii.output.join(''));
-
-  if (checkLines.length) {
-    const displayLines = checkLines.join(', ');
-    toastShow(
-      `Line${checkLines.length > 1 ? 's' : ''} ${displayLines} may be too large for IRC.`,
-      { type: 'error', position: 'bottom-center', duration: 1200 },
-    );
-  }
-
-  switch (type) {
-    case 'clipboard':
-      copyText(ascii.output.join('')).then(
-        () => {
-          toastShow('Copied mIRC to clipboard!', { type: 'success' });
-        },
-        () => {
-          toastShow('Error when copying mIRC to clipboard!', {
-            type: 'error',
-          });
-        },
-      );
-      break;
-
-    default:
-    case 'file':
-      downloadFile(ascii.output.join(''), ascii.filename, 'text/plain');
-      break;
-  }
-}
+// startExport is provided by useExportAscii composable
 
 function canvasToPng() {
   const canvas = canvasRef.value;
