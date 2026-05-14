@@ -185,6 +185,7 @@ export function useGlobalShortcuts() {
         toolbarStore.toggleGridView(!toolbarStore.toolbarState.gridView);
       }
     },
+    'r': () => toolbarStore.changeTool(8), // replace-color
   };
 
   for (const [key, handler] of Object.entries(toolShortcuts)) {
