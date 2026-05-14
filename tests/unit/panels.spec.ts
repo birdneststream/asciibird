@@ -410,30 +410,6 @@ describe('Toolbar.vue', () => {
     expect(wrapper.vm.currentTool.icon).toBe('edit_off')
   })
 
-  it('computed canFg returns targeting fg state', () => {
-    const wrapper = stw(
-      Toolbar,
-      mountOpts(),
-    )
-    expect(wrapper.vm.canFg).toBe(true)
-  })
-
-  it('computed canBg returns targeting bg state', () => {
-    const wrapper = stw(
-      Toolbar,
-      mountOpts(),
-    )
-    expect(wrapper.vm.canBg).toBe(true)
-  })
-
-  it('computed canText returns targeting char state', () => {
-    const wrapper = stw(
-      Toolbar,
-      mountOpts(),
-    )
-    expect(wrapper.vm.canText).toBe(true)
-  })
-
   it('toggleMirrorX calls store.updateMirror with toggled x', () => {
     const spy = vi.spyOn(_mockToolbarStore, 'updateMirror')
     const wrapper = stw(

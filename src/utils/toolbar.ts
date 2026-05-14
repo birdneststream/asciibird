@@ -25,3 +25,29 @@ export function tooltipName(value: ToolbarIcon): string {
       return value.name;
   }
 }
+
+/**
+ * Get a short label for inline display in toolbar buttons.
+ */
+export function toolLabel(value: ToolbarIcon): string {
+  switch (value.name) {
+    case 'default':
+      return 'Select';
+    case 'select':
+      return 'Select';
+    case 'text':
+      return 'Text';
+    case 'fill':
+      return 'Fill';
+    case 'brush':
+      return 'Brush';
+    case 'dropper':
+      return 'Picker';
+    case 'eraser':
+      return 'Eraser';
+    case 'fill-eraser':
+      return 'Erase Fill';
+    default:
+      return value.name;
+  }
+}

@@ -1,21 +1,35 @@
 <template>
-  <div class="flex items-center gap-2">
-    <!-- FG / BG swatches with swap button -->
-    <div class="relative flex items-center">
-      <button
-        type="button"
-        :style="{ backgroundColor: mircColours[currentFg] }"
-        class="w-14 h-14 rounded border border-outline-variant flex items-center justify-center text-sm font-label-mono transition-transform active:scale-95"
-        id="currentColourFg"
-        @click="toolbarStore.changeIsUpdatingFg(!toolbarState.isChoosingFg)"
-      >
-        FG
-      </button>
+  <div class="relative flex items-center justify-between w-full">
+    <!-- FG swatch -->
+    <button
+      type="button"
+      :style="{ backgroundColor: mircColours[currentFg] }"
+      class="w-14 h-14 rounded border border-outline-variant flex items-center justify-center text-sm font-label-mono transition-transform active:scale-95"
+      id="currentColourFg"
+      @click="toolbarStore.changeIsUpdatingFg(!toolbarState.isChoosingFg)"
+    >
+      FG
+    </button>
 
+    <!-- Swap button -->
+    <button
+      type="button"
+      class="w-8 h-8 rounded bg-surface-container-highest border border-outline-variant flex items-center justify-center hover:bg-surface-variant transition-colors z-10"
+      id="swapColour"
+      @click="swapColours()"
+    >
+      <span
+        class="material-icons text-sm"
+        aria-hidden="true"
+      >swap_horiz</span>
+    </button>
+
+    <!-- BG swatch + Char -->
+    <div class="flex items-center gap-2">
       <button
         type="button"
         :style="{ backgroundColor: mircColours[currentBg] }"
-        class="w-14 h-14 rounded border border-outline-variant flex items-center justify-center text-sm font-label-mono -ml-2 transition-transform active:scale-95"
+        class="w-14 h-14 rounded border border-outline-variant flex items-center justify-center text-sm font-label-mono transition-transform active:scale-95"
         id="currentColourBg"
         @click="toolbarStore.changeIsUpdatingBg(!toolbarState.isChoosingBg)"
       >
@@ -24,28 +38,15 @@
 
       <button
         type="button"
-        class="absolute -top-2 -right-2 w-8 h-8 rounded bg-surface-container-highest border border-outline-variant flex items-center justify-center hover:bg-surface-variant transition-colors z-10"
-        id="swapColour"
-        @click="swapColours()"
+        :style="charButtonStyle"
+        class="w-14 h-14 rounded border border-outline-variant flex items-center justify-center text-sm font-label-mono transition-transform active:scale-95"
+        id="currentChar"
+        :disabled="halfBlockEditing"
+        @click="toolbarStore.changeIsUpdatingChar(!toolbarState.isChoosingChar)"
       >
-        <span
-          class="material-icons text-sm"
-          aria-hidden="true"
-        >swap_horiz</span>
+        {{ toolbarState.selectedChar === " " ? "SP" : toolbarState.selectedChar }}
       </button>
     </div>
-
-    <!-- Character button -->
-    <button
-      type="button"
-      :style="charButtonStyle"
-      class="w-14 h-14 rounded border border-outline-variant flex items-center justify-center text-sm font-label-mono transition-transform active:scale-95"
-      id="currentChar"
-      :disabled="halfBlockEditing"
-      @click="toolbarStore.changeIsUpdatingChar(!toolbarState.isChoosingChar)"
-    >
-      {{ toolbarState.selectedChar === " " ? "SP" : toolbarState.selectedChar }}
-    </button>
   </div>
 </template>
 
