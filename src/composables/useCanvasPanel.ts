@@ -66,6 +66,8 @@ export function useCanvasPanel(options: UseCanvasPanelOptions) {
   let resizeStartY = 0;
   let resizeStartWidth = 0;
   let resizeStartHeight = 0;
+  let resizeStartPosX = 0;
+  let resizeStartPosY = 0;
   let resizeHandle: ResizeHandlePosition | null = null;
 
   // ─── Snap Computed ───────────────────────────────────────────────
@@ -137,6 +139,8 @@ export function useCanvasPanel(options: UseCanvasPanelOptions) {
       resizeStartY = e.clientY;
       resizeStartWidth = panelWidth.value;
       resizeStartHeight = panelHeight.value;
+      resizeStartPosX = dragX.value;
+      resizeStartPosY = dragY.value;
 
       document.addEventListener('pointermove', onResizePointerMove);
       document.addEventListener('pointerup', onResizePointerUp);
@@ -151,24 +155,49 @@ export function useCanvasPanel(options: UseCanvasPanelOptions) {
 
     let newWidth = resizeStartWidth;
     let newHeight = resizeStartHeight;
+    let newX = resizeStartPosX;
+    let newY = resizeStartPosY;
 
-    // Handle-specific dimension changes
-    switch (resizeHandle) {
-      case 'br':
-        newWidth = resizeStartWidth + dx;
-        newHeight = resizeStartHeight + dy;
-        break;
-      case 'bm':
-        newHeight = resizeStartHeight + dy;
-        break;
-      case 'mr':
-        newWidth = resizeStartWidth + dx;
-        break;
+    // ── Right edge handles (br, tr, mr) ──
+    if (resizeHandle === 'br' || resizeHandle === 'tr'
+        || resizeHandle === 'mr') {
+      newWidth = snapDimensionToGrid(
+        resizeStartWidth + dx, currentSnapX.value, 1,
+      );
     }
 
-    // Snap and clamp to minimum 1 block
-    panelWidth.value = snapDimensionToGrid(newWidth, currentSnapX.value, 1);
-    panelHeight.value = snapDimensionToGrid(newHeight, currentSnapY.value, 1);
+    // ── Bottom edge handles (br, bl, bm) ──
+    if (resizeHandle === 'br' || resizeHandle === 'bl'
+        || resizeHandle === 'bm') {
+      newHeight = snapDimensionToGrid(
+        resizeStartHeight + dy, currentSnapY.value, 1,
+      );
+    }
+
+    // ── Left edge handles (tl, ml, bl) ──
+    // Snap dimension first, derive position to keep right edge fixed
+    if (resizeHandle === 'tl' || resizeHandle === 'ml'
+        || resizeHandle === 'bl') {
+      newWidth = snapDimensionToGrid(
+        resizeStartWidth - dx, currentSnapX.value, 1,
+      );
+      newX = resizeStartPosX + resizeStartWidth - newWidth;
+    }
+
+    // ── Top edge handles (tl, tm, tr) ──
+    // Snap dimension first, derive position to keep bottom edge fixed
+    if (resizeHandle === 'tl' || resizeHandle === 'tm'
+        || resizeHandle === 'tr') {
+      newHeight = snapDimensionToGrid(
+        resizeStartHeight - dy, currentSnapY.value, 1,
+      );
+      newY = resizeStartPosY + resizeStartHeight - newHeight;
+    }
+
+    panelWidth.value = newWidth;
+    panelHeight.value = newHeight;
+    dragX.value = newX;
+    dragY.value = newY;
   }
 
   function onResizePointerUp() {

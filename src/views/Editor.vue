@@ -352,8 +352,8 @@ const canvasPanel = useCanvasPanel({
     await delayRedrawCanvas();
   },
   onResizeStop: async (
-    _left: number,
-    _topVal: number,
+    left: number,
+    topVal: number,
     width: number,
     height: number,
   ) => {
@@ -365,10 +365,11 @@ const canvasPanel = useCanvasPanel({
     );
     const layers = fillNullBlocks(canvasBlockHeight, canvasBlockWidth);
 
-    top.value = _topVal;
+    top.value = topVal;
     canvasSize.width = width;
     canvasSize.height = height;
 
+    store.changeAsciiCanvasState({ x: left, y: topVal });
     store.changeAsciiWidthHeight({ layers: [...layers] });
 
     toastShow(`${canvasBlockWidth} x ${canvasBlockHeight}`);

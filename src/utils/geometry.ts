@@ -31,5 +31,8 @@ export function snapDimensionToGrid(
   return Math.max(gridSize * minUnits, snapped);
 }
 
-/** Positions for resize handles (matches legacy vue-draggable-resizable) */
-export type ResizeHandlePosition = 'bm' | 'br' | 'mr';
+/** Positions for resize handles (all 8 directions) */
+export type ResizeHandlePosition =
+  | 'tl' | 'tm' | 'tr'
+  | 'ml' | 'mr'
+  | 'bl' | 'bm' | 'br';
