@@ -77,6 +77,11 @@ export function useGlobalShortcuts() {
       }
     },
     'ctrl+o': () => modalStore.openModal('options'),
+    'ctrl+f': () => {
+      if (store.asciibirdMeta.length) {
+        modalStore.openModal('find-replace');
+      }
+    },
     'alt+g': () => {
       if (store.asciibirdMeta.length) {
         toolbarStore.toggleGridView(!toolbarStore.toolbarState.gridView);

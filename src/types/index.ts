@@ -93,6 +93,7 @@ export interface ModalState {
   about: boolean;
   help: boolean;
   borderGenerator: boolean;
+  findReplace: boolean;
 }
 
 /** App options */

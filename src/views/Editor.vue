@@ -167,6 +167,7 @@ import { useFpsThrottle } from '../composables/useFpsThrottle';
 import { useSelectionTransform } from '../composables/useSelectionTransform';
 import { useColorReplace } from '../composables/useColorReplace';
 import { useGradientTool } from '../composables/useGradientTool';
+import { useMatchHighlight } from '../composables/useMatchHighlight';
 import hotkeys from 'hotkeys-js';
 
 import ContextMenu from '../components/parts/ContextMenu.vue';
@@ -253,6 +254,9 @@ const {
   resetReplace,
   contextMenuReplace,
 } = useColorReplace();
+
+// ─── Match Highlight (Find & Replace) ──────────────────────────
+const { drawHighlights: drawMatchHighlights } = useMatchHighlight();
 
 // ─── Template Refs ──────────────────────────────────────────────
 const canvasRef = ref<HTMLCanvasElement | null>(null);
@@ -763,6 +767,9 @@ let wheelHandler: ((e: WheelEvent) => void) | null = null;
 // Selection transform event handler
 let selectionTransformHandler: ((e: Event) => void) | null = null;
 
+// Scroll-to handler for Find & Replace navigation
+let scrollToHandler: ((e: Event) => void) | null = null;
+
 onMounted(async () => {
   const canvas = canvasRef.value;
   if (canvas) {
@@ -799,6 +806,17 @@ onMounted(async () => {
     selectionTransformHandler,
   );
 
+  // Find & Replace scroll-to handler
+  scrollToHandler = (e: Event) => {
+    const detail = (e as CustomEvent).detail;
+    if (detail.x !== undefined && detail.y !== undefined) {
+      x.value = detail.x;
+      y.value = detail.y;
+      delayRedrawCanvas();
+    }
+  };
+  window.addEventListener('asciibird:scroll-to', scrollToHandler);
+
   await delayRedrawCanvas();
 });
 
@@ -816,6 +834,10 @@ onUnmounted(() => {
       selectionTransformHandler,
     );
     selectionTransformHandler = null;
+  }
+  if (scrollToHandler) {
+    window.removeEventListener('asciibird:scroll-to', scrollToHandler);
+    scrollToHandler = null;
   }
 });
 
@@ -1236,6 +1258,19 @@ async function redrawCanvas(force = false) {
         }
       }
     }
+  }
+
+  // Draw Find & Replace match highlights on the tool canvas
+  if (toolCtx && canvastoolsRef.value) {
+    drawMatchHighlights(
+      toolCtx,
+      0,
+      0,
+      canvastoolsRef.value.width,
+      canvastoolsRef.value.height,
+      bw,
+      bh,
+    );
   }
 }
 

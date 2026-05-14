@@ -16,6 +16,7 @@ export const useModalStore = defineStore('modal', {
       about: false,
       help: false,
       borderGenerator: false,
+      findReplace: false,
     } as ModalState,
     isKeyboardDisabled: false,
   }),
@@ -56,6 +57,9 @@ export const useModalStore = defineStore('modal', {
         case 'border-generator':
           this.modalState.borderGenerator = true;
           break;
+        case 'find-replace':
+          this.modalState.findReplace = true;
+          break;
       }
     },
     closeModal(type: string) {
@@ -83,6 +87,9 @@ export const useModalStore = defineStore('modal', {
           break;
         case 'border-generator':
           this.modalState.borderGenerator = false;
+          break;
+        case 'find-replace':
+          this.modalState.findReplace = false;
           break;
       }
     },

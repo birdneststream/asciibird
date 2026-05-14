@@ -68,6 +68,7 @@
     <PasteAscii v-if="modalState.pasteAscii" />
     <ImageOverlay v-if="asciibirdMeta.length && modalState.overlay" />
     <BorderGenerator v-if="asciibirdMeta.length && modalState.borderGenerator" />
+    <FindReplace v-if="asciibirdMeta.length && modalState.findReplace" />
 
     <KeyboardShortcuts
       :selected-blocks="selectedBlocks"
@@ -406,6 +407,7 @@ import PasteAscii from './components/modals/PasteAscii.vue';
 import About from './components/modals/About.vue';
 import Help from './components/modals/Help.vue';
 import BorderGenerator from './components/modals/BorderGenerator.vue';
+import FindReplace from './components/modals/FindReplace.vue';
 import ABModal from './components/ABModal.vue';
 
 import BrushCanvas from './components/parts/BrushCanvas.vue';
@@ -646,6 +648,12 @@ const menuBar = computed<AppMenuBar[]>(() => [
         text: 'Add Border...',
         click: () => modalStore.openModal('border-generator'),
         disabled: !asciibirdMeta.value.length,
+      },
+      {
+        text: 'Find and Replace...',
+        click: () => modalStore.openModal('find-replace'),
+        disabled: !asciibirdMeta.value.length,
+        shortcut: 'Ctrl+F',
       },
     ],
   },
