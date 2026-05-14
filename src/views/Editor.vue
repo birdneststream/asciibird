@@ -34,6 +34,12 @@
           >
             Export Plain Text to Clipboard
           </li>
+          <li
+            @click="exportHtmlFile()"
+            class="ab-context-menu-item"
+          >
+            Export as HTML File
+          </li>
           <template v-if="isSelected && isSelecting">
             <li class="ab-context-menu-separator" />
             <li
@@ -205,6 +211,7 @@ import { bresenhamLine } from '../utils/bresenham';
 import { storeDiffBlocks as storeDiffBlockFn } from '../utils/diffBlocks';
 import { getCanvasFont } from '../utils/canvasFont';
 import { drawShapePreview } from '../utils/shapePreview';
+import { downloadHtml } from '../utils/htmlExport';
 import { HalfBlockGrid } from '../utils/halfBlockGrid';
 import type { DiffBlocks } from '../utils/diffBlocks';
 import type { Block } from '../types';
@@ -920,6 +927,16 @@ function canvasToPng() {
       toastShow('Plain text copied to clipboard!', { type: 'success' });
     } catch {
       toastShow('Failed to copy plain text.', { type: 'error' });
+    }
+  }
+
+  function exportHtmlFile() {
+    try {
+      const title = currentAscii.value?.title ?? 'ascii';
+      downloadHtml(title);
+      toastShow('Exported HTML file!', { type: 'success' });
+    } catch {
+      toastShow('Failed to export HTML.', { type: 'error' });
     }
   }
 

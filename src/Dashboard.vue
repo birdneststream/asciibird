@@ -422,9 +422,11 @@ import {
   downloadFile,
   checkForGetRequest,
   splashAscii,
+  mergeLayers,
 } from './ascii';
 
 import { downloadAnsi } from './utils/ansiExport';
+import { downloadHtml, exportHtmlFragment } from './utils/htmlExport';
 
 import { useAsciiBirdStore } from './store';
 import { useModalStore } from './store/modal';
@@ -628,6 +630,16 @@ const menuBar = computed<AppMenuBar[]>(() => [
       {
         text: 'Export Plain Text to File',
         click: () => handleExportPlainText('file'),
+        disabled: !asciibirdMeta.value.length,
+      },
+      {
+        text: 'Export as HTML File',
+        click: () => handleExportHtml('file'),
+        disabled: !asciibirdMeta.value.length,
+      },
+      {
+        text: 'Copy HTML Fragment',
+        click: () => handleExportHtml('clipboard'),
         disabled: !asciibirdMeta.value.length,
       },
     ],
@@ -962,6 +974,24 @@ function handleExportPlainText(target: 'clipboard' | 'file') {
     }
   } catch (err) {
     toastShow(`Plain text export error: ${String(err)}`, { type: 'error' });
+  }
+}
+
+function handleExportHtml(target: 'clipboard' | 'file') {
+  try {
+    const title = store.currentAscii?.title ?? 'ascii';
+
+    if (target === 'clipboard') {
+      const blocks = mergeLayers();
+      const fragment = exportHtmlFragment(blocks);
+      navigator.clipboard.writeText(fragment);
+      toastShow('HTML fragment copied to clipboard!', { type: 'success' });
+    } else {
+      downloadHtml(title);
+      toastShow('Exported HTML file!', { type: 'success' });
+    }
+  } catch (err) {
+    toastShow(`HTML export error: ${String(err)}`, { type: 'error' });
   }
 }
 
