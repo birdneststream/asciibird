@@ -599,6 +599,28 @@ hotkeys('*', 'editor', async function (event) {
     return;
   }
 
+  // Shift+Arrow: nudge selection by 1 block
+  if (
+    event.shiftKey &&
+    isSelected.value &&
+    selectedBlocks.value.length > 0
+  ) {
+    switch (event.key) {
+      case 'ArrowUp':
+        await selectionTransform.applyNudge(0, -1);
+        return;
+      case 'ArrowDown':
+        await selectionTransform.applyNudge(0, 1);
+        return;
+      case 'ArrowLeft':
+        await selectionTransform.applyNudge(-1, 0);
+        return;
+      case 'ArrowRight':
+        await selectionTransform.applyNudge(1, 0);
+        return;
+    }
+  }
+
   if (isBrushing.value || isErasing.value) {
     switch (event.key) {
       case 'ArrowUp':
