@@ -7,10 +7,9 @@ set -uo pipefail
 # Fully autonomous planner → builder loop.
 # Zero user interaction. Self-iterating with quality gates and code review.
 #
-# Flow per iteration (alternates GLM ↔ Kimi):
-#   Odd iterations:  GLM Plan  → GLM Build  (reviewed by GLM + Kimi + DeepSeek)
-#   Even iterations:  Kimi Plan → Kimi Build (reviewed by GLM + Kimi + DeepSeek)
-#   3. Gitea issues feed back into next planner iteration
+# Flow per iteration (GLM only):
+#   GLM Plan → GLM Build (reviewed by GLM + Hy3)
+#   Gitea issues feed back into next planner iteration
 #
 # Migration phases (strict order):
 #   Phase 1: Vite migration (replace vue-cli/webpack) ✅ DONE
@@ -396,7 +395,7 @@ ${changes}
 log "${CYAN}========================================${NC}"
 log "${CYAN}  ASCIIBIRD Auto-Improve Loop${NC}"
 log "${CYAN}  Iterations: $( [ "$ITERATIONS" -gt 0 ] && echo "$ITERATIONS" || echo "infinite" )${NC}"
-log "${CYAN}  Flow: GLM Plan/Build (odd) ↔ Kimi Plan/Build (even) | Review: GLM + Kimi + DeepSeek${NC}"
+log "${CYAN}  Flow: GLM Plan → GLM Build (reviewed by GLM + Hy3)${NC}"
 log "${CYAN}  Phases: 1-Vite → 2-TypeScript → 3-Tests → 4-Refactor → 5-Vue3 → 6-UI Polish${NC}"
 log "${CYAN}  Design: Obsidian Creative System (design/ folder)${NC}"
 log "${CYAN}  Issues: ${GITEA_URL}/${GITEA_REPO}/issues${NC}"
@@ -410,21 +409,14 @@ start_chrome
 while true; do
     COUNT=$((COUNT + 1))
 
-    if [ $((COUNT % 2)) -eq 1 ]; then
-        PLAN_AGENT="glm-plan"
-        BUILD_AGENT="glm-build"
-        AGENT_MODEL="zai-coding-plan/glm-5.1"
-        AGENT_LABEL="GLM"
-    else
-        PLAN_AGENT="kimi-plan"
-        BUILD_AGENT="kimi-build"
-        AGENT_MODEL="kimi-for-coding/k2p6"
-        AGENT_LABEL="KIMI"
-    fi
+    PLAN_AGENT="glm-plan"
+    BUILD_AGENT="glm-build"
+    AGENT_MODEL="zai-coding-plan/glm-5.1"
+    AGENT_LABEL="GLM"
 
     log "${GREEN}============================================${NC}"
     log "${GREEN}  Iteration ${COUNT} — ${AGENT_LABEL}${NC}"
-    log "${GREEN}  Plan: ${PLAN_AGENT} | Build: ${BUILD_AGENT} | Review: GLM + Kimi + DeepSeek${NC}"
+    log "${GREEN}  Plan: ${PLAN_AGENT} | Build: ${BUILD_AGENT} | Review: GLM + Hy3${NC}"
     log "${GREEN}============================================${NC}"
 
     # Health checks
@@ -545,7 +537,7 @@ After ALL tasks are done and committed on the feature branch:
 3. Push: git push origin asciibird-v2
 4. Delete the feature branch: git branch -d feat/ui-DESC-iter-${COUNT}
 
-Code review: You will be reviewed by 3 reviewers (GLM + Kimi + DeepSeek). Address all critical issues before proceeding.
+Code review: You will be reviewed by 2 reviewers (GLM + Hy3). Address all critical issues before proceeding.
 
 This is fully autonomous — no user interaction needed. Follow the per-task cycle from your agent instructions exactly. You MUST merge to asciibird-v2 and push before finishing."
 
