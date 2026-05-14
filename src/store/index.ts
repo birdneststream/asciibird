@@ -6,6 +6,7 @@
 import { defineStore } from 'pinia';
 import {
   mergeLayers,
+  mergeTwoLayers,
 } from '../ascii';
 import {
   CANVAS_DEFAULT_X,
@@ -398,6 +399,53 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         },
         () => {
           this.asciibirdMeta[this.tab].selectedLayer = 0;
+        },
+      );
+    },
+    /** Merge the selected layer into the layer below it. */
+    mergeLayerDown() {
+      const selectedLayer = this.asciibirdMeta[this.tab].selectedLayer;
+      if (selectedLayer <= 0) return;
+
+      this.withLayerMutation(
+        (layers) => {
+          const upper = layers[selectedLayer];
+          const lower = layers[selectedLayer - 1];
+          const mergedData = mergeTwoLayers(upper.data, lower.data);
+
+          layers[selectedLayer - 1] = {
+            ...lower,
+            data: mergedData,
+          };
+          layers.splice(selectedLayer, 1);
+        },
+        () => {
+          this.asciibirdMeta[this.tab].selectedLayer =
+            Math.max(0, selectedLayer - 1);
+        },
+      );
+    },
+    /** Duplicate the selected layer (copy placed above). */
+    duplicateLayer() {
+      const selectedLayer = this.asciibirdMeta[this.tab].selectedLayer;
+
+      this.withLayerMutation(
+        (layers) => {
+          const source = layers[selectedLayer];
+          const copy: Layer = {
+            label: `${source.label} (Copy)`,
+            visible: source.visible,
+            width: source.width,
+            height: source.height,
+            data: source.data.map(row =>
+              row.map(block => ({ ...block })),
+            ),
+          };
+          layers.splice(selectedLayer, 0, copy);
+        },
+        () => {
+          // Select the new copy (same index, source shifted up)
+          this.asciibirdMeta[this.tab].selectedLayer = selectedLayer;
         },
       );
     },

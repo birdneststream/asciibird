@@ -12,6 +12,7 @@ import {
   emptyBlock,
   isEmptyBlock,
   eraseBlockProperties,
+  mergeTwoLayers,
   create2DArray,
   blockWidth,
   blockHeight,
@@ -420,6 +421,61 @@ describe('ascii.ts constants', () => {
       const block: Block = { fg: 5, char: 'A' };
       eraseBlockProperties(block, { fg: true, bg: true, char: false });
       expect(block).toEqual({ char: 'A' });
+    });
+  });
+
+  describe('mergeTwoLayers', () => {
+    it('upper block overrides lower', () => {
+      const upper = [[{ fg: 1, bg: 2, char: 'X' }]];
+      const lower = [[{ fg: 3, bg: 4, char: 'Y' }]];
+      const result = mergeTwoLayers(upper, lower);
+      expect(result[0][0]).toEqual({ fg: 1, bg: 2, char: 'X' });
+    });
+
+    it('empty upper falls through to lower', () => {
+      const upper = [[{}]];
+      const lower = [[{ fg: 3, bg: 4, char: 'Y' }]];
+      const result = mergeTwoLayers(upper, lower);
+      expect(result[0][0]).toEqual({ fg: 3, bg: 4, char: 'Y' });
+    });
+
+    it('mixed: some cells upper, some lower', () => {
+      const upper = [[{ fg: 1, char: 'A' }, {}]];
+      const lower = [[{}, { bg: 5, char: 'B' }]];
+      const result = mergeTwoLayers(upper, lower);
+      expect(result[0][0]).toEqual({ fg: 1, char: 'A' });
+      expect(result[0][1]).toEqual({ bg: 5, char: 'B' });
+    });
+
+    it('both empty produces empty', () => {
+      const upper = [[{}]];
+      const lower = [[{}]];
+      const result = mergeTwoLayers(upper, lower);
+      expect(result[0][0]).toEqual({});
+    });
+
+    it('handles different-sized grids', () => {
+      const upper = [[{ fg: 1, char: 'A' }]];
+      const lower = [[{ bg: 2 }, { bg: 3, char: 'C' }]];
+      const result = mergeTwoLayers(upper, lower);
+      expect(result[0][0]).toEqual({ fg: 1, char: 'A' });
+      expect(result[0][1]).toEqual({ bg: 3, char: 'C' });
+    });
+
+    it('does not mutate inputs', () => {
+      const upper = [[{ fg: 1, char: 'A' }]];
+      const lower = [[{ bg: 2, char: 'B' }]];
+      mergeTwoLayers(upper, lower);
+      expect(upper[0][0]).toEqual({ fg: 1, char: 'A' });
+      expect(lower[0][0]).toEqual({ bg: 2, char: 'B' });
+    });
+
+    it('handles empty row gracefully', () => {
+      const upper: Block[][] = [[], [{ fg: 1, char: 'A' }]];
+      const lower: Block[][] = [[{ bg: 2 }], []];
+      const result = mergeTwoLayers(upper, lower);
+      expect(result[0][0]).toEqual({ bg: 2 });
+      expect(result[1][0]).toEqual({ fg: 1, char: 'A' });
     });
   });
 });

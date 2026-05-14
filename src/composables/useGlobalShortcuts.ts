@@ -150,6 +150,16 @@ export function useGlobalShortcuts() {
         );
       }
     },
+
+    // Layer operations
+    'ctrl+shift+m': () => {
+      if (!store.asciibirdMeta.length || modalStore.isModalOpen) return;
+      store.mergeLayerDown();
+    },
+    'ctrl+shift+d': () => {
+      if (!store.asciibirdMeta.length || modalStore.isModalOpen) return;
+      store.duplicateLayer();
+    },
   };
 
   // Register all menu shortcuts in scope 'all'

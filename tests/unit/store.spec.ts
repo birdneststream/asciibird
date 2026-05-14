@@ -619,6 +619,87 @@ describe('Pinia Store Actions', () => {
       expect(mergedLayers).toHaveLength(1);
       expect(store.asciibirdMeta[0].selectedLayer).toBe(0);
     });
+
+    it('mergeLayerDown merges selected into layer below', () => {
+      store.addLayer();
+      const layers = JSON.parse(
+        LZString.decompressFromUTF16(store.asciibirdMeta[0].layers),
+      );
+      // Content on layer 1 (upper, selected by default after add)
+      layers[1].data[0][0] = { fg: 5, bg: 2, char: 'X' };
+      // Content on layer 0 (lower)
+      layers[0].data[0][0] = { fg: 0, bg: 1, char: 'A' };
+      store.changeAsciiWidthHeight({ layers });
+      store.changeLayer(1);
+
+      store.mergeLayerDown();
+
+      const mergedLayers = JSON.parse(
+        LZString.decompressFromUTF16(store.asciibirdMeta[0].layers),
+      );
+      expect(mergedLayers).toHaveLength(1);
+      // Upper block (X) should win over lower (A)
+      expect(mergedLayers[0].data[0][0].char).toBe('X');
+      expect(store.asciibirdMeta[0].selectedLayer).toBe(0);
+    });
+
+    it('mergeLayerDown does nothing on layer 0', () => {
+      store.addLayer();
+      store.changeLayer(0);
+      const before = JSON.parse(
+        LZString.decompressFromUTF16(store.asciibirdMeta[0].layers),
+      );
+      store.mergeLayerDown();
+      const after = JSON.parse(
+        LZString.decompressFromUTF16(store.asciibirdMeta[0].layers),
+      );
+      expect(after).toHaveLength(before.length);
+    });
+
+    it('duplicateLayer creates a copy above selected', () => {
+      store.addLayer();
+      const layers = JSON.parse(
+        LZString.decompressFromUTF16(store.asciibirdMeta[0].layers),
+      );
+      layers[1].data[0][0] = { fg: 5, bg: 2, char: 'D' };
+      layers[1].label = 'Original';
+      store.changeAsciiWidthHeight({ layers });
+      store.changeLayer(1);
+
+      store.duplicateLayer();
+
+      const after = JSON.parse(
+        LZString.decompressFromUTF16(store.asciibirdMeta[0].layers),
+      );
+      expect(after).toHaveLength(3);
+      // The copy should be at index 1 (above original)
+      expect(after[1].label).toBe('Original (Copy)');
+      expect(after[1].data[0][0].char).toBe('D');
+      // Original shifted to index 2
+      expect(after[2].label).toBe('Original');
+      // Selected stays at index 1 (the new copy)
+      expect(store.asciibirdMeta[0].selectedLayer).toBe(1);
+    });
+
+    it('duplicateLayer copy is independent', () => {
+      store.addLayer();
+      const layers = JSON.parse(
+        LZString.decompressFromUTF16(store.asciibirdMeta[0].layers),
+      );
+      layers[1].data[0][0] = { fg: 5, char: 'T' };
+      store.changeAsciiWidthHeight({ layers });
+      store.changeLayer(1);
+
+      store.duplicateLayer();
+
+      const after = JSON.parse(
+        LZString.decompressFromUTF16(store.asciibirdMeta[0].layers),
+      );
+      // Mutate copy
+      after[1].data[0][0].char = 'Z';
+      // Original should be unchanged
+      expect(after[2].data[0][0].char).toBe('T');
+    });
   });
 
   // ── findNextVisibleLayer utility ─────────────────────────────

@@ -10,19 +10,35 @@
           class="material-icons text-sm"
           aria-hidden="true"
         >playlist_add</span>
-        Add Layer
+        Add
       </button>
 
       <button
         type="button"
         class="flex-1 py-1.5 font-label-mono text-label-mono rounded-sm transition-all duration-200 flex items-center justify-center gap-1 text-on-surface-variant hover:bg-surface-variant border border-transparent"
-        @click="mergeLayers()"
+        :disabled="selectedLayer <= 0"
+        :class="selectedLayer <= 0 ? 'opacity-40 cursor-not-allowed' : ''"
+        title="Merge selected layer into layer below"
+        @click="mergeDown()"
       >
         <span
           class="material-icons text-sm"
           aria-hidden="true"
-        >playlist_play</span>
-        Merge
+        >merge</span>
+        Merge ↓
+      </button>
+
+      <button
+        type="button"
+        class="flex-1 py-1.5 font-label-mono text-label-mono rounded-sm transition-all duration-200 flex items-center justify-center gap-1 text-on-surface-variant hover:bg-surface-variant border border-transparent"
+        title="Duplicate selected layer"
+        @click="duplicateLayer()"
+      >
+        <span
+          class="material-icons text-sm"
+          aria-hidden="true"
+        >content_copy</span>
+        Copy
       </button>
     </div>
 
@@ -98,6 +114,22 @@
           class="ab-context-menu-item"
         >
           Merge All Layers
+        </li>
+        <li
+          v-if="canToggleLayer && selectedLayer > 0"
+          @click="mergeDown()"
+          class="ab-context-menu-item"
+        >
+          Merge Layer Down
+          <span class="ab-shortcut">Ctrl+Shift+M</span>
+        </li>
+        <li
+          v-if="canToggleLayer"
+          @click="duplicateLayer()"
+          class="ab-context-menu-item"
+        >
+          Duplicate Layer
+          <span class="ab-shortcut">Ctrl+Shift+D</span>
         </li>
       </ul>
     </context-menu>
@@ -327,6 +359,22 @@ function addLayer() {
 function mergeLayers() {
   store.mergeAllLayers();
   toastShow('All layers have been merged.', { type: 'success' });
+  closeMenu();
+}
+
+function mergeDown() {
+  if (selectedLayer.value <= 0) {
+    toastShow('Cannot merge bottom layer down.', { type: 'error' });
+    return;
+  }
+  store.mergeLayerDown();
+  toastShow('Layer merged down.', { type: 'success' });
+  closeMenu();
+}
+
+function duplicateLayer() {
+  store.duplicateLayer();
+  toastShow('Layer duplicated.', { type: 'success' });
   closeMenu();
 }
 

@@ -1043,6 +1043,42 @@ export const calculateMircLineBytes = (blocks: Block[][]): IrcLineCheck => {
   return { lineByteLengths, overLimitLines, maxBytes };
 };
 
+/**
+ * Merge two block grids (upper over lower).
+ * For each cell: if the upper block has any property set, use it;
+ * otherwise fall through to the lower block.
+ * Returns a new 2D array (does not mutate inputs).
+ */
+export function mergeTwoLayers(
+  upper: Block[][],
+  lower: Block[][],
+): Block[][] {
+  const result: Block[][] = [];
+  const rows = Math.max(upper.length, lower.length);
+
+  for (let y = 0; y < rows; y++) {
+    result[y] = [];
+    const upperRow = upper[y] || [];
+    const lowerRow = lower[y] || [];
+    const cols = Math.max(upperRow.length, lowerRow.length);
+
+    for (let x = 0; x < cols; x++) {
+      const u = upperRow[x];
+      const l = lowerRow[x];
+
+      if (u && !isEmptyBlock(u)) {
+        result[y][x] = { ...u };
+      } else if (l) {
+        result[y][x] = { ...l };
+      } else {
+        result[y][x] = { ...emptyBlock };
+      }
+    }
+  }
+
+  return result;
+}
+
 export const mergeLayers = (): Block[][] => {
   const mergedLayers: Block[][] = [];
 
