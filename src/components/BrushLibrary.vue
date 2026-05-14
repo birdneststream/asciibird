@@ -16,10 +16,10 @@
         <div class="flex gap-1 mb-2">
           <button
             type="button"
-            class="flex-1 py-1 font-label-mono text-label-mono rounded transition-all duration-200 flex items-center justify-center gap-1"
+            class="flex-1 py-1.5 font-label-mono text-label-mono rounded-sm transition-all duration-200 flex items-center justify-center gap-1"
             :class="panel.tab === 0
-              ? 'bg-primary-container text-on-primary-container'
-              : 'text-on-surface-variant hover:bg-surface-variant'"
+              ? 'bg-primary-container/20 text-primary border border-primary/50'
+              : 'text-on-surface-variant hover:bg-surface-variant border border-transparent'"
             @click="changeTab(0)"
           >
             <span
@@ -31,10 +31,10 @@
 
           <button
             type="button"
-            class="flex-1 py-1 font-label-mono text-label-mono rounded transition-all duration-200 flex items-center justify-center gap-1"
+            class="flex-1 py-1.5 font-label-mono text-label-mono rounded-sm transition-all duration-200 flex items-center justify-center gap-1"
             :class="panel.tab === 1
-              ? 'bg-primary-container text-on-primary-container'
-              : 'text-on-surface-variant hover:bg-surface-variant'"
+              ? 'bg-primary-container/20 text-primary border border-primary/50'
+              : 'text-on-surface-variant hover:bg-surface-variant border border-transparent'"
             @click="changeTab(1)"
           >
             <span
@@ -60,7 +60,7 @@
             <div class="flex gap-1 mt-2">
               <button
                 type="button"
-                class="w-8 h-8 rounded flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors"
+                class="w-8 h-8 rounded-sm flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
                 @click="saveToLibrary(decompressBlock(brush.blocks))"
               >
                 <span
@@ -70,7 +70,7 @@
               </button>
               <button
                 type="button"
-                class="w-8 h-8 rounded flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors"
+                class="w-8 h-8 rounded-sm flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
                 @click="reuseBlocks(decompressBlock(brush.blocks))"
               >
                 <span
@@ -80,7 +80,7 @@
               </button>
               <button
                 type="button"
-                class="w-8 h-8 rounded flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors"
+                class="w-8 h-8 rounded-sm flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
                 @click="removeFromHistory(decompressBlock(brush.blocks))"
               >
                 <span
@@ -119,7 +119,7 @@
             <div class="flex gap-1 mt-2">
               <button
                 type="button"
-                class="w-8 h-8 rounded flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors"
+                class="w-8 h-8 rounded-sm flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
                 @click="removeFromLibrary(decompressBlock(brush.blocks))"
               >
                 <span
@@ -129,7 +129,7 @@
               </button>
               <button
                 type="button"
-                class="w-8 h-8 rounded flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors"
+                class="w-8 h-8 rounded-sm flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
                 @click="reuseBlocks(decompressBlock(brush.blocks))"
               >
                 <span
@@ -140,7 +140,7 @@
               <button
                 v-if="key !== 0"
                 type="button"
-                class="w-8 h-8 rounded flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors"
+                class="w-8 h-8 rounded-sm flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
                 @click="upBrush(key)"
               >
                 <span
@@ -151,7 +151,7 @@
               <button
                 v-if="key !== brushLibrary.length - 1"
                 type="button"
-                class="w-8 h-8 rounded flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors"
+                class="w-8 h-8 rounded-sm flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
                 @click="downBrush(key)"
               >
                 <span

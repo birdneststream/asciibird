@@ -21,10 +21,10 @@
           >
             <button
               type="button"
-              class="w-full h-10 rounded flex items-center justify-center gap-1 transition-all duration-150"
+              class="w-full h-8 rounded-sm flex items-center justify-center gap-1 transition-all duration-150"
               :class="currentTool.name === value.name
-                ? 'bg-primary-container text-on-primary-container shadow-md ring-2 ring-primary'
-                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
+                ? 'bg-primary-container/20 text-primary border border-primary/50'
+                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant border border-transparent'"
               @click="toolbarStore.changeTool(keyToolbar)"
             >
               <span
@@ -41,10 +41,10 @@
           <Tooltip content="Mirror X axis when Editing">
             <button
               type="button"
-              class="w-full h-10 rounded flex items-center justify-center gap-1 transition-colors duration-150"
+              class="w-full h-8 rounded-sm flex items-center justify-center gap-1 transition-colors duration-150"
               :class="toolbarStore.toolbarState.mirrorX
-                ? 'bg-primary-container text-on-primary-container ring-2 ring-primary'
-                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
+                ? 'bg-primary-container/20 text-primary border border-primary/50'
+                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant border border-transparent'"
               @click="toggleMirrorX()"
             >
               <span
@@ -58,10 +58,10 @@
           <Tooltip content="Mirror Y axis when Editing">
             <button
               type="button"
-              class="w-full h-10 rounded flex items-center justify-center gap-1 transition-colors duration-150"
+              class="w-full h-8 rounded-sm flex items-center justify-center gap-1 transition-colors duration-150"
               :class="toolbarStore.toolbarState.mirrorY
-                ? 'bg-primary-container text-on-primary-container ring-2 ring-primary'
-                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
+                ? 'bg-primary-container/20 text-primary border border-primary/50'
+                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant border border-transparent'"
               @click="toggleMirrorY()"
             >
               <span
@@ -75,10 +75,10 @@
           <Tooltip content="Update Brush Automatically when Colours or Char Changes">
             <button
               type="button"
-              class="w-full h-10 rounded flex items-center justify-center gap-1 transition-colors duration-150"
+              class="w-full h-8 rounded-sm flex items-center justify-center gap-1 transition-colors duration-150"
               :class="toolbarStore.toolbarState.updateBrush
-                ? 'bg-primary-container text-on-primary-container ring-2 ring-primary'
-                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
+                ? 'bg-primary-container/20 text-primary border border-primary/50'
+                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant border border-transparent'"
               @click="toggleUpdateBrush()"
             >
               <span
@@ -92,10 +92,10 @@
           <Tooltip content="Toggle Grid View">
             <button
               type="button"
-              class="w-full h-10 rounded flex items-center justify-center gap-1 transition-colors duration-150"
+              class="w-full h-8 rounded-sm flex items-center justify-center gap-1 transition-colors duration-150"
               :class="toolbarStore.toolbarState.gridView
-                ? 'bg-primary-container text-on-primary-container ring-2 ring-primary'
-                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
+                ? 'bg-primary-container/20 text-primary border border-primary/50'
+                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant border border-transparent'"
               @click="toggleGridView()"
             >
               <span
@@ -111,10 +111,10 @@
           <Tooltip content="Toggle Half Block Editing Mode">
             <button
               type="button"
-              class="w-full h-10 rounded flex items-center justify-center gap-1 transition-colors duration-150"
+              class="w-full h-8 rounded-sm flex items-center justify-center gap-1 transition-colors duration-150"
               :class="toolbarStore.toolbarState.halfBlockEditing
-                ? 'bg-primary-container text-on-primary-container ring-2 ring-primary'
-                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
+                ? 'bg-primary-container/20 text-primary border border-primary/50'
+                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant border border-transparent'"
               @click="toggleHalfBlockEditing()"
             >
               <span

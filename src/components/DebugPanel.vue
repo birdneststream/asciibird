@@ -56,7 +56,7 @@
 
         <button
           type="button"
-          class="mt-2 w-full py-2 px-3 rounded bg-error-container text-on-error-container font-label-mono text-label-mono hover:brightness-110 transition-all"
+          class="mt-2 w-full py-2 px-3 rounded-sm bg-error-container/20 text-error border border-error/50 font-label-mono text-label-mono hover:bg-error-container/30 transition-all"
           @click="copyUriToClipboard()"
         >
           Copy URI Encoded String

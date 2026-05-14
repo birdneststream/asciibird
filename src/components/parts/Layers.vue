@@ -3,7 +3,7 @@
     <div class="flex gap-1 mb-2">
       <button
         type="button"
-        class="flex-1 py-1 font-label-mono text-label-mono rounded transition-all duration-200 flex items-center justify-center gap-1 text-on-surface-variant hover:bg-surface-variant"
+        class="flex-1 py-1.5 font-label-mono text-label-mono rounded-sm transition-all duration-200 flex items-center justify-center gap-1 text-on-surface-variant hover:bg-surface-variant border border-transparent"
         @click="addLayer()"
       >
         <span
@@ -15,7 +15,7 @@
 
       <button
         type="button"
-        class="flex-1 py-1 font-label-mono text-label-mono rounded transition-all duration-200 flex items-center justify-center gap-1 text-on-surface-variant hover:bg-surface-variant"
+        class="flex-1 py-1.5 font-label-mono text-label-mono rounded-sm transition-all duration-200 flex items-center justify-center gap-1 text-on-surface-variant hover:bg-surface-variant border border-transparent"
         @click="mergeLayers()"
       >
         <span
@@ -31,10 +31,10 @@
     <div class="w-full">
       <button
         type="button"
-        class="w-full py-1 font-label-mono text-label-mono rounded transition-all duration-200 flex items-center justify-center gap-1"
+        class="w-full py-1.5 font-label-mono text-label-mono rounded-sm transition-all duration-200 flex items-center justify-center gap-1 border"
         :class="imageOverlay.visible
-          ? 'bg-primary-container text-on-primary-container'
-          : 'text-on-surface-variant hover:bg-surface-variant'"
+          ? 'bg-primary-container/20 text-primary border-primary/50'
+          : 'text-on-surface-variant hover:bg-surface-variant border-transparent'"
         @click="imageOverlay.visible ? updateImageOverlay() : showOverlayModal()"
       >
         <span
