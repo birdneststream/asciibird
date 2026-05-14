@@ -29,3 +29,6 @@ asciis/
 opencode.json
 .llm/
 .opencode/
+*.png
+.playwright-mcp
+auto-improve.log
