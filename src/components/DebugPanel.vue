@@ -8,6 +8,7 @@
       <PanelHeader
         ref="handleRef"
         title="Debug"
+        icon="bug_report"
         show-status
         minimizable
         @minimize="panelStore.minimizePanel('debugPanel')"

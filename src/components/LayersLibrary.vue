@@ -8,6 +8,7 @@
       <PanelHeader
         ref="handleRef"
         title="Layers"
+        icon="layers"
         show-status
         minimizable
         @minimize="panelStore.minimizePanel('layersLibrary')"

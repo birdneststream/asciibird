@@ -8,7 +8,7 @@
       <span
         class="material-icons text-outline text-sm"
         aria-hidden="true"
-      >drag_indicator</span>
+      >{{ icon || 'drag_indicator' }}</span>
       <span class="font-label-mono text-label-mono text-on-surface font-bold uppercase tracking-wider">
         {{ title }}
       </span>
@@ -42,6 +42,7 @@ import { ref } from 'vue';
 
 defineProps<{
   title: string;
+  icon?: string;
   showStatus?: boolean;
   minimizable?: boolean;
 }>();

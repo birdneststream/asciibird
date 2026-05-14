@@ -8,6 +8,7 @@
       <PanelHeader
         ref="handleRef"
         title="Brushes"
+        icon="palette"
         show-status
         minimizable
         @minimize="panelStore.minimizePanel('brushLibrary')"

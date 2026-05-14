@@ -8,6 +8,7 @@
       <PanelHeader
         ref="handleRef"
         title="Toolbar"
+        icon="handyman"
         show-status
         minimizable
         @minimize="toolbarStore.minimizeToolbar()"

@@ -47,7 +47,7 @@ function getPanelDefs(): PanelDef[] {
     {
       id: 'toolbar',
       name: 'Toolbar',
-      icon: 'construction',
+      icon: 'handyman',
       getState: () => ({
         x: toolbarStore.toolbarState.x,
         y: toolbarStore.toolbarState.y,
@@ -74,7 +74,7 @@ function getPanelDefs(): PanelDef[] {
     {
       id: 'brushLibrary',
       name: 'Brushes',
-      icon: 'brush',
+      icon: 'palette',
       getState: () => panelStore.brushLibrary,
       minimize: () => panelStore.minimizePanel('brushLibrary'),
       restore: () => panelStore.restorePanel('brushLibrary'),
@@ -84,7 +84,7 @@ function getPanelDefs(): PanelDef[] {
     {
       id: 'brushPreview',
       name: 'Brush',
-      icon: 'visibility',
+      icon: 'brush',
       getState: () => panelStore.brushPreview,
       minimize: () => panelStore.minimizePanel('brushPreview'),
       restore: () => panelStore.restorePanel('brushPreview'),

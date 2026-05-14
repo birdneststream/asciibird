@@ -8,6 +8,7 @@
       <PanelHeader
         ref="handleRef"
         title="Brush"
+        icon="brush"
         show-status
         minimizable
         @minimize="panelStore.minimizePanel('brushPreview')"
