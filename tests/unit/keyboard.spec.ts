@@ -530,6 +530,28 @@ describe('useGlobalShortcuts', () => {
     expect(spy).not.toHaveBeenCalled()
   })
 
+  it('tool shortcuts suppressed when text tool is active (#37)', async () => {
+    // Regression test for #37: keyboard shortcuts fire while typing in text mode.
+    // Text tool is tool index 2 (toolbarIcons[2].name === 'text').
+    // All single-key shortcuts (b, e, f, s, t, g) should be suppressed so
+    // the character is typed onto the canvas instead.
+    store = createMockStore({
+      toolbarState: createToolbarState({ currentTool: 2 }),
+    })
+    _mockStore = store
+    _mockToolbarStore = createMockToolbarStore({
+      toolbarState: { currentTool: 2 },
+    })
+    await initShortcuts()
+    const spy = vi.spyOn(_mockToolbarStore, 'changeTool')
+    // Test all tool shortcuts — none should fire
+    for (const key of ['b', 'e', 'f', 's', 't', 'g']) {
+      const handler = getHandler(`editor:${key}`)!
+      handler(createEvent({ key }), {})
+    }
+    expect(spy).not.toHaveBeenCalled()
+  })
+
   it('all handlers call preventDefault', async () => {
     await initShortcuts()
     const event = createEvent()

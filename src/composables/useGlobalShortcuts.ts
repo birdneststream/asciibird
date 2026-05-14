@@ -136,6 +136,12 @@ export function useGlobalShortcuts() {
       // handle single-character input)
       if (toolbarStore.toolbarState.isChoosingChar) return;
       if (!store.currentAscii) return;
+      // Suppress when text tool is active — single-key shortcuts (b, e,
+      // f, s, t, g) would interfere with typing characters onto the
+      // canvas. The wildcard handler in Editor.vue routes keypresses
+      // to canvasKeyDown() for character input instead.
+      const currentToolName = toolbarIcons[toolbarStore.currentTool]?.name;
+      if (currentToolName === 'text') return;
       event.preventDefault();
       handler();
     });

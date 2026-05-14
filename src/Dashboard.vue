@@ -159,6 +159,26 @@
       </ul>
     </context-menu>
 
+    <context-menu
+      ref="tabMenu"
+      class="z-50"
+    >
+      <ul>
+        <li
+          @click="editTabFromMenu"
+          class="ab-context-menu-item"
+        >
+          Edit Dimensions
+        </li>
+        <li
+          @click="closeTabFromMenu"
+          class="ab-context-menu-item"
+        >
+          Close Tab
+        </li>
+      </ul>
+    </context-menu>
+
     <span
       @mouseup.right="openContextMenu"
       style="width: 100%; height: 100%; position: absolute; z-index: -1"
@@ -184,6 +204,8 @@
           class="h-9 flex items-center gap-xs px-sm cursor-pointer transition-colors duration-150 min-w-[120px] max-w-[200px] group select-none"
           :class="tabClass(key)"
           @click="changeTab(key)"
+          @mouseup.middle.prevent="closeTab(key)"
+          @contextmenu.prevent="openTabContextMenu($event, key)"
         >
           <span
             class="material-icons text-sm flex-shrink-0"
@@ -412,6 +434,8 @@ useGlobalShortcuts();
 
 // Template refs
 const menu = ref<InstanceType<typeof ContextMenu> | null>(null);
+const tabMenu = ref<InstanceType<typeof ContextMenu> | null>(null);
+const tabMenuTarget = ref<number>(0);
 const asciiInput = ref<HTMLInputElement | null>(null);
 const tabbar = ref<HTMLElement | null>(null);
 
@@ -448,8 +472,13 @@ function onMenuButtonMouseEnter(index: number) {
     document.body.dispatchEvent(
       new MouseEvent('mousedown', { bubbles: true }),
     );
+    // Double nextTick ensures Headless UI processes the close before
+    // we trigger the open. Single nextTick is too early because HUI
+    // needs to update its internal state from the outside-click.
     nextTick(() => {
-      menuButtonRefs.value[index]?.click();
+      nextTick(() => {
+        menuButtonRefs.value[index]?.click();
+      });
     });
   }
 }
@@ -591,6 +620,24 @@ const menuBar = computed<AppMenuBar[]>(() => [
         text: debugPanelState.value.visible ? 'Hide Debug' : 'Show Debug',
         click: () => panelStore.toggleDebugPanel(!debugPanelState.value.visible),
       },
+      {
+        text: 'Zoom In',
+        click: () => store.setBlockMultiplier(store.blockSizeMultiplier + 0.25),
+        disabled: !asciibirdMeta.value.length,
+        shortcut: 'Ctrl+=',
+      },
+      {
+        text: 'Zoom Out',
+        click: () => store.setBlockMultiplier(store.blockSizeMultiplier - 0.25),
+        disabled: !asciibirdMeta.value.length,
+        shortcut: 'Ctrl+-',
+      },
+      {
+        text: 'Reset Zoom',
+        click: () => store.setBlockMultiplier(1),
+        disabled: !asciibirdMeta.value.length,
+        shortcut: 'Ctrl+0',
+      },
     ],
   },
   {
@@ -654,6 +701,25 @@ function tabClass(key: number) {
 function openContextMenu(e: MouseEvent) {
   e.preventDefault();
   menu.value?.open({ clientX: e.clientX, clientY: e.clientY });
+}
+
+function openTabContextMenu(e: MouseEvent, key: number) {
+  tabMenuTarget.value = key;
+  tabMenu.value?.open({ clientX: e.clientX, clientY: e.clientY });
+}
+
+function editTabFromMenu() {
+  tabMenu.value?.close();
+  const key = tabMenuTarget.value;
+  if (asciibirdMeta.value[key]) {
+    changeTab(key);
+    modalStore.openModal('edit-ascii');
+  }
+}
+
+function closeTabFromMenu() {
+  tabMenu.value?.close();
+  closeTab(tabMenuTarget.value);
 }
 
 function updateCoords(value: { x: number; y: number }) {

@@ -2,8 +2,8 @@
   <div>
     <div
       ref="panelEl"
-      :style="panelStyle"
-      class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-48 z-40"
+      class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-48"
+      :style="[panelStyle, { zIndex: panelStore.panelZIndex('debugPanel') }]"
     >
       <PanelHeader
         ref="handleRef"
@@ -99,6 +99,7 @@ const { style: panelStyle, x: dragX, y: dragY } = usePanelDraggable(panelEl, {
     y: panelStore.debugPanel.y,
   },
   handle: computed(() => handleRef.value?.headerEl ?? null),
+  onBringToFront: () => panelStore.bringToFront('debugPanel'),
 });
 
 // Sync drag position back to store for persistence

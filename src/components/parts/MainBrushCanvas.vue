@@ -77,6 +77,7 @@ import { useToolbarStore } from '../../store/toolbar'
 import { useToast } from '../../composables/useToast'
 import { useExportAscii } from '../../composables/useExportAscii'
 import { useFpsThrottle } from '../../composables/useFpsThrottle'
+import { getCanvasFont } from '../../utils/canvasFont'
 
 // ─── Composables ────────────────────────────────────────
 const store = useAsciiBirdStore()
@@ -101,9 +102,10 @@ const x = ref(0)
 const y = ref(0)
 
 // ─── FPS-Throttled Redraw ─────────────────────────────────
-let drawPreviewFn: () => void = () => {}
+// drawPreview is a hoisted function declaration — safe to reference
+// directly before the definition appears in source order.
 const { scheduleRedraw: delayRedrawCanvas } = useFpsThrottle(
-  () => drawPreviewFn(),
+  drawPreview,
   () => store.options.fps,
 )
 
@@ -227,13 +229,12 @@ function drawGrid() {
 }
 
  function drawPreview() {
-  drawPreviewFn = drawPreview
-   if (!canvasRef.value || !ctx.value) return
+    if (!canvasRef.value || !ctx.value) return
 
   const c = ctx.value
   c.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
   c.fillStyle = mircColours99[1]
-  c.font = '13px Hack'
+  c.font = getCanvasFont(store.blockSizeMultiplier)
 
   const blocks = brushBlocks.value
   if (!blocks) return

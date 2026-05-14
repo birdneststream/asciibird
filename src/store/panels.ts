@@ -54,8 +54,15 @@ export type PanelStates = ReturnType<typeof initialPanelStates>;
 
 export type PanelKey = keyof PanelStates;
 
+interface PanelStoreState extends PanelStates {
+  /** Ephemeral z-index counter — NOT persisted */
+  zCounter: number;
+  /** Ephemeral z-index map per panel — NOT persisted */
+  zIndices: Record<string, number>;
+}
+
 export const usePanelStore = defineStore('panel', {
-  state: (): PanelStates => {
+  state: (): PanelStoreState => {
     const defaults = initialPanelStates();
     // Ensure backward compat: if persisted state is missing `minimized`,
     // fill it in with false. This handles migration from pre-taskbar builds.
@@ -64,7 +71,14 @@ export const usePanelStore = defineStore('panel', {
         (defaults[key] as PanelState).minimized = false;
       }
     }
-    return defaults;
+    return { ...defaults, zCounter: 100, zIndices: {} };
+  },
+
+  getters: {
+    /** Get the current z-index for a panel (default 100) */
+    panelZIndex: (state) => (key: string): number => {
+      return state.zIndices[key] ?? 100;
+    },
   },
 
   actions: {
@@ -130,10 +144,18 @@ export const usePanelStore = defineStore('panel', {
         panel.minimized = false;
       }
     },
+
+    /** Bring a panel to the front of the z-index stack */
+    bringToFront(key: string) {
+      this.zCounter++;
+      this.zIndices[key] = this.zCounter;
+    },
   },
 
   persist: {
     key: 'asciibird-panel',
     storage: localStorage,
+    // Ephemeral z-index state is meaningless across sessions
+    omit: ['zCounter', 'zIndices'],
   },
 });
