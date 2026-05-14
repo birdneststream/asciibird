@@ -279,6 +279,7 @@ export function createMockToolbarStore(
       toolbarState.draggable = val
     },
     flipRotateBlocks() {},
+    transformBrush() {},
     pushBrushHistory(blocks: any) {
       const hash = cyrb53(JSON.stringify(blocks))
       if (!tState.brushHistory.some((b: any) => b.hash === hash)) {

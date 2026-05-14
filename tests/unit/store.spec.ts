@@ -951,7 +951,7 @@ describe('Pinia Store Actions', () => {
       expect(toolbarStore.toolbarState.updateBrush).toBe(false);
     });
 
-    it('flipRotateBlocks flips brush blocks', () => {
+    it('transformBrush flips brush blocks vertically', () => {
       const blocks: Block[][] = [
         [{ fg: 1, bg: 0, char: 'A' }],
         [{ fg: 2, bg: 0, char: 'B' }],
@@ -959,7 +959,7 @@ describe('Pinia Store Actions', () => {
       toolbarStore._brushBlocks = LZString.compressToUTF16(
         JSON.stringify(blocks),
       );
-      toolbarStore.flipRotateBlocks({ type: 'flip' });
+      toolbarStore.transformBrush({ type: 'flip-v' });
       const flipped = JSON.parse(
         LZString.decompressFromUTF16(toolbarStore._brushBlocks),
       );
@@ -967,19 +967,60 @@ describe('Pinia Store Actions', () => {
       expect(flipped[1][0].char).toBe('A');
     });
 
-    it('flipRotateBlocks rotates brush blocks', () => {
+    it('transformBrush flips brush blocks horizontally', () => {
       const blocks: Block[][] = [
         [{ fg: 1, bg: 0, char: 'A' }, { fg: 2, bg: 0, char: 'B' }],
       ];
       toolbarStore._brushBlocks = LZString.compressToUTF16(
         JSON.stringify(blocks),
       );
-      toolbarStore.flipRotateBlocks({ type: 'rotate' });
+      toolbarStore.transformBrush({ type: 'flip-h' });
       const rotated = JSON.parse(
         LZString.decompressFromUTF16(toolbarStore._brushBlocks),
       );
       expect(rotated[0][0].char).toBe('B');
       expect(rotated[0][1].char).toBe('A');
+    });
+
+    it('transformBrush rotates brush blocks 90° CW', () => {
+      const blocks: Block[][] = [
+        [{ fg: 1, bg: 0, char: 'A' }, { fg: 2, bg: 0, char: 'B' }],
+        [{ fg: 3, bg: 0, char: 'C' }, { fg: 4, bg: 0, char: 'D' }],
+      ];
+      toolbarStore._brushBlocks = LZString.compressToUTF16(
+        JSON.stringify(blocks),
+      );
+      toolbarStore.transformBrush({ type: 'rotate-cw' });
+      const rotated = JSON.parse(
+        LZString.decompressFromUTF16(toolbarStore._brushBlocks),
+      );
+      expect(rotated[0][0].char).toBe('C');
+      expect(rotated[0][1].char).toBe('A');
+      expect(rotated[1][0].char).toBe('D');
+      expect(rotated[1][1].char).toBe('B');
+    });
+
+    it('transformBrush does nothing on empty brush', () => {
+      toolbarStore._brushBlocks = '';
+      toolbarStore.transformBrush({ type: 'flip-h' });
+      expect(toolbarStore._brushBlocks).toBe('');
+    });
+
+    it('flipRotateBlocks backward compat maps to transformBrush', () => {
+      const blocks: Block[][] = [
+        [{ fg: 1, bg: 0, char: 'A' }],
+        [{ fg: 2, bg: 0, char: 'B' }],
+      ];
+      toolbarStore._brushBlocks = LZString.compressToUTF16(
+        JSON.stringify(blocks),
+      );
+      // Old API: 'flip' maps to 'flip-v'
+      toolbarStore.flipRotateBlocks({ type: 'flip' });
+      const flipped = JSON.parse(
+        LZString.decompressFromUTF16(toolbarStore._brushBlocks),
+      );
+      expect(flipped[0][0].char).toBe('B');
+      expect(flipped[1][0].char).toBe('A');
     });
   });
 

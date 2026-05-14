@@ -5,9 +5,11 @@
  * and allow independent persistence.
  */
 import { defineStore } from 'pinia';
-import { cyrb53, getBlocksWidth } from '../ascii';
+import { cyrb53 } from '../ascii';
 import { compressData, decompressData } from '../utils/layers';
 import { idbPersistAdapter } from '../utils/idbPersistAdapter';
+import { transformBlocks } from '../utils/transformBlocks';
+import type { TransformType } from '../utils/transformBlocks';
 import { useAsciiBirdStore } from './index';
 import type {
   Block,
@@ -155,35 +157,29 @@ export const useToolbarStore = defineStore('toolbar', {
     toggleUpdateBrush(payload: boolean) {
       this.toolbarState.updateBrush = payload;
     },
+    /**
+     * Transform the current brush blocks (flip or rotate).
+     * Uses the generic transformBlocks utility.
+     */
+    transformBrush(payload: { type: TransformType }) {
+      const blocks = decompressData<Block[][]>(this._brushBlocks);
+      if (!blocks || !blocks.length) return;
+      const result = transformBlocks(blocks, payload.type);
+      this._brushBlocks = compressData(result);
+    },
+
+    /**
+     * @deprecated Use transformBrush({ type: 'flip-v' }) instead.
+     * Kept for backward compatibility during transition.
+     */
     flipRotateBlocks(payload: { type: string }) {
-      let tempBlocks: Block[][] | null = decompressData(this._brushBlocks);
-      if (!tempBlocks || !tempBlocks.length) return;
-      const parsedBlocks: Block[][] = [];
-
-      switch (payload.type) {
-        case 'flip':
-          tempBlocks = tempBlocks.reverse();
-          for (let y = 0; y < tempBlocks.length; y++) {
-            parsedBlocks[y] = tempBlocks[y];
-
-            for (let x = 0; x < getBlocksWidth(tempBlocks); x++) {
-              parsedBlocks[y][x] = tempBlocks[y][x];
-            }
-          }
-          break;
-
-        case 'rotate':
-          for (let y = 0; y < tempBlocks.length; y++) {
-            parsedBlocks[y] = tempBlocks[y].reverse();
-
-            for (let x = 0; x < getBlocksWidth(tempBlocks); x++) {
-              parsedBlocks[y][x] = tempBlocks[y][x];
-            }
-          }
-          break;
-      }
-
-      this._brushBlocks = compressData(parsedBlocks);
+      // Map old type names to new TransformType
+      const typeMap: Record<string, TransformType> = {
+        flip: 'flip-v',
+        rotate: 'flip-h',
+      };
+      const type = typeMap[payload.type] || (payload.type as TransformType);
+      this.transformBrush({ type });
     },
 
     // Brush Library

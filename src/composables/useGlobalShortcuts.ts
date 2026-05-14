@@ -135,7 +135,7 @@ export function useGlobalShortcuts() {
       // When brush or eraser tool is active, E rotates the brush
       const toolName = toolbarIcons[toolbarStore.currentTool]?.name;
       if (toolName === 'brush' || toolName === 'eraser') {
-        toolbarStore.flipRotateBlocks({ type: 'rotate' });
+        toolbarStore.transformBrush({ type: 'flip-h' });
       } else {
         toolbarStore.changeTool(6); // eraser
       }
@@ -144,7 +144,7 @@ export function useGlobalShortcuts() {
       // When brush or eraser tool is active, Q flips the brush
       const toolName = toolbarIcons[toolbarStore.currentTool]?.name;
       if (toolName === 'brush' || toolName === 'eraser') {
-        toolbarStore.flipRotateBlocks({ type: 'flip' });
+        toolbarStore.transformBrush({ type: 'flip-v' });
       }
     },
     'f': () => toolbarStore.changeTool(3),  // fill
