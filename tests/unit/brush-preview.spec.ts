@@ -86,12 +86,15 @@ describe('BrushPreview.vue', () => {
   })
 
   describe('computed properties', () => {
-    it('brushOptions returns 7 brush types', () => {
+    it('brushOptions returns 18 brush type labels', () => {
       const wrapper = mountBrushPreview()
-      expect(wrapper.vm.brushOptions).toEqual([
-        'Square', 'Circle', 'Cross', 'Grid',
-        'Inverted Grid', 'H lines', 'V lines',
-      ])
+      expect(wrapper.vm.brushOptions).toHaveLength(18)
+      expect(wrapper.vm.brushOptions).toContain('Square')
+      expect(wrapper.vm.brushOptions).toContain('Circle')
+      expect(wrapper.vm.brushOptions).toContain('Cross')
+      expect(wrapper.vm.brushOptions).toContain('Diamond')
+      expect(wrapper.vm.brushOptions).toContain('Star')
+      expect(wrapper.vm.brushOptions).toContain('Checkerboard')
     })
 
     it('canFg reads from store', () => {
@@ -321,16 +324,8 @@ describe('BrushPreview.vue', () => {
     })
   })
 
-  describe('fillTool', () => {
-    it('fills blocks within circle', () => {
-      store = createMockStore({
-        toolbarState: createToolbarState({
-          brushSizeWidth: 5,
-          brushSizeHeight: 5,
-          brushSizeType: 'circle',
-        }),
-      })
-      _mockStore = store
+  describe('circle brush via registry', () => {
+    it('fills blocks within circle at center', () => {
       _mockToolbarStore = createMockToolbarStore({
         toolbarState: {
           brushSizeWidth: 5,
@@ -347,53 +342,21 @@ describe('BrushPreview.vue', () => {
       expect(blocks[midY][midX].bg).toBe(wrapper.vm.currentBg)
     })
 
-    it('respects boundary: returns when y >= brushSizeHeight', () => {
+    it('circle corners are empty at size 7', () => {
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: {
+          brushSizeWidth: 7,
+          brushSizeHeight: 7,
+          brushSizeType: 'circle',
+        },
+      })
       const wrapper = mountBrushPreview()
-      wrapper.vm.brushSizeWidthInput = 3
-      wrapper.vm.brushSizeHeightInput = 3
-      wrapper.vm.updateBrushSize()
+      wrapper.vm.createBlocks()
 
-      wrapper.vm.blocks = [
-        [{ ...emptyBlock }, { ...emptyBlock }, { ...emptyBlock }],
-        [{ ...emptyBlock }, { ...emptyBlock }, { ...emptyBlock }],
-        [{ ...emptyBlock }, { ...emptyBlock }, { ...emptyBlock }],
-      ]
-
-      const before = JSON.stringify(wrapper.vm.blocks)
-      wrapper.vm.fillTool(10, 1)
-      const after = JSON.stringify(wrapper.vm.blocks)
-      expect(before).toBe(after)
-    })
-
-    it('respects boundary: returns when x >= brushSizeWidth', () => {
-      const wrapper = mountBrushPreview()
-      wrapper.vm.brushSizeWidthInput = 3
-      wrapper.vm.brushSizeHeightInput = 3
-      wrapper.vm.updateBrushSize()
-
-      wrapper.vm.blocks = [
-        [{ ...emptyBlock }, { ...emptyBlock }, { ...emptyBlock }],
-        [{ ...emptyBlock }, { ...emptyBlock }, { ...emptyBlock }],
-        [{ ...emptyBlock }, { ...emptyBlock }, { ...emptyBlock }],
-      ]
-
-      const before = JSON.stringify(wrapper.vm.blocks)
-      wrapper.vm.fillTool(1, 10)
-      const after = JSON.stringify(wrapper.vm.blocks)
-      expect(before).toBe(after)
-    })
-
-    it('respects boundary: returns when blocks[y] is undefined', () => {
-      const wrapper = mountBrushPreview()
-      wrapper.vm.brushSizeWidthInput = 3
-      wrapper.vm.brushSizeHeightInput = 3
-      wrapper.vm.updateBrushSize()
-
-      wrapper.vm.blocks = [[{ ...emptyBlock }]]
-      const before = JSON.stringify(wrapper.vm.blocks)
-      wrapper.vm.fillTool(1, 0)
-      const after = JSON.stringify(wrapper.vm.blocks)
-      expect(before).toBe(after)
+      const blocks = wrapper.vm.blocks
+      // Corners should be empty
+      expect(blocks[0][0].fg).toBeUndefined()
+      expect(blocks[0][6].fg).toBeUndefined()
     })
   })
 
