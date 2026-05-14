@@ -88,18 +88,17 @@ class IdbPersistAdapter implements StorageLike {
       // Probe IDB availability and load ALL existing entries
       const allEntries = await entries(customStore);
 
-      let hasIdbData = false;
       for (const [key, value] of allEntries) {
         if (typeof key === 'string' && typeof value === 'string') {
           this.cache.set(key, value);
-          if (PERSISTED_KEYS.includes(key)) hasIdbData = true;
         }
       }
 
-      // Migrate localStorage → IDB if IDB is empty for our keys
-      if (!hasIdbData) {
-        await this.migrateFromLocalStorage();
-      }
+      // Per-key migration: migrate any PERSISTED_KEYS that are in
+      // localStorage but not yet in IDB. This handles the case where
+      // some keys were migrated previously (e.g. 'vuex') while others
+      // still only exist in localStorage (e.g. 'asciibird-panel').
+      await this.migrateFromLocalStorage();
 
       // Set schema version (stored in IDB but not in cache — it's
       // metadata, not store data)
@@ -127,6 +126,8 @@ class IdbPersistAdapter implements StorageLike {
     const migratedEntries: [string, string][] = [];
 
     for (const key of PERSISTED_KEYS) {
+      // Skip keys already present in IDB (loaded into cache in init)
+      if (this.cache.has(key)) continue;
       const lsValue = localStorage.getItem(key);
       if (lsValue !== null) {
         this.cache.set(key, lsValue);

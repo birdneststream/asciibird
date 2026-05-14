@@ -84,17 +84,45 @@ describe('idbPersistAdapter', () => {
         .toBe('{"ver":1,"options":{}}');
     });
 
-    it('skips migration when IDB already has data', async () => {
-      // Pre-populate IDB
+    it('prefers IDB data over localStorage for keys in both', async () => {
+      // Pre-populate IDB with 'vuex'
       const { set: idbSet } = await import('idb-keyval');
       await idbSet('vuex', '{"from":"idb"}', customStore);
 
-      // Also set localStorage — should NOT be used since IDB has data
+      // Also set localStorage — should NOT override IDB data
       localStorage.setItem('vuex', '{"from":"localstorage"}');
 
       await idbPersistAdapter.init();
 
       expect(idbPersistAdapter.getItem('vuex')).toBe('{"from":"idb"}');
+    });
+
+    it('migrates missing keys from localStorage even when other keys are in IDB', async () => {
+      // Simulate existing user: 'vuex' already in IDB but
+      // 'asciibird-toolbar' only in localStorage
+      const { set: idbSet } = await import('idb-keyval');
+      await idbSet('vuex', '{"from":"idb"}', customStore);
+      localStorage.setItem(
+        'asciibird-toolbar',
+        '{"tool":"brush"}',
+      );
+
+      await idbPersistAdapter.init();
+
+      // IDB data preserved (not overwritten by LS)
+      expect(idbPersistAdapter.getItem('vuex'))
+        .toBe('{"from":"idb"}');
+      // LS data migrated to cache (and will be flushed to IDB)
+      expect(idbPersistAdapter.getItem('asciibird-toolbar'))
+        .toBe('{"tool":"brush"}');
+
+      // Verify the migrated data is written to IDB
+      await idbPersistAdapter.flush();
+      const { get: idbGet } = await import('idb-keyval');
+      const toolbar = await idbGet<string>(
+        'asciibird-toolbar', customStore,
+      );
+      expect(toolbar).toBe('{"tool":"brush"}');
     });
 
     it('extracts toolbar data from legacy Vuex store', async () => {
