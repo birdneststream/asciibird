@@ -58,6 +58,14 @@
               Flip Vertical
               <span class="ab-shortcut">Ctrl+Shift+X</span>
             </li>
+            <li class="ab-context-menu-separator" />
+            <li
+              @click="contextMenuReplaceColor()"
+              class="ab-context-menu-item"
+            >
+              Replace Color in Selection
+              <span class="ab-shortcut">R</span>
+            </li>
           </template>
         </ul>
       </context-menu>
@@ -748,9 +756,25 @@ function canvasToPng() {
   }
 }
 
-function openContextMenu(e: MouseEvent) {
+ function openContextMenu(e: MouseEvent) {
   e.preventDefault();
   editorMenu.value?.open({ clientX: e.clientX, clientY: e.clientY });
+ }
+
+/**
+ * Context menu "Replace Color in Selection" handler.
+ * Uses the block under cursor as source, current FG/BG as target,
+ * scoped to the current selection bounds.
+ */
+function contextMenuReplaceColor() {
+  const block = asciiBlockAtXy.value;
+  if (!block) return;
+  const bounds = getSelectionBounds();
+  if (bounds) {
+    contextMenuReplace(block, bounds);
+  } else {
+    contextMenuReplace(block);
+  }
 }
 
 async function canvasKeyDown(char: string) {
