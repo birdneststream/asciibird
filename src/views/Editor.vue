@@ -173,6 +173,7 @@ import { useFpsThrottle } from '../composables/useFpsThrottle';
 import { useSelectionTransform } from '../composables/useSelectionTransform';
 import { useColorReplace } from '../composables/useColorReplace';
 import { useGradientTool } from '../composables/useGradientTool';
+import { useShapeTool } from '../composables/useShapeTool';
 import { useMatchHighlight } from '../composables/useMatchHighlight';
 import hotkeys from 'hotkeys-js';
 
@@ -203,6 +204,7 @@ import { getMirrorPositions, applyMirrored, applyMirroredHalfBlock } from '../ut
 import { bresenhamLine } from '../utils/bresenham';
 import { storeDiffBlocks as storeDiffBlockFn } from '../utils/diffBlocks';
 import { getCanvasFont } from '../utils/canvasFont';
+import { drawShapePreview } from '../utils/shapePreview';
 import { HalfBlockGrid } from '../utils/halfBlockGrid';
 import type { DiffBlocks } from '../utils/diffBlocks';
 import type { Block } from '../types';
@@ -398,6 +400,18 @@ const {
   recordDiff,
 });
 
+// ─── Shape Tool ──────────────────────────────────────────────────
+const {
+  shapeStart,
+  isShapePicking,
+  setShapeStart,
+  applyShape,
+  cancelShape,
+} = useShapeTool({
+  currentAsciiLayerBlocks,
+  recordDiff,
+});
+
 // ─── Selection Transform ─────────────────────────────────────────
 // useSelectionTransform provides rotate/flip operations on the
 // selected area. It references hoisted function declarations.
@@ -574,6 +588,11 @@ watch(currentTool, async () => {
       toolbarStore.changeTool(0);
       return;
     }
+    if (currentTool.value.name === 'shapes') {
+      toastShow('Shape tools are not available in half-block editing mode');
+      toolbarStore.changeTool(0);
+      return;
+    }
   }
 
   switch (currentTool.value.name) {
@@ -726,6 +745,13 @@ hotkeys('*', 'editor', async function (event) {
   // Escape: cancel gradient pick state
   if (event.key === 'Escape' && isGradientPicking.value) {
     cancelGradient();
+    await clearToolCanvas();
+    return;
+  }
+
+  // Escape: cancel shape pick state
+  if (event.key === 'Escape' && isShapePicking.value) {
+    cancelShape();
     await clearToolCanvas();
     return;
   }
@@ -1425,6 +1451,25 @@ async function canvasMouseDown() {
           await delayRedrawCanvas(true);
         }
         break;
+
+      case 'shapes':
+        if (toolbarState.value.halfBlockEditing) {
+          toastShow('Shape tools are not available in half-block mode', {
+            type: 'error',
+          });
+          break;
+        }
+        if (!isShapePicking.value) {
+          // Click 1: set start point
+          setShapeStart(x.value, y.value);
+        } else {
+          // Click 2: apply shape from start to current position
+          applyShape(x.value, y.value, currentAsciiLayerBlocks.value);
+          canTool.value = false;
+          await dispatchBlocks(true);
+          await delayRedrawCanvas(true);
+        }
+        break;
     }
   }
 }
@@ -1594,6 +1639,25 @@ async function canvasMouseMove(e: MouseEvent) {
           toolCtx.fillRect(sx, sy, bw, bh);
           toolCtx.fillStyle = mircColours99[toolbarStore.currentBg];
           toolCtx.fillRect(canvasX.value, canvasY.value, bw, bh);
+        }
+        break;
+
+      case 'shapes':
+        await clearToolCanvas();
+        await drawIndicator();
+        // Show shape preview from start point to cursor
+        if (isShapePicking.value && shapeStart.value && toolCtx) {
+          drawShapePreview({
+            ctx: toolCtx,
+            shapeType: toolbarStore.toolbarState.shapeType,
+            startX: shapeStart.value.x,
+            startY: shapeStart.value.y,
+            endX: x.value,
+            endY: y.value,
+            blockWidth: blockWidthComp.value,
+            blockHeight: blockHeightComp.value,
+            strokeColor: mircColours99[toolbarStore.currentFg],
+          });
         }
         break;
     }
