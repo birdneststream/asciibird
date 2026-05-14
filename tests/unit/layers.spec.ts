@@ -225,26 +225,28 @@ describe('Layers.vue', () => {
     )
   })
 
-  it('selectedLayerClass returns bg-error-container/30 for invisible layer',
+  it('layerItemClass returns error styles for selected invisible layer',
     () => {
       store.toggleLayer(0)
       const wrapper = createWrapper()
-      expect(wrapper.vm.selectedLayerClass(0)).toBe('bg-error-container/30')
+      expect(wrapper.vm.layerItemClass(0)).toContain('bg-error-container/30')
+      expect(wrapper.vm.layerItemClass(0)).toContain('border-l-2 border-error')
 
   })
 
-  it('selectedLayerClass returns bg-primary-container/30 for selected layer',
+  it('layerItemClass returns primary styles for selected visible layer',
     () => {
       const wrapper = createWrapper()
-      expect(wrapper.vm.selectedLayerClass(0)).toBe('bg-primary-container/30')
+      expect(wrapper.vm.layerItemClass(0)).toContain('bg-primary-container/30')
+      expect(wrapper.vm.layerItemClass(0)).toContain('border-l-2 border-primary')
     })
 
-  it('selectedLayerClass returns empty string for unselected visible',
+  it('layerItemClass returns hover style for unselected visible layer',
     () => {
       store.addLayer()
       store.changeLayer(0)
       const wrapper = createWrapper()
-      expect(wrapper.vm.selectedLayerClass(1)).toBe('')
+      expect(wrapper.vm.layerItemClass(1)).toBe('hover:bg-surface-variant/30')
     })
 
   it('selectBestLayer toggles first layer when all invisible', () => {
