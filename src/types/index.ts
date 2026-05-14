@@ -221,3 +221,32 @@ export interface AppMenuItem {
   disabled?: boolean;
   shortcut?: string;
 }
+
+// ─── Find and Replace ──────────────────────────────────────────
+
+/** Search criteria for find/replace operations */
+export interface FindCriteria {
+  char?: string;
+  fg?: number;
+  bg?: number;
+  useRegex?: boolean;
+}
+
+/** A single match position on the canvas */
+export interface MatchPosition {
+  x: number;
+  y: number;
+}
+
+/** Replacement specification for find/replace */
+export interface ReplaceSpec {
+  char?: string;
+  fg?: number;
+  bg?: number;
+}
+
+/** Error result from find/replace when regex is invalid */
+export interface FindError {
+  message: string;
+  pattern: string;
+}
