@@ -70,6 +70,21 @@
       >
         Zoom: {{ zoomPercent }}%
       </span>
+      <template v-if="ircLevel !== 'none'">
+        <span class="text-outline-variant">|</span>
+        <span
+          class="font-label-mono text-body-sm flex items-center gap-0.5"
+          :class="ircLevel === 'error' ? 'text-error' : 'text-secondary'"
+          :title="ircTooltip"
+        >
+          <span
+            class="material-icons"
+            style="font-size: 14px"
+            aria-hidden="true"
+          >warning</span>
+          {{ ircLevel === 'error' ? 'Lines exceed IRC limits' : 'Lines may exceed IRC limits' }}
+        </span>
+      </template>
     </div>
     <div class="flex items-center gap-sm">
       <span
@@ -145,6 +160,9 @@ const props = defineProps<{
   layerLabel: string | null;
   layerIndex: number;
   layerCount: number;
+  ircWarningLevel?: 'none' | 'warn' | 'error';
+  ircMaxBytes?: number;
+  ircOverLimitLines?: number[];
 }>();
 
 const coordsX = computed(() => props.canvasX ?? '-');
@@ -184,6 +202,17 @@ const layerInfo = computed(() => {
 
 const zoomPercent = computed(() => {
   return Math.round(store.blockSizeMultiplier * 100);
+});
+
+const ircLevel = computed(() => props.ircWarningLevel ?? 'none');
+
+const ircTooltip = computed(() => {
+  const max = props.ircMaxBytes ?? 0;
+  const lines = props.ircOverLimitLines ?? [];
+  if (lines.length > 0) {
+    return `Max ${max} bytes — lines ${lines.join(', ')} exceed IRC limits`;
+  }
+  return `Max ${max} bytes — approaching IRC line limits`;
 });
 
 /** Style class for task bar button based on panel state */

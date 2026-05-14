@@ -34,6 +34,9 @@ import {
   splashAscii,
   downloadFile,
   canvasToPng,
+  calculateMircLineBytes,
+  IRC_WARN_THRESHOLD,
+  IRC_ERROR_THRESHOLD,
 } from '@/ascii';
 import type { Block, Layer } from '@/types';
 import type { AsciiStoreAccess, ModalStoreAccess } from '@/types/store';
@@ -2371,5 +2374,93 @@ describe('iterativeFillHalfBlock', () => {
     // Fill from row 0 top half — should not crash
     const changes = iterativeFillHalfBlock(grid, 0, 0, 5);
     expect(changes.length).toBeGreaterThan(0);
+  });
+});
+
+// ─── calculateMircLineBytes ──────────────────────────────────
+
+describe('calculateMircLineBytes', () => {
+  it('returns empty result for empty blocks array', () => {
+    const result = calculateMircLineBytes([]);
+    expect(result.lineByteLengths).toEqual([]);
+    expect(result.overLimitLines).toEqual([]);
+    expect(result.maxBytes).toBe(0);
+  });
+
+  it('calculates bytes for a single empty block row', () => {
+    // One row with one empty block — char ' ' = 1 byte
+    const blocks: Block[][] = [[{}]];
+    const result = calculateMircLineBytes(blocks);
+    expect(result.lineByteLengths).toHaveLength(1);
+    expect(result.maxBytes).toBeGreaterThan(0);
+  });
+
+  it('calculates bytes for single-colored row', () => {
+    // 5 blocks with same fg/bg — one color code then 5 chars
+    const blocks: Block[][] = [
+      Array.from({ length: 5 }, () => ({ fg: 5, bg: 1, char: 'A' })),
+    ];
+    const result = calculateMircLineBytes(blocks);
+    expect(result.lineByteLengths).toHaveLength(1);
+    // Color code: \x03 + fg(1) + , + bg(1) = 4 bytes, then 5 chars = 9
+    expect(result.maxBytes).toBe(9);
+  });
+
+  it('detects over-limit lines', () => {
+    // Create a wide row that will exceed IRC limits
+    // Each block with alternating colors adds ~5 bytes of codes
+    const width = 100;
+    const blocks: Block[][] = [
+      Array.from({ length: width }, (_, i) => ({
+        fg: i % 99,
+        bg: (i + 1) % 99,
+        char: '█',
+      })),
+    ];
+    const result = calculateMircLineBytes(blocks);
+    expect(result.lineByteLengths).toHaveLength(1);
+    // With alternating colors, each block needs its own color code
+    expect(result.maxBytes).toBeGreaterThan(IRC_ERROR_THRESHOLD);
+    expect(result.overLimitLines).toContain(0);
+  });
+
+  it('handles multiple rows independently', () => {
+    const blocks: Block[][] = [
+      [{ fg: 0, bg: 0, char: 'A' }],
+      [{ fg: 1, bg: 1, char: 'B' }],
+    ];
+    const result = calculateMircLineBytes(blocks);
+    expect(result.lineByteLengths).toHaveLength(2);
+  });
+
+  it('optimizes when consecutive blocks share colors', () => {
+    // Same colors: 1 color code + 3 chars
+    const sameColors: Block[][] = [
+      [
+        { fg: 5, bg: 1, char: 'A' },
+        { fg: 5, bg: 1, char: 'B' },
+        { fg: 5, bg: 1, char: 'C' },
+      ],
+    ];
+    // Different colors: 3 color codes + 3 chars
+    const diffColors: Block[][] = [
+      [
+        { fg: 1, bg: 1, char: 'A' },
+        { fg: 2, bg: 2, char: 'B' },
+        { fg: 3, bg: 3, char: 'C' },
+      ],
+    ];
+    const sameResult = calculateMircLineBytes(sameColors);
+    const diffResult = calculateMircLineBytes(diffColors);
+    // Same colors should produce fewer bytes
+    expect(sameResult.maxBytes).toBeLessThan(diffResult.maxBytes);
+  });
+
+  it('handles multi-byte characters', () => {
+    const blocks: Block[][] = [
+      [{ fg: 0, bg: 0, char: '█' }], // 3 bytes in UTF-8
+    ];
+    const result = calculateMircLineBytes(blocks);
+    expect(result.lineByteLengths[0]).toBeGreaterThan(1);
   });
 });

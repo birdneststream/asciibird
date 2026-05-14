@@ -368,6 +368,9 @@
         :layer-label="currentSelectedLayer?.label ?? null"
         :layer-index="selectedLayerIndex"
         :layer-count="currentAsciiLayers.length"
+        :irc-warning-level="ircWarning.level"
+        :irc-max-bytes="ircWarning.maxBytes"
+        :irc-over-limit-lines="ircWarning.overLimitLines"
       />
     </template>
   </div>
@@ -427,6 +430,7 @@ import { useDialog } from './composables/useDialog';
 import { useExportAscii } from './composables/useExportAscii';
 import { useGlobalShortcuts } from './composables/useGlobalShortcuts';
 import { useInlineRename } from './composables/useInlineRename';
+import { useIrcLineWarning } from './composables/useIrcLineWarning';
 import type { Block, AppMenuBar } from './types';
 
 defineOptions({ name: 'Dashboard' });
@@ -439,6 +443,9 @@ const toolbarStore = useToolbarStore();
 const { messages: toasts, show: toastShow } = useToast();
 const { state: dialogState, confirm: dialogConfirm, prompt: dialogPrompt, ok: dialogOk, cancel: dialogCancel } = useDialog();
 const { startExport } = useExportAscii({ checkLimits: true });
+
+// IRC line length warning (debounced)
+const { ircWarning } = useIrcLineWarning();
 
 // Register global keyboard shortcuts (menu + tool shortcuts)
 useGlobalShortcuts();
