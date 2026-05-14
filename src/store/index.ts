@@ -96,7 +96,9 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       this.updateDocumentTitle();
     },
     updateImageOverlay(payload: AsciibirdMeta['imageOverlay']) {
-      this.asciibirdMeta[this.tab].imageOverlay = payload;
+      const meta = this.asciibirdMeta[this.tab];
+      if (!meta) return;
+      meta.imageOverlay = payload;
     },
     changeAsciiWidthHeight(payload: { layers: Layer[] }) {
       this.asciibirdMeta[this.tab].layers =
@@ -292,6 +294,15 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         : 'asciibird';
     },
 
+    /** Clamp historyIndex to valid range */
+    clampHistoryIndex() {
+      const meta = this.asciibirdMeta[this.tab];
+      if (!meta) return;
+      if (meta.historyIndex > meta.history.length) {
+        meta.historyIndex = meta.history.length;
+      }
+    },
+
     /**
      * Push a compressed HistoryDiff onto the undo stack.
      * Handles: undo limit enforcement, future history trimming,
@@ -315,22 +326,10 @@ export const useAsciiBirdStore = defineStore('asciibird', {
 
     /**
      * Push a legacy block diff (no layer index) onto the undo stack.
-     * Same as pushHistoryDiff but for the legacy BlockDiff format.
+     * Delegates to pushHistoryDiff for consistent behavior.
      */
     pushLegacyDiff(diff: { new: BlockDiff[]; old: BlockDiff[] }): void {
-      const meta = this.asciibirdMeta[this.tab];
-      if (!meta) return;
-
-      if (meta.history.length >= this.options.undoLimit) {
-        meta.history.shift();
-      }
-
-      if (meta.history.length !== meta.historyIndex) {
-        meta.history.splice(meta.historyIndex);
-      }
-
-      meta.history.push(compressData(diff));
-      meta.historyIndex = meta.history.length;
+      this.pushHistoryDiff(diff);
     },
 
     /**
@@ -454,22 +453,23 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       this.asciibirdMeta[this.tab].selectedLayer = payload;
     },
     toggleLayer(payload: number) {
-      const wasVisible = decompressLayers(
+      const layers = decompressLayers(
         this.asciibirdMeta[this.tab].layers,
-      )[payload].visible;
+      );
+      const wasVisible = layers[payload]?.visible ?? false;
       const wasSelectedLayer =
         payload === this.asciibirdMeta[this.tab].selectedLayer;
 
       this.withLayerMutation(
-        (layers) => {
-          layers[payload].visible = !layers[payload].visible;
+        (mutLayers) => {
+          mutLayers[payload].visible = !mutLayers[payload].visible;
         },
         () => {
           if (wasVisible && wasSelectedLayer) {
-            const layers = decompressLayers(
+            const currentLayers = decompressLayers(
               this.asciibirdMeta[this.tab].layers,
             );
-            const next = findNextVisibleLayer(layers, payload);
+            const next = findNextVisibleLayer(currentLayers, payload);
             if (next !== -1) {
               this.asciibirdMeta[this.tab].selectedLayer = next;
             }
@@ -478,25 +478,25 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       );
     },
     removeLayer(payload: number) {
-      const tempLayers = decompressLayers(
+      const layers = decompressLayers(
         this.asciibirdMeta[this.tab].layers,
       );
-      if (tempLayers.length <= 1) return;
+      if (layers.length <= 1) return;
 
       const wasSelectedLayer =
         payload === this.asciibirdMeta[this.tab].selectedLayer;
 
       this.withLayerMutation(
-        (layers) => {
-          layers.splice(payload, 1);
+        (mutLayers) => {
+          mutLayers.splice(payload, 1);
         },
         () => {
-          const layers = decompressLayers(
+          const currentLayers = decompressLayers(
             this.asciibirdMeta[this.tab].layers,
           );
           if (wasSelectedLayer) {
-            const searchFrom = Math.min(payload, layers.length - 1);
-            const next = findNextVisibleLayer(layers, searchFrom);
+            const searchFrom = Math.min(payload, currentLayers.length - 1);
+            const next = findNextVisibleLayer(currentLayers, searchFrom);
             this.asciibirdMeta[this.tab].selectedLayer =
               next !== -1 ? next : searchFrom;
           } else if (payload < this.asciibirdMeta[this.tab].selectedLayer) {
@@ -630,14 +630,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
           compressLayers(tempLayers);
 
         this.asciibirdMeta[this.tab].historyIndex--;
-
-        if (
-          this.asciibirdMeta[this.tab].historyIndex >
-          this.asciibirdMeta[this.tab].history.length
-        ) {
-          this.asciibirdMeta[this.tab].historyIndex =
-            this.asciibirdMeta[this.tab].history.length;
-        }
+        this.clampHistoryIndex();
       }
     },
     redoBlocks() {
@@ -695,14 +688,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
           compressLayers(tempLayers);
 
         this.asciibirdMeta[this.tab].historyIndex++;
-
-        if (
-          this.asciibirdMeta[this.tab].historyIndex >
-          this.asciibirdMeta[this.tab].history.length
-        ) {
-          this.asciibirdMeta[this.tab].historyIndex =
-            this.asciibirdMeta[this.tab].history.length;
-        }
+        this.clampHistoryIndex();
       }
     },
 
