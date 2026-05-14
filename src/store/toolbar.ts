@@ -54,6 +54,7 @@ export const useToolbarStore = defineStore('toolbar', {
       gridView: false,
       visible: true,
       halfBlockEditing: false,
+      minimized: false,
     },
     _brushBlocks: '',
     brushHistory: [],
@@ -251,6 +252,25 @@ export const useToolbarStore = defineStore('toolbar', {
     },
     changeToolBarDraggable(payload: boolean) {
       this.toolbarState.draggable = payload;
+    },
+    minimizeToolbar() {
+      this.toolbarState.minimized = true;
+      this.toolbarState.visible = true; // minimized != hidden
+    },
+    restoreToolbar() {
+      this.toolbarState.minimized = false;
+      this.toolbarState.visible = true;
+    },
+    toggleToolbarMinimize() {
+      if (this.toolbarState.minimized) {
+        this.toolbarState.minimized = false;
+      } else if (this.toolbarState.visible) {
+        this.toolbarState.minimized = true;
+      }
+    },
+    resetToolbarPosition() {
+      this.toolbarState.x = 16; // blockWidth * 2
+      this.toolbarState.y = 30; // blockHeight * 2
     },
   },
 

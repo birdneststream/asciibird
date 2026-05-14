@@ -227,7 +227,7 @@ describe('Pinia Store Actions', () => {
     });
 
     it('changeDebugPanelState', () => {
-      const newState = { x: 10, y: 20, h: 30, w: 40, visible: true };
+      const newState = { x: 10, y: 20, h: 30, w: 40, visible: true, minimized: false };
       panelStore.changeDebugPanelState(newState);
       expect(panelStore.debugPanel).toEqual(newState);
     });
@@ -239,27 +239,58 @@ describe('Pinia Store Actions', () => {
 
     it('changeBrushLibraryState', () => {
       const newState = {
-        x: 10, y: 20, h: 30, w: 40, visible: false, tab: 1,
+        x: 10, y: 20, h: 30, w: 40, visible: false, minimized: false, tab: 1,
       };
       panelStore.changeBrushLibraryState(newState);
       expect(panelStore.brushLibrary).toEqual(newState);
     });
 
     it('changeBrushPreviewState', () => {
-      const newState = { x: 1, y: 2, h: 3, w: 4, visible: false };
+      const newState = { x: 1, y: 2, h: 3, w: 4, visible: false, minimized: false };
       panelStore.changeBrushPreviewState(newState);
       expect(panelStore.brushPreview).toEqual(newState);
     });
 
     it('changeLayersLibraryState', () => {
-      const newState = { x: 5, y: 6, h: 7, w: 8, visible: true };
+      const newState = { x: 5, y: 6, h: 7, w: 8, visible: true, minimized: false };
       panelStore.changeLayersLibraryState(newState);
       expect(panelStore.layersLibrary).toEqual(newState);
     });
 
+    it('minimizePanel sets minimized true and visible true', () => {
+      panelStore.minimizePanel('brushPreview');
+      expect(panelStore.brushPreview.minimized).toBe(true);
+      expect(panelStore.brushPreview.visible).toBe(true);
+    });
+
+    it('restorePanel clears minimized and keeps visible', () => {
+      panelStore.minimizePanel('layersLibrary');
+      panelStore.restorePanel('layersLibrary');
+      expect(panelStore.layersLibrary.minimized).toBe(false);
+      expect(panelStore.layersLibrary.visible).toBe(true);
+    });
+
+    it('togglePanelMinimize toggles between minimized and restored', () => {
+      // debugPanel starts with visible=false, so set visible first
+      panelStore.toggleDebugPanel(true);
+      expect(panelStore.debugPanel.minimized).toBe(false);
+      panelStore.togglePanelMinimize('debugPanel');
+      expect(panelStore.debugPanel.minimized).toBe(true);
+      panelStore.togglePanelMinimize('debugPanel');
+      expect(panelStore.debugPanel.minimized).toBe(false);
+    });
+
+    it('resetPanelPosition resets x/y to initial defaults', () => {
+      panelStore.brushPreview.x = 9999;
+      panelStore.brushPreview.y = 8888;
+      panelStore.resetPanelPosition('brushPreview');
+      expect(panelStore.brushPreview.x).not.toBe(9999);
+      expect(panelStore.brushPreview.y).not.toBe(8888);
+    });
+
     it('changeToolBarState', () => {
       toolbarStore.changeToolBarState({
-        x: 10, y: 20, h: 30, w: 40, visible: false,
+        x: 10, y: 20, h: 30, w: 40, visible: false, minimized: false,
       });
       expect(toolbarStore.toolbarState.x).toBe(10);
       expect(toolbarStore.toolbarState.y).toBe(20);
@@ -269,6 +300,35 @@ describe('Pinia Store Actions', () => {
     it('changeToolBarDraggable', () => {
       toolbarStore.changeToolBarDraggable(false);
       expect(toolbarStore.toolbarState.draggable).toBe(false);
+    });
+
+    it('minimizeToolbar sets minimized true and visible true', () => {
+      toolbarStore.minimizeToolbar();
+      expect(toolbarStore.toolbarState.minimized).toBe(true);
+      expect(toolbarStore.toolbarState.visible).toBe(true);
+    });
+
+    it('restoreToolbar clears minimized and keeps visible', () => {
+      toolbarStore.minimizeToolbar();
+      toolbarStore.restoreToolbar();
+      expect(toolbarStore.toolbarState.minimized).toBe(false);
+      expect(toolbarStore.toolbarState.visible).toBe(true);
+    });
+
+    it('toggleToolbarMinimize toggles between minimized and restored', () => {
+      expect(toolbarStore.toolbarState.minimized).toBe(false);
+      toolbarStore.toggleToolbarMinimize();
+      expect(toolbarStore.toolbarState.minimized).toBe(true);
+      toolbarStore.toggleToolbarMinimize();
+      expect(toolbarStore.toolbarState.minimized).toBe(false);
+    });
+
+    it('resetToolbarPosition resets x/y to defaults', () => {
+      toolbarStore.toolbarState.x = 999;
+      toolbarStore.toolbarState.y = 888;
+      toolbarStore.resetToolbarPosition();
+      expect(toolbarStore.toolbarState.x).toBe(16);
+      expect(toolbarStore.toolbarState.y).toBe(30);
     });
 
     it('updateMirror', () => {

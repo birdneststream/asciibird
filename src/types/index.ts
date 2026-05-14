@@ -138,6 +138,7 @@ export interface ToolbarState {
   gridView: boolean;
   visible: boolean;
   halfBlockEditing: boolean;
+  minimized: boolean;
 }
 
 /** Desktop layout state */
@@ -153,6 +154,7 @@ export interface PanelState {
   h: number;
   w: number;
   visible: boolean;
+  minimized: boolean;
 }
 
 /** Brush library panel state (extends PanelState with tab) */
