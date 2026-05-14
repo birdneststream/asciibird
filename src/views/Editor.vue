@@ -227,6 +227,7 @@ import { useMatchHighlight } from '../composables/useMatchHighlight';
 import { useEditorState } from '../composables/useEditorState';
 import { useEditorRendering } from '../composables/useEditorRendering';
 import { usePasteMode } from '../composables/usePasteMode';
+import { useToolApplication } from '../composables/useToolApplication';
 import hotkeys from 'hotkeys-js';
 
 import ContextMenu from '../components/parts/ContextMenu.vue';
@@ -238,18 +239,12 @@ import {
   getBlocksWidth,
   filterNullBlocks,
   canvasToPng as canvasToPngUtil,
-  emptyBlock,
-  isEmptyBlock,
-  eraseBlockProperties,
+  emptyBlock as emptyBlockFn,
   exportPlainText,
-  iterativeFill,
-  iterativeFillHalfBlock,
 } from '../ascii';
 
-import { applyMirrored, applyMirroredHalfBlock } from '../utils/mirror';
+import { applyMirrored } from '../utils/mirror';
 import { bresenhamLine } from '../utils/bresenham';
-import { storeDiffBlocks as storeDiffBlockFn } from '../utils/diffBlocks';
-import { getCanvasFont } from '../utils/canvasFont';
 import { drawShapePreview } from '../utils/shapePreview';
 import { downloadHtml } from '../utils/htmlExport';
 import { HalfBlockGrid } from '../utils/halfBlockGrid';
@@ -363,6 +358,28 @@ const { scheduleRedraw: delayRedrawCanvas, cancelRedraw } = useFpsThrottle(
   redrawCanvas,
   () => options.value.fps,
 );
+
+// ─── Tool Application (brush, eraser, fill) ───────────────────────
+const toolApp = useToolApplication({
+  state: {
+    x, y, isTopHalf, canTool, diffBlocks,
+    currentAsciiLayerBlocks, currentAsciiWidth, currentAsciiHeight,
+    blockWidthComp, blockHeightComp, blockSizeMultiplier,
+    canFg, canBg, canText, currentFg, currentBg, currentChar,
+    isErasing, brushBlocks, mirrorX, mirrorY, toolbarState,
+    asciiBlockAtXy,
+  },
+  rendering: {
+    getToolCtx: rendering.getToolCtx,
+    clearToolCanvas,
+    showError: (msg: string) => toastShow(msg, { type: 'error' }),
+  },
+});
+
+const {
+  drawBrush, drawBrushBlocks, drawHalfBlocks,
+  eraser, fill, recordDiff,
+} = toolApp;
 
 // ─── Gradient Tool ────────────────────────────────────────────────
 const {
@@ -1601,469 +1618,6 @@ async function dispatchBlocks(clearDiff = false) {
   }
 }
 
-function recordDiff(
-  sx: number,
-  sy: number,
-  oldBlock: Block,
-  newBlock: Block,
-): void {
-  storeDiffBlockFn(diffBlocks, sx, sy, oldBlock, newBlock);
-}
-
-// ─── Methods: Tool Logic ───────────────────────────────────────
-
-function drawBrushBlocks(
-  brushX: number,
-  brushY: number,
-  brushBlock: Block,
-  target: string | null = null,
-  plain = false,
-) {
-  const toolCtx = rendering.getToolCtx();
-  if (!toolCtx) return;
-  const bw = blockWidthComp.value;
-  const bh = blockHeightComp.value;
-  const arrayY = brushY / bh;
-  const arrayX = brushX / bw;
-  const asciiWidth = currentAsciiWidth.value;
-  const asciiHeight = currentAsciiHeight.value;
-  const tBlock = currentAsciiLayerBlocks.value[arrayY]?.[arrayX];
-  if (!tBlock) return;
-
-  if (plain) {
-    let indicatorColour = tBlock.bg === 0 ? 1 : 0;
-    if (tBlock.bg === 8) {
-      indicatorColour = 1;
-    }
-    toolCtx.fillStyle = mircColours99[indicatorColour];
-    toolCtx.fillRect(brushX, brushY, bw, bh);
-
-    applyMirrored(
-      arrayX, arrayY, asciiWidth, asciiHeight,
-      mirrorX.value, mirrorY.value,
-      (mx, my) => {
-        toolCtx.fillRect(
-          mx * bw, my * bh, bw, bh,
-        );
-      },
-    );
-    return;
-  }
-
-  switch (target) {
-    case 'bg':
-      toolCtx.fillStyle =
-        brushBlock.bg !== undefined
-          ? mircColours99[brushBlock.bg]
-          : 'rgba(255,255,255,0.4)';
-      break;
-
-    case 'fg':
-      toolCtx.fillStyle =
-        brushBlock.fg !== undefined
-          ? mircColours99[brushBlock.fg]
-          : '#FFFFFF';
-      break;
-
-    default:
-      if (canText.value && brushBlock.char !== undefined) {
-        toolCtx.font = getCanvasFont(blockSizeMultiplier.value);
-        toolCtx.fillStyle = canFg.value
-          ? mircColours99[brushBlock.fg]
-          : '#FFFFFF';
-        toolCtx.fillText(
-          brushBlock.char, brushX, brushY + bh - 3,
-        );
-
-        applyMirrored(
-          arrayX, arrayY, asciiWidth, asciiHeight,
-          mirrorX.value, mirrorY.value,
-          (mx, my) => {
-            toolCtx.fillText(
-              brushBlock.char!,
-              mx * bw,
-              my * bh + bh - 3,
-            );
-          },
-        );
-      }
-
-      if (canText.value && canTool.value) {
-        tBlock['char'] = brushBlock['char'];
-
-        applyMirrored(
-          arrayX, arrayY, asciiWidth, asciiHeight,
-          mirrorX.value, mirrorY.value,
-          (mx, my) => {
-            if (
-              currentAsciiLayerBlocks.value[my]
-              && currentAsciiLayerBlocks.value[my][mx]
-              && (x.value !== mx || y.value !== my)
-            ) {
-              const charOb = {
-                ...currentAsciiLayerBlocks.value[my][mx],
-              };
-              currentAsciiLayerBlocks.value[my][mx].char = brushBlock.char;
-              recordDiff(mx, my, charOb, brushBlock);
-            }
-          },
-        );
-      }
-
-      return;
-  }
-
-  if (canBg.value && target === 'bg') {
-    toolCtx.setLineDash([1, 2]);
-    toolCtx.strokeRect(brushX, brushY, bw, bh);
-    toolCtx.fillRect(brushX, brushY, bw, bh);
-
-    applyMirrored(
-      arrayX, arrayY, asciiWidth, asciiHeight,
-      mirrorX.value, mirrorY.value,
-      (mx, my) => {
-        toolCtx.fillRect(
-          mx * bw, my * bh, bw, bh,
-        );
-        toolCtx.setLineDash([1, 2]);
-        toolCtx.strokeRect(
-          mx * bw, my * bh, bw, bh,
-        );
-      },
-    );
-  }
-
-  if (canTool.value && brushBlock[target!] !== undefined) {
-    tBlock[target!] = brushBlock[target!];
-
-    applyMirrored(
-      arrayX, arrayY, asciiWidth, asciiHeight,
-      mirrorX.value, mirrorY.value,
-      (mx, my) => {
-        if (
-          currentAsciiLayerBlocks.value[my]
-          && currentAsciiLayerBlocks.value[my][mx]
-          && (x.value !== mx || y.value !== my)
-        ) {
-          const ob = {
-            ...currentAsciiLayerBlocks.value[my][mx],
-          };
-          currentAsciiLayerBlocks.value[my][mx][target!] = brushBlock[target!];
-          recordDiff(mx, my, ob, brushBlock);
-        }
-      },
-    );
-  }
-
-  toolCtx.restore();
-}
-
-async function drawHalfBlocks(brushX: number, brushY: number) {
-  const toolCtx = rendering.getToolCtx();
-  if (!toolCtx) return;
-  const bw = blockWidthComp.value;
-  const bh = blockHeightComp.value;
-
-  const coord = HalfBlockGrid.fromPixels(brushX, brushY, bw, bh);
-  const blockY = Math.floor(coord.y / 2);
-  const blockX = coord.x;
-
-  if (
-    !currentAsciiLayerBlocks.value[blockY]
-    || !currentAsciiLayerBlocks.value[blockY][blockX]
-  ) {
-    toolCtx.restore();
-    return;
-  }
-
-  const ob = { ...currentAsciiLayerBlocks.value[blockY][blockX] };
-
-  toolCtx.font = getCanvasFont(blockSizeMultiplier.value);
-  toolCtx.fillStyle = mircColours99[currentFg.value];
-  toolCtx.fillText(
-    coord.y % 2 === 0 ? '\u2580' : '\u2584',
-    brushX,
-    brushY + bh - 3,
-  );
-
-  if (canTool.value) {
-    const grid = new HalfBlockGrid(currentAsciiLayerBlocks.value);
-    grid.setColour(coord.x, coord.y, currentFg.value);
-
-    recordDiff(
-      blockX, blockY, ob,
-      currentAsciiLayerBlocks.value[blockY][blockX],
-    );
-
-    applyMirroredHalfBlock(
-      coord.x, coord.y,
-      currentAsciiWidth.value, currentAsciiHeight.value,
-      mirrorX.value, mirrorY.value,
-      (mx, mHalfY, mBlockY) => {
-        const mRow = currentAsciiLayerBlocks.value[mBlockY];
-        if (!mRow || mRow[mx] === undefined) return;
-        const mOb = { ...mRow[mx] };
-        grid.setColour(mx, mHalfY, currentFg.value);
-        recordDiff(mx, mBlockY, mOb, mRow[mx]);
-      },
-    );
-  }
-
-  toolCtx.restore();
-}
-
-async function drawBrush(plain = false) {
-  await clearToolCanvas();
-  const bw = blockWidthComp.value;
-  const bh = blockHeightComp.value;
-  let brushDiffX = 0;
-  let xLength: number | false = false;
-
-  for (let i = 0; i <= brushBlocks.value.length; i++) {
-    if (brushBlocks.value[i] && xLength === false) {
-      brushDiffX = Math.floor(
-        brushBlocks.value[i].length / 2,
-      ) * bw;
-      xLength = brushBlocks.value[i].length;
-      break;
-    }
-  }
-
-  const brushDiffY = Math.floor(
-    brushBlocks.value.length / 2,
-  ) * bh;
-
-  for (let by = 0; by < brushBlocks.value.length; by++) {
-    if (!brushBlocks.value[by]) continue;
-
-    for (let bx = 0; bx < xLength; bx++) {
-      if (
-        !brushBlocks.value[by][bx]
-        || isEmptyBlock(brushBlocks.value[by][bx])
-      ) {
-        continue;
-      }
-
-      const brushBlock = brushBlocks.value[by][bx];
-
-      if (
-        brushBlock.char !== undefined
-        && brushBlock.char === ' '
-        && brushBlock.bg === undefined
-        && brushBlock.fg === undefined
-      ) {
-        continue;
-      }
-
-      const brushX = x.value * bw + bx * bw - brushDiffX;
-      const brushY = y.value * bh + by * bh - brushDiffY;
-
-      const arrayY = brushY / bh;
-      const arrayX = brushX / bw;
-
-      if (
-        currentAsciiLayerBlocks.value[arrayY]
-        && currentAsciiLayerBlocks.value[arrayY][arrayX]
-      ) {
-        const ob = {
-          ...currentAsciiLayerBlocks.value[arrayY][arrayX],
-        };
-
-        if (!plain) {
-          if (toolbarState.value.halfBlockEditing) {
-            await drawHalfBlocks(brushX, brushY);
-          } else {
-            if (canBg.value) {
-              await drawBrushBlocks(
-                brushX, brushY, brushBlock, 'bg',
-              );
-            }
-            if (canFg.value) {
-              await drawBrushBlocks(
-                brushX, brushY, brushBlock, 'fg',
-              );
-            }
-            await drawBrushBlocks(
-              brushX, brushY, brushBlock, null,
-            );
-          }
-
-          if (canTool.value && !toolbarState.value.halfBlockEditing) {
-            recordDiff(arrayX, arrayY, ob, brushBlock);
-          }
-        } else if (isErasing.value) {
-          await drawBrushBlocks(
-            brushX, brushY, brushBlock, null, true,
-          );
-        }
-      }
-    }
-  }
-}
-
-function eraser() {
-  if (canTool.value) {
-    const bw = blockWidthComp.value;
-    const bh = blockHeightComp.value;
-
-    if (toolbarState.value.halfBlockEditing) {
-      const grid = new HalfBlockGrid(currentAsciiLayerBlocks.value);
-      const halfY = y.value * 2 + (isTopHalf.value ? 0 : 1);
-
-      const row = currentAsciiLayerBlocks.value[y.value];
-      if (row && row[x.value] !== undefined) {
-        const ob = { ...row[x.value] };
-        grid.setColour(x.value, halfY, 99);
-        recordDiff(x.value, y.value, ob, row[x.value]);
-      }
-
-      applyMirroredHalfBlock(
-        x.value, halfY,
-        currentAsciiWidth.value, currentAsciiHeight.value,
-        mirrorX.value, mirrorY.value,
-        (mx, mHalfY, mBlockY) => {
-          const mRow = currentAsciiLayerBlocks.value[mBlockY];
-          if (!mRow || mRow[mx] === undefined) return;
-          const mOb = { ...mRow[mx] };
-          grid.setColour(mx, mHalfY, 99);
-          recordDiff(mx, mBlockY, mOb, mRow[mx]);
-        },
-      );
-      return;
-    }
-
-    const brushDiffX =
-      Math.floor(brushBlocks.value[0].length / 2) * bw;
-    const brushDiffY =
-      Math.floor(brushBlocks.value.length / 2) * bh;
-
-    for (let ey = 0; ey < brushBlocks.value.length; ey++) {
-      for (let ex = 0; ex < brushBlocks.value[0].length; ex++) {
-        const brushX =
-          x.value * bw + ex * bw - brushDiffX;
-        const brushY =
-          y.value * bh + ey * bh - brushDiffY;
-
-        const arrayY = brushY / bh;
-        const arrayX = brushX / bw;
-
-        if (currentAsciiLayerBlocks.value[arrayY] === undefined) continue;
-
-        if (
-          currentAsciiLayerBlocks.value[arrayY][arrayX] === undefined
-          || isEmptyBlock(brushBlocks.value[ey][ex])
-        ) {
-          continue;
-        }
-
-        const tBlock = currentAsciiLayerBlocks.value[arrayY][arrayX];
-        const ob = {
-          ...currentAsciiLayerBlocks.value[arrayY][arrayX],
-        };
-
-        eraseBlockProperties(tBlock, {
-          fg: canFg.value,
-          bg: canBg.value,
-          char: canText.value,
-        });
-
-        recordDiff(arrayX, arrayY, ob, tBlock);
-
-        applyMirrored(
-          arrayX, arrayY,
-          currentAsciiWidth.value, currentAsciiHeight.value,
-          mirrorX.value, mirrorY.value,
-          (mx, my) => {
-            const block = currentAsciiLayerBlocks.value[my]?.[mx];
-            if (!block) return;
-            const mOb = { ...block };
-            eraseBlockProperties(block, {
-              fg: canFg.value,
-              bg: canBg.value,
-              char: canText.value,
-            });
-            recordDiff(mx, my, mOb, block);
-          },
-        );
-      }
-    }
-  }
-}
-
-function fill(eraser = false) {
-  if (toolbarState.value.halfBlockEditing) {
-    const bh = blockHeightComp.value;
-    const halfY = Math.floor(
-      (y.value * bh + (isTopHalf.value ? 0 : bh / 2)) / (bh / 2),
-    );
-    const fillColour = eraser ? 99 : currentFg.value;
-
-    const changes = iterativeFillHalfBlock(
-      currentAsciiLayerBlocks.value,
-      halfY,
-      x.value,
-      fillColour,
-    );
-
-    for (const change of changes) {
-      if (
-        change.old.bg !== change.new.bg
-        || change.old.fg !== change.new.fg
-        || change.old.char !== change.new.char
-      ) {
-        recordDiff(change.x, change.y, change.old, change.new);
-      }
-    }
-    return;
-  }
-
-  if (!canBg.value && !canFg.value && !canText.value) {
-    toastShow('Select at least one fill target (FG/BG/Text)', {
-      type: 'error',
-    });
-    return;
-  }
-
-  const fillColor: Block = {
-    bg: currentBg.value,
-    fg: currentFg.value,
-    char: currentChar.value,
-  };
-  const current = { ...(asciiBlockAtXy.value as Block) };
-
-  if (!canBg.value) {
-    delete fillColor['bg'];
-  }
-  if (!canText.value) {
-    delete fillColor['char'];
-  }
-  if (JSON.stringify(current) === JSON.stringify(fillColor) && !eraser) {
-    return;
-  }
-
-  const changes = iterativeFill(
-    currentAsciiLayerBlocks.value,
-    y.value,
-    x.value,
-    current,
-    fillColor,
-    canBg.value,
-    canFg.value,
-    canText.value,
-    eraser,
-  );
-
-  for (const change of changes) {
-    if (
-      change.old.bg !== change.new.bg
-      || change.old.fg !== change.new.fg
-      || change.old.char !== change.new.char
-    ) {
-      recordDiff(change.x, change.y, change.old, change.new);
-    }
-  }
-}
-
 async function processSelect() {
   let sx = 0;
   let sy = 0;
@@ -2198,7 +1752,7 @@ defineExpose({
   imageOverlay,
   imageOverlayStyle,
   canvasTransparent,
-  emptyBlock,
+  emptyBlock: emptyBlockFn,
   isPasteMode: pasteMode.isPasteMode,
   updateCanvas: props.updateCanvas ?? false,
   // Methods
