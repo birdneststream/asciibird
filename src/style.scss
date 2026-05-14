@@ -15,6 +15,23 @@
     font-display: swap;
 }
 
+/* ── JetBrains Mono (for all UI elements) ─────────────────────── */
+@font-face {
+    font-family: "JetBrains Mono";
+    src: url("./assets/jetbrains-mono-regular.woff2") format("woff2");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "JetBrains Mono";
+    src: url("./assets/jetbrains-mono-bold.woff2") format("woff2");
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
 /* ── Body ──────────────────────────────────────────────────────────── */
 html,
 body {
@@ -31,7 +48,7 @@ body {
 body {
     background: #131313;
     color: #e5e2e1;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'JetBrains Mono', monospace;
     -ms-user-select: none;
     -moz-user-select: none;
     -webkit-user-select: none;
@@ -50,13 +67,13 @@ button {
 
 /* Headless UI Menu components need explicit font override */
 [role="menu"] {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'JetBrains Mono', monospace;
 }
 
 /* ── Canvas classes ────────────────────────────────────────────────── */
 .canvas {
     position: absolute;
-    font-family: "JetBrains Mono", "Hack", monospace;
+    font-family: "Hack", monospace;
     background-color: rgba(167, 167, 167, 0.308);
     border: #414755 1px solid;
     z-index: 0;
@@ -76,7 +93,7 @@ button {
 
 .canvastools {
     position: absolute;
-    font-family: "JetBrains Mono", "Hack", monospace;
+    font-family: "Hack", monospace;
     z-index: 0;
     opacity: 0.7;
     cursor: crosshair;
