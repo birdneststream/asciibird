@@ -6,6 +6,12 @@ export interface Position {
   y: number;
 }
 
+/** Half-block position with double-Y resolution coordinate */
+export interface HalfBlockPosition {
+  x: number;
+  halfY: number;
+}
+
 /**
  * Get all positions that should be affected by a mirror-aware operation.
  *
@@ -111,5 +117,63 @@ export function applyMirrored(
     if (seen.has(key)) continue;
     seen.add(key);
     callback(pos.x, pos.y);
+  }
+}
+
+/**
+ * Apply a callback at all mirrored positions for half-block coordinates.
+ *
+ * Works like `applyMirrored` but operates at double-Y resolution.
+ * Mirror X reflects horizontally (same as full-block).
+ * Mirror Y reflects vertically at half-block granularity:
+ *   mirroredHalfY = (height * 2) - halfY - 1
+ *
+ * @param x - Original x position (0-indexed block coordinate)
+ * @param halfY - Original half-Y position (0-indexed, double resolution)
+ * @param width - Grid width in blocks
+ * @param height - Grid height in blocks (full-block, NOT doubled)
+ * @param mirrorX - Whether horizontal mirroring is enabled
+ * @param mirrorY - Whether vertical mirroring is enabled
+ * @param callback - Called with (mx, mHalfY, mBlockY) for each mirror
+ */
+export function applyMirroredHalfBlock(
+  x: number,
+  halfY: number,
+  width: number,
+  height: number,
+  mirrorX: boolean,
+  mirrorY: boolean,
+  callback: (mx: number, mHalfY: number, mBlockY: number) => void,
+): void {
+  if (!mirrorX && !mirrorY) return;
+
+  const halfHeight = height * 2;
+  const positions: HalfBlockPosition[] = [];
+
+  if (mirrorX) {
+    positions.push({ x: width - x, halfY });
+  }
+  if (mirrorY) {
+    positions.push({ x, halfY: halfHeight - halfY - 1 });
+  }
+  if (mirrorX && mirrorY) {
+    positions.push({
+      x: width - x,
+      halfY: halfHeight - halfY - 1,
+    });
+  }
+
+  const seen = new Set<string>();
+  seen.add(`${x},${halfY}`);
+  for (const pos of positions) {
+    // Bounds check: x in [0, width), halfY in [0, halfHeight)
+    if (pos.x < 0 || pos.x >= width || pos.halfY < 0 || pos.halfY >= halfHeight) {
+      continue;
+    }
+    const key = `${pos.x},${pos.halfY}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    const blockY = Math.floor(pos.halfY / 2);
+    callback(pos.x, pos.halfY, blockY);
   }
 }

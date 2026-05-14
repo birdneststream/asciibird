@@ -61,34 +61,51 @@
             </label>
           </Tooltip>
 
-          <Tooltip content="Ignore Background when Editing">
-            <label class="flex items-center gap-1 cursor-pointer ab-checkbox-hover">
+          <Tooltip
+            :content="halfBlockEditing
+              ? 'Disabled in half-block editing mode'
+              : 'Ignore Background when Editing'"
+          >
+            <label
+              class="flex items-center gap-1 cursor-pointer ab-checkbox-hover"
+              :class="{ 'opacity-40': halfBlockEditing }"
+            >
               <input
                 v-model="toolbarStore.toolbarState.targetingBg"
                 type="checkbox"
                 class="ab-checkbox"
                 name="targetingBg"
-                :disabled="!canFg && !canText"
+                :disabled="halfBlockEditing || (!canFg && !canText)"
               >
               <span class="ab-checkbox-label">BG</span>
             </label>
           </Tooltip>
 
-          <Tooltip content="Ignore Characters when Editing">
-            <label class="flex items-center gap-1 cursor-pointer ab-checkbox-hover">
+          <Tooltip
+            :content="halfBlockEditing
+              ? 'Disabled in half-block editing mode'
+              : 'Ignore Characters when Editing'"
+          >
+            <label
+              class="flex items-center gap-1 cursor-pointer ab-checkbox-hover"
+              :class="{ 'opacity-40': halfBlockEditing }"
+            >
               <input
                 v-model="toolbarStore.toolbarState.targetingChar"
                 type="checkbox"
                 class="ab-checkbox"
                 name="targetingChar"
-                :disabled="!canFg && !canBg"
+                :disabled="halfBlockEditing || (!canFg && !canBg)"
               >
               <span class="ab-checkbox-label">Text</span>
             </label>
           </Tooltip>
         </div>
 
-        <div class="flex w-full gap-xs">
+        <div
+          class="flex w-full gap-xs"
+          :class="{ 'opacity-40': halfBlockEditing }"
+        >
           <input
             type="number"
             name="width"
@@ -96,6 +113,7 @@
             v-model="brushSizeWidthInput"
             min="1"
             :max="maxBrushSize"
+            :disabled="halfBlockEditing"
             @focus="isInputtingBrushSize = true"
             @blur="isInputtingBrushSize = false"
           >
@@ -106,25 +124,29 @@
             v-model="brushSizeHeightInput"
             min="1"
             :max="maxBrushSize"
+            :disabled="halfBlockEditing"
             @focus="isInputtingBrushSize = true"
             @blur="isInputtingBrushSize = false"
           >
         </div>
 
-        <select
-          class="ab-input w-full"
-          v-model="brushSizeTypeInput"
-          @pointerdown.stop
-          @mousedown.stop
-        >
-          <option
-            v-for="(label, i) in brushOptions"
-            :key="brushKeys[i]"
-            :value="brushKeys[i]"
+        <div :class="{ 'opacity-40': halfBlockEditing }">
+          <select
+            class="ab-input w-full"
+            v-model="brushSizeTypeInput"
+            :disabled="halfBlockEditing"
+            @pointerdown.stop
+            @mousedown.stop
           >
-            {{ label }}
-          </option>
-        </select>
+            <option
+              v-for="(label, i) in brushOptions"
+              :key="brushKeys[i]"
+              :value="brushKeys[i]"
+            >
+              {{ label }}
+            </option>
+          </select>
+        </div>
 
         <div
           @mouseenter="canDrag = false"
@@ -208,6 +230,7 @@ const recentColors = computed(() => toolbarStore.recentColors);
 const recentColorsDisplay = computed(() => toolbarStore.recentColors.slice(0, 12));
 const updateBrush = computed(() => toolbarStore.toolbarState.updateBrush);
 const brushPreviewState = computed(() => panelStore.brushPreview);
+const halfBlockEditing = computed(() => toolbarStore.toolbarState.halfBlockEditing);
 
 const brushBlocksEmpty = computed(() => brushBlocks.value.length === 0);
 const middleY = computed(() => Math.floor(brushSizeHeight.value / 2));
@@ -341,6 +364,7 @@ defineExpose({
   currentBg,
   currentChar,
   toolbarState: computed(() => toolbarStore.toolbarState),
+  halfBlockEditing,
   updateBrushSize,
   createBlocks,
 });

@@ -201,6 +201,5 @@ function toggleHalfBlockEditing() {
   const newVal = !toolbarStore.toolbarState.halfBlockEditing;
   toolbarStore.toggleHalfBlockEditing(newVal);
   toastShow(`Half Block Editing Mode ${newVal ? 'enabled' : 'disabled'}`);
-  toastShow('WARNING THIS FEATURE IS STILL EXPERIMENTAL');
 }
 </script>

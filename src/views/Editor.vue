@@ -181,7 +181,7 @@ import {
   iterativeFillHalfBlock,
 } from '../ascii';
 
-import { getMirrorPositions, applyMirrored } from '../utils/mirror';
+import { getMirrorPositions, applyMirrored, applyMirroredHalfBlock } from '../utils/mirror';
 import { bresenhamLine } from '../utils/bresenham';
 import { storeDiffBlocks as storeDiffBlockFn } from '../utils/diffBlocks';
 import { getCanvasFont } from '../utils/canvasFont';
@@ -261,7 +261,7 @@ let toolCtx: CanvasRenderingContext2D | null = null;
 const canvasSize = reactive({ width: 512, height: 512 });
 const x = ref(0);
 const y = ref(0);
-const atTopHalf = ref(0);
+const isTopHalf = ref(true);
 const top = ref<number | false>(false);
 const canTool = ref(false);
 const textEditing = ref<{ startX: number | null; startY: number | null }>({
@@ -526,6 +526,20 @@ watch(blockSizeMultiplier, () => {
 watch(currentTool, async () => {
   warnInvisibleLayer();
 
+  // Half-block mode: block text and select tools
+  if (halfBlockEditing.value) {
+    if (currentTool.value.name === 'text') {
+      toastShow('Text mode is not available in half-block editing mode');
+      toolbarStore.changeTool(0);
+      return;
+    }
+    if (currentTool.value.name === 'select') {
+      toastShow('Selection is not available in half-block editing mode');
+      toolbarStore.changeTool(0);
+      return;
+    }
+  }
+
   switch (currentTool.value.name) {
     case 'default':
       textEditing.value.startX = null;
@@ -600,9 +614,38 @@ watch(currentAsciiLayers, async () => {
   await delayRedrawCanvas(true);
 });
 
-watch(halfBlockEditing, () => {
+watch(halfBlockEditing, async (active) => {
+  if (active) {
+    // Entering half-block mode — enforce constraints
+
+    // Force brush to 1×1
+    toolbarStore.updateBrushSize({
+      brushSizeWidth: 1,
+      brushSizeHeight: 1,
+      brushSizeType: 'square',
+    });
+
+    // If text tool is active, switch to default
+    if (currentTool.value.name === 'text') {
+      toolbarStore.changeTool(0);
+      textEditing.value.startX = null;
+      textEditing.value.startY = null;
+    }
+
+    // If select tool is active, reset selection and switch to default
+    if (currentTool.value.name === 'select') {
+      toolbarStore.changeTool(0);
+      resetSelectTool();
+    }
+
+    // Ensure FG targeting is on
+    if (!canFg.value) {
+      toolbarStore.changeTargetingFg(true);
+    }
+  }
+
   if (gridView.value) {
-    clearToolCanvas();
+    await clearToolCanvas();
     drawGrid();
   }
 });
@@ -1276,7 +1319,7 @@ async function canvasMouseDown() {
       case 'dropper':
         if (toolbarState.value.halfBlockEditing) {
           // Half-block mode: sample colour at specific half
-          const halfY = y.value * 2 + (atTopHalf.value ? 0 : 1);
+          const halfY = y.value * 2 + (isTopHalf.value ? 0 : 1);
           const grid = new HalfBlockGrid(currentAsciiLayerBlocks.value);
           const sampledColour = grid.getColour(x.value, halfY);
           if (canFg.value) {
@@ -1377,7 +1420,7 @@ async function canvasMouseMove(e: MouseEvent) {
   }
   if (e.offsetY >= 0) {
     y.value = e.offsetY;
-    atTopHalf.value = Math.floor(e.offsetY / (blockHeightComp.value / 2)) % 2 === 0 ? 1 : 0;
+    isTopHalf.value = Math.floor(e.offsetY / (blockHeightComp.value / 2)) % 2 === 0;
   }
 
   x.value = Math.floor(x.value / blockWidthComp.value);
@@ -1568,7 +1611,7 @@ async function drawRectangleBlock(rx: number, ry: number) {
   // Half-block mode: draw half-height indicator
   if (toolbarState.value.halfBlockEditing) {
     const halfH = bh / 2;
-    const yOff = atTopHalf.value ? 0 : halfH;
+    const yOff = isTopHalf.value ? 0 : halfH;
     toolCtx.fillStyle = mircColours99[indicatorColour];
     toolCtx.fillRect(rx * bw, ry * bh + yOff, bw, halfH);
     toolCtx.setLineDash([1, 2]);
@@ -1780,6 +1823,20 @@ async function drawHalfBlocks(brushX: number, brushY: number) {
     grid.setColour(coord.x, coord.y, currentFg.value);
 
     await recordDiff(blockX, blockY, ob, currentAsciiLayerBlocks.value[blockY][blockX]);
+
+    // Mirror positions at half-block granularity
+    applyMirroredHalfBlock(
+      coord.x, coord.y,
+      currentAsciiWidth.value, currentAsciiHeight.value,
+      mirrorX.value, mirrorY.value,
+      (mx, mHalfY, mBlockY) => {
+        const mRow = currentAsciiLayerBlocks.value[mBlockY];
+        if (!mRow || mRow[mx] === undefined) return;
+        const mOb = { ...mRow[mx] };
+        grid.setColour(mx, mHalfY, currentFg.value);
+        recordDiff(mx, mBlockY, mOb, mRow[mx]);
+      },
+    );
   }
 
   toolCtx.restore();
@@ -1876,35 +1933,30 @@ async function eraser() {
 
     // ── Half-block eraser path ──
     if (toolbarState.value.halfBlockEditing) {
-      const brushRows = brushBlocks.value.length;
-      const brushCols = brushBlocks.value[0].length;
-      const brushDiffX = Math.floor(brushCols / 2) * bw;
-      const brushDiffY = Math.floor(brushRows / 2) * bh;
       const grid = new HalfBlockGrid(currentAsciiLayerBlocks.value);
+      const halfY = y.value * 2 + (isTopHalf.value ? 0 : 1);
 
-      for (let ey = 0; ey < brushRows; ey++) {
-        for (let ex = 0; ex < brushCols; ex++) {
-          if (isEmptyBlock(brushBlocks.value[ey][ex])) continue;
-
-          const pixelX = x.value * bw + ex * bw - brushDiffX;
-          const pixelY = y.value * bh + ey * bh - brushDiffY;
-
-          const arrayX = pixelX / bw;
-          const arrayY = pixelY / bh;
-
-          const row = currentAsciiLayerBlocks.value[arrayY];
-          if (!row || row[arrayX] === undefined) continue;
-
-          // All brush cells use cursor's atTopHalf to determine
-          // which half to erase
-          const halfY = arrayY * 2 + (atTopHalf.value ? 0 : 1);
-
-          const ob = { ...row[arrayX] };
-          grid.setColour(arrayX, halfY, 99);
-          recordDiff(arrayX, arrayY, ob, row[arrayX]);
-        }
+      // Primary erase position
+      const row = currentAsciiLayerBlocks.value[y.value];
+      if (row && row[x.value] !== undefined) {
+        const ob = { ...row[x.value] };
+        grid.setColour(x.value, halfY, 99);
+        recordDiff(x.value, y.value, ob, row[x.value]);
       }
-      // TODO: half-block mirror support (applyMirrored)
+
+      // Mirror positions
+      applyMirroredHalfBlock(
+        x.value, halfY,
+        currentAsciiWidth.value, currentAsciiHeight.value,
+        mirrorX.value, mirrorY.value,
+        (mx, mHalfY, mBlockY) => {
+          const mRow = currentAsciiLayerBlocks.value[mBlockY];
+          if (!mRow || mRow[mx] === undefined) return;
+          const mOb = { ...mRow[mx] };
+          grid.setColour(mx, mHalfY, 99);
+          recordDiff(mx, mBlockY, mOb, mRow[mx]);
+        },
+      );
       return;
     }
 
@@ -1978,7 +2030,7 @@ function fill(eraser = false) {
   if (toolbarState.value.halfBlockEditing) {
     const bh = blockHeightComp.value;
     const halfY = Math.floor(
-      (y.value * bh + (atTopHalf.value ? 0 : bh / 2)) / (bh / 2),
+      (y.value * bh + (isTopHalf.value ? 0 : bh / 2)) / (bh / 2),
     );
     // 99 = EMPTY_COLOUR (transparent) — acts as eraser in half-block mode
     const fillColour = eraser ? 99 : currentFg.value;
@@ -2055,7 +2107,7 @@ defineExpose({
   // Reactive state
   x,
   y,
-  atTopHalf,
+  isTopHalf,
   top,
   canTool,
   textEditing,

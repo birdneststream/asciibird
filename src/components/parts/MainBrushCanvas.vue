@@ -119,6 +119,7 @@ const renderBlockHeight = computed(
 )
 const brushBlocks = computed(() => toolbarStore.brushBlocks)
 const gridView = computed(() => toolbarStore.toolbarState.gridView)
+const halfBlockEditing = computed(() => toolbarStore.toolbarState.halfBlockEditing)
 const currentTool = computed(() => toolbarIcons[toolbarStore.currentTool] ?? null)
 const isDefault = computed(() => currentTool.value?.name === 'default')
 const isBrushing = computed(() => currentTool.value?.name === 'brush')
@@ -147,6 +148,7 @@ watch(
     toolbarStore.currentChar,
     store.blockSizeMultiplier,
     gridView.value,
+    halfBlockEditing.value,
   ],
   () => delayRedrawCanvas(),
 )
@@ -242,6 +244,26 @@ function drawGrid() {
   const bw = getBlocksWidth(blocks)
   const rw = renderBlockWidth.value
   const rh = renderBlockHeight.value
+
+  // Half-block mode: render single half-block preview
+  if (halfBlockEditing.value) {
+    const fg = toolbarStore.currentFg
+    const bg = toolbarStore.currentBg
+
+    // Background
+    c.fillStyle = mircColours99[bg]
+    c.fillRect(0, 0, rw, rh)
+
+    // Top half with FG color
+    c.fillStyle = mircColours99[fg]
+    c.font = getCanvasFont(store.blockSizeMultiplier)
+    c.fillText('\u2580', 0, rh - 3)
+
+    if (gridView.value) {
+      drawGrid()
+    }
+    return
+  }
 
   for (let by = 0; by < blocks.length; by++) {
     for (let bx = 0; bx < bw; bx++) {
