@@ -168,20 +168,6 @@ export const useToolbarStore = defineStore('toolbar', {
       this._brushBlocks = compressData(result);
     },
 
-    /**
-     * @deprecated Use transformBrush({ type: 'flip-v' }) instead.
-     * Kept for backward compatibility during transition.
-     */
-    flipRotateBlocks(payload: { type: string }) {
-      // Map old type names to new TransformType
-      const typeMap: Record<string, TransformType> = {
-        flip: 'flip-v',
-        rotate: 'flip-h',
-      };
-      const type = typeMap[payload.type] || (payload.type as TransformType);
-      this.transformBrush({ type });
-    },
-
     // Brush Library
     pushBrushHistory(payload: Block[][]) {
       const limit = useAsciiBirdStore().options.brushLimit;

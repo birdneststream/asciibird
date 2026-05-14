@@ -119,8 +119,8 @@ function close() {
 }
 
 function updateAscii() {
-  const canvasBlockHeight = Number.parseInt(String(layer.value.height));
-  const canvasBlockWidth = Number.parseInt(String(layer.value.width));
+  const canvasBlockHeight = Number(layer.value.height) || 0;
+  const canvasBlockWidth = Number(layer.value.width) || 0;
 
   if (
     Number.isNaN(canvasBlockHeight) ||

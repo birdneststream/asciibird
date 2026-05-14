@@ -263,7 +263,6 @@ const diffBlocks = reactive<DiffBlocks>({
   old: [],
   new: [],
 });
-const isUsingKeyboard = ref(false);
 const canvasHash = ref<number | null>(null);
 const lastBrushX = ref(-1);
 const lastBrushY = ref(-1);
@@ -408,8 +407,6 @@ const canvasTransparent = computed(() =>
     ? `opacity: ${imageOverlay.value.asciiOpacity / 100};`
     : 'opacity: 1;',
 );
-
-const emptyBlockComp = computed(() => emptyBlock);
 
 // ─── Canvas Panel (Drag + Resize with snap-to-grid) ─────────────
 const canvasPanel = useCanvasPanel({
@@ -1338,14 +1335,6 @@ async function clearToolCanvas() {
 
 // delayRedrawCanvas is provided by useFpsThrottle composable
 
-function getBlocksWidthFn(blocks: Block[][]) {
-  return getBlocksWidth(blocks);
-}
-
-function filterNullBlocksFn(blocks: Block[][]) {
-  return filterNullBlocks(blocks);
-}
-
 async function processSelect() {
   let sx = 0;
   let sy = 0;
@@ -1849,7 +1838,6 @@ defineExpose({
   isMouseOnCanvas,
   selectedBlocks,
   diffBlocks,
-  isUsingKeyboard,
   canvasHash,
   canvasSize,
   // Computed
@@ -1898,7 +1886,7 @@ defineExpose({
   imageOverlay,
   imageOverlayStyle,
   canvasTransparent,
-  emptyBlock: emptyBlockComp,
+  emptyBlock,
   updateCanvas: props.updateCanvas ?? false,
   // Methods
   startExport,
@@ -1920,8 +1908,8 @@ defineExpose({
   canvasMouseMove,
   clearToolCanvas,
   delayRedrawCanvas,
-  getBlocksWidth: getBlocksWidthFn,
-  filterNullBlocks: filterNullBlocksFn,
+  getBlocksWidth,
+  filterNullBlocks,
   processSelect,
   drawRectangleBlock,
   drawIndicator,

@@ -463,8 +463,8 @@ export const exportMirc = (blocks: Block[][] | null = null): MircExportResult =>
           Number.parseInt(nextBlock.char) >= 0 &&
           Number.parseInt(nextBlock.char) <= 9) ||
         (blocks[y][x].char !== undefined &&
-          Number.parseInt(blocks[y][x].char as string) >= 0 &&
-          Number.parseInt(blocks[y][x].char as string) <= 9)
+          Number.parseInt(blocks[y][x].char ?? '') >= 0 &&
+          Number.parseInt(blocks[y][x].char ?? '') <= 9)
       );
 
       // If we have a difference between our previous block
@@ -473,7 +473,7 @@ export const exportMirc = (blocks: Block[][] | null = null): MircExportResult =>
 
       // Optimise out half or full blocks with same bg and fg
       if (curBlock.fg === curBlock.bg &&
-          optimiseArray.includes(curBlock.char as string)) {
+          optimiseArray.includes(curBlock.char ?? '')) {
         curBlock.fg = 0;
         curBlock.char = ' ';
       }

@@ -1005,23 +1005,6 @@ describe('Pinia Store Actions', () => {
       toolbarStore.transformBrush({ type: 'flip-h' });
       expect(toolbarStore._brushBlocks).toBe('');
     });
-
-    it('flipRotateBlocks backward compat maps to transformBrush', () => {
-      const blocks: Block[][] = [
-        [{ fg: 1, bg: 0, char: 'A' }],
-        [{ fg: 2, bg: 0, char: 'B' }],
-      ];
-      toolbarStore._brushBlocks = LZString.compressToUTF16(
-        JSON.stringify(blocks),
-      );
-      // Old API: 'flip' maps to 'flip-v'
-      toolbarStore.flipRotateBlocks({ type: 'flip' });
-      const flipped = JSON.parse(
-        LZString.decompressFromUTF16(toolbarStore._brushBlocks),
-      );
-      expect(flipped[0][0].char).toBe('B');
-      expect(flipped[1][0].char).toBe('A');
-    });
   });
 
   // ── Brush library/history actions (now in useToolbarStore) ──

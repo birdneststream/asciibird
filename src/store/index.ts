@@ -166,7 +166,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       const newLayer = createEmptyLayer(
         tempLayers[0].width,
         tempLayers[0].height,
-        'Layer ' + Number.parseInt(String(tempLayers.length)),
+        'Layer ' + tempLayers.length,
       );
 
       tempLayers.push(newLayer);
@@ -183,7 +183,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         this.asciibirdMeta[this.tab].history.length;
 
       this.asciibirdMeta[this.tab].selectedLayer =
-        Number.parseInt(String(tempLayers.length)) - 1;
+        tempLayers.length - 1;
     },
     mergeAllLayers() {
       const tempLayers: Layer[] = decompressLayers(

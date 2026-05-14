@@ -63,7 +63,7 @@
     <Help v-if="modalState.help" />
     <EditAscii
       v-if="asciibirdMeta.length && modalState.editAscii"
-      @update-ascii="updateAsciiDetails"
+      @update-ascii="() => {}"
     />
     <PasteAscii v-if="modalState.pasteAscii" />
     <ImageOverlay v-if="asciibirdMeta.length && modalState.overlay" />
@@ -196,7 +196,7 @@
         v-if="tabsVisible"
         ref="tabbar"
         class="relative z-auto border-b bg-surface-container-low border-outline-variant h-9 flex items-stretch px-xs gap-px overflow-x-auto custom-scrollbar"
-        :style="toolbarString"
+        style="top: 0px"
       >
         <div
           v-for="(value, key) in asciibirdMeta"
@@ -473,7 +473,10 @@ const canvasX = ref<number | null>(null);
 const canvasY = ref<number | null>(null);
 const importType = ref<'mirc' | 'asb' | null>(null);
 const selectedBlocks = ref<Block[][]>([]);
-const textEditing = ref<unknown>(null);
+const textEditing = ref<{
+  startX: number | null;
+  startY: number | null;
+} | null>(null);
 const updateCanvas = ref(false);
 const selecting = ref({
   startX: null as number | null,
@@ -484,7 +487,6 @@ const selecting = ref({
 });
 const isInputtingBrushSize = ref(false);
 const scrollOffset = ref(0);
-const toolbarString = ref('top: 0px;');
 const lastPostURL = ref('');
 const resetSelect = ref(false);
 const updateAscii = ref(false);
@@ -713,10 +715,6 @@ function getSplashAscii() {
   return splashAscii;
 }
 
-function updateAsciiDetails(_widthHeight: unknown) {
-  // Signal the Editor component to update via prop
-}
-
 function inputtingbrush(val: boolean) {
   isInputtingBrushSize.value = val;
 }
@@ -802,7 +800,7 @@ async function onImport() {
   fileReader.readAsText(files[0]);
 }
 
-function startImport(type: string) {
+function startImport(type: 'mirc' | 'asb') {
   importType.value = type;
   asciiInput.value?.click();
 }
@@ -844,7 +842,7 @@ function exportAsciibirdState() {
   }
 }
 
-function handleExport(type: string) {
+function handleExport(type: 'file' | 'clipboard' | 'post') {
   if (type === 'post') {
     modalStore.toggleDisableKeyboard(true);
     dialogPrompt({
