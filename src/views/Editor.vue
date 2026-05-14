@@ -1688,7 +1688,7 @@ async function drawBrush(plain = false) {
             await drawBrushBlocks(brushX, brushY, brushBlock, null);
           }
 
-          if (canTool.value) {
+          if (canTool.value && !toolbarState.value.halfBlockEditing) {
             await recordDiff(arrayX, arrayY, ob, brushBlock);
           }
         } else if (isErasing.value) {
