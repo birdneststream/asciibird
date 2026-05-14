@@ -249,6 +249,15 @@ describe('Layers.vue', () => {
       expect(wrapper.vm.layerItemClass(1)).toBe('hover:bg-surface-variant/30')
     })
 
+  it('layerItemClass returns dimmed style for unselected invisible layer',
+    () => {
+      store.addLayer()
+      store.toggleLayer(1) // hide layer 1
+      store.changeLayer(0) // select layer 0 (not 1)
+      const wrapper = createWrapper()
+      expect(wrapper.vm.layerItemClass(1)).toBe('opacity-50 hover:opacity-70')
+    })
+
   it('selectBestLayer toggles first layer when all invisible', () => {
     store.toggleLayer(0)
     const wrapper = createWrapper()

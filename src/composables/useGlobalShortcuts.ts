@@ -113,9 +113,9 @@ export function useGlobalShortcuts() {
   // ─── Brush shortcuts (scope 'editor') ──────────────────────────
   // Shift+E: horizontal flip brush, Shift+Q: vertical rotate brush
   // Only active when brush or eraser tool is selected
-  const brushShortcuts: Record<string, { type: string; label: string }> = {
-    'shift+e': { type: 'flip', label: 'Flipped' },
-    'shift+q': { type: 'rotate', label: 'Rotated' },
+  const brushShortcuts: Record<string, string> = {
+    'shift+e': 'flip',
+    'shift+q': 'rotate',
   };
 
   for (const [key, action] of Object.entries(brushShortcuts)) {
@@ -124,7 +124,7 @@ export function useGlobalShortcuts() {
       const tool = toolbarIcons[toolbarStore.currentTool];
       if (tool?.name !== 'brush' && tool?.name !== 'eraser') return;
       event.preventDefault();
-      toolbarStore.flipRotateBlocks({ type: action.type });
+      toolbarStore.flipRotateBlocks({ type: action });
     });
   }
 

@@ -104,14 +104,13 @@
 
     <ul
       class="reverseorder mt-2"
-      @mouseup.right="openContextMenu"
     >
       <li
         v-for="(layer, key) in currentAsciiLayers"
         :key="key"
         class="group"
         @click.right="changeLayer(key)"
-        @mouseup.right="openContextMenu"
+        @mouseup.right.stop="openContextMenu"
       >
         <div
           class="flex items-center gap-1 p-1 rounded transition-colors duration-150 cursor-pointer"
