@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { createPinia, setActivePinia } from 'pinia';
 import LZString from 'lz-string';
 import {
@@ -1231,6 +1231,43 @@ describe('Pinia Store Getters', () => {
 
   it('blockSizeMultiplier returns multiplier', () => {
     expect(store.blockSizeMultiplier).toBe(1);
+  });
+
+  describe('setBlockMultiplier', () => {
+    afterEach(() => {
+      store.setBlockMultiplier(1);
+    });
+
+    it('sets multiplier within valid range', () => {
+      store.setBlockMultiplier(2);
+      expect(store.blockSizeMultiplier).toBe(2);
+    });
+
+    it('clamps below minimum (0.5)', () => {
+      store.setBlockMultiplier(0.25);
+      expect(store.blockSizeMultiplier).toBe(0.5);
+    });
+
+    it('clamps above maximum (4)', () => {
+      store.setBlockMultiplier(5);
+      expect(store.blockSizeMultiplier).toBe(4);
+    });
+
+    it('accepts minimum boundary value', () => {
+      store.setBlockMultiplier(0.5);
+      expect(store.blockSizeMultiplier).toBe(0.5);
+    });
+
+    it('accepts maximum boundary value', () => {
+      store.setBlockMultiplier(4);
+      expect(store.blockSizeMultiplier).toBe(4);
+    });
+
+    it('resets to 1', () => {
+      store.setBlockMultiplier(3);
+      store.setBlockMultiplier(1);
+      expect(store.blockSizeMultiplier).toBe(1);
+    });
   });
 
   it('brushHistory returns history array', () => {

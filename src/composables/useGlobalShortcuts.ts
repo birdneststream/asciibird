@@ -91,6 +91,20 @@ export function useGlobalShortcuts() {
         toolbarStore.changeTool(4); // brush tool
       }
     },
+
+    // Zoom in/out/reset (ctrl+plus covers numpad +; ctrl+= covers main keyboard)
+    'ctrl+=': () => {
+      store.setBlockMultiplier(store.blockSizeMultiplier + 0.25);
+    },
+    'ctrl+plus': () => {
+      store.setBlockMultiplier(store.blockSizeMultiplier + 0.25);
+    },
+    'ctrl+-': () => {
+      store.setBlockMultiplier(store.blockSizeMultiplier - 0.25);
+    },
+    'ctrl+0': () => {
+      store.setBlockMultiplier(1);
+    },
   };
 
   // Register all menu shortcuts in scope 'all'

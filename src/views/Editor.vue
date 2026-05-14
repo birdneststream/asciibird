@@ -258,8 +258,8 @@ const isSelected = computed(
 );
 
 const brushBlocks = computed(() => toolbarStore.brushBlocks);
-const canvasX = computed(() => x.value * blockWidth);
-const canvasY = computed(() => y.value * blockHeight);
+const canvasX = computed(() => x.value * blockWidthComp.value);
+const canvasY = computed(() => y.value * blockHeightComp.value);
 const toolbarState = computed(() => toolbarStore.toolbarState);
 const mirrorX = computed(() => toolbarState.value.mirrorX);
 const mirrorY = computed(() => toolbarState.value.mirrorY);
@@ -379,11 +379,11 @@ const panelStyle = computed(() => canvasPanel.style.value);
 
 // ─── Watchers ───────────────────────────────────────────────────
 watch(currentAsciiHeight, (val) => {
-  canvasSize.height = val * blockHeight;
+  canvasSize.height = val * blockHeightComp.value;
 });
 
 watch(currentAsciiWidth, (val) => {
-  canvasSize.width = val * blockWidth;
+  canvasSize.width = val * blockWidthComp.value;
 });
 
 // Watch tab index for tab switches — resets panel position from stored x/y.
@@ -393,8 +393,8 @@ watch(() => store.tab, (newTab) => {
     const meta = store.asciibirdMeta[newTab];
     if (!meta) return;
 
-    canvasSize.width = currentAsciiWidth.value * blockWidth;
-    canvasSize.height = currentAsciiHeight.value * blockHeight;
+    canvasSize.width = currentAsciiWidth.value * blockWidthComp.value;
+    canvasSize.height = currentAsciiHeight.value * blockHeightComp.value;
 
     canvasPanel.setPosition(meta.x ?? 0, meta.y ?? 0);
     canvasPanel.setDimensions(
@@ -415,6 +415,17 @@ watch(currentSelectedLayer, (val) => {
 
 watch(currentAsciiLayerBlocks, async () => {
   await delayRedrawCanvas();
+});
+
+// Re-layout canvas when zoom multiplier changes
+watch(blockSizeMultiplier, () => {
+  canvasSize.width = currentAsciiWidth.value * blockWidthComp.value;
+  canvasSize.height = currentAsciiHeight.value * blockHeightComp.value;
+  canvasPanel.setDimensions(
+    currentAsciiWidth.value * blockWidthComp.value,
+    currentAsciiHeight.value * blockHeightComp.value,
+  );
+  delayRedrawCanvas(true);
 });
 
 watch(currentTool, async () => {
@@ -543,6 +554,9 @@ hotkeys('*', 'editor', async function (event) {
 });
 
 // ─── Lifecycle ──────────────────────────────────────────────────
+// Ctrl+Scroll zoom handler — hoisted to setup scope for cleanup
+let wheelHandler: ((e: WheelEvent) => void) | null = null;
+
 onMounted(async () => {
   const canvas = canvasRef.value;
   if (canvas) {
@@ -556,6 +570,17 @@ onMounted(async () => {
     // willReadFrequently: tools canvas also uses width-reset clear pattern.
     toolCtx = tools.getContext('2d', { willReadFrequently: true });
   }
+
+  // Ctrl+Scroll zoom — passive:false needed to preventDefault browser zoom
+  wheelHandler = (e: WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.25 : 0.25;
+      store.setBlockMultiplier(store.blockSizeMultiplier + delta);
+    }
+  };
+  editorPanel.value?.addEventListener('wheel', wheelHandler, { passive: false });
+
   await delayRedrawCanvas();
 });
 
@@ -563,12 +588,16 @@ onUnmounted(() => {
   hotkeys.unbind('*', 'editor');
   canvasPanel.cleanup();
   cancelRedraw();
+  if (wheelHandler) {
+    editorPanel.value?.removeEventListener('wheel', wheelHandler);
+    wheelHandler = null;
+  }
 });
 
 // ─── Init (equivalent to created() — runs during setup) ─────────
 if (currentAsciiLayerBlocks.value) {
-  canvasSize.width = currentAsciiWidth.value * blockWidth;
-  canvasSize.height = currentAsciiHeight.value * blockHeight;
+  canvasSize.width = currentAsciiWidth.value * blockWidthComp.value;
+  canvasSize.height = currentAsciiHeight.value * blockHeightComp.value;
   // delayRedrawCanvas will be called in onMounted
 }
 
@@ -836,12 +865,14 @@ function mergeLayersFn() {
 
 async function drawGrid() {
   if (!toolCtx) return;
+  const bw = blockWidthComp.value;
+  const bh = blockHeightComp.value;
   const w = canvasSize.width;
   const h = canvasSize.height;
 
   toolCtx.beginPath();
 
-  for (let gx = 1; gx <= w; gx += blockWidth) {
+  for (let gx = 1; gx <= w; gx += bw) {
     toolCtx.moveTo(gx, 0);
     toolCtx.lineTo(gx, h);
   }
@@ -853,7 +884,7 @@ async function drawGrid() {
   toolCtx.stroke();
 
   toolCtx.beginPath();
-  for (let gy = 1; gy <= h; gy += halfBlockEditing.value ? (blockHeight / 2) : blockHeight) {
+  for (let gy = 1; gy <= h; gy += halfBlockEditing.value ? (bh / 2) : bh) {
     toolCtx.moveTo(0, gy);
     toolCtx.lineTo(w, gy);
   }
@@ -866,6 +897,9 @@ async function redrawCanvas(force = false) {
   redrawCanvasFn = redrawCanvas;
 
   if (!ctx) return;
+  const bw = blockWidthComp.value;
+  const bh = blockHeightComp.value;
+
   if (currentAsciiLayers.value.length) {
     let cx = 0;
     let cy = 0;
@@ -882,8 +916,8 @@ async function redrawCanvas(force = false) {
     ) {
       outer: for (const i in diffBlocks.new) {
         const entry = diffBlocks.new[i];
-        canvasXVal = blockWidth * entry.x;
-        canvasYVal = blockHeight * entry.y;
+        canvasXVal = bw * entry.x;
+        canvasYVal = bh * entry.y;
         curBlock = { ...entry.b };
 
         for (
@@ -902,8 +936,8 @@ async function redrawCanvas(force = false) {
           curBlock,
           canvasXVal,
           canvasYVal,
-          blockWidth,
-          blockHeight,
+          bw,
+          bh,
           mircColours99,
           {
             canBg: canBg.value,
@@ -932,7 +966,7 @@ async function redrawCanvas(force = false) {
       clearMainCanvas(ctx, canvasRef.value, canvasSize.width, canvasSize.height);
 
       for (cy = 0; cy < currentAsciiHeight.value + 1; cy++) {
-        canvasYVal = blockHeight * cy;
+        canvasYVal = bh * cy;
 
         if (
           options.value.renderOffScreen &&
@@ -943,7 +977,7 @@ async function redrawCanvas(force = false) {
         }
 
         for (cx = 0; cx < currentAsciiWidth.value + 1; cx++) {
-          canvasXVal = blockWidth * cx;
+          canvasXVal = bw * cx;
 
           curBlock = { ...merged[cy][cx] };
 
@@ -952,8 +986,8 @@ async function redrawCanvas(force = false) {
             curBlock,
             canvasXVal,
             canvasYVal,
-            blockWidth,
-            blockHeight,
+            bw,
+            bh,
             mircColours99,
           );
         }
@@ -1120,11 +1154,11 @@ async function canvasMouseMove(e: MouseEvent) {
   }
   if (e.offsetY >= 0) {
     y.value = e.offsetY;
-    atTopHalf.value = Math.floor(e.offsetY / (blockHeight / 2)) % 2 === 0 ? 1 : 0;
+    atTopHalf.value = Math.floor(e.offsetY / (blockHeightComp.value / 2)) % 2 === 0 ? 1 : 0;
   }
 
-  x.value = Math.floor(x.value / blockWidth);
-  y.value = Math.floor(y.value / blockHeight);
+  x.value = Math.floor(x.value / blockWidthComp.value);
+  y.value = Math.floor(y.value / blockHeightComp.value);
 
   if (x.value === lastX && y.value === lastY && !halfBlockEditing.value) {
     return;
@@ -1159,8 +1193,8 @@ async function canvasMouseMove(e: MouseEvent) {
 
       case 'select':
         if (selecting.value.canSelect) {
-          selecting.value.endX = canvasX.value + blockWidth;
-          selecting.value.endY = canvasY.value + blockHeight;
+          selecting.value.endX = canvasX.value + blockWidthComp.value;
+          selecting.value.endY = canvasY.value + blockHeightComp.value;
           await redrawSelect();
         }
         if (!isSelected.value) {
@@ -1236,8 +1270,8 @@ async function processSelect() {
 
   for (sy = 0; sy < currentAsciiHeight.value; sy++) {
     if (
-      sy > Math.floor(selecting.value.startY! / blockHeight) - 1 &&
-      sy < Math.floor(selecting.value.endY! / blockHeight)
+      sy > Math.floor(selecting.value.startY! / blockHeightComp.value) - 1 &&
+      sy < Math.floor(selecting.value.endY! / blockHeightComp.value)
     ) {
       if (!selectedBlocks.value[sy]) {
         selectedBlocks.value[sy] = [];
@@ -1245,8 +1279,8 @@ async function processSelect() {
 
       for (sx = 0; sx < currentAsciiWidth.value; sx++) {
         if (
-          sx > Math.ceil(selecting.value.startX! / blockWidth) - 1 &&
-          sx <= Math.ceil(selecting.value.endX! / blockWidth) - 1
+          sx > Math.ceil(selecting.value.startX! / blockWidthComp.value) - 1 &&
+          sx <= Math.ceil(selecting.value.endX! / blockWidthComp.value) - 1
         ) {
           if (
             currentAsciiLayerBlocks.value[sy] &&
@@ -1279,6 +1313,8 @@ async function processSelect() {
 
 async function drawRectangleBlock(rx: number, ry: number) {
   if (!toolCtx) return;
+  const bw = blockWidthComp.value;
+  const bh = blockHeightComp.value;
   const block = asciiBlockAtXy.value as Block | false;
   let indicatorColour = 1;
 
@@ -1290,9 +1326,9 @@ async function drawRectangleBlock(rx: number, ry: number) {
   }
 
   toolCtx.fillStyle = mircColours99[indicatorColour];
-  toolCtx.fillRect(rx * blockWidth, ry * blockHeight, blockWidth, blockHeight);
+  toolCtx.fillRect(rx * bw, ry * bh, bw, bh);
   toolCtx.setLineDash([1, 2]);
-  toolCtx.strokeRect(rx * blockWidth, ry * blockHeight, blockWidth, blockHeight);
+  toolCtx.strokeRect(rx * bw, ry * bh, bw, bh);
 }
 
 async function drawIndicator() {
@@ -1326,8 +1362,10 @@ async function drawBrushBlocks(
   plain = false,
 ) {
   if (!toolCtx) return;
-  const arrayY = brushY / blockHeight;
-  const arrayX = brushX / blockWidth;
+  const bw = blockWidthComp.value;
+  const bh = blockHeightComp.value;
+  const arrayY = brushY / bh;
+  const arrayX = brushX / bw;
   const asciiWidth = currentAsciiWidth.value;
   const asciiHeight = currentAsciiHeight.value;
   const tBlock = currentAsciiLayerBlocks.value[arrayY]?.[arrayX];
@@ -1339,14 +1377,14 @@ async function drawBrushBlocks(
       indicatorColour = 1;
     }
     toolCtx.fillStyle = mircColours99[indicatorColour];
-    toolCtx.fillRect(brushX, brushY, blockWidth, blockHeight);
+    toolCtx.fillRect(brushX, brushY, bw, bh);
 
     applyMirrored(
       arrayX, arrayY, asciiWidth, asciiHeight,
       mirrorX.value, mirrorY.value,
       (mx, my) => {
         toolCtx.fillRect(
-          mx * blockWidth, my * blockHeight, blockWidth, blockHeight,
+          mx * bw, my * bh, bw, bh,
         );
       },
     );
@@ -1374,7 +1412,7 @@ async function drawBrushBlocks(
         toolCtx.fillStyle = canFg.value
           ? mircColours99[brushBlock.fg]
           : '#FFFFFF';
-        toolCtx.fillText(brushBlock.char, brushX, brushY + blockHeight - 3);
+        toolCtx.fillText(brushBlock.char, brushX, brushY + bh - 3);
 
         applyMirrored(
           arrayX, arrayY, asciiWidth, asciiHeight,
@@ -1382,8 +1420,8 @@ async function drawBrushBlocks(
           (mx, my) => {
             toolCtx.fillText(
               brushBlock.char!,
-              mx * blockWidth,
-              my * blockHeight + blockHeight - 3,
+              mx * bw,
+              my * bh + bh - 3,
             );
           },
         );
@@ -1414,19 +1452,19 @@ async function drawBrushBlocks(
 
   if (canBg.value && target === 'bg') {
     toolCtx.setLineDash([1, 2]);
-    toolCtx.strokeRect(brushX, brushY, blockWidth, blockHeight);
-    toolCtx.fillRect(brushX, brushY, blockWidth, blockHeight);
+    toolCtx.strokeRect(brushX, brushY, bw, bh);
+    toolCtx.fillRect(brushX, brushY, bw, bh);
 
     applyMirrored(
       arrayX, arrayY, asciiWidth, asciiHeight,
       mirrorX.value, mirrorY.value,
       (mx, my) => {
         toolCtx.fillRect(
-          mx * blockWidth, my * blockHeight, blockWidth, blockHeight,
+          mx * bw, my * bh, bw, bh,
         );
         toolCtx.setLineDash([1, 2]);
         toolCtx.strokeRect(
-          mx * blockWidth, my * blockHeight, blockWidth, blockHeight,
+          mx * bw, my * bh, bw, bh,
         );
       },
     );
@@ -1457,8 +1495,9 @@ async function drawBrushBlocks(
 
 async function drawHalfBlocks(brushX: number, brushY: number) {
   if (!toolCtx) return;
-  const arrayY = brushY / blockHeight;
-  const arrayX = brushX / blockWidth;
+  const bh = blockHeightComp.value;
+  const arrayY = brushY / bh;
+  const arrayX = brushX / blockWidthComp.value;
 
   const tBlock = currentAsciiLayerBlocks.value[arrayY][arrayX];
   const ob = { ...currentAsciiLayerBlocks.value[arrayY][arrayX] };
@@ -1472,7 +1511,7 @@ async function drawHalfBlocks(brushX: number, brushY: number) {
   toolCtx.fillText(
     atTopHalf.value ? topChar : bottomChar,
     brushX,
-    brushY + blockHeight - 3,
+    brushY + bh - 3,
   );
 
   if (canTool.value) {
@@ -1500,18 +1539,20 @@ async function drawHalfBlocks(brushX: number, brushY: number) {
 
 async function drawBrush(plain = false) {
   await clearToolCanvas();
+  const bw = blockWidthComp.value;
+  const bh = blockHeightComp.value;
   let brushDiffX = 0;
   let xLength: number | false = false;
 
   for (let i = 0; i <= brushBlocks.value.length; i++) {
     if (brushBlocks.value[i] && xLength === false) {
-      brushDiffX = Math.floor(brushBlocks.value[i].length / 2) * blockWidth;
+      brushDiffX = Math.floor(brushBlocks.value[i].length / 2) * bw;
       xLength = brushBlocks.value[i].length;
       break;
     }
   }
 
-  const brushDiffY = Math.floor(brushBlocks.value.length / 2) * blockHeight;
+  const brushDiffY = Math.floor(brushBlocks.value.length / 2) * bh;
 
   for (let by = 0; by < brushBlocks.value.length; by++) {
     if (!brushBlocks.value[by]) continue;
@@ -1535,11 +1576,11 @@ async function drawBrush(plain = false) {
         continue;
       }
 
-      const brushX = x.value * blockWidth + bx * blockWidth - brushDiffX;
-      const brushY = y.value * blockHeight + by * blockHeight - brushDiffY;
+      const brushX = x.value * bw + bx * bw - brushDiffX;
+      const brushY = y.value * bh + by * bh - brushDiffY;
 
-      const arrayY = brushY / blockHeight;
-      const arrayX = brushX / blockWidth;
+      const arrayY = brushY / bh;
+      const arrayX = brushX / bw;
 
       if (
         currentAsciiLayerBlocks.value[arrayY] &&
@@ -1582,20 +1623,22 @@ function recordDiff(
 
 async function eraser() {
   if (canTool.value) {
+    const bw = blockWidthComp.value;
+    const bh = blockHeightComp.value;
     const brushDiffX =
-      Math.floor(brushBlocks.value[0].length / 2) * blockWidth;
+      Math.floor(brushBlocks.value[0].length / 2) * bw;
     const brushDiffY =
-      Math.floor(brushBlocks.value.length / 2) * blockHeight;
+      Math.floor(brushBlocks.value.length / 2) * bh;
 
     for (let ey = 0; ey < brushBlocks.value.length; ey++) {
       for (let ex = 0; ex < brushBlocks.value[0].length; ex++) {
         const brushX =
-          x.value * blockWidth + ex * blockWidth - brushDiffX;
+          x.value * bw + ex * bw - brushDiffX;
         const brushY =
-          y.value * blockHeight + ey * blockHeight - brushDiffY;
+          y.value * bh + ey * bh - brushDiffY;
 
-        const arrayY = brushY / blockHeight;
-        const arrayX = brushX / blockWidth;
+        const arrayY = brushY / bh;
+        const arrayX = brushX / bw;
 
         if (currentAsciiLayerBlocks.value[arrayY] === undefined) continue;
 

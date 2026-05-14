@@ -75,6 +75,9 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     changeState(payload: Partial<RootState>) {
       Object.assign(this, payload);
     },
+    setBlockMultiplier(value: number) {
+      this.blockSizeMultiplier = Math.max(0.5, Math.min(4, value));
+    },
     updateOptions(payload: Options) {
       this.options = { ...payload };
     },

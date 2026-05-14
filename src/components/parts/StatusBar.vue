@@ -38,6 +38,12 @@
       >
         Tool: {{ toolName }}
       </span>
+      <span
+        v-if="zoomPercent !== 100"
+        class="font-label-mono text-body-sm text-on-surface-variant"
+      >
+        Zoom: {{ zoomPercent }}%
+      </span>
     </div>
     <div class="flex items-center gap-sm">
       <span
@@ -132,6 +138,10 @@ const projectTitle = computed(() => {
 const layerInfo = computed(() => {
   if (!props.layerLabel || props.layerCount === 0) return null;
   return `${props.layerIndex + 1}/${props.layerCount} ${props.layerLabel}`;
+});
+
+const zoomPercent = computed(() => {
+  return Math.round(store.blockSizeMultiplier * 100);
 });
 
 /** Style class for task bar button based on panel state */
