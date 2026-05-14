@@ -6,6 +6,7 @@
       class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-[220px] z-40"
     >
       <PanelHeader
+        ref="handleRef"
         title="Brush"
         show-status
       />
@@ -131,12 +132,13 @@ const emit = defineEmits<{
 const toolbarStore = useToolbarStore();
 const panelStore = usePanelStore();
 const panelEl = ref<HTMLElement | null>(null);
-
+const handleRef = ref<InstanceType<typeof PanelHeader> | null>(null);
 const { style: panelStyle } = usePanelDraggable(panelEl, {
   initialValue: {
     x: panelStore.brushPreview.x,
     y: panelStore.brushPreview.y,
   },
+  handle: computed(() => handleRef.value?.headerEl ?? null),
 });
 
 const canDrag = ref(true);

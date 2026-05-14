@@ -6,6 +6,7 @@
       class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-48 z-40"
     >
       <PanelHeader
+        ref="handleRef"
         title="Debug"
         show-status
       />
@@ -88,12 +89,14 @@ const panelStore = usePanelStore();
 const { show: toastShow } = useToast();
 const { copyText } = useClipboard();
 const panelEl = ref<HTMLElement | null>(null);
+const handleRef = ref<InstanceType<typeof PanelHeader> | null>(null);
 
 const { style: panelStyle } = usePanelDraggable(panelEl, {
   initialValue: {
     x: panelStore.debugPanel.x,
     y: panelStore.debugPanel.y,
   },
+  handle: computed(() => handleRef.value?.headerEl ?? null),
 });
 
 const getToolName = computed(() =>
