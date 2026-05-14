@@ -6,7 +6,7 @@
   >
     <Dialog
       as="div"
-      class="relative z-50"
+      class="relative z-modal"
       @close="emit('close')"
     >
       <TransitionChild

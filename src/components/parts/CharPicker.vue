@@ -2,7 +2,7 @@
   <div
     ref="el"
     :style="style"
-    class="fixed z-50 floating-panel rounded-lg overflow-hidden"
+    class="fixed z-picker floating-panel rounded-lg overflow-hidden"
   >
     <div class="p-sm">
       <label class="flex items-center gap-2 mb-2 cursor-pointer">

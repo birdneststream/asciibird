@@ -7,7 +7,7 @@
     >
       <context-menu
         ref="editorMenu"
-        class="z-50"
+        class="z-picker"
       >
         <ul>
           <li

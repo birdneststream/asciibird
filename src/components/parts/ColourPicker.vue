@@ -2,7 +2,7 @@
   <div
     ref="el"
     :style="style"
-    class="fixed z-50 floating-panel rounded-lg overflow-hidden p-sm"
+    class="fixed z-picker floating-panel rounded-lg overflow-hidden p-sm"
   >
     <div class="grid grid-cols-10 gap-1">
       <button

@@ -26,7 +26,7 @@
             {{ menuItem.label }}
           </MenuButton>
           <MenuItems
-            class="absolute mt-0 shadow-panel rounded-b min-w-48 z-50 border bg-surface-container-high border-outline-variant"
+            class="absolute mt-0 shadow-panel rounded-b min-w-48 z-menu border bg-surface-container-high border-outline-variant"
             @focus="onMenuItemsOpen(index)"
           >
             <MenuItem
@@ -79,7 +79,7 @@
 
     <context-menu
       ref="menu"
-      class="z-50"
+      class="z-picker"
     >
       <ul>
         <li
@@ -161,7 +161,7 @@
 
     <context-menu
       ref="tabMenu"
-      class="z-50"
+      class="z-picker"
     >
       <ul>
         <li
@@ -276,12 +276,12 @@
 
       <CharPicker
         v-show="toolbarState.isChoosingChar"
-        class="z-50"
+        class="z-picker"
         :y-offset="scrollOffset"
       />
       <ColourPicker
         v-if="toolbarState.isChoosingFg || toolbarState.isChoosingBg"
-        class="z-50"
+        class="z-picker"
         :y-offset="scrollOffset"
       />
     </template>
@@ -295,7 +295,7 @@
     </template>
 
     <!-- Toast notifications -->
-    <div class="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-50 flex flex-col items-center gap-2">
+    <div class="fixed bottom-10 left-1/2 transform -translate-x-1/2 z-toast flex flex-col items-center gap-2">
       <TransitionGroup name="toast">
         <div
           v-for="msg in toasts"

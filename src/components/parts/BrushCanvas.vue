@@ -16,7 +16,7 @@
 
       <context-menu
         ref="contextMenuRef"
-        class="z-50"
+        class="z-picker"
       >
         <ul>
           <li

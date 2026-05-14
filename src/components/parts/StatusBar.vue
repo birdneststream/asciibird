@@ -68,7 +68,7 @@
   <!-- Context menu for task bar right-click -->
   <context-menu
     ref="taskBarMenu"
-    class="z-50"
+    class="z-picker"
   >
     <ul>
       <li

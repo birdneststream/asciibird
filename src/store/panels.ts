@@ -146,9 +146,9 @@ export const usePanelStore = defineStore('panel', {
       }
     },
 
-    /** Bring a panel to the front of the z-index stack */
+    /** Bring a panel to the front of the z-index stack (capped at 8999) */
     bringToFront(key: string) {
-      this.zCounter++;
+      this.zCounter = Math.min(this.zCounter + 1, 8999);
       this.zIndices[key] = this.zCounter;
     },
   },

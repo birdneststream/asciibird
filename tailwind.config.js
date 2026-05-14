@@ -75,10 +75,19 @@ export default {
         background: '#131313',
       },
       fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
         ui: ['Inter', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
         canvas: ['JetBrains Mono', 'Hack', 'monospace'],
         'label-mono': ['JetBrains Mono', 'monospace'],
+      },
+      zIndex: {
+        statusbar: '40',
+        panel: '100',
+        picker: '5000',
+        menu: '9000',
+        toast: '9500',
+        modal: '10000',
       },
       fontSize: {
         'headline-lg': [
