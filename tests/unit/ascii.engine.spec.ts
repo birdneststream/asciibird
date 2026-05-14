@@ -287,8 +287,8 @@ describe('ascii.ts constants', () => {
     expect(allChars).toContain('─');
   });
 
-  it('toolbarIcons has 8 tool entries', () => {
-    expect(toolbarIcons).toHaveLength(8);
+  it('toolbarIcons has 9 tool entries', () => {
+    expect(toolbarIcons).toHaveLength(9);
   });
 
   it('toolbarIcons each have name and icon', () => {
@@ -310,6 +310,7 @@ describe('ascii.ts constants', () => {
     expect(names).toContain('select');
     expect(names).toContain('text');
     expect(names).toContain('fill-eraser');
+    expect(names).toContain('replace-color');
   });
 
   it('blockWidth is 8', () => {
