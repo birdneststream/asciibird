@@ -33,7 +33,13 @@ const customStore: UseStore = createStore('asciibird', 'persist');
  * IMPORTANT: When adding a new Pinia store with IDB persistence, its
  * persist key MUST be added here so it's preloaded during init().
  */
-const PERSISTED_KEYS = ['vuex', 'asciibird-toolbar'];
+const PERSISTED_KEYS = [
+  'vuex',
+  'asciibird-toolbar',
+  'asciibird-panel',
+  'asciibird-desktop',
+  'asciibird-modal',
+];
 
 /** IDB schema version for future migration detection */
 const SCHEMA_VERSION_KEY = '_idbSchemaVersion';

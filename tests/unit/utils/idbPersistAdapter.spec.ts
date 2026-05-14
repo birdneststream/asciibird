@@ -125,6 +125,40 @@ describe('idbPersistAdapter', () => {
       expect(toolbar).toBe('{"tool":"brush"}');
     });
 
+    it('migrates all 3 small stores from localStorage to IDB', async () => {
+      // Simulate existing user with data only in localStorage
+      localStorage.setItem(
+        'asciibird-panel',
+        '{"debugPanel":{"x":100}}',
+      );
+      localStorage.setItem(
+        'asciibird-desktop',
+        '{"desktopState":{"menuBarVisible":true}}',
+      );
+      localStorage.setItem(
+        'asciibird-modal',
+        '{"isKeyboardDisabled":true}',
+      );
+
+      await idbPersistAdapter.init();
+
+      // All 3 migrated to cache
+      expect(idbPersistAdapter.getItem('asciibird-panel'))
+        .toBe('{"debugPanel":{"x":100}}');
+      expect(idbPersistAdapter.getItem('asciibird-desktop'))
+        .toBe('{"desktopState":{"menuBarVisible":true}}');
+      expect(idbPersistAdapter.getItem('asciibird-modal'))
+        .toBe('{"isKeyboardDisabled":true}');
+
+      // Verify flushed to IDB
+      await idbPersistAdapter.flush();
+      const { get: idbGet } = await import('idb-keyval');
+      const panel = await idbGet<string>(
+        'asciibird-panel', customStore,
+      );
+      expect(panel).toBe('{"debugPanel":{"x":100}}');
+    });
+
     it('extracts toolbar data from legacy Vuex store', async () => {
       const vuexData = {
         ver: 1,

@@ -2,6 +2,7 @@
 // Extracted from monolithic useAsciiBirdStore for separation of concerns
 
 import { defineStore } from 'pinia';
+import { idbPersistAdapter } from '../utils/idbPersistAdapter';
 import type { DesktopState } from '../types';
 
 export const useDesktopStore = defineStore('desktop', {
@@ -28,5 +29,6 @@ export const useDesktopStore = defineStore('desktop', {
 
   persist: {
     key: 'asciibird-desktop',
+    storage: idbPersistAdapter,
   },
 });

@@ -9,6 +9,7 @@ import {
   blockWidth,
   blockHeight,
 } from '../ascii';
+import { idbPersistAdapter } from '../utils/idbPersistAdapter';
 import type { PanelState, BrushLibraryState } from '../types';
 
 /** Initial panel positions derived from block dimensions */
@@ -154,7 +155,7 @@ export const usePanelStore = defineStore('panel', {
 
   persist: {
     key: 'asciibird-panel',
-    storage: localStorage,
+    storage: idbPersistAdapter,
     // Ephemeral z-index state is meaningless across sessions
     omit: ['zCounter', 'zIndices'],
   },

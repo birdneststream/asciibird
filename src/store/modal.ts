@@ -2,6 +2,7 @@
 // Extracted from monolithic useAsciiBirdStore for separation of concerns
 
 import { defineStore } from 'pinia';
+import { idbPersistAdapter } from '../utils/idbPersistAdapter';
 import type { ModalState } from '../types';
 
 export const useModalStore = defineStore('modal', {
@@ -88,6 +89,7 @@ export const useModalStore = defineStore('modal', {
 
   persist: {
     key: 'asciibird-modal',
+    storage: idbPersistAdapter,
     pick: ['isKeyboardDisabled'],
   },
 });
