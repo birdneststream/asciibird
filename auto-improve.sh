@@ -2,7 +2,7 @@
 set -uo pipefail
 
 # ============================================================================
-# ASCIIBIRD — Autonomous UI Polish Loop
+# ASCIIBIRD — Autonomous Improvement Loop
 # ============================================================================
 # Fully autonomous planner → builder loop.
 # Zero user interaction. Self-iterating with quality gates and code review.
@@ -17,7 +17,13 @@ set -uo pipefail
 #   Phase 3: Comprehensive test coverage ✅ DONE
 #   Phase 4: Review, audit, refactor, simplify ✅ DONE
 #   Phase 5: Vue 3 migration with Headless UI + Tailwind CSS + VueUse ✅ DONE
-#   Phase 6: UI Polish — Obsidian Creative System design (CURRENT)
+#   Phase 6: UI Polish — Obsidian Creative System design ✅ DONE
+#   Phase 7: Fixes, Refactoring, New Features (CURRENT)
+#
+# Priority order per iteration:
+#   1. Fix ALL open bugs from Gitea issues
+#   2. Review/refactor/simplify while preserving original functionality
+#   3. Add new features that improve the editor experience
 #
 # Usage:
 #   ./auto-improve.sh                          # infinite loop
@@ -248,7 +254,7 @@ ensure_git_repo() {
 # ============================================================================
 
 ITERATIONS="${1:-0}"
-DEFAULT_PROMPT="ASCIIBIRD Phase 6: UI Polish — Obsidian Creative System Design. Read AGENTS.md FIRST for current status, tech stack, data model, code conventions. ALL previous phases (1-5) are COMPLETE (Vite, TypeScript, Tests, Refactoring, Vue 3 migration). We are now on Phase 6: UI Polish and Visual Redesign. IMPORTANT: Read ALL files in the design/ folder — these are REFERENCE designs. Match the color scheme and design language but adapt to our existing architecture. The design/obsidian_creative_system/DESIGN.md is the design system specification. The design/ascii_art_studio_floating_panels_layout_2/code.html has the reference HTML/Tailwind implementation. DESIGN GOALS: (1) Centralize ALL colors in tailwind.config.js as a single source of truth — add the full Obsidian Creative System palette (surface, primary, secondary, outline, etc.) to theme.extend.colors. (2) Redo ALL toolbar/panel Tailwind CSS — make them clean, aligned, square, neat. The current panels use inconsistent rounded-full buttons and messy spacing; redo with consistent square-ish buttons (4px radius for small, 8px for containers), proper grid alignment, and the Obsidian dark theme. (3) Apply the surface elevation system: Level 0 background #131313, Level 1 panels #1E1E1E, Level 2 modals/popovers #2A2A2A, with 1px solid #333333 borders. (4) Use the Electric Blue (#adc6ff/#4b8eff) for primary actions/selection and Cyber Lime (#c3f400/#abd600) sparingly for active/success indicators. (5) Typography: Inter for UI, JetBrains Mono/Hack for canvas/technical. (6) Floating panels: semi-transparent with backdrop-blur, crisp borders, consistent drag handles. (7) Update src/style.scss CSS variables and custom classes to use the new palette. (8) Redo Dashboard.vue menu bar, tab bar, and status bar with the new design language. (9) Redo Toolbar.vue, Colours.vue, LayersLibrary.vue, BrushLibrary.vue, BrushPreview.vue, DebugPanel.vue with clean consistent panel styling. (10) Redo all modals (NewAscii, EditAscii, PasteAscii, Options, ImageOverlay, About, Help) with the new dark theme. PRIORITY ORDER: (a) First: tailwind.config.js color system + style.scss variables — the foundation, (b) Second: Dashboard.vue chrome (menu, tabs, status bar), (c) Third: Floating panels (Toolbar, Colours, Layers, Brush, Debug), (d) Fourth: Modals and dialogs, (e) Fifth: Canvas rendering and fine-tuning. MANDATORY: After EVERY runtime code change, verify the app in the browser using Chrome DevTools MCP (chrome-devtools_*) on port 9230. Check console for errors, screenshot to verify rendering. Do NOT use frontend-debugger. A clean build does NOT mean the app works."
+DEFAULT_PROMPT="ASCIIBIRD Phase 7: Fixes, Refactoring, and New Features. Read AGENTS.md FIRST for current status, tech stack, data model, code conventions. ALL previous phases (1-6) are COMPLETE (Vite, TypeScript, Tests, Refactoring, Vue 3 migration, UI Polish). The UI is now solid with the Obsidian Creative System design. Focus on: (1) FIX all open bugs and regressions from Gitea issues — always top priority, every iteration. (2) REVIEW and REFACTOR the codebase — simplify complex functions, improve type safety, remove dead code, consolidate duplicates, improve performance — while PRESERVING all existing functionality. Do NOT change any user-facing behavior during refactoring. (3) If there are ZERO open issues, propose and implement NEW FEATURES that would be a good fit for an IRC ASCII art editor. Good feature candidates: improved brush tools (rotate/flip), better layer management, keyboard shortcut improvements, accessibility enhancements, canvas zoom/pan, undo/redo improvements, export format options, template library, etc. The design/ folder has the Obsidian Creative System spec and reference layouts — maintain visual consistency with the existing design. Use tailwind.config.js Obsidian palette for any new UI elements."
 USER_PROMPT="${2:-$DEFAULT_PROMPT}"
 COUNT=0
 LOG_FILE="auto-improve.log"
@@ -356,7 +362,7 @@ TypeScript: NO"
     elif ! grep -q '"surface"' tailwind.config.js 2>/dev/null; then
         context+="Phase: 6 - UI Polish (Vue 3 done, need Obsidian Creative System design)"
     else
-        context+="Phase: 6 - UI Polish (ongoing — refine design system application)"
+        context+="Phase: 7 - Fixes, Refactoring, New Features (UI polish done)"
     fi
 
     # Only 5 most recent PROGRESS.md files, first 10 lines each
@@ -396,8 +402,8 @@ log "${CYAN}========================================${NC}"
 log "${CYAN}  ASCIIBIRD Auto-Improve Loop${NC}"
 log "${CYAN}  Iterations: $( [ "$ITERATIONS" -gt 0 ] && echo "$ITERATIONS" || echo "infinite" )${NC}"
 log "${CYAN}  Flow: GLM Plan → GLM Build (reviewed by GLM + Hy3)${NC}"
-log "${CYAN}  Phases: 1-Vite → 2-TypeScript → 3-Tests → 4-Refactor → 5-Vue3 → 6-UI Polish${NC}"
-log "${CYAN}  Design: Obsidian Creative System (design/ folder)${NC}"
+log "${CYAN}  Phases: 1-Vite → 2-TS → 3-Tests → 4-Refactor → 5-Vue3 → 6-UI Polish → 7-Fixes/Features${NC}"
+log "${CYAN}  Focus: Bugs → Gitea issues → Refactor → New features${NC}"
 log "${CYAN}  Issues: ${GITEA_URL}/${GITEA_REPO}/issues${NC}"
 log "${CYAN}  Prompt: ${USER_PROMPT}${NC}"
 log "${CYAN}========================================${NC}"
@@ -442,14 +448,7 @@ while true; do
     read -r -d '' PLAN_PROMPT <<PLAN_EOF
 [Iteration ${COUNT}${TOTAL_DISPLAY}] [${AGENT_LABEL}]
 
-IMPORTANT: Read AGENTS.md in the project root FIRST. It contains the full project guide — tech stack, directory structure, data model, code conventions, known issues, modernization roadmap, and MCP tool docs. You MUST follow its conventions.
-
-IMPORTANT: Read ALL files in the design/ folder. These are the REFERENCE designs for Phase 6 UI Polish:
-  - design/obsidian_creative_system/DESIGN.md — Full design system spec (colors, typography, spacing, shapes, components)
-  - design/ascii_art_studio_floating_panels_layout_1/screen.png — Visual reference screenshot
-  - design/ascii_art_studio_floating_panels_layout_2/screen.png — Visual reference screenshot (preferred layout)
-  - design/ascii_art_studio_floating_panels_layout_2/code.html — Reference HTML/Tailwind implementation with exact color tokens
-These are REFERENCES. Adapt the design to our existing Vue 3 + Pinia + Headless UI architecture. Do NOT rewrite the app from scratch.
+IMPORTANT: Read AGENTS.md in the project root FIRST. It contains the full project guide — tech stack, directory structure, data model, code conventions, known issues, and MCP tool docs. You MUST follow its conventions.
 
 Current project state:
 ${CONTEXT}
@@ -464,27 +463,37 @@ User request: ${USER_PROMPT}
 
 ${ISSUES_CONTEXT}
 
-Based on the current state, create a plan for the most impactful next UI polish step. STRICT priority order:
+Based on the current state, create a plan. STRICT priority order:
 1. Fix ALL open bugs from Gitea issues above (always first, every iteration)
-2. Follow the UI Polish task order from the prompt (foundation colors first, then chrome, then panels, then modals, then canvas)
-3. ONLY when there are ZERO open bugs — continue with polish tasks
+2. Review/refactor/simplify codebase while PRESERVING all existing functionality
+3. ONLY when there are ZERO open issues — propose NEW FEATURES that improve the editor
 4. NEVER add new features while there are open bugs outstanding
-5. Every UI change MUST be verified in the browser via Chrome DevTools MCP
+5. NEVER change user-facing behavior during refactoring
+6. Every change MUST be verified in the browser via Chrome DevTools MCP
 
-Check .llm/ for existing plans/progress. Key files for UI work:
-  - tailwind.config.js — Add Obsidian Creative System colors as single source of truth
-  - src/style.scss — CSS variables and custom classes must use new palette
-  - src/Dashboard.vue — Menu bar, tab bar, status bar redesign
-  - src/components/Toolbar.vue — Tool buttons redesign (square, aligned, neat)
-  - src/components/Colours.vue — Color palette panel
-  - src/components/LayersLibrary.vue — Layer management panel
-  - src/components/BrushLibrary.vue — Brush library panel
-  - src/components/DebugPanel.vue — Debug info panel
-  - src/components/parts/BrushPreview.vue — Brush preview
-  - src/components/ABModal.vue — Modal wrapper (affects all modals)
-  - src/components/modals/*.vue — Individual modals
+Good feature candidates for an IRC ASCII art editor:
+- Improved brush tools (rotate/flip)
+- Better layer management
+- Keyboard shortcut improvements
+- Accessibility enhancements
+- Canvas zoom/pan
+- Undo/redo improvements
+- Export format options
+- Template library
 
-IMPORTANT: This is iteration ${COUNT}${TOTAL_DISPLAY}. When creating a git branch, use format 'feat/ui-POLISH-DESC-iter-${COUNT}' (e.g. 'feat/ui-obsidian-colors-iter-${COUNT}'). Always end with '-iter-${COUNT}'.
+Check .llm/ for existing plans/progress. Key files:
+  - src/ascii.ts — Core engine (colors, parsing, export, canvas rendering)
+  - src/store/index.ts — Main Pinia store (tabs, layers, undo/redo)
+  - src/Dashboard.vue — Main orchestrator (menus, tabs, modals)
+  - src/views/Editor.vue — Canvas editor (mouse/keyboard events)
+  - src/components/ — All UI components
+  - src/composables/ — Shared composables
+  - src/utils/ — Shared utilities
+  - tailwind.config.js — Obsidian Creative System palette
+
+The design/ folder has the Obsidian Creative System spec and reference layouts — maintain visual consistency.
+
+IMPORTANT: This is iteration ${COUNT}${TOTAL_DISPLAY}. When creating a git branch, use format 'fix/SHORT-DESC' for bugs, 'refactor/SHORT-DESC' for refactoring, or 'feat/SHORT-DESC' for features.
 
 This is fully autonomous — zero user interaction. The builder will auto-commit and auto-merge to asciibird-v2.
 PLAN_EOF
@@ -507,14 +516,9 @@ PLAN_EOF
 
     BUILD_PROMPT="Implement the approved plan from the previous planning agent. This is iteration ${COUNT}${TOTAL_DISPLAY}.
 
-IMPORTANT: Read AGENTS.md in the project root FIRST. It contains the full project guide — tech stack, data model, code conventions, known issues, modernization roadmap. You MUST follow its conventions.
+IMPORTANT: Read AGENTS.md in the project root FIRST. It contains the full project guide — tech stack, data model, code conventions, known issues. You MUST follow its conventions.
 
-IMPORTANT: Read ALL files in the design/ folder before writing any UI code:
-  - design/obsidian_creative_system/DESIGN.md — The design system specification
-  - design/ascii_art_studio_floating_panels_layout_2/code.html — Reference Tailwind implementation with exact color tokens and component patterns
-These are REFERENCES to guide the visual direction. Adapt to our existing Vue 3 + Pinia + Headless UI + Tailwind CSS architecture.
-
-IMPORTANT: Before implementing, create a new git branch: git checkout -b feat/ui-DESC-iter-${COUNT}
+IMPORTANT: Before implementing, create a new git branch using the plan's specified branch name (fix/DESC, refactor/DESC, or feat/DESC).
 
 Quality gates for this project:
 - yarn lint (ESLint — fix any errors in files you modified)
@@ -522,20 +526,20 @@ Quality gates for this project:
 - yarn build (production build must succeed)
 - npx tsc --noEmit (TypeScript type checking)
 
-Phase 6 (UI Polish) specific gates:
-- tailwind.config.js colors match design/obsidian_creative_system/DESIGN.md palette
-- All hardcoded colors in templates replaced with Tailwind token classes
-- Panels have consistent styling: borders, spacing, typography, radius
+Phase 7 specific rules:
+- Bug fixes: include regression tests, verify root cause is addressed
+- Refactoring: NEVER change user-facing behavior — preserve all functionality
+- New features: verify they don't break existing functionality
+- Maintain visual consistency with Obsidian Creative System design (tailwind.config.js palette)
 - No console errors or Vue warnings in browser
-- Visual QA: toolbar buttons are square/aligned, panels are neat, colors match design system
 
-Chrome debug at http://127.0.0.1:${CHROME_DEBUG_PORT} — use chrome-devtools MCP to verify UI renders correctly after EVERY change. Take screenshots to compare with design references.
+Chrome debug at http://127.0.0.1:${CHROME_DEBUG_PORT} — use chrome-devtools MCP to verify UI renders correctly after EVERY runtime code change.
 
 After ALL tasks are done and committed on the feature branch:
 1. Switch to asciibird-v2: git checkout asciibird-v2
-2. Merge feature branch: git merge feat/ui-DESC-iter-${COUNT} (use actual branch name)
+2. Merge feature branch: git merge <actual-branch-name>
 3. Push: git push origin asciibird-v2
-4. Delete the feature branch: git branch -d feat/ui-DESC-iter-${COUNT}
+4. Delete the feature branch: git branch -d <actual-branch-name>
 
 Code review: You will be reviewed by 2 reviewers (GLM + Hy3). Address all critical issues before proceeding.
 
