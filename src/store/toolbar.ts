@@ -72,10 +72,10 @@ export const useToolbarStore = defineStore('toolbar', {
     brushSizeHeight: (state) => state.toolbarState.brushSizeHeight,
     brushSizeWidth: (state) => state.toolbarState.brushSizeWidth,
     brushSizeType: (state) => state.toolbarState.brushSizeType,
-    brushBlocks: (state): Block[] =>
-      decompressData<Block[]>(state._brushBlocks) || [],
-    selectBlocks: (state): Block[] =>
-      decompressData<Block[]>(state._selectBlocks) || [],
+    brushBlocks: (state): Block[][] =>
+      decompressData<Block[][]>(state._brushBlocks) || [],
+    selectBlocks: (state): Block[][] =>
+      decompressData<Block[][]>(state._selectBlocks) || [],
   },
 
   actions: {
