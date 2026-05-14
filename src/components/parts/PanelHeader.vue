@@ -14,6 +14,20 @@
     </div>
     <div class="flex items-center gap-2">
       <slot name="right" />
+      <button
+        v-if="minimizable"
+        type="button"
+        class="w-5 h-5 rounded flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors"
+        aria-label="Minimize panel"
+        title="Minimize"
+        @click.stop="$emit('minimize')"
+      >
+        <span
+          class="material-icons"
+          style="font-size: 14px"
+          aria-hidden="true"
+        >minimize</span>
+      </button>
       <div
         v-if="showStatus"
         class="w-2 h-2 rounded-full bg-secondary-fixed-dim shadow-[0_0_8px_rgba(171,214,0,0.5)]"
@@ -28,6 +42,11 @@ import { ref } from 'vue';
 defineProps<{
   title: string;
   showStatus?: boolean;
+  minimizable?: boolean;
+}>();
+
+defineEmits<{
+  minimize: [];
 }>();
 
 const headerEl = ref<HTMLElement | null>(null);
