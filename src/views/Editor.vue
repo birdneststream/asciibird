@@ -1119,6 +1119,16 @@ async function dispatchBlocks(clearDiff = false) {
   diffBlocks.old = diffBlocks.old.flat();
   diffBlocks.new = diffBlocks.new.flat();
 
+  // Record colors used for the recent colors strip
+  if (diffBlocks.new.length > 0) {
+    const fg = toolbarStore.currentFg;
+    const bg = toolbarStore.currentBg;
+    toolbarStore.addRecentColor(fg);
+    if (bg !== fg) {
+      toolbarStore.addRecentColor(bg);
+    }
+  }
+
   store.updateAsciiBlocks({
     blocks: currentAsciiLayerBlocks.value,
     diff: { ...diffBlocks },

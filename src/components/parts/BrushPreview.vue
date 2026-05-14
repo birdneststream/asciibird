@@ -15,6 +15,32 @@
       />
 
       <div class="p-sm flex flex-col gap-xs overflow-y-auto custom-scrollbar">
+        <!-- Recent colors strip -->
+        <div
+          v-if="recentColors.length > 0"
+          class="flex gap-0"
+          role="toolbar"
+          aria-label="Recent colors"
+        >
+          <button
+            v-for="(colorIdx, i) in recentColorsDisplay"
+            :key="i"
+            type="button"
+            class="w-4 h-4 flex-shrink-0 border border-outline-variant/30 hover:ring-1 hover:ring-primary transition-all"
+            :style="{ backgroundColor: mircColours[colorIdx] }"
+            :title="`Color ${colorIdx}`"
+            :aria-label="`Recent color ${colorIdx}`"
+            @click="toolbarStore.changeColourFg(colorIdx)"
+            @contextmenu.prevent="toolbarStore.changeColourBg(colorIdx)"
+          />
+          <!-- Empty slots -->
+          <div
+            v-for="i in (12 - recentColors.length)"
+            :key="'empty-' + i"
+            class="w-4 h-4 flex-shrink-0 border border-dashed border-outline-variant/20"
+          />
+        </div>
+
         <!-- Colour swatches -->
         <div class="flex justify-center">
           <Colours class="w-full" />
@@ -114,7 +140,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { usePanelDraggable } from '../../composables/usePanelDraggable';
-import { emptyBlock, maxBrushSize } from '../../ascii';
+import { emptyBlock, maxBrushSize, mircColours99 } from '../../ascii';
 import type { Block } from '../../types';
 import { useToolbarStore } from '../../store/toolbar';
 import { usePanelStore } from '../../store/panels';
@@ -177,6 +203,10 @@ const currentChar = computed(() => toolbarStore.currentChar);
 const canFg = computed(() => toolbarStore.isTargettingFg);
 const canBg = computed(() => toolbarStore.isTargettingBg);
 const canText = computed(() => toolbarStore.isTargettingChar);
+
+const mircColours = mircColours99;
+const recentColors = computed(() => toolbarStore.recentColors);
+const recentColorsDisplay = computed(() => toolbarStore.recentColors.slice(0, 12));
 const updateBrush = computed(() => toolbarStore.toolbarState.updateBrush);
 const brushPreviewState = computed(() => panelStore.brushPreview);
 

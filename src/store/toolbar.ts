@@ -27,6 +27,7 @@ export const useToolbarStore = defineStore('toolbar', {
     _selectBlocks: string;
     brushLibrary: BrushLibraryEntry[];
     pickerPos: { x: number; y: number } | null;
+    recentColors: number[];
   } => ({
     toolbarState: {
       currentColourFg: 0,
@@ -64,6 +65,7 @@ export const useToolbarStore = defineStore('toolbar', {
     _selectBlocks: '',
     brushLibrary: [],
     pickerPos: null,
+    recentColors: [],
   }),
 
   getters: {
@@ -100,6 +102,21 @@ export const useToolbarStore = defineStore('toolbar', {
 
       if (!this.toolbarState.persistCharPanel) {
         this.toolbarState.isChoosingChar = false;
+      }
+    },
+    /**
+     * Add a color to the recent colors strip (LRU, max 12).
+     * Moves to front if already present, pushes if new.
+     */
+    addRecentColor(colorIndex: number) {
+      if (colorIndex < 0 || colorIndex > 98) return;
+      // Remove if already present
+      this.recentColors = this.recentColors.filter(c => c !== colorIndex);
+      // Push to front
+      this.recentColors.unshift(colorIndex);
+      // Trim to 12
+      if (this.recentColors.length > 12) {
+        this.recentColors = this.recentColors.slice(0, 12);
       }
     },
     changeTool(payload: number) {

@@ -327,6 +327,11 @@ export function createMockToolbarStore(
         tState.brushLibrary[key + 1] = temp
       }
     },
+    recentColors: [] as number[],
+    addRecentColor(colorIndex: number) {
+      // Simple mock implementation
+      if (colorIndex < 0 || colorIndex > 98) return;
+    },
   }
 }
 
