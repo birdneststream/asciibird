@@ -420,6 +420,8 @@ import {
   splashAscii,
 } from './ascii';
 
+import { downloadAnsi } from './utils/ansiExport';
+
 import { useAsciiBirdStore } from './store';
 import { useModalStore } from './store/modal';
 import { useDesktopStore } from './store/desktop';
@@ -608,6 +610,11 @@ const menuBar = computed<AppMenuBar[]>(() => [
       {
         text: 'Export to HTTP POST',
         click: () => handleExport('post'),
+        disabled: !asciibirdMeta.value.length,
+      },
+      {
+        text: 'Export to ANSI File',
+        click: () => handleExportAnsi(),
         disabled: !asciibirdMeta.value.length,
       },
     ],
@@ -902,6 +909,16 @@ function handleExport(type: 'file' | 'clipboard' | 'post') {
     });
   } else {
     startExport(type as 'clipboard' | 'file');
+  }
+}
+
+function handleExportAnsi() {
+  try {
+    const title = store.currentAscii?.title ?? 'ascii';
+    downloadAnsi(title);
+    toastShow('Exported ANSI file!', { type: 'success' });
+  } catch (err) {
+    toastShow(`ANSI export error: ${String(err)}`, { type: 'error' });
   }
 }
 
