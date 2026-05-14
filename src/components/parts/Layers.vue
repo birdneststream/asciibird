@@ -87,7 +87,7 @@
           Show/Hide Layer
         </li>
         <li
-          @click="showLayerRename(selectedLayer, currentLayer.label)"
+          @click="startEdit(selectedLayer, currentLayer.label)"
           class="ab-context-menu-item"
         >
           Rename Layer
@@ -133,13 +133,24 @@
             }}</span>
           </button>
 
-          <!-- Layer label -->
+          <!-- Layer label — inline rename on double-click -->
+          <input
+            v-if="isEditing(key)"
+            data-inline-rename-input
+            v-model="editingName"
+            class="flex-1 font-label-mono text-label-mono bg-surface-container-lowest border border-primary rounded px-1 py-0 outline-none min-w-0"
+            @keydown.enter.stop="commitEdit"
+            @keydown.escape.stop="cancelEdit"
+            @blur="commitEdit"
+            @click.stop
+          >
           <span
+            v-else
             class="flex-1 font-label-mono text-label-mono truncate"
             :class="key === selectedLayer
               ? 'text-on-surface font-bold'
               : 'text-on-surface-variant'"
-            @dblclick.stop="showLayerRename(key, layer.label)"
+            @dblclick.stop="startEdit(key, layer.label)"
           >{{ layer.label }}</span>
 
           <!-- Reorder & delete buttons (visible on hover/selected) -->
@@ -198,17 +209,39 @@ import { ref, computed, watch } from 'vue';
 import { useAsciiBirdStore } from '../../store';
 import { useModalStore } from '../../store/modal';
 import { useToast } from '../../composables/useToast';
-import { useDialog } from '../../composables/useDialog';
+import { useInlineRename } from '../../composables/useInlineRename';
 import ContextMenu from './ContextMenu.vue';
 
 const store = useAsciiBirdStore();
 const modalStore = useModalStore();
 const { show: toastShow } = useToast();
-const dialog = useDialog();
+
+const {
+  editingKey: _editingKey,
+  editingName,
+  startEdit,
+  commitEdit,
+  cancelEdit,
+  isEditing,
+  forceCancel,
+} = useInlineRename<number>(
+  (key, newName) => {
+    store.updateLayerName({ key, label: newName });
+    closeMenu();
+  },
+);
 
 const layersMenu = ref<InstanceType<typeof ContextMenu> | null>(null);
 
 const currentAsciiLayers = computed(() => store.currentAsciiLayers);
+
+// Cancel inline rename if layer count changes (layer deleted while editing)
+watch(
+  () => currentAsciiLayers.value.length,
+  () => {
+    forceCancel();
+  },
+);
 
 const selectedLayer = computed(() => {
   let idx = store.selectedLayer;
@@ -283,34 +316,6 @@ function layerItemClass(key: number) {
     return 'opacity-50 hover:opacity-70';
   }
   return 'hover:bg-surface-variant/30';
-}
-
-function showLayerRename(key: number, label: string) {
-  modalStore.toggleDisableKeyboard(true);
-  dialog
-    .prompt({
-      title: 'Rename Layer',
-      text: 'Please input your new layer name',
-      inputValue: label,
-    })
-    .then((result) => {
-      modalStore.toggleDisableKeyboard(false);
-      if (!result.input.length) {
-        toastShow('You must enter a layer name!', {
-          type: 'error',
-        });
-        return;
-      }
-
-      if (result.isOk) {
-        updateLayerName(key, result.input);
-      }
-    });
-}
-
-function updateLayerName(key: number, label: string) {
-  store.updateLayerName({ key, label });
-  closeMenu();
 }
 
 function addLayer() {

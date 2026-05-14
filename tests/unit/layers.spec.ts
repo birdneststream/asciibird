@@ -289,10 +289,15 @@ describe('Layers.vue', () => {
     expect(() => wrapper.vm.closeMenu()).not.toThrow()
   })
 
-  it('updateLayerName calls store updateLayerName', () => {
+  it('inline rename commits via store updateLayerName', async () => {
     const wrapper = createWrapper()
     const spy = vi.spyOn(store, 'updateLayerName')
-    wrapper.vm.updateLayerName(0, 'Renamed Layer')
+    // Trigger inline edit start
+    wrapper.vm.startEdit(0, 'Layer 0')
+    await wrapper.vm.$nextTick()
+    // Simulate name change and commit
+    wrapper.vm.editingName = 'Renamed Layer'
+    wrapper.vm.commitEdit()
     expect(spy).toHaveBeenCalledWith({
       key: 0,
       label: 'Renamed Layer',
