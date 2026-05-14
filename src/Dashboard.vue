@@ -596,6 +596,24 @@ const menuBar = computed<AppMenuBar[]>(() => [
         text: debugPanelState.value.visible ? 'Hide Debug' : 'Show Debug',
         click: () => panelStore.toggleDebugPanel(!debugPanelState.value.visible),
       },
+      {
+        text: 'Zoom In',
+        click: () => store.setBlockMultiplier(store.blockSizeMultiplier + 0.25),
+        disabled: !asciibirdMeta.value.length,
+        shortcut: 'Ctrl+=',
+      },
+      {
+        text: 'Zoom Out',
+        click: () => store.setBlockMultiplier(store.blockSizeMultiplier - 0.25),
+        disabled: !asciibirdMeta.value.length,
+        shortcut: 'Ctrl+-',
+      },
+      {
+        text: 'Reset Zoom',
+        click: () => store.setBlockMultiplier(1),
+        disabled: !asciibirdMeta.value.length,
+        shortcut: 'Ctrl+0',
+      },
     ],
   },
   {
