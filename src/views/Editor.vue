@@ -58,6 +58,14 @@
               Flip Vertical
               <span class="ab-shortcut">Ctrl+Shift+X</span>
             </li>
+            <li class="ab-context-menu-separator" />
+            <li
+              @click="contextMenuReplaceColor()"
+              class="ab-context-menu-item"
+            >
+              Replace Color in Selection
+              <span class="ab-shortcut">R</span>
+            </li>
           </template>
         </ul>
       </context-menu>
@@ -149,6 +157,7 @@ import { useMainCanvasRenderer } from '../composables/useMainCanvasRenderer';
 import { useExportAscii } from '../composables/useExportAscii';
 import { useFpsThrottle } from '../composables/useFpsThrottle';
 import { useSelectionTransform } from '../composables/useSelectionTransform';
+import { useColorReplace } from '../composables/useColorReplace';
 import hotkeys from 'hotkeys-js';
 
 import ContextMenu from '../components/parts/ContextMenu.vue';
@@ -226,6 +235,14 @@ const { startExport } = useExportAscii({
   checkLimits: true,
   label: 'mIRC',
 });
+const {
+  replaceColorSource,
+  isReplacePicking,
+  pickSource,
+  applyReplace,
+  resetReplace,
+  contextMenuReplace,
+} = useColorReplace();
 
 // ─── Template Refs ──────────────────────────────────────────────
 const canvasRef = ref<HTMLCanvasElement | null>(null);
@@ -621,6 +638,12 @@ hotkeys('*', 'editor', async function (event) {
     }
   }
 
+  // Escape: cancel replace-color pick state
+  if (event.key === 'Escape' && isReplacePicking.value) {
+    resetReplace();
+    return;
+  }
+
   if (isBrushing.value || isErasing.value) {
     switch (event.key) {
       case 'ArrowUp':
@@ -733,9 +756,25 @@ function canvasToPng() {
   }
 }
 
-function openContextMenu(e: MouseEvent) {
+ function openContextMenu(e: MouseEvent) {
   e.preventDefault();
   editorMenu.value?.open({ clientX: e.clientX, clientY: e.clientY });
+ }
+
+/**
+ * Context menu "Replace Color in Selection" handler.
+ * Uses the block under cursor as source, current FG/BG as target,
+ * scoped to the current selection bounds.
+ */
+function contextMenuReplaceColor() {
+  const block = asciiBlockAtXy.value;
+  if (!block) return;
+  const bounds = getSelectionBounds();
+  if (bounds) {
+    contextMenuReplace(block, bounds);
+  } else {
+    contextMenuReplace(block);
+  }
 }
 
 async function canvasKeyDown(char: string) {
@@ -1170,6 +1209,31 @@ async function canvasMouseUp() {
   }
 }
 
+/**
+ * Get the current selection bounds as grid coordinates {x, y, w, h}.
+ * Returns null if no valid selection exists.
+ */
+function getSelectionBounds(): { x: number; y: number; w: number; h: number } | null {
+  if (!isSelected.value || !isSelecting.value) return null;
+
+  const bw = blockWidthComp.value;
+  const bh = blockHeightComp.value;
+
+  const startX = Math.floor(selecting.value.startX! / bw);
+  const startY = Math.floor(selecting.value.startY! / bh);
+  const endX = Math.ceil(selecting.value.endX! / bw);
+  const endY = Math.ceil(selecting.value.endY! / bh);
+
+  const x1 = Math.max(0, Math.min(startX, endX));
+  const y1 = Math.max(0, Math.min(startY, endY));
+  const x2 = Math.min(currentAsciiWidth.value, Math.max(startX, endX));
+  const y2 = Math.min(currentAsciiHeight.value, Math.max(startY, endY));
+
+  if (x2 <= x1 || y2 <= y1) return null;
+
+  return { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
+}
+
 async function canvasMouseDown() {
   if (isDefault.value) return;
 
@@ -1241,6 +1305,23 @@ async function canvasMouseDown() {
           }
         }
         toolbarStore.changeTool(0);
+        break;
+
+      case 'replace-color':
+        if (toolbarState.value.halfBlockEditing) {
+          toastShow('Color replace is not available in half-block mode', {
+            type: 'error',
+          });
+          break;
+        }
+        if (!isReplacePicking.value) {
+          // Click 1: pick source colors from the clicked block
+          pickSource(targetBlock);
+        } else {
+          // Click 2: apply replacement
+          const selection = getSelectionBounds();
+          applyReplace(selection ?? undefined);
+        }
         break;
     }
   }
@@ -1361,6 +1442,31 @@ async function canvasMouseMove(e: MouseEvent) {
       case 'fill-eraser':
         await clearToolCanvas();
         await drawIndicator();
+        break;
+
+      case 'replace-color':
+        await clearToolCanvas();
+        await drawIndicator();
+        // Show source color indicator when pick is active
+        if (isReplacePicking.value && replaceColorSource.value && toolCtx) {
+          const bw = blockWidthComp.value;
+          // Draw source FG color swatch above cursor
+          if (replaceColorSource.value.fg !== null) {
+            toolCtx.fillStyle = mircColours99[replaceColorSource.value.fg];
+            toolCtx.fillRect(
+              canvasX.value, canvasY.value - 6,
+              bw / 2, 4,
+            );
+          }
+          // Draw source BG color swatch above cursor
+          if (replaceColorSource.value.bg !== null) {
+            toolCtx.fillStyle = mircColours99[replaceColorSource.value.bg];
+            toolCtx.fillRect(
+              canvasX.value + bw / 2, canvasY.value - 6,
+              bw / 2, 4,
+            );
+          }
+        }
         break;
     }
   }

@@ -229,6 +229,7 @@ export const toolbarIcons: ToolbarIcon[] = [
   { name: 'dropper', icon: 'colorize' },
   { name: 'eraser', icon: 'remove_circle_outline' },
   { name: 'fill-eraser', icon: 'auto_fix_off' },
+  { name: 'replace-color', icon: 'format_paint' },
 ];
 
 export const emptyBlock: Block = {};

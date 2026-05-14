@@ -122,7 +122,18 @@ export interface ToolbarState {
     | 'grid'
     | 'inverted grid'
     | 'h lines'
-    | 'v lines';
+    | 'v lines'
+    | 'diamond'
+    | 'ring'
+    | 'star'
+    | 'frame'
+    | 'triangle up'
+    | 'triangle down'
+    | 'diagonal fwd'
+    | 'diagonal bwd'
+    | 'x pattern'
+    | 'checkerboard'
+    | 'sparse';
   selectedFg: number;
   selectedBg: number;
   selectedChar: string;

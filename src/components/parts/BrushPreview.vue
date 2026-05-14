@@ -118,11 +118,11 @@
           @mousedown.stop
         >
           <option
-            v-for="opt in brushOptions"
-            :key="opt"
-            :value="opt"
+            v-for="(label, i) in brushOptions"
+            :key="brushKeys[i]"
+            :value="brushKeys[i]"
           >
-            {{ opt }}
+            {{ label }}
           </option>
         </select>
 
@@ -140,10 +140,15 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { usePanelDraggable } from '../../composables/usePanelDraggable';
-import { emptyBlock, maxBrushSize, mircColours99 } from '../../ascii';
-import type { Block } from '../../types';
+import { maxBrushSize, mircColours99 } from '../../ascii';
+import type { Block, ToolbarState } from '../../types';
 import { useToolbarStore } from '../../store/toolbar';
 import { usePanelStore } from '../../store/panels';
+import {
+  getBrushShapeLabels,
+  getBrushShapeKeys,
+  createBrushBlocks,
+} from '../../utils/brushShapes';
 import MainBrushCanvas from './MainBrushCanvas.vue';
 import Colours from '../Colours.vue';
 import PanelHeader from './PanelHeader.vue';
@@ -183,15 +188,9 @@ const brushSizeTypeInput = ref('square');
 const isInputtingBrushSize = ref(false);
 const blocks = ref<Block[][]>([]);
 
-const brushOptions = [
-  'Square',
-  'Circle',
-  'Cross',
-  'Grid',
-  'Inverted Grid',
-  'H lines',
-  'V lines',
-];
+// Brush options from the registry (labels for display, keys for values)
+const brushOptions = getBrushShapeLabels();
+const brushKeys = getBrushShapeKeys();
 
 const brushSizeHeight = computed(() => toolbarStore.brushSizeHeight);
 const brushSizeWidth = computed(() => toolbarStore.brushSizeWidth);
@@ -292,238 +291,27 @@ function updateBrushSize() {
   toolbarStore.updateBrushSize({
     brushSizeHeight: brushSizeHeightInput.value,
     brushSizeWidth: brushSizeWidthInput.value,
-    brushSizeType: brushSizeTypeInput.value,
+    brushSizeType: brushSizeTypeInput.value as ToolbarState['brushSizeType'],
   });
 }
 
 function createBlocks() {
   updateBrushSize();
 
-  const brushHeight = brushSizeHeight.value;
-  const brushWidth = brushSizeWidth.value;
-  blocks.value = [];
-
-  let x = 0;
-  let y = 0;
-  let targetX = 0;
-  let targetY = 0;
-
-  const block = {
+  const block: Block = {
     fg: currentFg.value,
     bg: currentBg.value,
     char: currentChar.value,
   };
 
-  for (y = 0; y < brushHeight; y++) {
-    blocks.value[y] = [];
-    for (x = 0; x < brushWidth; x++) {
-      switch (brushSizeType.value.toLowerCase()) {
-        case 'cross':
-          if (x === 0 && y === 0) {
-            blocks.value[y][x] = { ...block };
-            continue;
-          }
-
-          blocks.value[y][x] = { ...emptyBlock };
-
-          if (blocks.value[y] && blocks.value[y][x]) {
-            if (x % 2 === 0 && y % 2 === 0) {
-              blocks.value[y][x] = { ...block };
-            }
-
-            if (x % 2 === 1 && y % 2 === 1) {
-              blocks.value[y][x] = { ...block };
-            }
-          }
-
-          break;
-
-        case 'inverted grid':
-          if (x === 0 && y === 0) {
-            blocks.value[y][x] = { ...block };
-            continue;
-          }
-          if (y % 2 === 0 || x % 2 === 0) {
-            blocks.value[y][x] = { ...block };
-          } else {
-            blocks.value[y][x] = { ...emptyBlock };
-          }
-          break;
-
-        case 'grid':
-          if (x === 0 && y === 0) {
-            blocks.value[y][x] = { ...block };
-            continue;
-          }
-
-          if (x === brushWidth) {
-            blocks.value[y][x] = { ...emptyBlock };
-          } else {
-            blocks.value[y][x] = { ...block };
-          }
-
-          targetX = x;
-
-          if (y % 2 === 0) {
-            targetX -= 1;
-          }
-
-          if (blocks.value[y] && blocks.value[y][targetX]) {
-            if (y % 2 === 0 && x % 2 !== 0) {
-              blocks.value[y][targetX] = { ...block };
-            } else {
-              blocks.value[y][targetX] = { ...emptyBlock };
-            }
-          }
-
-          break;
-
-        case 'h lines':
-          if (x === 0 && y === 0) {
-            blocks.value[y][x] = { ...block };
-            continue;
-          }
-
-          if (x === brushWidth) {
-            blocks.value[y][x] = { ...emptyBlock };
-          } else {
-            blocks.value[y][x] = { ...block };
-          }
-
-          targetX = x;
-
-          if (y % 2 === 0) {
-            targetX -= 1;
-          }
-
-          if (blocks.value[y] && blocks.value[y][targetX]) {
-            if (y % 2 === 0) {
-              if (targetX % 2 === 0) {
-                blocks.value[y][targetX] = { ...block };
-              }
-            } else {
-              blocks.value[y][targetX] = { ...emptyBlock };
-            }
-          }
-
-          break;
-
-        case 'v lines':
-          if (x === 0 && y === 0) {
-            blocks.value[y][x] = { ...block };
-            continue;
-          }
-
-          if (x === brushWidth) {
-            blocks.value[y][x] = { ...emptyBlock };
-          } else {
-            blocks.value[y][x] = { ...block };
-          }
-
-          targetY = y;
-
-          if (targetY % 2 === 0) {
-            targetY -= 1;
-          }
-
-          if (blocks.value[targetY] && blocks.value[targetY][x]) {
-            if (targetY % 2 === 0) {
-              if (x % 2 === 0) {
-                blocks.value[targetY][x] = { ...block };
-              }
-            } else {
-              blocks.value[targetY][x] = { ...emptyBlock };
-            }
-          }
-
-          break;
-
-        case 'square':
-          blocks.value[y][x] = { ...block };
-          break;
-
-        case 'circle':
-          blocks.value[y][x] = { ...emptyBlock };
-          break;
-      }
-    }
-  }
-
-  switch (brushSizeType.value.toLowerCase()) {
-    case 'circle': {
-      let x1 = 0;
-      let y1 = 0;
-
-      for (let angle = 0; angle <= 360; angle += 1) {
-        const radian = angle * ((Math.PI * 2) / 360);
-        x1 = Math.round(
-          (brushWidth - 1) * ((Math.cos(radian) + 1.0) / 2.0),
-        );
-        y1 = Math.round(
-          (brushHeight - 1) * ((Math.sin(radian) + 1.0) / 2.0),
-        );
-
-        if (blocks.value[y1] && blocks.value[y1][x1]) {
-          blocks.value[y1][x1] = { ...block };
-        }
-      }
-
-      fill();
-      break;
-    }
-  }
+  blocks.value = createBrushBlocks(
+    brushSizeType.value,
+    brushSizeWidth.value,
+    brushSizeHeight.value,
+    block,
+  );
 
   toolbarStore.setBrushBlocks(blocks.value);
-}
-
-function fill() {
-  fillTool(middleY.value, middleX.value);
-}
-
-function fillTool(startY: number, startX: number) {
-  // If no targeting flags are active, nothing to fill
-  if (!canFg.value && !canBg.value && !canText.value) return;
-
-  const maxY = brushSizeHeight.value;
-  const maxX = brushSizeWidth.value;
-  if (startY >= maxY || startX >= maxX) return;
-  if (!blocks.value[startY] || blocks.value[startY][startX] === undefined) {
-    return;
-  }
-
-  const targetBg = currentBg.value;
-  const startBlock = blocks.value[startY][startX] as Record<string, unknown>;
-  if (startBlock.bg === targetBg) return;
-
-  // Iterative flood fill using explicit stack
-  const visited = new Set<number>();
-  const stack: Array<{ x: number; y: number }> = [
-    { x: startX, y: startY },
-  ];
-
-  while (stack.length > 0) {
-    const pos = stack.pop()!;
-    const key = pos.y * maxX + pos.x;
-
-    if (visited.has(key)) continue;
-    if (pos.y < 0 || pos.y >= maxY || pos.x < 0 || pos.x >= maxX) continue;
-
-    const row = blocks.value[pos.y];
-    if (!row || row[pos.x] === undefined) continue;
-
-    const block = row[pos.x] as Record<string, unknown>;
-    if (block.bg === targetBg) continue;
-
-    visited.add(key);
-    block.bg = currentBg.value;
-    block.fg = currentFg.value;
-    block.char = currentChar.value;
-
-    stack.push({ x: pos.x - 1, y: pos.y });
-    stack.push({ x: pos.x + 1, y: pos.y });
-    stack.push({ x: pos.x, y: pos.y - 1 });
-    stack.push({ x: pos.x, y: pos.y + 1 });
-  }
 }
 
 // Expose internals for testing
@@ -535,6 +323,7 @@ defineExpose({
   brushSizeTypeInput,
   isInputtingBrushSize,
   brushOptions,
+  brushKeys,
   brushSizeHeight,
   brushSizeWidth,
   brushSizeType,
@@ -554,6 +343,5 @@ defineExpose({
   toolbarState: computed(() => toolbarStore.toolbarState),
   updateBrushSize,
   createBlocks,
-  fillTool,
 });
 </script>

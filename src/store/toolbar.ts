@@ -10,6 +10,7 @@ import { compressData, decompressData } from '../utils/layers';
 import { idbPersistAdapter } from '../utils/idbPersistAdapter';
 import { transformBlocks } from '../utils/transformBlocks';
 import type { TransformType } from '../utils/transformBlocks';
+import { validateBrushShapeKey } from '../utils/brushShapes';
 import { useAsciiBirdStore } from './index';
 import type {
   Block,
@@ -159,7 +160,9 @@ export const useToolbarStore = defineStore('toolbar', {
     ) {
       this.toolbarState.brushSizeHeight = payload.brushSizeHeight;
       this.toolbarState.brushSizeWidth = payload.brushSizeWidth;
-      this.toolbarState.brushSizeType = payload.brushSizeType;
+      // Validate shape key — defaults to 'square' if invalid (e.g. stale IDB)
+      this.toolbarState.brushSizeType =
+        validateBrushShapeKey(payload.brushSizeType);
     },
     setBrushBlocks(payload: Block[][]) {
       this._brushBlocks = compressData(payload);
@@ -308,6 +311,11 @@ export const useToolbarStore = defineStore('toolbar', {
         if ('selectBlocks' in parsed) {
           parsed._selectBlocks = parsed.selectBlocks;
           delete parsed.selectBlocks;
+        }
+        // Validate persisted brushSizeType against registry
+        if (parsed.toolbarState?.brushSizeType != null) {
+          parsed.toolbarState.brushSizeType =
+            validateBrushShapeKey(parsed.toolbarState.brushSizeType);
         }
         return parsed;
       },
