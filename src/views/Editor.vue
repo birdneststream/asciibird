@@ -175,6 +175,7 @@ import { getMirrorPositions, applyMirrored } from '../utils/mirror';
 import { bresenhamLine } from '../utils/bresenham';
 import { storeDiffBlocks as storeDiffBlockFn } from '../utils/diffBlocks';
 import { getCanvasFont } from '../utils/canvasFont';
+import { HalfBlockGrid } from '../utils/halfBlockGrid';
 import type { DiffBlocks } from '../utils/diffBlocks';
 import type { Block } from '../types';
 import type { TransformType } from '../utils/transformBlocks';
@@ -1582,43 +1583,40 @@ async function drawBrushBlocks(
 
 async function drawHalfBlocks(brushX: number, brushY: number) {
   if (!toolCtx) return;
+  const bw = blockWidthComp.value;
   const bh = blockHeightComp.value;
-  const arrayY = brushY / bh;
-  const arrayX = brushX / blockWidthComp.value;
 
-  const tBlock = currentAsciiLayerBlocks.value[arrayY][arrayX];
-  const ob = { ...currentAsciiLayerBlocks.value[arrayY][arrayX] };
+  // Compute half-block coordinates from pixel position
+  const coord = HalfBlockGrid.fromPixels(brushX, brushY, bw, bh);
+  const blockY = Math.floor(coord.y / 2);
+  const blockX = coord.x;
 
-  const topChar = '\u2580'; // ▀
-  const bottomChar = '\u2584'; // ▄
-  const fullChar = ' ';
+  if (
+    !currentAsciiLayerBlocks.value[blockY] ||
+    !currentAsciiLayerBlocks.value[blockY][blockX]
+  ) {
+    toolCtx.restore();
+    return;
+  }
 
+  // Snapshot old block before mutation
+  const ob = { ...currentAsciiLayerBlocks.value[blockY][blockX] };
+
+  // Draw canvas preview
   toolCtx.font = getCanvasFont(blockSizeMultiplier.value);
   toolCtx.fillStyle = mircColours99[currentFg.value];
   toolCtx.fillText(
-    atTopHalf.value ? topChar : bottomChar,
+    coord.y % 2 === 0 ? '\u2580' : '\u2584',
     brushX,
     brushY + bh - 3,
   );
 
   if (canTool.value) {
-    if (
-      (tBlock.char === topChar && !atTopHalf.value) ||
-      (tBlock.char === bottomChar && atTopHalf.value)
-    ) {
-      if (currentFg.value === tBlock.fg) {
-        tBlock['bg'] = currentFg.value;
-        tBlock['char'] = fullChar;
-      } else {
-        tBlock['bg'] = currentFg.value;
-        tBlock['char'] = !atTopHalf.value ? topChar : bottomChar;
-      }
-    } else {
-      tBlock['fg'] = currentFg.value;
-      tBlock['char'] = atTopHalf.value ? topChar : bottomChar;
-    }
+    // Use HalfBlockGrid to set the colour at half-block granularity
+    const grid = new HalfBlockGrid(currentAsciiLayerBlocks.value);
+    grid.setColour(coord.x, coord.y, currentFg.value);
 
-    await recordDiff(arrayX, arrayY, ob, tBlock);
+    await recordDiff(blockX, blockY, ob, currentAsciiLayerBlocks.value[blockY][blockX]);
   }
 
   toolCtx.restore();
