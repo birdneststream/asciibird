@@ -2,7 +2,7 @@
   <div>
     <div
       ref="panelEl"
-      class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-panel-width max-h-[80%]"
+      class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-panel-width max-h-[40%]"
       :style="[panelStyle, { zIndex: panelStore.panelZIndex('brushLibrary') }]"
     >
       <PanelHeader

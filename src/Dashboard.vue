@@ -214,9 +214,21 @@
           >
             insert_drive_file
           </span>
+          <input
+            v-if="isTabEditing(key)"
+            data-inline-rename-input
+            v-model="tabEditingName"
+            class="font-label-mono text-label-mono bg-surface-container-lowest border border-primary rounded px-1 py-0 outline-none flex-1 min-w-0"
+            @keydown.enter.stop="commitTabEdit"
+            @keydown.escape.stop="cancelTabEdit"
+            @blur="commitTabEdit"
+            @click.stop
+          >
           <span
+            v-else
             class="font-label-mono text-label-mono truncate flex-1 min-w-0"
             :class="key === currentTab ? 'text-on-surface' : 'text-on-surface-variant group-hover:text-on-surface'"
+            @dblclick.stop="startTabEdit(key, value.title)"
           >
             {{ value.title }}
           </span>
@@ -416,6 +428,7 @@ import { useToast } from './composables/useToast';
 import { useDialog } from './composables/useDialog';
 import { useExportAscii } from './composables/useExportAscii';
 import { useGlobalShortcuts } from './composables/useGlobalShortcuts';
+import { useInlineRename } from './composables/useInlineRename';
 import type { Block, AppMenuBar } from './types';
 
 defineOptions({ name: 'Dashboard' });
@@ -431,6 +444,22 @@ const { startExport } = useExportAscii({ checkLimits: true });
 
 // Register global keyboard shortcuts (menu + tool shortcuts)
 useGlobalShortcuts();
+
+// Tab inline rename composable
+const {
+  editingKey: _tabEditingKey,
+  editingName: tabEditingName,
+  startEdit: startTabEdit,
+  commitEdit: commitTabEdit,
+  cancelEdit: cancelTabEdit,
+  isEditing: isTabEditing,
+} = useInlineRename<number>(
+  (key, newName) => {
+    if (store.asciibirdMeta[key]) {
+      store.asciibirdMeta[key].title = newName;
+    }
+  },
+);
 
 // Template refs
 const menu = ref<InstanceType<typeof ContextMenu> | null>(null);
