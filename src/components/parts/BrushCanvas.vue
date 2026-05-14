@@ -93,9 +93,10 @@ const contextMenuRef = ref<InstanceType<typeof ContextMenu>>()
 const ctx = ref<CanvasRenderingContext2D | null>(null)
 
 // ─── FPS-Throttled Redraw ─────────────────────────────────
-let drawPreviewFn: () => void = () => {}
+// drawPreview is a hoisted function declaration — safe to reference
+// directly before the definition appears in source order.
 const { scheduleRedraw: delayRedrawCanvas } = useFpsThrottle(
-  () => drawPreviewFn(),
+  drawPreview,
   () => store.options.fps,
 )
 
@@ -169,7 +170,6 @@ function canvasToPng() {
 }
 
 function drawPreview() {
-  drawPreviewFn = drawPreview
   if (!canvasRef.value || !ctx.value) return
 
   const c = ctx.value

@@ -272,10 +272,10 @@ const gridView = computed(() => toolbarState.value.gridView);
 const halfBlockEditing = computed(() => toolbarState.value.halfBlockEditing);
 
 // ─── FPS-Throttled Canvas Redraw ─────────────────────────────────
-// redrawCanvas is defined below — use a deferred reference
-let redrawCanvasFn: (force?: boolean) => Promise<void> = async () => {};
+// redrawCanvas is a hoisted async function declaration — safe to
+// reference directly before the definition appears in source order.
 const { scheduleRedraw: delayRedrawCanvas, cancelRedraw } = useFpsThrottle(
-  (force) => redrawCanvasFn(force),
+  redrawCanvas,
   () => options.value.fps,
 );
 
@@ -893,9 +893,6 @@ async function drawGrid() {
 }
 
 async function redrawCanvas(force = false) {
-  // Wire deferred reference for useFpsThrottle
-  redrawCanvasFn = redrawCanvas;
-
   if (!ctx) return;
   const bw = blockWidthComp.value;
   const bh = blockHeightComp.value;
