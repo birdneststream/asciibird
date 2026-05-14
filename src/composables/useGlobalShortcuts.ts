@@ -74,6 +74,23 @@ export function useGlobalShortcuts() {
     },
     'f1': () => modalStore.openModal('help'),
     'shift+f1': () => modalStore.openModal('about'),
+
+    // Copy selected blocks to clipboard — handled by Dashboard
+    'ctrl+c': () => {
+      if (store.asciibirdMeta.length && !modalStore.isModalOpen) {
+        window.dispatchEvent(new CustomEvent('asciibird:copy-blocks'));
+      }
+    },
+
+    // Paste copied blocks as brush
+    'ctrl+v': () => {
+      if (!store.asciibirdMeta.length || modalStore.isModalOpen) return;
+      const copied = toolbarStore.selectBlocks;
+      if (copied.length > 0) {
+        toolbarStore.setBrushBlocks(copied);
+        toolbarStore.changeTool(4); // brush tool
+      }
+    },
   };
 
   // Register all menu shortcuts in scope 'all'

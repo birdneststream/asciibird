@@ -480,14 +480,24 @@ const importFileHandler = () => {
   startImport('mirc');
 };
 
+// Handler for Ctrl+C copy blocks shortcut (from useGlobalShortcuts)
+const copyBlocksHandler = () => {
+  if (selectedBlocks.value.length > 0) {
+    toolbarStore.setSelectBlocks(selectedBlocks.value);
+    toastShow('Copied blocks to clipboard', { type: 'success' });
+  }
+};
+
 // Lifecycle equivalent to created()
 checkForGetRequest();
 window.addEventListener('scroll', scrollHandler);
 window.addEventListener('asciibird:import-file', importFileHandler);
+window.addEventListener('asciibird:copy-blocks', copyBlocksHandler);
 
 onUnmounted(() => {
   window.removeEventListener('scroll', scrollHandler);
   window.removeEventListener('asciibird:import-file', importFileHandler);
+  window.removeEventListener('asciibird:copy-blocks', copyBlocksHandler);
 });
 
 // Computed
