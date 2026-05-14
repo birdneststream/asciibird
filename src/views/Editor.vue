@@ -268,7 +268,6 @@ const debugPanelState = computed(() => panelStore.debugPanel);
 const selectBlocks = computed(() => toolbarStore.selectBlocks);
 const options = computed(() => store.options);
 const haveSelectBlocks = computed(() => !!selectBlocks.value.length);
-const mircColours = computed(() => mircColours99);
 const brushLibraryState = computed(() => panelStore.brushLibrary);
 const gridView = computed(() => toolbarState.value.gridView);
 const halfBlockEditing = computed(() => toolbarState.value.halfBlockEditing);
@@ -279,8 +278,6 @@ const asciiBlockAtXy = computed(() => {
     ? currentAsciiLayerBlocks.value[y.value][x.value]
     : false;
 });
-
-const maxBrushSizeComp = computed(() => maxBrushSize);
 
 const currentAsciiWidth = computed(
   () => currentSelectedLayer.value.width,
@@ -848,7 +845,7 @@ async function resetSelectTool() {
 async function redrawSelect() {
   if (currentAsciiLayerBlocks.value.length && isSelected.value && toolCtx) {
     await clearToolCanvas();
-    toolCtx.fillStyle = mircColours.value[0];
+    toolCtx.fillStyle = mircColours99[0];
 
     toolCtx.fillRect(
       selecting.value.startX!,
@@ -938,7 +935,7 @@ async function redrawCanvas(force = false) {
           canvasYVal,
           blockWidth,
           blockHeight,
-          mircColours.value,
+          mircColours99,
           {
             canBg: canBg.value,
             canFg: canFg.value,
@@ -988,7 +985,7 @@ async function redrawCanvas(force = false) {
             canvasYVal,
             blockWidth,
             blockHeight,
-            mircColours.value,
+            mircColours99,
           );
         }
       }
@@ -1347,7 +1344,7 @@ async function drawRectangleBlock(rx: number, ry: number) {
     }
   }
 
-  toolCtx.fillStyle = mircColours.value[indicatorColour];
+  toolCtx.fillStyle = mircColours99[indicatorColour];
   toolCtx.fillRect(rx * blockWidth, ry * blockHeight, blockWidth, blockHeight);
   toolCtx.setLineDash([1, 2]);
   toolCtx.strokeRect(rx * blockWidth, ry * blockHeight, blockWidth, blockHeight);
@@ -1396,7 +1393,7 @@ async function drawBrushBlocks(
     if (tBlock.bg === 8) {
       indicatorColour = 1;
     }
-    toolCtx.fillStyle = mircColours.value[indicatorColour];
+    toolCtx.fillStyle = mircColours99[indicatorColour];
     toolCtx.fillRect(brushX, brushY, blockWidth, blockHeight);
 
     applyMirrored(
@@ -1415,14 +1412,14 @@ async function drawBrushBlocks(
     case 'bg':
       toolCtx.fillStyle =
         brushBlock.bg !== undefined
-          ? mircColours.value[brushBlock.bg]
+          ? mircColours99[brushBlock.bg]
           : 'rgba(255,255,255,0.4)';
       break;
 
     case 'fg':
       toolCtx.fillStyle =
         brushBlock.fg !== undefined
-          ? mircColours.value[brushBlock.fg]
+          ? mircColours99[brushBlock.fg]
           : '#FFFFFF';
       break;
 
@@ -1430,7 +1427,7 @@ async function drawBrushBlocks(
       if (canText.value && brushBlock.char !== undefined) {
         toolCtx.font = 'Hack 13px';
         toolCtx.fillStyle = canFg.value
-          ? mircColours.value[brushBlock.fg]
+          ? mircColours99[brushBlock.fg]
           : '#FFFFFF';
         toolCtx.fillText(brushBlock.char, brushX, brushY + blockHeight - 3);
 
@@ -1526,7 +1523,7 @@ async function drawHalfBlocks(brushX: number, brushY: number) {
   const fullChar = ' ';
 
   toolCtx.font = 'Hack 13px';
-  toolCtx.fillStyle = mircColours.value[currentFg.value];
+  toolCtx.fillStyle = mircColours99[currentFg.value];
   toolCtx.fillText(
     atTopHalf.value ? topChar : bottomChar,
     brushX,
@@ -1805,12 +1802,12 @@ defineExpose({
   selectBlocks,
   options,
   haveSelectBlocks,
-  mircColours,
+  mircColours99,
   brushLibraryState,
   gridView,
   halfBlockEditing,
   asciiBlockAtXy,
-  maxBrushSize: maxBrushSizeComp,
+  maxBrushSize,
   currentAsciiWidth,
   currentAsciiHeight,
   imageOverlay,

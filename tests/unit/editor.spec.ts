@@ -343,9 +343,9 @@ describe('Editor.vue', () => {
       expect(wrapper.vm.haveSelectBlocks).toBe(false)
     })
 
-    it('mircColours returns palette', () => {
+    it('mircColours99 returns palette', () => {
       const wrapper = mountEditor()
-      expect(wrapper.vm.mircColours).toBe(mircColours99)
+      expect(wrapper.vm.mircColours99).toBe(mircColours99)
     })
 
     it('brushLibraryState reads from store', () => {
