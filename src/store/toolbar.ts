@@ -11,6 +11,7 @@ import { idbPersistAdapter } from '../utils/idbPersistAdapter';
 import { transformBlocks } from '../utils/transformBlocks';
 import type { TransformType } from '../utils/transformBlocks';
 import { validateBrushShapeKey } from '../utils/brushShapes';
+import { nextShapeType, validateShapeType } from '../utils/shapes';
 import { useAsciiBirdStore } from './index';
 import type {
   Block,
@@ -184,13 +185,9 @@ export const useToolbarStore = defineStore('toolbar', {
       this.toolbarState.shapeType = payload;
     },
     cycleShapeType() {
-      const types: ToolbarState['shapeType'][] = [
-        'line', 'rectOutline', 'rectFilled',
-        'ellipseOutline', 'ellipseFilled',
-      ];
-      const current = this.toolbarState.shapeType;
-      const idx = types.indexOf(current);
-      this.toolbarState.shapeType = types[(idx + 1) % types.length];
+      this.toolbarState.shapeType = nextShapeType(
+        this.toolbarState.shapeType,
+      );
     },
     /**
      * Transform the current brush blocks (flip or rotate).
@@ -329,6 +326,11 @@ export const useToolbarStore = defineStore('toolbar', {
         if (parsed.toolbarState?.brushSizeType != null) {
           parsed.toolbarState.brushSizeType =
             validateBrushShapeKey(parsed.toolbarState.brushSizeType);
+        }
+        // Validate persisted shapeType against known types
+        if (parsed.toolbarState?.shapeType != null) {
+          parsed.toolbarState.shapeType =
+            validateShapeType(parsed.toolbarState.shapeType);
         }
         return parsed;
       },

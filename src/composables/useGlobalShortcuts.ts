@@ -209,7 +209,9 @@ export function useGlobalShortcuts() {
       }
     },
     'r': () => toolbarStore.changeTool(8), // replace-color
-    'l': () => toolbarStore.changeTool(10), // shapes
+    'l': () => toolbarStore.changeTool(
+      toolbarIcons.findIndex(i => i.name === 'shapes'),
+    ),
   };
 
   for (const [key, handler] of Object.entries(toolShortcuts)) {
