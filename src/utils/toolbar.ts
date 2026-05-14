@@ -21,6 +21,8 @@ export function tooltipName(value: ToolbarIcon): string {
       return 'Eraser Blocks';
     case 'fill-eraser':
       return 'Fill Eraser Blocks';
+    case 'replace-color':
+      return 'Replace Color';
     default:
       return value.name;
   }
@@ -47,6 +49,8 @@ export function toolLabel(value: ToolbarIcon): string {
       return 'Eraser';
     case 'fill-eraser':
       return 'Erase Fill';
+    case 'replace-color':
+      return 'ReColor';
     default:
       return value.name;
   }
