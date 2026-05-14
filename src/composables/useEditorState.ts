@@ -54,6 +54,7 @@ export function useEditorState() {
   const canvasHash = ref<number | null>(null);
   const lastBrushX = ref(-1);
   const lastBrushY = ref(-1);
+  const isPasteMode = ref(false);
 
   // ─── Computed ────────────────────────────────────────────────
   const blockSizeMultiplier = computed(() => store.blockSizeMultiplier);
@@ -167,6 +168,7 @@ export function useEditorState() {
     canvasHash,
     lastBrushX,
     lastBrushY,
+    isPasteMode,
 
     // Computed
     blockSizeMultiplier,

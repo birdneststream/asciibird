@@ -81,6 +81,40 @@
               <span class="ab-shortcut">R</span>
             </li>
           </template>
+          <template v-if="isSelected && isSelecting">
+            <li class="ab-context-menu-separator" />
+            <li
+              @click="contextMenuCopySelection()"
+              class="ab-context-menu-item"
+            >
+              Copy
+              <span class="ab-shortcut">Ctrl+C</span>
+            </li>
+            <li
+              @click="contextMenuCutSelection()"
+              class="ab-context-menu-item"
+            >
+              Cut
+              <span class="ab-shortcut">Ctrl+X</span>
+            </li>
+            <li
+              @click="contextMenuDeleteSelection()"
+              class="ab-context-menu-item"
+            >
+              Delete Selection
+              <span class="ab-shortcut">Delete</span>
+            </li>
+          </template>
+          <template v-if="haveSelectBlocks">
+            <li class="ab-context-menu-separator" />
+            <li
+              @click="pasteMode.startPasteMode()"
+              class="ab-context-menu-item"
+            >
+              Paste Selection
+              <span class="ab-shortcut">Ctrl+V</span>
+            </li>
+          </template>
           <li class="ab-context-menu-separator" />
           <li
             @click="openBorderGenerator()"
@@ -192,6 +226,7 @@ import { useShapeTool } from '../composables/useShapeTool';
 import { useMatchHighlight } from '../composables/useMatchHighlight';
 import { useEditorState } from '../composables/useEditorState';
 import { useEditorRendering } from '../composables/useEditorRendering';
+import { usePasteMode } from '../composables/usePasteMode';
 import hotkeys from 'hotkeys-js';
 
 import ContextMenu from '../components/parts/ContextMenu.vue';
@@ -280,7 +315,7 @@ const {
   canvasSize, x, y, isTopHalf, top, canTool,
   textEditing, selecting, isMouseOnCanvas,
   selectedBlocks, diffBlocks, canvasHash,
-  lastBrushX, lastBrushY,
+  lastBrushX, lastBrushY, isPasteMode,
   blockSizeMultiplier, blockWidthComp, blockHeightComp,
   currentAscii, currentAsciiLayers, selectedLayerIndex,
   currentSelectedLayer, currentAsciiLayerBlocks,
@@ -353,6 +388,21 @@ const {
 } = useShapeTool({
   currentAsciiLayerBlocks,
   recordDiff,
+});
+
+// ─── Paste Mode ──────────────────────────────────────────────────
+const pasteMode = usePasteMode({
+  selecting,
+  selectedBlocks,
+  blockWidthComp,
+  blockHeightComp,
+  currentAsciiWidth,
+  currentAsciiHeight,
+  currentAsciiLayerBlocks,
+  selectedLayerIndex,
+  updateAsciiBlocks: store.updateAsciiBlocks.bind(store),
+  redrawCanvas: async () => { await delayRedrawCanvas(true); },
+  clearToolCanvas,
 });
 
 // ─── Selection Transform ─────────────────────────────────────────
@@ -725,6 +775,20 @@ hotkeys('*', 'editor', async function (event) {
     return;
   }
 
+  if (event.key === 'Escape' && isPasteMode.value) {
+    pasteMode.cancelPasteMode();
+    await clearToolCanvas();
+    await delayRedrawCanvas();
+    return;
+  }
+
+  // Delete key: clear selection contents
+  if (event.key === 'Delete' && isSelecting.value && isSelected.value) {
+    pasteMode.deleteSelection();
+    await delayRedrawCanvas(true);
+    return;
+  }
+
   if (isBrushing.value || isErasing.value) {
     switch (event.key) {
       case 'ArrowUp':
@@ -761,6 +825,9 @@ hotkeys('*', 'editor', async function (event) {
 let wheelHandler: ((e: WheelEvent) => void) | null = null;
 let selectionTransformHandler: ((e: Event) => void) | null = null;
 let scrollToHandler: ((e: Event) => void) | null = null;
+let pasteBlocksHandler: ((e: Event) => void) | null = null;
+let cutBlocksHandler: ((e: Event) => void) | null = null;
+let deleteSelectionHandler: ((e: Event) => void) | null = null;
 
 onMounted(async () => {
   rendering.initContexts();
@@ -797,6 +864,33 @@ onMounted(async () => {
   };
   window.addEventListener('asciibird:scroll-to', scrollToHandler);
 
+  pasteBlocksHandler = () => {
+    pasteMode.startPasteMode();
+  };
+  window.addEventListener(
+    'asciibird:paste-blocks', pasteBlocksHandler,
+  );
+
+  cutBlocksHandler = () => {
+    if (isSelecting.value && isSelected.value) {
+      pasteMode.cutSelection();
+      delayRedrawCanvas(true);
+    }
+  };
+  window.addEventListener(
+    'asciibird:cut-blocks', cutBlocksHandler,
+  );
+
+  deleteSelectionHandler = () => {
+    if (isSelecting.value && isSelected.value) {
+      pasteMode.deleteSelection();
+      delayRedrawCanvas(true);
+    }
+  };
+  window.addEventListener(
+    'asciibird:delete-selection', deleteSelectionHandler,
+  );
+
   await delayRedrawCanvas();
 });
 
@@ -819,6 +913,24 @@ onUnmounted(() => {
   if (scrollToHandler) {
     window.removeEventListener('asciibird:scroll-to', scrollToHandler);
     scrollToHandler = null;
+  }
+  if (pasteBlocksHandler) {
+    window.removeEventListener(
+      'asciibird:paste-blocks', pasteBlocksHandler,
+    );
+    pasteBlocksHandler = null;
+  }
+  if (cutBlocksHandler) {
+    window.removeEventListener(
+      'asciibird:cut-blocks', cutBlocksHandler,
+    );
+    cutBlocksHandler = null;
+  }
+  if (deleteSelectionHandler) {
+    window.removeEventListener(
+      'asciibird:delete-selection', deleteSelectionHandler,
+    );
+    deleteSelectionHandler = null;
   }
 });
 
@@ -850,6 +962,28 @@ function contextMenuReplaceColor() {
     contextMenuReplace(block, bounds);
   } else {
     contextMenuReplace(block);
+  }
+}
+
+function contextMenuCopySelection() {
+  if (selectedBlocks.value.length > 0) {
+    toolbarStore.setSelectBlocks(selectedBlocks.value);
+    toastShow('Copied selection to clipboard', { type: 'success' });
+  }
+}
+
+function contextMenuCutSelection() {
+  if (isSelecting.value && isSelected.value) {
+    pasteMode.cutSelection();
+    delayRedrawCanvas(true);
+    toastShow('Cut selection to clipboard', { type: 'success' });
+  }
+}
+
+function contextMenuDeleteSelection() {
+  if (isSelecting.value && isSelected.value) {
+    pasteMode.deleteSelection();
+    delayRedrawCanvas(true);
   }
 }
 
@@ -1118,6 +1252,13 @@ async function canvasMouseUp() {
 }
 
 async function canvasMouseDown() {
+  // Paste mode: confirm paste at cursor position
+  if (isPasteMode.value) {
+    pasteMode.confirmPaste(x.value, y.value);
+    await delayRedrawCanvas(true);
+    return;
+  }
+
   if (isDefault.value) return;
 
   if (asciiBlockAtXy.value && currentTool.value) {
@@ -1282,8 +1423,7 @@ async function interpolateStroke(
 }
 
 async function canvasMouseMove(e: MouseEvent) {
-  if (isDefault.value) return;
-
+  // Update coordinates regardless of mode
   const lastX = x.value;
   const lastY = y.value;
 
@@ -1299,6 +1439,22 @@ async function canvasMouseMove(e: MouseEvent) {
 
   x.value = Math.floor(x.value / blockWidthComp.value);
   y.value = Math.floor(y.value / blockHeightComp.value);
+
+  // Paste mode: draw ghost preview
+  if (isPasteMode.value) {
+    const toolCtx = rendering.getToolCtx();
+    if (toolCtx) {
+      await clearToolCanvas();
+      pasteMode.drawPastePreview(
+        toolCtx, x.value, y.value,
+        blockWidthComp.value, blockHeightComp.value,
+      );
+    }
+    emit('coordsupdate', { x: x.value, y: y.value });
+    return;
+  }
+
+  if (isDefault.value) return;
 
   if (x.value === lastX && y.value === lastY && !halfBlockEditing.value) {
     return;
@@ -2062,6 +2218,7 @@ defineExpose({
   imageOverlayStyle,
   canvasTransparent,
   emptyBlock,
+  isPasteMode,
   updateCanvas: props.updateCanvas ?? false,
   // Methods
   startExport,

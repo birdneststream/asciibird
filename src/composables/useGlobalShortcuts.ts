@@ -97,8 +97,23 @@ export function useGlobalShortcuts() {
       }
     },
 
-    // Paste copied blocks as brush
+    // Paste copied blocks — enter paste mode with ghost preview
     'ctrl+v': () => {
+      if (!store.asciibirdMeta.length || modalStore.isModalOpen) return;
+      const copied = toolbarStore.selectBlocks;
+      if (copied.length > 0) {
+        window.dispatchEvent(new CustomEvent('asciibird:paste-blocks'));
+      }
+    },
+
+    // Cut selection (copy + erase)
+    'ctrl+x': () => {
+      if (!store.asciibirdMeta.length || modalStore.isModalOpen) return;
+      window.dispatchEvent(new CustomEvent('asciibird:cut-blocks'));
+    },
+
+    // Load copied blocks as brush (legacy Ctrl+V behavior)
+    'ctrl+shift+b': () => {
       if (!store.asciibirdMeta.length || modalStore.isModalOpen) return;
       const copied = toolbarStore.selectBlocks;
       if (copied.length > 0) {
