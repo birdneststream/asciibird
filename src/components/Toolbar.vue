@@ -3,7 +3,7 @@
     <div
       ref="panelEl"
       :style="panelStyle"
-      class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-panel-width z-40"
+      class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-[220px] z-40"
     >
       <PanelHeader
         title="Toolbar"
@@ -12,59 +12,12 @@
       />
 
       <div class="p-sm flex flex-col gap-xs overflow-y-auto custom-scrollbar">
-        <!-- Colour swatches -->
-        <div class="flex mb-2 justify-center">
-          <Colours />
-        </div>
-
-        <!-- Targeting checkboxes -->
-        <div class="flex justify-center gap-2 mb-2">
-          <Tooltip content="Ignore Foreground when Editing">
-            <label class="flex items-center gap-1 cursor-pointer ab-checkbox-hover">
-              <input
-                v-model="toolbarStore.toolbarState.targetingFg"
-                type="checkbox"
-                class="ab-checkbox"
-                name="targetingFg"
-                :disabled="!canBg && !canText"
-              >
-              <span class="ab-checkbox-label">FG</span>
-            </label>
-          </Tooltip>
-
-          <Tooltip content="Ignore Background when Editing">
-            <label class="flex items-center gap-1 cursor-pointer ab-checkbox-hover">
-              <input
-                v-model="toolbarStore.toolbarState.targetingBg"
-                type="checkbox"
-                class="ab-checkbox"
-                name="targetingBg"
-                :disabled="!canFg && !canText"
-              >
-              <span class="ab-checkbox-label">BG</span>
-            </label>
-          </Tooltip>
-
-          <Tooltip content="Ignore Characters when Editing">
-            <label class="flex items-center gap-1 cursor-pointer ab-checkbox-hover">
-              <input
-                v-model="toolbarStore.toolbarState.targetingChar"
-                type="checkbox"
-                class="ab-checkbox"
-                name="targetingChar"
-                :disabled="!canFg && !canBg"
-              >
-              <span class="ab-checkbox-label">Text</span>
-            </label>
-          </Tooltip>
-        </div>
-
         <!-- Utility buttons -->
         <div class="grid grid-cols-2 gap-1 pt-2 border-t border-outline-variant/30">
           <Tooltip content="Mirror X axis when Editing">
             <button
               type="button"
-              class="w-10 h-10 rounded flex items-center justify-center transition-colors duration-150"
+              class="w-full h-10 rounded flex items-center justify-center gap-1 transition-colors duration-150"
               :class="toolbarStore.toolbarState.mirrorX
                 ? 'bg-primary-container text-on-primary-container ring-2 ring-primary'
                 : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
@@ -74,13 +27,14 @@
                 class="material-icons text-sm"
                 aria-hidden="true"
               >more_vert</span>
+              <span class="text-[10px] font-label-mono">Mir X</span>
             </button>
           </Tooltip>
 
           <Tooltip content="Mirror Y axis when Editing">
             <button
               type="button"
-              class="w-10 h-10 rounded flex items-center justify-center transition-colors duration-150"
+              class="w-full h-10 rounded flex items-center justify-center gap-1 transition-colors duration-150"
               :class="toolbarStore.toolbarState.mirrorY
                 ? 'bg-primary-container text-on-primary-container ring-2 ring-primary'
                 : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
@@ -90,13 +44,14 @@
                 class="material-icons text-sm"
                 aria-hidden="true"
               >more_horiz</span>
+              <span class="text-[10px] font-label-mono">Mir Y</span>
             </button>
           </Tooltip>
 
           <Tooltip content="Update Brush Automatically when Colours or Char Changes">
             <button
               type="button"
-              class="w-10 h-10 rounded flex items-center justify-center transition-colors duration-150"
+              class="w-full h-10 rounded flex items-center justify-center gap-1 transition-colors duration-150"
               :class="toolbarStore.toolbarState.updateBrush
                 ? 'bg-primary-container text-on-primary-container ring-2 ring-primary'
                 : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
@@ -106,13 +61,14 @@
                 class="material-icons text-sm"
                 aria-hidden="true"
               >color_lens</span>
+              <span class="text-[10px] font-label-mono">Auto</span>
             </button>
           </Tooltip>
 
           <Tooltip content="Toggle Grid View">
             <button
               type="button"
-              class="w-10 h-10 rounded flex items-center justify-center transition-colors duration-150"
+              class="w-full h-10 rounded flex items-center justify-center gap-1 transition-colors duration-150"
               :class="toolbarStore.toolbarState.gridView
                 ? 'bg-primary-container text-on-primary-container ring-2 ring-primary'
                 : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
@@ -124,13 +80,14 @@
               >
                 {{ !toolbarStore.toolbarState.gridView ? "grid_on" : "grid_off" }}
               </span>
+              <span class="text-[10px] font-label-mono">Grid</span>
             </button>
           </Tooltip>
 
           <Tooltip content="Toggle Half Block Editing Mode">
             <button
               type="button"
-              class="w-10 h-10 rounded flex items-center justify-center transition-colors duration-150"
+              class="w-full h-10 rounded flex items-center justify-center gap-1 transition-colors duration-150"
               :class="toolbarStore.toolbarState.halfBlockEditing
                 ? 'bg-primary-container text-on-primary-container ring-2 ring-primary'
                 : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
@@ -140,6 +97,7 @@
                 class="material-icons text-sm"
                 aria-hidden="true"
               >grid_view</span>
+              <span class="text-[10px] font-label-mono">Half</span>
             </button>
           </Tooltip>
         </div>
@@ -153,7 +111,7 @@
           >
             <button
               type="button"
-              class="w-10 h-10 rounded flex items-center justify-center transition-all duration-150"
+              class="w-full h-10 rounded flex items-center justify-center gap-1 transition-all duration-150"
               :class="currentTool.name === value.name
                 ? 'bg-primary-container text-on-primary-container shadow-md ring-2 ring-primary'
                 : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant'"
@@ -163,6 +121,7 @@
                 class="material-icons text-sm"
                 aria-hidden="true"
               >{{ value.icon }}</span>
+              <span class="text-[10px] font-label-mono">{{ toolLabel(value) }}</span>
             </button>
           </Tooltip>
         </div>
@@ -176,11 +135,10 @@ import { computed, ref, watch } from 'vue';
 import { usePanelDraggable } from '../composables/usePanelDraggable';
 import { useToolbarStore } from '../store/toolbar';
 import { useToast } from '../composables/useToast';
-import Colours from './Colours.vue';
 import PanelHeader from './parts/PanelHeader.vue';
 import Tooltip from './parts/Tooltip.vue';
 import { toolbarIcons } from '../ascii';
-import { tooltipName } from '../utils/toolbar';
+import { tooltipName, toolLabel } from '../utils/toolbar';
 
 defineOptions({ name: 'Toolbar' });
 
@@ -204,9 +162,6 @@ watch([dragX, dragY], ([newX, newY]) => {
 });
 
 const currentTool = computed(() => toolbarIcons[toolbarStore.currentTool]);
-const canFg = computed(() => toolbarStore.isTargettingFg);
-const canBg = computed(() => toolbarStore.isTargettingBg);
-const canText = computed(() => toolbarStore.isTargettingChar);
 
 function toggleMirrorX() {
   const newVal = !toolbarStore.toolbarState.mirrorX;

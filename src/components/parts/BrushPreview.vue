@@ -3,7 +3,7 @@
     <div
       ref="panelEl"
       :style="panelStyle"
-      class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-48 z-40"
+      class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-[220px] z-40"
     >
       <PanelHeader
         title="Brush"
@@ -11,6 +11,53 @@
       />
 
       <div class="p-sm flex flex-col gap-xs overflow-y-auto custom-scrollbar">
+        <!-- Colour swatches -->
+        <div class="flex mb-2 justify-start">
+          <Colours />
+        </div>
+
+        <!-- Targeting checkboxes -->
+        <div class="flex justify-center gap-2 mb-2">
+          <Tooltip content="Ignore Foreground when Editing">
+            <label class="flex items-center gap-1 cursor-pointer ab-checkbox-hover">
+              <input
+                v-model="toolbarStore.toolbarState.targetingFg"
+                type="checkbox"
+                class="ab-checkbox"
+                name="targetingFg"
+                :disabled="!canBg && !canText"
+              >
+              <span class="ab-checkbox-label">FG</span>
+            </label>
+          </Tooltip>
+
+          <Tooltip content="Ignore Background when Editing">
+            <label class="flex items-center gap-1 cursor-pointer ab-checkbox-hover">
+              <input
+                v-model="toolbarStore.toolbarState.targetingBg"
+                type="checkbox"
+                class="ab-checkbox"
+                name="targetingBg"
+                :disabled="!canFg && !canText"
+              >
+              <span class="ab-checkbox-label">BG</span>
+            </label>
+          </Tooltip>
+
+          <Tooltip content="Ignore Characters when Editing">
+            <label class="flex items-center gap-1 cursor-pointer ab-checkbox-hover">
+              <input
+                v-model="toolbarStore.toolbarState.targetingChar"
+                type="checkbox"
+                class="ab-checkbox"
+                name="targetingChar"
+                :disabled="!canFg && !canBg"
+              >
+              <span class="ab-checkbox-label">Text</span>
+            </label>
+          </Tooltip>
+        </div>
+
         <div class="flex w-full gap-1">
           <div class="w-1/2">
             <input
@@ -72,7 +119,9 @@ import { emptyBlock, maxBrushSize } from '../../ascii';
 import { useToolbarStore } from '../../store/toolbar';
 import { usePanelStore } from '../../store/panels';
 import MainBrushCanvas from './MainBrushCanvas.vue';
+import Colours from '../Colours.vue';
 import PanelHeader from './PanelHeader.vue';
+import Tooltip from './Tooltip.vue';
 
 const props = defineProps<{ yOffset?: number }>();
 const emit = defineEmits<{
