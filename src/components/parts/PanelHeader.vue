@@ -1,7 +1,7 @@
 <template>
   <div
+    ref="headerEl"
     class="drag-handle bg-surface-container-high flex items-center justify-between p-sm border-b border-outline-variant select-none"
-    @mousedown="$emit('mousedown', $event)"
   >
     <div class="flex items-center gap-2">
       <span
@@ -23,12 +23,14 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
+
 defineProps<{
   title: string;
   showStatus?: boolean;
 }>();
 
-defineEmits<{
-  mousedown: [event: MouseEvent];
-}>();
+const headerEl = ref<HTMLElement | null>(null);
+
+defineExpose({ headerEl });
 </script>

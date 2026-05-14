@@ -1,5 +1,6 @@
 import { watch, onUnmounted } from 'vue';
 import hotkeys from 'hotkeys-js';
+import { toolbarIcons } from '../ascii';
 import { useAsciiBirdStore } from '../store';
 import { useToolbarStore } from '../store/toolbar';
 import { useModalStore } from '../store/modal';
@@ -109,6 +110,24 @@ export function useGlobalShortcuts() {
     });
   }
 
+  // ─── Brush shortcuts (scope 'editor') ──────────────────────────
+  // Shift+E: horizontal flip brush, Shift+Q: vertical rotate brush
+  // Only active when brush or eraser tool is selected
+  const brushShortcuts: Record<string, string> = {
+    'shift+e': 'flip',
+    'shift+q': 'rotate',
+  };
+
+  for (const [key, action] of Object.entries(brushShortcuts)) {
+    hotkeys(key, 'editor', (event) => {
+      if (!store.currentAscii) return;
+      const tool = toolbarIcons[toolbarStore.currentTool];
+      if (tool?.name !== 'brush' && tool?.name !== 'eraser') return;
+      event.preventDefault();
+      toolbarStore.flipRotateBlocks({ type: action });
+    });
+  }
+
   // ─── Scope management ──────────────────────────────────────────
   // Replace dangerous deleteScope('all') with setScope transitions.
   // Use immediate:true to set initial scope on mount.
@@ -132,6 +151,10 @@ export function useGlobalShortcuts() {
     }
     // Unbind all tool shortcuts
     for (const key of Object.keys(toolShortcuts)) {
+      hotkeys.unbind(key, 'editor');
+    }
+    // Unbind all brush shortcuts
+    for (const key of Object.keys(brushShortcuts)) {
       hotkeys.unbind(key, 'editor');
     }
   });

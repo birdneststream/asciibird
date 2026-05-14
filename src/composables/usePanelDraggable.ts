@@ -6,6 +6,11 @@ import type { UseDraggableOptions, UseDraggableReturn } from '@vueuse/core';
  * Wrapper around @vueuse/core's useDraggable with safety nets to prevent
  * drag state from getting stuck.
  *
+ * Supports a `handle` option to restrict drag initiation to a specific
+ * element (e.g. the PanelHeader). This prevents interactive elements
+ * like <select>, <input>, and <textarea> inside the panel from
+ * accidentally triggering a drag.
+ *
  * @vueuse/core 14.x already defaults `buttons: [0]`, which filters out
  * right-clicks. However, a left-click drag can still get stuck if the
  * `pointerup` event is lost (e.g. browser context menu, alt-tab, dev-tools).

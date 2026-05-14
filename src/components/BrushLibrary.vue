@@ -6,6 +6,7 @@
       class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-panel-width max-h-[80%] z-40"
     >
       <PanelHeader
+        ref="handleRef"
         title="Brushes"
         show-status
       />
@@ -184,12 +185,22 @@ const toolbarStore = useToolbarStore();
 const panelStore = usePanelStore();
 const { show: toastShow } = useToast();
 const panelEl = ref<HTMLElement | null>(null);
-
-const { style: panelStyle } = usePanelDraggable(panelEl, {
+const handleRef = ref<InstanceType<typeof PanelHeader> | null>(null);
+const { style: panelStyle, x: dragX, y: dragY } = usePanelDraggable(panelEl, {
   initialValue: {
     x: panelStore.brushLibrary.x,
     y: panelStore.brushLibrary.y,
   },
+  handle: computed(() => handleRef.value?.headerEl ?? null),
+});
+
+// Sync drag position back to store for persistence
+watch([dragX, dragY], ([newX, newY]) => {
+  panelStore.changeBrushLibraryState({
+    ...panelStore.brushLibrary,
+    x: newX,
+    y: newY,
+  });
 });
 
 const panel = reactive({

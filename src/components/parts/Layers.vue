@@ -103,93 +103,93 @@
     </context-menu>
 
     <ul
-      class="divide-y-2 divide-outline-variant reverseorder mt-2"
-      @mouseup.right="openContextMenu"
+      class="reverseorder mt-2"
     >
-        <li
-          :class="`p-1 ${selectedLayerClass(key)}`"
-          v-for="(layer, key) in currentAsciiLayers"
-          :key="key"
-          @click.right="changeLayer(key)"
+      <li
+        v-for="(layer, key) in currentAsciiLayers"
+        :key="key"
+        class="group"
+        @click.right="changeLayer(key)"
+        @mouseup.right.stop="openContextMenu"
+      >
+        <div
+          class="flex items-center gap-1 p-1 rounded transition-colors duration-150 cursor-pointer"
+          :class="layerItemClass(key)"
+          @click="changeLayer(key)"
         >
-          <div
-            class="flex"
-            @mouseup.right="openContextMenu"
+          <!-- Visibility toggle -->
+          <button
+            type="button"
+            class="w-7 h-7 rounded flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors"
+            @click.stop="toggleLayer(key)"
+            :disabled="!canToggleLayer"
+            :title="layer.visible ? 'Hide layer' : 'Show layer'"
           >
-            <div
-              class="w-12"
-              @click="changeLayer(key)"
+            <span
+              class="material-icons text-sm"
+              aria-hidden="true"
+            >{{
+              layer.visible ? "visibility" : "visibility_off"
+            }}</span>
+          </button>
+
+          <!-- Layer label -->
+          <span
+            class="flex-1 font-label-mono text-label-mono truncate"
+            :class="key === selectedLayer
+              ? 'text-on-surface font-bold'
+              : 'text-on-surface-variant'"
+            @dblclick.stop="showLayerRename(key, layer.label)"
+          >{{ layer.label }}</span>
+
+          <!-- Reorder & delete buttons (visible on hover/selected) -->
+          <div
+            class="flex items-center gap-px"
+            :class="key === selectedLayer ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'"
+          >
+            <button
+              type="button"
+              class="w-6 h-6 rounded flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors"
+              @click.stop="downLayer(key)"
+              :disabled="!canToggleLayer"
+              title="Move up"
             >
-              <button
-                type="button"
-                class="ab-rounded-button"
-                @click="toggleLayer(key)"
-                :disabled="!canToggleLayer"
-              >
-                <span
-                  class="material-icons"
-                  aria-hidden="true"
-                >{{
-                  layer.visible ? "remove_red_eye" : "panorama_fish_eye"
-                }}</span>
-              </button><br>
-
-              <button
-                type="button"
-                class="ab-rounded-button"
-                @click="removeLayer(key)"
-                :disabled="!canToggleLayer"
-              >
-                <span
-                  class="material-icons"
-                  aria-hidden="true"
-                >delete</span>
-              </button>
-            </div>
-
-            <div class="w-full">
-              <div class="flex text-right">
-                <div
-                  class="w-full"
-                  @click="changeLayer(key)"
-                >
-                  <div class="ab-card w-full hover:bg-surface-container-highest cursor-pointer">
-                    <span @dblclick="showLayerRename(key, layer.label)">{{
-                      layer.label
-                    }}</span>
-                  </div>
-                </div>
-
-                <div class="w-5">
-                  <button
-                    type="button"
-                    class="ab-rounded-button"
-                    @click="downLayer(key)"
-                    :disabled="!canToggleLayer"
-                  >
-                    <span
-                      class="material-icons"
-                      aria-hidden="true"
-                    >arrow_upward</span>
-                  </button><br>
-
-                  <button
-                    type="button"
-                    class="ab-rounded-button"
-                    @click="upLayer(key)"
-                    :disabled="!canToggleLayer"
-                  >
-                    <span
-                      class="material-icons"
-                      aria-hidden="true"
-                    >arrow_downward</span>
-                  </button>
-                </div>
-              </div>
-            </div>
+              <span
+                class="material-icons"
+                style="font-size: 14px"
+                aria-hidden="true"
+              >expand_less</span>
+            </button>
+            <button
+              type="button"
+              class="w-6 h-6 rounded flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors"
+              @click.stop="upLayer(key)"
+              :disabled="!canToggleLayer"
+              title="Move down"
+            >
+              <span
+                class="material-icons"
+                style="font-size: 14px"
+                aria-hidden="true"
+              >expand_more</span>
+            </button>
+            <button
+              type="button"
+              class="w-6 h-6 rounded flex items-center justify-center text-on-surface-variant hover:text-error transition-colors"
+              @click.stop="removeLayer(key)"
+              :disabled="!canToggleLayer"
+              title="Delete layer"
+            >
+              <span
+                class="material-icons"
+                style="font-size: 14px"
+                aria-hidden="true"
+              >delete</span>
+            </button>
           </div>
-        </li>
-      </ul>
+        </div>
+      </li>
+    </ul>
   </div>
 </template>
 
@@ -269,16 +269,20 @@ function selectBestLayer() {
   }
 }
 
-function selectedLayerClass(key: number) {
-  if (!currentAsciiLayers.value[key]?.visible) {
-    return 'bg-error-container/30';
-  }
+function layerItemClass(key: number) {
+  const isSelected = key === selectedLayer.value;
+  const isVisible = currentAsciiLayers.value[key]?.visible;
 
-  if (key === selectedLayer.value) {
-    return 'bg-primary-container/30';
+  if (isSelected && isVisible) {
+    return 'bg-primary-container/30 border-l-2 border-primary';
   }
-
-  return '';
+  if (isSelected && !isVisible) {
+    return 'bg-error-container/30 border-l-2 border-error opacity-70';
+  }
+  if (!isVisible) {
+    return 'opacity-50 hover:opacity-70';
+  }
+  return 'hover:bg-surface-variant/30';
 }
 
 function showLayerRename(key: number, label: string) {

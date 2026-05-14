@@ -6,9 +6,9 @@
       class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-[220px] z-40"
     >
       <PanelHeader
+        ref="handleRef"
         title="Toolbar"
         show-status
-        @mousedown="$event.stopPropagation()"
       />
 
       <div class="p-sm flex flex-col gap-xs overflow-y-auto custom-scrollbar">
@@ -146,8 +146,10 @@ const toolbarStore = useToolbarStore();
 const { show: toastShow } = useToast();
 
 const panelEl = ref<HTMLElement | null>(null);
+const handleRef = ref<InstanceType<typeof PanelHeader> | null>(null);
 const { style: panelStyle, x: dragX, y: dragY } = usePanelDraggable(panelEl, {
   initialValue: { x: toolbarStore.toolbarState.x, y: toolbarStore.toolbarState.y },
+  handle: computed(() => handleRef.value?.headerEl ?? null),
 });
 
 // Sync drag position back to store

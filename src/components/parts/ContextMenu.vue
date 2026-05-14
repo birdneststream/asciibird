@@ -1,18 +1,23 @@
 <template>
-  <div
-    class="context-menu"
-    v-show="show"
-    :style="contextStyle"
-    ref="contextEl"
-    tabindex="0"
-    @blur="close"
-  >
-    <slot />
-  </div>
+  <Teleport to="body">
+    <div
+      v-bind="$attrs"
+      class="context-menu"
+      v-show="show"
+      :style="contextStyle"
+      ref="contextEl"
+      tabindex="0"
+      @blur="close"
+    >
+      <slot />
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue';
+
+defineOptions({ inheritAttrs: false });
 
 const left = ref(0);
 const top = ref(0);
