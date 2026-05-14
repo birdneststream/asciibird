@@ -1,130 +1,111 @@
 <template>
   <div>
-    <div class="flex">
+    <div class="flex gap-1 mb-2">
       <button
         type="button"
-        class="ab-button"
+        class="flex-1 py-1 font-label-mono text-label-mono rounded transition-all duration-200 flex items-center justify-center gap-1 text-on-surface-variant hover:bg-surface-variant"
         @click="addLayer()"
       >
         <span
-          class="material-icons relative top-2 pb-4"
+          class="material-icons text-sm"
           aria-hidden="true"
-        >playlist_add</span> Add
-        Layer
+        >playlist_add</span>
+        Add Layer
       </button>
 
       <button
         type="button"
-        class="ab-button"
+        class="flex-1 py-1 font-label-mono text-label-mono rounded transition-all duration-200 flex items-center justify-center gap-1 text-on-surface-variant hover:bg-surface-variant"
         @click="mergeLayers()"
       >
         <span
-          class="material-icons relative top-2 pb-4"
+          class="material-icons text-sm"
           aria-hidden="true"
         >playlist_play</span>
-        Merge Layers
+        Merge
       </button>
     </div>
 
-    <hr class="border-outline-variant">
+    <hr class="border-outline-variant mb-2">
 
-    <div class="w-full rounded-lg">
-      <ul
-        class="divide-y-2 divide-outline-variant mb-2"
+    <div class="w-full">
+      <button
+        type="button"
+        class="w-full py-1 font-label-mono text-label-mono rounded transition-all duration-200 flex items-center justify-center gap-1"
+        :class="imageOverlay.visible
+          ? 'bg-primary-container text-on-primary-container'
+          : 'text-on-surface-variant hover:bg-surface-variant'"
+        @click="imageOverlay.visible ? updateImageOverlay() : showOverlayModal()"
       >
-        <div class="flex p-1">
-          <button
-            type="button"
-            class="ab-rounded-button"
-            @click="updateImageOverlay"
-          >
-            <span
-              class="material-icons"
-              aria-hidden="true"
-            >{{
-              !imageOverlay.visible ? "remove_red_eye" : "panorama_fish_eye"
-            }}</span>
-          </button>
-          <div
-            class="w-full p-1"
-            @click="showOverlayModal"
-          >
-            <div class="flex text-right">
-              <div class="w-full">
-                <div
-                  class="ab-card w-full pl-2 cursor-pointer"
-                >
-                  <span>{{ imageOverlayUrl || "Image Overlay" }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <span
+          class="material-icons text-sm"
+          aria-hidden="true"
+        >{{
+          !imageOverlay.visible ? "remove_red_eye" : "panorama_fish_eye"
+        }}</span>
+        {{ imageOverlayUrl || "Image Overlay" }}
+      </button>
+    </div>
+
+    <context-menu
+      ref="layersMenu"
+      class="z-50"
+    >
+      <ul>
+        <li
+          @click="addLayer()"
+          class="ab-context-menu-item"
+        >
+          Add New Layer
+        </li>
+        <li
+          v-if="canToggleLayer"
+          @click="removeLayer(selectedLayer)"
+          class="ab-context-menu-item"
+        >
+          Remove Selected Layer
+        </li>
+        <li
+          v-if="canToggleLayer"
+          @click="downLayer(selectedLayer)"
+          class="ab-context-menu-item"
+        >
+          Move Selected Layer Up
+        </li>
+        <li
+          v-if="canToggleLayer"
+          @click="upLayer(selectedLayer)"
+          class="ab-context-menu-item"
+        >
+          Move Selected Layer Down
+        </li>
+        <li
+          v-if="canToggleLayer"
+          @click="toggleLayer(selectedLayer)"
+          class="ab-context-menu-item"
+        >
+          Show/Hide Layer
+        </li>
+        <li
+          @click="showLayerRename(selectedLayer, currentLayer.label)"
+          class="ab-context-menu-item"
+        >
+          Rename Layer
+        </li>
+        <li
+          v-if="canToggleLayer"
+          @click="mergeLayers()"
+          class="ab-context-menu-item"
+        >
+          Merge All Layers
+        </li>
       </ul>
+    </context-menu>
 
-      <ul class="mt-1 mb-2">
-        <li />
-      </ul>
-
-      <context-menu
-        ref="layersMenu"
-        class="z-50"
-      >
-        <ul>
-          <li
-            @click="addLayer()"
-            class="ab-context-menu-item"
-          >
-            Add New Layer
-          </li>
-          <li
-            v-if="canToggleLayer"
-            @click="removeLayer(selectedLayer)"
-            class="ab-context-menu-item"
-          >
-            Remove Selected Layer
-          </li>
-          <li
-            v-if="canToggleLayer"
-            @click="downLayer(selectedLayer)"
-            class="ab-context-menu-item"
-          >
-            Move Selected Layer Up
-          </li>
-          <li
-            v-if="canToggleLayer"
-            @click="upLayer(selectedLayer)"
-            class="ab-context-menu-item"
-          >
-            Move Selected Layer Down
-          </li>
-          <li
-            v-if="canToggleLayer"
-            @click="toggleLayer(selectedLayer)"
-            class="ab-context-menu-item"
-          >
-            Show/Hide Layer
-          </li>
-          <li
-            @click="showLayerRename(selectedLayer, currentLayer.label)"
-            class="ab-context-menu-item"
-          >
-            Rename Layer
-          </li>
-          <li
-            v-if="canToggleLayer"
-            @click="mergeLayers()"
-            class="ab-context-menu-item"
-          >
-            Merge All Layers
-          </li>
-        </ul>
-      </context-menu>
-
-      <ul
-        class="divide-y-2 divide-outline-variant reverseorder"
-        @mouseup.right="openContextMenu"
-      >
+    <ul
+      class="divide-y-2 divide-outline-variant reverseorder mt-2"
+      @mouseup.right="openContextMenu"
+    >
         <li
           :class="`p-1 ${selectedLayerClass(key)}`"
           v-for="(layer, key) in currentAsciiLayers"
@@ -209,7 +190,6 @@
           </div>
         </li>
       </ul>
-    </div>
   </div>
 </template>
 
