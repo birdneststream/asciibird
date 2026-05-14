@@ -39,6 +39,33 @@
           </Tooltip>
         </div>
 
+        <!-- Shape type selector — visible when shapes tool is active -->
+        <div
+          v-if="isShapesTool"
+          class="grid grid-cols-5 gap-px pt-2 border-t border-outline-variant/30"
+        >
+          <Tooltip
+            v-for="st in shapeTypes"
+            :key="st"
+            :content="shapeLabels[st]"
+          >
+            <button
+              type="button"
+              class="w-full h-7 rounded-sm flex items-center justify-center transition-colors duration-150"
+              :class="currentShapeType === st
+                ? 'bg-primary-container/20 text-primary border border-primary/50'
+                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant border border-transparent'"
+              @click="toolbarStore.changeShapeType(st)"
+            >
+              <span
+                class="material-icons"
+                style="font-size: 14px"
+                aria-hidden="true"
+              >{{ shapeIcons[st] }}</span>
+            </button>
+          </Tooltip>
+        </div>
+
         <!-- Utility buttons -->
         <div class="grid grid-cols-2 gap-1 pt-2 border-t border-outline-variant/30">
           <Tooltip content="Mirror X axis when Editing">
@@ -143,6 +170,11 @@ import PanelHeader from './parts/PanelHeader.vue';
 import Tooltip from './parts/Tooltip.vue';
 import { toolbarIcons } from '../ascii';
 import { tooltipName, toolLabel } from '../utils/toolbar';
+import {
+  SHAPE_TYPES,
+  SHAPE_LABELS,
+  SHAPE_ICONS,
+} from '../utils/shapes';
 
 defineOptions({ name: 'Toolbar' });
 
@@ -170,6 +202,14 @@ watch([dragX, dragY], ([newX, newY]) => {
 });
 
 const currentTool = computed(() => toolbarIcons[toolbarStore.currentTool]);
+
+const isShapesTool = computed(() => currentTool.value?.name === 'shapes');
+const currentShapeType = computed(
+  () => toolbarStore.toolbarState.shapeType,
+);
+const shapeTypes = SHAPE_TYPES;
+const shapeLabels = SHAPE_LABELS;
+const shapeIcons = SHAPE_ICONS;
 
 function toggleMirrorX() {
   const newVal = !toolbarStore.toolbarState.mirrorX;
