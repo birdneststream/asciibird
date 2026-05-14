@@ -15,13 +15,23 @@ import { useModalStore } from '../store/modal';
  *
  * Scope hierarchy:
  * - 'all' — menu shortcuts (Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z, Cmd+Z, etc.)
- * - 'editor' — tool shortcuts (B, E, F, S, T, G) + KeyboardShortcuts.vue
+ * - 'editor' — tool shortcuts (B, E, F, S, T, G, Q) + KeyboardShortcuts.vue
  * - 'modals' — active when modal/dialog is open (no editor shortcuts)
  */
 export function useGlobalShortcuts() {
   const store = useAsciiBirdStore();
   const toolbarStore = useToolbarStore();
   const modalStore = useModalStore();
+
+  // Suppress hotkeys when typing in inputs/textareas (e.g. inline rename).
+  // hotkeys.filter is assignable at runtime but typed as method-only.
+  (hotkeys as unknown as { filter: (event: KeyboardEvent) => boolean }).filter =
+    function (event) {
+      const target = event.target as HTMLElement;
+      const tagName = target.tagName;
+      if (tagName === 'INPUT' || tagName === 'TEXTAREA') return false;
+      return true;
+    };
 
   // ─── Menu shortcuts (scope 'all' — always active) ──────────────
   const menuShortcuts: Record<string, () => void> = {
@@ -116,10 +126,27 @@ export function useGlobalShortcuts() {
   }
 
   // ─── Tool shortcuts (scope 'editor') ───────────────────────────
-  // Single-key tool switching — only when no char picker active
+  // Single-key tool switching — only when no char picker active.
+  // E and Q are context-sensitive: when brush/eraser is active they
+  // trigger rotate/flip instead of tool switching.
   const toolShortcuts: Record<string, () => void> = {
     'b': () => toolbarStore.changeTool(4),  // brush
-    'e': () => toolbarStore.changeTool(6),  // eraser
+    'e': () => {
+      // When brush or eraser tool is active, E rotates the brush
+      const toolName = toolbarIcons[toolbarStore.currentTool]?.name;
+      if (toolName === 'brush' || toolName === 'eraser') {
+        toolbarStore.flipRotateBlocks({ type: 'rotate' });
+      } else {
+        toolbarStore.changeTool(6); // eraser
+      }
+    },
+    'q': () => {
+      // When brush or eraser tool is active, Q flips the brush
+      const toolName = toolbarIcons[toolbarStore.currentTool]?.name;
+      if (toolName === 'brush' || toolName === 'eraser') {
+        toolbarStore.flipRotateBlocks({ type: 'flip' });
+      }
+    },
     'f': () => toolbarStore.changeTool(3),  // fill
     's': () => toolbarStore.changeTool(1),  // select
     't': () => toolbarStore.changeTool(2),  // text
@@ -137,31 +164,13 @@ export function useGlobalShortcuts() {
       if (toolbarStore.toolbarState.isChoosingChar) return;
       if (!store.currentAscii) return;
       // Suppress when text tool is active — single-key shortcuts (b, e,
-      // f, s, t, g) would interfere with typing characters onto the
+      // f, s, t, g, q) would interfere with typing characters onto the
       // canvas. The wildcard handler in Editor.vue routes keypresses
       // to canvasKeyDown() for character input instead.
       const currentToolName = toolbarIcons[toolbarStore.currentTool]?.name;
       if (currentToolName === 'text') return;
       event.preventDefault();
       handler();
-    });
-  }
-
-  // ─── Brush shortcuts (scope 'editor') ──────────────────────────
-  // Shift+E: horizontal flip brush, Shift+Q: vertical rotate brush
-  // Only active when brush or eraser tool is selected
-  const brushShortcuts: Record<string, string> = {
-    'shift+e': 'flip',
-    'shift+q': 'rotate',
-  };
-
-  for (const [key, action] of Object.entries(brushShortcuts)) {
-    hotkeys(key, 'editor', (event) => {
-      if (!store.currentAscii) return;
-      const tool = toolbarIcons[toolbarStore.currentTool];
-      if (tool?.name !== 'brush' && tool?.name !== 'eraser') return;
-      event.preventDefault();
-      toolbarStore.flipRotateBlocks({ type: action });
     });
   }
 
@@ -188,10 +197,6 @@ export function useGlobalShortcuts() {
     }
     // Unbind all tool shortcuts
     for (const key of Object.keys(toolShortcuts)) {
-      hotkeys.unbind(key, 'editor');
-    }
-    // Unbind all brush shortcuts
-    for (const key of Object.keys(brushShortcuts)) {
       hotkeys.unbind(key, 'editor');
     }
   });
