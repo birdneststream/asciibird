@@ -23,6 +23,7 @@ import {
 import { cloneLayers } from '../utils/clone';
 import { findMatches, replaceAtPositions } from '../utils/findReplace';
 import { idbPersistAdapter } from '../utils/idbPersistAdapter';
+import { cropToContent as cropToContentUtil } from '../utils/cropContent';
 import type { RootState } from '../types/store';
 import type {
   Block,
@@ -540,6 +541,37 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     updateAsciiTitle(payload: string) {
       this.asciibirdMeta[this.tab].title = payload;
       this.updateDocumentTitle();
+    },
+    /**
+     * Crop all layers to the bounding rectangle of non-empty content.
+     * Uses withLayerMutation for proper undo support.
+     * Resets canvas position after crop.
+     */
+    cropToContentAction(): boolean {
+      const meta = this.asciibirdMeta[this.tab];
+      if (!meta) return false;
+
+      // Decompress to check if crop is needed
+      const layers = decompressLayers(meta.layers);
+      const result = cropToContentUtil(layers);
+
+      if (!result.cropped) return false;
+
+      // Apply crop with proper undo history
+      this.withLayerMutation((originalLayers) => {
+        // Replace all layer data with cropped versions
+        const cropped = cropToContentUtil(originalLayers);
+        if (cropped.cropped && cropped.layers) {
+          originalLayers.length = 0;
+          originalLayers.push(...cropped.layers);
+        }
+      });
+
+      // Reset canvas position to defaults
+      meta.x = CANVAS_DEFAULT_X;
+      meta.y = CANVAS_DEFAULT_Y;
+
+      return true;
     },
 
     // BLOCKS — undo/redo

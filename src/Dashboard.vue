@@ -682,6 +682,11 @@ const menuBar = computed<AppMenuBar[]>(() => [
         disabled: !asciibirdMeta.value.length,
         shortcut: 'Ctrl+F',
       },
+      {
+        text: 'Crop to Content',
+        click: () => handleCropToContent(),
+        disabled: !asciibirdMeta.value.length,
+      },
     ],
   },
   {
@@ -1002,6 +1007,17 @@ function handleExportHtml(target: 'clipboard' | 'file') {
     }
   } catch (err) {
     toastShow(`HTML export error: ${String(err)}`, { type: 'error' });
+  }
+}
+
+function handleCropToContent() {
+  const cropped = store.cropToContentAction();
+  if (cropped) {
+    toastShow('Canvas cropped to content!', { type: 'success' });
+  } else {
+    toastShow('Nothing to crop — content already fills edges.', {
+      type: 'info',
+    });
   }
 }
 

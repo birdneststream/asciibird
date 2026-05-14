@@ -86,6 +86,12 @@
           >
             Add Border...
           </li>
+          <li
+            @click="cropToContent()"
+            class="ab-context-menu-item"
+          >
+            Crop to Content
+          </li>
         </ul>
       </context-menu>
 
@@ -917,6 +923,18 @@ function canvasToPng() {
   /** Open the border generator modal from context menu */
   function openBorderGenerator() {
     modalStore.openModal('border-generator');
+  }
+
+  /** Crop canvas to content bounds from context menu */
+  function cropToContent() {
+    const cropped = store.cropToContentAction();
+    if (cropped) {
+      toastShow('Canvas cropped to content!', { type: 'success' });
+    } else {
+      toastShow('Nothing to crop — content already fills edges.', {
+        type: 'info',
+      });
+    }
   }
 
   /** Export plain text to clipboard from context menu */
