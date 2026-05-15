@@ -56,47 +56,6 @@ export function findMatches(
 }
 
 /**
- * Count matching blocks without building the full results array.
- */
-export function countMatches(
-  blocks: Block[][],
-  criteria: FindCriteria,
-): number {
-  const { char, fg, bg, useRegex } = criteria;
-  const hasCriteria = char !== undefined || fg !== undefined
-    || bg !== undefined;
-
-  if (!hasCriteria) return 0;
-
-  let regex: RegExp | null = null;
-  if (char !== undefined && useRegex) {
-    try {
-      regex = new RegExp(char);
-    } catch {
-      return 0;
-    }
-  }
-
-  let count = 0;
-
-  for (let y = 0; y < blocks.length; y++) {
-    const row = blocks[y];
-    if (!row) continue;
-
-    for (let x = 0; x < row.length; x++) {
-      const block = row[x];
-      if (!block) continue;
-
-      if (matchesCriteria(block, char, fg, bg, regex)) {
-        count++;
-      }
-    }
-  }
-
-  return count;
-}
-
-/**
  * Apply replacement at the given positions.
  * Returns old/new diff arrays for undo/redo integration.
  * Mutates blocks in-place (caller handles layer compression).

@@ -223,9 +223,6 @@ export const charGroups: { label: string; chars: string[] }[] = [
   },
 ];
 
-// Flat char array for backward compatibility
-export const charCodes: string[] = charGroups.flatMap(g => g.chars);
-
 // Toolbar icons
 export const toolbarIcons: ToolbarIcon[] = [
   { name: 'default', icon: 'edit_off' },

@@ -11,7 +11,6 @@ import {
   rotate90CCW,
   rotate180,
   transformBlocks,
-  isSpecialBlockChar,
 } from '@/utils/transformBlocks';
 import type { Block } from '@/types';
 
@@ -374,39 +373,6 @@ describe('transformBlocks', () => {
     const result = transformBlocks(grid, 'unknown' as any);
     expect(result).toEqual(grid);
     expect(result).not.toBe(grid);
-  });
-});
-
-// ─── isSpecialBlockChar ──────────────────────────────────────────
-
-describe('isSpecialBlockChar', () => {
-  it('recognises ▀', () => {
-    expect(isSpecialBlockChar('\u2580')).toBe(true);
-  });
-
-  it('recognises ▄', () => {
-    expect(isSpecialBlockChar('\u2584')).toBe(true);
-  });
-
-  it('recognises ▌', () => {
-    expect(isSpecialBlockChar('\u258C')).toBe(true);
-  });
-
-  it('recognises ▐', () => {
-    expect(isSpecialBlockChar('\u2590')).toBe(true);
-  });
-
-  it('recognises █', () => {
-    expect(isSpecialBlockChar('\u2588')).toBe(true);
-  });
-
-  it('returns false for regular characters', () => {
-    expect(isSpecialBlockChar('A')).toBe(false);
-  });
-
-  it('returns false for null/undefined', () => {
-    expect(isSpecialBlockChar(null)).toBe(false);
-    expect(isSpecialBlockChar(undefined)).toBe(false);
   });
 });
 

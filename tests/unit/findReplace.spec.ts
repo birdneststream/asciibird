@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   findMatches,
-  countMatches,
   replaceAtPositions,
 } from '@/utils/findReplace';
 import type { Block, FindCriteria, ReplaceSpec } from '@/types';
@@ -168,38 +167,6 @@ describe('findMatches', () => {
     const grid: Block[][] = [null as any, [{ fg: 0, bg: 1, char: 'a' }]];
     const matches = findMatches(grid, { char: 'a' });
     expect(matches).toEqual([{ x: 0, y: 1 }]);
-  });
-});
-
-// ─── countMatches ──────────────────────────────────────────────
-
-describe('countMatches', () => {
-  it('returns 0 for empty criteria', () => {
-    const grid = makeGrid(['abc']);
-    expect(countMatches(grid, {})).toBe(0);
-  });
-
-  it('counts all matching blocks', () => {
-    const grid = makeGrid(['aba', 'bab']);
-    expect(countMatches(grid, { char: 'a' })).toBe(3);
-  });
-
-  it('returns 0 for no matches', () => {
-    const grid = makeGrid(['abc']);
-    expect(countMatches(grid, { char: 'z' })).toBe(0);
-  });
-
-  it('returns 0 for invalid regex', () => {
-    const grid = makeGrid(['abc']);
-    expect(countMatches(grid, { char: '[bad', useRegex: true })).toBe(0);
-  });
-
-  it('counts with combined criteria', () => {
-    const grid: Block[][] = [
-      [{ fg: 5, bg: 1, char: 'X' }, { fg: 5, bg: 1, char: 'X' }],
-      [{ fg: 6, bg: 1, char: 'X' }],
-    ];
-    expect(countMatches(grid, { char: 'X', fg: 5 })).toBe(2);
   });
 });
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { snapToGrid, clamp, snapDimensionToGrid } from '@/utils/geometry';
+import { snapToGrid, snapDimensionToGrid } from '@/utils/geometry';
 
 describe('snapToGrid', () => {
   it('snaps to nearest grid line', () => {
@@ -47,25 +47,6 @@ describe('snapToGrid', () => {
     const result = snapToGrid(-3, 8);
     expect(Object.is(result, -0)).toBe(false);
     expect(result).toBe(0);
-  });
-});
-
-describe('clamp', () => {
-  it('clamps to min', () => {
-    expect(clamp(3, 5, 10)).toBe(5);
-  });
-
-  it('clamps to max', () => {
-    expect(clamp(15, 5, 10)).toBe(10);
-  });
-
-  it('returns value when in range', () => {
-    expect(clamp(7, 5, 10)).toBe(7);
-  });
-
-  it('handles edge values', () => {
-    expect(clamp(5, 5, 10)).toBe(5);
-    expect(clamp(10, 5, 10)).toBe(10);
   });
 });
 

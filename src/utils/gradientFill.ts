@@ -10,7 +10,6 @@ import type { FillChange } from '../ascii';
 import {
   MIRC_RGB,
   closestMircColor,
-  parseColor,
 } from './ansiColors';
 
 // ─── Color Types ────────────────────────────────────────────────
@@ -22,25 +21,7 @@ export interface RgbColor {
   b: number;
 }
 
-/**
- * Parse a CSS color string to RgbColor.
- * Delegates to parseColor from ansiColors and converts tuple to object.
- * Kept for backward compatibility with tests.
- */
-export function parseCssColor(colorStr: string): RgbColor {
-  const [r, g, b] = parseColor(colorStr);
-  return { r, g, b };
-}
-
 // ─── Color Interpolation ────────────────────────────────────────
-
-/**
- * Find the closest color index in the 99-color mIRC palette.
- * Delegates to the shared closestMircColor in ansiColors.
- */
-export function findClosestMircColor(r: number, g: number, b: number): number {
-  return closestMircColor([r, g, b]);
-}
 
 /**
  * Linear interpolation between two RGB colors.
@@ -180,10 +161,8 @@ export function gradientFill(opts: GradientFillOptions): FillChange[] {
 
       // Interpolate and find closest palette color
       const interpolated = lerpRgb(startRgb, endRgb, t);
-      const paletteIdx = findClosestMircColor(
-        interpolated.r,
-        interpolated.g,
-        interpolated.b,
+      const paletteIdx = closestMircColor(
+        [interpolated.r, interpolated.g, interpolated.b],
       );
 
       // Record old state

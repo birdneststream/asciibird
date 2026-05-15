@@ -6,7 +6,6 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import LZString from 'lz-string';
 import {
   mircColours99,
-  charCodes,
   charGroups,
   toolbarIcons,
   emptyBlock,
@@ -215,11 +214,13 @@ describe('ascii.ts constants', () => {
     }
   });
 
-  it('charCodes has correct length (>100)', () => {
+  it('charGroups flat array has correct length (>100)', () => {
+    const charCodes = charGroups.flatMap(g => g.chars);
     expect(charCodes.length).toBeGreaterThan(100);
   });
 
-  it('charCodes starts with space and bang', () => {
+  it('charGroups flat array starts with space and bang', () => {
+    const charCodes = charGroups.flatMap(g => g.chars);
     expect(charCodes[0]).toBe(' ');
     expect(charCodes[1]).toBe('!');
   });
@@ -250,9 +251,13 @@ describe('ascii.ts constants', () => {
     expect(labels).toContain('Math & Special');
   });
 
-  it('charCodes is a flat superset of all charGroups chars', () => {
-    const allGroupChars = charGroups.flatMap(g => g.chars);
-    expect(charCodes).toEqual(allGroupChars);
+  it('charGroups flat chars have no duplicates', () => {
+    const charCodes = charGroups.flatMap(g => g.chars);
+    const seen = new Set<string>();
+    for (const c of charCodes) {
+      expect(seen.has(c)).toBe(false);
+      seen.add(c);
+    }
   });
 
   it('charGroups has no duplicate characters across groups', () => {

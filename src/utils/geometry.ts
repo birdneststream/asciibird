@@ -12,13 +12,6 @@ export function snapToGrid(value: number, gridSize: number): number {
 }
 
 /**
- * Clamp a value between a minimum and maximum.
- */
-export function clamp(value: number, min: number, max: number): number {
-  return Math.max(min, Math.min(max, value));
-}
-
-/**
  * Snap a pixel dimension to a grid size, enforcing a minimum of one grid unit.
  */
 export function snapDimensionToGrid(

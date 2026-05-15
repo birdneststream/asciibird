@@ -18,7 +18,7 @@ import About from '@/components/modals/About.vue'
 import Help from '@/components/modals/Help.vue'
 import Layers from '@/components/parts/Layers.vue'
 import ContextMenu from '@/components/parts/ContextMenu.vue'
-import { mircColours99, charCodes, charGroups } from '@/ascii'
+import { mircColours99, charGroups } from '@/ascii'
 import {
   createMockStore,
   createMockModalStore,
@@ -541,7 +541,8 @@ describe('ascii module constants', () => {
     expect(mircColours99.length).toBe(99)
   })
 
-  it('charCodes is a non-empty array', () => {
+  it('charGroups produces a non-empty flat char array', () => {
+    const charCodes = charGroups.flatMap(g => g.chars)
     expect(Array.isArray(charCodes)).toBe(true)
     expect(charCodes.length).toBeGreaterThan(0)
   })

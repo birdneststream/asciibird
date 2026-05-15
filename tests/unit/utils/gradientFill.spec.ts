@@ -1,12 +1,11 @@
 // Gradient Fill utility tests
 import { describe, it, expect } from 'vitest';
 import {
-  parseCssColor,
-  findClosestMircColor,
   lerpRgb,
   detectGradientDirection,
   gradientFill,
 } from '../../../src/utils/gradientFill';
+import { parseColor, closestMircColor } from '../../../src/utils/ansiColors';
 import type { Block } from '../../../src/types';
 import { emptyBlock } from '../../../src/ascii';
 
@@ -23,50 +22,49 @@ function makeGrid(w: number, h: number): Block[][] {
 }
 
 describe('gradientFill', () => {
-  describe('parseCssColor', () => {
+  describe('parseColor (from ansiColors)', () => {
     it('parses rgb(r,g,b) format', () => {
-      const result = parseCssColor('rgb(255,128,0)');
-      expect(result).toEqual({ r: 255, g: 128, b: 0 });
+      const result = parseColor('rgb(255,128,0)');
+      expect(result).toEqual([255, 128, 0]);
     });
 
     it('parses #hex format', () => {
-      const result = parseCssColor('#FF8000');
-      expect(result).toEqual({ r: 255, g: 128, b: 0 });
+      const result = parseColor('#FF8000');
+      expect(result).toEqual([255, 128, 0]);
     });
 
     it('handles lowercase hex', () => {
-      const result = parseCssColor('#ff0000');
-      expect(result).toEqual({ r: 255, g: 0, b: 0 });
+      const result = parseColor('#ff0000');
+      expect(result).toEqual([255, 0, 0]);
     });
 
     it('parses rgb with spaces', () => {
-      const result = parseCssColor('rgb( 0 , 0 , 0 )');
-      expect(result).toEqual({ r: 0, g: 0, b: 0 });
+      const result = parseColor('rgb( 0 , 0 , 0 )');
+      expect(result).toEqual([0, 0, 0]);
     });
   });
 
-  describe('findClosestMircColor', () => {
+  describe('closestMircColor', () => {
     it('finds exact match for white', () => {
-      expect(findClosestMircColor(255, 255, 255)).toBe(0);
+      expect(closestMircColor([255, 255, 255])).toBe(0);
     });
 
     it('finds exact match for black', () => {
-      expect(findClosestMircColor(0, 0, 0)).toBe(1);
+      expect(closestMircColor([0, 0, 0])).toBe(1);
     });
 
     it('finds exact match for red', () => {
-      expect(findClosestMircColor(255, 0, 0)).toBe(4);
+      expect(closestMircColor([255, 0, 0])).toBe(4);
     });
 
     it('finds closest match for near-white', () => {
-      const idx = findClosestMircColor(250, 250, 250);
-      // Should be close to white (0) or one of the light greys
+      const idx = closestMircColor([250, 250, 250]);
       expect(idx).toBeGreaterThanOrEqual(0);
       expect(idx).toBeLessThan(99);
     });
 
     it('finds closest match for arbitrary color', () => {
-      const idx = findClosestMircColor(100, 100, 100);
+      const idx = closestMircColor([100, 100, 100]);
       expect(idx).toBeGreaterThanOrEqual(0);
       expect(idx).toBeLessThan(99);
     });
@@ -75,7 +73,7 @@ describe('gradientFill', () => {
       for (let r = 0; r < 256; r += 50) {
         for (let g = 0; g < 256; g += 50) {
           for (let b = 0; b < 256; b += 50) {
-            const idx = findClosestMircColor(r, g, b);
+            const idx = closestMircColor([r, g, b]);
             expect(idx).toBeGreaterThanOrEqual(0);
             expect(idx).toBeLessThan(99);
           }
