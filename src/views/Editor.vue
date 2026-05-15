@@ -23,6 +23,7 @@
         @paste="pasteMode.startPasteMode()"
         @border-generator="openBorderGenerator()"
         @crop-to-content="cropToContent()"
+        @align-selection="alignSelectionInRect"
       />
 
       <div
@@ -364,6 +365,7 @@ const {
   warnInvisibleLayer, undo, redo,
   resetSelectTool, getSelectionBounds,
   dispatchBlocks, processSelect,
+  alignSelectionInRect,
 } = actions;
 
 // ─── Canvas Mouse Handlers (extracted composable) ─────────────
