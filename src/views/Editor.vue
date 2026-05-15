@@ -136,11 +136,12 @@ import EditorContextMenu from '../components/parts/EditorContextMenu.vue';
 import {
   mircColours99,
   maxBrushSize,
-  fillNullBlocks,
   getBlocksWidth,
   filterNullBlocks,
   emptyBlock as emptyBlockFn,
 } from '../ascii';
+
+import { resizeLayers } from '../utils/resizeLayers';
 
 import type { Block } from '../types';
 import type { TransformType } from '../utils/transformBlocks';
@@ -490,13 +491,18 @@ const canvasPanel = useCanvasPanel({
     width: number,
     height: number,
   ) => {
-    const canvasBlockHeight = Math.floor(
+    // Clamp to minimum 1x1 to prevent zero-dimension crash
+    const canvasBlockHeight = Math.max(1, Math.floor(
       height / blockHeightComp.value,
-    );
-    const canvasBlockWidth = Math.floor(
+    ));
+    const canvasBlockWidth = Math.max(1, Math.floor(
       width / blockWidthComp.value,
+    ));
+    const layers = resizeLayers(
+      store.currentAsciiLayers,
+      canvasBlockWidth,
+      canvasBlockHeight,
     );
-    const layers = fillNullBlocks(canvasBlockHeight, canvasBlockWidth);
 
     top.value = topVal;
     canvasSize.width = width;
