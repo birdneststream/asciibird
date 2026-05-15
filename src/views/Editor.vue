@@ -104,11 +104,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, toRef, onMounted, onUnmounted } from 'vue';
 import { useEventListener } from '@vueuse/core';
 import { useAsciiBirdStore } from '../store';
 import { useToolbarStore } from '../store/toolbar';
-import { useModalStore } from '../store/modal';
 import { useToast } from '../composables/useToast';
 import { useCanvasPanel } from '../composables/useCanvasPanel';
 import { useMainCanvasRenderer } from '../composables/useMainCanvasRenderer';
@@ -116,8 +115,6 @@ import { useExportAscii } from '../composables/useExportAscii';
 import { useFpsThrottle } from '../composables/useFpsThrottle';
 import {
   useSelectionTransform,
-  selectionToGridRect,
-  copySelectionBlocks,
 } from '../composables/useSelectionTransform';
 import { useColorReplace } from '../composables/useColorReplace';
 import { useGradientTool } from '../composables/useGradientTool';
@@ -130,6 +127,8 @@ import { useToolApplication } from '../composables/useToolApplication';
 import { useCanvasMouseHandlers } from '../composables/useCanvasMouseHandlers';
 import { useEditorHotkeys } from '../composables/useEditorHotkeys';
 import { useTextEditing } from '../composables/useTextEditing';
+import { useEditorWatchers } from '../composables/useEditorWatchers';
+import { useEditorActions } from '../composables/useEditorActions';
 
 import EditorContextMenu from '../components/parts/EditorContextMenu.vue';
 
@@ -139,12 +138,9 @@ import {
   fillNullBlocks,
   getBlocksWidth,
   filterNullBlocks,
-  canvasToPng as canvasToPngUtil,
   emptyBlock as emptyBlockFn,
-  exportPlainText,
 } from '../ascii';
 
-import { downloadHtml } from '../utils/htmlExport';
 import type { Block } from '../types';
 import type { TransformType } from '../utils/transformBlocks';
 
@@ -180,7 +176,6 @@ const emit = defineEmits<{
 // ─── Store & Composables ────────────────────────────────────────
 const store = useAsciiBirdStore();
 const toolbarStore = useToolbarStore();
-const modalStore = useModalStore();
 const { show: toastShow } = useToast();
 const { renderBlock, clearMainCanvas } = useMainCanvasRenderer();
 const { startExport } = useExportAscii({
@@ -337,13 +332,39 @@ const selectionTransform = useSelectionTransform({
 const {
   applyTransform: applyTransformFn,
   applyNudge,
-  extractSelectionBlocks,
 } = selectionTransform;
 
 /** Apply a transform to the current selection (context menu + shortcuts) */
 async function applySelectionTransform(type: TransformType) {
   await applyTransformFn(type);
 }
+
+// ─── Editor Actions (context menu, export, helpers) ───────────────
+// Must be initialized before mouse handlers and watchers since they
+// depend on dispatchBlocks, processSelect, resetSelectTool, etc.
+const actions = useEditorActions({
+  state,
+  rendering: { clearToolCanvas, delayRedrawCanvas },
+  pasteMode,
+  refs: { canvasRef, editorMenu },
+  emit: {
+    selecting: (val) => emit('selecting', val),
+    selectedblocks: (val) => emit('selectedblocks', val),
+  },
+  toastShow,
+  contextMenuReplace,
+});
+
+const {
+  canvasToPng, openContextMenu,
+  contextMenuReplaceColor, contextMenuCopySelection,
+  contextMenuCutSelection, contextMenuDeleteSelection,
+  openBorderGenerator, cropToContent,
+  exportPlainTextClipboard, exportHtmlFile,
+  warnInvisibleLayer, undo, redo,
+  resetSelectTool, getSelectionBounds,
+  dispatchBlocks, processSelect,
+} = actions;
 
 // ─── Canvas Mouse Handlers (extracted composable) ─────────────
 const mouseHandlers = useCanvasMouseHandlers({
@@ -523,186 +544,38 @@ function onCanvasMouseMove(e: MouseEvent) {
   canvasMouseMove(e);
 }
 
-// ─── Watchers ───────────────────────────────────────────────────
-watch(currentAsciiHeight, (val) => {
-  canvasSize.height = val * blockHeightComp.value;
-});
+// ─── Watchers (extracted composable) ────────────────────────────
+// useEditorWatchers registers all reactive watchers. Vue 3 auto-stops
+// them on unmount. Function refs (resetSelectTool, warnInvisibleLayer,
+// dispatchBlocks) are hoisted within the setup scope.
 
-watch(currentAsciiWidth, (val) => {
-  canvasSize.width = val * blockWidthComp.value;
-});
-
-watch(() => store.tab, (newTab) => {
-    const meta = store.asciibirdMeta[newTab];
-    if (!meta) return;
-
-    canvasSize.width = currentAsciiWidth.value * blockWidthComp.value;
-    canvasSize.height = currentAsciiHeight.value * blockHeightComp.value;
-
-    canvasPanel.setPosition(meta.x ?? 0, meta.y ?? 0);
-    canvasPanel.setDimensions(
-      currentAsciiWidth.value * blockWidthComp.value,
-      currentAsciiHeight.value * blockHeightComp.value,
-    );
-  });
-
-watch(() => props.resetSelect, () => {
-  resetSelectTool();
-});
-
-watch(currentSelectedLayer, (val) => {
-  if (val && val.visible) {
-    warnInvisibleLayer();
-  }
-});
-
-watch(currentAsciiLayerBlocks, async () => {
-  await delayRedrawCanvas();
-});
-
-watch(blockSizeMultiplier, () => {
-  canvasSize.width = currentAsciiWidth.value * blockWidthComp.value;
-  canvasSize.height = currentAsciiHeight.value * blockHeightComp.value;
-  canvasPanel.setDimensions(
-    currentAsciiWidth.value * blockWidthComp.value,
-    currentAsciiHeight.value * blockHeightComp.value,
-  );
-  rendering.updateCanvasFont();
-  delayRedrawCanvas(true);
-});
-
-watch(currentTool, async () => {
-  warnInvisibleLayer();
-
-  if (halfBlockEditing.value) {
-    if (currentTool.value.name === 'text') {
-      toastShow('Text mode is not available in half-block editing mode');
-      toolbarStore.changeTool(0);
-      return;
-    }
-    if (currentTool.value.name === 'gradient') {
-      toastShow('Gradient fill is not available in half-block editing mode');
-      toolbarStore.changeTool(0);
-      return;
-    }
-    if (currentTool.value.name === 'shapes') {
-      toastShow('Shape tools are not available in half-block editing mode');
-      toolbarStore.changeTool(0);
-      return;
-    }
-  }
-
-  switch (currentTool.value.name) {
-    case 'default':
-      textEditing.value.startX = null;
-      textEditing.value.startY = null;
-      resetSelectTool();
-      await clearToolCanvas();
-      break;
-
-    case 'text':
-      textEditing.value.startX = x.value;
-      textEditing.value.startY = y.value;
-      break;
-  }
-});
-
-// When mouse leaves canvas: clear visual indicators and commit
-// pending changes. For brush/eraser, preserve canTool so the stroke
-// can resume if the mouse re-enters while the button is held.
-// Other tools (fill, dropper, text, etc.) deactivate on leave.
-// See: Gitea issues #83, #84.
-watch(isMouseOnCanvas, async (val, old) => {
-  if (val !== old) {
-    if (!isSelecting.value) {
-      // Deactivate tool state first (before async rendering that
-      // may fail in test environments without real canvas)
-      if (!isBrushing.value && !isErasing.value) {
-        canTool.value = false;
-      }
-      await clearToolCanvas();
-      await dispatchBlocks(true);
-      await delayRedrawCanvas();
-    }
-  }
-});
-
-watch(gridView, async (val, old) => {
-  if (val !== old) {
-    await clearToolCanvas();
-  }
-});
-
-watch(brushBlocks, async () => {
-  await clearToolCanvas();
-  if (isMouseOnCanvas.value && isBrushing.value) {
-    await drawBrush();
-  }
-});
-
-watch(isTextEditing, async (val) => {
-  if (val === false) {
-    await dispatchBlocks(true);
-  }
-});
-
-watch(textEditing, (val) => {
-  emit('textediting', val);
-}, { deep: true });
-
-watch(() => props.updateCanvas, async () => {
-  await clearToolCanvas();
-  await drawTextIndicator();
-  await drawIndicator();
-  await delayRedrawCanvas();
-});
-
-watch(selecting, (val) => {
-  emit('selecting', val);
-}, { deep: true });
-
-watch(() => props.yOffset, async () => {
-  await delayRedrawCanvas(true);
-});
-
-watch(selectedLayerIndex, (val, old) => {
-  if (val !== old) {
-    diffBlocks.l = val;
-  }
-});
-
-watch(currentAsciiLayers, async () => {
-  await delayRedrawCanvas(true);
-});
-
-watch(halfBlockEditing, async (active) => {
-  if (active) {
-    toolbarStore.updateBrushSize({
-      brushSizeWidth: 1,
-      brushSizeHeight: 1,
-      brushSizeType: 'square',
-    });
-
-    if (currentTool.value.name === 'text') {
-      toolbarStore.changeTool(0);
-      textEditing.value.startX = null;
-      textEditing.value.startY = null;
-    }
-
-    if (currentTool.value.name === 'select') {
-      toolbarStore.changeTool(0);
-      resetSelectTool();
-    }
-
-    if (!canFg.value) {
-      toolbarStore.changeTargetingFg(true);
-    }
-  }
-
-  if (gridView.value) {
-    await clearToolCanvas();
-    drawGrid();
-  }
+useEditorWatchers({
+  state,
+  rendering: {
+    clearToolCanvas,
+    delayRedrawCanvas,
+    drawBrush,
+    drawGrid,
+    drawTextIndicator,
+    drawIndicator,
+    updateCanvasFont: rendering.updateCanvasFont,
+  },
+  canvasPanel,
+  callbacks: {
+    resetSelectTool,
+    warnInvisibleLayer,
+    dispatchBlocks,
+  },
+  props: {
+    resetSelect: toRef(props, 'resetSelect'),
+    updateCanvas: toRef(props, 'updateCanvas'),
+    yOffset: toRef(props, 'yOffset'),
+  },
+  emit: {
+    textediting: (val) => emit('textediting', val),
+    selecting: (val) => emit('selecting', val),
+  },
+  toastShow,
 });
 
 // ─── Editor Hotkeys (extracted composable) ───────────────────────
@@ -877,208 +750,14 @@ if (currentAsciiLayerBlocks.value) {
   canvasSize.height = currentAsciiHeight.value * blockHeightComp.value;
 }
 
-// ─── Methods: Context Menu & Export ────────────────────────────
-
-function canvasToPng() {
-  const canvas = canvasRef.value;
-  if (canvas) {
-    canvasToPngUtil(canvas, (currentAscii.value as { title: string })?.title ?? 'ascii');
-  }
-}
-
-function openContextMenu(e: MouseEvent) {
-  e.preventDefault();
-  editorMenu.value?.open({ clientX: e.clientX, clientY: e.clientY });
-}
-
-function contextMenuReplaceColor() {
-  const block = asciiBlockAtXy.value;
-  if (!block) return;
-  const bounds = getSelectionBounds();
-  if (bounds) {
-    contextMenuReplace(block, bounds);
-  } else {
-    contextMenuReplace(block);
-  }
-}
-
-  function contextMenuCopySelection() {
-    if (selectedBlocks.value.length > 0) {
-      const didCopy = copySelectionBlocks(
-        selecting.value,
-        selectedBlocks.value,
-        currentAsciiLayerBlocks.value,
-        blockWidthComp.value,
-        blockHeightComp.value,
-        currentAsciiWidth.value,
-        currentAsciiHeight.value,
-        toolbarStore.setSelectBlocks,
-      );
-      if (didCopy) {
-        toastShow('Copied selection to clipboard', { type: 'success' });
-      }
-    }
-  }
-
-function contextMenuCutSelection() {
-  if (isSelecting.value && isSelected.value) {
-    pasteMode.cutSelection();
-    delayRedrawCanvas(true);
-    toastShow('Cut selection to clipboard', { type: 'success' });
-  }
-}
-
-function contextMenuDeleteSelection() {
-  if (isSelecting.value && isSelected.value) {
-    pasteMode.deleteSelection();
-    delayRedrawCanvas(true);
-  }
-}
-
-function openBorderGenerator() {
-  modalStore.openModal('border-generator');
-}
-
-function cropToContent() {
-  const cropped = store.cropToContentAction();
-  if (cropped) {
-    toastShow('Canvas cropped to content!', { type: 'success' });
-  } else {
-    toastShow('Nothing to crop — content already fills edges.', {
-      type: 'info',
-    });
-  }
-}
-
-function exportPlainTextClipboard() {
-  try {
-    const lines = exportPlainText();
-    navigator.clipboard.writeText(lines.join('\n'));
-    toastShow('Plain text copied to clipboard!', { type: 'success' });
-  } catch {
-    toastShow('Failed to copy plain text.', { type: 'error' });
-  }
-}
-
-function exportHtmlFile() {
-  try {
-    const title = (currentAscii.value as { title: string })?.title ?? 'ascii';
-    downloadHtml(title);
-    toastShow('Exported HTML file!', { type: 'success' });
-  } catch {
-    toastShow('Failed to export HTML.', { type: 'error' });
-  }
-}
-
-// ─── Methods: Helpers ──────────────────────────────────────────
-
-function warnInvisibleLayer() {
-  if (!currentSelectedLayer.value.visible) {
-    toastShow('You are trying to edit an invisible layer!!', {
-      type: 'error',
-      icon: 'warning_amber',
-      singleton: true,
-    });
-  }
-}
-
-function undo() {
-  store.undoBlocks();
-}
-
-function redo() {
-  store.redoBlocks();
-}
-
-async function resetSelectTool() {
-  selecting.value.startX = null;
-  selecting.value.startY = null;
-  selecting.value.endX = null;
-  selecting.value.endY = null;
-  selecting.value.canSelect = false;
-
-  selectedBlocks.value = [];
-  await clearToolCanvas();
-  await delayRedrawCanvas();
-  emit('selecting', selecting.value);
-}
-
-/**
- * Get the current selection bounds as grid coordinates.
- * Returns null if no valid selection exists.
- */
-function getSelectionBounds(): {
-  x: number; y: number; w: number; h: number;
-} | null {
-  if (!isSelected.value || !isSelecting.value) return null;
-
-  const bw = blockWidthComp.value;
-  const bh = blockHeightComp.value;
-
-  const startX = Math.floor(selecting.value.startX! / bw);
-  const startY = Math.floor(selecting.value.startY! / bh);
-  const endX = Math.ceil(selecting.value.endX! / bw);
-  const endY = Math.ceil(selecting.value.endY! / bh);
-
-  const x1 = Math.max(0, Math.min(startX, endX));
-  const y1 = Math.max(0, Math.min(startY, endY));
-  const x2 = Math.min(currentAsciiWidth.value, Math.max(startX, endX));
-  const y2 = Math.min(currentAsciiHeight.value, Math.max(startY, endY));
-
-  if (x2 <= x1 || y2 <= y1) return null;
-
-  return { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
-}
-
-// ─── Mouse handlers delegated to useCanvasMouseHandlers composable ──
-// canvasMouseUp, canvasMouseDown, canvasMouseMove, and interpolateStroke
-// are provided by the mouseHandlers composable initialized above.
-
-// ─── Methods: Dispatch & Diff ──────────────────────────────────
-
-async function dispatchBlocks(clearDiff = false) {
-  diffBlocks.old = diffBlocks.old.flat();
-  diffBlocks.new = diffBlocks.new.flat();
-
-  if (diffBlocks.new.length > 0) {
-    const fg = toolbarStore.currentFg;
-    const bg = toolbarStore.currentBg;
-    toolbarStore.addRecentColor(fg);
-    if (bg !== fg) {
-      toolbarStore.addRecentColor(bg);
-    }
-  }
-
-  store.updateAsciiBlocks({
-    blocks: currentAsciiLayerBlocks.value,
-    diff: { ...diffBlocks },
-  });
-
-  if (clearDiff) {
-    diffBlocks.l = selectedLayerIndex.value;
-    diffBlocks.new = [];
-    diffBlocks.old = [];
-  }
-}
-
-async function processSelect() {
-  const rect = selectionToGridRect(
-    selecting.value,
-    blockWidthComp.value,
-    blockHeightComp.value,
-    currentAsciiWidth.value,
-    currentAsciiHeight.value,
-  );
-
-  if (rect) {
-    selectedBlocks.value = extractSelectionBlocks(
-      currentAsciiLayerBlocks.value, rect,
-    );
-  }
-
-  emit('selectedblocks', selectedBlocks.value);
-  emit('selecting', selecting.value);
-}
+// ─── Methods delegated to useEditorActions composable ──────────────
+// canvasToPng, openContextMenu, contextMenuReplaceColor,
+// contextMenuCopySelection, contextMenuCutSelection,
+// contextMenuDeleteSelection, openBorderGenerator, cropToContent,
+// exportPlainTextClipboard, exportHtmlFile, warnInvisibleLayer,
+// undo, redo, resetSelectTool, getSelectionBounds,
+// dispatchBlocks, processSelect — all provided by the
+// useEditorActions composable initialized above.
 
 // ─── Expose for test compatibility ─────────────────────────────
 defineExpose({
