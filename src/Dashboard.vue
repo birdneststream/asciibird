@@ -6,7 +6,7 @@
     <div v-show="menuBarVisible">
       <div
         v-if="!isKeyboardDisabled"
-        class="flex items-center border-b header-bar text-on-surface border-outline-variant relative z-[95]"
+        class="flex items-center border-b header-bar text-on-surface border-outline-variant relative z-menu"
         @mouseleave="onMenuBarMouseLeave"
       >
         <h1 class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight px-md select-none">
