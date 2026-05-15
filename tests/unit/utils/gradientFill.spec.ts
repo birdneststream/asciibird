@@ -292,6 +292,39 @@ describe('gradientFill', () => {
       expect(uniqueColors.size).toBeGreaterThanOrEqual(2);
     });
 
+    it('produces many distinct colors for a wide white-to-black gradient', () => {
+      const grid = makeGrid(20, 1);
+      const changes = gradientFill({
+        blocks: grid,
+        startX: 0, startY: 0,
+        endX: 19, endY: 0,
+        startColorIdx: 0, // white
+        endColorIdx: 1,   // black
+      });
+
+      const uniqueColors = new Set(changes.map(c => c.new.bg));
+      // With 99 mIRC colors, a 20-cell white→black gradient should
+      // produce significantly more than 2 distinct palette colors
+      expect(uniqueColors.size).toBeGreaterThanOrEqual(5);
+      // First cell should be start color, last should be end color
+      expect(changes[0].new.bg).toBe(0);
+      expect(changes[19].new.bg).toBe(1);
+    });
+
+    it('produces gradient from red to blue with distinct colors', () => {
+      const grid = makeGrid(20, 1);
+      const changes = gradientFill({
+        blocks: grid,
+        startX: 0, startY: 0,
+        endX: 19, endY: 0,
+        startColorIdx: 4,  // red
+        endColorIdx: 12,   // blue
+      });
+
+      const uniqueColors = new Set(changes.map(c => c.new.bg));
+      expect(uniqueColors.size).toBeGreaterThanOrEqual(3);
+    });
+
     it('uses auto-detected direction when not specified', () => {
       const grid = makeGrid(10, 2);
       // Horizontal-ish gradient
