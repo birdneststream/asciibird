@@ -61,6 +61,22 @@ function initialPanelStates() {
       visible: true,
       minimized: false,
     } as PanelState,
+    colourPicker: {
+      x: RIGHT_X,
+      y: TOP_Y + 600 + GAP,
+      h: 200,
+      w: 260,
+      visible: false,
+      minimized: false,
+    } as PanelState,
+    charPicker: {
+      x: RIGHT_X,
+      y: TOP_Y + 600 + GAP + 200 + GAP,
+      h: 300,
+      w: 480,
+      visible: false,
+      minimized: false,
+    } as PanelState,
   };
 }
 
@@ -121,6 +137,12 @@ export const usePanelStore = defineStore('panel', {
     },
     changeLayersLibraryState(payload: PanelState) {
       this.layersLibrary = payload;
+    },
+    changeColourPickerState(payload: PanelState) {
+      this.colourPicker = payload;
+    },
+    changeCharPickerState(payload: PanelState) {
+      this.charPicker = payload;
     },
 
     /** Minimize a panel — hides from canvas but keeps in task bar */
