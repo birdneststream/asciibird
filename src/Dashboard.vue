@@ -26,7 +26,7 @@
             {{ menuItem.label }}
           </MenuButton>
           <MenuItems
-            class="absolute mt-0 shadow-panel rounded-b min-w-60 z-menu border floating-panel border-outline-variant"
+            class="absolute mt-0 rounded-b min-w-60 z-menu border menu-panel border-outline-variant"
             @focus="onMenuItemsOpen(index)"
           >
             <MenuItem
