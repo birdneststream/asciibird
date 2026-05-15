@@ -438,9 +438,15 @@ const selectionTransform = useSelectionTransform({
   redrawSelect,
 });
 
+const {
+  applyTransform: applyTransformFn,
+  applyNudge,
+  extractSelectionBlocks,
+} = selectionTransform;
+
 /** Apply a transform to the current selection (context menu + shortcuts) */
 async function applySelectionTransform(type: TransformType) {
-  await selectionTransform.applyTransform(type);
+  await applyTransformFn(type);
 }
 
 const imageOverlay = computed(() => store.imageOverlay);
@@ -760,16 +766,16 @@ hotkeys('*', 'editor', async function (event) {
   ) {
     switch (event.key) {
       case 'ArrowUp':
-        await selectionTransform.applyNudge(0, -1);
+        await applyNudge(0, -1);
         return;
       case 'ArrowDown':
-        await selectionTransform.applyNudge(0, 1);
+        await applyNudge(0, 1);
         return;
       case 'ArrowLeft':
-        await selectionTransform.applyNudge(-1, 0);
+        await applyNudge(-1, 0);
         return;
       case 'ArrowRight':
-        await selectionTransform.applyNudge(1, 0);
+        await applyNudge(1, 0);
         return;
     }
   }
@@ -964,12 +970,23 @@ function contextMenuReplaceColor() {
   }
 }
 
-function contextMenuCopySelection() {
-  if (selectedBlocks.value.length > 0) {
-    toolbarStore.setSelectBlocks(selectedBlocks.value);
-    toastShow('Copied selection to clipboard', { type: 'success' });
+  function contextMenuCopySelection() {
+    if (selectedBlocks.value.length > 0) {
+      // Extract compact selection (not sparse full-canvas array)
+      // so paste mode can render ghost preview at correct size
+      const bounds = getSelectionBounds();
+      if (bounds) {
+        const compact = extractSelectionBlocks(
+          currentAsciiLayerBlocks.value,
+          { x: bounds.x, y: bounds.y, width: bounds.w, height: bounds.h },
+        );
+        toolbarStore.setSelectBlocks(compact);
+      } else {
+        toolbarStore.setSelectBlocks(selectedBlocks.value);
+      }
+      toastShow('Copied selection to clipboard', { type: 'success' });
+    }
   }
-}
 
 function contextMenuCutSelection() {
   if (isSelecting.value && isSelected.value) {

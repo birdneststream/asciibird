@@ -452,7 +452,12 @@ import { useExportAscii } from './composables/useExportAscii';
 import { useGlobalShortcuts } from './composables/useGlobalShortcuts';
 import { useInlineRename } from './composables/useInlineRename';
 import { useIrcLineWarning } from './composables/useIrcLineWarning';
+import {
+  selectionToGridRect,
+  extractSelectionBlocks,
+} from './composables/useSelectionTransform';
 import type { Block, AppMenuBar } from './types';
+import { blockWidth, blockHeight } from './ascii';
 
 defineOptions({ name: 'Dashboard' });
 
@@ -558,7 +563,24 @@ const importFileHandler = () => {
 // Handler for Ctrl+C copy blocks shortcut (from useGlobalShortcuts)
 const copyBlocksHandler = () => {
   if (selectedBlocks.value.length > 0) {
-    toolbarStore.setSelectBlocks(selectedBlocks.value);
+    // Extract compact selection (not sparse full-canvas array)
+    // so paste mode renders ghost preview at correct size
+    const bw = blockWidth * store.blockSizeMultiplier;
+    const bh = blockHeight * store.blockSizeMultiplier;
+    const layerBlocks = store.currentAsciiLayerBlocks;
+    const canvasW = store.currentAscii?.width ?? 0;
+    const canvasH = store.currentAscii?.height ?? 0;
+
+    const rect = selectionToGridRect(
+      selecting.value, bw, bh, canvasW, canvasH,
+    );
+
+    if (rect && layerBlocks) {
+      const compact = extractSelectionBlocks(layerBlocks, rect);
+      toolbarStore.setSelectBlocks(compact);
+    } else {
+      toolbarStore.setSelectBlocks(selectedBlocks.value);
+    }
     toastShow('Copied blocks to clipboard', { type: 'success' });
   }
 };

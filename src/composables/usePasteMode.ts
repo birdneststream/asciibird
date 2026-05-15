@@ -106,7 +106,7 @@ export function usePasteMode(opts: UsePasteModeOptions) {
    */
   function confirmPaste(gx: number, gy: number): boolean {
     const blocks = clipboardBlocks.value;
-    if (!blocks.length || !blocks[0]?.length) return false;
+    if (!blocks || !blocks.length || !blocks[0]?.length) return false;
 
     const layerBlocks = opts.currentAsciiLayerBlocks.value;
     const canvasW = opts.currentAsciiWidth.value;
@@ -119,11 +119,14 @@ export function usePasteMode(opts: UsePasteModeOptions) {
       const destY = gy + dy;
       if (destY < 0 || destY >= canvasH) continue;
 
-      for (let dx = 0; dx < blocks[dy].length; dx++) {
+      const srcRow = blocks[dy];
+      if (!srcRow) continue;
+
+      for (let dx = 0; dx < srcRow.length; dx++) {
         const destX = gx + dx;
         if (destX < 0 || destX >= canvasW) continue;
 
-        const srcBlock = blocks[dy][dx];
+        const srcBlock = srcRow[dx];
         // Skip empty source blocks (they don't overwrite)
         if (!srcBlock || Object.keys(srcBlock).length === 0) continue;
 
@@ -255,7 +258,7 @@ export function usePasteMode(opts: UsePasteModeOptions) {
     bh: number,
   ): void {
     const blocks = clipboardBlocks.value;
-    if (!blocks.length) return;
+    if (!blocks || !blocks.length) return;
 
     const canvasW = opts.currentAsciiWidth.value;
     const canvasH = opts.currentAsciiHeight.value;
@@ -267,11 +270,14 @@ export function usePasteMode(opts: UsePasteModeOptions) {
       const destY = gy + dy;
       if (destY < 0 || destY >= canvasH) continue;
 
-      for (let dx = 0; dx < blocks[dy].length; dx++) {
+      const row = blocks[dy];
+      if (!row) continue;
+
+      for (let dx = 0; dx < row.length; dx++) {
         const destX = gx + dx;
         if (destX < 0 || destX >= canvasW) continue;
 
-        const block = blocks[dy][dx];
+        const block = row[dx];
         if (!block || Object.keys(block).length === 0) continue;
 
         const px = destX * bw;
