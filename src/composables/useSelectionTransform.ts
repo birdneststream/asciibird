@@ -36,7 +36,7 @@ export interface SelectionTransformDeps {
   currentAsciiLayerBlocks: ComputedRef<Block[][]>;
   selectedLayerIndex: ComputedRef<number>;
   /** Store action to commit undo diff */
-  updateAsciiBlocks: (payload: { diff: HistoryDiff; blocks: unknown }) => void;
+  updateAsciiBlocks: (payload: { diff: HistoryDiff; blocks: Block[][] }) => void;
   /** Toolbar store action to update select blocks (for Ctrl+V paste) */
   setSelectBlocks: (blocks: Block[][]) => void;
   /** Trigger canvas redraw */
