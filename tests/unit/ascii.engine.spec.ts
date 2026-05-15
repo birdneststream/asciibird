@@ -33,10 +33,9 @@ import {
    exportMirc,
    exportPlainText,
    parseMircAscii,
-  mergeLayers,
-  checkForGetRequest,
-  splashAscii,
-  downloadFile,
+   mergeLayers,
+   checkForGetRequest,
+   downloadFile,
   canvasToPng,
   calculateMircLineBytes,
   IRC_WARN_THRESHOLD,
@@ -1365,45 +1364,6 @@ describe('mIRC round-trip (parse → export)', () => {
     expect(joined).toContain('B');
     expect(joined).toContain('C');
     expect(joined).toContain('D');
-  });
-});
-
-// ─── splashAscii ────────────────────────────────────────────────────────
-
-describe('splashAscii', () => {
-  it('is an array', () => {
-    expect(Array.isArray(splashAscii)).toBe(true);
-  });
-
-  it('has content (at least 1 row)', () => {
-    expect(splashAscii.length).toBeGreaterThan(0);
-  });
-
-  it('contains block data (rows of blocks)', () => {
-    // splashAscii is a raw 2D block array, not Layer[]
-    for (const row of splashAscii) {
-      expect(Array.isArray(row)).toBe(true);
-    }
-  });
-
-  it('has valid block structure in cells', () => {
-    const firstRow = splashAscii[0];
-    expect(firstRow.length).toBeGreaterThan(0);
-    const block = firstRow[0];
-    // Blocks can be empty {} or have fg/bg/char
-    expect(typeof block).toBe('object');
-    // At least some blocks in the splash should have content
-    let hasContent = false;
-    for (const row of splashAscii) {
-      for (const cell of row) {
-        if (cell && cell.char) {
-          hasContent = true;
-          break;
-        }
-      }
-      if (hasContent) break;
-    }
-    expect(hasContent).toBe(true);
   });
 });
 

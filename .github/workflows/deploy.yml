@@ -11,30 +11,28 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '16'
-          cache: 'yarn'
+          node-version: 22
+          cache: yarn
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: yarn install --frozen-lockfile
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Test
+        run: yarn test
 
       - name: Build
         run: yarn build
-        env:
-          NODE_ENV: production
-
-      - name: Copy docs folder to build output
-        run: cp -r docs/ dist/docs/
 
       - name: Deploy to BunnyCDN
         uses: ayeressian/bunnycdn-storage-deploy@v2.4.0
         with:
-          storageEndpoint: 'storage.bunnycdn.com'
           source: "dist"
           destination: ""
           storageZoneName: "${{ secrets.BUNNY_STORAGE_ZONE_NAME }}"

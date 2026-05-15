@@ -297,10 +297,25 @@
     </template>
     <template v-else>
       <div
-        class="absolute left-1/2 transform -translate-x-1/2 text-center"
+        class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center select-none"
         @mouseup.right="openContextMenu"
       >
-        <BrushCanvas :blocks="splashAscii" />
+        <h1 class="text-headline-xl font-bold text-primary tracking-wide mb-2">
+          ASCIIBIRD
+        </h1>
+        <span class="text-title-lg text-on-surface-variant font-semibold">
+          v3 TESTING
+        </span>
+        <div class="mt-6">
+          <a
+            href="https://classic.birdnest.live/"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-primary hover:text-primary-fixed underline cursor-pointer text-body-lg"
+          >
+            Classic ASCIIBIRD (v2)
+          </a>
+        </div>
       </div>
     </template>
 
@@ -408,7 +423,6 @@ import BorderGenerator from './components/modals/BorderGenerator.vue';
 import FindReplace from './components/modals/FindReplace.vue';
 import ABModal from './components/ABModal.vue';
 
-import BrushCanvas from './components/parts/BrushCanvas.vue';
 import BrushPreview from './components/parts/BrushPreview.vue';
 import KeyboardShortcuts from './components/parts/KeyboardShortcuts.vue';
 import StatusBar from './components/parts/StatusBar.vue';
@@ -420,7 +434,6 @@ import {
   exportPlainText,
   downloadFile,
   checkForGetRequest,
-  splashAscii,
   mergeLayers,
 } from './ascii';
 
