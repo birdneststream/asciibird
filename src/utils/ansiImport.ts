@@ -26,6 +26,10 @@ import {
   ANSI16_STANDARD,
   ANSI16_BRIGHT,
 } from './ansiColors';
+import {
+  decodeAnsiBuffer,
+  stripSauceBytes,
+} from './cp437';
 import type { Block, Layer, AsciibirdMetaBuilder } from '../types';
 
 // ─── Image overlay default ───────────────────────────────────────
@@ -250,15 +254,22 @@ export function isAnsiContent(contents: string): boolean {
  * Uses dynamic import for the Pinia store to avoid circular
  * dependencies (ascii.ts ← store/index.ts ← utils/*).
  *
- * @param contents - raw ANSI content string
+ * @param contents - raw ANSI content string (for clipboard paste)
  * @param filename - title for the new tab
+ * @param buffer - optional raw bytes for binary ANSI files (CP437)
  * @returns true on success
  */
 export const parseAnsiAscii = async (
   contents: string,
   filename: string,
+  buffer?: ArrayBuffer,
 ): Promise<boolean> => {
-  const { blocks, width, height } = parseAnsiToBlocks(contents);
+  // If binary buffer provided, strip SAUCE and decode with encoding detection
+  const text = buffer
+    ? decodeAnsiBuffer(stripSauceBytes(buffer))
+    : contents;
+
+  const { blocks, width, height } = parseAnsiToBlocks(text);
 
   if (height === 0 || width === 0) {
     return false;

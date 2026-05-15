@@ -881,30 +881,39 @@ async function onImport() {
   if (!files || !files.length) return;
 
   const filename = files[0].name;
-  const fileReader = new FileReader();
-
   const fileType = importType.value;
-  fileReader.addEventListener('load', async () => {
-    switch (fileType) {
-      case 'asb':
-        importAsciibirdState(fileReader.result as string);
-        break;
 
-      case 'ansi':
-        await parseAnsiAscii(fileReader.result as string, filename);
-        break;
+  if (fileType === 'ansi') {
+    // ANSI files may be CP437-encoded — read as ArrayBuffer for
+    // proper encoding detection (UTF-8 first, CP437 fallback)
+    const bufferReader = new FileReader();
+    bufferReader.addEventListener('load', async () => {
+      await parseAnsiAscii(
+        '', // contents ignored when buffer is provided
+        filename,
+        bufferReader.result as ArrayBuffer,
+      );
+      input.value = '';
+    });
+    bufferReader.readAsArrayBuffer(files[0]);
+  } else {
+    // mIRC and ASB files are always text-based (UTF-8)
+    const textReader = new FileReader();
+    textReader.addEventListener('load', async () => {
+      switch (fileType) {
+        case 'asb':
+          importAsciibirdState(textReader.result as string);
+          break;
 
-      default:
-      case 'mirc':
-        await parseMircAscii(fileReader.result as string, filename);
-        break;
-    }
-
-    // Reset input so the same file can be imported again
-    input.value = '';
-  });
-
-  fileReader.readAsText(files[0]);
+        default:
+        case 'mirc':
+          await parseMircAscii(textReader.result as string, filename);
+          break;
+      }
+      input.value = '';
+    });
+    textReader.readAsText(files[0]);
+  }
 }
 
 function startImport(type: 'mirc' | 'asb' | 'ansi') {
