@@ -301,22 +301,19 @@ export function useToolApplication(
       !s.currentAsciiLayerBlocks.value[blockY]
       || !s.currentAsciiLayerBlocks.value[blockY][blockX]
     ) {
-      toolCtx.restore();
       return;
     }
 
     const ob = { ...s.currentAsciiLayerBlocks.value[blockY][blockX] };
 
-    toolCtx.font = getCanvasFont(s.blockSizeMultiplier.value);
+    // Tool canvas preview: fill the correct half with current fg colour
+    const halfH = bh / 2;
     toolCtx.fillStyle = mircColours99[s.currentFg.value];
-
-    // Draw the half-block character at the correct pixel position
-    const charPixelY = isTop ? brushY : brushY;
-    toolCtx.fillText(
-      isTop ? '\u2580' : '\u2584',
-      brushX,
-      charPixelY + bh - 3,
-    );
+    if (isTop) {
+      toolCtx.fillRect(brushX, brushY, bw, halfH);
+    } else {
+      toolCtx.fillRect(brushX, brushY + halfH, bw, halfH);
+    }
 
     if (s.canTool.value) {
       const grid = new HalfBlockGrid(s.currentAsciiLayerBlocks.value);
@@ -340,8 +337,6 @@ export function useToolApplication(
         },
       );
     }
-
-    toolCtx.restore();
   }
 
   // ─── Draw Brush ───────────────────────────────────────────────
