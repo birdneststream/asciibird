@@ -310,7 +310,7 @@ const {
   canvasSize, x, y, isTopHalf, top, canTool,
   textEditing, selecting, isMouseOnCanvas,
   selectedBlocks, diffBlocks, canvasHash,
-  lastBrushX, lastBrushY,
+  lastBrushX, lastBrushY, lastIsTopHalf,
   blockSizeMultiplier, blockWidthComp, blockHeightComp,
   currentAscii, currentAsciiLayers, selectedLayerIndex,
   currentSelectedLayer, currentAsciiLayerBlocks,
@@ -1242,6 +1242,7 @@ async function canvasMouseUp() {
       canTool.value = false;
       lastBrushX.value = -1;
       lastBrushY.value = -1;
+      lastIsTopHalf.value = true;
       await dispatchBlocks(true);
       break;
 
@@ -1301,6 +1302,7 @@ async function canvasMouseDown() {
         canTool.value = true;
         lastBrushX.value = x.value;
         lastBrushY.value = y.value;
+        lastIsTopHalf.value = isTopHalf.value;
         await drawBrush();
         break;
 
@@ -1308,6 +1310,7 @@ async function canvasMouseDown() {
         canTool.value = true;
         lastBrushX.value = x.value;
         lastBrushY.value = y.value;
+        lastIsTopHalf.value = isTopHalf.value;
         await eraser();
         break;
 
@@ -1427,7 +1430,7 @@ async function interpolateStroke(
     // Convert full-block coords to half-block coords (y*2 + half offset)
     // so Bresenham generates intermediate half-block positions.
     const lastHalfY = lastBrushY.value * 2
-      + (savedIsTopHalf ? 0 : 1);
+      + (lastIsTopHalf.value ? 0 : 1);
     const curHalfY = y.value * 2
       + (savedIsTopHalf ? 0 : 1);
 
@@ -1516,6 +1519,7 @@ async function canvasMouseMove(e: MouseEvent) {
           await delayRedrawCanvas();
           lastBrushX.value = x.value;
           lastBrushY.value = y.value;
+          lastIsTopHalf.value = isTopHalf.value;
         }
         break;
 
@@ -1528,6 +1532,7 @@ async function canvasMouseMove(e: MouseEvent) {
           await eraser();
           lastBrushX.value = x.value;
           lastBrushY.value = y.value;
+          lastIsTopHalf.value = isTopHalf.value;
         }
         break;
 
