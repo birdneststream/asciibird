@@ -6,7 +6,7 @@
     <div v-show="menuBarVisible">
       <div
         v-if="!isKeyboardDisabled"
-        class="flex items-center border-b header-bar text-on-surface border-outline-variant"
+        class="flex items-center border-b header-bar text-on-surface border-outline-variant relative z-[95]"
         @mouseleave="onMenuBarMouseLeave"
       >
         <h1 class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight px-md select-none">
@@ -26,7 +26,7 @@
             {{ menuItem.label }}
           </MenuButton>
           <MenuItems
-            class="absolute mt-0 shadow-panel rounded-b min-w-60 z-menu border bg-surface-container-high border-outline-variant"
+            class="absolute mt-0 shadow-panel rounded-b min-w-60 z-menu border floating-panel border-outline-variant"
             @focus="onMenuItemsOpen(index)"
           >
             <MenuItem
