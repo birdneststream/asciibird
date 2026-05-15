@@ -134,6 +134,39 @@ export function extractSelectionBlocks(
 }
 
 /**
+ * Copy selection blocks to the toolbar store for later paste.
+ * Handles the common pattern: selectionToGridRect → extractSelectionBlocks
+ * → toolbarStore.setSelectBlocks. Falls back to raw selectedBlocks when
+ * no grid rect can be computed.
+ * @returns true if blocks were copied, false if nothing to copy
+ */
+export function copySelectionBlocks(
+  selecting: SelectionRect,
+  selectedBlocks: Block[][],
+  layerBlocks: Block[][],
+  blockWidth: number,
+  blockHeight: number,
+  canvasWidth: number,
+  canvasHeight: number,
+  setSelectBlocks: (blocks: Block[][]) => void,
+): boolean {
+  if (selectedBlocks.length === 0) return false;
+
+  const rect = selectionToGridRect(
+    selecting, blockWidth, blockHeight, canvasWidth, canvasHeight,
+  );
+
+  if (rect && layerBlocks) {
+    const compact = extractSelectionBlocks(layerBlocks, rect);
+    setSelectBlocks(compact);
+  } else {
+    setSelectBlocks(selectedBlocks);
+  }
+
+  return true;
+}
+
+/**
  * Selection transform composable.
  *
  * Provides methods to transform (rotate/flip) the selected area of the

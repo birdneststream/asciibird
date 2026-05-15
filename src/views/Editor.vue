@@ -117,6 +117,7 @@ import { useFpsThrottle } from '../composables/useFpsThrottle';
 import {
   useSelectionTransform,
   selectionToGridRect,
+  copySelectionBlocks,
 } from '../composables/useSelectionTransform';
 import { useColorReplace } from '../composables/useColorReplace';
 import { useGradientTool } from '../composables/useGradientTool';
@@ -846,19 +847,19 @@ function contextMenuReplaceColor() {
 
   function contextMenuCopySelection() {
     if (selectedBlocks.value.length > 0) {
-      // Extract compact selection (not sparse full-canvas array)
-      // so paste mode can render ghost preview at correct size
-      const bounds = getSelectionBounds();
-      if (bounds) {
-        const compact = extractSelectionBlocks(
-          currentAsciiLayerBlocks.value,
-          { x: bounds.x, y: bounds.y, width: bounds.w, height: bounds.h },
-        );
-        toolbarStore.setSelectBlocks(compact);
-      } else {
-        toolbarStore.setSelectBlocks(selectedBlocks.value);
+      const didCopy = copySelectionBlocks(
+        selecting.value,
+        selectedBlocks.value,
+        currentAsciiLayerBlocks.value,
+        blockWidthComp.value,
+        blockHeightComp.value,
+        currentAsciiWidth.value,
+        currentAsciiHeight.value,
+        toolbarStore.setSelectBlocks,
+      );
+      if (didCopy) {
+        toastShow('Copied selection to clipboard', { type: 'success' });
       }
-      toastShow('Copied selection to clipboard', { type: 'success' });
     }
   }
 
