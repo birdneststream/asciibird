@@ -1,9 +1,0 @@
-[  129165ms] [WARNING] [Vue warn]: Unhandled error during execution of native event handler 
-  at <BrushLibrary y-offset=0 > 
-  at <Dashboard> @ http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:1752
-[  129168ms] TypeError: toastShow is not a function
-    at Proxy.saveToLibrary (http://localhost:5180/src/components/BrushLibrary.vue?t=1778356966229:80:4)
-    at onClick (http://localhost:5180/src/components/BrushLibrary.vue?t=1778356966229:203:36)
-    at callWithErrorHandling (http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:1890:17)
-    at callWithAsyncErrorHandling (http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:1897:15)
-    at HTMLButtonElement.invoker (http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=a460c5b6:7651:3)

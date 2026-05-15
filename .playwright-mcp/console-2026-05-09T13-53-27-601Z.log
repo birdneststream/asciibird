@@ -1,5 +1,0 @@
-[     142ms] The requested module '/node_modules/vue-color/dist/vue-color.min.js?v=c33908c4' does not provide an export named 'default'
-[   26805ms] [ERROR] WebSocket connection to 'ws://localhost:5180/?token=4K9eQylxxap_' failed:  @ http://localhost:5180/@vite/client:535
-[   26806ms] [LOG] [vite] server connection lost. Polling for restart... @ http://localhost:5180/@vite/client:559
-[   27810ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5180/:0
-[   30381ms] The requested module '/node_modules/vue-color/dist/vue-color.min.js?v=dda865f6' does not provide an export named 'default'

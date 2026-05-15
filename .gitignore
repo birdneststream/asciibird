@@ -3,7 +3,6 @@ node_modules
 /dist
 .vite
 
-
 # local env files
 .env
 .env.local
@@ -25,10 +24,27 @@ pnpm-debug.log*
 *.sw?
 deploy.sh
 asciis/
+
+# LLM / agent tooling
 .claude/
 opencode.json
 .llm/
 .opencode/
-*.png
-.playwright-mcp
+.opencode-docker
+AGENTS.md
+PLAN.md
+auto-improve.sh
 auto-improve.log
+
+# Test / coverage
+coverage/
+
+# Design reference files
+design/
+
+# Browser debugging artifacts
+.playwright-mcp/
+.frontend-debugger/
+
+# Screenshots
+*.png

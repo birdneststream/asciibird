@@ -1,6 +1,0 @@
-gnupg=true
-gh=false
-jira=false
-ssh=false
-docker=false
-env=true

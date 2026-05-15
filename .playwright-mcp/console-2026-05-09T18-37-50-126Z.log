@@ -1,2 +1,0 @@
-[     108ms] [WARNING] [Vue warn] Set operation on key "brushBlocks" failed: target is readonly. ComputedRefImpl @ http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=9dce0d7d:236
-[     108ms] [WARNING] [Vue warn] Set operation on key "selectBlocks" failed: target is readonly. ComputedRefImpl @ http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=9dce0d7d:236

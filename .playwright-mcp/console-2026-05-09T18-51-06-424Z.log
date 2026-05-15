@@ -1,3 +1,0 @@
-[  107741ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5180/src/main.ts?t=1778352773884:0
-[  107741ms] [ERROR] Failed to load resource: net::ERR_EMPTY_RESPONSE @ http://localhost:5180/@vite/client:0
-[  107746ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://localhost:5180/favicon.ico:0

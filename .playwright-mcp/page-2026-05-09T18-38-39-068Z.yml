@@ -1,6 +1,0 @@
-- generic [ref=e5]:
-  - button "File" [ref=e7] [cursor=pointer]
-  - button "Edit" [ref=e9] [cursor=pointer]
-  - button "View" [ref=e11] [cursor=pointer]
-  - button "Tools" [ref=e13] [cursor=pointer]
-  - button "Help" [ref=e15] [cursor=pointer]

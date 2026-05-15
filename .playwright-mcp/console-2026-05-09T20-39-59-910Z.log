@@ -1,6 +1,0 @@
-[  262014ms] [ERROR] TypeError: i is not a function
-    at m (http://localhost:5199/assets/index-CbSxLjTD.js:8:31031)
-    at M.onClick.n.<computed> (http://localhost:5199/assets/index-CbSxLjTD.js:8:32136)
-    at yn (http://localhost:5199/assets/vendor-ui-BpLkwk0n.js:1:20234)
-    at bn (http://localhost:5199/assets/vendor-ui-BpLkwk0n.js:1:20302)
-    at HTMLDivElement.n (http://localhost:5199/assets/index-CbSxLjTD.js:1:8894) @ http://localhost:5199/assets/vendor-ui-BpLkwk0n.js:0

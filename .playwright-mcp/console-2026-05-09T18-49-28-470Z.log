@@ -1,5 +1,0 @@
-[     133ms] [WARNING] [Vue warn]: Failed to resolve component: vue-draggable-resizable
-If this is a native custom element, make sure to exclude it from component resolution via compilerOptions.isCustomElement. 
-  at <CharPicker class="z-50" y-offset=0 > 
-  at <Dashboard> @ http://localhost:5180/node_modules/.vite/deps/vue.runtime.esm-bundler-C6sZGmPl.js?v=9dce0d7d:1752
-[   73611ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:5180/src/components/parts/CharPicker.vue?t=1778352363326:0
