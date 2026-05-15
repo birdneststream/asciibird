@@ -2603,6 +2603,38 @@ describe('calculateMircLineBytes', () => {
     const result = calculateMircLineBytes(blocks);
     expect(result.lineByteLengths[0]).toBeGreaterThan(1);
   });
+
+  it('computes warnLines for lines between warn and error thresholds', () => {
+    // Row 0: alternating colors with 50 blocks → ~431 bytes (warn range)
+    // Row 1: alternating colors with 100 blocks → over error threshold
+    const warnWidth = 50;
+    const errorWidth = 100;
+    const blocks: Block[][] = [
+      Array.from({ length: warnWidth }, (_, i) => ({
+        fg: i % 99,
+        bg: (i + 1) % 99,
+        char: '█',
+      })),
+      Array.from({ length: errorWidth }, (_, i) => ({
+        fg: i % 99,
+        bg: (i + 1) % 99,
+        char: '█',
+      })),
+    ];
+    const result = calculateMircLineBytes(blocks);
+    expect(result.warnLines).toContain(0);
+    expect(result.overLimitLines).toContain(1);
+    expect(result.warnLines).not.toContain(1);
+  });
+
+  it('returns empty warnLines when no lines are in warn range', () => {
+    const blocks: Block[][] = [
+      [{ fg: 5, bg: 1, char: 'A' }],
+    ];
+    const result = calculateMircLineBytes(blocks);
+    expect(result.warnLines).toEqual([]);
+    expect(result.overLimitLines).toEqual([]);
+  });
 });
 
 // ─── exportPlainText ─────────────────────────────────────────────────

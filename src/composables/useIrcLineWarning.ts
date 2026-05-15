@@ -18,8 +18,10 @@ export interface IrcLineWarningResult {
   level: IrcWarningLevel;
   /** Maximum byte count across all lines */
   maxBytes: number;
-  /** Indices of lines exceeding the error threshold */
+  /** Indices of lines exceeding the error threshold (500+ bytes) */
   overLimitLines: number[];
+  /** Indices of lines in the warning range (400-500 bytes) */
+  warnLines: number[];
   /** Per-line byte lengths */
   lineByteLengths: number[];
 }
@@ -27,6 +29,7 @@ export interface IrcLineWarningResult {
 const EMPTY_CHECK: IrcLineCheck = {
   lineByteLengths: [],
   overLimitLines: [],
+  warnLines: [],
   maxBytes: 0,
 };
 
@@ -75,13 +78,16 @@ export function useIrcLineWarning() {
   }
 
   const result = computed<IrcLineWarningResult>(() => {
-    const { lineByteLengths, overLimitLines, maxBytes } = checkResult.value;
+    const {
+      lineByteLengths, overLimitLines, warnLines, maxBytes,
+    } = checkResult.value;
 
     if (lineByteLengths.length === 0) {
       return {
         level: 'none',
         maxBytes: 0,
         overLimitLines: [],
+        warnLines: [],
         lineByteLengths: [],
       };
     }
@@ -93,7 +99,7 @@ export function useIrcLineWarning() {
           ? 'warn'
           : 'none';
 
-    return { level, maxBytes, overLimitLines, lineByteLengths };
+    return { level, maxBytes, overLimitLines, warnLines, lineByteLengths };
   });
 
   return { ircWarning: result };
