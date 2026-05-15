@@ -7,129 +7,23 @@
       @mouseleave="isMouseOnCanvas = false"
       @mouseenter="isMouseOnCanvas = true"
     >
-      <context-menu
+      <editor-context-menu
         ref="editorMenu"
-        class="z-picker"
-      >
-        <ul>
-          <li
-            @click="canvasToPng()"
-            class="ab-context-menu-item"
-          >
-            Save as PNG
-          </li>
-          <li
-            @click="startExport('clipboard')"
-            class="ab-context-menu-item"
-          >
-            Export ASCII to mIRC Clipboard
-          </li>
-          <li
-            @click="startExport('file')"
-            class="ab-context-menu-item"
-          >
-            Export ASCII to mIRC File
-          </li>
-          <li
-            @click="exportPlainTextClipboard()"
-            class="ab-context-menu-item"
-          >
-            Export Plain Text to Clipboard
-          </li>
-          <li
-            @click="exportHtmlFile()"
-            class="ab-context-menu-item"
-          >
-            Export as HTML File
-          </li>
-          <template v-if="isSelected && isSelecting">
-            <li class="ab-context-menu-separator" />
-            <li
-              @click="applySelectionTransform('rotate-cw')"
-              class="ab-context-menu-item"
-            >
-              Rotate 90° CW
-              <span class="ab-shortcut">Ctrl+Shift+&gt;</span>
-            </li>
-            <li
-              @click="applySelectionTransform('rotate-ccw')"
-              class="ab-context-menu-item"
-            >
-              Rotate 90° CCW
-              <span class="ab-shortcut">Ctrl+Shift+&lt;</span>
-            </li>
-            <li
-              @click="applySelectionTransform('flip-h')"
-              class="ab-context-menu-item"
-            >
-              Flip Horizontal
-              <span class="ab-shortcut">Ctrl+Shift+H</span>
-            </li>
-            <li
-              @click="applySelectionTransform('flip-v')"
-              class="ab-context-menu-item"
-            >
-              Flip Vertical
-              <span class="ab-shortcut">Ctrl+Shift+X</span>
-            </li>
-            <li class="ab-context-menu-separator" />
-            <li
-              @click="contextMenuReplaceColor()"
-              class="ab-context-menu-item"
-            >
-              Replace Color in Selection
-              <span class="ab-shortcut">R</span>
-            </li>
-          </template>
-          <template v-if="isSelected && isSelecting">
-            <li class="ab-context-menu-separator" />
-            <li
-              @click="contextMenuCopySelection()"
-              class="ab-context-menu-item"
-            >
-              Copy
-              <span class="ab-shortcut">Ctrl+C</span>
-            </li>
-            <li
-              @click="contextMenuCutSelection()"
-              class="ab-context-menu-item"
-            >
-              Cut
-              <span class="ab-shortcut">Ctrl+X</span>
-            </li>
-            <li
-              @click="contextMenuDeleteSelection()"
-              class="ab-context-menu-item"
-            >
-              Delete Selection
-              <span class="ab-shortcut">Delete</span>
-            </li>
-          </template>
-          <template v-if="haveSelectBlocks">
-            <li class="ab-context-menu-separator" />
-            <li
-              @click="pasteMode.startPasteMode()"
-              class="ab-context-menu-item"
-            >
-              Paste Selection
-              <span class="ab-shortcut">Ctrl+V</span>
-            </li>
-          </template>
-          <li class="ab-context-menu-separator" />
-          <li
-            @click="openBorderGenerator()"
-            class="ab-context-menu-item"
-          >
-            Add Border...
-          </li>
-          <li
-            @click="cropToContent()"
-            class="ab-context-menu-item"
-          >
-            Crop to Content
-          </li>
-        </ul>
-      </context-menu>
+        :has-selection="isSelected && isSelecting"
+        :have-select-blocks="haveSelectBlocks"
+        @save-png="canvasToPng()"
+        @export-mirc="startExport"
+        @export-plain-text="exportPlainTextClipboard()"
+        @export-html="exportHtmlFile()"
+        @transform-selection="applySelectionTransform"
+        @replace-color="contextMenuReplaceColor()"
+        @copy-selection="contextMenuCopySelection()"
+        @cut-selection="contextMenuCutSelection()"
+        @delete-selection="contextMenuDeleteSelection()"
+        @paste="pasteMode.startPasteMode()"
+        @border-generator="openBorderGenerator()"
+        @crop-to-content="cropToContent()"
+      />
 
       <div
         ref="editorPanel"
@@ -233,7 +127,7 @@ import { usePasteMode } from '../composables/usePasteMode';
 import { useToolApplication } from '../composables/useToolApplication';
 import hotkeys from 'hotkeys-js';
 
-import ContextMenu from '../components/parts/ContextMenu.vue';
+import EditorContextMenu from '../components/parts/EditorContextMenu.vue';
 
 import {
   mircColours99,
@@ -331,7 +225,7 @@ const {
 // ─── Template Refs ──────────────────────────────────────────────
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const canvastoolsRef = ref<HTMLCanvasElement | null>(null);
-const editorMenu = ref<InstanceType<typeof ContextMenu> | null>(null);
+const editorMenu = ref<InstanceType<typeof EditorContextMenu> | null>(null);
 const editorPanel = ref<HTMLElement | null>(null);
 const scrollContainerRef = ref<HTMLElement | null>(null);
 
