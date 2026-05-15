@@ -111,6 +111,7 @@ import { useAsciiBirdStore } from '../store';
 import { useToolbarStore } from '../store/toolbar';
 import { useToast } from '../composables/useToast';
 import { useCanvasPanel } from '../composables/useCanvasPanel';
+import { useCanvasPan } from '../composables/useCanvasPan';
 import { useMainCanvasRenderer } from '../composables/useMainCanvasRenderer';
 import { useExportAscii } from '../composables/useExportAscii';
 import { useFpsThrottle } from '../composables/useFpsThrottle';
@@ -432,6 +433,12 @@ const {
   canvasMouseMove,
 } = mouseHandlers;
 
+// ─── Canvas Pan (middle-click) ────────────────────────────────────
+const { startPan, onCanvasMouseMove, panCursorStyle } = useCanvasPan({
+  scrollContainerRef,
+  canvasMouseMove,
+});
+
 const imageOverlay = computed(() => store.imageOverlay);
 
 const imageOverlayStyle = computed(() => {
@@ -518,47 +525,10 @@ const canvasPanel = useCanvasPanel({
 
 const panelStyle = computed(() => canvasPanel.style.value);
 
-// ─── Middle-Click Pan State ─────────────────────────────────────
-const isPanning = ref(false);
-const panLastX = ref(0);
-const panLastY = ref(0);
-const panCursorStyle = computed(() =>
-  isPanning.value ? 'cursor: grabbing;' : '',
-);
-
-function startPan(e: MouseEvent) {
-  isPanning.value = true;
-  panLastX.value = e.clientX;
-  panLastY.value = e.clientY;
-  // Listen for mouseup at document level so pan ends even
-  // if the mouse is released outside the canvas element.
-  const onMouseUp = () => {
-    isPanning.value = false;
-    document.removeEventListener('mouseup', onMouseUp);
-  };
-  document.addEventListener('mouseup', onMouseUp);
-}
-
-function doPan(e: MouseEvent) {
-  if (!isPanning.value) return;
-  const dx = panLastX.value - e.clientX;
-  const dy = panLastY.value - e.clientY;
-  panLastX.value = e.clientX;
-  panLastY.value = e.clientY;
-  const el = scrollContainerRef.value;
-  if (el) {
-    el.scrollBy(dx, dy);
-  }
-}
-
-/** Canvas mousemove dispatcher: delegates to pan or tool handler */
-function onCanvasMouseMove(e: MouseEvent) {
-  if (isPanning.value) {
-    doPan(e);
-    return;
-  }
-  canvasMouseMove(e);
-}
+// ─── Middle-Click Pan (extracted composable) ────────────────────
+// useCanvasPan provides startPan, onCanvasMouseMove dispatcher, and
+// panCursorStyle. It requires scrollContainerRef and the tool-level
+// canvasMouseMove handler.
 
 // ─── Watchers (extracted composable) ────────────────────────────
 // useEditorWatchers registers all reactive watchers. Vue 3 auto-stops
