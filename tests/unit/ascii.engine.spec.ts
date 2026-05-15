@@ -2350,7 +2350,7 @@ describe('iterativeFillHalfBlock', () => {
     expect(changes).toHaveLength(1);
     expect(changes[0].old).toEqual({ fg: 0, bg: 1, char: ' ' });
     // Both halves get colour 5 → collapses to space block
-    expect(changes[0].new).toEqual({ fg: 0, bg: 5, char: ' ' });
+    expect(changes[0].new).toEqual({ bg: 5, char: ' ' });
   });
 
   it('fills bottom half only when top half is different colour', () => {
@@ -2376,7 +2376,7 @@ describe('iterativeFillHalfBlock', () => {
     // Old is the original block before any mutation
     expect(changes[0].old).toEqual({ fg: 0, bg: 1, char: ' ' });
     // New is after both halves filled → same colour → collapses to space
-    expect(changes[0].new).toEqual({ fg: 0, bg: 5, char: ' ' });
+    expect(changes[0].new).toEqual({ bg: 5, char: ' ' });
   });
 
   it('fills a region bounded by different colours', () => {
@@ -2475,7 +2475,7 @@ describe('iterativeFillHalfBlock', () => {
     // (because all halves get colour 8 → collapse)
     for (let y = 0; y < 2; y++) {
       for (let x = 0; x < 2; x++) {
-        expect(grid[y][x]).toEqual({ fg: 0, bg: 8, char: ' ' });
+        expect(grid[y][x]).toEqual({ bg: 8, char: ' ' });
       }
     }
   });

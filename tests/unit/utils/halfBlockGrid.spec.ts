@@ -142,7 +142,7 @@ describe('HalfBlockGrid', () => {
       grid.setColour(0, 0, 7); // top
       grid.setColour(0, 1, 7); // bottom = same
       expect(blocks[0][0].char).toBe(' ');
-      expect(blocks[0][0].fg).toBe(0);
+      expect(blocks[0][0].fg).toBeUndefined();
       expect(blocks[0][0].bg).toBe(7);
     });
 
@@ -204,7 +204,7 @@ describe('HalfBlockGrid', () => {
       const grid = new HalfBlockGrid(blocks);
       grid.setColour(0, 0, 10); // top = 10, bottom already 10 → collapse
       expect(blocks[0][0].char).toBe(' ');
-      expect(blocks[0][0].fg).toBe(0);
+      expect(blocks[0][0].fg).toBeUndefined();
       expect(blocks[0][0].bg).toBe(10);
     });
   });

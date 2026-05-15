@@ -191,7 +191,10 @@ export class HalfBlockGrid {
       block.fg === block.bg
     ) {
       block.char = ' ';
-      block.fg = 0;
+      // Don't set fg — collapsed space blocks only need bg.
+      // Setting fg=0 (white) can cause white artifacts during
+      // rendering if the space glyph leaks any visible pixels.
+      delete block.fg;
       // bg keeps the colour
     }
   }

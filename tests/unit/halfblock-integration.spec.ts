@@ -91,7 +91,7 @@ describe('Half-block integration', () => {
       paintHalfBlock(blocks, 0, 0, 8); // top = 8
       paintHalfBlock(blocks, 0, 1, 8); // bottom = 8
 
-      expect(blocks[0][0]).toEqual({ fg: 0, bg: 8, char: ' ' });
+      expect(blocks[0][0]).toEqual({ bg: 8, char: ' ' });
     });
   });
 
