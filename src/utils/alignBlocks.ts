@@ -129,8 +129,20 @@ export function alignRight(row: Block[], width: number): Block[] {
   const contentWidth = end + 1;
   const offset = width - contentWidth;
 
-  if (offset <= 0) {
-    // Content fills or exceeds width, just truncate/pad
+  if (offset < 0) {
+    // Content exceeds width — keep the trailing (rightmost) characters
+    const shift = -offset;
+    const result: Block[] = Array.from(
+      { length: width }, () => ({ ...emptyBlock }),
+    );
+    for (let x = shift; x < row.length && (x - shift) < width; x++) {
+      result[x - shift] = row[x];
+    }
+    return result;
+  }
+
+  if (offset === 0) {
+    // Content exactly fills width
     const result: Block[] = [];
     for (let x = 0; x < width; x++) {
       result[x] = x < row.length ? row[x] : { ...emptyBlock };

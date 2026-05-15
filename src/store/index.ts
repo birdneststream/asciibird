@@ -128,7 +128,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     },
     updateAsciiBlocks(
       payload: {
-        diff: { new: BlockDiff[]; old: BlockDiff[] };
+        diff: HistoryDiff;
         blocks: Block[][];
       },
     ) {
