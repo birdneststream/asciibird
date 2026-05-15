@@ -23,6 +23,7 @@
             :content="tooltipName(value)"
           >
             <button
+              v-if="value.name !== 'shapes'"
               type="button"
               class="w-full h-8 rounded-sm flex items-center justify-center gap-1 transition-all duration-150"
               :class="currentTool.name === value.name
@@ -33,21 +34,14 @@
               <span
                 class="material-icons text-sm"
                 aria-hidden="true"
-              >{{
-                value.name === 'shapes' && isShapesTool
-                  ? shapeIcons[currentShapeType]
-                  : value.icon
-              }}</span>
+              >{{ value.icon }}</span>
               <span class="text-[10px] font-label-mono">{{ toolLabel(value) }}</span>
             </button>
           </Tooltip>
         </div>
 
-        <!-- Shape type selector — visible when shapes tool is active -->
-        <div
-          v-if="isShapesTool"
-          class="grid grid-cols-5 gap-px pt-2 border-t border-outline-variant/30"
-        >
+        <!-- Shape types — always visible, clicking activates shapes tool -->
+        <div class="grid grid-cols-5 gap-px pt-2 border-t border-outline-variant/30">
           <Tooltip
             v-for="st in shapeTypes"
             :key="st"
@@ -56,7 +50,7 @@
             <button
               type="button"
               class="w-full h-7 rounded-sm flex items-center justify-center transition-colors duration-150"
-              :class="currentShapeType === st
+              :class="isShapesTool && currentShapeType === st
                 ? 'bg-primary-container/20 text-primary border border-primary/50'
                 : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant border border-transparent'"
               @click="activateShapeType(st)"
