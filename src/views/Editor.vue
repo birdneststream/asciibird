@@ -152,10 +152,14 @@ const props = withDefaults(defineProps<{
   updateCanvas?: boolean;
   yOffset?: number;
   resetSelect?: boolean;
+  ircOverLimitLines?: number[];
+  ircWarnLines?: number[];
 }>(), {
   updateCanvas: false,
   yOffset: 0,
   resetSelect: false,
+  ircOverLimitLines: () => [],
+  ircWarnLines: () => [],
 });
 
 const emit = defineEmits<{
@@ -226,6 +230,8 @@ const scrollContainerRef = ref<HTMLElement | null>(null);
 
 // ─── Y-offset from props (not in useEditorState) ────────────────
 const yOffsetComp = computed(() => props.yOffset);
+const ircOverLimitLinesComp = computed(() => props.ircOverLimitLines);
+const ircWarnLinesComp = computed(() => props.ircWarnLines);
 
 // ─── Editor Rendering Composable ───────────────────────────────
 const rendering = useEditorRendering(
@@ -236,6 +242,8 @@ const rendering = useEditorRendering(
     renderBlock,
     clearMainCanvas,
     drawHighlights: drawMatchHighlights,
+    ircOverLimitLines: ircOverLimitLinesComp,
+    ircWarnLines: ircWarnLinesComp,
   },
 );
 
