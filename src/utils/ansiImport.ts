@@ -168,7 +168,8 @@ export function parseAnsiToBlocks(contents: string): {
   // Strip SAUCE metadata
   contents = stripSauce(contents);
 
-  const lines = contents.split('\n');
+  // Split on all line-ending styles: \r\n, \n, and \r (old Mac/BBS)
+  const lines = contents.split(/\r?\n|\r/);
   // Remove trailing empty line from final newline
   if (lines.length > 0 && lines[lines.length - 1] === '') {
     lines.pop();
@@ -188,7 +189,6 @@ export function parseAnsiToBlocks(contents: string): {
       // Add characters before this escape
       const text = line.slice(lastIndex, match.index);
       for (const ch of text) {
-        if (ch === '\r') continue;
         row.push(makeBlock(ch, state));
       }
 
@@ -212,7 +212,6 @@ export function parseAnsiToBlocks(contents: string): {
     // Remaining text after last escape
     const remaining = line.slice(lastIndex);
     for (const ch of remaining) {
-      if (ch === '\r') continue;
       row.push(makeBlock(ch, state));
     }
 

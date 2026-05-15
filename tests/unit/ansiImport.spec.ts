@@ -260,6 +260,54 @@ describe('parseAnsiToBlocks', () => {
     expect(result.blocks[0][0].fg).toBe(ANSI_TO_MIRC[196]);
     expect(result.blocks[0][0].char).toBe('X');
   });
+
+  // ── Line-ending variants ────────────────────────────────────────
+
+  it('handles \\r-only line endings', () => {
+    const result = parseAnsiToBlocks('A\rB\rC');
+    expect(result.height).toBe(3);
+    expect(result.width).toBe(1);
+    expect(result.blocks[0][0].char).toBe('A');
+    expect(result.blocks[1][0].char).toBe('B');
+    expect(result.blocks[2][0].char).toBe('C');
+  });
+
+  it('handles \\r\\n line endings', () => {
+    const result = parseAnsiToBlocks('A\r\nB');
+    expect(result.height).toBe(2);
+    expect(result.blocks[0][0].char).toBe('A');
+    expect(result.blocks[1][0].char).toBe('B');
+  });
+
+  it('handles mixed \\r\\n and \\n line endings', () => {
+    const result = parseAnsiToBlocks('A\r\nB\nC');
+    expect(result.height).toBe(3);
+    expect(result.blocks[0][0].char).toBe('A');
+    expect(result.blocks[1][0].char).toBe('B');
+    expect(result.blocks[2][0].char).toBe('C');
+  });
+
+  it('preserves empty lines with \\n', () => {
+    const result = parseAnsiToBlocks('A\n\nB');
+    expect(result.height).toBe(3);
+    expect(result.blocks[1]).toEqual([{}]); // empty row padded to width 1
+  });
+
+  it('handles consecutive \\r\\n\\r\\n', () => {
+    const result = parseAnsiToBlocks('A\r\n\r\nB');
+    expect(result.height).toBe(3);
+    expect(result.blocks[0][0].char).toBe('A');
+    expect(result.blocks[1][0]).toEqual({}); // empty row padded
+    expect(result.blocks[2][0].char).toBe('B');
+  });
+
+  it('handles \\r\\n with ANSI colors', () => {
+    const input = '\x1b[31mA\r\n\x1b[32mB';
+    const result = parseAnsiToBlocks(input);
+    expect(result.height).toBe(2);
+    expect(result.blocks[0][0].fg).toBe(ANSI_TO_MIRC[1]);
+    expect(result.blocks[1][0].fg).toBe(ANSI_TO_MIRC[2]);
+  });
 });
 
 // ─── ANSI_TO_MIRC mapping ────────────────────────────────────────
