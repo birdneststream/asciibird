@@ -128,7 +128,7 @@ import { useEditorRendering } from '../composables/useEditorRendering';
 import { usePasteMode } from '../composables/usePasteMode';
 import { useToolApplication } from '../composables/useToolApplication';
 import { useCanvasMouseHandlers } from '../composables/useCanvasMouseHandlers';
-import hotkeys from 'hotkeys-js';
+import { useEditorHotkeys } from '../composables/useEditorHotkeys';
 
 import EditorContextMenu from '../components/parts/EditorContextMenu.vue';
 
@@ -705,102 +705,42 @@ watch(halfBlockEditing, async (active) => {
   }
 });
 
-// ─── Hotkeys (register + cleanup) ──────────────────────────────
-hotkeys('*', 'editor', async function (event) {
-  // Skip modifier combos (Ctrl+Z, Ctrl+Y, Ctrl+C, etc.) — let
-  // global shortcuts in scope 'all' handle them instead of routing
-  // through canvasKeyDown which would type the raw character.
-  if (event.ctrlKey || event.metaKey || event.altKey) return;
+// ─── Editor Hotkeys (extracted composable) ───────────────────────
+// Keyboard handler registered in 'editor' scope via useEditorHotkeys.
+// Returns cleanup() for onUnmounted.
 
-  event.preventDefault();
-
-  if (isTextEditing.value) {
-    await canvasKeyDown(event.key);
-    return;
-  }
-
-  if (
-    event.shiftKey
-    && isSelected.value
-    && selectedBlocks.value.length > 0
-  ) {
-    switch (event.key) {
-      case 'ArrowUp':
-        await applyNudge(0, -1);
-        return;
-      case 'ArrowDown':
-        await applyNudge(0, 1);
-        return;
-      case 'ArrowLeft':
-        await applyNudge(-1, 0);
-        return;
-      case 'ArrowRight':
-        await applyNudge(1, 0);
-        return;
-    }
-  }
-
-  if (event.key === 'Escape' && isReplacePicking.value) {
-    resetReplace();
-    return;
-  }
-
-  if (event.key === 'Escape' && isGradientPicking.value) {
-    cancelGradient();
-    await clearToolCanvas();
-    return;
-  }
-
-  if (event.key === 'Escape' && isShapePicking.value) {
-    cancelShape();
-    await clearToolCanvas();
-    return;
-  }
-
-  if (event.key === 'Escape' && pasteMode.isPasteMode.value) {
-    pasteMode.cancelPasteMode();
-    await clearToolCanvas();
-    await delayRedrawCanvas();
-    return;
-  }
-
-  // Delete key: clear selection contents
-  if (event.key === 'Delete' && isSelecting.value && isSelected.value) {
-    pasteMode.deleteSelection();
-    await delayRedrawCanvas(true);
-    return;
-  }
-
-  if (isBrushing.value || isErasing.value) {
-    switch (event.key) {
-      case 'ArrowUp':
-        y.value--;
-        await drawBrush(isErasing.value);
-        break;
-      case 'ArrowDown':
-        y.value++;
-        await drawBrush(isErasing.value);
-        break;
-      case 'ArrowLeft':
-        x.value--;
-        await drawBrush(isErasing.value);
-        break;
-      case 'ArrowRight':
-        x.value++;
-        await drawBrush(isErasing.value);
-        break;
-      case ' ':
-        canTool.value = true;
-        if (isBrushing.value) {
-          await drawBrush(false);
-        } else {
-          await eraser();
-        }
-        canTool.value = false;
-        await dispatchBlocks(true);
-        break;
-    }
-  }
+const { cleanup: cleanupHotkeys } = useEditorHotkeys({
+  state: {
+    isTextEditing, isSelected, isSelecting,
+    isBrushing, isErasing, selectedBlocks,
+    canTool, x, y,
+  },
+  tools: {
+    pasteMode,
+    colorReplace: {
+      isReplacePicking,
+      resetReplace,
+    },
+    gradientTool: {
+      isGradientPicking,
+      cancelGradient,
+    },
+    shapeTool: {
+      isShapePicking,
+      cancelShape,
+    },
+  },
+  rendering: {
+    clearToolCanvas,
+    delayRedrawCanvas,
+  },
+  actions: {
+    canvasKeyDown,
+    applyNudge,
+    drawBrush,
+    eraser,
+    dispatchBlocks,
+  },
 });
 
 // ─── Lifecycle ──────────────────────────────────────────────────
@@ -811,7 +751,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  hotkeys.unbind('*', 'editor');
+  cleanupHotkeys();
   canvasPanel.cleanup();
   cancelRedraw();
   rendering.disposeContexts();
