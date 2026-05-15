@@ -72,7 +72,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { fillNullBlocks } from '../../ascii';
+import { resizeLayers } from '../../utils/resizeLayers';
 import ABModal from '../ABModal.vue';
 import { useAsciiBirdStore } from '../../store';
 import { useModalStore } from '../../store/modal';
@@ -134,7 +134,11 @@ function updateAscii() {
     return;
   }
 
-  const layers = fillNullBlocks(canvasBlockHeight, canvasBlockWidth);
+  const layers = resizeLayers(
+    store.currentAsciiLayers,
+    canvasBlockWidth,
+    canvasBlockHeight,
+  );
   store.changeAsciiWidthHeight({ layers: [...layers] });
 
   if (layer.value.title && layer.value.title !== currentAscii.value.title) {
