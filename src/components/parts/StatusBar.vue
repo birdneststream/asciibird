@@ -32,6 +32,24 @@
       <span class="font-label-mono text-body-sm text-on-surface-variant">
         X: {{ coordsX }} | Y: {{ coordsY }}
       </span>
+      <template v-if="canvasDimensions">
+        <span class="text-outline-variant">|</span>
+        <span
+          class="font-label-mono text-body-sm text-on-surface-variant"
+          title="Canvas dimensions (width × height)"
+        >
+          {{ canvasDimensions }}
+        </span>
+      </template>
+      <template v-if="charDisplay">
+        <span class="text-outline-variant">|</span>
+        <span
+          class="font-label-mono text-body-sm text-on-surface-variant"
+          title="Character under cursor"
+        >
+          {{ charDisplay }}
+        </span>
+      </template>
       <span class="text-outline-variant">|</span>
       <span
         class="font-label-mono text-body-sm flex items-center gap-0.5"
@@ -163,6 +181,9 @@ const props = defineProps<{
   ircWarningLevel?: 'none' | 'warn' | 'error';
   ircMaxBytes?: number;
   ircOverLimitLines?: number[];
+  canvasWidth?: number;
+  canvasHeight?: number;
+  charUnderCursor?: string | null;
 }>();
 
 const coordsX = computed(() => props.canvasX ?? '-');
@@ -213,6 +234,20 @@ const ircTooltip = computed(() => {
     return `Max ${max} bytes — lines ${lines.join(', ')} exceed IRC limits`;
   }
   return `Max ${max} bytes — approaching IRC line limits`;
+});
+
+const canvasDimensions = computed(() => {
+  if (props.canvasWidth && props.canvasHeight) {
+    return `${props.canvasWidth}×${props.canvasHeight}`;
+  }
+  return null;
+});
+
+const charDisplay = computed(() => {
+  const ch = props.charUnderCursor;
+  if (ch === null || ch === undefined) return null;
+  if (ch === '') return '·';
+  return `'${ch}'`;
 });
 
 /** Style class for task bar button based on panel state */

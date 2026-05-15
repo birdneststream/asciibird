@@ -388,6 +388,9 @@
         :irc-warning-level="ircWarning.level"
         :irc-max-bytes="ircWarning.maxBytes"
         :irc-over-limit-lines="ircWarning.overLimitLines"
+        :canvas-width="canvasDimensions.width"
+        :canvas-height="canvasDimensions.height"
+        :char-under-cursor="charUnderCursor"
       />
     </template>
   </div>
@@ -602,6 +605,21 @@ const brushLibraryState = computed(() => panelStore.brushLibrary);
 const brushPreviewState = computed(() => panelStore.brushPreview);
 const layersLibraryState = computed(() => panelStore.layersLibrary);
 const currentSelectedLayer = computed(() => currentAsciiLayers.value[currentAscii.value?.selectedLayer ?? 0]);
+
+// Canvas dimensions for status bar
+const canvasDimensions = computed(() => store.currentAsciiLayersWidthHeight);
+
+// Character under cursor for status bar
+const charUnderCursor = computed(() => {
+  if (canvasX.value === null || canvasY.value === null) return null;
+  const blocks = store.currentAsciiLayerBlocks;
+  if (!blocks) return null;
+  const row = blocks[canvasY.value];
+  if (!row) return null;
+  const block = row[canvasX.value];
+  if (!block) return null;
+  return block.char ?? null;
+});
 
 // Watch — scope transitions handled by useGlobalShortcuts composable
 watch(currentTool, (val, old) => {

@@ -127,6 +127,7 @@ import { useEditorState } from '../composables/useEditorState';
 import { useEditorRendering } from '../composables/useEditorRendering';
 import { usePasteMode } from '../composables/usePasteMode';
 import { useToolApplication } from '../composables/useToolApplication';
+import { useCanvasMouseHandlers } from '../composables/useCanvasMouseHandlers';
 import hotkeys from 'hotkeys-js';
 
 import EditorContextMenu from '../components/parts/EditorContextMenu.vue';
@@ -143,10 +144,7 @@ import {
 } from '../ascii';
 
 import { applyMirrored } from '../utils/mirror';
-import { bresenhamLine } from '../utils/bresenham';
-import { drawShapePreview } from '../utils/shapePreview';
 import { downloadHtml } from '../utils/htmlExport';
-import { HalfBlockGrid } from '../utils/halfBlockGrid';
 import type { Block } from '../types';
 import type { TransformType } from '../utils/transformBlocks';
 
@@ -209,7 +207,6 @@ const {
   canvasSize, x, y, isTopHalf, top, canTool,
   textEditing, selecting, isMouseOnCanvas,
   selectedBlocks, diffBlocks, canvasHash,
-  lastBrushX, lastBrushY, lastIsTopHalf,
   blockSizeMultiplier, blockWidthComp, blockHeightComp,
   currentAscii, currentAsciiLayers, selectedLayerIndex,
   currentSelectedLayer, currentAsciiLayerBlocks,
@@ -347,6 +344,61 @@ const {
 async function applySelectionTransform(type: TransformType) {
   await applyTransformFn(type);
 }
+
+// ─── Canvas Mouse Handlers (extracted composable) ─────────────
+const mouseHandlers = useCanvasMouseHandlers({
+  state,
+  tools: {
+    pasteMode,
+    colorReplace: {
+      isReplacePicking,
+      replaceColorSource,
+      pickSource,
+      applyReplace,
+    },
+    gradientTool: {
+      isGradientPicking,
+      gradientStart,
+      setStartPoint,
+      applyGradient,
+    },
+    shapeTool: {
+      isShapePicking,
+      shapeStart,
+      setShapeStart,
+      applyShape,
+    },
+    toolApp: {
+      drawBrush,
+      eraser,
+      fill,
+    },
+  },
+  rendering: {
+    getToolCtx: rendering.getToolCtx,
+    clearToolCanvas,
+    drawIndicator,
+    drawTextIndicator,
+    delayRedrawCanvas,
+    redrawSelect,
+  },
+  callbacks: {
+    dispatchBlocks,
+    processSelect,
+    getSelectionBounds,
+  },
+  emit: {
+    coords: (v: { x: number; y: number }) => {
+      emit('coordsupdate', v);
+    },
+  },
+});
+
+const {
+  canvasMouseDown,
+  canvasMouseUp,
+  canvasMouseMove,
+} = mouseHandlers;
 
 const imageOverlay = computed(() => store.imageOverlay);
 
@@ -1111,420 +1163,9 @@ function getSelectionBounds(): {
   return { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
 }
 
-// ─── Methods: Mouse Event Handlers ─────────────────────────────
-
-async function canvasMouseUp() {
-  if (isDefault.value) return;
-
-  switch (currentTool.value.name) {
-    case 'brush':
-    case 'eraser':
-      canTool.value = false;
-      lastBrushX.value = -1;
-      lastBrushY.value = -1;
-      lastIsTopHalf.value = true;
-      await dispatchBlocks(true);
-      break;
-
-    case 'fill-eraser':
-    case 'fill':
-      canTool.value = false;
-      break;
-
-    case 'select':
-      selecting.value.canSelect = false;
-      await processSelect();
-      break;
-
-    case 'text':
-      textEditing.value.startX = x.value;
-      textEditing.value.startY = y.value;
-      break;
-  }
-}
-
-async function canvasMouseDown() {
-  // Paste mode: confirm paste at cursor position
-  if (pasteMode.isPasteMode.value) {
-    pasteMode.confirmPaste(x.value, y.value);
-    await delayRedrawCanvas(true);
-    return;
-  }
-
-  if (isDefault.value) return;
-
-  if (asciiBlockAtXy.value && currentTool.value) {
-    const targetBlock = asciiBlockAtXy.value;
-
-    switch (currentTool.value.name) {
-      case 'select':
-        selecting.value.startX = canvasX.value;
-        // In half-block mode, start Y at half-block precision
-        selecting.value.startY = halfBlockEditing.value
-          ? canvasY.value + (isTopHalf.value ? 0 : blockHeightComp.value / 2)
-          : canvasY.value;
-        selecting.value.canSelect = true;
-        await clearToolCanvas();
-        break;
-
-      case 'fill':
-        fill();
-        canTool.value = false;
-        await dispatchBlocks(true);
-        break;
-
-      case 'fill-eraser':
-        fill(true);
-        await dispatchBlocks(true);
-        break;
-
-      case 'brush':
-        canTool.value = true;
-        lastBrushX.value = x.value;
-        lastBrushY.value = y.value;
-        lastIsTopHalf.value = isTopHalf.value;
-        await drawBrush();
-        break;
-
-      case 'eraser':
-        canTool.value = true;
-        lastBrushX.value = x.value;
-        lastBrushY.value = y.value;
-        lastIsTopHalf.value = isTopHalf.value;
-        await eraser();
-        break;
-
-      case 'dropper':
-        if (toolbarState.value.halfBlockEditing) {
-          const halfY = y.value * 2 + (isTopHalf.value ? 0 : 1);
-          const grid = new HalfBlockGrid(currentAsciiLayerBlocks.value);
-          const sampledColour = grid.getColour(x.value, halfY);
-          if (canFg.value) {
-            toolbarStore.changeColourFg(sampledColour);
-          } else if (canBg.value) {
-            toolbarStore.changeColourBg(sampledColour);
-          }
-        } else {
-          if (canFg.value) {
-            toolbarStore.changeColourFg(
-              targetBlock.fg === undefined
-                ? currentFg.value
-                : targetBlock.fg,
-            );
-          }
-          if (canBg.value) {
-            toolbarStore.changeColourBg(
-              targetBlock.bg === undefined
-                ? currentBg.value
-                : targetBlock.bg,
-            );
-          }
-          if (canText.value) {
-            toolbarStore.changeChar(
-              targetBlock.char === undefined
-                ? currentChar.value
-                : targetBlock.char,
-            );
-          }
-        }
-        toolbarStore.changeTool(0);
-        break;
-
-      case 'replace-color':
-        if (toolbarState.value.halfBlockEditing) {
-          toastShow(
-            'Color replace is not available in half-block mode',
-            { type: 'error' },
-          );
-          break;
-        }
-        if (!isReplacePicking.value) {
-          pickSource(targetBlock);
-        } else {
-          const selection = getSelectionBounds();
-          applyReplace(selection ?? undefined);
-        }
-        break;
-
-      case 'gradient':
-        if (toolbarState.value.halfBlockEditing) {
-          toastShow(
-            'Gradient fill is not available in half-block mode',
-            { type: 'error' },
-          );
-          break;
-        }
-        if (!isGradientPicking.value) {
-          setStartPoint(x.value, y.value);
-        } else {
-          applyGradient(
-            x.value, y.value,
-            currentAsciiLayerBlocks.value,
-          );
-          canTool.value = false;
-          await dispatchBlocks(true);
-          await delayRedrawCanvas(true);
-        }
-        break;
-
-      case 'shapes':
-        if (toolbarState.value.halfBlockEditing) {
-          toastShow(
-            'Shape tools are not available in half-block mode',
-            { type: 'error' },
-          );
-          break;
-        }
-        if (!isShapePicking.value) {
-          setShapeStart(x.value, y.value);
-        } else {
-          applyShape(
-            x.value, y.value,
-            currentAsciiLayerBlocks.value,
-          );
-          canTool.value = false;
-          await dispatchBlocks(true);
-          await delayRedrawCanvas(true);
-        }
-        break;
-    }
-  }
-}
-
-async function interpolateStroke(
-  applyFn: () => Promise<void>,
-): Promise<void> {
-  if (
-    !canTool.value
-    || lastBrushX.value < 0
-    || lastBrushY.value < 0
-    || (lastBrushX.value === x.value && lastBrushY.value === y.value)
-  ) {
-    return;
-  }
-
-  const savedIsTopHalf = isTopHalf.value;
-
-  if (halfBlockEditing.value) {
-    // In half-block mode, interpolate at half-block resolution.
-    // Convert full-block coords to half-block coords (y*2 + half offset)
-    // so Bresenham generates intermediate half-block positions.
-    const lastHalfY = lastBrushY.value * 2
-      + (lastIsTopHalf.value ? 0 : 1);
-    const curHalfY = y.value * 2
-      + (savedIsTopHalf ? 0 : 1);
-
-    const points = bresenhamLine(
-      lastBrushX.value, lastHalfY,
-      x.value, curHalfY,
-    );
-
-    for (let i = 1; i < points.length - 1; i++) {
-      const savedX = x.value;
-      const savedY = y.value;
-      x.value = points[i].x;
-      y.value = Math.floor(points[i].y / 2);
-      isTopHalf.value = points[i].y % 2 === 0;
-      await applyFn();
-      x.value = savedX;
-      y.value = savedY;
-    }
-  } else {
-    const points = bresenhamLine(
-      lastBrushX.value, lastBrushY.value,
-      x.value, y.value,
-    );
-
-    for (let i = 1; i < points.length - 1; i++) {
-      const savedX = x.value;
-      const savedY = y.value;
-      x.value = points[i].x;
-      y.value = points[i].y;
-      await applyFn();
-      x.value = savedX;
-      y.value = savedY;
-    }
-  }
-
-  isTopHalf.value = savedIsTopHalf;
-}
-
-async function canvasMouseMove(e: MouseEvent) {
-  // Update coordinates regardless of mode
-  const lastX = x.value;
-  const lastY = y.value;
-
-  if (e.offsetX >= 0) {
-    x.value = e.offsetX;
-  }
-  if (e.offsetY >= 0) {
-    y.value = e.offsetY;
-    isTopHalf.value = Math.floor(
-      e.offsetY / (blockHeightComp.value / 2),
-    ) % 2 === 0;
-  }
-
-  x.value = Math.floor(x.value / blockWidthComp.value);
-  y.value = Math.floor(y.value / blockHeightComp.value);
-
-  if (pasteMode.isPasteMode.value) {
-    const toolCtx = rendering.getToolCtx();
-    if (toolCtx) {
-      await clearToolCanvas();
-      pasteMode.drawPastePreview(
-        toolCtx, x.value, y.value,
-        blockWidthComp.value, blockHeightComp.value,
-      );
-    }
-    emit('coordsupdate', { x: x.value, y: y.value });
-    return;
-  }
-
-  if (isDefault.value) return;
-
-  if (x.value === lastX && y.value === lastY && !halfBlockEditing.value) {
-    return;
-  }
-
-  emit('coordsupdate', { x: x.value, y: y.value });
-
-  if (asciiBlockAtXy.value) {
-    const toolCtx = rendering.getToolCtx();
-    switch (currentTool.value.name) {
-      case 'brush':
-        if (isMouseOnCanvas.value) {
-          await interpolateStroke(drawBrush);
-          await clearToolCanvas();
-          await drawBrush();
-          await delayRedrawCanvas();
-          lastBrushX.value = x.value;
-          lastBrushY.value = y.value;
-          lastIsTopHalf.value = isTopHalf.value;
-        }
-        break;
-
-      case 'eraser':
-        await clearToolCanvas();
-        if (isMouseOnCanvas.value) {
-          await interpolateStroke(eraser);
-          await drawBrush(true);
-          await delayRedrawCanvas();
-          await eraser();
-          lastBrushX.value = x.value;
-          lastBrushY.value = y.value;
-          lastIsTopHalf.value = isTopHalf.value;
-        }
-        break;
-
-      case 'select':
-        if (selecting.value.canSelect) {
-          selecting.value.endX = canvasX.value + blockWidthComp.value;
-          // In half-block mode, end Y at half-block precision
-          selecting.value.endY = halfBlockEditing.value
-            ? canvasY.value
-              + (isTopHalf.value ? 0 : blockHeightComp.value / 2)
-              + blockHeightComp.value / 2
-            : canvasY.value + blockHeightComp.value;
-          await redrawSelect();
-        }
-        if (!isSelected.value) {
-          await redrawSelect();
-        }
-        break;
-
-      case 'text':
-        await clearToolCanvas();
-        await drawIndicator();
-        if (isTextEditingValues.value) {
-          await drawTextIndicator();
-        }
-        break;
-
-      case 'dropper':
-        await clearToolCanvas();
-        await drawIndicator();
-        break;
-
-      case 'fill':
-      case 'fill-eraser':
-        await clearToolCanvas();
-        await drawIndicator();
-        break;
-
-      case 'replace-color':
-        await clearToolCanvas();
-        await drawIndicator();
-        if (isReplacePicking.value
-          && replaceColorSource.value
-          && toolCtx) {
-          const bw = blockWidthComp.value;
-          if (replaceColorSource.value.fg !== null) {
-            toolCtx.fillStyle = mircColours99[replaceColorSource.value.fg];
-            toolCtx.fillRect(
-              canvasX.value, canvasY.value - 6,
-              bw / 2, 4,
-            );
-          }
-          if (replaceColorSource.value.bg !== null) {
-            toolCtx.fillStyle = mircColours99[replaceColorSource.value.bg];
-            toolCtx.fillRect(
-              canvasX.value + bw / 2, canvasY.value - 6,
-              bw / 2, 4,
-            );
-          }
-        }
-        break;
-
-      case 'gradient':
-        await clearToolCanvas();
-        await drawIndicator();
-        if (isGradientPicking.value
-          && gradientStart.value
-          && toolCtx) {
-          const bw = blockWidthComp.value;
-          const bh = blockHeightComp.value;
-          const sx = gradientStart.value.x * bw;
-          const sy = gradientStart.value.y * bh;
-          toolCtx.strokeStyle = mircColours99[toolbarStore.currentFg];
-          toolCtx.lineWidth = 2;
-          toolCtx.setLineDash([4, 4]);
-          toolCtx.strokeRect(
-            Math.min(sx, canvasX.value),
-            Math.min(sy, canvasY.value),
-            Math.abs(canvasX.value - sx) + bw,
-            Math.abs(canvasY.value - sy) + bh,
-          );
-          toolCtx.fillStyle = mircColours99[toolbarStore.currentFg];
-          toolCtx.fillRect(sx, sy, bw, bh);
-          toolCtx.fillStyle = mircColours99[toolbarStore.currentBg];
-          toolCtx.fillRect(
-            canvasX.value, canvasY.value, bw, bh,
-          );
-        }
-        break;
-
-      case 'shapes':
-        await clearToolCanvas();
-        await drawIndicator();
-        if (isShapePicking.value
-          && shapeStart.value
-          && toolCtx) {
-          drawShapePreview({
-            ctx: toolCtx,
-            shapeType: toolbarStore.toolbarState.shapeType,
-            startX: shapeStart.value.x,
-            startY: shapeStart.value.y,
-            endX: x.value,
-            endY: y.value,
-            blockWidth: blockWidthComp.value,
-            blockHeight: blockHeightComp.value,
-            strokeColor: mircColours99[toolbarStore.currentFg],
-          });
-        }
-        break;
-    }
-  }
-}
+// ─── Mouse handlers delegated to useCanvasMouseHandlers composable ──
+// canvasMouseUp, canvasMouseDown, canvasMouseMove, and interpolateStroke
+// are provided by the mouseHandlers composable initialized above.
 
 // ─── Methods: Dispatch & Diff ──────────────────────────────────
 
