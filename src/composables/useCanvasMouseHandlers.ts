@@ -180,6 +180,10 @@ export function useCanvasMouseHandlers(deps: MouseHandlerDeps) {
     switch (s.currentTool.value.name) {
       case 'brush':
       case 'eraser':
+        // Guard against double-fire: canvas mouseup + window mouseup
+        // both fire when released on canvas. First call sets canTool
+        // to false, second call exits early.
+        if (!s.canTool.value) return;
         s.canTool.value = false;
         s.lastBrushX.value = -1;
         s.lastBrushY.value = -1;
@@ -193,6 +197,8 @@ export function useCanvasMouseHandlers(deps: MouseHandlerDeps) {
         break;
 
       case 'select':
+        // Guard against double-fire for select tool
+        if (!s.selecting.value.canSelect) return;
         s.selecting.value.canSelect = false;
         await cb.processSelect();
         break;
@@ -421,28 +427,30 @@ export function useCanvasMouseHandlers(deps: MouseHandlerDeps) {
       const toolCtx = r.getToolCtx();
       switch (s.currentTool.value.name) {
         case 'brush':
-          if (s.isMouseOnCanvas.value) {
-            await interpolateStroke(tools.toolApp.drawBrush);
-            await r.clearToolCanvas();
-            await tools.toolApp.drawBrush();
-            await r.delayRedrawCanvas();
-            s.lastBrushX.value = s.x.value;
-            s.lastBrushY.value = s.y.value;
-            s.lastIsTopHalf.value = s.isTopHalf.value;
-          }
+          // isMouseOnCanvas guard removed — mousemove on the canvas
+          // element only fires when the cursor is actually over it.
+          // The old guard broke touch-based drawing since touch events
+          // never set isMouseOnCanvas. See: Gitea issues #83, #84.
+          await interpolateStroke(tools.toolApp.drawBrush);
+          await r.clearToolCanvas();
+          await tools.toolApp.drawBrush();
+          await r.delayRedrawCanvas();
+          s.lastBrushX.value = s.x.value;
+          s.lastBrushY.value = s.y.value;
+          s.lastIsTopHalf.value = s.isTopHalf.value;
           break;
 
         case 'eraser':
           await r.clearToolCanvas();
-          if (s.isMouseOnCanvas.value) {
-            await interpolateStroke(tools.toolApp.eraser);
-            await tools.toolApp.drawBrush(true);
-            await r.delayRedrawCanvas();
-            await tools.toolApp.eraser();
-            s.lastBrushX.value = s.x.value;
-            s.lastBrushY.value = s.y.value;
-            s.lastIsTopHalf.value = s.isTopHalf.value;
-          }
+          // isMouseOnCanvas guard removed — same rationale as brush
+          // case above. See: Gitea issues #83, #84.
+          await interpolateStroke(tools.toolApp.eraser);
+          await tools.toolApp.drawBrush(true);
+          await r.delayRedrawCanvas();
+          await tools.toolApp.eraser();
+          s.lastBrushX.value = s.x.value;
+          s.lastBrushY.value = s.y.value;
+          s.lastIsTopHalf.value = s.isTopHalf.value;
           break;
 
         case 'select':

@@ -607,12 +607,21 @@ watch(currentTool, async () => {
   }
 });
 
+// When mouse leaves canvas: clear visual indicators and commit
+// pending changes. For brush/eraser, preserve canTool so the stroke
+// can resume if the mouse re-enters while the button is held.
+// Other tools (fill, dropper, text, etc.) deactivate on leave.
+// See: Gitea issues #83, #84.
 watch(isMouseOnCanvas, async (val, old) => {
   if (val !== old) {
     if (!isSelecting.value) {
+      // Deactivate tool state first (before async rendering that
+      // may fail in test environments without real canvas)
+      if (!isBrushing.value && !isErasing.value) {
+        canTool.value = false;
+      }
       await clearToolCanvas();
       await dispatchBlocks(true);
-      canTool.value = false;
       await delayRedrawCanvas();
     }
   }
@@ -862,6 +871,44 @@ useEventListener(
     if (isSelecting.value && isSelected.value) {
       pasteMode.cutSelection();
       delayRedrawCanvas(true);
+    }
+  },
+);
+
+// Document-level mouseup: ensures brush/eraser strokes and select
+// drags end properly even when the mouse is released outside the
+// canvas element. Left-button-only filter prevents right/middle
+// clicks from interfering.
+// See: Gitea issues #83, #84.
+useEventListener(
+  window,
+  'mouseup',
+  (e: MouseEvent) => {
+    if (e.button !== 0) return;
+    // Only handle if a stroke or selection is actually in progress
+    const tool = currentTool.value.name;
+    if (
+      (canTool.value && (tool === 'brush' || tool === 'eraser'))
+      || (tool === 'select' && selecting.value.canSelect)
+    ) {
+      canvasMouseUp();
+    }
+  },
+);
+
+// Document-level touchend: mirrors window mouseup for touch devices.
+// Touch events never fire mouseup, so a separate listener is needed
+// for strokes that extend beyond the canvas on touch screens.
+useEventListener(
+  window,
+  'touchend',
+  () => {
+    const tool = currentTool.value.name;
+    if (
+      (canTool.value && (tool === 'brush' || tool === 'eraser'))
+      || (tool === 'select' && selecting.value.canSelect)
+    ) {
+      canvasMouseUp();
     }
   },
 );

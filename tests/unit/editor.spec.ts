@@ -8,6 +8,7 @@ import {
   beforeEach,
   afterEach,
 } from 'vitest'
+import { nextTick } from 'vue'
 import { mount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import Editor from '@/views/Editor.vue'
@@ -23,6 +24,8 @@ import {
 import {
   createMockStore,
   createMockModalStore,
+  createMockToolbarStore,
+  createToolbarState,
   globalStubs,
   setupHotkeysMocks,
   toastedMock,
@@ -33,12 +36,16 @@ import LZString from 'lz-string'
 
 let _mockStore: any = null
 let _mockModalStore: any = null
+let _mockToolbarStore: any = null
 
 vi.mock('@/store', () => ({
   useAsciiBirdStore: () => _mockStore,
 }))
 vi.mock('@/store/modal', () => ({
   useModalStore: () => _mockModalStore,
+}))
+vi.mock('@/store/toolbar', () => ({
+  useToolbarStore: () => _mockToolbarStore,
 }))
 
 
@@ -82,6 +89,7 @@ beforeEach(() => {
   store = createMockStore()
   _mockStore = store
   _mockModalStore = createMockModalStore()
+  _mockToolbarStore = createMockToolbarStore()
 })
 
 afterEach(() => {
@@ -575,6 +583,117 @@ describe('Editor.vue', () => {
         },
       })
       expect(wrapper.vm.updateCanvas).toBe(false)
+    })
+  })
+
+  // ─── Regression tests for brush tool deactivation (#83/#84) ──────
+  //
+  // The bug: when mouse leaves the canvas during an active brush
+  // stroke, the isMouseOnCanvas watcher set canTool=false, killing
+  // the stroke. The fix makes the watcher tool-aware: canTool is
+  // preserved for brush/eraser but still cleared for other tools.
+  // A document-level mouseup listener was also added to properly
+  // end strokes when the mouse is released outside the canvas.
+
+  describe('brush tool canvas leave (issues #83/#84)', () => {
+    it('preserves canTool for brush tool when mouse leaves canvas', async () => {
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { currentTool: 4 },
+      })
+      _mockStore = createMockStore()
+      const wrapper = mountEditor()
+
+      wrapper.vm.isMouseOnCanvas = true
+      await nextTick()
+      wrapper.vm.canTool = true
+      wrapper.vm.isMouseOnCanvas = false
+
+      await nextTick()
+      expect(wrapper.vm.canTool).toBe(true)
+    })
+
+    it('preserves canTool for eraser tool when mouse leaves canvas', async () => {
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { currentTool: 6 },
+      })
+      _mockStore = createMockStore()
+      const wrapper = mountEditor()
+
+      wrapper.vm.isMouseOnCanvas = true
+      await nextTick()
+      wrapper.vm.canTool = true
+      wrapper.vm.isMouseOnCanvas = false
+
+      await nextTick()
+      expect(wrapper.vm.canTool).toBe(true)
+    })
+
+    it('clears canTool for fill tool when mouse leaves canvas', async () => {
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { currentTool: 3 },
+      })
+      _mockStore = createMockStore()
+      const wrapper = mountEditor()
+
+      wrapper.vm.isMouseOnCanvas = true
+      await nextTick()
+      wrapper.vm.canTool = true
+      wrapper.vm.isMouseOnCanvas = false
+
+      await nextTick()
+      await nextTick()
+      expect(wrapper.vm.canTool).toBe(false)
+    })
+
+    it('clears canTool for text tool when mouse leaves canvas', async () => {
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { currentTool: 2 },
+      })
+      _mockStore = createMockStore()
+      const wrapper = mountEditor()
+
+      wrapper.vm.isMouseOnCanvas = true
+      await nextTick()
+      wrapper.vm.canTool = true
+      wrapper.vm.isMouseOnCanvas = false
+
+      await nextTick()
+      await nextTick()
+      expect(wrapper.vm.canTool).toBe(false)
+    })
+
+    it('skips canTool logic for select tool (uses canSelect instead)', async () => {
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { currentTool: 1 },
+      })
+      _mockStore = createMockStore()
+      const wrapper = mountEditor()
+
+      wrapper.vm.isMouseOnCanvas = true
+      await nextTick()
+      wrapper.vm.canTool = true
+      wrapper.vm.isMouseOnCanvas = false
+      await nextTick()
+      expect(wrapper.vm.canTool).toBe(true)
+    })
+
+    it('brush canTool stays true through leave and re-enter cycle', async () => {
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { currentTool: 4 },
+      })
+      _mockStore = createMockStore()
+      const wrapper = mountEditor()
+
+      wrapper.vm.isMouseOnCanvas = true
+      await nextTick()
+      wrapper.vm.canTool = true
+      wrapper.vm.isMouseOnCanvas = false
+      await nextTick()
+      expect(wrapper.vm.canTool).toBe(true)
+
+      wrapper.vm.isMouseOnCanvas = true
+      await nextTick()
+      expect(wrapper.vm.canTool).toBe(true)
     })
   })
 })
