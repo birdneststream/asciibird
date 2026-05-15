@@ -121,6 +121,13 @@ button {
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
 
+/* ── Header bars (menu + tabs) — glass effect over canvas ────────── */
+.header-bar {
+    background-color: rgba(28, 27, 27, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
 .drag-handle {
     cursor: grab;
     user-select: none;

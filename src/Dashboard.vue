@@ -6,7 +6,7 @@
     <div v-show="menuBarVisible">
       <div
         v-if="!isKeyboardDisabled"
-        class="flex items-center border-b bg-surface-container text-on-surface border-outline-variant"
+        class="flex items-center border-b header-bar text-on-surface border-outline-variant"
         @mouseleave="onMenuBarMouseLeave"
       >
         <h1 class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight px-md select-none">
@@ -196,7 +196,7 @@
     <template v-if="asciibirdMeta.length">
       <div
         v-if="tabsVisible"
-        class="relative z-tabbar border-b bg-surface-container-low border-outline-variant h-9 flex items-stretch px-xs gap-px overflow-x-auto custom-scrollbar"
+        class="relative z-tabbar border-b header-bar border-outline-variant h-9 flex items-stretch px-xs gap-px overflow-x-auto custom-scrollbar"
         style="top: 0px"
       >
         <div
