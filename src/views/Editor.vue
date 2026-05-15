@@ -747,6 +747,11 @@ watch(halfBlockEditing, async (active) => {
 
 // ─── Hotkeys (register + cleanup) ──────────────────────────────
 hotkeys('*', 'editor', async function (event) {
+  // Skip modifier combos (Ctrl+Z, Ctrl+Y, Ctrl+C, etc.) — let
+  // global shortcuts in scope 'all' handle them instead of routing
+  // through canvasKeyDown which would type the raw character.
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+
   event.preventDefault();
 
   if (isTextEditing.value) {

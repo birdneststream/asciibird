@@ -196,7 +196,7 @@
     <template v-if="asciibirdMeta.length">
       <div
         v-if="tabsVisible"
-        class="relative z-auto border-b bg-surface-container-low border-outline-variant h-9 flex items-stretch px-xs gap-px overflow-x-auto custom-scrollbar"
+        class="relative z-tabbar border-b bg-surface-container-low border-outline-variant h-9 flex items-stretch px-xs gap-px overflow-x-auto custom-scrollbar"
         style="top: 0px"
       >
         <div

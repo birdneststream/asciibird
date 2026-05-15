@@ -83,6 +83,7 @@ export default {
       },
       zIndex: {
         statusbar: '40',
+        tabbar: '90',
         panel: '100',
         picker: '5000',
         menu: '9000',
