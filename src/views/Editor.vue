@@ -129,6 +129,7 @@ import { usePasteMode } from '../composables/usePasteMode';
 import { useToolApplication } from '../composables/useToolApplication';
 import { useCanvasMouseHandlers } from '../composables/useCanvasMouseHandlers';
 import { useEditorHotkeys } from '../composables/useEditorHotkeys';
+import { useTextEditing } from '../composables/useTextEditing';
 
 import EditorContextMenu from '../components/parts/EditorContextMenu.vue';
 
@@ -143,7 +144,6 @@ import {
   exportPlainText,
 } from '../ascii';
 
-import { applyMirrored } from '../utils/mirror';
 import { downloadHtml } from '../utils/htmlExport';
 import type { Block } from '../types';
 import type { TransformType } from '../utils/transformBlocks';
@@ -706,6 +706,24 @@ watch(halfBlockEditing, async (active) => {
 });
 
 // ─── Editor Hotkeys (extracted composable) ───────────────────────
+// ─── Text Editing (extracted composable) ─────────────────────────
+// canvasKeyDown is provided by useTextEditing composable.
+
+const { canvasKeyDown } = useTextEditing({
+  state: {
+    textEditing, canFg, currentFg,
+    currentAsciiLayerBlocks, currentAsciiWidth, currentAsciiHeight,
+    mirrorX, mirrorY,
+  },
+  actions: {
+    recordDiff,
+    clearToolCanvas,
+    drawTextIndicator,
+    drawIndicator,
+    delayRedrawCanvas,
+  },
+});
+
 // Keyboard handler registered in 'editor' scope via useEditorHotkeys.
 // Returns cleanup() for onUnmounted.
 
@@ -950,144 +968,6 @@ function exportHtmlFile() {
   } catch {
     toastShow('Failed to export HTML.', { type: 'error' });
   }
-}
-
-// ─── Methods: Text Editing ─────────────────────────────────────
-
-async function canvasKeyDown(char: string) {
-  const rawX = textEditing.value.startX;
-  const rawY = textEditing.value.startY;
-  if (rawX === null || rawY === null) return;
-
-  let sx = rawX;
-  let sy = rawY;
-
-  const data = currentAsciiLayerBlocks.value;
-  if (data[sy] && data[sy][sx]) {
-    let targetBlock = data[sy][sx];
-    let oldBlock: Block = {};
-
-    switch (char) {
-      case 'Backspace':
-        if (data[sy][sx - 1]) {
-          targetBlock = data[sy][sx - 1];
-
-          oldBlock = { ...targetBlock };
-
-          delete data[sy][sx - 1]['char'];
-
-          recordDiff(sx, sy, oldBlock, data[sy][sx - 1]);
-
-          sx -= 1;
-        }
-
-      // eslint-disable-next-line no-fallthrough
-      case 'Delete':
-        if (data[sy][sx]) {
-          targetBlock = data[sy][sx];
-
-          oldBlock = { ...targetBlock };
-
-          delete data[sy][sx]['char'];
-
-          recordDiff(sx, sy, oldBlock, targetBlock);
-        }
-
-        applyMirrored(
-          sx, sy,
-          currentAsciiWidth.value, currentAsciiHeight.value,
-          mirrorX.value, mirrorY.value,
-          (mx, my) => {
-            const block = data[my]?.[mx];
-            if (!block) return;
-            oldBlock = { ...block };
-            delete block['char'];
-            recordDiff(mx, my, oldBlock, block);
-          },
-        );
-
-        break;
-
-      case 'Enter':
-        if (data[sy + 1]?.[0]) {
-          sx = 0;
-          sy += 1;
-        }
-        break;
-
-      case 'ArrowUp':
-        if (data[sy - 1]?.[sx]) {
-          sy -= 1;
-        }
-        break;
-
-      case 'ArrowDown':
-        if (data[sy + 1]?.[sx]) {
-          sy += 1;
-        }
-        break;
-
-      case 'ArrowLeft':
-        if (data[sy]?.[sx - 1]) {
-          sx -= 1;
-        }
-        break;
-
-      case 'ArrowRight':
-        if (data[sy]?.[sx + 1]) {
-          sx += 1;
-        }
-        break;
-
-      default:
-        if (char.length === 1) {
-          oldBlock = { ...targetBlock };
-          targetBlock.char = char;
-
-          if (canFg.value) {
-            targetBlock.fg = currentFg.value;
-          }
-
-          recordDiff(sx, sy, oldBlock, targetBlock);
-
-          applyMirrored(
-            sx, sy,
-            currentAsciiWidth.value, currentAsciiHeight.value,
-            mirrorX.value, mirrorY.value,
-            (mx, my) => {
-              const block = data[my]?.[mx];
-              if (!block) return;
-              oldBlock = { ...block };
-              if (canFg.value) {
-                block.fg = currentFg.value;
-              }
-              block.char = char;
-              recordDiff(mx, my, oldBlock, block);
-            },
-          );
-
-          if (data[sy]?.[sx + 1]) {
-            sx += 1;
-          } else {
-            sx = 0;
-
-            if (sy < currentAsciiHeight.value) {
-              sy += 1;
-            }
-          }
-        }
-
-        break;
-    }
-  }
-
-  textEditing.value.startX = sx;
-  textEditing.value.startY = sy;
-
-  await clearToolCanvas();
-  await drawTextIndicator();
-  await drawIndicator();
-  await delayRedrawCanvas();
 }
 
 // ─── Methods: Helpers ──────────────────────────────────────────
