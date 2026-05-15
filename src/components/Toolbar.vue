@@ -33,7 +33,11 @@
               <span
                 class="material-icons text-sm"
                 aria-hidden="true"
-              >{{ value.icon }}</span>
+              >{{
+                value.name === 'shapes' && isShapesTool
+                  ? shapeIcons[currentShapeType]
+                  : value.icon
+              }}</span>
               <span class="text-[10px] font-label-mono">{{ toolLabel(value) }}</span>
             </button>
           </Tooltip>
@@ -55,7 +59,7 @@
               :class="currentShapeType === st
                 ? 'bg-primary-container/20 text-primary border border-primary/50'
                 : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant border border-transparent'"
-              @click="toolbarStore.changeShapeType(st)"
+              @click="activateShapeType(st)"
             >
               <span
                 class="material-icons"
@@ -241,5 +245,14 @@ function toggleHalfBlockEditing() {
   const newVal = !toolbarStore.toolbarState.halfBlockEditing;
   toolbarStore.toggleHalfBlockEditing(newVal);
   toastShow(`Half Block Editing Mode ${newVal ? 'enabled' : 'disabled'}`);
+}
+
+/** Activate shapes tool (if not active) and set the shape type */
+function activateShapeType(st: typeof SHAPE_TYPES[number]) {
+  if (!isShapesTool.value) {
+    const shapesIdx = toolbarIcons.findIndex(t => t.name === 'shapes');
+    if (shapesIdx >= 0) toolbarStore.changeTool(shapesIdx);
+  }
+  toolbarStore.changeShapeType(st);
 }
 </script>

@@ -25,6 +25,8 @@ export function tooltipName(value: ToolbarIcon): string {
       return 'Replace Color';
     case 'gradient':
       return 'Gradient Fill';
+    case 'shapes':
+      return 'Shape Drawing';
     default:
       return value.name;
   }
@@ -55,6 +57,8 @@ export function toolLabel(value: ToolbarIcon): string {
       return 'ReColor';
     case 'gradient':
       return 'Gradient';
+    case 'shapes':
+      return 'Shapes';
     default:
       return value.name;
   }
