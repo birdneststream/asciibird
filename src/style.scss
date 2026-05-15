@@ -283,3 +283,92 @@ button {
         linear-gradient(to right, #333333 1px, transparent 1px),
         linear-gradient(to bottom, #333333 1px, transparent 1px);
 }
+
+/* ── Resize handles — sourced from Editor.vue ──────────────────────── */
+/* Visible only when default tool is active */
+.ab-resize-handle {
+    position: absolute;
+    z-index: 10;
+    background: rgba(100, 116, 139, 0.4);
+    transition: background-color 0.15s;
+}
+
+.ab-resize-handle:hover {
+    background: rgba(59, 130, 246, 0.7);
+}
+
+/* Bottom-right corner */
+.ab-resize-handle-br {
+    right: -4px;
+    bottom: -4px;
+    width: 10px;
+    height: 10px;
+    cursor: nwse-resize;
+}
+
+/* Bottom-left corner */
+.ab-resize-handle-bl {
+    left: -4px;
+    bottom: -4px;
+    width: 10px;
+    height: 10px;
+    cursor: nesw-resize;
+}
+
+/* Top-right corner */
+.ab-resize-handle-tr {
+    right: -4px;
+    top: -4px;
+    width: 10px;
+    height: 10px;
+    cursor: nesw-resize;
+}
+
+/* Top-left corner */
+.ab-resize-handle-tl {
+    left: -4px;
+    top: -4px;
+    width: 10px;
+    height: 10px;
+    cursor: nwse-resize;
+}
+
+/* Bottom-middle edge */
+.ab-resize-handle-bm {
+    left: 50%;
+    bottom: -4px;
+    width: 20px;
+    height: 8px;
+    transform: translateX(-50%);
+    cursor: ns-resize;
+}
+
+/* Top-middle edge */
+.ab-resize-handle-tm {
+    left: 50%;
+    top: -4px;
+    width: 20px;
+    height: 8px;
+    transform: translateX(-50%);
+    cursor: ns-resize;
+}
+
+/* Middle-right edge */
+.ab-resize-handle-mr {
+    right: -4px;
+    top: 50%;
+    width: 8px;
+    height: 20px;
+    transform: translateY(-50%);
+    cursor: ew-resize;
+}
+
+/* Middle-left edge */
+.ab-resize-handle-ml {
+    left: -4px;
+    top: 50%;
+    width: 8px;
+    height: 20px;
+    transform: translateY(-50%);
+    cursor: ew-resize;
+}
