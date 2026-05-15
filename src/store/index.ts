@@ -292,6 +292,62 @@ export const useAsciiBirdStore = defineStore('asciibird', {
 
     // ── Private helpers ──────────────────────────────────────────
 
+    /**
+     * Apply a history diff in the given direction.
+     * Shared logic for undoBlocks and redoBlocks.
+     */
+    applyHistoryDiff(direction: 'undo' | 'redo') {
+      const meta = this.asciibirdMeta[this.tab];
+      if (!meta) return;
+
+      const isUndo = direction === 'undo';
+      const entryIndex = isUndo
+        ? meta.historyIndex - 1
+        : meta.historyIndex;
+
+      const entry: HistoryEntry | undefined =
+        meta.history[entryIndex];
+      if (!entry) return;
+
+      const indexDelta = isUndo ? -1 : 1;
+
+      if (isLayerHistoryEntry(entry)) {
+        const data = decompressData<LayerHistoryData>(entry.d);
+        const layers = isUndo ? data.old : data.new;
+
+        meta.layers = compressLayers(layers);
+        meta.historyIndex += indexDelta;
+
+        // Adjust selectedLayer to valid position in the restored state
+        const selectedLayer = meta.selectedLayer;
+        if (layers[selectedLayer + 1]) {
+          meta.selectedLayer = selectedLayer + 1;
+        } else if (layers[selectedLayer - 1]) {
+          meta.selectedLayer = selectedLayer - 1;
+        }
+        return;
+      }
+
+      // Block-level diff
+      const diff = decompressData<HistoryDiff>(entry);
+      const diffs = isUndo ? diff.old : diff.new;
+      const layerIndex = diff.l;
+      if (!diffs || layerIndex === undefined) return;
+
+      const tempLayers: Layer[] = decompressLayers(meta.layers);
+
+      for (const change in diffs) {
+        const d = diffs[change];
+        if (tempLayers[layerIndex] !== undefined) {
+          tempLayers[layerIndex].data[d.y][d.x] = { ...d.b };
+        }
+      }
+
+      meta.layers = compressLayers(tempLayers);
+      meta.historyIndex += indexDelta;
+      this.clampHistoryIndex();
+    },
+
     /** Set document.title to match current tab */
     updateDocumentTitle() {
       const meta = this.asciibirdMeta[this.tab];
@@ -578,120 +634,10 @@ export const useAsciiBirdStore = defineStore('asciibird', {
 
     // BLOCKS — undo/redo
     undoBlocks() {
-      const historyIndex =
-        this.asciibirdMeta[this.tab].historyIndex;
-
-      if (this.asciibirdMeta[this.tab].history[historyIndex - 1]) {
-        const prev: HistoryEntry =
-          this.asciibirdMeta[this.tab].history[historyIndex - 1];
-
-        if (isLayerHistoryEntry(prev)) {
-          const data = decompressData<LayerHistoryData>(prev.d);
-
-          this.asciibirdMeta[this.tab].layers =
-            compressLayers(data.old);
-
-          this.asciibirdMeta[this.tab].historyIndex--;
-
-          const selectedLayer =
-            this.asciibirdMeta[this.tab].selectedLayer;
-
-          if (data.old[selectedLayer + 1]) {
-            this.asciibirdMeta[this.tab].selectedLayer =
-              selectedLayer + 1;
-          } else if (data.old[selectedLayer - 1]) {
-            this.asciibirdMeta[this.tab].selectedLayer =
-              selectedLayer - 1;
-          } else {
-            this.asciibirdMeta[this.tab].selectedLayer =
-              selectedLayer;
-          }
-          return;
-        }
-
-        const prevData = decompressData<HistoryDiff>(
-          prev,
-        );
-
-        const tempLayers: Layer[] = decompressLayers(
-          this.asciibirdMeta[this.tab].layers,
-        );
-
-        if (prevData.old) {
-          for (const change in prevData.old) {
-            const data = prevData.old[change];
-            if (tempLayers[prevData.l!] !== undefined) {
-              tempLayers[prevData.l!].data[data.y][data.x] = {
-                ...data.b,
-              };
-            }
-          }
-        }
-
-        this.asciibirdMeta[this.tab].layers =
-          compressLayers(tempLayers);
-
-        this.asciibirdMeta[this.tab].historyIndex--;
-        this.clampHistoryIndex();
-      }
+      this.applyHistoryDiff('undo');
     },
     redoBlocks() {
-      const historyIndex =
-        this.asciibirdMeta[this.tab].historyIndex;
-
-      if (this.asciibirdMeta[this.tab].history[historyIndex]) {
-        const prev: HistoryEntry =
-          this.asciibirdMeta[this.tab].history[historyIndex];
-
-        if (isLayerHistoryEntry(prev)) {
-          const data = decompressData<LayerHistoryData>(prev.d);
-
-          this.asciibirdMeta[this.tab].layers =
-            compressLayers(data.new);
-
-          this.asciibirdMeta[this.tab].historyIndex++;
-
-          const selectedLayer =
-            this.asciibirdMeta[this.tab].selectedLayer;
-
-          if (data.new[selectedLayer + 1]) {
-            this.asciibirdMeta[this.tab].selectedLayer =
-              selectedLayer + 1;
-          } else if (data.new[selectedLayer - 1]) {
-            this.asciibirdMeta[this.tab].selectedLayer =
-              selectedLayer - 1;
-          } else {
-            this.asciibirdMeta[this.tab].selectedLayer =
-              selectedLayer;
-          }
-          return;
-        }
-
-        const redoData = decompressData<HistoryDiff>(
-          prev,
-        );
-
-        const tempLayers: Layer[] = decompressLayers(
-          this.asciibirdMeta[this.tab].layers,
-        );
-
-        if (redoData.new && redoData.l !== undefined) {
-          for (const change in redoData.new) {
-            if (tempLayers[redoData.l] !== undefined) {
-              const data = redoData.new[change];
-              tempLayers[redoData.l].data[data.y][data.x] = {
-                ...data.b,
-              };
-            }
-          }
-        }
-
-        this.asciibirdMeta[this.tab].layers =
-          compressLayers(tempLayers);
-
-        this.asciibirdMeta[this.tab].historyIndex++;
-        this.clampHistoryIndex();
-      }
+      this.applyHistoryDiff('redo');
     },
 
     // Tabs
