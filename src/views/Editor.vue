@@ -219,7 +219,10 @@ import { useCanvasPanel } from '../composables/useCanvasPanel';
 import { useMainCanvasRenderer } from '../composables/useMainCanvasRenderer';
 import { useExportAscii } from '../composables/useExportAscii';
 import { useFpsThrottle } from '../composables/useFpsThrottle';
-import { useSelectionTransform } from '../composables/useSelectionTransform';
+import {
+  useSelectionTransform,
+  selectionToGridRect,
+} from '../composables/useSelectionTransform';
 import { useColorReplace } from '../composables/useColorReplace';
 import { useGradientTool } from '../composables/useGradientTool';
 import { useShapeTool } from '../composables/useShapeTool';
@@ -1679,72 +1682,18 @@ async function dispatchBlocks(clearDiff = false) {
 }
 
 async function processSelect() {
-  let sx = 0;
-  let sy = 0;
-  let curBlock: Block = {};
-  selectedBlocks.value = [];
+  const rect = selectionToGridRect(
+    selecting.value,
+    blockWidthComp.value,
+    blockHeightComp.value,
+    currentAsciiWidth.value,
+    currentAsciiHeight.value,
+  );
 
-  if (selecting.value.endY! < selecting.value.startY!) {
-    const end = selecting.value.endY!;
-    const start = selecting.value.startY!;
-    selecting.value.startY = end;
-    selecting.value.endY = start;
-  }
-
-  if (selecting.value.endX! < selecting.value.startX!) {
-    const end = selecting.value.endX!;
-    const start = selecting.value.startX!;
-    selecting.value.startX = end;
-    selecting.value.endX = start;
-  }
-
-  for (sy = 0; sy < currentAsciiHeight.value; sy++) {
-    if (
-      sy > Math.floor(
-        selecting.value.startY! / blockHeightComp.value,
-      ) - 1
-      && sy < Math.floor(
-        selecting.value.endY! / blockHeightComp.value,
-      )
-    ) {
-      if (!selectedBlocks.value[sy]) {
-        selectedBlocks.value[sy] = [];
-      }
-
-      for (sx = 0; sx < currentAsciiWidth.value; sx++) {
-        if (
-          sx > Math.ceil(
-            selecting.value.startX! / blockWidthComp.value,
-          ) - 1
-          && sx <= Math.ceil(
-            selecting.value.endX! / blockWidthComp.value,
-          ) - 1
-        ) {
-          if (
-            currentAsciiLayerBlocks.value[sy]
-            && currentAsciiLayerBlocks.value[sy][sx]
-          ) {
-            if (currentAsciiLayerBlocks.value[sy][sx].bg === null) {
-              delete currentAsciiLayerBlocks.value[sy][sx]['bg'];
-            }
-            if (currentAsciiLayerBlocks.value[sy][sx].fg === null) {
-              delete currentAsciiLayerBlocks.value[sy][sx]['fg'];
-            }
-            if (currentAsciiLayerBlocks.value[sy][sx].char === null) {
-              delete currentAsciiLayerBlocks.value[sy][sx]['char'];
-            }
-
-            curBlock = {
-              ...currentAsciiLayerBlocks.value[sy][sx],
-            };
-
-            if (!selectedBlocks.value[sy][sx]) {
-              selectedBlocks.value[sy][sx] = { ...curBlock };
-            }
-          }
-        }
-      }
-    }
+  if (rect) {
+    selectedBlocks.value = extractSelectionBlocks(
+      currentAsciiLayerBlocks.value, rect,
+    );
   }
 
   emit('selectedblocks', selectedBlocks.value);
