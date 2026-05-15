@@ -52,6 +52,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       brushLimit: 50,
       tabLimit: 12,
       fps: 50,
+      ircOverlay: true,
     },
     tab: 0,
     asciibirdMeta: [] as AsciibirdMeta[],
@@ -90,7 +91,10 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       this.blockSizeMultiplier = Math.max(0.5, Math.min(4, value));
     },
     updateOptions(payload: Options) {
-      this.options = { ...payload };
+      this.options = {
+        ircOverlay: true,
+        ...payload,
+      };
     },
     changeTab(payload: number) {
       this.tab = payload;
@@ -143,7 +147,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         this.asciibirdMeta[this.tab].layers =
           compressLayers(tempLayers);
 
-        this.pushLegacyDiff(payload.diff);
+        this.pushHistoryDiff(payload.diff);
       }
     },
 
@@ -384,14 +388,6 @@ export const useAsciiBirdStore = defineStore('asciibird', {
 
       meta.history.push(compressData(diff));
       meta.historyIndex = meta.history.length;
-    },
-
-    /**
-     * Push a block diff onto the undo stack.
-     * Delegates to pushHistoryDiff for consistent behavior.
-     */
-    pushLegacyDiff(diff: HistoryDiff): void {
-      this.pushHistoryDiff(diff);
     },
 
     /**

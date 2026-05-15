@@ -31,8 +31,10 @@ export const checkIrcByteLimits = (output: string): number[] => {
 export interface IrcLineCheck {
   /** Byte length of each line in the mIRC output */
   lineByteLengths: number[];
-  /** Indices of lines exceeding the warning threshold */
+  /** Indices of lines exceeding the error threshold (500+ bytes) */
   overLimitLines: number[];
+  /** Indices of lines in the warning range (400-500 bytes) */
+  warnLines: number[];
   /** Maximum byte length across all lines */
   maxBytes: number;
 }
@@ -50,6 +52,7 @@ export const calculateMircLineBytes = (blocks: Block[][]): IrcLineCheck => {
   const lineByteLengths: number[] = [];
   let maxBytes = 0;
   const overLimitLines: number[] = [];
+  const warnLines: number[] = [];
 
   for (let y = 0; y < blocks.length; y++) {
     let lineBytes = 0;
@@ -85,8 +88,12 @@ export const calculateMircLineBytes = (blocks: Block[][]): IrcLineCheck => {
 
     lineByteLengths.push(lineBytes);
     if (lineBytes > maxBytes) maxBytes = lineBytes;
-    if (lineBytes > IRC_ERROR_THRESHOLD) overLimitLines.push(y);
+    if (lineBytes > IRC_ERROR_THRESHOLD) {
+      overLimitLines.push(y);
+    } else if (lineBytes > IRC_WARN_THRESHOLD) {
+      warnLines.push(y);
+    }
   }
 
-  return { lineByteLengths, overLimitLines, maxBytes };
+  return { lineByteLengths, overLimitLines, warnLines, maxBytes };
 };
