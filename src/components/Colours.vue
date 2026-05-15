@@ -6,7 +6,7 @@
       :style="{ backgroundColor: mircColours[currentFg] }"
       class="w-12 h-12 rounded border border-outline-variant flex items-center justify-center text-xs font-label-mono transition-transform active:scale-95"
       id="currentColourFg"
-      @click="toolbarStore.changeIsUpdatingFg(!toolbarState.isChoosingFg)"
+      @click="toggleFg"
     >
       FG
     </button>
@@ -31,7 +31,7 @@
         :style="{ backgroundColor: mircColours[currentBg] }"
         class="w-12 h-12 rounded border border-outline-variant flex items-center justify-center text-xs font-label-mono transition-transform active:scale-95"
         id="currentColourBg"
-        @click="toolbarStore.changeIsUpdatingBg(!toolbarState.isChoosingBg)"
+        @click="toggleBg"
       >
         BG
       </button>
@@ -42,7 +42,7 @@
         class="w-12 h-12 rounded border border-outline-variant flex items-center justify-center text-xs font-label-mono transition-transform active:scale-95"
         id="currentChar"
         :disabled="halfBlockEditing"
-        @click="toolbarStore.changeIsUpdatingChar(!toolbarState.isChoosingChar)"
+        @click="toggleChar"
       >
         {{ toolbarState.selectedChar === " " ? "SP" : toolbarState.selectedChar }}
       </button>
@@ -54,8 +54,10 @@
 import { computed } from 'vue';
 import { mircColours99 } from '../ascii';
 import { useToolbarStore } from '../store/toolbar';
+import { usePanelStore } from '../store/panels';
 
 const toolbarStore = useToolbarStore();
+const panelStore = usePanelStore();
 
 const mircColours = mircColours99;
 
@@ -63,6 +65,33 @@ const toolbarState = computed(() => toolbarStore.toolbarState);
 const currentFg = computed(() => toolbarStore.currentFg);
 const currentBg = computed(() => toolbarStore.currentBg);
 const halfBlockEditing = computed(() => toolbarState.value.halfBlockEditing);
+
+/** Toggle FG picker and auto-restore panel from minimize */
+function toggleFg() {
+  const choosing = !toolbarState.value.isChoosingFg;
+  toolbarStore.changeIsUpdatingFg(choosing);
+  if (choosing) {
+    panelStore.restorePanel('colourPicker');
+  }
+}
+
+/** Toggle BG picker and auto-restore panel from minimize */
+function toggleBg() {
+  const choosing = !toolbarState.value.isChoosingBg;
+  toolbarStore.changeIsUpdatingBg(choosing);
+  if (choosing) {
+    panelStore.restorePanel('colourPicker');
+  }
+}
+
+/** Toggle Char picker and auto-restore panel from minimize */
+function toggleChar() {
+  const choosing = !toolbarState.value.isChoosingChar;
+  toolbarStore.changeIsUpdatingChar(choosing);
+  if (choosing) {
+    panelStore.restorePanel('charPicker');
+  }
+}
 
 const outline = computed(() => {
   const outlineColor = currentBg.value === 0 ? 'black' : 'white';
@@ -92,5 +121,5 @@ function swapColours() {
   toolbarStore.changeColourBg(fg);
 }
 
-defineExpose({ swapColours, mircColours, toolbarState, currentFg, currentBg, outline, halfBlockEditing });
+defineExpose({ swapColours, mircColours, toolbarState, currentFg, currentBg, outline, halfBlockEditing, toggleFg, toggleBg, toggleChar });
 </script>

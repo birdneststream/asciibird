@@ -1,18 +1,32 @@
 <template>
   <div
-    ref="el"
-    :style="style"
-    class="fixed z-picker floating-panel rounded-lg overflow-hidden p-sm"
+    ref="panelEl"
+    class="fixed floating-panel rounded-lg overflow-hidden flex flex-col"
+    :style="[panelStyle, { zIndex: panelStore.panelZIndex('colourPicker') }]"
+    style="width: 260px"
   >
-    <div class="grid grid-cols-10 gap-1">
-      <button
-        v-for="(value, keyColours) in mircColours"
-        :key="keyColours"
-        type="button"
-        :style="{ backgroundColor: mircColours[keyColours] }"
-        class="w-6 h-6 rounded border border-outline-variant hover:ring-2 hover:ring-primary transition-all"
-        @click="onColourChange(keyColours)"
-      />
+    <PanelHeader
+      ref="handleRef"
+      title="Colors"
+      icon="color_lens"
+      minimizable
+      @minimize="panelStore.minimizePanel('colourPicker')"
+    />
+
+    <div
+      v-show="!panelStore.colourPicker.minimized"
+      class="p-sm"
+    >
+      <div class="grid grid-cols-10 gap-1">
+        <button
+          v-for="(value, keyColours) in mircColours"
+          :key="keyColours"
+          type="button"
+          :style="{ backgroundColor: mircColours[keyColours] }"
+          class="w-6 h-6 rounded border border-outline-variant hover:ring-2 hover:ring-primary transition-all"
+          @click="onColourChange(keyColours)"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -20,36 +34,35 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { usePanelDraggable } from '../../composables/usePanelDraggable';
+import PanelHeader from './PanelHeader.vue';
 import { mircColours99 } from '../../ascii';
 import { useToolbarStore } from '../../store/toolbar';
 import { usePanelStore } from '../../store/panels';
 
 const toolbarStore = useToolbarStore();
 const panelStore = usePanelStore();
-const el = ref<HTMLElement | null>(null);
+const panelEl = ref<HTMLElement | null>(null);
+const handleRef = ref<InstanceType<typeof PanelHeader> | null>(null);
 
-/** Smart default position: adjacent to brush panel with bounds check */
+/** Smart default position: fallback to toolbarStore.pickerPos for migration */
 const initialPos = computed(() => {
   if (toolbarStore.pickerPos) return toolbarStore.pickerPos;
-  const bp = panelStore.brushPreview;
-  const vpWidth = window?.innerWidth ?? 1280;
-  const PICKER_W = 260;
-  const rightEdge = bp.x + bp.w + 8 + PICKER_W;
-  if (rightEdge > vpWidth) {
-    return { x: bp.x, y: bp.y + bp.h + 8 };
-  }
-  return { x: bp.x + bp.w + 8, y: bp.y };
+  return { x: panelStore.colourPicker.x, y: panelStore.colourPicker.y };
 });
 
-const { style, x, y, isDragging } = usePanelDraggable(el, {
+const { style: panelStyle, x: dragX, y: dragY } = usePanelDraggable(panelEl, {
   initialValue: initialPos.value,
+  handle: computed(() => handleRef.value?.headerEl ?? null),
+  onBringToFront: () => panelStore.bringToFront('colourPicker'),
 });
 
-// Only persist position on drag-end, not every pixel
-watch(isDragging, (dragging) => {
-  if (!dragging) {
-    toolbarStore.setPickerPos({ x: x.value, y: y.value });
-  }
+// Sync drag position back to store for persistence
+watch([dragX, dragY], ([newX, newY]) => {
+  panelStore.changeColourPickerState({
+    ...panelStore.colourPicker,
+    x: newX,
+    y: newY,
+  });
 });
 
 const mircColours = mircColours99;

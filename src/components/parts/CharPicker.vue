@@ -1,18 +1,22 @@
 <template>
   <div
-    ref="el"
-    :style="style"
-    class="fixed z-picker floating-panel rounded-lg overflow-hidden flex flex-col"
+    ref="panelEl"
+    class="fixed floating-panel rounded-lg overflow-hidden flex flex-col"
+    :style="[panelStyle, { zIndex: panelStore.panelZIndex('charPicker') }]"
     style="width: 480px"
   >
     <PanelHeader
       ref="handleRef"
       title="Characters"
       icon="text_fields"
-      @minimize="toolbarStore.setPickerPos(null)"
+      minimizable
+      @minimize="panelStore.minimizePanel('charPicker')"
     />
 
-    <div class="p-sm flex flex-col gap-xs">
+    <div
+      v-show="!panelStore.charPicker.minimized"
+      class="p-sm flex flex-col gap-xs"
+    >
       <label class="flex items-center gap-2 cursor-pointer">
         <input
           type="checkbox"
@@ -68,32 +72,29 @@ import { usePanelStore } from '../../store/panels';
 
 const toolbarStore = useToolbarStore();
 const panelStore = usePanelStore();
-const el = ref<HTMLElement | null>(null);
+const panelEl = ref<HTMLElement | null>(null);
 const handleRef = ref<InstanceType<typeof PanelHeader> | null>(null);
 const persistChars = ref(false);
 
-/** Smart default position: adjacent to brush panel */
+/** Smart default position: fallback to toolbarStore.pickerPos for migration */
 const initialPos = computed(() => {
   if (toolbarStore.pickerPos) return toolbarStore.pickerPos;
-  const bp = panelStore.brushPreview;
-  const vpWidth = window?.innerWidth ?? 1280;
-  const PICKER_W = 480;
-  const rightEdge = bp.x + bp.w + 8 + PICKER_W;
-  if (rightEdge > vpWidth) {
-    return { x: bp.x, y: bp.y + bp.h + 8 };
-  }
-  return { x: bp.x + bp.w + 8, y: bp.y };
+  return { x: panelStore.charPicker.x, y: panelStore.charPicker.y };
 });
 
-const { style, x, y, isDragging } = usePanelDraggable(el, {
+const { style: panelStyle, x: dragX, y: dragY } = usePanelDraggable(panelEl, {
   initialValue: initialPos.value,
   handle: computed(() => handleRef.value?.headerEl ?? null),
+  onBringToFront: () => panelStore.bringToFront('charPicker'),
 });
 
-watch(isDragging, (dragging) => {
-  if (!dragging) {
-    toolbarStore.setPickerPos({ x: x.value, y: y.value });
-  }
+// Sync drag position back to store for persistence
+watch([dragX, dragY], ([newX, newY]) => {
+  panelStore.changeCharPickerState({
+    ...panelStore.charPicker,
+    x: newX,
+    y: newY,
+  });
 });
 
 const mircColours = mircColours99;

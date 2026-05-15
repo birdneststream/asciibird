@@ -9,15 +9,17 @@ describe('usePanelRegistry', () => {
     setActivePinia(createPinia())
   })
 
-  it('returns all 5 panels', () => {
+  it('returns all 7 panels', () => {
     const { panels } = usePanelRegistry()
-    expect(panels.value).toHaveLength(5)
+    expect(panels.value).toHaveLength(7)
     const ids = panels.value.map((p) => p.id)
     expect(ids).toContain('toolbar')
     expect(ids).toContain('debugPanel')
     expect(ids).toContain('brushLibrary')
     expect(ids).toContain('brushPreview')
     expect(ids).toContain('layersLibrary')
+    expect(ids).toContain('colourPicker')
+    expect(ids).toContain('charPicker')
   })
 
   it('each panel has required properties', () => {
