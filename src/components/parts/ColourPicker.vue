@@ -27,6 +27,29 @@
           @click="onColourChange(keyColours)"
         />
       </div>
+
+      <!-- Shade strip: lighter → darker variations of active color -->
+      <div
+        v-if="activeShades.length > 1"
+        class="mt-2 pt-2 border-t border-outline-variant/30"
+      >
+        <span class="font-label-mono text-label-mono text-on-surface-variant/60 mb-1 block text-[10px]">
+          Shades
+        </span>
+        <div class="flex gap-1">
+          <button
+            v-for="shadeIdx in activeShades"
+            :key="shadeIdx"
+            type="button"
+            :style="{ backgroundColor: mircColours[shadeIdx] }"
+            class="w-6 h-6 rounded border border-outline-variant hover:ring-2 hover:ring-primary transition-all"
+            :class="shadeIdx === activeColorIndex ? 'ring-2 ring-primary' : ''"
+            :aria-label="'Shade, mIRC color ' + shadeIdx"
+            :title="'mIRC color ' + shadeIdx"
+            @click="onColourChange(shadeIdx)"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -38,6 +61,7 @@ import PanelHeader from './PanelHeader.vue';
 import { mircColours99 } from '../../ascii';
 import { useToolbarStore } from '../../store/toolbar';
 import { usePanelStore } from '../../store/panels';
+import { SHADE_MAP } from '../../utils/colorShades';
 
 const toolbarStore = useToolbarStore();
 const panelStore = usePanelStore();
@@ -66,6 +90,20 @@ watch([dragX, dragY], ([newX, newY]) => {
 });
 
 const mircColours = mircColours99;
+
+// ─── Shade strip state ─────────────────────────────────────────
+// FG priority when both are active; default FG when neither.
+const activeColorIndex = computed(() => {
+  const ts = toolbarStore.toolbarState;
+  if (ts.isChoosingBg && !ts.isChoosingFg) return toolbarStore.currentBg;
+  return toolbarStore.currentFg;
+});
+
+const activeShades = computed(
+  () => SHADE_MAP[activeColorIndex.value] ?? [],
+);
+
+// ─── Color change handler ───────────────────────────────────────
 
 function onColourChange(colour: number) {
   if (toolbarStore.toolbarState.isChoosingFg) {
