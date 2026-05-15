@@ -31,8 +31,9 @@ jobs:
         uses: ayeressian/bunnycdn-storage-deploy@v2.4.6
         with:
           source: "dist"
-          destination: "www"
-          storageZoneName: "${{ secrets.BUNNY_STORAGE_ZONE_NAME }}"
+          destination: ""
+          storageZoneName: "asciibirdv3"
+          storageEndpoint: "syd.storage.bunnycdn.com"
           storagePassword: "${{ secrets.BUNNY_STORAGE_PASSWORD }}"
           accessKey: "${{ secrets.BUNNY_API_KEY }}"
           pullZoneId: "${{ secrets.BUNNY_PULL_ZONE_ID }}"
