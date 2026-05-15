@@ -101,6 +101,26 @@ function getPanelDefs(): PanelDef[] {
       toggleMinimize: () => panelStore.togglePanelMinimize('layersLibrary'),
       resetPosition: () => panelStore.resetPanelPosition('layersLibrary'),
     },
+    {
+      id: 'colourPicker',
+      name: 'Colors',
+      icon: 'color_lens',
+      getState: () => panelStore.colourPicker,
+      minimize: () => panelStore.minimizePanel('colourPicker'),
+      restore: () => panelStore.restorePanel('colourPicker'),
+      toggleMinimize: () => panelStore.togglePanelMinimize('colourPicker'),
+      resetPosition: () => panelStore.resetPanelPosition('colourPicker'),
+    },
+    {
+      id: 'charPicker',
+      name: 'Characters',
+      icon: 'text_fields',
+      getState: () => panelStore.charPicker,
+      minimize: () => panelStore.minimizePanel('charPicker'),
+      restore: () => panelStore.restorePanel('charPicker'),
+      toggleMinimize: () => panelStore.togglePanelMinimize('charPicker'),
+      resetPosition: () => panelStore.resetPanelPosition('charPicker'),
+    },
   ];
 }
 
@@ -116,11 +136,14 @@ export function usePanelRegistry() {
     void panelStore.brushLibrary.minimized;
     void panelStore.brushPreview.minimized;
     void panelStore.layersLibrary.minimized;
-    void toolbarStore.toolbarState.minimized;
+    void panelStore.colourPicker.minimized;
+    void panelStore.charPicker.minimized;
     void panelStore.debugPanel.visible;
     void panelStore.brushLibrary.visible;
     void panelStore.brushPreview.visible;
     void panelStore.layersLibrary.visible;
+    void panelStore.colourPicker.visible;
+    void panelStore.charPicker.visible;
     void toolbarStore.toolbarState.visible;
 
     return getPanelDefs().map((def) => {
