@@ -26,7 +26,7 @@
             {{ menuItem.label }}
           </MenuButton>
           <MenuItems
-            class="absolute mt-0 shadow-panel rounded-b min-w-48 z-menu border bg-surface-container-high border-outline-variant"
+            class="absolute mt-0 shadow-panel rounded-b min-w-60 z-menu border bg-surface-container-high border-outline-variant"
             @focus="onMenuItemsOpen(index)"
           >
             <MenuItem
@@ -115,34 +115,34 @@
           @click="startImport('mirc')"
           class="ab-context-menu-item"
         >
-          Import from File
+          Import File
         </li>
         <li
           @click="handleExport('file')"
           class="ab-context-menu-item border-b border-outline-variant"
           v-if="asciibirdMeta.length"
         >
-          Export to File
+          Export File
         </li>
         <li
           class="ab-context-menu-item"
           @click="modalStore.openModal('paste-ascii')"
         >
-          Import from Clipboard
+          Import Clipboard
         </li>
         <li
           class="ab-context-menu-item"
           @click="handleExport('clipboard')"
           v-if="asciibirdMeta.length"
         >
-          Export to Clipboard
+          Export Clipboard
         </li>
         <li
           class="ab-context-menu-item border-b border-outline-variant"
           @click="handleExport('post')"
           v-if="asciibirdMeta.length"
         >
-          Export to HTTP POST
+          Export HTTP POST
         </li>
         <li
           @click="exportAsciibirdState()"
@@ -636,12 +636,12 @@ const currentSelectedLayer = computed(() => currentAsciiLayers.value[currentAsci
         shortcut: 'Ctrl+Shift+V',
       },
       {
-        text: 'Import mIRC from File',
+        text: 'mIRC File',
         click: () => startImport('mirc'),
         shortcut: 'Ctrl+Shift+O',
       },
       {
-        text: 'Import ANSI from File',
+        text: 'ANSI File',
         click: () => startImport('ansi'),
       },
     ],
@@ -650,42 +650,42 @@ const currentSelectedLayer = computed(() => currentAsciiLayers.value[currentAsci
     label: 'Export',
     items: [
       {
-        text: 'Copy mIRC to Clipboard',
+        text: 'mIRC to Clipboard',
         click: () => handleExport('clipboard'),
         disabled: !asciibirdMeta.value.length,
       },
       {
-        text: 'Download mIRC File',
+        text: 'mIRC File',
         click: () => handleExport('file'),
         disabled: !asciibirdMeta.value.length,
       },
       {
-        text: 'Download ANSI File',
+        text: 'ANSI File',
         click: () => handleExportAnsi(),
         disabled: !asciibirdMeta.value.length,
       },
       {
-        text: 'Download HTML File',
+        text: 'HTML File',
         click: () => handleExportHtml('file'),
         disabled: !asciibirdMeta.value.length,
       },
       {
-        text: 'Copy HTML Fragment',
+        text: 'HTML to Clipboard',
         click: () => handleExportHtml('clipboard'),
         disabled: !asciibirdMeta.value.length,
       },
       {
-        text: 'Copy Plain Text',
+        text: 'Plain Text to Clipboard',
         click: () => handleExportPlainText('clipboard'),
         disabled: !asciibirdMeta.value.length,
       },
       {
-        text: 'Download Plain Text',
+        text: 'Plain Text File',
         click: () => handleExportPlainText('file'),
         disabled: !asciibirdMeta.value.length,
       },
       {
-        text: 'HTTP POST to URL',
+        text: 'HTTP POST',
         click: () => handleExport('post'),
         disabled: !asciibirdMeta.value.length,
       },
