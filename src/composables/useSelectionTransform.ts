@@ -71,10 +71,15 @@ export function selectionToGridRect(
   const pw = Math.abs(sel.endX - sel.startX);
   const ph = Math.abs(sel.endY - sel.startY);
 
-  const gridX = Math.round(px / bw);
-  const gridY = Math.round(py / bh);
-  const gridW = Math.max(1, Math.round(pw / bw));
-  const gridH = Math.max(1, Math.round(ph / bh));
+  // Use floor for start, ceil for end to correctly include blocks
+  // that contain half-block selection boundaries
+  const gridX = Math.floor(px / bw);
+  const endGridX = Math.ceil((px + pw) / bw);
+  const gridY = Math.floor(py / bh);
+  const endGridY = Math.ceil((py + ph) / bh);
+
+  const gridW = Math.max(1, endGridX - gridX);
+  const gridH = Math.max(1, endGridY - gridY);
 
   // Clamp to canvas bounds
   const clampedX = Math.max(0, Math.min(gridX, canvasWidth - 1));
