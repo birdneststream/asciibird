@@ -70,10 +70,10 @@ export const mergeLayerStack = (layers: Layer[]): Block[][] => {
   const mergedLayers: Block[][] = [];
   const firstLayer = layers[0];
 
-  // Use the first visible layer's dimensions as the grid size
-  const refLayer = layers.find(l => l.visible) ?? firstLayer;
-  const height = refLayer.height + 1;
-  const width = refLayer.width + 1;
+  // Use the first layer's dimensions as the grid size (all layers
+  // share the same dimensions enforced by fillNullBlocks)
+  const height = firstLayer.height + 1;
+  const width = firstLayer.width + 1;
 
   for (let y = 0; y < height; y++) {
     if (!mergedLayers[y]) {
