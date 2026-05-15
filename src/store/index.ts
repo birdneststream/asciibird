@@ -128,7 +128,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     },
     updateAsciiBlocks(
       payload: {
-        diff: { new: BlockDiff[]; old: BlockDiff[] };
+        diff: HistoryDiff;
         blocks: Block[][];
       },
     ) {
@@ -387,10 +387,10 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     },
 
     /**
-     * Push a legacy block diff (no layer index) onto the undo stack.
+     * Push a block diff onto the undo stack.
      * Delegates to pushHistoryDiff for consistent behavior.
      */
-    pushLegacyDiff(diff: { new: BlockDiff[]; old: BlockDiff[] }): void {
+    pushLegacyDiff(diff: HistoryDiff): void {
       this.pushHistoryDiff(diff);
     },
 
