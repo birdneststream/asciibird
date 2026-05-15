@@ -52,7 +52,7 @@ export const useToolbarStore = defineStore('toolbar', {
       mirrorX: false,
       mirrorY: false,
       x: 8,
-      y: 364,
+      y: 56,
       h: 285,
       w: 200,
       draggable: true,
@@ -289,7 +289,7 @@ export const useToolbarStore = defineStore('toolbar', {
     },
     resetToolbarPosition() {
       this.toolbarState.x = 8;
-      this.toolbarState.y = 364;
+      this.toolbarState.y = 56;
     },
     setPickerPos(pos: { x: number; y: number }) {
       this.pickerPos = pos;
@@ -331,6 +331,16 @@ export const useToolbarStore = defineStore('toolbar', {
         if (parsed.toolbarState?.shapeType != null) {
           parsed.toolbarState.shapeType =
             validateShapeType(parsed.toolbarState.shapeType);
+        }
+        // Migrate stale toolbar y-positions that extend below viewport.
+        // The old default was y:364 which overlaps the status bar on
+        // small viewports (< 757px). Clamp to a safe default (56px).
+        if (parsed.toolbarState?.y != null) {
+          const maxY = (typeof window !== 'undefined'
+            ? window.innerHeight : 800) - 100;
+          if (parsed.toolbarState.y > maxY) {
+            parsed.toolbarState.y = 56;
+          }
         }
         return parsed;
       },

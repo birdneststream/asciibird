@@ -29,6 +29,7 @@
             class="ab-input w-full"
             v-model="forms.createAscii.width"
             min="1"
+            max="999"
           >
           <input
             type="number"
@@ -36,6 +37,7 @@
             class="ab-input w-full"
             v-model="forms.createAscii.height"
             min="1"
+            max="999"
           >
         </div>
       </div>

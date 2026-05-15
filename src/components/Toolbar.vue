@@ -2,7 +2,7 @@
   <div>
     <div
       ref="panelEl"
-      class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-[220px]"
+      class="fixed floating-panel rounded-lg overflow-hidden flex flex-col w-[220px] max-h-[calc(100dvh_-_1.75rem)]"
       :style="[panelStyle, { zIndex: panelStore.panelZIndex('toolbar') }]"
     >
       <PanelHeader

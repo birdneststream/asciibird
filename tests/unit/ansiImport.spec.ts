@@ -6,10 +6,12 @@
  * export→import, auto-detection.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { setActivePinia, createPinia } from 'pinia';
 import {
   parseAnsiToBlocks,
   isAnsiContent,
+  parseAnsiAscii,
 } from '../../src/utils/ansiImport';
 import { ANSI_TO_MIRC } from '../../src/utils/ansiColors';
 import type { Block } from '../../src/types';
@@ -404,5 +406,30 @@ describe('round-trip export→import', () => {
     const result = parseAnsiToBlocks(exported);
     const ansiBg = IRC_TO_ANSI[mircBg];
     expect(result.blocks[0][0].bg).toBe(ANSI_TO_MIRC[ansiBg]);
+  });
+});
+
+// ─── parseAnsiAscii (full import into store) ────────────────────
+
+describe('parseAnsiAscii', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia());
+  });
+
+  it('creates a new tab with ANSI content', async () => {
+    const content = '\x1b[31mHello\x1b[0m World';
+    const result = await parseAnsiAscii(content, 'test.ans');
+    expect(result).toBe(true);
+  });
+
+  it('returns false for empty content', async () => {
+    const result = await parseAnsiAscii('', 'empty.ans');
+    expect(result).toBe(false);
+  });
+
+  it('handles whitespace content as valid input', async () => {
+    // Whitespace has width > 0 and height > 0, so parseAnsiAscii succeeds
+    const result = await parseAnsiAscii('   \n  ', 'whitespace.ans');
+    expect(result).toBe(true);
   });
 });

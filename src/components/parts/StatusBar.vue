@@ -1,5 +1,6 @@
 <template>
-  <footer class="fixed bottom-0 left-0 right-0 z-40 h-7 bg-surface-container border-t border-outline-variant px-md flex items-center justify-between select-none">
+  <!-- z-[9100]: must sit above all floating panels (z-index capped at 8999) -->
+  <footer class="fixed bottom-0 left-0 right-0 z-[9100] h-7 bg-surface-container border-t border-outline-variant px-md flex items-center justify-between select-none">
     <div class="flex items-center gap-sm">
       <!-- Panel task bar — shows all panels including hidden (dimmed) -->
       <div

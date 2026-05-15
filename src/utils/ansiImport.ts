@@ -30,6 +30,9 @@ import {
   decodeAnsiBuffer,
   stripSauceBytes,
 } from './cp437';
+// Static import is safe — store/index.ts does not import from this module,
+// so there is no circular dependency risk.
+import { useAsciiBirdStore } from '../store';
 import type { Block, Layer, AsciibirdMetaBuilder } from '../types';
 
 // ─── Image overlay default ───────────────────────────────────────
@@ -251,9 +254,6 @@ export function isAnsiContent(contents: string): boolean {
  * Parse ANSI art and create a new ASCIIBIRD tab.
  * Follows the same pattern as parseMircAscii in ascii.ts.
  *
- * Uses dynamic import for the Pinia store to avoid circular
- * dependencies (ascii.ts ← store/index.ts ← utils/*).
- *
  * @param contents - raw ANSI content string (for clipboard paste)
  * @param filename - title for the new tab
  * @param buffer - optional raw bytes for binary ANSI files (CP437)
@@ -297,8 +297,6 @@ export const parseAnsiAscii = async (
     selectedLayer: 0,
   };
 
-  // Dynamic import avoids circular dep (ascii.ts ← store/index.ts)
-  const { useAsciiBirdStore } = await import('../store');
   const store = useAsciiBirdStore();
   store.newAsciibirdMeta(finalAscii);
 
