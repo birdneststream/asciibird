@@ -390,7 +390,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onUnmounted, nextTick, type ComponentPublicInstance } from 'vue';
+import { computed, ref, watch, onUnmounted, type ComponentPublicInstance } from 'vue';
 import {
   Menu,
   MenuButton,
@@ -439,10 +439,11 @@ import { useGlobalShortcuts } from './composables/useGlobalShortcuts';
 import { useInlineRename } from './composables/useInlineRename';
 import { useIrcLineWarning } from './composables/useIrcLineWarning';
 import { useImportExport } from './composables/useImportExport';
+import { useMenuBar } from './composables/useMenuBar';
 import {
   copySelectionBlocks,
 } from './composables/useSelectionTransform';
-import type { Block, AppMenuBar } from './types';
+import type { Block } from './types';
 import { blockWidth, blockHeight } from './ascii';
 
 defineOptions({ name: 'Dashboard' });
@@ -467,6 +468,22 @@ const {
   handleExportHtml,
   handleCropToContent,
 } = useImportExport({ toastShow, dialogPrompt });
+
+// Menu bar composable (extracted from Dashboard)
+const {
+  menuBar,
+  menuButtonRefs,
+  onMenuButtonMouseEnter,
+  onMenuItemsOpen,
+  onMenuBarMouseLeave,
+} = useMenuBar({
+  startImport,
+  handleExport,
+  handleExportAnsi,
+  handleExportHtml,
+  handleExportPlainText,
+  handleCropToContent,
+});
 
 // IRC line length warning (debounced)
 const { ircWarning } = useIrcLineWarning();
@@ -513,37 +530,6 @@ const selecting = ref({
 const isInputtingBrushSize = ref(false);
 const scrollOffset = ref(0);
 const resetSelect = ref(false);
-
-// Menu hover cascading state
-const menuButtonRefs = ref<(HTMLButtonElement | null)[]>([]);
-const activeMenuIndex = ref<number | null>(null);
-
-function onMenuButtonMouseEnter(index: number) {
-  // If a menu is already open and user hovers a different button,
-  // close the active menu by simulating an outside click (mousedown on
-  // body triggers HUI's outside-click handler), then open the new menu.
-  if (activeMenuIndex.value !== null && activeMenuIndex.value !== index) {
-    document.body.dispatchEvent(
-      new MouseEvent('mousedown', { bubbles: true }),
-    );
-    // Double nextTick ensures Headless UI processes the close before
-    // we trigger the open. Single nextTick is too early because HUI
-    // needs to update its internal state from the outside-click.
-    nextTick(() => {
-      nextTick(() => {
-        menuButtonRefs.value[index]?.click();
-      });
-    });
-  }
-}
-
-function onMenuItemsOpen(index: number) {
-  activeMenuIndex.value = index;
-}
-
-function onMenuBarMouseLeave() {
-  activeMenuIndex.value = null;
-}
 
 // Scroll handler (defined here so it can be referenced in onUnmounted)
 const scrollHandler = () => {
@@ -608,202 +594,6 @@ const brushLibraryState = computed(() => panelStore.brushLibrary);
 const brushPreviewState = computed(() => panelStore.brushPreview);
 const layersLibraryState = computed(() => panelStore.layersLibrary);
 const currentSelectedLayer = computed(() => currentAsciiLayers.value[currentAscii.value?.selectedLayer ?? 0]);
-
- const menuBar = computed<AppMenuBar[]>(() => [
-  {
-    label: 'File',
-    items: [
-      {
-        text: 'New ASCII',
-        click: () => modalStore.openModal('new-ascii'),
-        shortcut: 'Ctrl+M',
-      },
-    ],
-  },
-  {
-    label: 'Import',
-    items: [
-      {
-        text: 'Paste from Clipboard',
-        click: () => modalStore.openModal('paste-ascii'),
-        shortcut: 'Ctrl+Shift+V',
-      },
-      {
-        text: 'mIRC File',
-        click: () => startImport('mirc'),
-        shortcut: 'Ctrl+Shift+O',
-      },
-      {
-        text: 'ANSI File',
-        click: () => startImport('ansi'),
-      },
-    ],
-  },
-  {
-    label: 'Export',
-    items: [
-      {
-        text: 'mIRC to Clipboard',
-        click: () => handleExport('clipboard'),
-        disabled: !asciibirdMeta.value.length,
-      },
-      {
-        text: 'mIRC File',
-        click: () => handleExport('file'),
-        disabled: !asciibirdMeta.value.length,
-      },
-      {
-        text: 'ANSI File',
-        click: () => handleExportAnsi(),
-        disabled: !asciibirdMeta.value.length,
-      },
-      {
-        text: 'HTML File',
-        click: () => handleExportHtml('file'),
-        disabled: !asciibirdMeta.value.length,
-      },
-      {
-        text: 'HTML to Clipboard',
-        click: () => handleExportHtml('clipboard'),
-        disabled: !asciibirdMeta.value.length,
-      },
-      {
-        text: 'Plain Text to Clipboard',
-        click: () => handleExportPlainText('clipboard'),
-        disabled: !asciibirdMeta.value.length,
-      },
-      {
-        text: 'Plain Text File',
-        click: () => handleExportPlainText('file'),
-        disabled: !asciibirdMeta.value.length,
-      },
-      {
-        text: 'HTTP POST',
-        click: () => handleExport('post'),
-        disabled: !asciibirdMeta.value.length,
-      },
-    ],
-  },
-  {
-    label: 'Edit',
-    items: [
-      {
-        text: 'Edit ASCII',
-        click: () => modalStore.openModal('edit-ascii'),
-        disabled: !asciibirdMeta.value.length,
-        shortcut: 'Ctrl+E',
-      },
-      {
-        text: 'Undo',
-        click: () => store.undoBlocks(),
-        disabled: !asciibirdMeta.value.length,
-        shortcut: 'Ctrl+Z',
-      },
-      {
-        text: 'Redo',
-        click: () => store.redoBlocks(),
-        disabled: !asciibirdMeta.value.length,
-        shortcut: 'Ctrl+Y',
-      },
-      {
-        text: 'Add Border...',
-        click: () => modalStore.openModal('border-generator'),
-        disabled: !asciibirdMeta.value.length,
-      },
-      {
-        text: 'Find and Replace...',
-        click: () => modalStore.openModal('find-replace'),
-        disabled: !asciibirdMeta.value.length,
-        shortcut: 'Ctrl+F',
-      },
-      {
-        text: 'Crop to Content',
-        click: () => handleCropToContent(),
-        disabled: !asciibirdMeta.value.length,
-      },
-    ],
-  },
-  {
-    label: 'View',
-    items: [
-      {
-        text: menuBarVisible.value ? 'Hide Menu Bar' : 'Show Menu Bar',
-        click: () => desktopStore.changeMenuBarVisible(!menuBarVisible.value),
-      },
-      {
-        text: tabsVisible.value ? 'Hide Tabs' : 'Show Tabs',
-        click: () => desktopStore.changeTabsVisible(!tabsVisible.value),
-      },
-      {
-        text: toolbarState.value.gridView ? 'Disable Grid' : 'Enable Grid',
-        click: () => toolbarStore.toggleGridView(!toolbarState.value.gridView),
-        disabled: !asciibirdMeta.value.length,
-        shortcut: 'Alt+G',
-      },
-      {
-        text: debugPanelState.value.visible ? 'Hide Debug' : 'Show Debug',
-        click: () => panelStore.toggleDebugPanel(!debugPanelState.value.visible),
-      },
-      {
-        text: 'Zoom In',
-        click: () => store.setBlockMultiplier(store.blockSizeMultiplier + 0.25),
-        disabled: !asciibirdMeta.value.length,
-        shortcut: 'Ctrl+=',
-      },
-      {
-        text: 'Zoom Out',
-        click: () => store.setBlockMultiplier(store.blockSizeMultiplier - 0.25),
-        disabled: !asciibirdMeta.value.length,
-        shortcut: 'Ctrl+-',
-      },
-      {
-        text: 'Reset Zoom',
-        click: () => store.setBlockMultiplier(1),
-        disabled: !asciibirdMeta.value.length,
-        shortcut: 'Ctrl+0',
-      },
-      {
-        text: 'Reset Layout',
-        click: () => {
-          panelStore.resetAllPanelPositions();
-          toolbarStore.resetToolbarPosition();
-          toolbarStore.pickerPos = null;
-          store.resetCanvasPosition();
-        },
-      },
-    ],
-  },
-  {
-    label: 'Tools',
-    items: [
-      {
-        text: 'Options',
-        click: () => modalStore.openModal('options'),
-        shortcut: 'Ctrl+O',
-      },
-      {
-        text: 'Image Overlay',
-        click: () => modalStore.openModal('overlay'),
-        disabled: !asciibirdMeta.value.length,
-      },
-    ],
-  },
-  {
-    label: 'Help',
-    items: [
-      {
-        text: 'About',
-        click: () => modalStore.openModal('about'),
-        shortcut: 'Shift+F1',
-      },
-      {
-        text: 'Help',
-        click: () => modalStore.openModal('help'),
-        shortcut: 'F1',
-      },
-    ],
-  },
-]);
 
 // Watch — scope transitions handled by useGlobalShortcuts composable
 watch(currentTool, (val, old) => {
