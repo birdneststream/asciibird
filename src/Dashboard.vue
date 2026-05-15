@@ -9,7 +9,11 @@
         class="flex items-center border-b header-bar text-on-surface border-outline-variant relative z-menu"
         @mouseleave="onMenuBarMouseLeave"
       >
-        <h1 class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight px-md select-none">
+        <h1
+          class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight px-md select-none"
+          :class="{ 'ab-easter-egg-active': easterEgg.isActive.value }"
+          @click="easterEgg.trigger()"
+        >
           ASCIIBIRD
         </h1>
         <Menu
@@ -440,6 +444,7 @@ import { useInlineRename } from './composables/useInlineRename';
 import { useIrcLineWarning } from './composables/useIrcLineWarning';
 import { useImportExport } from './composables/useImportExport';
 import { useMenuBar } from './composables/useMenuBar';
+import { useEasterEgg } from './composables/useEasterEgg';
 import {
   copySelectionBlocks,
 } from './composables/useSelectionTransform';
@@ -484,6 +489,9 @@ const {
   handleExportPlainText,
   handleCropToContent,
 });
+
+// Easter egg composable (Issue #81)
+const easterEgg = useEasterEgg();
 
 // IRC line length warning (debounced)
 const { ircWarning } = useIrcLineWarning();

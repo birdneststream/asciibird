@@ -372,3 +372,22 @@ button {
     transform: translateY(-50%);
     cursor: ew-resize;
 }
+
+/* ── Easter egg — ASCIIBIRD logo shimmer animation ─────────────────── */
+/* Issue #81: Rainbow text shimmer on logo click, 1.5s duration */
+@keyframes ab-shimmer {
+    0% { color: #e5e2e1; }
+    15% { color: #ff6b6b; }
+    30% { color: #ffd93d; }
+    45% { color: #6bcb77; }
+    60% { color: #4d96ff; }
+    75% { color: #9b59b6; }
+    90% { color: #ff6b6b; }
+    100% { color: #e5e2e1; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .ab-easter-egg-active {
+        animation: ab-shimmer 1.5s ease-in-out;
+    }
+}
