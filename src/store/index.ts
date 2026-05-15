@@ -551,20 +551,16 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       const meta = this.asciibirdMeta[this.tab];
       if (!meta) return false;
 
-      // Decompress to check if crop is needed
+      // Decompress and compute crop once — reuse result in mutation
       const layers = decompressLayers(meta.layers);
       const result = cropToContentUtil(layers);
 
-      if (!result.cropped) return false;
+      if (!result.cropped || !result.layers) return false;
 
-      // Apply crop with proper undo history
+      // Apply pre-computed crop with proper undo history
       this.withLayerMutation((originalLayers) => {
-        // Replace all layer data with cropped versions
-        const cropped = cropToContentUtil(originalLayers);
-        if (cropped.cropped && cropped.layers) {
-          originalLayers.length = 0;
-          originalLayers.push(...cropped.layers);
-        }
+        originalLayers.length = 0;
+        originalLayers.push(...result.layers!);
       });
 
       // Reset canvas position to defaults
