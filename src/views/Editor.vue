@@ -111,6 +111,7 @@ import { useAsciiBirdStore } from '../store';
 import { useToolbarStore } from '../store/toolbar';
 import { useToast } from '../composables/useToast';
 import { useCanvasPanel } from '../composables/useCanvasPanel';
+import { useCanvasPan } from '../composables/useCanvasPan';
 import { useMainCanvasRenderer } from '../composables/useMainCanvasRenderer';
 import { useExportAscii } from '../composables/useExportAscii';
 import { useFpsThrottle } from '../composables/useFpsThrottle';
@@ -136,11 +137,12 @@ import EditorContextMenu from '../components/parts/EditorContextMenu.vue';
 import {
   mircColours99,
   maxBrushSize,
-  fillNullBlocks,
   getBlocksWidth,
   filterNullBlocks,
   emptyBlock as emptyBlockFn,
 } from '../ascii';
+
+import { resizeLayers } from '../utils/resizeLayers';
 
 import type { Block } from '../types';
 import type { TransformType } from '../utils/transformBlocks';
@@ -431,6 +433,12 @@ const {
   canvasMouseMove,
 } = mouseHandlers;
 
+// ─── Canvas Pan (middle-click) ────────────────────────────────────
+const { startPan, onCanvasMouseMove, panCursorStyle } = useCanvasPan({
+  scrollContainerRef,
+  canvasMouseMove,
+});
+
 const imageOverlay = computed(() => store.imageOverlay);
 
 const imageOverlayStyle = computed(() => {
@@ -490,13 +498,18 @@ const canvasPanel = useCanvasPanel({
     width: number,
     height: number,
   ) => {
-    const canvasBlockHeight = Math.floor(
+    // Clamp to minimum 1x1 to prevent zero-dimension crash
+    const canvasBlockHeight = Math.max(1, Math.floor(
       height / blockHeightComp.value,
-    );
-    const canvasBlockWidth = Math.floor(
+    ));
+    const canvasBlockWidth = Math.max(1, Math.floor(
       width / blockWidthComp.value,
+    ));
+    const layers = resizeLayers(
+      store.currentAsciiLayers,
+      canvasBlockWidth,
+      canvasBlockHeight,
     );
-    const layers = fillNullBlocks(canvasBlockHeight, canvasBlockWidth);
 
     top.value = topVal;
     canvasSize.width = width;
@@ -511,48 +524,6 @@ const canvasPanel = useCanvasPanel({
 });
 
 const panelStyle = computed(() => canvasPanel.style.value);
-
-// ─── Middle-Click Pan State ─────────────────────────────────────
-const isPanning = ref(false);
-const panLastX = ref(0);
-const panLastY = ref(0);
-const panCursorStyle = computed(() =>
-  isPanning.value ? 'cursor: grabbing;' : '',
-);
-
-function startPan(e: MouseEvent) {
-  isPanning.value = true;
-  panLastX.value = e.clientX;
-  panLastY.value = e.clientY;
-  // Listen for mouseup at document level so pan ends even
-  // if the mouse is released outside the canvas element.
-  const onMouseUp = () => {
-    isPanning.value = false;
-    document.removeEventListener('mouseup', onMouseUp);
-  };
-  document.addEventListener('mouseup', onMouseUp);
-}
-
-function doPan(e: MouseEvent) {
-  if (!isPanning.value) return;
-  const dx = panLastX.value - e.clientX;
-  const dy = panLastY.value - e.clientY;
-  panLastX.value = e.clientX;
-  panLastY.value = e.clientY;
-  const el = scrollContainerRef.value;
-  if (el) {
-    el.scrollBy(dx, dy);
-  }
-}
-
-/** Canvas mousemove dispatcher: delegates to pan or tool handler */
-function onCanvasMouseMove(e: MouseEvent) {
-  if (isPanning.value) {
-    doPan(e);
-    return;
-  }
-  canvasMouseMove(e);
-}
 
 // ─── Watchers (extracted composable) ────────────────────────────
 // useEditorWatchers registers all reactive watchers. Vue 3 auto-stops
