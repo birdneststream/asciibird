@@ -525,11 +525,6 @@ const canvasPanel = useCanvasPanel({
 
 const panelStyle = computed(() => canvasPanel.style.value);
 
-// ─── Middle-Click Pan (extracted composable) ────────────────────
-// useCanvasPan provides startPan, onCanvasMouseMove dispatcher, and
-// panCursorStyle. It requires scrollContainerRef and the tool-level
-// canvasMouseMove handler.
-
 // ─── Watchers (extracted composable) ────────────────────────────
 // useEditorWatchers registers all reactive watchers. Vue 3 auto-stops
 // them on unmount. Function refs (resetSelectTool, warnInvisibleLayer,
