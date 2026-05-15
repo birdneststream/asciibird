@@ -391,14 +391,12 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, onUnmounted, nextTick, type ComponentPublicInstance } from 'vue';
-import LZString from 'lz-string';
 import {
   Menu,
   MenuButton,
   MenuItems,
   MenuItem,
 } from '@headlessui/vue';
-
 
 import Toolbar from './components/Toolbar.vue';
 import DebugPanel from './components/DebugPanel.vue';
@@ -426,18 +424,9 @@ import KeyboardShortcuts from './components/parts/KeyboardShortcuts.vue';
 import StatusBar from './components/parts/StatusBar.vue';
 
 import {
-  parseMircAscii,
   toolbarIcons,
-  exportMirc,
-  exportPlainText,
-  downloadFile,
   checkForGetRequest,
-  mergeLayers,
 } from './ascii';
-
-import { downloadAnsi } from './utils/ansiExport';
-import { downloadHtml, exportHtmlFragment } from './utils/htmlExport';
-import { parseAnsiAscii } from './utils/ansiImport';
 
 import { useAsciiBirdStore } from './store';
 import { useModalStore } from './store/modal';
@@ -446,10 +435,10 @@ import { usePanelStore } from './store/panels';
 import { useToolbarStore } from './store/toolbar';
 import { useToast } from './composables/useToast';
 import { useDialog } from './composables/useDialog';
-import { useExportAscii } from './composables/useExportAscii';
 import { useGlobalShortcuts } from './composables/useGlobalShortcuts';
 import { useInlineRename } from './composables/useInlineRename';
 import { useIrcLineWarning } from './composables/useIrcLineWarning';
+import { useImportExport } from './composables/useImportExport';
 import {
   copySelectionBlocks,
 } from './composables/useSelectionTransform';
@@ -465,7 +454,19 @@ const panelStore = usePanelStore();
 const toolbarStore = useToolbarStore();
 const { messages: toasts, show: toastShow } = useToast();
 const { state: dialogState, confirm: dialogConfirm, prompt: dialogPrompt, ok: dialogOk, cancel: dialogCancel } = useDialog();
-const { startExport } = useExportAscii({ checkLimits: true });
+
+// Import/Export composable (extracted from Dashboard)
+const {
+  asciiInput,
+  onImport,
+  startImport,
+  exportAsciibirdState,
+  handleExport,
+  handleExportAnsi,
+  handleExportPlainText,
+  handleExportHtml,
+  handleCropToContent,
+} = useImportExport({ toastShow, dialogPrompt });
 
 // IRC line length warning (debounced)
 const { ircWarning } = useIrcLineWarning();
@@ -492,12 +493,10 @@ const {
 const menu = ref<InstanceType<typeof ContextMenu> | null>(null);
 const tabMenu = ref<InstanceType<typeof ContextMenu> | null>(null);
 const tabMenuTarget = ref<number>(0);
-const asciiInput = ref<HTMLInputElement | null>(null);
 
 // Reactive state
 const canvasX = ref<number | null>(null);
 const canvasY = ref<number | null>(null);
-const importType = ref<'mirc' | 'asb' | 'ansi' | null>(null);
 const selectedBlocks = ref<Block[][]>([]);
 const textEditing = ref<{
   startX: number | null;
@@ -513,7 +512,6 @@ const selecting = ref({
 });
 const isInputtingBrushSize = ref(false);
 const scrollOffset = ref(0);
-const lastPostURL = ref('');
 const resetSelect = ref(false);
 
 // Menu hover cascading state
@@ -556,7 +554,6 @@ const scrollHandler = () => {
 const importFileHandler = () => {
   startImport('mirc');
 };
-
 // Handler for Ctrl+C copy blocks shortcut (from useGlobalShortcuts)
 const copyBlocksHandler = () => {
   if (selectedBlocks.value.length === 0) return;
@@ -869,198 +866,6 @@ function textediting(value: unknown) {
 
 function updatecanvas() {
   updateCanvas.value = !updateCanvas.value;
-}
-
-async function onImport() {
-  const input = asciiInput.value;
-  if (!input) return;
-
-  const files = input.files;
-  if (!files || !files.length) return;
-
-  const filename = files[0].name;
-  const fileType = importType.value;
-
-  if (fileType === 'ansi') {
-    // ANSI files may be CP437-encoded — read as ArrayBuffer for
-    // proper encoding detection (UTF-8 first, CP437 fallback)
-    const bufferReader = new FileReader();
-    bufferReader.addEventListener('load', async () => {
-      await parseAnsiAscii(
-        '', // contents ignored when buffer is provided
-        filename,
-        bufferReader.result as ArrayBuffer,
-      );
-      input.value = '';
-    });
-    bufferReader.readAsArrayBuffer(files[0]);
-  } else {
-    // mIRC and ASB files are always text-based (UTF-8)
-    const textReader = new FileReader();
-    textReader.addEventListener('load', async () => {
-      switch (fileType) {
-        case 'asb':
-          importAsciibirdState(textReader.result as string);
-          break;
-
-        default:
-        case 'mirc':
-          await parseMircAscii(textReader.result as string, filename);
-          break;
-      }
-      input.value = '';
-    });
-    textReader.readAsText(files[0]);
-  }
-}
-
-function startImport(type: 'mirc' | 'asb' | 'ansi') {
-  importType.value = type;
-  asciiInput.value?.click();
-}
-
-function importAsciibirdState(fileContents: string) {
-  try {
-    const contents = JSON.parse(
-      LZString.decompressFromEncodedURIComponent(fileContents)
-    );
-    store.changeState({ ...contents });
-  } catch {
-    toastShow('Failed to import ASCIIBIRD state. File may be corrupted.', {
-      type: 'error',
-    });
-  }
-}
-
-function exportAsciibirdState() {
-  try {
-    const output = LZString.compressToEncodedURIComponent(
-      JSON.stringify(store.state)
-    );
-
-    const today = new Date();
-    const y = today.getFullYear();
-    const m = today.getMonth() + 1;
-    const d = today.getDate();
-    const h = today.getHours();
-    const mi = today.getMinutes();
-    const s = today.getSeconds();
-
-    downloadFile(
-      output,
-      `asciibird-${y}-${m}-${d}-${h}-${mi}-${s}.asb`,
-      'application/gzip'
-    );
-  } catch (err) {
-    toastShow(String(err), { type: 'error' });
-  }
-}
-
-function handleExport(type: 'file' | 'clipboard' | 'post') {
-  if (type === 'post') {
-    modalStore.toggleDisableKeyboard(true);
-    dialogPrompt({
-      title: 'HTTP Post your Ascii',
-      text: 'Please input the URL for the HTTP Post sir',
-      inputValue: lastPostURL.value,
-    }).then((result: { input?: string; isOk: boolean }) => {
-      if (result.input === undefined) {
-        toastShow('Come on bro. Get it together.', {
-          type: 'error',
-        });
-        modalStore.toggleDisableKeyboard(false);
-        return;
-      }
-
-      if (result.isOk) {
-        const asciiText = exportMirc().output.join('');
-        lastPostURL.value = result.input;
-        const requestOptions = {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/octet-stream' },
-          body: asciiText,
-        };
-        fetch(lastPostURL.value, requestOptions)
-          .then((response) => {
-            if (response.status === 200 || response.status === 201) {
-              toastShow('POSTed ascii!', { type: 'success' });
-            } else {
-              toastShow(
-                `Error: ${response.status} ${response.statusText}`,
-                { type: 'error' },
-              );
-            }
-          })
-          .catch((error) => {
-            toastShow(`Error: ${JSON.stringify(error)}`, {
-              type: 'error',
-            });
-          });
-      }
-
-      modalStore.toggleDisableKeyboard(false);
-    });
-  } else {
-    startExport(type as 'clipboard' | 'file');
-  }
-}
-
-function handleExportAnsi() {
-  try {
-    const title = store.currentAscii?.title ?? 'ascii';
-    downloadAnsi(title);
-    toastShow('Exported ANSI file!', { type: 'success' });
-  } catch (err) {
-    toastShow(`ANSI export error: ${String(err)}`, { type: 'error' });
-  }
-}
-
-function handleExportPlainText(target: 'clipboard' | 'file') {
-  try {
-    const lines = exportPlainText();
-    const text = lines.join('\n');
-    const title = store.currentAscii?.title ?? 'ascii';
-
-    if (target === 'clipboard') {
-      navigator.clipboard.writeText(text);
-      toastShow('Plain text copied to clipboard!', { type: 'success' });
-    } else {
-      const filename = title.endsWith('.txt') ? title : `${title}.txt`;
-      downloadFile(text, filename, 'text/plain');
-      toastShow('Exported plain text file!', { type: 'success' });
-    }
-  } catch (err) {
-    toastShow(`Plain text export error: ${String(err)}`, { type: 'error' });
-  }
-}
-
-function handleExportHtml(target: 'clipboard' | 'file') {
-  try {
-    const title = store.currentAscii?.title ?? 'ascii';
-
-    if (target === 'clipboard') {
-      const blocks = mergeLayers();
-      const fragment = exportHtmlFragment(blocks);
-      navigator.clipboard.writeText(fragment);
-      toastShow('HTML fragment copied to clipboard!', { type: 'success' });
-    } else {
-      downloadHtml(title);
-      toastShow('Exported HTML file!', { type: 'success' });
-    }
-  } catch (err) {
-    toastShow(`HTML export error: ${String(err)}`, { type: 'error' });
-  }
-}
-
-function handleCropToContent() {
-  const cropped = store.cropToContentAction();
-  if (cropped) {
-    toastShow('Canvas cropped to content!', { type: 'success' });
-  } else {
-    toastShow('Nothing to crop — content already fills edges.', {
-      type: 'info',
-    });
-  }
 }
 
 function changeTab(key: number) {
