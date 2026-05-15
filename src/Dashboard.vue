@@ -616,7 +616,7 @@ const brushPreviewState = computed(() => panelStore.brushPreview);
 const layersLibraryState = computed(() => panelStore.layersLibrary);
 const currentSelectedLayer = computed(() => currentAsciiLayers.value[currentAscii.value?.selectedLayer ?? 0]);
 
-const menuBar = computed<AppMenuBar[]>(() => [
+ const menuBar = computed<AppMenuBar[]>(() => [
   {
     label: 'File',
     items: [
@@ -625,8 +625,18 @@ const menuBar = computed<AppMenuBar[]>(() => [
         click: () => modalStore.openModal('new-ascii'),
         shortcut: 'Ctrl+M',
       },
+    ],
+  },
+  {
+    label: 'Import',
+    items: [
       {
-        text: 'Import from File',
+        text: 'Paste from Clipboard',
+        click: () => modalStore.openModal('paste-ascii'),
+        shortcut: 'Ctrl+Shift+V',
+      },
+      {
+        text: 'Import mIRC from File',
         click: () => startImport('mirc'),
         shortcut: 'Ctrl+Shift+O',
       },
@@ -634,49 +644,49 @@ const menuBar = computed<AppMenuBar[]>(() => [
         text: 'Import ANSI from File',
         click: () => startImport('ansi'),
       },
+    ],
+  },
+  {
+    label: 'Export',
+    items: [
       {
-        text: 'Import from Clipboard',
-        click: () => modalStore.openModal('paste-ascii'),
-        shortcut: 'Ctrl+Shift+V',
-      },
-      {
-        text: 'Export to File',
-        click: () => handleExport('file'),
-        disabled: !asciibirdMeta.value.length,
-      },
-      {
-        text: 'Export to Clipboard',
+        text: 'Copy mIRC to Clipboard',
         click: () => handleExport('clipboard'),
         disabled: !asciibirdMeta.value.length,
       },
       {
-        text: 'Export to HTTP POST',
-        click: () => handleExport('post'),
+        text: 'Download mIRC File',
+        click: () => handleExport('file'),
         disabled: !asciibirdMeta.value.length,
       },
       {
-        text: 'Export to ANSI File',
+        text: 'Download ANSI File',
         click: () => handleExportAnsi(),
         disabled: !asciibirdMeta.value.length,
       },
       {
-        text: 'Export Plain Text to Clipboard',
-        click: () => handleExportPlainText('clipboard'),
-        disabled: !asciibirdMeta.value.length,
-      },
-      {
-        text: 'Export Plain Text to File',
-        click: () => handleExportPlainText('file'),
-        disabled: !asciibirdMeta.value.length,
-      },
-      {
-        text: 'Export as HTML File',
+        text: 'Download HTML File',
         click: () => handleExportHtml('file'),
         disabled: !asciibirdMeta.value.length,
       },
       {
         text: 'Copy HTML Fragment',
         click: () => handleExportHtml('clipboard'),
+        disabled: !asciibirdMeta.value.length,
+      },
+      {
+        text: 'Copy Plain Text',
+        click: () => handleExportPlainText('clipboard'),
+        disabled: !asciibirdMeta.value.length,
+      },
+      {
+        text: 'Download Plain Text',
+        click: () => handleExportPlainText('file'),
+        disabled: !asciibirdMeta.value.length,
+      },
+      {
+        text: 'HTTP POST to URL',
+        click: () => handleExport('post'),
         disabled: !asciibirdMeta.value.length,
       },
     ],
