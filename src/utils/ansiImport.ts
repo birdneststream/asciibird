@@ -290,11 +290,7 @@ export const parseAnsiAscii = async (
   // Dynamic import avoids circular dep (ascii.ts ← store/index.ts)
   const { useAsciiBirdStore } = await import('../store');
   const store = useAsciiBirdStore();
-  // Type assertion: layers is already compressed to string above,
-  // making finalAscii structurally AsciibirdMeta (layers: string).
-  store.newAsciibirdMeta(
-    finalAscii as unknown as Parameters<typeof store.newAsciibirdMeta>[0],
-  );
+  store.newAsciibirdMeta(finalAscii);
 
   return true;
 };

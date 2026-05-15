@@ -31,6 +31,7 @@ import type {
   Layer,
   Options,
   AsciibirdMeta,
+  AsciibirdMetaBuilder,
   HistoryDiff,
   LayerHistoryData,
   HistoryEntry,
@@ -115,8 +116,13 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         meta.y = CANVAS_DEFAULT_Y;
       }
     },
-    newAsciibirdMeta(payload: AsciibirdMeta) {
-      this.asciibirdMeta.push(payload);
+    newAsciibirdMeta(payload: AsciibirdMetaBuilder) {
+      // Compress layers if not already a string (supports both Layer[] and string)
+      const layers = typeof payload.layers === 'string'
+        ? payload.layers
+        : compressLayers(payload.layers);
+      const meta: AsciibirdMeta = { ...payload, layers };
+      this.asciibirdMeta.push(meta);
       this.tab = this.asciibirdMeta.length - 1;
       this.updateDocumentTitle();
     },
