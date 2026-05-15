@@ -99,7 +99,11 @@ export interface ToolApplicationReturn {
     target?: string | null,
     plain?: boolean,
   ) => void;
-  drawHalfBlocks: (brushX: number, brushY: number) => Promise<void>;
+  drawHalfBlocks: (
+    brushX: number,
+    brushY: number,
+    topHalf?: boolean,
+  ) => Promise<void>;
   eraser: () => void;
   fill: (eraser?: boolean) => void;
   recordDiff: (
@@ -275,18 +279,23 @@ export function useToolApplication(
 
   // ─── Draw Half Blocks ─────────────────────────────────────────
 
+  /** Draw a half-block at the cursor position. */
   async function drawHalfBlocks(
     brushX: number,
     brushY: number,
+    topHalf?: boolean,
   ): Promise<void> {
     const toolCtx = r.getToolCtx();
     if (!toolCtx) return;
     const bw = s.blockWidthComp.value;
     const bh = s.blockHeightComp.value;
 
-    const coord = HalfBlockGrid.fromPixels(brushX, brushY, bw, bh);
-    const blockY = Math.floor(coord.y / 2);
-    const blockX = coord.x;
+    // Use isTopHalf directly (not pixel-based conversion which loses
+    // half-block info when y.value is quantised to full-block coords)
+    const isTop = topHalf ?? s.isTopHalf.value;
+    const blockX = Math.floor(brushX / bw);
+    const blockY = Math.floor(brushY / bh);
+    const halfY = blockY * 2 + (isTop ? 0 : 1);
 
     if (
       !s.currentAsciiLayerBlocks.value[blockY]
@@ -300,15 +309,18 @@ export function useToolApplication(
 
     toolCtx.font = getCanvasFont(s.blockSizeMultiplier.value);
     toolCtx.fillStyle = mircColours99[s.currentFg.value];
+
+    // Draw the half-block character at the correct pixel position
+    const charPixelY = isTop ? brushY : brushY;
     toolCtx.fillText(
-      coord.y % 2 === 0 ? '\u2580' : '\u2584',
+      isTop ? '\u2580' : '\u2584',
       brushX,
-      brushY + bh - 3,
+      charPixelY + bh - 3,
     );
 
     if (s.canTool.value) {
       const grid = new HalfBlockGrid(s.currentAsciiLayerBlocks.value);
-      grid.setColour(coord.x, coord.y, s.currentFg.value);
+      grid.setColour(blockX, halfY, s.currentFg.value);
 
       recordDiff(
         blockX, blockY, ob,
@@ -316,7 +328,7 @@ export function useToolApplication(
       );
 
       applyMirroredHalfBlock(
-        coord.x, coord.y,
+        blockX, halfY,
         s.currentAsciiWidth.value, s.currentAsciiHeight.value,
         s.mirrorX.value, s.mirrorY.value,
         (mx, mHalfY, mBlockY) => {
@@ -374,11 +386,18 @@ export function useToolApplication(
 
         const brushX =
           s.x.value * bw + bx * bw - brushDiffX;
+        // In half-block mode, offset brushY to the correct half.
+        // y.value is always a full-block coord; isTopHalf tracks
+        // which half the cursor is in.
+        const halfOffset = s.toolbarState.value.halfBlockEditing
+          && !s.isTopHalf.value
+          ? bh / 2
+          : 0;
         const brushY =
-          s.y.value * bh + by * bh - brushDiffY;
+          s.y.value * bh + by * bh - brushDiffY + halfOffset;
 
-        const arrayY = brushY / bh;
-        const arrayX = brushX / bw;
+        const arrayY = Math.floor(brushY / bh);
+        const arrayX = Math.floor(brushX / bw);
 
         if (
           s.currentAsciiLayerBlocks.value[arrayY]
@@ -390,7 +409,9 @@ export function useToolApplication(
 
           if (!plain) {
             if (s.toolbarState.value.halfBlockEditing) {
-              await drawHalfBlocks(brushX, brushY);
+              await drawHalfBlocks(
+                brushX, brushY, s.isTopHalf.value,
+              );
             } else {
               if (s.canBg.value) {
                 drawBrushBlocks(brushX, brushY, brushBlock, 'bg');

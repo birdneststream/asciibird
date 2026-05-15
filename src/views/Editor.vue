@@ -629,11 +629,6 @@ watch(currentTool, async () => {
       toolbarStore.changeTool(0);
       return;
     }
-    if (currentTool.value.name === 'select') {
-      toastShow('Selection is not available in half-block editing mode');
-      toolbarStore.changeTool(0);
-      return;
-    }
     if (currentTool.value.name === 'gradient') {
       toastShow('Gradient fill is not available in half-block editing mode');
       toolbarStore.changeTool(0);
@@ -1283,7 +1278,10 @@ async function canvasMouseDown() {
     switch (currentTool.value.name) {
       case 'select':
         selecting.value.startX = canvasX.value;
-        selecting.value.startY = canvasY.value;
+        // In half-block mode, start Y at half-block precision
+        selecting.value.startY = halfBlockEditing.value
+          ? canvasY.value + (isTopHalf.value ? 0 : blockHeightComp.value / 2)
+          : canvasY.value;
         selecting.value.canSelect = true;
         await clearToolCanvas();
         break;
@@ -1422,20 +1420,50 @@ async function interpolateStroke(
     return;
   }
 
-  const points = bresenhamLine(
-    lastBrushX.value, lastBrushY.value,
-    x.value, y.value,
-  );
+  const savedIsTopHalf = isTopHalf.value;
 
-  for (let i = 1; i < points.length - 1; i++) {
-    const savedX = x.value;
-    const savedY = y.value;
-    x.value = points[i].x;
-    y.value = points[i].y;
-    await applyFn();
-    x.value = savedX;
-    y.value = savedY;
+  if (halfBlockEditing.value) {
+    // In half-block mode, interpolate at half-block resolution.
+    // Convert full-block coords to half-block coords (y*2 + half offset)
+    // so Bresenham generates intermediate half-block positions.
+    const lastHalfY = lastBrushY.value * 2
+      + (savedIsTopHalf ? 0 : 1);
+    const curHalfY = y.value * 2
+      + (savedIsTopHalf ? 0 : 1);
+
+    const points = bresenhamLine(
+      lastBrushX.value, lastHalfY,
+      x.value, curHalfY,
+    );
+
+    for (let i = 1; i < points.length - 1; i++) {
+      const savedX = x.value;
+      const savedY = y.value;
+      x.value = points[i].x;
+      y.value = Math.floor(points[i].y / 2);
+      isTopHalf.value = points[i].y % 2 === 0;
+      await applyFn();
+      x.value = savedX;
+      y.value = savedY;
+    }
+  } else {
+    const points = bresenhamLine(
+      lastBrushX.value, lastBrushY.value,
+      x.value, y.value,
+    );
+
+    for (let i = 1; i < points.length - 1; i++) {
+      const savedX = x.value;
+      const savedY = y.value;
+      x.value = points[i].x;
+      y.value = points[i].y;
+      await applyFn();
+      x.value = savedX;
+      y.value = savedY;
+    }
   }
+
+  isTopHalf.value = savedIsTopHalf;
 }
 
 async function canvasMouseMove(e: MouseEvent) {
@@ -1506,7 +1534,12 @@ async function canvasMouseMove(e: MouseEvent) {
       case 'select':
         if (selecting.value.canSelect) {
           selecting.value.endX = canvasX.value + blockWidthComp.value;
-          selecting.value.endY = canvasY.value + blockHeightComp.value;
+          // In half-block mode, end Y at half-block precision
+          selecting.value.endY = halfBlockEditing.value
+            ? canvasY.value
+              + (isTopHalf.value ? 0 : blockHeightComp.value / 2)
+              + blockHeightComp.value / 2
+            : canvasY.value + blockHeightComp.value;
           await redrawSelect();
         }
         if (!isSelected.value) {

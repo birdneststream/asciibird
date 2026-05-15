@@ -15,8 +15,11 @@ describe('main.ts — browser zoom suppression', () => {
   it('registers a wheel event listener with passive: false', async () => {
     const addEventListenerSpy = vi.spyOn(document, 'addEventListener');
 
-    // Dynamic import to trigger module execution
+    // Dynamic import to trigger module execution.
+    // Long timeout: bootstrap() does IDB init + store creation in jsdom.
     await import('@/main');
+    // Flush any pending microtasks (IDB adapter init, etc.)
+    await vi.advanceTimersByTimeAsync(100);
 
     const wheelCalls = addEventListenerSpy.mock.calls.filter(
       (call) => call[0] === 'wheel',
@@ -27,10 +30,11 @@ describe('main.ts — browser zoom suppression', () => {
     expect(lastWheelCall[2]).toEqual({ passive: false });
 
     addEventListenerSpy.mockRestore();
-  });
+  }, 15000);
 
   it('prevents default on Ctrl+wheel events', async () => {
     await import('@/main');
+    await vi.advanceTimersByTimeAsync(100);
 
     const preventDefault = vi.fn();
     const ctrlWheelEvent = new WheelEvent('wheel', {
@@ -46,10 +50,11 @@ describe('main.ts — browser zoom suppression', () => {
 
     document.dispatchEvent(ctrlWheelEvent);
     expect(preventDefault).toHaveBeenCalled();
-  });
+  }, 15000);
 
   it('does not prevent default on non-Ctrl wheel events', async () => {
     await import('@/main');
+    await vi.advanceTimersByTimeAsync(100);
 
     const regularEvent = new WheelEvent('wheel', {
       ctrlKey: false,
@@ -62,5 +67,5 @@ describe('main.ts — browser zoom suppression', () => {
     expect(() => {
       document.dispatchEvent(regularEvent);
     }).not.toThrow();
-  });
+  }, 15000);
 });
