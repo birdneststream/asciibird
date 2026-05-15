@@ -19,7 +19,7 @@
  */
 
 import LZString from 'lz-string';
-import { fillNullBlocks, blockWidth, blockHeight } from '../ascii';
+import { fillNullBlocks, blockWidth, blockHeight, defaultImageOverlay } from '../ascii';
 import {
   ANSI_TO_MIRC,
   closestMircColor,
@@ -29,20 +29,7 @@ import {
 import type { Block, Layer, AsciibirdMetaBuilder } from '../types';
 
 // ─── Image overlay default ───────────────────────────────────────
-
-const defaultImageOverlay = () => ({
-  url: null as string | null,
-  opacity: 95,
-  asciiOpacity: 100,
-  left: 0,
-  top: 0,
-  position: 'centered',
-  size: 100,
-  repeatx: true,
-  repeaty: true,
-  visible: false,
-  stretched: false,
-});
+// (imported from ascii.ts — single source of truth)
 
 // ─── SAUCE metadata stripping ────────────────────────────────────
 

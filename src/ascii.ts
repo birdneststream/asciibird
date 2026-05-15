@@ -293,7 +293,7 @@ export const maxBrushHistory = 200;
 export const maxUndoHistory = 500;
 export const tabLimit = 20;
 
-const defaultImageOverlay = (): ImageOverlay => ({
+export const defaultImageOverlay = (): ImageOverlay => ({
   url: null,
   opacity: 95,
   asciiOpacity: 100,
