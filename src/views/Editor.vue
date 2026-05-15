@@ -105,6 +105,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { useEventListener } from '@vueuse/core';
 import { useAsciiBirdStore } from '../store';
 import { useToolbarStore } from '../store/toolbar';
 import { useModalStore } from '../store/modal';
@@ -741,64 +742,9 @@ hotkeys('*', 'editor', async function (event) {
 });
 
 // ─── Lifecycle ──────────────────────────────────────────────────
-let wheelHandler: ((e: WheelEvent) => void) | null = null;
-let selectionTransformHandler: ((e: Event) => void) | null = null;
-let scrollToHandler: ((e: Event) => void) | null = null;
-let pasteBlocksHandler: ((e: Event) => void) | null = null;
-let cutBlocksHandler: ((e: Event) => void) | null = null;
 
 onMounted(async () => {
   rendering.initContexts();
-
-  wheelHandler = (e: WheelEvent) => {
-    if (e.ctrlKey || e.metaKey) {
-      e.preventDefault();
-      const delta = e.deltaY > 0 ? -0.25 : 0.25;
-      store.setBlockMultiplier(store.blockSizeMultiplier + delta);
-    }
-  };
-  editorPanel.value?.addEventListener(
-    'wheel', wheelHandler, { passive: false },
-  );
-
-  selectionTransformHandler = (e: Event) => {
-    const type = (e as CustomEvent).detail as TransformType;
-    if (isSelecting.value && isSelected.value) {
-      applySelectionTransform(type);
-    }
-  };
-  window.addEventListener(
-    'asciibird:selection-transform',
-    selectionTransformHandler,
-  );
-
-  scrollToHandler = (e: Event) => {
-    const detail = (e as CustomEvent).detail;
-    if (detail.x !== undefined && detail.y !== undefined) {
-      x.value = detail.x;
-      y.value = detail.y;
-      delayRedrawCanvas();
-    }
-  };
-  window.addEventListener('asciibird:scroll-to', scrollToHandler);
-
-  pasteBlocksHandler = () => {
-    pasteMode.startPasteMode();
-  };
-  window.addEventListener(
-    'asciibird:paste-blocks', pasteBlocksHandler,
-  );
-
-  cutBlocksHandler = () => {
-    if (isSelecting.value && isSelected.value) {
-      pasteMode.cutSelection();
-      delayRedrawCanvas(true);
-    }
-  };
-  window.addEventListener(
-    'asciibird:cut-blocks', cutBlocksHandler,
-  );
-
   await delayRedrawCanvas();
 });
 
@@ -807,34 +753,65 @@ onUnmounted(() => {
   canvasPanel.cleanup();
   cancelRedraw();
   rendering.disposeContexts();
-  if (wheelHandler) {
-    editorPanel.value?.removeEventListener('wheel', wheelHandler);
-    wheelHandler = null;
-  }
-  if (selectionTransformHandler) {
-    window.removeEventListener(
-      'asciibird:selection-transform',
-      selectionTransformHandler,
-    );
-    selectionTransformHandler = null;
-  }
-  if (scrollToHandler) {
-    window.removeEventListener('asciibird:scroll-to', scrollToHandler);
-    scrollToHandler = null;
-  }
-  if (pasteBlocksHandler) {
-    window.removeEventListener(
-      'asciibird:paste-blocks', pasteBlocksHandler,
-    );
-    pasteBlocksHandler = null;
-  }
-  if (cutBlocksHandler) {
-    window.removeEventListener(
-      'asciibird:cut-blocks', cutBlocksHandler,
-    );
-    cutBlocksHandler = null;
-  }
 });
+
+// ─── Auto-cleanup Event Listeners (VueUse) ─────────────────────
+
+useEventListener(
+  editorPanel,
+  'wheel',
+  (e: WheelEvent) => {
+    if (e.ctrlKey || e.metaKey) {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.25 : 0.25;
+      store.setBlockMultiplier(store.blockSizeMultiplier + delta);
+    }
+  },
+  { passive: false },
+);
+
+useEventListener(
+  window,
+  'asciibird:selection-transform',
+  (e: Event) => {
+    const type = (e as CustomEvent).detail as TransformType;
+    if (isSelecting.value && isSelected.value) {
+      applySelectionTransform(type);
+    }
+  },
+);
+
+useEventListener(
+  window,
+  'asciibird:scroll-to',
+  (e: Event) => {
+    const detail = (e as CustomEvent).detail;
+    if (detail.x !== undefined && detail.y !== undefined) {
+      x.value = detail.x;
+      y.value = detail.y;
+      delayRedrawCanvas();
+    }
+  },
+);
+
+useEventListener(
+  window,
+  'asciibird:paste-blocks',
+  () => {
+    pasteMode.startPasteMode();
+  },
+);
+
+useEventListener(
+  window,
+  'asciibird:cut-blocks',
+  () => {
+    if (isSelecting.value && isSelected.value) {
+      pasteMode.cutSelection();
+      delayRedrawCanvas(true);
+    }
+  },
+);
 
 // ─── Init (equivalent to created()) ────────────────────────────
 if (currentAsciiLayerBlocks.value) {
