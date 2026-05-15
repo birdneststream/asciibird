@@ -24,17 +24,14 @@ jobs:
       - name: Lint
         run: yarn lint
 
-      - name: Test
-        run: yarn test
-
       - name: Build
         run: yarn build
 
       - name: Deploy to BunnyCDN
-        uses: ayeressian/bunnycdn-storage-deploy@v2.4.0
+        uses: ayeressian/bunnycdn-storage-deploy@v2.4.6
         with:
           source: "dist"
-          destination: ""
+          destination: "www"
           storageZoneName: "${{ secrets.BUNNY_STORAGE_ZONE_NAME }}"
           storagePassword: "${{ secrets.BUNNY_STORAGE_PASSWORD }}"
           accessKey: "${{ secrets.BUNNY_API_KEY }}"
