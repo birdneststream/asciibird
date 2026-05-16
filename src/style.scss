@@ -144,10 +144,16 @@ button {
 
 /* ── Canvas panel drag glow ──────────────────────────────────────── */
 .canvas-wrapper.is-dragging {
+    cursor: grabbing;
     box-shadow:
         0 0 30px 5px rgba(173, 198, 255, 0.06),
         0 0 60px 15px rgba(173, 198, 255, 0.03);
     border-color: rgba(173, 198, 255, 0.3);
+}
+
+/* Override canvastools crosshair cursor during canvas drag */
+.canvas-wrapper.is-dragging .canvastools {
+    cursor: grabbing;
 }
 
 /* ── Menu dropdowns — darker glass than panels ────────────────────── */

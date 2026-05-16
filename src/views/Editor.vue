@@ -1,7 +1,6 @@
 <template>
   <div>
     <div
-      ref="scrollContainerRef"
       id="canvas-area"
       class="overflow-auto"
       @mouseleave="isMouseOnCanvas = false"
@@ -54,15 +53,14 @@
           class="canvastools"
           :width="currentAsciiWidth * blockWidthComp"
           :height="currentAsciiHeight * blockHeightComp"
-          @mousemove="onCanvasMouseMove"
+          @mousemove="handleCanvasMouseMove"
           @mousedown.left="canvasMouseDown"
           @mouseup.left="canvasMouseUp"
           @mouseup.right="openContextMenu"
-          @mousedown.middle.prevent="startPan"
+          @mousedown.middle.prevent="() => {}"
           @touchmove="canvasMouseMove"
           @touchend="canvasMouseUp"
           @touchstart="canvasMouseDown"
-          :style="panCursorStyle"
         />
 
         <!-- Resize handles — visible only with default tool -->
@@ -86,7 +84,6 @@ import { useAsciiBirdStore } from '../store';
 import { useToolbarStore } from '../store/toolbar';
 import { useToast } from '../composables/useToast';
 import { useCanvasPanel } from '../composables/useCanvasPanel';
-import { useCanvasPan } from '../composables/useCanvasPan';
 import { useMainCanvasRenderer } from '../composables/useMainCanvasRenderer';
 import { useExportAscii } from '../composables/useExportAscii';
 import { useFpsThrottle } from '../composables/useFpsThrottle';
@@ -191,7 +188,6 @@ const canvasRef = ref<HTMLCanvasElement | null>(null);
 const canvastoolsRef = ref<HTMLCanvasElement | null>(null);
 const editorMenu = ref<InstanceType<typeof EditorContextMenu> | null>(null);
 const editorPanel = ref<HTMLElement | null>(null);
-const scrollContainerRef = ref<HTMLElement | null>(null);
 
 // ─── Y-offset from props (not in useEditorState) ────────────────
 const yOffsetComp = computed(() => props.yOffset);
@@ -390,11 +386,13 @@ const {
   canvasMouseMove,
 } = mouseHandlers;
 
-// ─── Canvas Pan (middle-click) ────────────────────────────────────
-const { startPan, onCanvasMouseMove, panCursorStyle } = useCanvasPan({
-  scrollContainerRef,
-  canvasMouseMove,
-});
+// ─── Canvas Mouse Move Guard ────────────────────────────────────
+// Suppresses tool mousemove during canvas panel drag (middle-click pan)
+// to prevent brush previews and unnecessary redraws while panning.
+function handleCanvasMouseMove(e: MouseEvent) {
+  if (canvasPanel.isDragging.value) return;
+  canvasMouseMove(e);
+}
 
 const imageOverlay = computed(() => store.imageOverlay);
 

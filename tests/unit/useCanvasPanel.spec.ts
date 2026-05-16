@@ -127,7 +127,7 @@ describe('useCanvasPanel', () => {
       expect(panel.isDragging.value).toBe(false);
     });
 
-    it('does not start drag on non-left button', () => {
+    it('does not start drag on right button (button 2)', () => {
       const panel = createPanel();
       const event = new TestPointerEvent('pointerdown', {
         clientX: 100,
@@ -154,6 +154,67 @@ describe('useCanvasPanel', () => {
       expect(panel.isDragging.value).toBe(true);
 
       // Cleanup: end the drag
+      document.dispatchEvent(new MouseEvent('pointerup'));
+    });
+
+    it('starts drag on middle button when not disabled', () => {
+      const panel = createPanel();
+      const event = new TestPointerEvent('pointerdown', {
+        clientX: 100,
+        clientY: 100,
+        button: 1,
+        bubbles: true,
+      } as any);
+
+      panel.onDragPointerDown(event as any);
+      expect(panel.isDragging.value).toBe(true);
+
+      // Cleanup
+      document.dispatchEvent(new MouseEvent('pointerup'));
+    });
+
+    it('starts drag on middle button even when disabled', () => {
+      const panel = createPanel({ disabled: ref(true) });
+      const event = new TestPointerEvent('pointerdown', {
+        clientX: 100,
+        clientY: 100,
+        button: 1,
+        bubbles: true,
+      } as any);
+      vi.spyOn(event, 'preventDefault');
+
+      panel.onDragPointerDown(event as any);
+      expect(panel.isDragging.value).toBe(true);
+
+      // Cleanup
+      document.dispatchEvent(new MouseEvent('pointerup'));
+    });
+
+    it('moves position during middle-button drag', () => {
+      const panel = createPanel({ initialX: 0, initialY: 0 });
+
+      // Start drag with middle button at (100, 100)
+      const downEvent = new TestPointerEvent('pointerdown', {
+        clientX: 100,
+        clientY: 100,
+        button: 1,
+        bubbles: true,
+      } as any);
+      panel.onDragPointerDown(downEvent as any);
+      expect(panel.isDragging.value).toBe(true);
+
+      // Move to (116, 115) — dx=16, dy=15, snaps to (16, 15)
+      const moveEvent = new TestPointerEvent('pointermove', {
+        clientX: 116,
+        clientY: 115,
+        bubbles: true,
+      } as any);
+      document.dispatchEvent(moveEvent as any);
+
+      expect(panel.x.value).toBe(16); // snap grid 8
+      expect(panel.y.value).toBe(15); // snap grid 15
+
+      // Cleanup
       document.dispatchEvent(new MouseEvent('pointerup'));
     });
   });
