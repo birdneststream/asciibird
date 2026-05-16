@@ -131,6 +131,22 @@ export function useTextEditing(deps: TextEditingDeps) {
 
   // ─── Main handler ──────────────────────────────────────────────
 
+  /** Cursor movement map for navigation keys */
+  const CURSOR_MOVE: Record<string, (
+    data: Block[][], sx: number, sy: number,
+  ) => { sx: number; sy: number }> = {
+    Enter: (data, sx, sy) =>
+      data[sy + 1]?.[0] ? { sx: 0, sy: sy + 1 } : { sx, sy },
+    ArrowUp: (data, sx, sy) =>
+      data[sy - 1]?.[sx] ? { sx, sy: sy - 1 } : { sx, sy },
+    ArrowDown: (data, sx, sy) =>
+      data[sy + 1]?.[sx] ? { sx, sy: sy + 1 } : { sx, sy },
+    ArrowLeft: (data, sx, sy) =>
+      data[sy]?.[sx - 1] ? { sx: sx - 1, sy } : { sx, sy },
+    ArrowRight: (data, sx, sy) =>
+      data[sy]?.[sx + 1] ? { sx: sx + 1, sy } : { sx, sy },
+  };
+
   /**
    * Handle keyboard input in text editing mode.
    * Processes character typing, Backspace/Delete, Enter,
@@ -155,53 +171,25 @@ export function useTextEditing(deps: TextEditingDeps) {
       return;
     }
 
-    switch (char) {
-      case 'Backspace': {
-        // Delete previous cell's char, then delete current
-        if (data[sy]?.[sx - 1]) {
-          const prevBlock = data[sy][sx - 1];
-          const ob = { ...prevBlock };
-          delete prevBlock['char'];
-          a.recordDiff(sx, sy, ob, data[sy][sx - 1]);
-          sx -= 1;
-        }
-        deleteAtPos(data, sx, sy);
-        break;
+    if (char === 'Backspace') {
+      if (data[sy]?.[sx - 1]) {
+        const prevBlock = data[sy][sx - 1];
+        const ob = { ...prevBlock };
+        delete prevBlock['char'];
+        a.recordDiff(sx, sy, ob, data[sy][sx - 1]);
+        sx -= 1;
       }
-      case 'Delete':
-        deleteAtPos(data, sx, sy);
-        break;
-
-      case 'Enter':
-        if (data[sy + 1]?.[0]) {
-          sx = 0;
-          sy += 1;
-        }
-        break;
-
-      case 'ArrowUp':
-        if (data[sy - 1]?.[sx]) sy -= 1;
-        break;
-
-      case 'ArrowDown':
-        if (data[sy + 1]?.[sx]) sy += 1;
-        break;
-
-      case 'ArrowLeft':
-        if (data[sy]?.[sx - 1]) sx -= 1;
-        break;
-
-      case 'ArrowRight':
-        if (data[sy]?.[sx + 1]) sx += 1;
-        break;
-
-      default:
-        if (char.length === 1) {
-          const pos = typeChar(data, sx, sy, char);
-          sx = pos.sx;
-          sy = pos.sy;
-        }
-        break;
+      deleteAtPos(data, sx, sy);
+    } else if (char === 'Delete') {
+      deleteAtPos(data, sx, sy);
+    } else if (CURSOR_MOVE[char]) {
+      const pos = CURSOR_MOVE[char](data, sx, sy);
+      sx = pos.sx;
+      sy = pos.sy;
+    } else if (char.length === 1) {
+      const pos = typeChar(data, sx, sy, char);
+      sx = pos.sx;
+      sy = pos.sy;
     }
 
     s.textEditing.value.startX = sx;
