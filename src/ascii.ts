@@ -432,5 +432,3 @@ export const checkForGetRequest = async (): Promise<void> => {
     history.replaceState({}, '', url.toString());
   }
 };
-
-export default createNewAscii;

@@ -372,5 +372,3 @@ export function useEditorRendering(
     drawMatchHighlightsOnCanvas,
   };
 }
-
-export type EditorRendering = ReturnType<typeof useEditorRendering>;

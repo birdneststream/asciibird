@@ -76,7 +76,7 @@
 
 <script setup lang="ts">
 import { reactive, computed, watch } from 'vue';
-import createNewASCII from '../../ascii';
+import { createNewAscii } from '../../ascii';
 import ABModal from '../ABModal.vue';
 import { useAsciiBirdStore } from '../../store';
 import { useModalStore } from '../../store/modal';
@@ -114,7 +114,7 @@ function initiateNewAscii() {
   forms.createAscii.width = Number.parseInt(
     String(forms.createAscii.width),
   );
-  createNewASCII(forms);
+  createNewAscii(forms);
 }
 
 watch(showNewAsciiModal, (val) => {
