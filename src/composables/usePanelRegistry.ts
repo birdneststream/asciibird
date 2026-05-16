@@ -165,27 +165,8 @@ function getPanelDefs(): PanelDef[] {
 }
 
 export function usePanelRegistry() {
-  const panelStore = usePanelStore();
-  const toolbarStore = useToolbarStore();
-
   /** Reactive list of all panel info */
   const panels = computed<PanelInfo[]>(() => {
-    // Access reactive store properties to ensure re-computation triggers.
-    // These reads create reactive dependencies on the panel store state.
-    void panelStore.debugPanel.minimized;
-    void panelStore.brushLibrary.minimized;
-    void panelStore.brushPreview.minimized;
-    void panelStore.layersLibrary.minimized;
-    void panelStore.colourPicker.minimized;
-    void panelStore.charPicker.minimized;
-    void panelStore.debugPanel.visible;
-    void panelStore.brushLibrary.visible;
-    void panelStore.brushPreview.visible;
-    void panelStore.layersLibrary.visible;
-    void panelStore.colourPicker.visible;
-    void panelStore.charPicker.visible;
-    void toolbarStore.toolbarState.visible;
-
     return getPanelDefs().map((def) => {
       const state = def.getState();
       const visible = state.visible;

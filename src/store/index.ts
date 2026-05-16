@@ -428,17 +428,21 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     /**
      * Decompress layers, clone for undo, apply mutation, compress,
      * and push to layer history.
+     *
      * @param mutate - modify layers in-place
-     * @param afterCommit - optional callback after history is recorded
-     *   (e.g. to update selectedLayer)
+     * @param afterCommit - optional callback receiving post-mutation
+     *   layers (e.g. to update selectedLayer without re-decompressing)
+     * @param preDecompressedLayers - optional pre-decompressed layers
+     *   to skip internal decompress (caller already decompressed for
+     *   pre-checks). Always cloned for undo safety.
      */
     withLayerMutation(
       mutate: (layers: Layer[]) => void,
-      afterCommit?: () => void,
+      afterCommit?: (layers: Layer[]) => void,
+      preDecompressedLayers?: Layer[],
     ): void {
-      const layers = decompressLayers(
-        this.asciibirdMeta[this.tab].layers,
-      );
+      const layers = preDecompressedLayers
+        ?? decompressLayers(this.asciibirdMeta[this.tab].layers);
       const oldLayer = cloneLayers(layers);
       mutate(layers);
       this.asciibirdMeta[this.tab].layers =
@@ -449,7 +453,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       });
       this.asciibirdMeta[this.tab].historyIndex =
         this.asciibirdMeta[this.tab].history.length;
-      afterCommit?.();
+      afterCommit?.(layers);
     },
 
     // ── Layers ──────────────────────────────────────────────────
@@ -463,10 +467,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
             'Layer ' + layers.length,
           ));
         },
-        () => {
-          const layers = decompressLayers(
-            this.asciibirdMeta[this.tab].layers,
-          );
+        (layers) => {
           this.asciibirdMeta[this.tab].selectedLayer =
             layers.length - 1;
         },
@@ -557,17 +558,15 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         (mutLayers) => {
           mutLayers[payload].visible = !mutLayers[payload].visible;
         },
-        () => {
+        (currentLayers) => {
           if (wasVisible && wasSelectedLayer) {
-            const currentLayers = decompressLayers(
-              this.asciibirdMeta[this.tab].layers,
-            );
             const next = findNextVisibleLayer(currentLayers, payload);
             if (next !== -1) {
               this.asciibirdMeta[this.tab].selectedLayer = next;
             }
           }
         },
+        layers,
       );
     },
     removeLayer(payload: number) {
@@ -583,10 +582,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         (mutLayers) => {
           mutLayers.splice(payload, 1);
         },
-        () => {
-          const currentLayers = decompressLayers(
-            this.asciibirdMeta[this.tab].layers,
-          );
+        (currentLayers) => {
           if (wasSelectedLayer) {
             const searchFrom = Math.min(payload, currentLayers.length - 1);
             const next = findNextVisibleLayer(currentLayers, searchFrom);
@@ -596,6 +592,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
             this.asciibirdMeta[this.tab].selectedLayer--;
           }
         },
+        layers,
       );
     },
     downLayer(payload: number) {
@@ -644,17 +641,18 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       const meta = this.asciibirdMeta[this.tab];
       if (!meta) return false;
 
-      // Decompress and compute crop once — reuse result in mutation
+      // Decompress and compute crop once
       const layers = decompressLayers(meta.layers);
       const result = cropToContentUtil(layers);
 
       if (!result.cropped || !result.layers) return false;
 
-      // Apply pre-computed crop with proper undo history
+      // Apply pre-computed crop with proper undo history.
+      // Pass pre-decompressed layers to skip redundant decompress.
       this.withLayerMutation((originalLayers) => {
         originalLayers.length = 0;
         originalLayers.push(...result.layers!);
-      });
+      }, undefined, layers);
 
       // Reset canvas position to defaults
       meta.x = CANVAS_DEFAULT_X;
