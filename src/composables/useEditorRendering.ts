@@ -63,124 +63,133 @@ export function useEditorRendering(
   }
 
   /**
+   * Render only changed blocks from the diff buffer.
+   * Skips blocks covered by higher layers.
+   */
+  function redrawDiffBlocks(
+    bw: number, bh: number,
+  ): void {
+    for (const row of state.diffBlocks.new) {
+      if (!row) continue;
+      diffRow: for (const entry of row) {
+        if (!entry) continue;
+
+        // Skip if a higher layer covers this block
+        for (
+          let j = state.currentAsciiLayers.value.length - 1;
+          j >= state.diffBlocks.l;
+          j--
+        ) {
+          const layer = state.currentAsciiLayers.value[j];
+          if (layer.data[entry.y][entry.x] && j !== state.diffBlocks.l) {
+            continue diffRow;
+          }
+        }
+
+        deps.renderBlock(
+          ctx!,
+          { ...entry.b } as Block,
+          bw * entry.x,
+          bh * entry.y,
+          bw, bh,
+          mircColours99,
+          {
+            canBg: state.canBg.value,
+            canFg: state.canFg.value,
+            canText: state.canText.value,
+            fallbackChar:
+              state.currentAsciiLayerBlocks.value[entry.y][entry.x].char
+                || ' ',
+          },
+        );
+      }
+    }
+
+    state.diffBlocks.l = state.selectedLayerIndex.value;
+    state.diffBlocks.new = [];
+    state.diffBlocks.old = [];
+    state.canvasHash.value = cyrb53(JSON.stringify(mergeLayersFn()));
+  }
+
+  /**
+   * Full canvas redraw from merged layer data.
+   * Skips off-screen rows when renderOffScreen is enabled.
+   */
+  function redrawFullCanvas(
+    bw: number, bh: number, merged: Block[][],
+  ): void {
+    deps.clearMainCanvas(
+      ctx!,
+      deps.canvasRef.value,
+      state.canvasSize.width,
+      state.canvasSize.height,
+      state.blockSizeMultiplier.value,
+    );
+
+    for (let cy = 0; cy < state.currentAsciiHeight.value + 1; cy++) {
+      const canvasYVal = bh * cy;
+
+      if (
+        state.options.value.renderOffScreen
+        && state.top.value !== false
+        && !checkVisibleFn(
+          state.top.value + canvasYVal - state.yOffset.value,
+        )
+      ) {
+        continue;
+      }
+
+      for (let cx = 0; cx < state.currentAsciiWidth.value + 1; cx++) {
+        deps.renderBlock(
+          ctx!,
+          { ...merged[cy][cx] },
+          bw * cx,
+          canvasYVal,
+          bw, bh,
+          mircColours99,
+        );
+      }
+    }
+  }
+
+  /** Check if diff-based rendering is appropriate right now */
+  function canUseDiffRendering(): boolean {
+    return !!(
+      state.diffBlocks.new.length
+      && !state.canTool.value
+      && !state.isTextEditing.value
+      && !state.isFill.value
+      && !state.isBrushing.value
+    );
+  }
+
+  /**
    * Full canvas redraw with diff optimization.
    * If force=false and hash unchanged, skips full repaint.
    * If diffs exist, paints only changed blocks.
    */
   async function redrawCanvas(force = false) {
-    if (!ctx) return;
+    if (!ctx || !state.currentAsciiLayers.value.length) {
+      drawMatchHighlightsOnCanvas();
+      return;
+    }
+
     const bw = state.blockWidthComp.value;
     const bh = state.blockHeightComp.value;
 
-    if (state.currentAsciiLayers.value.length) {
-      let cx = 0;
-      let cy = 0;
-      let canvasXVal = 0;
-      let canvasYVal = 0;
-      let curBlock: Block = {};
+    if (canUseDiffRendering()) {
+      redrawDiffBlocks(bw, bh);
+    } else {
+      const merged = mergeLayersFn();
+      const tempHash = cyrb53(JSON.stringify(merged));
 
-      if (
-        state.diffBlocks.new.length
-        && !state.canTool.value
-        && !state.isTextEditing.value
-        && !state.isFill.value
-        && !state.isBrushing.value
-      ) {
-        outer: for (const row of state.diffBlocks.new) {
-          if (!row) continue;
-          for (const entry of row) {
-            if (!entry) continue;
-            canvasXVal = bw * entry.x;
-            canvasYVal = bh * entry.y;
-            curBlock = { ...entry.b } as Block;
-
-            for (
-              let j = state.currentAsciiLayers.value.length - 1;
-              j >= state.diffBlocks.l;
-              j--
-            ) {
-              const layer = state.currentAsciiLayers.value[j];
-              if (layer.data[entry.y][entry.x] && j !== state.diffBlocks.l) {
-                continue outer;
-              }
-            }
-
-            deps.renderBlock(
-              ctx,
-              curBlock,
-              canvasXVal,
-              canvasYVal,
-              bw,
-              bh,
-              mircColours99,
-              {
-                canBg: state.canBg.value,
-                canFg: state.canFg.value,
-                canText: state.canText.value,
-                fallbackChar:
-                  state.currentAsciiLayerBlocks.value[entry.y][entry.x].char
-                    || ' ',
-              },
-            );
-          }
-        }
-
-        state.diffBlocks.l = state.selectedLayerIndex.value;
-        state.diffBlocks.new = [];
-        state.diffBlocks.old = [];
-
-        state.canvasHash.value = cyrb53(
-          JSON.stringify(mergeLayersFn()),
-        );
-      } else {
-        const merged = mergeLayersFn();
-        const tempHash = cyrb53(JSON.stringify(merged));
-
-        if (tempHash === state.canvasHash.value && !force) {
-          // Still draw overlays even when skipping full redraw
-          drawMatchHighlightsOnCanvas();
-          return;
-        }
-
-        state.canvasHash.value = tempHash;
-        deps.clearMainCanvas(
-          ctx,
-          deps.canvasRef.value,
-          state.canvasSize.width,
-          state.canvasSize.height,
-          state.blockSizeMultiplier.value,
-        );
-
-        for (cy = 0; cy < state.currentAsciiHeight.value + 1; cy++) {
-          canvasYVal = bh * cy;
-
-          if (
-            state.options.value.renderOffScreen
-            && state.top.value !== false
-            && !checkVisibleFn(
-              state.top.value + canvasYVal - state.yOffset.value,
-            )
-          ) {
-            continue;
-          }
-
-          for (cx = 0; cx < state.currentAsciiWidth.value + 1; cx++) {
-            canvasXVal = bw * cx;
-
-            curBlock = { ...merged[cy][cx] };
-
-            deps.renderBlock(
-              ctx,
-              curBlock,
-              canvasXVal,
-              canvasYVal,
-              bw,
-              bh,
-              mircColours99,
-            );
-          }
-        }
+      if (tempHash === state.canvasHash.value && !force) {
+        drawMatchHighlightsOnCanvas();
+        return;
       }
+
+      state.canvasHash.value = tempHash;
+      redrawFullCanvas(bw, bh, merged);
     }
 
     drawMatchHighlightsOnCanvas();
