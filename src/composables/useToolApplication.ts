@@ -81,76 +81,77 @@ export function useToolApplication(
 
   // ─── Draw Brush Blocks ────────────────────────────────────────
 
-  function drawBrushBlocks(
-    brushX: number,
-    brushY: number,
-    brushBlock: Block,
-    target: string | null = null,
-    plain = false,
+  /** Plain mode: draw indicator rectangle only */
+  function drawBrushBlocksPlain(
+    toolCtx: CanvasRenderingContext2D,
+    brushX: number, brushY: number,
+    bw: number, bh: number,
+    arrayX: number, arrayY: number,
+    tBlock: Block,
   ): void {
-    const toolCtx = r.getToolCtx();
-    if (!toolCtx) return;
-    const bw = s.blockWidthComp.value;
-    const bh = s.blockHeightComp.value;
-    const arrayY = brushY / bh;
-    const arrayX = brushX / bw;
-    const tBlock = s.currentAsciiLayerBlocks.value[arrayY]?.[arrayX];
-    if (!tBlock) return;
+    const indicatorColour = tBlock.bg === 0 || tBlock.bg === 8 ? 1 : 0;
+    toolCtx.fillStyle = mircColours99[indicatorColour];
+    toolCtx.fillRect(brushX, brushY, bw, bh);
 
-    // Plain mode: draw indicator rectangle only
-    if (plain) {
-      const indicatorColour = tBlock.bg === 0 || tBlock.bg === 8
-        ? 1 : 0;
-      toolCtx.fillStyle = mircColours99[indicatorColour];
+    applyMirrored(
+      arrayX, arrayY,
+      s.currentAsciiWidth.value, s.currentAsciiHeight.value,
+      s.mirrorX.value, s.mirrorY.value,
+      (mx, my) => toolCtx.fillRect(mx * bw, my * bh, bw, bh),
+    );
+  }
+
+  /** Target mode: apply bg or fg colour to canvas and block */
+  function drawBrushBlocksTarget(
+    toolCtx: CanvasRenderingContext2D,
+    brushX: number, brushY: number,
+    bw: number, bh: number,
+    arrayX: number, arrayY: number,
+    brushBlock: Block, target: 'bg' | 'fg',
+    tBlock: Block,
+  ): void {
+    const val = brushBlock[target];
+    const canApply = target === 'bg' ? s.canBg.value : true;
+
+    toolCtx.fillStyle = val !== undefined
+      ? mircColours99[val]
+      : target === 'bg' ? 'rgba(255,255,255,0.4)' : '#FFFFFF';
+
+    if (target === 'bg' && canApply) {
+      toolCtx.setLineDash([1, 2]);
+      toolCtx.strokeRect(brushX, brushY, bw, bh);
       toolCtx.fillRect(brushX, brushY, bw, bh);
-
       applyMirrored(
         arrayX, arrayY,
         s.currentAsciiWidth.value, s.currentAsciiHeight.value,
         s.mirrorX.value, s.mirrorY.value,
-        (mx, my) => toolCtx.fillRect(mx * bw, my * bh, bw, bh),
+        (mx, my) => {
+          toolCtx.fillRect(mx * bw, my * bh, bw, bh);
+          toolCtx.setLineDash([1, 2]);
+          toolCtx.strokeRect(mx * bw, my * bh, bw, bh);
+        },
       );
-      return;
     }
 
-    // Background or foreground target
-    if (target === 'bg' || target === 'fg') {
-      const val = brushBlock[target];
-      const canApply = target === 'bg' ? s.canBg.value : true;
-
-      toolCtx.fillStyle = val !== undefined
-        ? mircColours99[val]
-        : target === 'bg'
-          ? 'rgba(255,255,255,0.4)' : '#FFFFFF';
-
-      if (target === 'bg' && canApply) {
-        toolCtx.setLineDash([1, 2]);
-        toolCtx.strokeRect(brushX, brushY, bw, bh);
-        toolCtx.fillRect(brushX, brushY, bw, bh);
-        applyMirrored(
-          arrayX, arrayY,
-          s.currentAsciiWidth.value, s.currentAsciiHeight.value,
-          s.mirrorX.value, s.mirrorY.value,
-          (mx, my) => {
-            toolCtx.fillRect(mx * bw, my * bh, bw, bh);
-            toolCtx.setLineDash([1, 2]);
-            toolCtx.strokeRect(mx * bw, my * bh, bw, bh);
-          },
-        );
-      }
-
-      if (s.canTool.value && val !== undefined) {
-        (tBlock as Record<string, unknown>)[target] = val;
-        mirrorBlockMutate(arrayX, arrayY, (mx, my) => {
-          snapshotMutateDiff(mx, my, (b) => {
-            (b as Record<string, unknown>)[target] = val;
-          });
+    if (s.canTool.value && val !== undefined) {
+      (tBlock as Record<string, unknown>)[target] = val;
+      mirrorBlockMutate(arrayX, arrayY, (mx, my) => {
+        snapshotMutateDiff(mx, my, (b) => {
+          (b as Record<string, unknown>)[target] = val;
         });
-      }
-      return;
+      });
     }
+  }
 
-    // Default: text/char rendering and mutation
+  /** Char mode: draw character text and mutate block */
+  function drawBrushBlocksChar(
+    toolCtx: CanvasRenderingContext2D,
+    brushX: number, brushY: number,
+    bw: number, bh: number,
+    arrayX: number, arrayY: number,
+    brushBlock: Block,
+    tBlock: Block,
+  ): void {
     if (s.canText.value && brushBlock.char !== undefined) {
       toolCtx.font = getCanvasFont(s.blockSizeMultiplier.value);
       toolCtx.fillStyle = s.canFg.value
@@ -177,6 +178,39 @@ export function useToolApplication(
           b.char = brushBlock.char;
         });
       });
+    }
+  }
+
+  function drawBrushBlocks(
+    brushX: number,
+    brushY: number,
+    brushBlock: Block,
+    target: string | null = null,
+    plain = false,
+  ): void {
+    const toolCtx = r.getToolCtx();
+    if (!toolCtx) return;
+    const bw = s.blockWidthComp.value;
+    const bh = s.blockHeightComp.value;
+    const arrayY = brushY / bh;
+    const arrayX = brushX / bw;
+    const tBlock = s.currentAsciiLayerBlocks.value[arrayY]?.[arrayX];
+    if (!tBlock) return;
+
+    if (plain) {
+      drawBrushBlocksPlain(
+        toolCtx, brushX, brushY, bw, bh, arrayX, arrayY, tBlock,
+      );
+    } else if (target === 'bg' || target === 'fg') {
+      drawBrushBlocksTarget(
+        toolCtx, brushX, brushY, bw, bh,
+        arrayX, arrayY, brushBlock, target, tBlock,
+      );
+    } else {
+      drawBrushBlocksChar(
+        toolCtx, brushX, brushY, bw, bh,
+        arrayX, arrayY, brushBlock, tBlock,
+      );
     }
   }
 
@@ -240,58 +274,60 @@ export function useToolApplication(
 
   // ─── Draw Brush ───────────────────────────────────────────────
 
-  async function drawBrush(plain = false): Promise<void> {
-    await r.clearToolCanvas();
+  /** Check if a brush cell should be skipped (empty or whitespace-only) */
+  function shouldSkipCell(cell: Block): boolean {
+    if (!cell || isEmptyBlock(cell)) return true;
+    return cell.char !== undefined && cell.char === ' '
+      && cell.bg === undefined && cell.fg === undefined;
+  }
+
+  /** Apply a single brush cell to the canvas */
+  async function applyBrushCell(
+    cell: Block, bx: number, by: number,
+    brushDiffX: number, brushDiffY: number,
+    plain: boolean,
+  ): Promise<void> {
     const bw = s.blockWidthComp.value;
     const bh = s.blockHeightComp.value;
+    const brushX = s.x.value * bw + bx * bw - brushDiffX;
+    const halfOffset = s.toolbarState.value.halfBlockEditing
+      && !s.isTopHalf.value ? bh / 2 : 0;
+    const brushY = s.y.value * bh + by * bh - brushDiffY + halfOffset;
+    const arrayY = Math.floor(brushY / bh);
+    const arrayX = Math.floor(brushX / bw);
+
+    const row = s.currentAsciiLayerBlocks.value[arrayY];
+    if (!row?.[arrayX]) return;
+
+    if (!plain) {
+      const ob = { ...row[arrayX] };
+      if (s.toolbarState.value.halfBlockEditing) {
+        await drawHalfBlocks(brushX, brushY, s.isTopHalf.value);
+      } else {
+        if (s.canBg.value) drawBrushBlocks(brushX, brushY, cell, 'bg');
+        if (s.canFg.value) drawBrushBlocks(brushX, brushY, cell, 'fg');
+        drawBrushBlocks(brushX, brushY, cell, null);
+      }
+      if (s.canTool.value && !s.toolbarState.value.halfBlockEditing) {
+        recordDiff(arrayX, arrayY, ob, cell);
+      }
+    } else if (s.isErasing.value) {
+      drawBrushBlocks(brushX, brushY, cell, null, true);
+    }
+  }
+
+  async function drawBrush(plain = false): Promise<void> {
+    await r.clearToolCanvas();
     const { brushDiffX, brushDiffY, xLength } = computeBrushBounds();
 
     for (let by = 0; by < s.brushBlocks.value.length; by++) {
       if (!s.brushBlocks.value[by]) continue;
-
       for (let bx = 0; bx < xLength; bx++) {
         const cell = s.brushBlocks.value[by][bx];
-        if (!cell || isEmptyBlock(cell)) continue;
-
-        // Skip whitespace-only blocks (space with no colors)
-        if (
-          cell.char !== undefined && cell.char === ' '
-          && cell.bg === undefined && cell.fg === undefined
-        ) {
-          continue;
-        }
-
-        const brushX = s.x.value * bw + bx * bw - brushDiffX;
-        const halfOffset = s.toolbarState.value.halfBlockEditing
-          && !s.isTopHalf.value ? bh / 2 : 0;
-        const brushY = s.y.value * bh + by * bh - brushDiffY + halfOffset;
-
-        const arrayY = Math.floor(brushY / bh);
-        const arrayX = Math.floor(brushX / bw);
-
-        const row = s.currentAsciiLayerBlocks.value[arrayY];
-        if (!row?.[arrayX]) continue;
-
-        const ob = { ...row[arrayX] };
-
-        if (!plain) {
-          if (s.toolbarState.value.halfBlockEditing) {
-            await drawHalfBlocks(brushX, brushY, s.isTopHalf.value);
-          } else {
-            if (s.canBg.value) {
-              drawBrushBlocks(brushX, brushY, cell, 'bg');
-            }
-            if (s.canFg.value) {
-              drawBrushBlocks(brushX, brushY, cell, 'fg');
-            }
-            drawBrushBlocks(brushX, brushY, cell, null);
-          }
-          if (s.canTool.value && !s.toolbarState.value.halfBlockEditing) {
-            recordDiff(arrayX, arrayY, ob, cell);
-          }
-        } else if (s.isErasing.value) {
-          drawBrushBlocks(brushX, brushY, cell, null, true);
-        }
+        if (shouldSkipCell(cell)) continue;
+        await applyBrushCell(
+          cell, bx, by, brushDiffX, brushDiffY, plain,
+        );
       }
     }
   }
