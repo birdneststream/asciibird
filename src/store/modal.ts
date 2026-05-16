@@ -5,6 +5,19 @@ import { defineStore } from 'pinia';
 import { idbPersistAdapter } from '../utils/idbPersistAdapter';
 import type { ModalState } from '../types';
 
+/** Maps external modal identifiers to state property keys */
+const MODAL_KEY_MAP: Record<string, keyof ModalState> = {
+  'new-ascii': 'newAscii',
+  'edit-ascii': 'editAscii',
+  'paste-ascii': 'pasteAscii',
+  'options': 'options',
+  'overlay': 'overlay',
+  'about': 'about',
+  'help': 'help',
+  'border-generator': 'borderGenerator',
+  'find-replace': 'findReplace',
+};
+
 export const useModalStore = defineStore('modal', {
   state: () => ({
     modalState: {
@@ -32,66 +45,12 @@ export const useModalStore = defineStore('modal', {
 
   actions: {
     openModal(type: string) {
-      switch (type) {
-        case 'new-ascii':
-          this.modalState.newAscii = true;
-          break;
-        case 'edit-ascii':
-          this.modalState.editAscii = true;
-          break;
-        case 'paste-ascii':
-          this.modalState.pasteAscii = true;
-          break;
-        case 'options':
-          this.modalState.options = true;
-          break;
-        case 'overlay':
-          this.modalState.overlay = true;
-          break;
-        case 'about':
-          this.modalState.about = true;
-          break;
-        case 'help':
-          this.modalState.help = true;
-          break;
-        case 'border-generator':
-          this.modalState.borderGenerator = true;
-          break;
-        case 'find-replace':
-          this.modalState.findReplace = true;
-          break;
-      }
+      const key = MODAL_KEY_MAP[type];
+      if (key) this.modalState[key] = true;
     },
     closeModal(type: string) {
-      switch (type) {
-        case 'new-ascii':
-          this.modalState.newAscii = false;
-          break;
-        case 'edit-ascii':
-          this.modalState.editAscii = false;
-          break;
-        case 'paste-ascii':
-          this.modalState.pasteAscii = false;
-          break;
-        case 'options':
-          this.modalState.options = false;
-          break;
-        case 'overlay':
-          this.modalState.overlay = false;
-          break;
-        case 'about':
-          this.modalState.about = false;
-          break;
-        case 'help':
-          this.modalState.help = false;
-          break;
-        case 'border-generator':
-          this.modalState.borderGenerator = false;
-          break;
-        case 'find-replace':
-          this.modalState.findReplace = false;
-          break;
-      }
+      const key = MODAL_KEY_MAP[type];
+      if (key) this.modalState[key] = false;
     },
     toggleDisableKeyboard(payload: boolean | null = null) {
       this.isKeyboardDisabled =

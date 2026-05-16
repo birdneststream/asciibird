@@ -77,6 +77,23 @@ function matchAndReplaceColor(
   return modified ? { oldBlock, modified } : null;
 }
 
+/** Legacy keys from before store extraction — stripped on deserialization */
+const LEGACY_STORE_KEYS = [
+  'modalState', 'isKeyboardDisabled', 'desktopState',
+  'debugPanelState', 'brushLibraryState', 'brushPreviewState',
+  'layersLibraryState', 'toolbarState',
+  '_brushBlocks', '_selectBlocks',
+  'brushHistory', 'brushLibrary', 'brushBlocks', 'selectBlocks',
+] as const;
+
+function deserialize(value: string) {
+  const parsed = JSON.parse(value);
+  for (const key of LEGACY_STORE_KEYS) {
+    delete parsed[key];
+  }
+  return parsed;
+}
+
 export const useAsciiBirdStore = defineStore('asciibird', {
   state: (): RootState => ({
     ver: 1,
@@ -669,29 +686,8 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     key: 'vuex',
     storage: idbPersistAdapter,
     serializer: {
-      serialize: (value: Record<string, unknown>) => {
-        return JSON.stringify(value);
-      },
-      deserialize: (value: string) => {
-        const parsed = JSON.parse(value);
-        // Remove extracted state (now in separate stores)
-        delete parsed.modalState;
-        delete parsed.isKeyboardDisabled;
-        delete parsed.desktopState;
-        delete parsed.debugPanelState;
-        delete parsed.brushLibraryState;
-        delete parsed.brushPreviewState;
-        delete parsed.layersLibraryState;
-        // Remove toolbar state (now in useToolbarStore)
-        delete parsed.toolbarState;
-        delete parsed._brushBlocks;
-        delete parsed._selectBlocks;
-        delete parsed.brushHistory;
-        delete parsed.brushLibrary;
-        delete parsed.brushBlocks;
-        delete parsed.selectBlocks;
-        return parsed;
-      },
+      serialize: (value: Record<string, unknown>) => JSON.stringify(value),
+      deserialize,
     },
   },
 });
