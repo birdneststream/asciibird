@@ -15,7 +15,6 @@ const MODAL_KEY_MAP: Record<string, keyof ModalState> = {
   'about': 'about',
   'help': 'help',
   'border-generator': 'borderGenerator',
-  'find-replace': 'findReplace',
 };
 
 export const useModalStore = defineStore('modal', {
@@ -29,7 +28,6 @@ export const useModalStore = defineStore('modal', {
       about: false,
       help: false,
       borderGenerator: false,
-      findReplace: false,
     } as ModalState,
     isKeyboardDisabled: false,
   }),

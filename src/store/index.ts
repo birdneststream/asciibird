@@ -21,7 +21,6 @@ import {
   findNextVisibleLayer,
 } from '../utils/layers';
 import { cloneLayers } from '../utils/clone';
-import { findMatches, replaceAtPositions } from '../utils/findReplace';
 import { idbPersistAdapter } from '../utils/idbPersistAdapter';
 import { cropToContent as cropToContentUtil } from '../utils/cropContent';
 import type { RootState } from '../types/store';
@@ -35,9 +34,6 @@ import type {
   HistoryDiff,
   LayerHistoryData,
   HistoryEntry,
-  FindCriteria,
-  ReplaceSpec,
-  MatchPosition,
 } from '../types';
 import { isLayerHistoryEntry } from '../types';
 
@@ -275,62 +271,6 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       }
 
       return changed;
-    },
-
-    /**
-     * Find and replace across the active layer's canvas.
-     * Supports searching by character (literal/regex), fg, bg.
-     * Returns match positions and count, with optional replace.
-     *
-     * When `replacement` is provided, applies replacement to matched
-     * blocks and records a single undo diff for all changes.
-     */
-    findReplaceAction(params: {
-      criteria: FindCriteria;
-      replacement?: ReplaceSpec;
-      scope?: MatchPosition[];
-      errorOut?: { error?: { message: string; pattern: string } };
-    }): { matches: MatchPosition[]; replaced: number } {
-      const meta = this.getCurrentMeta();
-      if (!meta) return { matches: [], replaced: 0 };
-
-      const layers = decompressLayers(meta.layers);
-      const layer = layers[meta.selectedLayer];
-      if (!layer) return { matches: [], replaced: 0 };
-
-      const data = layer.data;
-
-      // Find matches (use provided scope or search all)
-      const matches = params.scope
-        ? params.scope
-        : findMatches(data, params.criteria, params.errorOut);
-
-      // If no replacement requested, just return matches
-      if (!params.replacement || matches.length === 0) {
-        return { matches, replaced: 0 };
-      }
-
-      // Apply replacement and get diffs
-      const { oldDiffs, newDiffs } = replaceAtPositions(
-        data,
-        matches,
-        params.replacement,
-      );
-
-      if (oldDiffs.length > 0) {
-        // Update layer data
-        layers[meta.selectedLayer].data = data;
-        meta.layers = compressLayers(layers);
-
-        // Record single undo diff
-        this.pushHistoryDiff({
-          old: oldDiffs,
-          new: newDiffs,
-          l: meta.selectedLayer,
-        });
-      }
-
-      return { matches, replaced: oldDiffs.length };
     },
 
     // ── Private helpers ──────────────────────────────────────────

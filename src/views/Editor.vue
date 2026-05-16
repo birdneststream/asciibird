@@ -96,7 +96,6 @@ import {
 import { useColorReplace } from '../composables/useColorReplace';
 import { useGradientTool } from '../composables/useGradientTool';
 import { useShapeTool } from '../composables/useShapeTool';
-import { useMatchHighlight } from '../composables/useMatchHighlight';
 import { useEditorState } from '../composables/useEditorState';
 import { useEditorRendering } from '../composables/useEditorRendering';
 import { usePasteMode } from '../composables/usePasteMode';
@@ -172,9 +171,6 @@ const {
   contextMenuReplace,
 } = useColorReplace();
 
-// ─── Match Highlight (Find & Replace) ──────────────────────────
-const { drawHighlights: drawMatchHighlights } = useMatchHighlight();
-
 // ─── Shared Editor State ───────────────────────────────────────
 const state = useEditorState();
 
@@ -214,7 +210,6 @@ const rendering = useEditorRendering(
     canvastoolsRef,
     renderBlock,
     clearMainCanvas,
-    drawHighlights: drawMatchHighlights,
   },
 );
 
@@ -612,19 +607,6 @@ useEventListener(
     const type = (e as CustomEvent<TransformType>).detail;
     if (isSelecting.value && isSelected.value) {
       applySelectionTransform(type);
-    }
-  },
-);
-
-useEventListener(
-  window,
-  'asciibird:scroll-to',
-  (e: Event) => {
-    const detail = (e as CustomEvent<{ x: number; y: number }>).detail;
-    if (detail.x !== undefined && detail.y !== undefined) {
-      x.value = detail.x;
-      y.value = detail.y;
-      delayRedrawCanvas();
     }
   },
 );

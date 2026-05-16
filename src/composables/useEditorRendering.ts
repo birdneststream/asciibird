@@ -8,7 +8,6 @@ import type {
   renderBlock as renderBlockFn,
   clearMainCanvas as clearMainCanvasFn,
 } from './useMainCanvasRenderer';
-import type { MatchHighlightState } from './useMatchHighlight';
 
 /** Mutable canvas context container — set in initContexts */
 interface CanvasContexts {
@@ -27,7 +26,6 @@ interface RenderDeps {
   canvastoolsRef: Ref<HTMLCanvasElement | null>;
   renderBlock: typeof renderBlockFn;
   clearMainCanvas: typeof clearMainCanvasFn;
-  drawHighlights: MatchHighlightState['drawHighlights'];
 }
 
 // ─── Module-level rendering helpers ──────────────────────────────
@@ -225,21 +223,6 @@ function drawTextIndicatorFn(
   }
 }
 
-function drawHighlights(
-  contexts: CanvasContexts,
-  deps: RenderDeps,
-  state: EditorState,
-): void {
-  if (contexts.toolCtx && deps.canvastoolsRef.value) {
-    deps.drawHighlights(
-      contexts.toolCtx, 0, 0,
-      deps.canvastoolsRef.value.width,
-      deps.canvastoolsRef.value.height,
-      state.blockWidthComp.value, state.blockHeightComp.value,
-    );
-  }
-}
-
 async function clearToolCanvasFn(
   contexts: CanvasContexts,
   deps: RenderDeps,
@@ -319,7 +302,6 @@ export function useEditorRendering(
 
   async function redrawCanvas(force = false) {
     if (!contexts.ctx || !state.currentAsciiLayers.value.length) {
-      drawHighlights(contexts, deps, state);
       return;
     }
     const bw = state.blockWidthComp.value;
@@ -331,13 +313,11 @@ export function useEditorRendering(
       const merged = mergeLayers();
       const tempHash = cyrb53(JSON.stringify(merged));
       if (tempHash === state.canvasHash.value && !force) {
-        drawHighlights(contexts, deps, state);
         return;
       }
       state.canvasHash.value = tempHash;
       redrawFullCanvas(contexts, state, deps, bw, bh, merged);
     }
-    drawHighlights(contexts, deps, state);
   }
 
   async function clearToolCanvas() {
@@ -376,6 +356,5 @@ export function useEditorRendering(
     redrawSelect,
     checkVisibleFn: (topVal: number) => checkVisibleFn(state, topVal),
     mergeLayersFn: () => mergeLayers(),
-    drawMatchHighlightsOnCanvas: () => drawHighlights(contexts, deps, state),
   };
 }

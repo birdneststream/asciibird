@@ -160,12 +160,6 @@ export function useMenuBar(actions: MenuBarActions) {
           disabled: !asciibirdMeta.value.length,
         },
         {
-          text: 'Find and Replace...',
-          click: () => modalStore.openModal('find-replace'),
-          disabled: !asciibirdMeta.value.length,
-          shortcut: 'Ctrl+F',
-        },
-        {
           text: 'Crop to Content',
           click: () => actions.handleCropToContent(),
           disabled: !asciibirdMeta.value.length,
