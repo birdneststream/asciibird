@@ -254,6 +254,56 @@ describe('parseAnsiToBlocks', () => {
     expect(result.height).toBe(100);
   });
 
+  // ── Flat ANSI (no newlines, targetWidth wrapping) ──────────────
+
+  it('wraps flat content at targetWidth', () => {
+    // 10 characters with targetWidth=5 → 2 rows of 5
+    const result = parseAnsiToBlocks('ABCDEFGHIJ', 5);
+    expect(result.width).toBe(5);
+    expect(result.height).toBe(2);
+    expect(result.blocks[0][0].char).toBe('A');
+    expect(result.blocks[0][4].char).toBe('E');
+    expect(result.blocks[1][0].char).toBe('F');
+    expect(result.blocks[1][4].char).toBe('J');
+  });
+
+  it('wraps flat ANSI with colors at targetWidth', () => {
+    // 6 colored chars, targetWidth=3 → 2 rows of 3
+    const input = '\x1b[31mAAA\x1b[32mBBB';
+    const result = parseAnsiToBlocks(input, 3);
+    expect(result.width).toBe(3);
+    expect(result.height).toBe(2);
+    expect(result.blocks[0][0].fg).toBe(ANSI_TO_MIRC[1]); // red
+    expect(result.blocks[1][0].fg).toBe(ANSI_TO_MIRC[2]); // green
+  });
+
+  it('carries SGR state across line wraps (no reset)', () => {
+    // 5 red chars wrapping at 3 → row 1 has 3 red, row 2 has 2 red
+    const input = '\x1b[31mAAAAA';
+    const result = parseAnsiToBlocks(input, 3);
+    expect(result.height).toBe(2);
+    // All chars should be red — state carries across wrap
+    expect(result.blocks[0][0].fg).toBe(ANSI_TO_MIRC[1]);
+    expect(result.blocks[1][0].fg).toBe(ANSI_TO_MIRC[1]);
+    expect(result.blocks[1][1].fg).toBe(ANSI_TO_MIRC[1]);
+  });
+
+  it('targetWidth=0 disables wrapping', () => {
+    const result = parseAnsiToBlocks('A'.repeat(200), 0);
+    expect(result.width).toBe(200);
+    expect(result.height).toBe(1);
+  });
+
+  it('handles leftover chars that do not fill a complete row', () => {
+    // 7 chars with targetWidth=3 → 2 full rows + 1 partial row
+    const result = parseAnsiToBlocks('ABCDEFG', 3);
+    expect(result.height).toBe(3);
+    expect(result.width).toBe(3);
+    // Last row padded to width
+    expect(result.blocks[2][0].char).toBe('G');
+    expect(result.blocks[2][1]).toEqual({}); // padded
+  });
+
   // ── Unknown SGR codes ──────────────────────────────────────────
 
   it('ignores underline (4) and reverse (7)', () => {

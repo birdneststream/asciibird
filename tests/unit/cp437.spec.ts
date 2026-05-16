@@ -48,8 +48,8 @@ describe('decodeCp437', () => {
     expect(decodeCp437(new Uint8Array([0xC4]).buffer)).toBe('─');
   });
 
-  it('decodes box-drawing: ┌ (0xCF)', () => {
-    expect(decodeCp437(new Uint8Array([0xCF]).buffer)).toBe('┌');
+  it('decodes box-drawing: ┌ (0xDA)', () => {
+    expect(decodeCp437(new Uint8Array([0xDA]).buffer)).toBe('┌');
   });
 
   it('decodes box-drawing: ┐ (0xBF)', () => {
@@ -60,14 +60,14 @@ describe('decodeCp437', () => {
     expect(decodeCp437(new Uint8Array([0xC0]).buffer)).toBe('└');
   });
 
-  it('decodes box-drawing: ┘ (0xCE)', () => {
-    expect(decodeCp437(new Uint8Array([0xCE]).buffer)).toBe('┘');
+  it('decodes box-drawing: ┘ (0xD9)', () => {
+    expect(decodeCp437(new Uint8Array([0xD9]).buffer)).toBe('┘');
   });
 
   // ── Block elements ─────────────────────────────────────────────
 
-  it('decodes block: █ (0xD0)', () => {
-    expect(decodeCp437(new Uint8Array([0xD0]).buffer)).toBe('█');
+  it('decodes block: █ (0xDB)', () => {
+    expect(decodeCp437(new Uint8Array([0xDB]).buffer)).toBe('█');
   });
 
   it('decodes block: ░ (0xB0)', () => {
@@ -82,12 +82,12 @@ describe('decodeCp437', () => {
     expect(decodeCp437(new Uint8Array([0xB2]).buffer)).toBe('▓');
   });
 
-  it('decodes block: ▄ (0xD1)', () => {
-    expect(decodeCp437(new Uint8Array([0xD1]).buffer)).toBe('▄');
+  it('decodes block: ▄ (0xDC)', () => {
+    expect(decodeCp437(new Uint8Array([0xDC]).buffer)).toBe('▄');
   });
 
-  it('decodes block: ▌ (0xD2)', () => {
-    expect(decodeCp437(new Uint8Array([0xD2]).buffer)).toBe('▌');
+  it('decodes block: ▌ (0xDD)', () => {
+    expect(decodeCp437(new Uint8Array([0xDD]).buffer)).toBe('▌');
   });
 
   // ── Special high-range characters ──────────────────────────────
@@ -96,16 +96,16 @@ describe('decodeCp437', () => {
     expect(decodeCp437(new Uint8Array([0x80]).buffer)).toBe('Ç');
   });
 
-  it('decodes √ (0xF0)', () => {
-    expect(decodeCp437(new Uint8Array([0xF0]).buffer)).toBe('√');
+  it('decodes √ (0xFB)', () => {
+    expect(decodeCp437(new Uint8Array([0xFB]).buffer)).toBe('√');
   });
 
-  it('decodes α (0xD5)', () => {
-    expect(decodeCp437(new Uint8Array([0xD5]).buffer)).toBe('α');
+  it('decodes α (0xE0)', () => {
+    expect(decodeCp437(new Uint8Array([0xE0]).buffer)).toBe('α');
   });
 
-  it('decodes π (0xD8)', () => {
-    expect(decodeCp437(new Uint8Array([0xD8]).buffer)).toBe('π');
+  it('decodes π (0xE3)', () => {
+    expect(decodeCp437(new Uint8Array([0xE3]).buffer)).toBe('π');
   });
 
   // ── Empty buffer ───────────────────────────────────────────────
@@ -128,10 +128,10 @@ describe('decodeCp437', () => {
   // ── Real-world pattern: ANSI escape + colored block ────────────
 
   it('decodes ANSI escape sequences with CP437 box chars', () => {
-    // ESC[31m█ = red full block in CP437 (█ = byte 0xD0)
+    // ESC[31m█ = red full block in CP437 (█ = byte 0xDB)
     const bytes = new Uint8Array([
       0x1B, 0x5B, 0x33, 0x31, 0x6D, // ESC[31m
-      0xD0,                           // █ (full block in CP437)
+      0xDB,                           // █ (full block in CP437)
       0x1B, 0x5B, 0x30, 0x6D,       // ESC[0m (reset)
     ]);
     const decoded = decodeCp437(bytes.buffer);

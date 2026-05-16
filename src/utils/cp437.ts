@@ -4,8 +4,9 @@
  * Maps CP437 byte values to Unicode code points for decoding legacy
  * ANSI art files (.ans) that use the DOS character set.
  *
- * Source: Unicode Consortium IBMPC mapping
- * https://www.unicode.org/Public/MAPPINGS/VENDORS/MICSFT/PC/CP437.TXT
+ * Source: IBM PC CP437 hardware glyph mapping (VGA charset), matching
+ * golang.org/x/text/encoding/charmap.CodePage437. This is the mapping
+ * used by actual DOS ANSI art — the VGA font renders these glyphs.
  *
  * IMPORTANT: Bytes 0-127 are kept as standard ASCII. The CP437 "graphical"
  * representations of control characters (0x01=☺, 0x1B=←, etc.) are display-
@@ -39,26 +40,26 @@ const CP437_HIGH: string[] = [
   '\u2524', '\u2561', '\u2562', '\u2556', // ┤╡╢╖
   '\u2555', '\u2563', '\u2551', '\u2557', // ╕╣║╗
   '\u255D', '\u255C', '\u255B', '\u2510', // ╝╜╛┐
-  // 0xC0-0xCF: Box drawing
+  // 0xC0-0xCF: Box drawing (continued)
   '\u2514', '\u2534', '\u252C', '\u251C', // └┴┬├
-  '\u2500', '\u253C', '\u2564', '\u2565', // ─┼╤╥
-  '\u2559', '\u2558', '\u2552', '\u2553', // ╙╘╒╓
-  '\u256B', '\u256A', '\u2518', '\u250C', // ╫╪┘┌
-  // 0xD0-0xDF: Block elements + math
-  '\u2588', '\u2584', '\u258C', '\u2590', // █▄▌▐
-  '\u2580', '\u03B1', '\u00DF', '\u0393', // ▀αßΓ
-  '\u03C0', '\u03A3', '\u03C3', '\u00B5', // πΣσµ
-  '\u03C4', '\u03A6', '\u0398', '\u03A9', // τΦΘΩ
+  '\u2500', '\u253C', '\u255E', '\u255F', // ─┼╞╟
+  '\u255A', '\u2554', '\u2569', '\u2566', // ╚╔╩╦
+  '\u2560', '\u2550', '\u256C', '\u2567', // ╠═╬╧
+  // 0xD0-0xDF: Box drawing + block elements
+  '\u2568', '\u2564', '\u2565', '\u2559', // ╨╤╥╙
+  '\u2558', '\u2552', '\u2553', '\u256B', // ╘╒╓╫
+  '\u256A', '\u2518', '\u250C', '\u2588', // ╪┘┌█
+  '\u2584', '\u258C', '\u2590', '\u2580', // ▄▌▐▀
   // 0xE0-0xEF: Greek + math
-  '\u03B4', '\u221E', '\u03C6', '\u03B5', // δ∞φε
-  '\u2229', '\u2261', '\u00B1', '\u2265', // ∩≡±≥
-  '\u2264', '\u2320', '\u2321', '\u00F7', // ≤⌠⌡÷
-  '\u2248', '\u00B0', '\u2219', '\u00B7', // ∞°··
-  // 0xF0-0xFF: Misc
-  '\u221A', '\u207F', '\u00B2', '\u25A0', // √ⁿ²■
-  '\u00A0', '\u00A0', '\u00A0', '\u00A0', // NBSP (0xF4-0xF7 undefined)
-  '\u00A0', '\u00A0', '\u00A0', '\u00A0', // 0xF8-0xFB undefined
-  '\u00A0', '\u00A0', '\u00A0', '\u00A0', // 0xFC-0xFF undefined
+  '\u03B1', '\u00DF', '\u0393', '\u03C0', // αßΓπ
+  '\u03A3', '\u03C3', '\u00B5', '\u03C4', // Σσµτ
+  '\u03A6', '\u0398', '\u03A9', '\u03B4', // ΦΘΩδ
+  '\u221E', '\u03C6', '\u03B5', '\u2229', // ∞φε∩
+  // 0xF0-0xFF: Math + misc
+  '\u2261', '\u00B1', '\u2265', '\u2264', // ≡±≥≤
+  '\u2320', '\u2321', '\u00F7', '\u2248', // ⌠⌡÷≈
+  '\u00B0', '\u2219', '\u00B7', '\u221A', // °∙·√
+  '\u207F', '\u00B2', '\u25A0', '\u00A0', // ⁿ²■ NBSP
 ];
 
 /**

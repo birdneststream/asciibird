@@ -37,25 +37,6 @@
         </p>
       </div>
 
-      <div class="mb-4">
-        <label class="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            class="ab-checkbox"
-            name="ircOverlay"
-            v-model="options.ircOverlay"
-            @change="updateOptions"
-          >
-          <span class="text-on-surface-variant font-label-mono">
-            Show IRC Line Overlay
-          </span>
-        </label>
-        <p class="mt-1 ml-6 text-on-surface-variant text-body-sm">
-          Highlights canvas rows exceeding IRC byte limits
-          (400+ warn, 500+ error).
-        </p>
-      </div>
-
       <div class="grid grid-cols-[120px_1fr] gap-sm items-center mb-4">
         <label class="text-on-surface-variant font-label-mono">
           Brush Limit

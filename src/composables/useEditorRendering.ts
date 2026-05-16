@@ -10,17 +10,6 @@ import type {
 } from './useMainCanvasRenderer';
 import type { MatchHighlightState } from './useMatchHighlight';
 
-/** IRC overlay stripe colors */
-const IRC_ERROR_COLOR = 'rgba(220, 50, 50, 0.12)';
-const IRC_WARN_COLOR = 'rgba(220, 180, 50, 0.08)';
-
-/**
- * Canvas rendering composable for the Editor.
- *
- * Handles all canvas drawing operations: full redraws, grid overlay,
- * cursor indicators, selection rectangle, and match highlights.
- * Receives shared state from useEditorState() to avoid param explosion.
- */
 export function useEditorRendering(
   state: EditorState & {
     /** yOffset from Editor props — not part of EditorState */
@@ -32,10 +21,6 @@ export function useEditorRendering(
     renderBlock: typeof renderBlockFn;
     clearMainCanvas: typeof clearMainCanvasFn;
     drawHighlights: MatchHighlightState['drawHighlights'];
-    /** IRC line indices exceeding the error threshold (500+ bytes) */
-    ircOverLimitLines: ComputedRef<number[]>;
-    /** IRC line indices in the warning range (400-500 bytes) */
-    ircWarnLines: ComputedRef<number[]>;
   },
 ) {
   // Canvas contexts — set in onMounted, not reactive for performance
@@ -154,7 +139,6 @@ export function useEditorRendering(
         if (tempHash === state.canvasHash.value && !force) {
           // Still draw overlays even when skipping full redraw
           drawMatchHighlightsOnCanvas();
-          drawIrcOverlay();
           return;
         }
 
@@ -200,7 +184,6 @@ export function useEditorRendering(
     }
 
     drawMatchHighlightsOnCanvas();
-    drawIrcOverlay();
   }
 
   /** Draw Find & Replace match highlights on the tool canvas */
@@ -215,38 +198,6 @@ export function useEditorRendering(
         state.blockWidthComp.value,
         state.blockHeightComp.value,
       );
-    }
-  }
-
-  /**
-   * Draw IRC line-length overlay on the tool canvas.
-   * Red stripes for error-level lines (500+ bytes),
-   * yellow stripes for warn-level lines (400-500 bytes).
-   * Skipped when ircOverlay option is false.
-   */
-  function drawIrcOverlay() {
-    if (!toolCtx) return;
-    if (!state.options.value.ircOverlay) return;
-
-    const bh = state.blockHeightComp.value;
-    const w = state.canvasSize.width;
-    const errorLines = deps.ircOverLimitLines.value;
-    const warnLines = deps.ircWarnLines.value;
-
-    if (errorLines.length === 0 && warnLines.length === 0) return;
-
-    // Draw warn-level stripes (yellow) first so error stripes overlay
-    toolCtx.fillStyle = IRC_WARN_COLOR;
-    for (const lineIdx of warnLines) {
-      const y = lineIdx * bh;
-      toolCtx.fillRect(0, y, w, bh);
-    }
-
-    // Draw error-level stripes (red) on top
-    toolCtx.fillStyle = IRC_ERROR_COLOR;
-    for (const lineIdx of errorLines) {
-      const y = lineIdx * bh;
-      toolCtx.fillRect(0, y, w, bh);
     }
   }
 
@@ -270,7 +221,6 @@ export function useEditorRendering(
       if (state.gridView.value) {
         await drawGrid();
       }
-      drawIrcOverlay();
     }
   }
 
@@ -420,7 +370,6 @@ export function useEditorRendering(
     checkVisibleFn,
     mergeLayersFn,
     drawMatchHighlightsOnCanvas,
-    drawIrcOverlay,
   };
 }
 

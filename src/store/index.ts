@@ -52,7 +52,6 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       brushLimit: 50,
       tabLimit: 12,
       fps: 50,
-      ircOverlay: true,
     },
     tab: 0,
     asciibirdMeta: [] as AsciibirdMeta[],
@@ -92,7 +91,6 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     },
     updateOptions(payload: Options) {
       this.options = {
-        ircOverlay: true,
         ...payload,
       };
     },

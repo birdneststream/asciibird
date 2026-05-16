@@ -105,7 +105,6 @@ export interface Options {
   brushLimit: number;
   tabLimit: number;
   fps: number;
-  ircOverlay: boolean;
 }
 
 /** Toolbar state */

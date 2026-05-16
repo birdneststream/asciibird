@@ -261,8 +261,6 @@
         @selecting="updateSelecting"
         :y-offset="scrollOffset"
         :reset-select="resetSelect"
-        :irc-over-limit-lines="ircWarning.overLimitLines"
-        :irc-warn-lines="ircWarning.warnLines"
       />
 
       <Toolbar

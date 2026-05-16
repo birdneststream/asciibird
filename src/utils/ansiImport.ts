@@ -3,6 +3,7 @@
  * ASCIIBIRD Block format.
  *
  * Supports:
+ * - CP437 and UTF-8 encoded ANSI files (with auto-detection)
  * - 256-color: ESC[38;5;Nm (fg), ESC[48;5;Nm (bg)
  * - 16-color: ESC[30-37m (fg), ESC[40-47m (bg)
  * - Bright 16-color: ESC[90-97m (fg), ESC[100-107m (bg)
@@ -10,10 +11,11 @@
  * - 24-bit truecolor: ESC[38;2;R;G;Bm (fg), ESC[48;2;R;G;Bm (bg)
  * - Combined SGR: multiple attributes in one ESC[...m sequence
  * - Reset: ESC[0m
+ * - SAUCE metadata: reads width/lines for proper column wrapping
+ * - Flat ANSI (no newlines): wraps at SAUCE width or default 80 cols
  *
  * Limitations:
- * - No CP437 decoding (assumes UTF-8 input)
- * - Cursor positioning codes are ignored
+ * - Cursor positioning codes (ESC[Hf) are ignored
  * - Round-trip loss: ▄→▀ normalization and █→space in export are
  *   not reversible
  */
@@ -35,15 +37,49 @@ import {
 import { useAsciiBirdStore } from '../store';
 import type { Block, Layer, AsciibirdMetaBuilder } from '../types';
 
-// ─── Image overlay default ───────────────────────────────────────
-// (imported from ascii.ts — single source of truth)
+// ─── SAUCE metadata ──────────────────────────────────────────────
 
-// ─── SAUCE metadata stripping ────────────────────────────────────
+/** Default column width for ANSI art without SAUCE metadata */
+const DEFAULT_ANSI_WIDTH = 80;
+
+interface SauceInfo {
+  width: number;
+  lines: number;
+}
 
 /**
- * Strip SAUCE (Standard Architecture for Universal Comment Extensions)
- * metadata from ANSI file content. SAUCE records are exactly 128 bytes
- * at the very end of the file starting with "SAUCE00".
+ * Parse SAUCE record from the last 128 bytes of a buffer.
+ * Returns { width, lines } or { width: 0, lines: 0 } if no SAUCE found.
+ */
+function parseSauceInfo(buffer: ArrayBuffer): SauceInfo {
+  if (buffer.byteLength < 128) return { width: 0, lines: 0 };
+  const bytes = new Uint8Array(buffer);
+  const sauceStart = buffer.byteLength - 128;
+  // Check for "SAUCE00" signature
+  if (
+    bytes[sauceStart] !== 0x53 || bytes[sauceStart + 1] !== 0x41
+    || bytes[sauceStart + 2] !== 0x55 || bytes[sauceStart + 3] !== 0x43
+    || bytes[sauceStart + 4] !== 0x45 || bytes[sauceStart + 5] !== 0x30
+    || bytes[sauceStart + 6] !== 0x30
+  ) {
+    return { width: 0, lines: 0 };
+  }
+  // SAUCE record layout (128 bytes):
+  // 0-6: "SAUCE00" | 7-41: Title | 42-63: Author | 64-85: Group
+  // 86-93: Date | 94: DataType | 95: FileType
+  // 96-97: TInfo1 (LE word) — width for ANSI
+  // 98-99: TInfo2 (LE word) — lines for ANSI
+  const width = bytes[sauceStart + 96]
+    | (bytes[sauceStart + 97] << 8);
+  const lines = bytes[sauceStart + 98]
+    | (bytes[sauceStart + 99] << 8);
+  return { width, lines };
+}
+
+/**
+ * Strip SAUCE metadata from a decoded string.
+ * SAUCE records are exactly 128 bytes at the end, starting with
+ * "SAUCE00". After decoding, they're 128+ characters.
  */
 function stripSauce(contents: string): string {
   if (contents.length < 128) return contents;
@@ -159,82 +195,136 @@ function makeBlock(char: string, state: SgrState): Block {
 
 // ─── Main parser ─────────────────────────────────────────────────
 
-/** Regex to match CSI SGR sequences: ESC [ (params) m */
-// eslint-disable-next-line no-control-regex
-const CSI_SGR_REGEX = /\x1b\[([0-9;]*)m/g;
+/** ESC character code */
+const ESC = 0x1B;
 
 /**
  * Parse ANSI escape sequences into an ASCIIBIRD Block[][] grid.
- * Returns the grid with dimensions filled in.
+ *
+ * Handles both newline-delimited and flat (no-newline) ANSI art.
+ * When `targetWidth` is provided, characters wrap at that column
+ * width, which is how legacy BBS ANSI art works (terminal auto-wrap).
+ *
+ * @param contents - decoded string with ANSI escape sequences
+ * @param targetWidth - column width for line wrapping (0 = no wrap)
  */
-export function parseAnsiToBlocks(contents: string): {
+export function parseAnsiToBlocks(
+  contents: string,
+  targetWidth = 0,
+): {
   blocks: Block[][];
   width: number;
   height: number;
 } {
-  // Strip SAUCE metadata
+  // Strip SAUCE metadata from decoded text
   contents = stripSauce(contents);
 
-  // Split on all line-ending styles: \r\n, \n, and \r (old Mac/BBS)
-  const lines = contents.split(/\r?\n|\r/);
-  // Remove trailing empty line from final newline
-  if (lines.length > 0 && lines[lines.length - 1] === '') {
-    lines.pop();
+  if (contents.length === 0) {
+    return { blocks: [], width: 0, height: 0 };
   }
 
   const state: SgrState = { fg: null, bg: null, bold: false };
-  let maxWidth = 0;
   const blocks: Block[][] = [];
+  let row: Block[] = [];
+  let colCount = 0;
+  let maxWidth = 0;
 
-  for (const line of lines) {
-    const row: Block[] = [];
-    let lastIndex = 0;
-    CSI_SGR_REGEX.lastIndex = 0;
-    let match: RegExpExecArray | null;
+  let i = 0;
+  while (i < contents.length) {
+    const code = contents.charCodeAt(i);
 
-    while ((match = CSI_SGR_REGEX.exec(line)) !== null) {
-      // Add characters before this escape
-      const text = line.slice(lastIndex, match.index);
-      for (const ch of text) {
-        row.push(makeBlock(ch, state));
+    if (code === ESC && i + 1 < contents.length
+        && contents.charCodeAt(i + 1) === 0x5B) {
+      // CSI sequence: ESC [ ... <final byte>
+      i += 2; // skip ESC [
+      // Collect parameter bytes (0x30-0x3F) and intermediate
+      // bytes (0x20-0x2F) until final byte (0x40-0x7E)
+      let paramStr = '';
+      while (i < contents.length && contents.charCodeAt(i) >= 0x20
+             && contents.charCodeAt(i) <= 0x3F) {
+        paramStr += contents[i];
+        i++;
       }
-
-      // Process SGR parameters
-      const paramStr = match[1];
-      if (paramStr === '' || paramStr === '0') {
-        // Reset
+      // Skip intermediate bytes
+      while (i < contents.length && contents.charCodeAt(i) >= 0x20
+             && contents.charCodeAt(i) <= 0x2F) {
+        i++;
+      }
+      // Final byte
+      if (i < contents.length) {
+        const finalByte = contents.charCodeAt(i);
+        if (finalByte === 0x6D) {
+          // SGR: ESC[...m — process color attributes
+          if (paramStr === '' || paramStr === '0') {
+            state.fg = null;
+            state.bg = null;
+            state.bold = false;
+          } else {
+            const params = paramStr
+              .split(';')
+              .map(n => (n === '' ? 0 : Number.parseInt(n, 10)));
+            applySgr(params, state);
+          }
+        }
+        // Other CSI sequences (cursor movement, etc.) are ignored
+        i++;
+      }
+    } else if (code === 0x0A) {
+      // LF — end row
+      if (row.length > maxWidth) maxWidth = row.length;
+      blocks.push(row);
+      row = [];
+      colCount = 0;
+      state.fg = null;
+      state.bg = null;
+      state.bold = false;
+      i++;
+    } else if (code === 0x0D) {
+      // CR — end row (handles \r-only and \r\n line endings)
+      // Check for \r\n pair — just skip CR and let LF handle it
+      if (i + 1 < contents.length
+          && contents.charCodeAt(i + 1) === 0x0A) {
+        // \r\n pair — skip CR, LF will end the row
+        i++;
+      } else {
+        // Standalone \r — treat as line break
+        if (row.length > maxWidth) maxWidth = row.length;
+        blocks.push(row);
+        row = [];
+        colCount = 0;
         state.fg = null;
         state.bg = null;
         state.bold = false;
-      } else {
-        const params = paramStr
-          .split(';')
-          .map(n => (n === '' ? 0 : Number.parseInt(n, 10)));
-        applySgr(params, state);
+        i++;
       }
+    } else {
+      // Visible character
+      row.push(makeBlock(contents[i], state));
+      colCount++;
 
-      lastIndex = CSI_SGR_REGEX.lastIndex;
+      // Wrap at target width (for flat ANSI files)
+      if (targetWidth > 0 && colCount >= targetWidth) {
+        if (row.length > maxWidth) maxWidth = row.length;
+        blocks.push(row);
+        row = [];
+        colCount = 0;
+        // Do NOT reset SGR state at wrap — ANSI art expects
+        // colors to carry across line wraps
+      }
+      i++;
     }
+  }
 
-    // Remaining text after last escape
-    const remaining = line.slice(lastIndex);
-    for (const ch of remaining) {
-      row.push(makeBlock(ch, state));
-    }
-
-    blocks.push(row);
+  // Push remaining row
+  if (row.length > 0) {
     if (row.length > maxWidth) maxWidth = row.length;
-
-    // Reset state at end of line (terminal convention)
-    state.fg = null;
-    state.bg = null;
-    state.bold = false;
+    blocks.push(row);
   }
 
   // Pad all rows to maxWidth
-  for (const row of blocks) {
-    while (row.length < maxWidth) {
-      row.push({});
+  for (const r of blocks) {
+    while (r.length < maxWidth) {
+      r.push({});
     }
   }
 
@@ -264,12 +354,28 @@ export const parseAnsiAscii = async (
   filename: string,
   buffer?: ArrayBuffer,
 ): Promise<boolean> => {
-  // If binary buffer provided, strip SAUCE and decode with encoding detection
-  const text = buffer
-    ? decodeAnsiBuffer(stripSauceBytes(buffer))
-    : contents;
+  // Extract SAUCE metadata for width before stripping/decoding
+  let sauceWidth = 0;
+  let text: string;
 
-  const { blocks, width, height } = parseAnsiToBlocks(text);
+  if (buffer) {
+    const sauce = parseSauceInfo(buffer);
+    sauceWidth = sauce.width || 0;
+    text = decodeAnsiBuffer(stripSauceBytes(buffer));
+  } else {
+    text = contents;
+  }
+
+  // Determine target width for flat ANSI files (no newlines)
+  let targetWidth = 0;
+  if (sauceWidth > 0) {
+    targetWidth = sauceWidth;
+  } else if (!text.includes('\n') && !text.includes('\r')) {
+    // No newlines and no SAUCE — default to 80 columns
+    targetWidth = DEFAULT_ANSI_WIDTH;
+  }
+
+  const { blocks, width, height } = parseAnsiToBlocks(text, targetWidth);
 
   if (height === 0 || width === 0) {
     return false;

@@ -8,8 +8,6 @@ import type { EditorState } from './useEditorState';
 import type { Ref } from 'vue';
 import type { Block } from '../types';
 import { useModalStore } from '../store/modal';
-import { alignSelection } from '../utils/alignBlocks';
-import { storeDiffBlocks } from '../utils/diffBlocks';
 import {
   canvasToPng as canvasToPngUtil,
   exportPlainText,
@@ -286,59 +284,6 @@ export function useEditorActions(opts: EditorActionsOptions) {
     opts.emit.selecting(s.selecting.value);
   }
 
-  // ─── Selection Alignment ──────────────────────────────────────
-
-  /**
-   * Align the content within the current selection.
-   * Each row is independently aligned (center, left, or right).
-   */
-  function alignSelectionInRect(
-    alignment: 'center' | 'left' | 'right',
-  ): void {
-    const bounds = getSelectionBounds();
-    if (!bounds) return;
-
-    const { x: bx, y: by, w, h } = bounds;
-    const blocks = s.currentAsciiLayerBlocks.value;
-
-    // Extract the selection rows
-    const rows: Block[][] = [];
-    for (let y = by; y < by + h && y < blocks.length; y++) {
-      const row: Block[] = [];
-      for (let x = bx; x < bx + w && x < (blocks[y]?.length ?? 0); x++) {
-        const block = blocks[y]?.[x];
-        row.push(block ? { ...block } : {});
-      }
-      // Pad row to full width if needed
-      while (row.length < w) row.push({});
-      rows.push(row);
-    }
-
-    // Align each row
-    const aligned = alignSelection(rows, alignment);
-
-    // Write back to the layer, recording diffs for undo
-    s.diffBlocks.l = s.selectedLayerIndex.value;
-    s.diffBlocks.old = [];
-    s.diffBlocks.new = [];
-
-    for (let dy = 0; dy < aligned.length; dy++) {
-      const gy = by + dy;
-      if (gy >= blocks.length) break;
-      for (let dx = 0; dx < aligned[dy].length; dx++) {
-        const gx = bx + dx;
-        if (gx >= (blocks[gy]?.length ?? 0)) break;
-        const oldBlock = blocks[gy][gx];
-        const newBlock = aligned[dy][dx];
-        storeDiffBlocks(s.diffBlocks, gx, gy, oldBlock, newBlock);
-        blocks[gy][gx] = newBlock;
-      }
-    }
-
-    dispatchBlocks(true);
-    r.delayRedrawCanvas(true);
-  }
-
   return {
     canvasToPng,
     openContextMenu,
@@ -357,6 +302,5 @@ export function useEditorActions(opts: EditorActionsOptions) {
     getSelectionBounds,
     dispatchBlocks,
     processSelect,
-    alignSelectionInRect,
   };
 }

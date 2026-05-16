@@ -120,27 +120,6 @@
       >
         Crop to Content
       </li>
-      <template v-if="hasSelection">
-        <li class="ab-context-menu-separator" />
-        <li
-          @click="emit('align-selection', 'center')"
-          class="ab-context-menu-item"
-        >
-          Align Center
-        </li>
-        <li
-          @click="emit('align-selection', 'left')"
-          class="ab-context-menu-item"
-        >
-          Align Left
-        </li>
-        <li
-          @click="emit('align-selection', 'right')"
-          class="ab-context-menu-item"
-        >
-          Align Right
-        </li>
-      </template>
     </ul>
   </context-menu>
 </template>
@@ -169,7 +148,7 @@ const emit = defineEmits<{
   'paste': [];
   'border-generator': [];
   'crop-to-content': [];
-  'align-selection': [alignment: 'center' | 'left' | 'right'];
+
 }>();
 
 const menuRef = ref<InstanceType<typeof ContextMenu> | null>(null);

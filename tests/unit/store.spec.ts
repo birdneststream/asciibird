@@ -99,19 +99,9 @@ describe('Pinia Store Actions', () => {
       const newOptions: Options = {
         defaultBg: 5, defaultFg: 3, renderOffScreen: true,
         undoLimit: 100, brushLimit: 200, tabLimit: 5, fps: 60,
-        ircOverlay: false,
       };
       store.updateOptions(newOptions);
       expect(store.options).toEqual(newOptions);
-    });
-
-    it('defaults ircOverlay to true when not provided', () => {
-      const partial = {
-        defaultBg: 5, defaultFg: 3, renderOffScreen: true,
-        undoLimit: 100, brushLimit: 200, tabLimit: 5, fps: 60,
-      };
-      store.updateOptions(partial as Options);
-      expect(store.options.ircOverlay).toBe(true);
     });
   });
 
