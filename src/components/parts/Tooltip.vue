@@ -157,7 +157,8 @@ function hide() {
 
 function handleMouseEnter(e: MouseEvent) {
   if (props.disabled) return;
-  const trigger = (e.currentTarget as HTMLElement);
+  const trigger = e.currentTarget;
+  if (!(trigger instanceof HTMLElement)) return;
   clearTimers();
   hideTimer = null;
   showTimer = setTimeout(() => {
@@ -175,7 +176,8 @@ function handleMouseLeave() {
 
 function handleFocusIn(e: FocusEvent) {
   if (props.disabled) return;
-  const trigger = (e.currentTarget as HTMLElement);
+  const trigger = e.currentTarget;
+  if (!(trigger instanceof HTMLElement)) return;
   clearTimers();
   showTimer = setTimeout(() => {
     show(trigger);

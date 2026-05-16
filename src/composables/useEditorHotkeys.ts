@@ -9,6 +9,7 @@
 
 import hotkeys from 'hotkeys-js';
 import type { Ref } from 'vue';
+import type { Block } from '../types';
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -40,7 +41,7 @@ export interface HotkeyStateDeps {
   isSelecting: Ref<boolean>;
   isBrushing: Ref<boolean>;
   isErasing: Ref<boolean>;
-  selectedBlocks: Ref<any[]>;
+  selectedBlocks: Ref<Block[][]>;
   canTool: Ref<boolean>;
   x: Ref<number>;
   y: Ref<number>;

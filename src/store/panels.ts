@@ -154,9 +154,14 @@ export const usePanelStore = defineStore('panel', {
       this.charPicker = payload;
     },
 
+    /** Get typed panel state by key */
+    getPanel(key: PanelKey): PanelState | undefined {
+      return this[key] as PanelState | undefined;
+    },
+
     /** Minimize a panel — hides from canvas but keeps in task bar */
     minimizePanel(key: PanelKey) {
-      const panel = this[key] as PanelState;
+      const panel = this.getPanel(key);
       if (panel) {
         panel.minimized = true;
         panel.visible = true; // minimized != hidden
@@ -165,7 +170,7 @@ export const usePanelStore = defineStore('panel', {
 
     /** Restore a minimized panel — shows on canvas again */
     restorePanel(key: PanelKey) {
-      const panel = this[key] as PanelState;
+      const panel = this.getPanel(key);
       if (panel) {
         panel.minimized = false;
         panel.visible = true;
@@ -175,8 +180,8 @@ export const usePanelStore = defineStore('panel', {
     /** Reset a single panel position to initial defaults */
     resetPanelPosition(key: PanelKey) {
       const defaults = initialPanelStates();
-      const panel = this[key] as PanelState;
-      const def = defaults[key] as PanelState;
+      const panel = this.getPanel(key);
+      const def = defaults[key] as PanelState | undefined;
       if (panel && def) {
         panel.x = def.x;
         panel.y = def.y;
@@ -187,8 +192,8 @@ export const usePanelStore = defineStore('panel', {
     resetAllPanelPositions() {
       const defaults = initialPanelStates();
       for (const key of Object.keys(defaults) as PanelKey[]) {
-        const panel = this[key] as PanelState;
-        const def = defaults[key] as PanelState;
+        const panel = this.getPanel(key);
+        const def = defaults[key] as PanelState | undefined;
         if (panel && def) {
           panel.x = def.x;
           panel.y = def.y;
@@ -198,7 +203,7 @@ export const usePanelStore = defineStore('panel', {
 
     /** Toggle between minimized and restored */
     togglePanelMinimize(key: PanelKey) {
-      const panel = this[key] as PanelState;
+      const panel = this.getPanel(key);
       if (!panel) return;
       if (panel.minimized) {
         panel.minimized = false;

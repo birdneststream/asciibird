@@ -192,7 +192,7 @@ export const iterativeFillHalfBlock = (
     if (!cellChanges.has(cellKey)) {
       cellChanges.set(cellKey, {
         old: { ...sourceBlock },
-        new: {} as Block,
+        new: {},
       });
     }
 

@@ -38,11 +38,17 @@ export function useEditorState() {
     startX: null,
     startY: null,
   });
-  const selecting = ref({
-    startX: null as number | null,
-    startY: null as number | null,
-    endX: null as number | null,
-    endY: null as number | null,
+  const selecting = ref<{
+    startX: number | null;
+    startY: number | null;
+    endX: number | null;
+    endY: number | null;
+    canSelect: boolean;
+  }>({
+    startX: null,
+    startY: null,
+    endX: null,
+    endY: null,
     canSelect: false,
   });
   const isMouseOnCanvas = ref(false);

@@ -639,7 +639,7 @@ useEventListener(
   window,
   'asciibird:selection-transform',
   (e: Event) => {
-    const type = (e as CustomEvent).detail as TransformType;
+    const type = (e as CustomEvent<TransformType>).detail;
     if (isSelecting.value && isSelected.value) {
       applySelectionTransform(type);
     }
@@ -650,7 +650,7 @@ useEventListener(
   window,
   'asciibird:scroll-to',
   (e: Event) => {
-    const detail = (e as CustomEvent).detail;
+    const detail = (e as CustomEvent<{ x: number; y: number }>).detail;
     if (detail.x !== undefined && detail.y !== undefined) {
       x.value = detail.x;
       y.value = detail.y;

@@ -13,6 +13,7 @@ import {
   exportPlainText,
 } from '../ascii';
 import { downloadHtml } from '../utils/htmlExport';
+import { getAsciiTitle } from '../utils/asciiTitle';
 import {
   selectionToGridRect,
   extractSelectionBlocks,
@@ -88,7 +89,7 @@ function canvasToPng(
   if (canvas) {
     canvasToPngUtil(
       canvas,
-      (s.currentAscii.value as { title: string })?.title ?? 'ascii',
+      getAsciiTitle(s.currentAscii.value),
     );
   }
 }
@@ -181,7 +182,7 @@ function doExportHtmlFile(
   toastShow: EditorActionsOptions['toastShow'],
 ): void {
   try {
-    const title = (s.currentAscii.value as { title: string })?.title ?? 'ascii';
+    const title = getAsciiTitle(s.currentAscii.value);
     downloadHtml(title);
     toastShow('Exported HTML file!', { type: 'success' });
   } catch {

@@ -129,7 +129,7 @@ export function usePanelDraggable(
     el,
     'pointerdown',
     (e: PointerEvent) => {
-      if (isFormElement(e.target as EventTarget | null)) {
+      if (isFormElement(e.target)) {
         e.stopImmediatePropagation();
       }
       // Bring panel to front on any pointerdown (click, drag start)

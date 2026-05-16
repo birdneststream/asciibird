@@ -61,7 +61,7 @@ function redrawDiffBlocks(
 
       deps.renderBlock(
         contexts.ctx!,
-        { ...entry.b } as Block,
+        { ...entry.b },
         bw * entry.x,
         bh * entry.y,
         bw, bh,

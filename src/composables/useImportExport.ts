@@ -11,6 +11,7 @@ import {
 import { downloadAnsi } from '../utils/ansiExport';
 import { downloadHtml, exportHtmlFragment } from '../utils/htmlExport';
 import { parseAnsiAscii } from '../utils/ansiImport';
+import { getAsciiTitle } from '../utils/asciiTitle';
 import { useAsciiBirdStore } from '../store';
 import { useModalStore } from '../store/modal';
 import { useExportAscii } from './useExportAscii';
@@ -132,7 +133,7 @@ function doExportAnsi(
   toastShow: UseImportExportOptions['toastShow'],
 ): void {
   try {
-    const title = (store.currentAscii as { title: string })?.title ?? 'ascii';
+    const title = getAsciiTitle(store.currentAscii);
     downloadAnsi(title);
     toastShow('Exported ANSI file!', { type: 'success' });
   } catch (err) {
@@ -148,7 +149,7 @@ function doExportPlainText(
   try {
     const lines = exportPlainText();
     const text = lines.join('\n');
-    const title = (store.currentAscii as { title: string })?.title ?? 'ascii';
+    const title = getAsciiTitle(store.currentAscii);
 
     if (target === 'clipboard') {
       navigator.clipboard.writeText(text);
@@ -169,7 +170,7 @@ function doExportHtml(
   target: 'clipboard' | 'file',
 ): void {
   try {
-    const title = (store.currentAscii as { title: string })?.title ?? 'ascii';
+    const title = getAsciiTitle(store.currentAscii);
 
     if (target === 'clipboard') {
       const blocks = mergeLayers();

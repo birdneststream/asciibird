@@ -23,7 +23,7 @@ const currentIndex = ref(-1);
 
 export function useMatchHighlight(): MatchHighlightState {
   function handleFindMatches(e: Event) {
-    const detail = (e as CustomEvent).detail;
+    const detail = (e as CustomEvent<{ matches?: MatchPosition[]; currentIndex?: number }>).detail;
     matchPositions.value = detail.matches ?? [];
     currentIndex.value = detail.currentIndex ?? -1;
   }
