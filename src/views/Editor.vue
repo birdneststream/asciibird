@@ -162,14 +162,7 @@ const { startExport } = useExportAscii({
   checkLimits: true,
   label: 'mIRC',
 });
-const {
-  replaceColorSource,
-  isReplacePicking,
-  pickSource,
-  applyReplace,
-  resetReplace,
-  contextMenuReplace,
-} = useColorReplace();
+const { applyReplaceFromBlock } = useColorReplace();
 
 // ─── Shared Editor State ───────────────────────────────────────
 const state = useEditorState();
@@ -331,7 +324,7 @@ const actions = useEditorActions({
     selectedblocks: (val) => emit('selectedblocks', val),
   },
   toastShow,
-  contextMenuReplace,
+  applyReplaceFromBlock,
 });
 
 const {
@@ -351,10 +344,7 @@ const mouseHandlers = useCanvasMouseHandlers({
   tools: {
     pasteMode,
     colorReplace: {
-      isReplacePicking,
-      replaceColorSource,
-      pickSource,
-      applyReplace,
+      applyReplaceFromBlock,
     },
     gradientTool: {
       isGradientPicking,
@@ -545,10 +535,6 @@ const { cleanup: cleanupHotkeys } = useEditorHotkeys({
   },
   tools: {
     pasteMode,
-    colorReplace: {
-      isReplacePicking,
-      resetReplace,
-    },
     gradientTool: {
       isGradientPicking,
       cancelGradient,

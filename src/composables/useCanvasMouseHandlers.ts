@@ -33,14 +33,10 @@ export interface MouseHandlerDeps {
       ) => void;
     };
     colorReplace: {
-      isReplacePicking: { value: boolean };
-      replaceColorSource: { value: {
-        fg: number | null; bg: number | null;
-      } | null };
-      pickSource: (block: Block) => void;
-      applyReplace: (
+      applyReplaceFromBlock: (
+        block: Block,
         selection?: { x: number; y: number; w: number; h: number },
-      ) => void;
+      ) => number;
     };
     gradientTool: {
       isGradientPicking: { value: boolean };
@@ -180,12 +176,11 @@ function doHandleDropper(d: InternalDeps, targetBlock: Block): void {
 }
 
 function doHandleReplaceColor(d: InternalDeps, targetBlock: Block): void {
-  if (!d.tools.colorReplace.isReplacePicking.value) {
-    d.tools.colorReplace.pickSource(targetBlock);
-  } else {
-    const selection = d.cb.getSelectionBounds();
-    d.tools.colorReplace.applyReplace(selection ?? undefined);
-  }
+  const selection = d.cb.getSelectionBounds();
+  d.tools.colorReplace.applyReplaceFromBlock(
+    targetBlock,
+    selection ?? undefined,
+  );
 }
 
 /**
@@ -224,22 +219,6 @@ async function doHandleShapes(d: InternalDeps): Promise<void> {
     setStart: d.tools.shapeTool.setShapeStart,
     apply: d.tools.shapeTool.applyShape,
   });
-}
-
-function drawReplaceColorPreview(
-  toolCtx: CanvasRenderingContext2D, d: InternalDeps,
-): void {
-  const source = d.tools.colorReplace.replaceColorSource.value;
-  if (!source) return;
-  const bw = d.s.blockWidthComp.value;
-  if (source.fg !== null) {
-    toolCtx.fillStyle = mircColours99[source.fg];
-    toolCtx.fillRect(d.s.canvasX.value, d.s.canvasY.value - 6, bw / 2, 4);
-  }
-  if (source.bg !== null) {
-    toolCtx.fillStyle = mircColours99[source.bg];
-    toolCtx.fillRect(d.s.canvasX.value + bw / 2, d.s.canvasY.value - 6, bw / 2, 4);
-  }
 }
 
 function drawGradientPreview(
@@ -416,18 +395,13 @@ async function doMouseMove(d: InternalDeps, e: MouseEvent): Promise<void> {
       await r.drawIndicator();
       if (s.isTextEditingValues.value) await r.drawTextIndicator();
       break;
+    case 'replace-color':
     case 'dropper':
     case 'fill':
     case 'fill-eraser':
       await r.clearToolCanvas();
       await r.drawIndicator();
       break;
-    case 'replace-color':
-      await r.clearToolCanvas();
-      await r.drawIndicator();
-      if (tools.colorReplace.isReplacePicking.value && tools.colorReplace.replaceColorSource.value && toolCtx) {
-        drawReplaceColorPreview(toolCtx, d);
-      }
       break;
     case 'gradient':
       await r.clearToolCanvas();

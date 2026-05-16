@@ -28,12 +28,6 @@ export interface ActionsPasteMode {
   deleteSelection: () => void;
 }
 
-/** Color replace function type */
-export type ContextMenuReplaceFn = (
-  block: Block,
-  bounds?: { x: number; y: number; w: number; h: number },
-) => void;
-
 /** Rendering methods needed by actions */
 export interface ActionsRenderingDeps {
   clearToolCanvas: () => Promise<void>;
@@ -60,7 +54,10 @@ export interface EditorActionsOptions {
   refs: ActionsTemplateRefs;
   emit: ActionsEmits;
   toastShow: (msg: string, opts?: Record<string, unknown>) => void;
-  contextMenuReplace: ContextMenuReplaceFn;
+  applyReplaceFromBlock: (
+    block: Block,
+    selection?: { x: number; y: number; w: number; h: number },
+  ) => number;
 }
 
 // ─── Module-level helpers ───────────────────────────────────────
@@ -107,16 +104,12 @@ function openContextMenu(
 
 function doContextMenuReplaceColor(
   s: EditorState,
-  replaceFn: ContextMenuReplaceFn,
+  applyReplaceFromBlock: EditorActionsOptions['applyReplaceFromBlock'],
 ): void {
   const block = s.asciiBlockAtXy.value;
   if (!block) return;
   const bounds = getSelectionBounds(s);
-  if (bounds) {
-    replaceFn(block, bounds);
-  } else {
-    replaceFn(block);
-  }
+  applyReplaceFromBlock(block, bounds ?? undefined);
 }
 
 function doContextMenuCopySelection(
@@ -294,7 +287,7 @@ export function useEditorActions(opts: EditorActionsOptions) {
   return {
     canvasToPng: () => canvasToPng(s, opts.refs.canvasRef),
     openContextMenu: (e: MouseEvent) => openContextMenu(opts.refs.editorMenu, e),
-    contextMenuReplaceColor: () => doContextMenuReplaceColor(s, opts.contextMenuReplace),
+    contextMenuReplaceColor: () => doContextMenuReplaceColor(s, opts.applyReplaceFromBlock),
     contextMenuCopySelection: () => doContextMenuCopySelection(s, opts.toastShow),
     contextMenuCutSelection: () => doContextMenuCutSelection(s, r, opts.pasteMode, opts.toastShow),
     contextMenuDeleteSelection: () => doContextMenuDeleteSelection(s, r, opts.pasteMode),

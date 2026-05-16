@@ -20,10 +20,6 @@ export interface HotkeyToolDeps {
     cancelPasteMode: () => void;
     deleteSelection: () => void;
   };
-  colorReplace: {
-    isReplacePicking: Ref<boolean>;
-    resetReplace: () => void;
-  };
   gradientTool: {
     isGradientPicking: Ref<boolean>;
     cancelGradient: () => void;
@@ -74,16 +70,11 @@ export interface HotkeyDeps {
 
 /** Handle Escape key — cancels active tool picking/paste modes */
 async function handleEscape(tools: HotkeyToolDeps['pasteMode']
-  & HotkeyToolDeps['colorReplace']
   & HotkeyToolDeps['gradientTool']
   & HotkeyToolDeps['shapeTool'],
   clearToolCanvas: () => Promise<void>,
   delayRedrawCanvas: (force?: boolean) => Promise<void>,
 ): Promise<boolean> {
-  if (tools.isReplacePicking.value) {
-    tools.resetReplace();
-    return true;
-  }
   if (tools.isGradientPicking.value) {
     tools.cancelGradient();
     await clearToolCanvas();
@@ -152,7 +143,7 @@ export function useEditorHotkeys(deps: HotkeyDeps) {
     // Escape: cancel active tool
     if (event.key === 'Escape') {
       const handled = await handleEscape(
-        { ...tools.pasteMode, ...tools.colorReplace,
+        { ...tools.pasteMode,
           ...tools.gradientTool, ...tools.shapeTool },
         r.clearToolCanvas, r.delayRedrawCanvas,
       );

@@ -38,36 +38,50 @@ import type {
 import { isLayerHistoryEntry } from '../types';
 
 /**
- * Attempt to match and replace colors on a single block.
+ * Attempt to match and replace properties on a single block.
  * Returns the old block snapshot if modified, or null if no match.
  * Mutates the block parameter in place (caller reads mutated state after).
  */
-function matchAndReplaceColor(
+function matchAndReplaceBlock(
   block: Block,
   params: {
     sourceFg: number | null;
     sourceBg: number | null;
+    sourceChar: string | null;
     targetFg: number;
     targetBg: number;
+    targetChar: string;
     replaceFg: boolean;
     replaceBg: boolean;
+    replaceChar: boolean;
   },
 ): { oldBlock: Block; modified: boolean } | null {
+  // Check match: all enabled criteria must match (AND logic)
+  if (params.replaceFg && params.sourceFg !== null) {
+    if (block.fg !== params.sourceFg) return null;
+  }
+  if (params.replaceBg && params.sourceBg !== null) {
+    if (block.bg !== params.sourceBg) return null;
+  }
+  if (params.replaceChar && params.sourceChar !== null) {
+    if (block.char !== params.sourceChar) return null;
+  }
+
+  // Block matched — apply replacements
   let modified = false;
   const oldBlock = { ...block };
 
   if (params.replaceFg && params.sourceFg !== null) {
-    if (block.fg === params.sourceFg) {
-      block.fg = params.targetFg;
-      modified = true;
-    }
+    block.fg = params.targetFg;
+    modified = true;
   }
-
   if (params.replaceBg && params.sourceBg !== null) {
-    if (block.bg === params.sourceBg) {
-      block.bg = params.targetBg;
-      modified = true;
-    }
+    block.bg = params.targetBg;
+    modified = true;
+  }
+  if (params.replaceChar && params.sourceChar !== null) {
+    block.char = params.targetChar;
+    modified = true;
   }
 
   return modified ? { oldBlock, modified } : null;
@@ -203,19 +217,22 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     },
 
     /**
-     * Replace colors across the active layer's canvas.
-     * Iterates over target blocks, replaces matching fg/bg, records
-     * a single undo diff for all changes.
+     * Replace block properties across the active layer's canvas.
+     * Matches blocks based on source fg/bg/char (for enabled criteria),
+     * replaces with target values. Records a single undo diff.
      *
      * @returns Number of blocks changed
      */
     replaceColor(params: {
       sourceFg: number | null;
       sourceBg: number | null;
+      sourceChar: string | null;
       targetFg: number;
       targetBg: number;
+      targetChar: string;
       replaceFg: boolean;
       replaceBg: boolean;
+      replaceChar: boolean;
       selection?: { x: number; y: number; w: number; h: number };
     }): number {
       const meta = this.getCurrentMeta();
@@ -248,7 +265,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
           const block = row[x];
           if (!block) continue;
 
-          const result = matchAndReplaceColor(block, params);
+          const result = matchAndReplaceBlock(block, params);
           if (result) {
             oldDiffs.push({ x, y, b: result.oldBlock });
             newDiffs.push({ x, y, b: { ...block } });
