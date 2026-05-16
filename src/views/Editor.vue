@@ -27,7 +27,9 @@
 
       <div
         ref="editorPanel"
+        class="canvas-wrapper"
         :style="panelStyle"
+        :class="{ 'is-dragging': canvasPanel.isDragging.value }"
         @pointerdown="canvasPanel.onDragPointerDown"
       >
         <canvas

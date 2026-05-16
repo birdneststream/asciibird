@@ -40,11 +40,6 @@ body {
     overflow: hidden;
 }
 
-#app {
-    height: 100%;
-    overflow: hidden;
-}
-
 body {
     background: #131313;
     color: #e5e2e1;
@@ -55,6 +50,22 @@ body {
     -webkit-touch-callout: none;
     -khtml-user-select: none;
     user-select: none;
+}
+
+/* ── App background grid (blockWidth=8, blockHeight=15) ──────────── */
+#app {
+    height: 100%;
+    overflow: hidden;
+    background-color: #131313;
+    background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.008) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.008) 1px, transparent 1px);
+    background-size: 8px 15px;
+}
+
+/* Canvas panel blocks the background grid */
+.canvas-wrapper {
+    background: #131313;
 }
 
 /* ── Font consistency — form elements inherit global font ──────────── */
@@ -119,6 +130,24 @@ button {
     backdrop-filter: blur(12px);
     border: 1px solid rgba(139, 144, 160, 0.2);
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    transition: box-shadow 0.2s ease;
+}
+
+/* ── Panel drag glow — illuminates surrounding grid ─────────────── */
+.floating-panel.is-dragging {
+    box-shadow:
+        0 0 30px 5px rgba(173, 198, 255, 0.06),
+        0 0 60px 15px rgba(173, 198, 255, 0.03),
+        0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    border-color: rgba(173, 198, 255, 0.3);
+}
+
+/* ── Canvas panel drag glow ──────────────────────────────────────── */
+.canvas-wrapper.is-dragging {
+    box-shadow:
+        0 0 30px 5px rgba(173, 198, 255, 0.06),
+        0 0 60px 15px rgba(173, 198, 255, 0.03);
+    border-color: rgba(173, 198, 255, 0.3);
 }
 
 /* ── Menu dropdowns — darker glass than panels ────────────────────── */

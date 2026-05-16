@@ -69,6 +69,14 @@ export function usePanelDraggable(
     );
   }
 
+  // Toggle is-dragging class for glow effect on background grid
+  watch(draggable.isDragging, (dragging) => {
+    const element = toValue(el);
+    if (element instanceof HTMLElement) {
+      element.classList.toggle('is-dragging', dragging);
+    }
+  });
+
   /**
    * Force-end a stuck drag by dispatching a synthetic pointerup event.
    *
