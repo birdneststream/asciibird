@@ -106,9 +106,33 @@ function getPanelDefs(): PanelDef[] {
       name: 'Colors',
       icon: 'color_lens',
       getState: () => panelStore.colourPicker,
-      minimize: () => panelStore.minimizePanel('colourPicker'),
-      restore: () => panelStore.restorePanel('colourPicker'),
-      toggleMinimize: () => panelStore.togglePanelMinimize('colourPicker'),
+      minimize: () => {
+        panelStore.minimizePanel('colourPicker');
+        toolbarStore.changeIsUpdatingFg(false);
+        toolbarStore.changeIsUpdatingBg(false);
+      },
+      restore: () => {
+        panelStore.restorePanel('colourPicker');
+        // Default to FG mode if no mode is active
+        if (!toolbarStore.toolbarState.isChoosingFg
+          && !toolbarStore.toolbarState.isChoosingBg) {
+          toolbarStore.changeIsUpdatingFg(true);
+        }
+      },
+      toggleMinimize: () => {
+        const state = panelStore.colourPicker;
+        if (state.minimized) {
+          panelStore.restorePanel('colourPicker');
+          if (!toolbarStore.toolbarState.isChoosingFg
+            && !toolbarStore.toolbarState.isChoosingBg) {
+            toolbarStore.changeIsUpdatingFg(true);
+          }
+        } else {
+          panelStore.minimizePanel('colourPicker');
+          toolbarStore.changeIsUpdatingFg(false);
+          toolbarStore.changeIsUpdatingBg(false);
+        }
+      },
       resetPosition: () => panelStore.resetPanelPosition('colourPicker'),
     },
     {
@@ -116,9 +140,24 @@ function getPanelDefs(): PanelDef[] {
       name: 'Characters',
       icon: 'text_fields',
       getState: () => panelStore.charPicker,
-      minimize: () => panelStore.minimizePanel('charPicker'),
-      restore: () => panelStore.restorePanel('charPicker'),
-      toggleMinimize: () => panelStore.togglePanelMinimize('charPicker'),
+      minimize: () => {
+        panelStore.minimizePanel('charPicker');
+        toolbarStore.changeIsUpdatingChar(false);
+      },
+      restore: () => {
+        panelStore.restorePanel('charPicker');
+        toolbarStore.changeIsUpdatingChar(true);
+      },
+      toggleMinimize: () => {
+        const state = panelStore.charPicker;
+        if (state.minimized) {
+          panelStore.restorePanel('charPicker');
+          toolbarStore.changeIsUpdatingChar(true);
+        } else {
+          panelStore.minimizePanel('charPicker');
+          toolbarStore.changeIsUpdatingChar(false);
+        }
+      },
       resetPosition: () => panelStore.resetPanelPosition('charPicker'),
     },
   ];

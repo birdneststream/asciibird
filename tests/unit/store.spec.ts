@@ -170,6 +170,13 @@ describe('Pinia Store Actions', () => {
     });
   });
 
+  describe('persistColourPanel', () => {
+    it('toggles colour panel persistence', () => {
+      toolbarStore.persistColourPanel(true);
+      expect(toolbarStore.toolbarState.persistColourPanel).toBe(true);
+    });
+  });
+
   // ── Targeting actions (now in useToolbarStore) ───────────────
 
   describe('targeting actions', () => {
@@ -1469,6 +1476,10 @@ describe('Pinia Store Getters', () => {
 
   it('persistCharPanel returns char panel persistence', () => {
     expect(toolbarStore.toolbarState.persistCharPanel).toBe(false);
+  });
+
+  it('persistColourPanel returns colour panel persistence', () => {
+    expect(toolbarStore.toolbarState.persistColourPanel).toBe(false);
   });
 });
 

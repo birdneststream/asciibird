@@ -38,6 +38,7 @@ export const useToolbarStore = defineStore('toolbar', {
       isChoosingBg: false,
       isChoosingChar: false,
       persistCharPanel: false,
+      persistColourPanel: false,
       brushSizeWidth: 1,
       brushSizeHeight: 1,
       brushSizeType: 'square',
@@ -92,12 +93,16 @@ export const useToolbarStore = defineStore('toolbar', {
     changeColourFg(payload: number) {
       this.toolbarState.currentColourFg = payload;
       this.toolbarState.isUpdating = false;
-      this.toolbarState.isChoosingFg = false;
+      if (!this.toolbarState.persistColourPanel) {
+        this.toolbarState.isChoosingFg = false;
+      }
     },
     changeColourBg(payload: number) {
       this.toolbarState.currentColourBg = payload;
       this.toolbarState.isUpdating = false;
-      this.toolbarState.isChoosingBg = false;
+      if (!this.toolbarState.persistColourPanel) {
+        this.toolbarState.isChoosingBg = false;
+      }
     },
     changeChar(payload: string) {
       this.toolbarState.selectedChar = payload;
@@ -127,6 +132,9 @@ export const useToolbarStore = defineStore('toolbar', {
     },
     persistCharPanel(payload: boolean) {
       this.toolbarState.persistCharPanel = payload;
+    },
+    persistColourPanel(payload: boolean) {
+      this.toolbarState.persistColourPanel = payload;
     },
     changeIsUpdatingFg(payload: boolean) {
       this.toolbarState.isChoosingFg = payload;

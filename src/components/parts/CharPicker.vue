@@ -11,23 +11,31 @@
       icon="text_fields"
       minimizable
       @minimize="panelStore.minimizePanel('charPicker')"
-    />
+    >
+      <template #right>
+        <Tooltip content="Disable auto hide after selection">
+          <button
+            type="button"
+            class="w-5 h-5 rounded flex items-center justify-center transition-colors"
+            :class="toolbarStore.toolbarState.persistCharPanel
+              ? 'text-primary bg-primary-container/20'
+              : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-variant'"
+            @click.stop="togglePersistChar"
+          >
+            <span
+              class="material-icons"
+              style="font-size: 14px"
+              aria-hidden="true"
+            >push_pin</span>
+          </button>
+        </Tooltip>
+      </template>
+    </PanelHeader>
 
     <div
       v-show="!panelStore.charPicker.minimized"
       class="p-sm flex flex-col gap-xs"
     >
-      <label class="flex items-center gap-2 cursor-pointer">
-        <input
-          type="checkbox"
-          class="ab-checkbox"
-          name="leave-open"
-          v-model="persistChars"
-          @click="changePersistChars"
-        >
-        <span class="text-body-sm text-on-surface-variant">Persist after changes</span>
-      </label>
-
       <div class="overflow-y-auto max-h-[420px] custom-scrollbar">
         <section
           v-for="(group, gi) in charGroups"
@@ -61,6 +69,7 @@
 import { ref, computed, watch } from 'vue';
 import { usePanelDraggable } from '../../composables/usePanelDraggable';
 import PanelHeader from './PanelHeader.vue';
+import Tooltip from './Tooltip.vue';
 import {
   charGroups,
   mircColours99,
@@ -74,7 +83,6 @@ const toolbarStore = useToolbarStore();
 const panelStore = usePanelStore();
 const panelEl = ref<HTMLElement | null>(null);
 const handleRef = ref<InstanceType<typeof PanelHeader> | null>(null);
-const persistChars = ref(false);
 
 /** Smart default position: fallback to toolbarStore.pickerPos for migration */
 const initialPos = computed(() => {
@@ -141,9 +149,14 @@ function charName(char: string): string {
 
 function onCharChange(char: string) {
   toolbarStore.changeChar(char);
+  // Auto-minimize after picking unless persist is on
+  if (!toolbarStore.toolbarState.persistCharPanel) {
+    panelStore.minimizePanel('charPicker');
+  }
 }
 
-function changePersistChars() {
-  toolbarStore.persistCharPanel(!persistChars.value);
+function togglePersistChar() {
+  const val = !toolbarStore.toolbarState.persistCharPanel;
+  toolbarStore.persistCharPanel(val);
 }
 </script>

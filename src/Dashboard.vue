@@ -291,10 +291,10 @@
       />
 
       <CharPicker
-        v-show="toolbarState.isChoosingChar && !panelStore.charPicker.minimized"
+        v-show="!panelStore.charPicker.minimized"
       />
       <ColourPicker
-        v-show="(toolbarState.isChoosingFg || toolbarState.isChoosingBg) && !panelStore.colourPicker.minimized"
+        v-show="!panelStore.colourPicker.minimized"
       />
     </template>
     <template v-else>

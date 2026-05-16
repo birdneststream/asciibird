@@ -115,6 +115,7 @@ export interface ToolbarState {
   isChoosingBg: boolean;
   isChoosingChar: boolean;
   persistCharPanel: boolean;
+  persistColourPanel: boolean;
   brushSizeWidth: number;
   brushSizeHeight: number;
   brushSizeType:

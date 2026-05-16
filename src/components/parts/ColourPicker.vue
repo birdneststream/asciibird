@@ -7,25 +7,62 @@
   >
     <PanelHeader
       ref="handleRef"
-      title="Colors"
+      :title="panelTitle"
       icon="color_lens"
       minimizable
       @minimize="panelStore.minimizePanel('colourPicker')"
-    />
+    >
+      <template #right>
+        <Tooltip content="Disable auto hide after selection">
+          <button
+            type="button"
+            class="w-5 h-5 rounded flex items-center justify-center transition-colors"
+            :class="toolbarStore.toolbarState.persistColourPanel
+              ? 'text-primary bg-primary-container/20'
+              : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-variant'"
+            @click.stop="togglePersistColour"
+          >
+            <span
+              class="material-icons"
+              style="font-size: 14px"
+              aria-hidden="true"
+            >push_pin</span>
+          </button>
+        </Tooltip>
+      </template>
+    </PanelHeader>
 
     <div
       v-show="!panelStore.colourPicker.minimized"
       class="p-sm"
     >
+      <!-- Legacy IRC 16 colors -->
       <div class="grid grid-cols-10 gap-1">
         <button
-          v-for="(value, keyColours) in mircColours"
+          v-for="(value, keyColours) in mircColours.slice(0, 16)"
           :key="keyColours"
           type="button"
           :style="{ backgroundColor: mircColours[keyColours] }"
           class="w-6 h-6 rounded border border-outline-variant hover:ring-2 hover:ring-primary transition-all"
           @click="onColourChange(keyColours)"
         />
+      </div>
+
+      <!-- Extended colors (17-98) -->
+      <div class="mt-2 pt-2 border-t border-outline-variant/30">
+        <span class="font-label-mono text-label-mono text-on-surface-variant/60 mb-1 block text-[10px]">
+          Extended
+        </span>
+        <div class="grid grid-cols-10 gap-1">
+          <button
+            v-for="(value, keyColours) in mircColours.slice(16)"
+            :key="keyColours + 16"
+            type="button"
+            :style="{ backgroundColor: mircColours[keyColours + 16] }"
+            class="w-6 h-6 rounded border border-outline-variant hover:ring-2 hover:ring-primary transition-all"
+            @click="onColourChange(keyColours + 16)"
+          />
+        </div>
       </div>
 
       <!-- Shade strip: lighter → darker variations of active color -->
@@ -58,6 +95,7 @@
 import { ref, computed, watch } from 'vue';
 import { usePanelDraggable } from '../../composables/usePanelDraggable';
 import PanelHeader from './PanelHeader.vue';
+import Tooltip from './Tooltip.vue';
 import { mircColours99 } from '../../ascii';
 import { useToolbarStore } from '../../store/toolbar';
 import { usePanelStore } from '../../store/panels';
@@ -89,6 +127,13 @@ watch([dragX, dragY], ([newX, newY]) => {
   });
 });
 
+const panelTitle = computed(() => {
+  const ts = toolbarStore.toolbarState;
+  if (ts.isChoosingFg) return 'Colors - FG';
+  if (ts.isChoosingBg) return 'Colors - BG';
+  return 'Colors';
+});
+
 const mircColours = mircColours99;
 
 // ─── Shade strip state ─────────────────────────────────────────
@@ -113,5 +158,15 @@ function onColourChange(colour: number) {
   if (toolbarStore.toolbarState.isChoosingBg) {
     toolbarStore.changeColourBg(colour);
   }
+
+  // Auto-minimize after picking unless persist is on
+  if (!toolbarStore.toolbarState.persistColourPanel) {
+    panelStore.minimizePanel('colourPicker');
+  }
+}
+
+function togglePersistColour() {
+  const val = !toolbarStore.toolbarState.persistColourPanel;
+  toolbarStore.persistColourPanel(val);
 }
 </script>

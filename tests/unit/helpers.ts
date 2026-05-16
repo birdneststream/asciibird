@@ -105,6 +105,7 @@ export function createToolbarState(overrides: Record<string, any> = {}) {
     isChoosingBg: false,
     isChoosingChar: false,
     persistCharPanel: false,
+    persistColourPanel: false,
     brushSizeWidth: 1,
     brushSizeHeight: 1,
     brushSizeType: 'square',
@@ -193,12 +194,16 @@ export function createMockToolbarStore(
     changeColourFg(c: number) {
       toolbarState.currentColourFg = c
       toolbarState.isUpdating = false
-      toolbarState.isChoosingFg = false
+      if (!toolbarState.persistColourPanel) {
+        toolbarState.isChoosingFg = false
+      }
     },
     changeColourBg(c: number) {
       toolbarState.currentColourBg = c
       toolbarState.isUpdating = false
-      toolbarState.isChoosingBg = false
+      if (!toolbarState.persistColourPanel) {
+        toolbarState.isChoosingBg = false
+      }
     },
     changeChar(c: string) {
       toolbarState.selectedChar = c
@@ -212,6 +217,9 @@ export function createMockToolbarStore(
     },
     persistCharPanel(val: boolean) {
       toolbarState.persistCharPanel = val
+    },
+    persistColourPanel(val: boolean) {
+      toolbarState.persistColourPanel = val
     },
     changeIsUpdatingFg(val: boolean) {
       toolbarState.isChoosingFg = val
@@ -398,16 +406,22 @@ export function createMockPanelStore(
 ) {
   const defaultState = {
     debugPanel: {
-      x: 100, y: 100, h: 200, w: 300, visible: false,
+      x: 100, y: 100, h: 200, w: 300, visible: false, minimized: false,
     },
     brushLibrary: {
-      x: 200, y: 150, h: 250, w: 350, visible: true, tab: 0,
+      x: 200, y: 150, h: 250, w: 350, visible: true, minimized: false, tab: 0,
     },
     brushPreview: {
-      x: 50, y: 50, h: 190, w: 250, visible: true,
+      x: 50, y: 50, h: 190, w: 250, visible: true, minimized: false,
     },
     layersLibrary: {
-      x: 300, y: 100, h: 190, w: 350, visible: true,
+      x: 300, y: 100, h: 190, w: 350, visible: true, minimized: false,
+    },
+    colourPicker: {
+      x: 800, y: 100, h: 200, w: 260, visible: false, minimized: false,
+    },
+    charPicker: {
+      x: 800, y: 300, h: 300, w: 480, visible: false, minimized: false,
     },
   }
 
@@ -431,6 +445,16 @@ export function createMockPanelStore(
     changeBrushPreviewState(p: any) { Object.assign(state.brushPreview, p) },
     toggleBrushLibrary(v: boolean) { state.brushLibrary.visible = v },
     changeLayersLibraryState(p: any) { Object.assign(state.layersLibrary, p) },
+    changeColourPickerState(p: any) { Object.assign(state.colourPicker, p) },
+    changeCharPickerState(p: any) { Object.assign(state.charPicker, p) },
+    minimizePanel(key: string) {
+      const panel = (state as any)[key]
+      if (panel) { panel.minimized = true; panel.visible = true }
+    },
+    restorePanel(key: string) {
+      const panel = (state as any)[key]
+      if (panel) { panel.minimized = false; panel.visible = true }
+    },
   }
 }
 
@@ -536,6 +560,9 @@ export function createMockStore(
     get currentTool() { return state.toolbarState.currentTool },
     get persistCharPanel() {
       return state.toolbarState.persistCharPanel
+    },
+    get persistColourPanel() {
+      return state.toolbarState.persistColourPanel
     },
     get isTargettingFg() { return state.toolbarState.targetingFg },
     get isTargettingBg() { return state.toolbarState.targetingBg },

@@ -23,6 +23,7 @@ import {
   createMockStore,
   createMockModalStore,
   createMockToolbarStore,
+  createMockPanelStore,
   toastedMock,
   copyTextMock,
   globalStubs,
@@ -33,6 +34,7 @@ import {
 let _mockStore: any = null
 let _mockModalStore: any = null
 let _mockToolbarStore: any = null
+let _mockPanelStore: any = null
 
 vi.mock('@/store', () => ({
   useAsciiBirdStore: () => _mockStore,
@@ -42,6 +44,9 @@ vi.mock('@/store/modal', () => ({
 }))
 vi.mock('@/store/toolbar', () => ({
   useToolbarStore: () => _mockToolbarStore,
+}))
+vi.mock('@/store/panels', () => ({
+  usePanelStore: () => _mockPanelStore,
 }))
 
 vi.mock('@/composables/useToast', () => ({
@@ -93,6 +98,7 @@ beforeEach(() => {
   _mockStore = store
   _mockModalStore = createMockModalStore()
   _mockToolbarStore = createMockToolbarStore()
+  _mockPanelStore = createMockPanelStore()
 })
 
 afterEach(() => {
@@ -122,16 +128,18 @@ describe('Colours.vue', () => {
     expect(bgStyle).toContain('0, 0, 0')
   })
 
-  it('clicking FG button toggles isChoosingFg', () => {
+  it('clicking FG button shows colour picker in FG mode', () => {
     const wrapper = tw(Colours, mountOpts())
     wrapper.find('#currentColourFg').trigger('click')
     expect(_mockToolbarStore.toolbarState.isChoosingFg).toBe(true)
+    expect(_mockPanelStore.colourPicker.minimized).toBe(false)
   })
 
-  it('clicking BG button toggles isChoosingBg', () => {
+  it('clicking BG button shows colour picker in BG mode', () => {
     const wrapper = tw(Colours, mountOpts())
     wrapper.find('#currentColourBg').trigger('click')
     expect(_mockToolbarStore.toolbarState.isChoosingBg).toBe(true)
+    expect(_mockPanelStore.colourPicker.minimized).toBe(false)
   })
 
   it('swapColours swaps FG and BG', () => {
@@ -155,10 +163,34 @@ describe('Colours.vue', () => {
     expect(wrapper.find('#currentChar').text()).toContain('SP')
   })
 
-  it('clicking char button toggles isChoosingChar', () => {
+  it('clicking char button shows char picker', () => {
     const wrapper = tw(Colours, mountOpts())
     wrapper.find('#currentChar').trigger('click')
     expect(_mockToolbarStore.toolbarState.isChoosingChar).toBe(true)
+    expect(_mockPanelStore.charPicker.minimized).toBe(false)
+  })
+
+  it('clicking FG button again dismisses colour picker', () => {
+    const wrapper = tw(Colours, mountOpts())
+    // First click: show
+    wrapper.find('#currentColourFg').trigger('click')
+    expect(_mockToolbarStore.toolbarState.isChoosingFg).toBe(true)
+    expect(_mockPanelStore.colourPicker.minimized).toBe(false)
+    // Second click: dismiss
+    wrapper.find('#currentColourFg').trigger('click')
+    expect(_mockToolbarStore.toolbarState.isChoosingFg).toBe(false)
+    expect(_mockPanelStore.colourPicker.minimized).toBe(true)
+  })
+
+  it('clicking FG when panel is minimized restores it', () => {
+    // Simulate panel minimized externally (e.g. taskbar)
+    _mockPanelStore.colourPicker.minimized = true
+    _mockToolbarStore.toolbarState.isChoosingFg = true
+    const wrapper = tw(Colours, mountOpts())
+    wrapper.find('#currentColourFg').trigger('click')
+    // Should detect not showing → restore
+    expect(_mockToolbarStore.toolbarState.isChoosingFg).toBe(true)
+    expect(_mockPanelStore.colourPicker.minimized).toBe(false)
   })
 })
 

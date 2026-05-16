@@ -66,29 +66,52 @@ const currentFg = computed(() => toolbarStore.currentFg);
 const currentBg = computed(() => toolbarStore.currentBg);
 const halfBlockEditing = computed(() => toolbarState.value.halfBlockEditing);
 
-/** Toggle FG picker and auto-restore panel from minimize */
+/**
+ * Check if the colour picker panel is actually showing on screen.
+ * Must satisfy both: not minimized AND the isChoosing flag is active.
+ */
+function isColourPickerShowing(): boolean {
+  return !panelStore.colourPicker.minimized
+    && (toolbarState.value.isChoosingFg || toolbarState.value.isChoosingBg);
+}
+
+/** Show colour picker in FG mode, or dismiss if already showing in FG mode */
 function toggleFg() {
-  const choosing = !toolbarState.value.isChoosingFg;
-  toolbarStore.changeIsUpdatingFg(choosing);
-  if (choosing) {
+  const showing = isColourPickerShowing() && toolbarState.value.isChoosingFg;
+  if (showing) {
+    toolbarStore.changeIsUpdatingFg(false);
+    panelStore.minimizePanel('colourPicker');
+  } else {
+    toolbarStore.changeIsUpdatingFg(false);
+    toolbarStore.changeIsUpdatingBg(false);
+    toolbarStore.changeIsUpdatingFg(true);
     panelStore.restorePanel('colourPicker');
   }
 }
 
-/** Toggle BG picker and auto-restore panel from minimize */
+/** Show colour picker in BG mode, or dismiss if already showing in BG mode */
 function toggleBg() {
-  const choosing = !toolbarState.value.isChoosingBg;
-  toolbarStore.changeIsUpdatingBg(choosing);
-  if (choosing) {
+  const showing = isColourPickerShowing() && toolbarState.value.isChoosingBg;
+  if (showing) {
+    toolbarStore.changeIsUpdatingBg(false);
+    panelStore.minimizePanel('colourPicker');
+  } else {
+    toolbarStore.changeIsUpdatingFg(false);
+    toolbarStore.changeIsUpdatingBg(false);
+    toolbarStore.changeIsUpdatingBg(true);
     panelStore.restorePanel('colourPicker');
   }
 }
 
-/** Toggle Char picker and auto-restore panel from minimize */
+/** Show char picker, or dismiss if already showing */
 function toggleChar() {
-  const choosing = !toolbarState.value.isChoosingChar;
-  toolbarStore.changeIsUpdatingChar(choosing);
-  if (choosing) {
+  const showing = !panelStore.charPicker.minimized
+    && toolbarState.value.isChoosingChar;
+  if (showing) {
+    toolbarStore.changeIsUpdatingChar(false);
+    panelStore.minimizePanel('charPicker');
+  } else {
+    toolbarStore.changeIsUpdatingChar(true);
     panelStore.restorePanel('charPicker');
   }
 }
