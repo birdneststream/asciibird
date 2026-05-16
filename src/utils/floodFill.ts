@@ -35,7 +35,7 @@ function matchesBoundary(
 
 /**
  * Apply fill or eraser to a block, selectively targeting properties.
- * Returns the new block state (mutates in place, returns copy for recording).
+ * Mutates the block in place.
  */
 function applyFillToBlock(
   block: Block, fillColor: Block,

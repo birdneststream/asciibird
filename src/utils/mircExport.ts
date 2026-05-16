@@ -55,7 +55,8 @@ function formatMircColor(block: Block, isPadded: boolean): string {
   }
 
   if (block.bg === undefined && block.fg !== undefined) {
-    return '\u0003' + (isPadded ? zeroPad(block.fg) : String(block.fg));
+    // Original behavior: emit bare reset before fg-only color code
+    return '\u0003\u0003' + (isPadded ? zeroPad(block.fg) : String(block.fg));
   }
 
   if (block.bg !== undefined && block.fg !== undefined) {

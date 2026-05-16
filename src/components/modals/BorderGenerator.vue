@@ -135,7 +135,9 @@ import {
   generateBorder,
   getBorderMinimumSize,
 } from '../../utils/borderGenerator';
-import type { BorderStyle, BorderStyleChars, BorderGeneratorResult } from '../../utils/borderGenerator';
+import type {
+  BorderStyle, BorderStyleChars, BorderGeneratorResult,
+} from '../../utils/borderGenerator';
 import { fillNullBlocks, emptyBlock } from '../../ascii';
 import type { Block } from '../../types';
 
