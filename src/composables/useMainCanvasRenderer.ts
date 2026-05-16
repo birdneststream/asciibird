@@ -18,6 +18,64 @@ export interface RenderBlockOptions {
 }
 
 /**
+ * Render a half-block character (▀ or ▄) as two coloured halves.
+ * Pure function — no external state.
+ */
+function renderHalfBlock(
+  ctx: CanvasRenderingContext2D,
+  block: Block,
+  canvasX: number,
+  canvasY: number,
+  blockWidth: number,
+  blockHeight: number,
+  colours: string[],
+  canBg: boolean,
+): void {
+  const halfH = blockHeight / 2;
+  const isUpper = block.char === UPPER_HALF;
+  const topColour = isUpper ? block.fg : block.bg;
+  const bottomColour = isUpper ? block.bg : block.fg;
+
+  if (canBg && topColour !== undefined && topColour !== null) {
+    ctx.fillStyle = colours[topColour];
+    ctx.fillRect(canvasX, canvasY, blockWidth, halfH);
+  }
+  if (canBg && bottomColour !== undefined && bottomColour !== null) {
+    ctx.fillStyle = colours[bottomColour];
+    ctx.fillRect(canvasX, canvasY + halfH, blockWidth, halfH);
+  }
+}
+
+/**
+ * Render the character glyph for a standard (non-half-block) block.
+ * Pure function — no external state.
+ */
+function renderCharGlyph(
+  ctx: CanvasRenderingContext2D,
+  block: Block,
+  canvasX: number,
+  canvasY: number,
+  blockWidth: number,
+  blockHeight: number,
+  colours: string[],
+  canFg: boolean,
+  canText: boolean,
+  fallbackChar: string,
+): void {
+  if (block.char === undefined || block.char === null) return;
+
+  const charToDraw = canText ? block.char : fallbackChar;
+  if (!charToDraw) return;
+
+  if (canFg && block.fg !== undefined && block.fg !== null) {
+    ctx.fillStyle = colours[block.fg];
+  } else {
+    ctx.fillStyle = '#FFFFFF';
+  }
+  ctx.fillText(charToDraw, canvasX, canvasY + blockHeight - 3);
+}
+
+/**
  * Render a single ASCII block onto a canvas context.
  *
  * Pure function — no external state, no side effects beyond the
@@ -40,25 +98,12 @@ export function renderBlock(
     fallbackChar = ' ',
   } = options ?? {};
 
-  const isUpperHalf = block.char === UPPER_HALF;
-  const isLowerHalf = block.char === LOWER_HALF;
-
-  // For half-block characters, render two coloured halves instead
-  // of a full-rect bg fill + character glyph. This avoids the
-  // "white bg" artifact when only one half has a colour.
-  if (isUpperHalf || isLowerHalf) {
-    const halfH = blockHeight / 2;
-    const topColour = isUpperHalf ? block.fg : block.bg;
-    const bottomColour = isUpperHalf ? block.bg : block.fg;
-
-    if (canBg && topColour !== undefined && topColour !== null) {
-      ctx.fillStyle = colours[topColour];
-      ctx.fillRect(canvasX, canvasY, blockWidth, halfH);
-    }
-    if (canBg && bottomColour !== undefined && bottomColour !== null) {
-      ctx.fillStyle = colours[bottomColour];
-      ctx.fillRect(canvasX, canvasY + halfH, blockWidth, halfH);
-    }
+  // Half-block characters use two-colour split rendering
+  if (block.char === UPPER_HALF || block.char === LOWER_HALF) {
+    renderHalfBlock(
+      ctx, block, canvasX, canvasY,
+      blockWidth, blockHeight, colours, canBg,
+    );
     return;
   }
 
@@ -68,17 +113,10 @@ export function renderBlock(
     ctx.fillRect(canvasX, canvasY, blockWidth, blockHeight);
   }
 
-  if (block.char !== undefined && block.char !== null) {
-    const charToDraw = canText ? block.char : fallbackChar;
-    if (charToDraw) {
-      if (canFg && block.fg !== undefined && block.fg !== null) {
-        ctx.fillStyle = colours[block.fg];
-      } else {
-        ctx.fillStyle = '#FFFFFF';
-      }
-      ctx.fillText(charToDraw, canvasX, canvasY + blockHeight - 3);
-    }
-  }
+  renderCharGlyph(
+    ctx, block, canvasX, canvasY,
+    blockWidth, blockHeight, colours, canFg, canText, fallbackChar,
+  );
 }
 
 /**
