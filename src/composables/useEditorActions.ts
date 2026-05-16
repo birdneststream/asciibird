@@ -229,14 +229,10 @@ export function useEditorActions(opts: EditorActionsOptions) {
   // ─── Dispatch & Diff ──────────────────────────────────────────
 
   async function dispatchBlocks(clearDiff = false) {
-    // .flat() converts the 2D diff array to 1D for store processing.
-    // Type mismatch is intentional: store expects flat diff arrays.
     const flatOld = s.diffBlocks.old.flat();
     const flatNew = s.diffBlocks.new.flat();
-    (s.diffBlocks as Record<string, unknown>).old = flatOld;
-    (s.diffBlocks as Record<string, unknown>).new = flatNew;
 
-    if (s.diffBlocks.new.length > 0) {
+    if (flatNew.length > 0) {
       const fg = s.toolbarStore.currentFg;
       const bg = s.toolbarStore.currentBg;
       s.toolbarStore.addRecentColor(fg);

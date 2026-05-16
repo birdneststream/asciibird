@@ -134,10 +134,10 @@ export function useToolApplication(
     }
 
     if (s.canTool.value && val !== undefined) {
-      (tBlock as Record<string, unknown>)[target] = val;
+      tBlock[target] = val;
       mirrorBlockMutate(arrayX, arrayY, (mx, my) => {
         snapshotMutateDiff(mx, my, (b) => {
-          (b as Record<string, unknown>)[target] = val;
+          b[target] = val;
         });
       });
     }

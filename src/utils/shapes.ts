@@ -49,10 +49,8 @@ export const SHAPE_ICONS: Record<ShapeType, string> = {
 
 /** Validate a ShapeType value (e.g., from stale IDB). Returns fallback. */
 export function validateShapeType(value: string): ShapeType {
-  if (SHAPE_TYPES.includes(value as ShapeType)) {
-    return value as ShapeType;
-  }
-  return 'line';
+  const valid = SHAPE_TYPES.find(t => t === value);
+  return valid ?? 'line';
 }
 
 /** Get the next shape type in the cycle. */
