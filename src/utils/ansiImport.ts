@@ -100,86 +100,107 @@ interface SgrState {
 }
 
 /**
+ * Parse extended (256-color or truecolor) SGR color parameter.
+ * Handles ESC[38;5;N / ESC[48;5;N (256-color) and
+ * ESC[38;2;R;G;B / ESC[48;2;R;G;B (truecolor).
+ *
+ * @returns New index advanced past consumed params, or -1 if not matched
+ */
+function parseSgrExtendedColor(
+  params: number[],
+  i: number,
+): { colour: number; advance: number } | null {
+  if (i + 1 >= params.length) return null;
+
+  if (params[i + 1] === 5 && i + 2 < params.length) {
+    // 256-color: ESC[3X;5;Nm
+    return {
+      colour: ANSI_TO_MIRC[params[i + 2]] ?? 0,
+      advance: 2,
+    };
+  }
+
+  if (params[i + 1] === 2 && i + 4 < params.length) {
+    // Truecolor: ESC[3X;2;R;G;Bm
+    return {
+      colour: closestMircColor([
+        params[i + 2], params[i + 3], params[i + 4],
+      ]),
+      advance: 4,
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Apply simple SGR attribute (non-extended-color).
+ * Handles: 0 reset, 1 bold on, 22 bold off, 39 default fg,
+ * 49 default bg, 30-37 standard fg, 40-47 standard bg,
+ * 90-97 bright fg, 100-107 bright bg.
+ *
+ * @returns true if the parameter was handled
+ */
+function applySgrSimple(p: number, state: SgrState): boolean {
+  if (p === 0) {
+    state.fg = null;
+    state.bg = null;
+    state.bold = false;
+  } else if (p === 1) {
+    state.bold = true;
+  } else if (p === 22) {
+    state.bold = false;
+  } else if (p === 39) {
+    state.fg = null;
+  } else if (p === 49) {
+    state.bg = null;
+  } else if (p >= 30 && p <= 37) {
+    const idx = p - 30;
+    state.fg = ANSI_TO_MIRC[
+      state.bold ? ANSI16_BRIGHT[idx] : ANSI16_STANDARD[idx]
+    ];
+  } else if (p >= 40 && p <= 47) {
+    state.bg = ANSI_TO_MIRC[ANSI16_STANDARD[p - 40]];
+  } else if (p >= 90 && p <= 97) {
+    state.fg = ANSI_TO_MIRC[ANSI16_BRIGHT[p - 90]];
+  } else if (p >= 100 && p <= 107) {
+    state.bg = ANSI_TO_MIRC[ANSI16_BRIGHT[p - 100]];
+  } else {
+    return false;
+  }
+  return true;
+}
+
+/**
  * Process an array of SGR parameters and update color state.
- * Handles:
- * - 0: reset
- * - 1: bold (affects 16-color interpretation)
- * - 30-37: standard fg
- * - 38;5;N: 256-color fg
- * - 38;2;R;G;B: truecolor fg
- * - 40-47: standard bg
- * - 48;5;N: 256-color bg
- * - 48;2;R;G;B: truecolor bg
- * - 90-97: bright fg
- * - 100-107: bright bg
- * - 22: bold off
- * - 39: default fg
- * - 49: default bg
+ * See applySgrSimple + parseSgrExtendedColor for sub-handlers.
  */
 function applySgr(params: number[], state: SgrState): void {
   let i = 0;
   while (i < params.length) {
     const p = params[i];
 
-    if (p === 0) {
-      // Full reset
-      state.fg = null;
-      state.bg = null;
-      state.bold = false;
-    } else if (p === 1) {
-      state.bold = true;
-    } else if (p === 22) {
-      state.bold = false;
-    } else if (p === 39) {
-      state.fg = null;
-    } else if (p === 49) {
-      state.bg = null;
-    } else if (p >= 30 && p <= 37) {
-      // Standard 16-color fg
-      const idx = p - 30;
-      state.fg = ANSI_TO_MIRC[
-        state.bold ? ANSI16_BRIGHT[idx] : ANSI16_STANDARD[idx]
-      ];
-    } else if (p === 38 && i + 1 < params.length) {
-      if (params[i + 1] === 5 && i + 2 < params.length) {
-        // 256-color fg: ESC[38;5;Nm
-        state.fg = ANSI_TO_MIRC[params[i + 2]] ?? 0;
-        i += 2;
-      } else if (params[i + 1] === 2 && i + 4 < params.length) {
-        // Truecolor fg: ESC[38;2;R;G;Bm
-        state.fg = closestMircColor([
-          params[i + 2], params[i + 3], params[i + 4],
-        ]);
-        i += 4;
-      } else {
-        i++;
-      }
-    } else if (p === 48 && i + 1 < params.length) {
-      if (params[i + 1] === 5 && i + 2 < params.length) {
-        // 256-color bg: ESC[48;5;Nm
-        state.bg = ANSI_TO_MIRC[params[i + 2]] ?? 0;
-        i += 2;
-      } else if (params[i + 1] === 2 && i + 4 < params.length) {
-        // Truecolor bg: ESC[48;2;R;G;Bm
-        state.bg = closestMircColor([
-          params[i + 2], params[i + 3], params[i + 4],
-        ]);
-        i += 4;
-      } else {
-        i++;
-      }
-    } else if (p >= 90 && p <= 97) {
-      // Bright 16-color fg
-      state.fg = ANSI_TO_MIRC[ANSI16_BRIGHT[p - 90]];
-    } else if (p >= 100 && p <= 107) {
-      // Bright 16-color bg
-      state.bg = ANSI_TO_MIRC[ANSI16_BRIGHT[p - 100]];
-    } else if (p >= 40 && p <= 47) {
-      // Standard 16-color bg
-      state.bg = ANSI_TO_MIRC[ANSI16_STANDARD[p - 40]];
+    // Try simple attribute first
+    if (applySgrSimple(p, state)) {
+      i++;
+      continue;
     }
-    // Ignore: 4 underline, 7 reverse, 8 conceal, etc.
 
+    // Extended color: 38 = fg, 48 = bg
+    if ((p === 38 || p === 48) && i + 1 < params.length) {
+      const parsed = parseSgrExtendedColor(params, i);
+      if (parsed) {
+        if (p === 38) {
+          state.fg = parsed.colour;
+        } else {
+          state.bg = parsed.colour;
+        }
+        i += parsed.advance + 1;
+        continue;
+      }
+    }
+
+    // Ignore: 4 underline, 7 reverse, 8 conceal, etc.
     i++;
   }
 }
@@ -194,10 +215,78 @@ function makeBlock(char: string, state: SgrState): Block {
   return block;
 }
 
-// ─── Main parser ─────────────────────────────────────────────────
+// ─── Main parser helpers ─────────────────────────────────────────
 
 /** ESC character code */
 const ESC = 0x1B;
+
+/**
+ * Finish the current row, push it to blocks, reset state.
+ * Returns the new empty row.
+ */
+function finishRow(
+  row: Block[],
+  blocks: Block[][],
+  state: SgrState,
+  resetSgr: boolean,
+): { row: Block[]; colCount: number; maxWidth: number } {
+  const maxWidth = row.length;
+  blocks.push(row);
+  if (resetSgr) {
+    state.fg = null;
+    state.bg = null;
+    state.bold = false;
+  }
+  return { row: [], colCount: 0, maxWidth };
+}
+
+/**
+ * Process a CSI escape sequence starting after ESC[.
+ * Advances the index past the sequence.
+ * If the sequence is SGR (ESC[...m), updates state.
+ *
+ * @returns new index after the CSI sequence
+ */
+function processCsiSequence(
+  contents: string,
+  i: number,
+  state: SgrState,
+): number {
+  // Collect parameter bytes (0x30-0x3F)
+  let paramStr = '';
+  while (i < contents.length
+         && contents.charCodeAt(i) >= 0x20
+         && contents.charCodeAt(i) <= 0x3F) {
+    paramStr += contents[i];
+    i++;
+  }
+  // Skip intermediate bytes (0x20-0x2F)
+  while (i < contents.length
+         && contents.charCodeAt(i) >= 0x20
+         && contents.charCodeAt(i) <= 0x2F) {
+    i++;
+  }
+  // Final byte
+  if (i < contents.length) {
+    const finalByte = contents.charCodeAt(i);
+    if (finalByte === 0x6D) {
+      // SGR: ESC[...m — process color attributes
+      if (paramStr === '' || paramStr === '0') {
+        state.fg = null;
+        state.bg = null;
+        state.bold = false;
+      } else {
+        const params = paramStr
+          .split(';')
+          .map(n => (n === '' ? 0 : Number.parseInt(n, 10)));
+        applySgr(params, state);
+      }
+    }
+    // Other CSI sequences (cursor movement, etc.) are ignored
+    i++;
+  }
+  return i;
+}
 
 /**
  * Parse ANSI escape sequences into an ASCIIBIRD Block[][] grid.
@@ -238,64 +327,26 @@ export function parseAnsiToBlocks(
         && contents.charCodeAt(i + 1) === 0x5B) {
       // CSI sequence: ESC [ ... <final byte>
       i += 2; // skip ESC [
-      // Collect parameter bytes (0x30-0x3F) and intermediate
-      // bytes (0x20-0x2F) until final byte (0x40-0x7E)
-      let paramStr = '';
-      while (i < contents.length && contents.charCodeAt(i) >= 0x20
-             && contents.charCodeAt(i) <= 0x3F) {
-        paramStr += contents[i];
-        i++;
-      }
-      // Skip intermediate bytes
-      while (i < contents.length && contents.charCodeAt(i) >= 0x20
-             && contents.charCodeAt(i) <= 0x2F) {
-        i++;
-      }
-      // Final byte
-      if (i < contents.length) {
-        const finalByte = contents.charCodeAt(i);
-        if (finalByte === 0x6D) {
-          // SGR: ESC[...m — process color attributes
-          if (paramStr === '' || paramStr === '0') {
-            state.fg = null;
-            state.bg = null;
-            state.bold = false;
-          } else {
-            const params = paramStr
-              .split(';')
-              .map(n => (n === '' ? 0 : Number.parseInt(n, 10)));
-            applySgr(params, state);
-          }
-        }
-        // Other CSI sequences (cursor movement, etc.) are ignored
-        i++;
-      }
+      i = processCsiSequence(contents, i, state);
     } else if (code === 0x0A) {
       // LF — end row
-      if (row.length > maxWidth) maxWidth = row.length;
-      blocks.push(row);
-      row = [];
-      colCount = 0;
-      state.fg = null;
-      state.bg = null;
-      state.bold = false;
+      const result = finishRow(row, blocks, state, true);
+      row = result.row;
+      colCount = result.colCount;
+      if (result.maxWidth > maxWidth) maxWidth = result.maxWidth;
       i++;
     } else if (code === 0x0D) {
-      // CR — end row (handles \r-only and \r\n line endings)
-      // Check for \r\n pair — just skip CR and let LF handle it
+      // CR — handle \r\n pair vs standalone \r
       if (i + 1 < contents.length
           && contents.charCodeAt(i + 1) === 0x0A) {
         // \r\n pair — skip CR, LF will end the row
         i++;
       } else {
         // Standalone \r — treat as line break
-        if (row.length > maxWidth) maxWidth = row.length;
-        blocks.push(row);
-        row = [];
-        colCount = 0;
-        state.fg = null;
-        state.bg = null;
-        state.bold = false;
+        const result = finishRow(row, blocks, state, true);
+        row = result.row;
+        colCount = result.colCount;
+        if (result.maxWidth > maxWidth) maxWidth = result.maxWidth;
         i++;
       }
     } else {
@@ -305,12 +356,10 @@ export function parseAnsiToBlocks(
 
       // Wrap at target width (for flat ANSI files)
       if (targetWidth > 0 && colCount >= targetWidth) {
-        if (row.length > maxWidth) maxWidth = row.length;
-        blocks.push(row);
-        row = [];
-        colCount = 0;
-        // Do NOT reset SGR state at wrap — ANSI art expects
-        // colors to carry across line wraps
+        const result = finishRow(row, blocks, state, false);
+        row = result.row;
+        colCount = result.colCount;
+        if (result.maxWidth > maxWidth) maxWidth = result.maxWidth;
       }
       i++;
     }
