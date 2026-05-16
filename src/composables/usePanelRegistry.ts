@@ -122,7 +122,7 @@ function getPanelDefs(): PanelDef[] {
       },
       toggleMinimize: () => {
         const state = panelStore.colourPicker;
-        if (state.minimized) {
+        if (!state.visible || state.minimized) {
           panelStore.restorePanel('colourPicker');
           if (!toolbarStore.toolbarState.isChoosingFg
             && !toolbarStore.toolbarState.isChoosingBg) {
@@ -151,7 +151,7 @@ function getPanelDefs(): PanelDef[] {
       },
       toggleMinimize: () => {
         const state = panelStore.charPicker;
-        if (state.minimized) {
+        if (!state.visible || state.minimized) {
           panelStore.restorePanel('charPicker');
           toolbarStore.changeIsUpdatingChar(true);
         } else {

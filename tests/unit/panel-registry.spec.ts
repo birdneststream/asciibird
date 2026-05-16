@@ -117,4 +117,123 @@ describe('usePanelRegistry', () => {
     expect(restored.minimized).toBe(false)
     expect(restored.isShowing).toBe(true)
   })
+
+  describe('colourPicker toggle', () => {
+    it('restores a hidden colourPicker to visible', () => {
+      const panelStore = usePanelStore()
+      const toolbarStore = useToolbarStore()
+      panelStore.colourPicker.visible = false
+      panelStore.colourPicker.minimized = false
+      const { panels, toggle } = usePanelRegistry()
+      toggle('colourPicker')
+      const cp = panels.value.find((p) => p.id === 'colourPicker')!
+      expect(cp.visible).toBe(true)
+      expect(cp.minimized).toBe(false)
+      expect(cp.isShowing).toBe(true)
+    })
+
+    it('restores a minimized colourPicker', () => {
+      const panelStore = usePanelStore()
+      panelStore.minimizePanel('colourPicker')
+      const { panels, toggle } = usePanelRegistry()
+      toggle('colourPicker')
+      const cp = panels.value.find((p) => p.id === 'colourPicker')!
+      expect(cp.visible).toBe(true)
+      expect(cp.minimized).toBe(false)
+      expect(cp.isShowing).toBe(true)
+    })
+
+    it('minimizes a visible colourPicker', () => {
+      const panelStore = usePanelStore()
+      panelStore.colourPicker.visible = true
+      panelStore.colourPicker.minimized = false
+      const { panels, toggle } = usePanelRegistry()
+      toggle('colourPicker')
+      const cp = panels.value.find((p) => p.id === 'colourPicker')!
+      expect(cp.visible).toBe(true)
+      expect(cp.minimized).toBe(true)
+      expect(cp.isShowing).toBe(false)
+    })
+
+    it('sets isChoosingFg when restoring and no mode active', () => {
+      const panelStore = usePanelStore()
+      const toolbarStore = useToolbarStore()
+      panelStore.colourPicker.visible = false
+      toolbarStore.changeIsUpdatingFg(false)
+      toolbarStore.changeIsUpdatingBg(false)
+      const { toggle } = usePanelRegistry()
+      toggle('colourPicker')
+      expect(toolbarStore.toolbarState.isChoosingFg).toBe(true)
+    })
+
+    it('clears fg/bg mode when minimizing', () => {
+      const panelStore = usePanelStore()
+      const toolbarStore = useToolbarStore()
+      panelStore.colourPicker.visible = true
+      panelStore.colourPicker.minimized = false
+      toolbarStore.changeIsUpdatingFg(true)
+      const { toggle } = usePanelRegistry()
+      toggle('colourPicker')
+      expect(toolbarStore.toolbarState.isChoosingFg).toBe(false)
+      expect(toolbarStore.toolbarState.isChoosingBg).toBe(false)
+    })
+  })
+
+  describe('charPicker toggle', () => {
+    it('restores a hidden charPicker to visible', () => {
+      const panelStore = usePanelStore()
+      panelStore.charPicker.visible = false
+      panelStore.charPicker.minimized = false
+      const { panels, toggle } = usePanelRegistry()
+      toggle('charPicker')
+      const cp = panels.value.find((p) => p.id === 'charPicker')!
+      expect(cp.visible).toBe(true)
+      expect(cp.minimized).toBe(false)
+      expect(cp.isShowing).toBe(true)
+    })
+
+    it('restores a minimized charPicker', () => {
+      const panelStore = usePanelStore()
+      panelStore.minimizePanel('charPicker')
+      const { panels, toggle } = usePanelRegistry()
+      toggle('charPicker')
+      const cp = panels.value.find((p) => p.id === 'charPicker')!
+      expect(cp.visible).toBe(true)
+      expect(cp.minimized).toBe(false)
+      expect(cp.isShowing).toBe(true)
+    })
+
+    it('minimizes a visible charPicker', () => {
+      const panelStore = usePanelStore()
+      panelStore.charPicker.visible = true
+      panelStore.charPicker.minimized = false
+      const { panels, toggle } = usePanelRegistry()
+      toggle('charPicker')
+      const cp = panels.value.find((p) => p.id === 'charPicker')!
+      expect(cp.visible).toBe(true)
+      expect(cp.minimized).toBe(true)
+      expect(cp.isShowing).toBe(false)
+    })
+
+    it('sets isChoosingChar when restoring', () => {
+      const panelStore = usePanelStore()
+      const toolbarStore = useToolbarStore()
+      panelStore.charPicker.visible = false
+      toolbarStore.changeIsUpdatingChar(false)
+      const { toggle } = usePanelRegistry()
+      toggle('charPicker')
+      expect(toolbarStore.toolbarState.isChoosingChar).toBe(true)
+    })
+
+    it('clears isChoosingChar when minimizing', () => {
+      const panelStore = usePanelStore()
+      const toolbarStore = useToolbarStore()
+      panelStore.charPicker.visible = true
+      panelStore.charPicker.minimized = false
+      toolbarStore.changeIsUpdatingChar(true)
+      const { toggle } = usePanelRegistry()
+      toggle('charPicker')
+      expect(toolbarStore.toolbarState.isChoosingChar).toBe(false)
+    })
+  })
 })
