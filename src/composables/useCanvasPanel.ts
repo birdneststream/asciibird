@@ -55,8 +55,10 @@ function createDragHandlers(state: DragState) {
   let startPosY = 0;
 
   function onPointerDown(e: PointerEvent, disabled: boolean) {
-    if (disabled) return;
-    if (e.button !== 0) return;
+    // Middle button (1) always works regardless of disabled state,
+    // enabling canvas drag in any tool mode via middle-click.
+    if (e.button !== 0 && e.button !== 1) return;
+    if (disabled && e.button !== 1) return;
     e.preventDefault();
     e.stopPropagation();
 
