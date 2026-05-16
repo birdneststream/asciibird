@@ -16,6 +16,7 @@ export interface MenuBarActions {
   handleCropToContent: () => void;
 }
 
+// eslint-disable-next-line max-lines-per-function -- menu bar definition: static data literal with store access
 export function useMenuBar(actions: MenuBarActions) {
   const store = useAsciiBirdStore();
   const modalStore = useModalStore();
@@ -56,6 +57,7 @@ export function useMenuBar(actions: MenuBarActions) {
   const debugPanelState = computed(() => panelStore.debugPanel);
 
   // ── Menu bar definition ────────────────────────────────────────
+  // eslint-disable-next-line max-lines-per-function -- menu items: static data array
   const menuBar = computed<AppMenuBar[]>(() => [
     {
       label: 'File',

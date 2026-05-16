@@ -18,6 +18,7 @@ import { useModalStore } from '../store/modal';
  * - 'editor' — tool shortcuts (B, E, F, S, T, G, Q) + KeyboardShortcuts.vue
  * - 'modals' — active when modal/dialog is open (no editor shortcuts)
  */
+// eslint-disable-next-line max-lines-per-function -- shortcut registration: hotkeys loops + lifecycle hooks
 export function useGlobalShortcuts() {
   const store = useAsciiBirdStore();
   const toolbarStore = useToolbarStore();

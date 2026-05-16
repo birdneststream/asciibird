@@ -39,6 +39,7 @@ interface PanelDef {
 }
 
 /** Get all panel definitions using lazy store access */
+// eslint-disable-next-line max-lines-per-function -- static panel definition array
 function getPanelDefs(): PanelDef[] {
   const panelStore = usePanelStore();
   const toolbarStore = useToolbarStore();

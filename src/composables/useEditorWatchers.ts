@@ -60,6 +60,7 @@ export interface EditorWatcherOptions {
 
 // ─── Composable ─────────────────────────────────────────────────
 
+// eslint-disable-next-line max-lines-per-function -- watcher registration: 12 watch() calls must run in composable scope
 export function useEditorWatchers(opts: EditorWatcherOptions): void {
   const s = opts.state;
   const r = opts.rendering;
