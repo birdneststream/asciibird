@@ -36,182 +36,185 @@ export interface UseCanvasPanelOptions {
   ) => void;
 }
 
-export function useCanvasPanel(options: UseCanvasPanelOptions) {
-  const {
-    snapX,
-    snapY,
-    disabled,
-    initialX = 0,
-    initialY = 0,
-    initialWidth = 512,
-    initialHeight = 512,
-    onDragStop,
-    onDragMove,
-    onResizeStop,
-  } = options;
+// ─── Module-level helpers ───────────────────────────────────────
 
-  // ─── Drag State ──────────────────────────────────────────────────
-  const dragX = ref(initialX);
-  const dragY = ref(initialY);
+interface DragState {
+  x: { value: number };
+  y: { value: number };
+  isDragging: { value: boolean };
+  snapX: number;
+  snapY: number;
+  onDragMove?: (x: number, y: number) => void;
+  onDragStop?: (x: number, y: number) => void;
+}
 
-  const isDragging = ref(false);
+function createDragHandlers(state: DragState) {
+  let startClientX = 0;
+  let startClientY = 0;
+  let startPosX = 0;
+  let startPosY = 0;
 
-  // ─── Resize State ────────────────────────────────────────────────
-  const panelWidth = ref(initialWidth);
-  const panelHeight = ref(initialHeight);
-  const isResizing = ref(false);
-
-  // Store resize start state
-  let resizeStartX = 0;
-  let resizeStartY = 0;
-  let resizeStartWidth = 0;
-  let resizeStartHeight = 0;
-  let resizeStartPosX = 0;
-  let resizeStartPosY = 0;
-  let resizeHandle: ResizeHandlePosition | null = null;
-
-  // ─── Snap Computed ───────────────────────────────────────────────
-  const currentSnapX = computed(() => toValue(snapX));
-  const currentSnapY = computed(() => toValue(snapY));
-
-  // ─── Drag Implementation ─────────────────────────────────────────
-  // We implement custom drag instead of useDraggable for snap control
-  let dragStartClientX = 0;
-  let dragStartClientY = 0;
-  let dragStartPosX = 0;
-  let dragStartPosY = 0;
-
-  function onDragPointerDown(e: PointerEvent) {
-    if (toValue(disabled)) return;
-    if (e.button !== 0) return; // left button only
-
+  function onPointerDown(e: PointerEvent, disabled: boolean) {
+    if (disabled) return;
+    if (e.button !== 0) return;
     e.preventDefault();
     e.stopPropagation();
 
-    isDragging.value = true;
-    dragStartClientX = e.clientX;
-    dragStartClientY = e.clientY;
-    dragStartPosX = dragX.value;
-    dragStartPosY = dragY.value;
+    state.isDragging.value = true;
+    startClientX = e.clientX;
+    startClientY = e.clientY;
+    startPosX = state.x.value;
+    startPosY = state.y.value;
 
-    document.addEventListener('pointermove', onDragPointerMove);
-    document.addEventListener('pointerup', onDragPointerUp);
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerup', onPointerUp);
   }
 
-  function onDragPointerMove(e: PointerEvent) {
-    if (!isDragging.value) return;
+  function onPointerMove(e: PointerEvent) {
+    if (!state.isDragging.value) return;
 
-    const dx = e.clientX - dragStartClientX;
-    const dy = e.clientY - dragStartClientY;
+    const dx = e.clientX - startClientX;
+    const dy = e.clientY - startClientY;
+    const snappedX = snapToGrid(startPosX + dx, state.snapX);
+    const snappedY = snapToGrid(startPosY + dy, state.snapY);
 
-    const rawX = dragStartPosX + dx;
-    const rawY = dragStartPosY + dy;
-
-    const snappedX = snapToGrid(rawX, currentSnapX.value);
-    const snappedY = snapToGrid(rawY, currentSnapY.value);
-
-    // Update position for live feedback
-    dragX.value = snappedX;
-    dragY.value = snappedY;
-
-    onDragMove?.(snappedX, snappedY);
+    state.x.value = snappedX;
+    state.y.value = snappedY;
+    state.onDragMove?.(snappedX, snappedY);
   }
 
-  function onDragPointerUp() {
-    if (!isDragging.value) return;
-
-    isDragging.value = false;
-    document.removeEventListener('pointermove', onDragPointerMove);
-    document.removeEventListener('pointerup', onDragPointerUp);
-
-    onDragStop?.(dragX.value, dragY.value);
+  function onPointerUp() {
+    if (!state.isDragging.value) return;
+    state.isDragging.value = false;
+    document.removeEventListener('pointermove', onPointerMove);
+    document.removeEventListener('pointerup', onPointerUp);
+    state.onDragStop?.(state.x.value, state.y.value);
   }
 
-  // ─── Resize Implementation ───────────────────────────────────────
-  function startResize(handle: ResizeHandlePosition) {
+  return { onPointerDown, onPointerMove, onPointerUp };
+}
+
+interface ResizeState {
+  x: { value: number };
+  y: { value: number };
+  width: { value: number };
+  height: { value: number };
+  isResizing: { value: boolean };
+  snapX: number;
+  snapY: number;
+  onResizeStop?: (x: number, y: number, w: number, h: number) => void;
+}
+
+function createResizeHandlers(state: ResizeState) {
+  let startX = 0;
+  let startY = 0;
+  let startWidth = 0;
+  let startHeight = 0;
+  let startPosX = 0;
+  let startPosY = 0;
+  let handle: ResizeHandlePosition | null = null;
+
+  function startResize(h: ResizeHandlePosition) {
     return (e: PointerEvent) => {
       e.preventDefault();
       e.stopPropagation();
 
-      isResizing.value = true;
-      resizeHandle = handle;
-      resizeStartX = e.clientX;
-      resizeStartY = e.clientY;
-      resizeStartWidth = panelWidth.value;
-      resizeStartHeight = panelHeight.value;
-      resizeStartPosX = dragX.value;
-      resizeStartPosY = dragY.value;
+      state.isResizing.value = true;
+      handle = h;
+      startX = e.clientX;
+      startY = e.clientY;
+      startWidth = state.width.value;
+      startHeight = state.height.value;
+      startPosX = state.x.value;
+      startPosY = state.y.value;
 
-      document.addEventListener('pointermove', onResizePointerMove);
-      document.addEventListener('pointerup', onResizePointerUp);
+      document.addEventListener('pointermove', onPointerMove);
+      document.addEventListener('pointerup', onPointerUp);
     };
   }
 
-  function onResizePointerMove(e: PointerEvent) {
-    if (!isResizing.value || !resizeHandle) return;
+  function onPointerMove(e: PointerEvent) {
+    if (!state.isResizing.value || !handle) return;
 
-    const dx = e.clientX - resizeStartX;
-    const dy = e.clientY - resizeStartY;
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    let newWidth = startWidth;
+    let newHeight = startHeight;
+    let newX = startPosX;
+    let newY = startPosY;
 
-    let newWidth = resizeStartWidth;
-    let newHeight = resizeStartHeight;
-    let newX = resizeStartPosX;
-    let newY = resizeStartPosY;
-
-    // ── Right edge handles (br, tr, mr) ──
-    if (resizeHandle === 'br' || resizeHandle === 'tr'
-        || resizeHandle === 'mr') {
-      newWidth = snapDimensionToGrid(
-        resizeStartWidth + dx, currentSnapX.value, 1,
-      );
+    if (handle === 'br' || handle === 'tr' || handle === 'mr') {
+      newWidth = snapDimensionToGrid(startWidth + dx, state.snapX, 1);
+    }
+    if (handle === 'br' || handle === 'bl' || handle === 'bm') {
+      newHeight = snapDimensionToGrid(startHeight + dy, state.snapY, 1);
+    }
+    if (handle === 'tl' || handle === 'ml' || handle === 'bl') {
+      newWidth = snapDimensionToGrid(startWidth - dx, state.snapX, 1);
+      newX = startPosX + startWidth - newWidth;
+    }
+    if (handle === 'tl' || handle === 'tm' || handle === 'tr') {
+      newHeight = snapDimensionToGrid(startHeight - dy, state.snapY, 1);
+      newY = startPosY + startHeight - newHeight;
     }
 
-    // ── Bottom edge handles (br, bl, bm) ──
-    if (resizeHandle === 'br' || resizeHandle === 'bl'
-        || resizeHandle === 'bm') {
-      newHeight = snapDimensionToGrid(
-        resizeStartHeight + dy, currentSnapY.value, 1,
-      );
-    }
-
-    // ── Left edge handles (tl, ml, bl) ──
-    // Snap dimension first, derive position to keep right edge fixed
-    if (resizeHandle === 'tl' || resizeHandle === 'ml'
-        || resizeHandle === 'bl') {
-      newWidth = snapDimensionToGrid(
-        resizeStartWidth - dx, currentSnapX.value, 1,
-      );
-      newX = resizeStartPosX + resizeStartWidth - newWidth;
-    }
-
-    // ── Top edge handles (tl, tm, tr) ──
-    // Snap dimension first, derive position to keep bottom edge fixed
-    if (resizeHandle === 'tl' || resizeHandle === 'tm'
-        || resizeHandle === 'tr') {
-      newHeight = snapDimensionToGrid(
-        resizeStartHeight - dy, currentSnapY.value, 1,
-      );
-      newY = resizeStartPosY + resizeStartHeight - newHeight;
-    }
-
-    panelWidth.value = newWidth;
-    panelHeight.value = newHeight;
-    dragX.value = newX;
-    dragY.value = newY;
+    state.width.value = newWidth;
+    state.height.value = newHeight;
+    state.x.value = newX;
+    state.y.value = newY;
   }
 
-  function onResizePointerUp() {
-    if (!isResizing.value) return;
-
-    isResizing.value = false;
-    resizeHandle = null;
-    document.removeEventListener('pointermove', onResizePointerMove);
-    document.removeEventListener('pointerup', onResizePointerUp);
-
-    onResizeStop?.(dragX.value, dragY.value, panelWidth.value, panelHeight.value);
+  function onPointerUp() {
+    if (!state.isResizing.value) return;
+    state.isResizing.value = false;
+    handle = null;
+    document.removeEventListener('pointermove', onPointerMove);
+    document.removeEventListener('pointerup', onPointerUp);
+    state.onResizeStop?.(
+      state.x.value, state.y.value,
+      state.width.value, state.height.value,
+    );
   }
 
-  // ─── Computed Style ──────────────────────────────────────────────
+  return { startResize, onPointerMove, onPointerUp };
+}
+
+// ─── Composable ─────────────────────────────────────────────────
+
+export function useCanvasPanel(options: UseCanvasPanelOptions) {
+  const {
+    snapX, snapY, disabled,
+    initialX = 0, initialY = 0,
+    initialWidth = 512, initialHeight = 512,
+    onDragStop, onDragMove, onResizeStop,
+  } = options;
+
+  const dragX = ref(initialX);
+  const dragY = ref(initialY);
+  const isDragging = ref(false);
+  const panelWidth = ref(initialWidth);
+  const panelHeight = ref(initialHeight);
+  const isResizing = ref(false);
+
+  const currentSnapX = computed(() => toValue(snapX));
+  const currentSnapY = computed(() => toValue(snapY));
+
+  const drag = createDragHandlers({
+    x: dragX, y: dragY, isDragging,
+    get snapX() { return currentSnapX.value; },
+    get snapY() { return currentSnapY.value; },
+    onDragStop, onDragMove,
+  });
+
+  const resize = createResizeHandlers({
+    x: dragX, y: dragY,
+    width: panelWidth, height: panelHeight,
+    isResizing,
+    get snapX() { return currentSnapX.value; },
+    get snapY() { return currentSnapY.value; },
+    onResizeStop,
+  });
+
   const style = computed(() => ({
     position: 'absolute' as const,
     left: `${dragX.value}px`,
@@ -220,54 +223,33 @@ export function useCanvasPanel(options: UseCanvasPanelOptions) {
     height: `${panelHeight.value}px`,
   }));
 
-  // ─── Public API ──────────────────────────────────────────────────
-  /**
-   * Reset position (e.g. on tab switch)
-   */
   function setPosition(newX: number, newY: number) {
     dragX.value = snapToGrid(newX, currentSnapX.value);
     dragY.value = snapToGrid(newY, currentSnapY.value);
   }
 
-  /**
-   * Update panel dimensions (e.g. when ASCII dimensions change externally)
-   */
   function setDimensions(newWidth: number, newHeight: number) {
     panelWidth.value = newWidth;
     panelHeight.value = newHeight;
   }
 
-  /**
-   * Cleanup event listeners (call on component unmount)
-   */
   function cleanup() {
-    document.removeEventListener('pointermove', onDragPointerMove);
-    document.removeEventListener('pointerup', onDragPointerUp);
-    document.removeEventListener('pointermove', onResizePointerMove);
-    document.removeEventListener('pointerup', onResizePointerUp);
+    document.removeEventListener('pointermove', drag.onPointerMove);
+    document.removeEventListener('pointerup', drag.onPointerUp);
+    document.removeEventListener('pointermove', resize.onPointerMove);
+    document.removeEventListener('pointerup', resize.onPointerUp);
     isDragging.value = false;
     isResizing.value = false;
   }
 
   return {
-    // Position
-    x: dragX,
-    y: dragY,
-    // Dimensions
-    width: panelWidth,
-    height: panelHeight,
-    // State
-    isDragging,
-    isResizing,
-    // Style
+    x: dragX, y: dragY,
+    width: panelWidth, height: panelHeight,
+    isDragging, isResizing,
     style,
-    // Drag handler (attach to the panel element via @pointerdown)
-    onDragPointerDown,
-    // Resize handler factory
-    startResize,
-    // Utility methods
-    setPosition,
-    setDimensions,
-    cleanup,
+    onDragPointerDown: (e: PointerEvent) =>
+      drag.onPointerDown(e, toValue(disabled) ?? false),
+    startResize: resize.startResize,
+    setPosition, setDimensions, cleanup,
   };
 }

@@ -62,6 +62,227 @@ export interface EditorActionsOptions {
   contextMenuReplace: ContextMenuReplaceFn;
 }
 
+// ─── Module-level helpers ───────────────────────────────────────
+
+/** Get the current selection bounds as grid coordinates. */
+function getSelectionBounds(
+  s: EditorState,
+): { x: number; y: number; w: number; h: number } | null {
+  if (!s.isSelected.value || !s.isSelecting.value) return null;
+  const rect = selectionToGridRect(
+    s.selecting.value,
+    s.blockWidthComp.value,
+    s.blockHeightComp.value,
+    s.currentAsciiWidth.value,
+    s.currentAsciiHeight.value,
+  );
+  if (!rect) return null;
+  return { x: rect.x, y: rect.y, w: rect.width, h: rect.height };
+}
+
+function canvasToPng(
+  s: EditorState,
+  canvasRef: Ref<HTMLCanvasElement | null>,
+): void {
+  const canvas = canvasRef.value;
+  if (canvas) {
+    canvasToPngUtil(
+      canvas,
+      (s.currentAscii.value as { title: string })?.title ?? 'ascii',
+    );
+  }
+}
+
+function openContextMenu(
+  editorMenu: ActionsTemplateRefs['editorMenu'],
+  e: MouseEvent,
+): void {
+  e.preventDefault();
+  editorMenu.value?.open({
+    clientX: e.clientX,
+    clientY: e.clientY,
+  });
+}
+
+function doContextMenuReplaceColor(
+  s: EditorState,
+  replaceFn: ContextMenuReplaceFn,
+): void {
+  const block = s.asciiBlockAtXy.value;
+  if (!block) return;
+  const bounds = getSelectionBounds(s);
+  if (bounds) {
+    replaceFn(block, bounds);
+  } else {
+    replaceFn(block);
+  }
+}
+
+function doContextMenuCopySelection(
+  s: EditorState,
+  toastShow: EditorActionsOptions['toastShow'],
+): void {
+  if (s.selectedBlocks.value.length > 0) {
+    const didCopy = copySelectionBlocks(
+      s.selecting.value,
+      s.selectedBlocks.value,
+      s.currentAsciiLayerBlocks.value,
+      s.blockWidthComp.value,
+      s.blockHeightComp.value,
+      s.currentAsciiWidth.value,
+      s.currentAsciiHeight.value,
+      s.toolbarStore.setSelectBlocks,
+    );
+    if (didCopy) {
+      toastShow('Copied selection to clipboard', { type: 'success' });
+    }
+  }
+}
+
+function doContextMenuCutSelection(
+  s: EditorState,
+  r: ActionsRenderingDeps,
+  pasteMode: ActionsPasteMode,
+  toastShow: EditorActionsOptions['toastShow'],
+): void {
+  if (s.isSelecting.value && s.isSelected.value) {
+    pasteMode.cutSelection();
+    r.delayRedrawCanvas(true);
+    toastShow('Cut selection to clipboard', { type: 'success' });
+  }
+}
+
+function doContextMenuDeleteSelection(
+  s: EditorState,
+  r: ActionsRenderingDeps,
+  pasteMode: ActionsPasteMode,
+): void {
+  if (s.isSelecting.value && s.isSelected.value) {
+    pasteMode.deleteSelection();
+    r.delayRedrawCanvas(true);
+  }
+}
+
+function doExportPlainTextClipboard(
+  s: EditorState,
+  toastShow: EditorActionsOptions['toastShow'],
+): void {
+  try {
+    const lines = exportPlainText();
+    navigator.clipboard.writeText(lines.join('\n'));
+    toastShow('Plain text copied to clipboard!', { type: 'success' });
+  } catch {
+    toastShow('Failed to copy plain text.', { type: 'error' });
+  }
+}
+
+function doExportHtmlFile(
+  s: EditorState,
+  toastShow: EditorActionsOptions['toastShow'],
+): void {
+  try {
+    const title = (s.currentAscii.value as { title: string })?.title ?? 'ascii';
+    downloadHtml(title);
+    toastShow('Exported HTML file!', { type: 'success' });
+  } catch {
+    toastShow('Failed to export HTML.', { type: 'error' });
+  }
+}
+
+function doCropToContent(
+  s: EditorState,
+  toastShow: EditorActionsOptions['toastShow'],
+): void {
+  const cropped = s.store.cropToContentAction();
+  if (cropped) {
+    toastShow('Canvas cropped to content!', { type: 'success' });
+  } else {
+    toastShow('Nothing to crop — content already fills edges.', {
+      type: 'info',
+    });
+  }
+}
+
+function warnInvisibleLayer(
+  s: EditorState,
+  toastShow: EditorActionsOptions['toastShow'],
+): void {
+  if (!s.currentSelectedLayer.value.visible) {
+    toastShow('You are trying to edit an invisible layer!!', {
+      type: 'error',
+      icon: 'warning_amber',
+      singleton: true,
+    });
+  }
+}
+
+async function resetSelectTool(
+  s: EditorState,
+  r: ActionsRenderingDeps,
+  emit: ActionsEmits,
+): Promise<void> {
+  s.selecting.value.startX = null;
+  s.selecting.value.startY = null;
+  s.selecting.value.endX = null;
+  s.selecting.value.endY = null;
+  s.selecting.value.canSelect = false;
+
+  s.selectedBlocks.value = [];
+  await r.clearToolCanvas();
+  await r.delayRedrawCanvas();
+  emit.selecting(s.selecting.value);
+}
+
+async function dispatchBlocks(
+  s: EditorState,
+  clearDiff = false,
+): Promise<void> {
+  const flatOld = s.diffBlocks.old.flat();
+  const flatNew = s.diffBlocks.new.flat();
+
+  if (flatNew.length > 0) {
+    const fg = s.toolbarStore.currentFg;
+    const bg = s.toolbarStore.currentBg;
+    s.toolbarStore.addRecentColor(fg);
+    if (bg !== fg) {
+      s.toolbarStore.addRecentColor(bg);
+    }
+  }
+
+  s.store.updateAsciiBlocks({
+    blocks: s.currentAsciiLayerBlocks.value,
+    diff: { old: flatOld, new: flatNew, l: s.diffBlocks.l },
+  });
+
+  if (clearDiff) {
+    s.diffBlocks.l = s.selectedLayerIndex.value;
+    s.diffBlocks.new = [];
+    s.diffBlocks.old = [];
+  }
+}
+
+async function processSelect(
+  s: EditorState,
+  emit: ActionsEmits,
+): Promise<void> {
+  const rect = selectionToGridRect(
+    s.selecting.value,
+    s.blockWidthComp.value,
+    s.blockHeightComp.value,
+    s.currentAsciiWidth.value,
+    s.currentAsciiHeight.value,
+  );
+
+  if (rect) {
+    s.selectedBlocks.value = extractSelectionBlocks(
+      s.currentAsciiLayerBlocks.value, rect,
+    );
+  }
+
+  emit.selectedblocks(s.selectedBlocks.value);
+  emit.selecting(s.selecting.value);
+}
+
 // ─── Composable ─────────────────────────────────────────────────
 
 export function useEditorActions(opts: EditorActionsOptions) {
@@ -69,226 +290,23 @@ export function useEditorActions(opts: EditorActionsOptions) {
   const r = opts.rendering;
   const modalStore = useModalStore();
 
-  // ─── Context Menu & Export ────────────────────────────────────
-
-  function canvasToPng() {
-    const canvas = opts.refs.canvasRef.value;
-    if (canvas) {
-      canvasToPngUtil(
-        canvas,
-        (s.currentAscii.value as { title: string })?.title ?? 'ascii',
-      );
-    }
-  }
-
-  function openContextMenu(e: MouseEvent) {
-    e.preventDefault();
-    opts.refs.editorMenu.value?.open({
-      clientX: e.clientX,
-      clientY: e.clientY,
-    });
-  }
-
-  function contextMenuReplaceColor() {
-    const block = s.asciiBlockAtXy.value;
-    if (!block) return;
-    const bounds = getSelectionBounds();
-    if (bounds) {
-      opts.contextMenuReplace(block, bounds);
-    } else {
-      opts.contextMenuReplace(block);
-    }
-  }
-
-  function contextMenuCopySelection() {
-    if (s.selectedBlocks.value.length > 0) {
-      const didCopy = copySelectionBlocks(
-        s.selecting.value,
-        s.selectedBlocks.value,
-        s.currentAsciiLayerBlocks.value,
-        s.blockWidthComp.value,
-        s.blockHeightComp.value,
-        s.currentAsciiWidth.value,
-        s.currentAsciiHeight.value,
-        s.toolbarStore.setSelectBlocks,
-      );
-      if (didCopy) {
-        opts.toastShow('Copied selection to clipboard', {
-          type: 'success',
-        });
-      }
-    }
-  }
-
-  function contextMenuCutSelection() {
-    if (s.isSelecting.value && s.isSelected.value) {
-      opts.pasteMode.cutSelection();
-      r.delayRedrawCanvas(true);
-      opts.toastShow('Cut selection to clipboard', {
-        type: 'success',
-      });
-    }
-  }
-
-  function contextMenuDeleteSelection() {
-    if (s.isSelecting.value && s.isSelected.value) {
-      opts.pasteMode.deleteSelection();
-      r.delayRedrawCanvas(true);
-    }
-  }
-
-  function openBorderGenerator() {
-    modalStore.openModal('border-generator');
-  }
-
-  function cropToContent() {
-    const cropped = s.store.cropToContentAction();
-    if (cropped) {
-      opts.toastShow('Canvas cropped to content!', { type: 'success' });
-    } else {
-      opts.toastShow('Nothing to crop — content already fills edges.', {
-        type: 'info',
-      });
-    }
-  }
-
-  function exportPlainTextClipboard() {
-    try {
-      const lines = exportPlainText();
-      navigator.clipboard.writeText(lines.join('\n'));
-      opts.toastShow('Plain text copied to clipboard!', {
-        type: 'success',
-      });
-    } catch {
-      opts.toastShow('Failed to copy plain text.', { type: 'error' });
-    }
-  }
-
-  function exportHtmlFile() {
-    try {
-      const title = (s.currentAscii.value as { title: string })?.title ?? 'ascii';
-      downloadHtml(title);
-      opts.toastShow('Exported HTML file!', { type: 'success' });
-    } catch {
-      opts.toastShow('Failed to export HTML.', { type: 'error' });
-    }
-  }
-
-  // ─── Helpers ──────────────────────────────────────────────────
-
-  function warnInvisibleLayer() {
-    if (!s.currentSelectedLayer.value.visible) {
-      opts.toastShow('You are trying to edit an invisible layer!!', {
-        type: 'error',
-        icon: 'warning_amber',
-        singleton: true,
-      });
-    }
-  }
-
-  function undo() {
-    s.store.undoBlocks();
-  }
-
-  function redo() {
-    s.store.redoBlocks();
-  }
-
-  async function resetSelectTool() {
-    s.selecting.value.startX = null;
-    s.selecting.value.startY = null;
-    s.selecting.value.endX = null;
-    s.selecting.value.endY = null;
-    s.selecting.value.canSelect = false;
-
-    s.selectedBlocks.value = [];
-    await r.clearToolCanvas();
-    await r.delayRedrawCanvas();
-    opts.emit.selecting(s.selecting.value);
-  }
-
-  /**
-   * Get the current selection bounds as grid coordinates.
-   * Returns null if no valid selection exists.
-   */
-  function getSelectionBounds(): {
-    x: number; y: number; w: number; h: number;
-  } | null {
-    if (!s.isSelected.value || !s.isSelecting.value) return null;
-    const rect = selectionToGridRect(
-      s.selecting.value,
-      s.blockWidthComp.value,
-      s.blockHeightComp.value,
-      s.currentAsciiWidth.value,
-      s.currentAsciiHeight.value,
-    );
-    if (!rect) return null;
-    return { x: rect.x, y: rect.y, w: rect.width, h: rect.height };
-  }
-
-  // ─── Dispatch & Diff ──────────────────────────────────────────
-
-  async function dispatchBlocks(clearDiff = false) {
-    const flatOld = s.diffBlocks.old.flat();
-    const flatNew = s.diffBlocks.new.flat();
-
-    if (flatNew.length > 0) {
-      const fg = s.toolbarStore.currentFg;
-      const bg = s.toolbarStore.currentBg;
-      s.toolbarStore.addRecentColor(fg);
-      if (bg !== fg) {
-        s.toolbarStore.addRecentColor(bg);
-      }
-    }
-
-    s.store.updateAsciiBlocks({
-      blocks: s.currentAsciiLayerBlocks.value,
-      diff: { old: flatOld, new: flatNew, l: s.diffBlocks.l },
-    });
-
-    if (clearDiff) {
-      s.diffBlocks.l = s.selectedLayerIndex.value;
-      s.diffBlocks.new = [];
-      s.diffBlocks.old = [];
-    }
-  }
-
-  async function processSelect() {
-    const rect = selectionToGridRect(
-      s.selecting.value,
-      s.blockWidthComp.value,
-      s.blockHeightComp.value,
-      s.currentAsciiWidth.value,
-      s.currentAsciiHeight.value,
-    );
-
-    if (rect) {
-      s.selectedBlocks.value = extractSelectionBlocks(
-        s.currentAsciiLayerBlocks.value, rect,
-      );
-    }
-
-    opts.emit.selectedblocks(s.selectedBlocks.value);
-    opts.emit.selecting(s.selecting.value);
-  }
-
   return {
-    canvasToPng,
-    openContextMenu,
-    contextMenuReplaceColor,
-    contextMenuCopySelection,
-    contextMenuCutSelection,
-    contextMenuDeleteSelection,
-    openBorderGenerator,
-    cropToContent,
-    exportPlainTextClipboard,
-    exportHtmlFile,
-    warnInvisibleLayer,
-    undo,
-    redo,
-    resetSelectTool,
-    getSelectionBounds,
-    dispatchBlocks,
-    processSelect,
+    canvasToPng: () => canvasToPng(s, opts.refs.canvasRef),
+    openContextMenu: (e: MouseEvent) => openContextMenu(opts.refs.editorMenu, e),
+    contextMenuReplaceColor: () => doContextMenuReplaceColor(s, opts.contextMenuReplace),
+    contextMenuCopySelection: () => doContextMenuCopySelection(s, opts.toastShow),
+    contextMenuCutSelection: () => doContextMenuCutSelection(s, r, opts.pasteMode, opts.toastShow),
+    contextMenuDeleteSelection: () => doContextMenuDeleteSelection(s, r, opts.pasteMode),
+    openBorderGenerator: () => modalStore.openModal('border-generator'),
+    cropToContent: () => doCropToContent(s, opts.toastShow),
+    exportPlainTextClipboard: () => doExportPlainTextClipboard(s, opts.toastShow),
+    exportHtmlFile: () => doExportHtmlFile(s, opts.toastShow),
+    warnInvisibleLayer: () => warnInvisibleLayer(s, opts.toastShow),
+    undo: () => s.store.undoBlocks(),
+    redo: () => s.store.redoBlocks(),
+    resetSelectTool: () => resetSelectTool(s, r, opts.emit),
+    getSelectionBounds: () => getSelectionBounds(s),
+    dispatchBlocks: (clear?: boolean) => dispatchBlocks(s, clear),
+    processSelect: () => processSelect(s, opts.emit),
   };
 }
