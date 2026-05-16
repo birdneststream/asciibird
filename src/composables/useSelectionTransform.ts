@@ -122,6 +122,62 @@ export function copySelectionBlocks(
   return true;
 }
 
+// ─── Pure helpers (module-level) ───────────────────────────────────
+
+/** Check if a block has meaningful content */
+function hasBlockContent(block: Block | undefined): boolean {
+  return !!block && Object.keys(block).length > 0;
+}
+
+/**
+ * Clear all blocks in a grid selection area.
+ * Mutates layerBlocks in place.
+ */
+function clearSelectionArea(
+  layerBlocks: Block[][],
+  rect: GridSelection,
+  canvasW: number,
+  canvasH: number,
+): void {
+  for (let sy = 0; sy < rect.height; sy++) {
+    for (let sx = 0; sx < rect.width; sx++) {
+      const gy = rect.y + sy, gx = rect.x + sx;
+      if (gy < canvasH && gx < canvasW) {
+        if (!layerBlocks[gy]) layerBlocks[gy] = [];
+        layerBlocks[gy][gx] = {};
+      }
+    }
+  }
+}
+
+/**
+ * Write selection blocks at an offset position (clipped to canvas).
+ * Mutates layerBlocks in place.
+ */
+function writeBlocksAtOffset(
+  layerBlocks: Block[][],
+  selBlocks: Block[][],
+  rect: GridSelection,
+  dx: number,
+  dy: number,
+  canvasW: number,
+  canvasH: number,
+): void {
+  for (let sy = 0; sy < rect.height; sy++) {
+    const destY = rect.y + sy + dy;
+    if (destY < 0 || destY >= canvasH) continue;
+    for (let sx = 0; sx < rect.width; sx++) {
+      const destX = rect.x + sx + dx;
+      if (destX < 0 || destX >= canvasW) continue;
+      const src = selBlocks[sy]?.[sx];
+      if (hasBlockContent(src)) {
+        if (!layerBlocks[destY]) layerBlocks[destY] = [];
+        layerBlocks[destY][destX] = { ...src! };
+      }
+    }
+  }
+}
+
 // ─── Composable ─────────────────────────────────────────────────
 
 export function useSelectionTransform(deps: SelectionTransformDeps) {
@@ -268,33 +324,12 @@ export function useSelectionTransform(deps: SelectionTransformDeps) {
       rect.y + rect.height - 1, rect.y + rect.height - 1 + dy,
     ));
 
-    const oldDiffs = snapshotRegion(layerBlocks, minX, minY, maxX - minX + 1, maxY - minY + 1);
+    const oldDiffs = snapshotRegion(
+      layerBlocks, minX, minY, maxX - minX + 1, maxY - minY + 1,
+    );
 
-    // Clear original selection
-    for (let sy = 0; sy < rect.height; sy++) {
-      for (let sx = 0; sx < rect.width; sx++) {
-        const gy = rect.y + sy, gx = rect.x + sx;
-        if (gy < canvasH && gx < canvasW) {
-          if (!layerBlocks[gy]) layerBlocks[gy] = [];
-          layerBlocks[gy][gx] = {};
-        }
-      }
-    }
-
-    // Write at new position (clipped)
-    for (let sy = 0; sy < rect.height; sy++) {
-      const destY = rect.y + sy + dy;
-      if (destY < 0 || destY >= canvasH) continue;
-      for (let sx = 0; sx < rect.width; sx++) {
-        const destX = rect.x + sx + dx;
-        if (destX < 0 || destX >= canvasW) continue;
-        const src = selBlocks[sy]?.[sx];
-        if (src && Object.keys(src).length > 0) {
-          if (!layerBlocks[destY]) layerBlocks[destY] = [];
-          layerBlocks[destY][destX] = { ...src };
-        }
-      }
-    }
+    clearSelectionArea(layerBlocks, rect, canvasW, canvasH);
+    writeBlocksAtOffset(layerBlocks, selBlocks, rect, dx, dy, canvasW, canvasH);
 
     // Record new blocks in affected area
     const newDiffs: BlockDiff[] = [];

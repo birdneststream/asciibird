@@ -27,6 +27,67 @@ import {
 } from './useSelectionTransform';
 import type { Block, BlockDiff } from '../types';
 
+// ─── Pure helpers (module-level, no closure over composable state) ─────
+
+/** Render a single block's bg, fg, and character onto the canvas */
+function renderPasteBlock(
+  ctx: CanvasRenderingContext2D,
+  block: Block,
+  px: number,
+  py: number,
+  bw: number,
+  bh: number,
+): void {
+  if (block.bg != null) {
+    ctx.fillStyle = mircColours99[block.bg] ?? '#000';
+    ctx.fillRect(px, py, bw, bh);
+  }
+
+  if (block.fg != null) {
+    ctx.fillStyle = mircColours99[block.fg] ?? '#fff';
+    ctx.fillRect(px, py, bw, bh / 2);
+  }
+
+  if (block.char) {
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = block.fg != null
+      ? mircColours99[block.fg] ?? '#fff'
+      : '#fff';
+    ctx.font = `${Math.round(bh * 0.8)}px Hack`;
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(block.char, px, py + bh - 1);
+    ctx.globalAlpha = 0.55;
+  }
+}
+
+/** Draw dashed outline around the paste preview area */
+function drawPasteOutline(
+  ctx: CanvasRenderingContext2D,
+  blocks: Block[][],
+  gx: number,
+  gy: number,
+  bw: number,
+  bh: number,
+  canvasW: number,
+  canvasH: number,
+): void {
+  const pasteW = Math.min(blocks[0]?.length ?? 0, canvasW - gx);
+  const pasteH = Math.min(blocks.length, canvasH - gy);
+  if (pasteW <= 0 || pasteH <= 0) return;
+
+  ctx.save();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.strokeRect(gx * bw, gy * bh, pasteW * bw, pasteH * bh);
+  ctx.restore();
+}
+
+/** Check if a block has any meaningful content */
+function hasContent(block: Block | undefined): boolean {
+  return !!block && Object.keys(block).length > 0;
+}
+
 /** Dependencies injected from Editor.vue */
 export interface UsePasteModeOptions {
   /** Pixel-coordinate selection rectangle from Editor */
@@ -128,7 +189,7 @@ export function usePasteMode(opts: UsePasteModeOptions) {
 
         const srcBlock = srcRow[dx];
         // Skip empty source blocks (they don't overwrite)
-        if (!srcBlock || Object.keys(srcBlock).length === 0) continue;
+        if (!hasContent(srcBlock)) continue;
 
         // Record old block for undo
         const oldBlock = layerBlocks[destY]?.[destX];
@@ -235,7 +296,7 @@ export function usePasteMode(opts: UsePasteModeOptions) {
         const block = layerBlocks[gy]?.[gx];
         if (!block) continue;
         // Only record diffs for non-empty blocks
-        if (Object.keys(block).length === 0) continue;
+        if (!hasContent(block)) continue;
 
         oldDiffs.push({ x: gx, y: gy, b: { ...block } });
         layerBlocks[gy][gx] = {};
@@ -269,62 +330,20 @@ export function usePasteMode(opts: UsePasteModeOptions) {
     for (let dy = 0; dy < blocks.length; dy++) {
       const destY = gy + dy;
       if (destY < 0 || destY >= canvasH) continue;
-
       const row = blocks[dy];
       if (!row) continue;
 
       for (let dx = 0; dx < row.length; dx++) {
         const destX = gx + dx;
         if (destX < 0 || destX >= canvasW) continue;
+        if (!hasContent(row[dx])) continue;
 
-        const block = row[dx];
-        if (!block || Object.keys(block).length === 0) continue;
-
-        const px = destX * bw;
-        const py = destY * bh;
-
-        // Draw background
-        if (block.bg !== undefined && block.bg !== null) {
-          ctx.fillStyle = mircColours99[block.bg] ?? '#000';
-          ctx.fillRect(px, py, bw, bh);
-        }
-
-        // Draw foreground color indicator (top half)
-        if (block.fg !== undefined && block.fg !== null) {
-          ctx.fillStyle = mircColours99[block.fg] ?? '#fff';
-          ctx.fillRect(px, py, bw, bh / 2);
-        }
-
-        // Draw character if present
-        if (block.char) {
-          ctx.globalAlpha = 0.7;
-          ctx.fillStyle = block.fg !== undefined && block.fg !== null
-            ? mircColours99[block.fg] ?? '#fff'
-            : '#fff';
-          ctx.font = `${Math.round(bh * 0.8)}px Hack`;
-          ctx.textBaseline = 'bottom';
-          ctx.fillText(block.char, px, py + bh - 1);
-          ctx.globalAlpha = 0.55;
-        }
+        renderPasteBlock(ctx, row[dx], destX * bw, destY * bh, bw, bh);
       }
     }
 
     ctx.restore();
-
-    // Draw dashed outline around the paste area
-    const pasteW = Math.min(
-      blocks[0]?.length ?? 0,
-      canvasW - gx,
-    );
-    const pasteH = Math.min(blocks.length, canvasH - gy);
-    if (pasteW > 0 && pasteH > 0) {
-      ctx.save();
-      ctx.strokeStyle = '#fff';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 4]);
-      ctx.strokeRect(gx * bw, gy * bh, pasteW * bw, pasteH * bh);
-      ctx.restore();
-    }
+    drawPasteOutline(ctx, blocks, gx, gy, bw, bh, canvasW, canvasH);
   }
 
   // ─── Cleanup watchers ───────────────────────────────────────────

@@ -54,6 +54,19 @@ export function mergeTwoLayers(
 }
 
 /**
+ * Merge a single property from source to current if not already set.
+ * Returns undefined if srcVal is null, otherwise returns srcVal.
+ */
+function mergeProperty<T>(
+  curVal: T | undefined,
+  srcVal: T | null,
+): T | undefined {
+  return curVal === undefined
+    ? (srcVal !== null ? srcVal : undefined)
+    : curVal;
+}
+
+/**
  * Merge all visible layers into a single flat block grid.
  * Layers are composited back-to-front: the topmost visible layer's
  * non-empty blocks take precedence.
@@ -85,34 +98,14 @@ export const mergeLayerStack = (layers: Layer[]): Block[][] => {
 
       // Loop layers (back to front)
       for (let z = layers.length - 1; z >= 0; z--) {
-        if (layers[z].visible === false) {
-          continue;
-        }
+        if (layers[z].visible === false) continue;
 
-        if (
-          layers[z] &&
-          layers[z].data &&
-          layers[z].data[y] &&
-          layers[z].data[y][x]
-        ) {
-          const srcBlock = layers[z].data[y][x];
+        const srcBlock = layers[z]?.data?.[y]?.[x];
+        if (!srcBlock) continue;
 
-          if (curBlock.bg === undefined) {
-            curBlock.bg = srcBlock.bg !== null ? srcBlock.bg : undefined;
-          }
-
-          if (curBlock.fg === undefined) {
-            curBlock.fg = srcBlock.fg !== null ? srcBlock.fg : undefined;
-          }
-
-          if (curBlock.char === undefined) {
-            curBlock.char = srcBlock.char !== null
-              ? srcBlock.char
-              : undefined;
-          }
-
-          continue;
-        }
+        curBlock.bg = mergeProperty(curBlock.bg, srcBlock.bg);
+        curBlock.fg = mergeProperty(curBlock.fg, srcBlock.fg);
+        curBlock.char = mergeProperty(curBlock.char, srcBlock.char);
       }
 
       mergedLayers[y][x] = { ...curBlock };

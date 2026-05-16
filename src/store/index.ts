@@ -41,6 +41,42 @@ import type {
 } from '../types';
 import { isLayerHistoryEntry } from '../types';
 
+/**
+ * Attempt to match and replace colors on a single block.
+ * Returns the old block snapshot if modified, or null if no match.
+ * Mutates the block parameter in place (caller reads mutated state after).
+ */
+function matchAndReplaceColor(
+  block: Block,
+  params: {
+    sourceFg: number | null;
+    sourceBg: number | null;
+    targetFg: number;
+    targetBg: number;
+    replaceFg: boolean;
+    replaceBg: boolean;
+  },
+): { oldBlock: Block; modified: boolean } | null {
+  let modified = false;
+  const oldBlock = { ...block };
+
+  if (params.replaceFg && params.sourceFg !== null) {
+    if (block.fg === params.sourceFg) {
+      block.fg = params.targetFg;
+      modified = true;
+    }
+  }
+
+  if (params.replaceBg && params.sourceBg !== null) {
+    if (block.bg === params.sourceBg) {
+      block.bg = params.targetBg;
+      modified = true;
+    }
+  }
+
+  return modified ? { oldBlock, modified } : null;
+}
+
 export const useAsciiBirdStore = defineStore('asciibird', {
   state: (): RootState => ({
     ver: 1,
@@ -195,25 +231,9 @@ export const useAsciiBirdStore = defineStore('asciibird', {
           const block = row[x];
           if (!block) continue;
 
-          let modified = false;
-          const oldBlock = { ...block };
-
-          if (params.replaceFg && params.sourceFg !== null) {
-            if (block.fg === params.sourceFg) {
-              block.fg = params.targetFg;
-              modified = true;
-            }
-          }
-
-          if (params.replaceBg && params.sourceBg !== null) {
-            if (block.bg === params.sourceBg) {
-              block.bg = params.targetBg;
-              modified = true;
-            }
-          }
-
-          if (modified) {
-            oldDiffs.push({ x, y, b: oldBlock });
+          const result = matchAndReplaceColor(block, params);
+          if (result) {
+            oldDiffs.push({ x, y, b: result.oldBlock });
             newDiffs.push({ x, y, b: { ...block } });
             changed++;
           }
