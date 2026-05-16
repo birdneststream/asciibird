@@ -273,14 +273,8 @@ export function useEditorRendering(
     const bw = state.blockWidthComp.value;
     const bh = state.blockHeightComp.value;
     const block = state.asciiBlockAtXy.value;
-    let indicatorColour = 1;
-
-    if (block && typeof block === 'object') {
-      indicatorColour = block.bg === 0 ? 1 : 0;
-      if (block.bg === 8) {
-        indicatorColour = 1;
-      }
-    }
+    const indicatorColour = (block && (block.bg === 0 || block.bg === 8))
+      ? 1 : 0;
 
     // Half-block mode: draw half-height indicator
     if (state.toolbarState.value.halfBlockEditing) {
