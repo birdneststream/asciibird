@@ -1264,8 +1264,8 @@ describe('Pinia Store Getters', () => {
     store.newAsciibirdMeta(createTestMeta());
   });
 
-  it('state getter returns state properties', () => {
-    const state = store.state;
+  it('$state returns state properties', () => {
+    const state = store.$state;
     expect(state.tab).toBe(store.tab);
     expect(state.options).toBe(store.options);
   });
@@ -1305,7 +1305,7 @@ describe('Pinia Store Getters', () => {
 
   it('currentAscii returns current ASCII metadata', () => {
     const ascii = store.currentAscii;
-    expect(ascii).not.toBe(false);
+    expect(ascii).toBeTruthy();
     if (ascii) expect(ascii.title).toBe('Test');
   });
 
@@ -1419,9 +1419,9 @@ describe('Pinia Store Getters', () => {
     expect(toolbarStore.selectBlocks).toEqual(blocks);
   });
 
-  it('currentAscii returns false when no tabs', () => {
+  it('currentAscii returns undefined when no tabs', () => {
     store.closeTab(0);
-    expect(store.currentAscii).toBe(false);
+    expect(store.currentAscii).toBe(undefined);
   });
 
   it('currentAsciiLayers returns empty array when no tabs', () => {

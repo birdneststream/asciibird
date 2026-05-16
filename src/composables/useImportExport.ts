@@ -53,7 +53,7 @@ function exportAsciibirdState(
 ): void {
   try {
     const output = LZString.compressToEncodedURIComponent(
-      JSON.stringify(store.state),
+      JSON.stringify(store.$state),
     );
 
     const today = new Date();

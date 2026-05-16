@@ -112,9 +112,8 @@ export const useAsciiBirdStore = defineStore('asciibird', {
   }),
 
   getters: {
-    state: (state): RootState => state,
     currentTab: (state) => state.tab,
-    currentAscii: (state) => state.asciibirdMeta[state.tab] ?? false,
+    currentAscii: (state) => state.asciibirdMeta[state.tab] ?? undefined,
     currentAsciiLayers: (state): Layer[] => {
       const meta = state.asciibirdMeta[state.tab];
       if (!meta) return [];
@@ -136,6 +135,11 @@ export const useAsciiBirdStore = defineStore('asciibird', {
   },
 
   actions: {
+    /** Get metadata for current tab, or undefined if no tab is active */
+    getCurrentMeta(): AsciibirdMeta | undefined {
+      return this.asciibirdMeta[this.tab];
+    },
+
     changeState(payload: Partial<RootState>) {
       Object.assign(this, payload);
     },
@@ -152,7 +156,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       this.updateDocumentTitle();
     },
     updateImageOverlay(payload: AsciibirdMeta['imageOverlay']) {
-      const meta = this.asciibirdMeta[this.tab];
+      const meta = this.getCurrentMeta();
       if (!meta) return;
       meta.imageOverlay = payload;
     },
@@ -165,7 +169,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       this.asciibirdMeta[this.tab].y = payload.y;
     },
     resetCanvasPosition() {
-      const meta = this.asciibirdMeta[this.tab];
+      const meta = this.getCurrentMeta();
       if (meta) {
         meta.x = CANVAS_DEFAULT_X;
         meta.y = CANVAS_DEFAULT_Y;
@@ -218,7 +222,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       replaceBg: boolean;
       selection?: { x: number; y: number; w: number; h: number };
     }): number {
-      const meta = this.asciibirdMeta[this.tab];
+      const meta = this.getCurrentMeta();
       if (!meta) return 0;
 
       const layers = decompressLayers(meta.layers);
@@ -287,7 +291,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       scope?: MatchPosition[];
       errorOut?: { error?: { message: string; pattern: string } };
     }): { matches: MatchPosition[]; replaced: number } {
-      const meta = this.asciibirdMeta[this.tab];
+      const meta = this.getCurrentMeta();
       if (!meta) return { matches: [], replaced: 0 };
 
       const layers = decompressLayers(meta.layers);
@@ -336,7 +340,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
      * Shared logic for undoBlocks and redoBlocks.
      */
     applyHistoryDiff(direction: 'undo' | 'redo') {
-      const meta = this.asciibirdMeta[this.tab];
+      const meta = this.getCurrentMeta();
       if (!meta) return;
 
       const isUndo = direction === 'undo';
@@ -375,8 +379,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
 
       const tempLayers: Layer[] = decompressLayers(meta.layers);
 
-      for (const change in diffs) {
-        const d = diffs[change];
+      for (const d of diffs) {
         if (tempLayers[layerIndex] !== undefined) {
           tempLayers[layerIndex].data[d.y][d.x] = { ...d.b };
         }
@@ -389,7 +392,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
 
     /** Set document.title to match current tab */
     updateDocumentTitle() {
-      const meta = this.asciibirdMeta[this.tab];
+      const meta = this.getCurrentMeta();
       document.title = meta
         ? `asciibird - ${meta.title}`
         : 'asciibird';
@@ -397,7 +400,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
 
     /** Clamp historyIndex to valid range */
     clampHistoryIndex() {
-      const meta = this.asciibirdMeta[this.tab];
+      const meta = this.getCurrentMeta();
       if (!meta) return;
       if (meta.historyIndex > meta.history.length) {
         meta.historyIndex = meta.history.length;
@@ -410,7 +413,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
      * push, and historyIndex update.
      */
     pushHistoryDiff(diff: HistoryDiff): void {
-      const meta = this.asciibirdMeta[this.tab];
+      const meta = this.getCurrentMeta();
       if (!meta) return;
 
       if (meta.history.length >= this.options.undoLimit) {
@@ -441,19 +444,43 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       afterCommit?: (layers: Layer[]) => void,
       preDecompressedLayers?: Layer[],
     ): void {
+      const meta = this.getCurrentMeta();
+      if (!meta) return;
+
       const layers = preDecompressedLayers
-        ?? decompressLayers(this.asciibirdMeta[this.tab].layers);
+        ?? decompressLayers(meta.layers);
       const oldLayer = cloneLayers(layers);
       mutate(layers);
-      this.asciibirdMeta[this.tab].layers =
-        compressLayers(layers);
-      this.asciibirdMeta[this.tab].history.push({
-        t: 'l',
-        d: compressData({ new: layers, old: oldLayer }),
-      });
-      this.asciibirdMeta[this.tab].historyIndex =
-        this.asciibirdMeta[this.tab].history.length;
+      meta.layers = compressLayers(layers);
+
+      // Use pushLayerHistoryDiff for undo limit + future trimming
+      this.pushLayerHistoryDiff({ new: layers, old: oldLayer });
+
       afterCommit?.(layers);
+    },
+
+    /**
+     * Push a layer history entry with undo limit enforcement
+     * and future history trimming. Mirrors pushHistoryDiff but
+     * for layer-level (structural) mutations.
+     */
+    pushLayerHistoryDiff(data: LayerHistoryData): void {
+      const meta = this.getCurrentMeta();
+      if (!meta) return;
+
+      if (meta.history.length >= this.options.undoLimit) {
+        meta.history.shift();
+      }
+
+      if (meta.history.length !== meta.historyIndex) {
+        meta.history.splice(meta.historyIndex);
+      }
+
+      meta.history.push({
+        t: 'l',
+        d: compressData(data),
+      });
+      meta.historyIndex = meta.history.length;
     },
 
     // ── Layers ──────────────────────────────────────────────────
@@ -595,31 +622,25 @@ export const useAsciiBirdStore = defineStore('asciibird', {
         layers,
       );
     },
-    downLayer(payload: number) {
+    moveLayer(payload: number, direction: 1 | -1) {
+      const target = payload + direction;
       this.withLayerMutation(
         (layers) => {
-          if (!layers[payload + 1]) return;
-          const swap = layers[payload + 1];
-          layers[payload + 1] = layers[payload];
+          if (!layers[target]) return;
+          const swap = layers[target];
+          layers[target] = layers[payload];
           layers[payload] = swap;
         },
         () => {
-          this.asciibirdMeta[this.tab].selectedLayer = payload + 1;
+          this.asciibirdMeta[this.tab].selectedLayer = target;
         },
       );
     },
+    downLayer(payload: number) {
+      this.moveLayer(payload, 1);
+    },
     upLayer(payload: number) {
-      this.withLayerMutation(
-        (layers) => {
-          if (!layers[payload - 1]) return;
-          const swap = layers[payload - 1];
-          layers[payload - 1] = layers[payload];
-          layers[payload] = swap;
-        },
-        () => {
-          this.asciibirdMeta[this.tab].selectedLayer = payload - 1;
-        },
-      );
+      this.moveLayer(payload, -1);
     },
     updateLayerName(payload: { key: number; label: string }) {
       this.withLayerMutation((layers) => {
@@ -638,7 +659,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
      * Resets canvas position after crop.
      */
     cropToContentAction(): boolean {
-      const meta = this.asciibirdMeta[this.tab];
+      const meta = this.getCurrentMeta();
       if (!meta) return false;
 
       // Decompress and compute crop once

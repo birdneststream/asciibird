@@ -52,8 +52,8 @@ export const parseMircToLayers = (
   const asciiblasterRegex = /(^[\d]{1,2})?(?:,([\d]{1,2}))?/;
   let cleanedWidth = 0;
 
-  for (const y in asciiLines) {
-    const line = asciiLines[y];
+  let y = 0;
+  for (const line of asciiLines) {
     const len = line.length - 1;
     let char: string;
     let block: Block = {};
@@ -105,6 +105,7 @@ export const parseMircToLayers = (
     }
 
     block = {};
+    y++;
   }
 
   initialLayers[0].width = cleanedWidth;

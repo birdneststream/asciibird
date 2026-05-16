@@ -30,7 +30,7 @@ const modalStore = useModalStore();
 
 const toolbarState = computed(() => toolbarStore.toolbarState);
 const currentTool = computed(() => toolbarIcons[toolbarStore.currentTool]);
-const haveOpenTabs = computed(() => store.currentAscii !== false);
+const haveOpenTabs = computed(() => !!store.currentAscii);
 const isDefault = computed(() => currentTool.value?.name === 'default');
 const isKeyboardDisabled = computed(() => modalStore.isKeyboardDisabled);
 const isModalOpen = computed(() => modalStore.isModalOpen);
