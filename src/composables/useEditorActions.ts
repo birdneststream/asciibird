@@ -215,23 +215,15 @@ export function useEditorActions(opts: EditorActionsOptions) {
     x: number; y: number; w: number; h: number;
   } | null {
     if (!s.isSelected.value || !s.isSelecting.value) return null;
-
-    const bw = s.blockWidthComp.value;
-    const bh = s.blockHeightComp.value;
-
-    const startX = Math.floor(s.selecting.value.startX! / bw);
-    const startY = Math.floor(s.selecting.value.startY! / bh);
-    const endX = Math.ceil(s.selecting.value.endX! / bw);
-    const endY = Math.ceil(s.selecting.value.endY! / bh);
-
-    const x1 = Math.max(0, Math.min(startX, endX));
-    const y1 = Math.max(0, Math.min(startY, endY));
-    const x2 = Math.min(s.currentAsciiWidth.value, Math.max(startX, endX));
-    const y2 = Math.min(s.currentAsciiHeight.value, Math.max(startY, endY));
-
-    if (x2 <= x1 || y2 <= y1) return null;
-
-    return { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
+    const rect = selectionToGridRect(
+      s.selecting.value,
+      s.blockWidthComp.value,
+      s.blockHeightComp.value,
+      s.currentAsciiWidth.value,
+      s.currentAsciiHeight.value,
+    );
+    if (!rect) return null;
+    return { x: rect.x, y: rect.y, w: rect.width, h: rect.height };
   }
 
   // ─── Dispatch & Diff ──────────────────────────────────────────
