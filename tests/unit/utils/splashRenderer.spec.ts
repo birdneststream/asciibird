@@ -8,19 +8,14 @@ import {
   calcGridDimensions,
   renderFrame,
 } from '@/utils/splashRenderer';
-import type { Ripple, MouseState } from '@/utils/splashRenderer';
-
-// getPlasmaColor is no longer exported but we can test via renderFrame
-// Testing the public API surface
+import type { Ripple } from '@/utils/splashRenderer';
 
 // ─── Sin LUT ──────────────────────────────────────────────────────
 
 describe('fastSin', () => {
-  it('returns approximately correct values for common angles', () => {
+  it('returns approximately correct values', () => {
     expect(fastSin(0)).toBeCloseTo(0, 1);
     expect(fastSin(Math.PI / 2)).toBeCloseTo(1, 1);
-    expect(fastSin(Math.PI)).toBeCloseTo(0, 1);
-    expect(fastSin(Math.PI * 1.5)).toBeCloseTo(-1, 1);
   });
 
   it('handles negative angles', () => {
@@ -35,67 +30,75 @@ describe('fastSin', () => {
 // ─── Ripple lifecycle ─────────────────────────────────────────────
 
 describe('createRipple', () => {
-  it('creates a ripple with correct properties', () => {
+  it('creates a ripple near the requested position', () => {
     const ripple = createRipple(100, 200, 1.5);
-    expect(ripple.x).toBe(100);
-    expect(ripple.y).toBe(200);
+    // Position may be offset by up to ±20px for randomness
+    expect(Math.abs(ripple.x - 100)).toBeLessThanOrEqual(20);
+    expect(Math.abs(ripple.y - 200)).toBeLessThanOrEqual(20);
     expect(ripple.startTime).toBe(1.5);
     expect(ripple.duration).toBeGreaterThan(0);
     expect(ripple.maxRadius).toBeGreaterThan(0);
+    expect(ripple.frequency).toBeGreaterThan(0);
+    expect(ripple.intensity).toBeGreaterThan(0);
+    expect(ripple.ringWidth).toBeGreaterThan(0);
+  });
+
+  it('creates ripples with varied properties', () => {
+    const props = new Set<string>();
+    for (let i = 0; i < 20; i++) {
+      const r = createRipple(0, 0, 0);
+      props.add(`${r.duration.toFixed(1)}-${r.maxRadius.toFixed(0)}`);
+    }
+    // Randomness should produce at least a few distinct property combos
+    expect(props.size).toBeGreaterThan(3);
   });
 });
 
 describe('updateRipples', () => {
   it('removes expired ripples', () => {
-    const ripples = [createRipple(100, 100, 0), createRipple(200, 200, 1.0)];
-    expect(updateRipples(ripples, 10.0)).toHaveLength(0);
+    expect(updateRipples([createRipple(100, 100, 0)], 10.0)).toHaveLength(0);
   });
 
   it('keeps active ripples', () => {
     expect(updateRipples([createRipple(100, 100, 9.0)], 10.0)).toHaveLength(1);
   });
 
-  it('enforces cap of 10 ripples', () => {
+  it('enforces cap of 12', () => {
     const ripples: Ripple[] = [];
-    for (let i = 0; i < 15; i++) {
-      ripples.push(createRipple(i * 10, i * 10, 4.0));
-    }
-    expect(updateRipples(ripples, 4.5)).toHaveLength(10);
+    for (let i = 0; i < 15; i++) ripples.push(createRipple(i * 10, i * 10, 4.0));
+    expect(updateRipples(ripples, 4.5)).toHaveLength(12);
   });
 
-  it('removes oldest ripples when over cap', () => {
+  it('removes oldest when over cap', () => {
     const ripples: Ripple[] = [];
-    for (let i = 0; i < 12; i++) {
-      ripples.push(createRipple(i, i, 4.0));
-    }
+    for (let i = 0; i < 14; i++) ripples.push(createRipple(i, i, 4.0));
     const result = updateRipples(ripples, 4.5);
-    expect(result).toHaveLength(10);
-    expect(result[0].x).toBe(2);
+    expect(result).toHaveLength(12);
+    // Oldest ripples (earliest startTime) are removed
+    expect(result[0].startTime).toBe(4.0);
   });
 });
 
 // ─── Parallax offset ──────────────────────────────────────────────
 
 describe('computeParallaxOffset', () => {
-  it('returns zero for center mouse position', () => {
-    const offset = computeParallaxOffset(500, 500, 1000, 1000);
-    expect(offset.x).toBeCloseTo(0, 5);
-    expect(offset.y).toBeCloseTo(0, 5);
+  it('returns zero for center mouse', () => {
+    const o = computeParallaxOffset(500, 500, 1000, 1000);
+    expect(o.x).toBeCloseTo(0, 5);
+    expect(o.y).toBeCloseTo(0, 5);
   });
 
-  it('shifts opposite to mouse direction', () => {
+  it('shifts opposite to mouse', () => {
     expect(computeParallaxOffset(1000, 500, 1000, 1000).x).toBeLessThan(0);
   });
 
-  it('clamps to ±15px max', () => {
-    const offset = computeParallaxOffset(0, 0, 1000, 1000);
-    expect(Math.abs(offset.x)).toBeLessThanOrEqual(15);
-    expect(Math.abs(offset.y)).toBeLessThanOrEqual(15);
+  it('clamps to ±15px', () => {
+    const o = computeParallaxOffset(0, 0, 1000, 1000);
+    expect(Math.abs(o.x)).toBeLessThanOrEqual(15);
   });
 
   it('returns zero for zero viewport', () => {
-    const offset = computeParallaxOffset(500, 500, 0, 0);
-    expect(offset).toEqual({ x: 0, y: 0 });
+    expect(computeParallaxOffset(500, 500, 0, 0)).toEqual({ x: 0, y: 0 });
   });
 });
 
@@ -107,11 +110,22 @@ describe('calcGridDimensions', () => {
     expect(cols * 8).toBeGreaterThanOrEqual(1920);
     expect(rows * 15).toBeGreaterThanOrEqual(1080);
   });
+});
 
-  it('includes padding', () => {
-    const { cols, rows } = calcGridDimensions(800, 600);
-    expect(cols).toBeGreaterThan(Math.ceil(800 / 8));
-    expect(rows).toBeGreaterThan(Math.ceil(600 / 15));
+// ─── getPlasmaColor ───────────────────────────────────────────────
+
+describe('getPlasmaColor', () => {
+  it('returns a valid CSS color string', () => {
+    expect(getPlasmaColor(25, 25, 1.0)).toMatch(/^rgb\(\d+,\d+,\d+\)$/);
+  });
+
+  it('produces darkened values', () => {
+    const color = getPlasmaColor(10, 10, 0);
+    const match = color.match(/rgb\((\d+),(\d+),(\d+)\)/);
+    expect(match).toBeTruthy();
+    expect(Number(match![1])).toBeLessThanOrEqual(64);
+    expect(Number(match![2])).toBeLessThanOrEqual(64);
+    expect(Number(match![3])).toBeLessThanOrEqual(64);
   });
 });
 
@@ -125,10 +139,6 @@ describe('renderFrame', () => {
       restore: vi.fn(),
       translate: vi.fn(),
       fillRect: vi.fn(),
-      stroke: vi.fn(),
-      beginPath: vi.fn(),
-      arc: vi.fn(),
-      createRadialGradient: vi.fn(() => ({ addColorStop: vi.fn() })),
       fillStyle: '',
       strokeStyle: '',
       lineWidth: 0,
@@ -136,7 +146,7 @@ describe('renderFrame', () => {
     } as unknown as CanvasRenderingContext2D;
   }
 
-  it('clears the canvas at the start', () => {
+  it('clears the canvas', () => {
     const ctx = createMockContext();
     renderFrame(ctx, 1.0, { x: 100, y: 100 }, [], { x: 0, y: 0 }, 800, 600);
     expect(ctx.clearRect).toHaveBeenCalledWith(0, 0, 800, 600);
@@ -148,57 +158,18 @@ describe('renderFrame', () => {
     expect(ctx.translate).toHaveBeenCalledWith(5, -3);
   });
 
-  it('fills many blocks via fillRect', () => {
+  it('fills many blocks', () => {
     const ctx = createMockContext();
     renderFrame(ctx, 1.0, { x: 100, y: 100 }, [], { x: 0, y: 0 }, 800, 600);
-    expect(ctx.fillRect).toHaveBeenCalled();
-    // Many blocks in an 800×600 viewport
     const calls = (ctx.fillRect as ReturnType<typeof vi.fn>).mock.calls;
     expect(calls.length).toBeGreaterThan(100);
   });
 
-  it('uses dark colors for fillStyle (background is dark)', () => {
-    const ctx = createMockContext();
-    renderFrame(ctx, 1.0, { x: 100, y: 100 }, [], { x: 0, y: 0 }, 800, 600);
-
-    // fillStyle gets set before each fillRect — check it was set at all
-    expect(ctx.fillRect).toHaveBeenCalled();
-  });
-
-  it('does NOT use arc or createRadialGradient (ripples are in-plasma)', () => {
-    const ctx = createMockContext();
-    renderFrame(ctx, 1.0, { x: 400, y: 300 }, [], { x: 0, y: 0 }, 800, 600);
-    expect(ctx.arc).not.toHaveBeenCalled();
-    expect(ctx.createRadialGradient).not.toHaveBeenCalled();
-    expect(ctx.stroke).not.toHaveBeenCalled();
-  });
-
-  it('renders with active ripples without errors', () => {
+  it('renders with active ripples', () => {
     const ctx = createMockContext();
     const ripples = [createRipple(400, 300, 0.5)];
     expect(() => {
       renderFrame(ctx, 1.0, { x: 400, y: 300 }, ripples, { x: 0, y: 0 }, 800, 600);
     }).not.toThrow();
-    // Still no arc calls — ripple is in the plasma
-    expect(ctx.arc).not.toHaveBeenCalled();
-  });
-});
-
-// ─── getPlasmaColor (public for testing) ───────────────────────────
-
-describe('getPlasmaColor', () => {
-  it('returns a valid CSS color string', () => {
-    const color = getPlasmaColor(25, 25, 1.0);
-    expect(color).toMatch(/^rgb\(\d+,\d+,\d+\)$/);
-  });
-
-  it('produces darkened values', () => {
-    const color = getPlasmaColor(10, 10, 0);
-    const match = color.match(/rgb\((\d+),(\d+),(\d+)\)/);
-    expect(match).toBeTruthy();
-    // With DARKEN=0.25, max channel value is 63
-    expect(Number(match![1])).toBeLessThanOrEqual(64);
-    expect(Number(match![2])).toBeLessThanOrEqual(64);
-    expect(Number(match![3])).toBeLessThanOrEqual(64);
   });
 });

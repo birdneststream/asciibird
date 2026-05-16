@@ -14,6 +14,12 @@ export interface Ripple {
   startTime: number;
   duration: number;
   maxRadius: number;
+  /** Per-ripple wave frequency for varied ring patterns */
+  frequency: number;
+  /** Per-ripple intensity multiplier */
+  intensity: number;
+  /** Per-ripple ring width in pixels */
+  ringWidth: number;
 }
 
 export interface MouseState {
@@ -57,12 +63,24 @@ const PLASMA_LEN = PLASMA_COLORS.length;
 
 // ─── Ripple lifecycle ───────────────────────────────────────────────
 
-const MAX_RIPPLES = 10;
-const RIPPLE_DURATION = 2.5;
-const RIPPLE_MAX_RADIUS = 350;
+const MAX_RIPPLES = 12;
+
+/** Random float in [min, max) */
+function randRange(min: number, max: number): number {
+  return min + Math.random() * (max - min);
+}
 
 export function createRipple(x: number, y: number, time: number): Ripple {
-  return { x, y, startTime: time, duration: RIPPLE_DURATION, maxRadius: RIPPLE_MAX_RADIUS };
+  return {
+    x: x + randRange(-20, 20),
+    y: y + randRange(-20, 20),
+    startTime: time,
+    duration: randRange(1.5, 3.5),
+    maxRadius: randRange(150, 500),
+    frequency: randRange(0.04, 0.12),
+    intensity: randRange(2, 5),
+    ringWidth: randRange(40, 100),
+  };
 }
 
 export function updateRipples(ripples: Ripple[], time: number): Ripple[] {
@@ -127,9 +145,9 @@ export function getPlasmaColor(
 }
 
 /**
- * Full block color with ripple distortion and mouse glow.
- * Ripples inject sine waves into the plasma pattern itself,
- * creating expanding color rings that ARE the distortion.
+ * Full block color with ripple distortion.
+ * Each ripple has its own randomized frequency, intensity, and ring width,
+ * so clicks produce varied, organic-looking expanding color rings.
  */
 function getBlockColor(
   col: number,
@@ -137,7 +155,7 @@ function getBlockColor(
   pxX: number,
   pxY: number,
   time: number,
-  mouse: MouseState,
+  _mouse: MouseState,
   ripples: Ripple[],
 ): string {
   const t = time * 0.4;
@@ -149,7 +167,7 @@ function getBlockColor(
     fastSin((col + row) * 0.03 + t) +
     fastSin(Math.sqrt(col * col + row * row) * 0.04 + t * 0.3);
 
-  // Ripple distortion — sine rings expanding from click point
+  // Ripple distortion — each ripple has unique wave properties
   for (let i = 0; i < ripples.length; i++) {
     const rp = ripples[i];
     const progress = (time - rp.startTime) / rp.duration;
@@ -159,12 +177,10 @@ function getBlockColor(
     const dy = pxY - rp.y;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
-    // Ring wave at the expanding edge
     const ringDist = Math.abs(dist - radius);
-    const ringWidth = 60;
-    if (ringDist < ringWidth) {
-      const ringFade = fade * (1 - ringDist / ringWidth);
-      v += fastSin(dist * 0.08 - time * 3) * ringFade * 3;
+    if (ringDist < rp.ringWidth) {
+      const ringFade = fade * (1 - ringDist / rp.ringWidth);
+      v += fastSin(dist * rp.frequency - time * 3) * ringFade * rp.intensity;
     }
   }
 
@@ -174,15 +190,9 @@ function getBlockColor(
     Math.floor(Math.abs(norm) * PLASMA_LEN) % PLASMA_LEN
   ];
 
-  // Mouse proximity — subtle brightness boost
-  const mdx = pxX - mouse.x;
-  const mdy = pxY - mouse.y;
-  const mDist = Math.sqrt(mdx * mdx + mdy * mdy);
-  const glowBoost = mDist < 200 ? (1 - mDist / 200) * 0.35 : 0;
-
-  const r = Math.min(255, Math.floor(pr * (DARKEN + glowBoost)));
-  const g = Math.min(255, Math.floor(pg * (DARKEN + glowBoost)));
-  const b = Math.min(255, Math.floor(pb * (DARKEN + glowBoost)));
+  const r = Math.min(255, Math.floor(pr * DARKEN));
+  const g = Math.min(255, Math.floor(pg * DARKEN));
+  const b = Math.min(255, Math.floor(pb * DARKEN));
 
   return `rgb(${r},${g},${b})`;
 }
@@ -190,8 +200,7 @@ function getBlockColor(
 // ─── Frame rendering ────────────────────────────────────────────────
 
 /**
- * Render one frame — fillRect per block.
- * Ripples distort the plasma color directly — no overlays.
+ * Render one frame — fillRect per block with plasma + ripple distortion.
  */
 export function renderFrame(
   ctx: CanvasRenderingContext2D,

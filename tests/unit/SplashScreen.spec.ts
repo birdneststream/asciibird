@@ -8,6 +8,7 @@ import SplashScreen from '@/components/SplashScreen.vue';
 vi.mock('@/utils/splashRenderer', () => ({
   createRipple: vi.fn((x, y, t) => ({
     x, y, startTime: t, duration: 1.5, maxRadius: 250,
+    frequency: 0.08, intensity: 3, ringWidth: 60,
   })),
   updateRipples: vi.fn((r) => r),
   computeParallaxOffset: vi.fn(() => ({ x: 0, y: 0 })),
