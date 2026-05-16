@@ -85,282 +85,225 @@ function drawPasteOutline(
 
 /** Dependencies injected from Editor.vue */
 export interface UsePasteModeOptions {
-  /** Pixel-coordinate selection rectangle from Editor */
   selecting: Ref<SelectionRect>;
-  /** Block width in pixels (computed from multiplier) */
   blockWidthComp: ComputedRef<number>;
-  /** Block height in pixels (computed from multiplier) */
   blockHeightComp: ComputedRef<number>;
-  /** Canvas width in blocks */
   currentAsciiWidth: ComputedRef<number>;
-  /** Canvas height in blocks */
   currentAsciiHeight: ComputedRef<number>;
-  /** Current layer blocks (2D Block array) */
   currentAsciiLayerBlocks: ComputedRef<Block[][]>;
-  /** Currently selected layer index */
   selectedLayerIndex: ComputedRef<number>;
-  /** Store action to commit undo diff */
   updateAsciiBlocks: (payload: {
     diff: { new: BlockDiff[]; old: BlockDiff[]; l?: number };
     blocks: Block[][];
   }) => void;
-  /** Trigger canvas redraw */
   redrawCanvas: () => Promise<void>;
-  /** Clear tool overlay canvas */
   clearToolCanvas: () => Promise<void>;
 }
+
+// ─── Module-level operations ────────────────────────────────────
+
+/** Get current selection as grid rect */
+function getSelectionRect(
+  opts: UsePasteModeOptions,
+): GridSelection | null {
+  return selectionToGridRect(
+    opts.selecting.value,
+    opts.blockWidthComp.value,
+    opts.blockHeightComp.value,
+    opts.currentAsciiWidth.value,
+    opts.currentAsciiHeight.value,
+  );
+}
+
+/** Erase all blocks within a grid selection area. Returns old/new diffs for undo. */
+function eraseArea(
+  rect: GridSelection,
+  layerBlocks: Block[][],
+): { oldDiffs: BlockDiff[]; newDiffs: BlockDiff[] } {
+  const oldDiffs: BlockDiff[] = [];
+  const newDiffs: BlockDiff[] = [];
+
+  for (let dy = 0; dy < rect.height; dy++) {
+    const gy = rect.y + dy;
+    for (let dx = 0; dx < rect.width; dx++) {
+      const gx = rect.x + dx;
+      const block = layerBlocks[gy]?.[gx];
+      if (!block) continue;
+      if (!hasBlockContent(block)) continue;
+
+      oldDiffs.push({ x: gx, y: gy, b: { ...block } });
+      layerBlocks[gy][gx] = {};
+      newDiffs.push({ x: gx, y: gy, b: {} });
+    }
+  }
+
+  return { oldDiffs, newDiffs };
+}
+
+/** Commit blocks diff for undo/redo. */
+function commitDiff(
+  opts: UsePasteModeOptions,
+  oldDiffs: BlockDiff[],
+  newDiffs: BlockDiff[],
+  layerBlocks: Block[][],
+): void {
+  if (oldDiffs.length > 0 || newDiffs.length > 0) {
+    opts.updateAsciiBlocks({
+      diff: {
+        old: oldDiffs,
+        new: newDiffs,
+        l: opts.selectedLayerIndex.value,
+      },
+      blocks: layerBlocks,
+    });
+  }
+}
+
+/** Confirm paste: stamp clipboard blocks at grid position (gx, gy). */
+function confirmPaste(
+  opts: UsePasteModeOptions,
+  blocks: Block[][],
+  gx: number, gy: number,
+): boolean {
+  if (!blocks || !blocks.length || !blocks[0]?.length) return false;
+
+  const layerBlocks = opts.currentAsciiLayerBlocks.value;
+  const canvasW = opts.currentAsciiWidth.value;
+  const canvasH = opts.currentAsciiHeight.value;
+
+  const oldDiffs: BlockDiff[] = [];
+  const newDiffs: BlockDiff[] = [];
+
+  for (let dy = 0; dy < blocks.length; dy++) {
+    const destY = gy + dy;
+    if (destY < 0 || destY >= canvasH) continue;
+    const srcRow = blocks[dy];
+    if (!srcRow) continue;
+
+    for (let dx = 0; dx < srcRow.length; dx++) {
+      const destX = gx + dx;
+      if (destX < 0 || destX >= canvasW) continue;
+
+      const srcBlock = srcRow[dx];
+      if (!hasBlockContent(srcBlock)) continue;
+
+      const oldBlock = layerBlocks[destY]?.[destX];
+      if (oldBlock) {
+        oldDiffs.push({ x: destX, y: destY, b: { ...oldBlock } });
+      } else {
+        oldDiffs.push({ x: destX, y: destY, b: {} });
+      }
+
+      if (!layerBlocks[destY]) layerBlocks[destY] = [];
+      layerBlocks[destY][destX] = { ...srcBlock };
+
+      newDiffs.push({ x: destX, y: destY, b: { ...srcBlock } });
+    }
+  }
+
+  commitDiff(opts, oldDiffs, newDiffs, layerBlocks);
+  return oldDiffs.length > 0;
+}
+
+/** Draw a semi-transparent ghost preview of clipboard blocks. */
+function drawPastePreview(
+  opts: UsePasteModeOptions,
+  blocks: Block[][],
+  ctx: CanvasRenderingContext2D,
+  gx: number,
+  gy: number,
+  bw: number,
+  bh: number,
+): void {
+  if (!blocks || !blocks.length) return;
+
+  const canvasW = opts.currentAsciiWidth.value;
+  const canvasH = opts.currentAsciiHeight.value;
+
+  ctx.save();
+  ctx.globalAlpha = 0.55;
+
+  for (let dy = 0; dy < blocks.length; dy++) {
+    const destY = gy + dy;
+    if (destY < 0 || destY >= canvasH) continue;
+    const row = blocks[dy];
+    if (!row) continue;
+
+    for (let dx = 0; dx < row.length; dx++) {
+      const destX = gx + dx;
+      if (destX < 0 || destX >= canvasW) continue;
+      if (!hasBlockContent(row[dx])) continue;
+
+      renderPasteBlock(ctx, row[dx], destX * bw, destY * bh, bw, bh);
+    }
+  }
+
+  ctx.restore();
+  drawPasteOutline(ctx, blocks, gx, gy, bw, bh, canvasW, canvasH);
+}
+
+// ─── Composable ─────────────────────────────────────────────────
 
 export function usePasteMode(opts: UsePasteModeOptions) {
   const toolbarStore = useToolbarStore();
   const store = useAsciiBirdStore();
 
-  // ─── State ──────────────────────────────────────────────────────
   const isPasteMode = ref(false);
-
-  // ─── Computed ───────────────────────────────────────────────────
   const clipboardBlocks = computed<Block[][]>(
     () => toolbarStore.selectBlocks,
   );
-  const hasClipboard = computed(
-    () => clipboardBlocks.value.length > 0,
-  );
+  const hasClipboard = computed(() => clipboardBlocks.value.length > 0);
 
-  // ─── Helper: get current selection as grid rect ────────────────
-  function getSelectionRect(): GridSelection | null {
-    return selectionToGridRect(
-      opts.selecting.value,
-      opts.blockWidthComp.value,
-      opts.blockHeightComp.value,
-      opts.currentAsciiWidth.value,
-      opts.currentAsciiHeight.value,
-    );
-  }
-
-  // ─── Methods ────────────────────────────────────────────────────
-
-  /**
-   * Enter paste mode. Shows ghost preview of clipboard blocks
-   * following the cursor. Click to confirm, Escape to cancel.
-   */
   function startPasteMode(): void {
     if (!hasClipboard.value) return;
     isPasteMode.value = true;
   }
 
-  /**
-   * Cancel paste mode. Resets state without stamping blocks.
-   */
   function cancelPasteMode(): void {
     isPasteMode.value = false;
   }
 
-  /**
-   * Confirm paste: stamp clipboard blocks at grid position (gx, gy).
-   * Only writes non-empty blocks. Clips to canvas bounds.
-   * Records a single undo diff.
-   * Returns true if any blocks were stamped.
-   */
-  function confirmPaste(gx: number, gy: number): boolean {
-    const blocks = clipboardBlocks.value;
-    if (!blocks || !blocks.length || !blocks[0]?.length) return false;
-
-    const layerBlocks = opts.currentAsciiLayerBlocks.value;
-    const canvasW = opts.currentAsciiWidth.value;
-    const canvasH = opts.currentAsciiHeight.value;
-
-    const oldDiffs: BlockDiff[] = [];
-    const newDiffs: BlockDiff[] = [];
-
-    for (let dy = 0; dy < blocks.length; dy++) {
-      const destY = gy + dy;
-      if (destY < 0 || destY >= canvasH) continue;
-
-      const srcRow = blocks[dy];
-      if (!srcRow) continue;
-
-      for (let dx = 0; dx < srcRow.length; dx++) {
-        const destX = gx + dx;
-        if (destX < 0 || destX >= canvasW) continue;
-
-        const srcBlock = srcRow[dx];
-        // Skip empty source blocks (they don't overwrite)
-        if (!hasBlockContent(srcBlock)) continue;
-
-        // Record old block for undo
-        const oldBlock = layerBlocks[destY]?.[destX];
-        if (oldBlock) {
-          oldDiffs.push({ x: destX, y: destY, b: { ...oldBlock } });
-        } else {
-          oldDiffs.push({ x: destX, y: destY, b: {} });
-        }
-
-        // Write new block
-        if (!layerBlocks[destY]) layerBlocks[destY] = [];
-        layerBlocks[destY][destX] = { ...srcBlock };
-
-        newDiffs.push({ x: destX, y: destY, b: { ...srcBlock } });
-      }
-    }
-
-    if (oldDiffs.length > 0 || newDiffs.length > 0) {
-      opts.updateAsciiBlocks({
-        diff: {
-          old: oldDiffs,
-          new: newDiffs,
-          l: opts.selectedLayerIndex.value,
-        },
-        blocks: layerBlocks,
-      });
-    }
-
+  function doConfirmPaste(gx: number, gy: number): boolean {
+    const result = confirmPaste(opts, clipboardBlocks.value, gx, gy);
     isPasteMode.value = false;
-    return oldDiffs.length > 0;
+    return result;
   }
 
-  /**
-   * Cut the current selection: copy blocks to clipboard, then erase
-   * the selection area. Returns true if anything was cut.
-   */
   function cutSelection(): boolean {
-    const rect = getSelectionRect();
+    const rect = getSelectionRect(opts);
     if (!rect) return false;
-
     const layerBlocks = opts.currentAsciiLayerBlocks.value;
-
-    // Extract and store in clipboard
     const blocks = extractSelectionBlocks(layerBlocks, rect);
     toolbarStore.setSelectBlocks(blocks);
-
-    // Erase the selection area
     const { oldDiffs, newDiffs } = eraseArea(rect, layerBlocks);
-
-    if (oldDiffs.length > 0) {
-      opts.updateAsciiBlocks({
-        diff: {
-          old: oldDiffs,
-          new: newDiffs,
-          l: opts.selectedLayerIndex.value,
-        },
-        blocks: layerBlocks,
-      });
-    }
-
+    commitDiff(opts, oldDiffs, newDiffs, layerBlocks);
     return oldDiffs.length > 0;
   }
 
-  /**
-   * Delete the current selection contents (clear blocks, keep rect).
-   * Does NOT modify the clipboard. Returns true if anything was deleted.
-   */
   function deleteSelection(): boolean {
-    const rect = getSelectionRect();
+    const rect = getSelectionRect(opts);
     if (!rect) return false;
-
     const layerBlocks = opts.currentAsciiLayerBlocks.value;
     const { oldDiffs, newDiffs } = eraseArea(rect, layerBlocks);
-
-    if (oldDiffs.length > 0) {
-      opts.updateAsciiBlocks({
-        diff: {
-          old: oldDiffs,
-          new: newDiffs,
-          l: opts.selectedLayerIndex.value,
-        },
-        blocks: layerBlocks,
-      });
-    }
-
+    commitDiff(opts, oldDiffs, newDiffs, layerBlocks);
     return oldDiffs.length > 0;
   }
 
-  /**
-   * Erase all blocks within a grid selection area.
-   * Returns old/new diffs for undo.
-   */
-  function eraseArea(
-    rect: GridSelection,
-    layerBlocks: Block[][],
-  ): { oldDiffs: BlockDiff[]; newDiffs: BlockDiff[] } {
-    const oldDiffs: BlockDiff[] = [];
-    const newDiffs: BlockDiff[] = [];
-
-    for (let dy = 0; dy < rect.height; dy++) {
-      const gy = rect.y + dy;
-      for (let dx = 0; dx < rect.width; dx++) {
-        const gx = rect.x + dx;
-        const block = layerBlocks[gy]?.[gx];
-        if (!block) continue;
-        // Only record diffs for non-empty blocks
-        if (!hasBlockContent(block)) continue;
-
-        oldDiffs.push({ x: gx, y: gy, b: { ...block } });
-        layerBlocks[gy][gx] = {};
-        newDiffs.push({ x: gx, y: gy, b: {} });
-      }
-    }
-
-    return { oldDiffs, newDiffs };
-  }
-
-  /**
-   * Draw a semi-transparent ghost preview of clipboard blocks
-   * at grid position (gx, gy). Uses canvas 2D context directly.
-   */
-  function drawPastePreview(
-    ctx: CanvasRenderingContext2D,
-    gx: number,
-    gy: number,
-    bw: number,
-    bh: number,
+  function doDrawPastePreview(
+    ctx: CanvasRenderingContext2D, gx: number, gy: number,
+    bw: number, bh: number,
   ): void {
-    const blocks = clipboardBlocks.value;
-    if (!blocks || !blocks.length) return;
-
-    const canvasW = opts.currentAsciiWidth.value;
-    const canvasH = opts.currentAsciiHeight.value;
-
-    ctx.save();
-    ctx.globalAlpha = 0.55;
-
-    for (let dy = 0; dy < blocks.length; dy++) {
-      const destY = gy + dy;
-      if (destY < 0 || destY >= canvasH) continue;
-      const row = blocks[dy];
-      if (!row) continue;
-
-      for (let dx = 0; dx < row.length; dx++) {
-        const destX = gx + dx;
-        if (destX < 0 || destX >= canvasW) continue;
-        if (!hasBlockContent(row[dx])) continue;
-
-        renderPasteBlock(ctx, row[dx], destX * bw, destY * bh, bw, bh);
-      }
-    }
-
-    ctx.restore();
-    drawPasteOutline(ctx, blocks, gx, gy, bw, bh, canvasW, canvasH);
+    drawPastePreview(opts, clipboardBlocks.value, ctx, gx, gy, bw, bh);
   }
 
-  // ─── Cleanup watchers ───────────────────────────────────────────
-
-  // Cancel paste mode when switching tools
+  // Cancel paste mode when switching tools or tabs
   watch(
     () => toolbarStore.currentTool,
-    () => {
-      if (isPasteMode.value) {
-        cancelPasteMode();
-      }
-    },
+    () => { if (isPasteMode.value) cancelPasteMode(); },
   );
-
-  // Cancel paste mode when switching tabs
   watch(
     () => store.tab,
-    () => {
-      if (isPasteMode.value) {
-        cancelPasteMode();
-      }
-    },
+    () => { if (isPasteMode.value) cancelPasteMode(); },
   );
 
   return {
@@ -368,10 +311,10 @@ export function usePasteMode(opts: UsePasteModeOptions) {
     clipboardBlocks,
     hasClipboard,
     startPasteMode,
-    confirmPaste,
+    confirmPaste: doConfirmPaste,
     cancelPasteMode,
     cutSelection,
     deleteSelection,
-    drawPastePreview,
+    drawPastePreview: doDrawPastePreview,
   };
 }
