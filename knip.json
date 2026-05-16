@@ -1,0 +1,13 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": ["src/main.ts"],
+  "project": ["src/**/*.{ts,vue}"],
+  "ignore": [
+    "src/types/**",
+    "src/style.scss"
+  ],
+  "ignoreExportsUsedInFile": true,
+  "ignoreDependencies": [
+    "hotkeys-js"
+  ]
+}

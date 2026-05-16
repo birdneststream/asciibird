@@ -56,6 +56,10 @@ export default [
       '@typescript-eslint/no-redeclare': 'warn',
       'vue/multi-word-component-names': 'off',
       'vue/no-reserved-component-names': 'off',
+      'complexity': ['warn', { max: 20 }],
+      'max-depth': ['warn', { max: 4 }],
+      'max-lines-per-function': ['warn', { max: 100, skipBlankLines: true, skipComments: true }],
+      'max-lines': ['warn', { max: 1000, skipBlankLines: true, skipComments: true }],
     },
   },
   // Node.js globals for config files

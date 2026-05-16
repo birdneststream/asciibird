@@ -10,7 +10,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src/"
+    "lint": "eslint src/",
+    "lint:complexity": "eslint src/ --rule 'complexity: warn' --rule 'max-depth: warn' --rule 'max-lines-per-function: warn' --rule 'max-lines: warn'",
+    "knip": "knip",
+    "stats": "vite build && echo 'Open dist/stats.html for bundle analysis'"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
@@ -44,7 +47,9 @@
     "eslint-plugin-vue": "^9.26.0",
     "fake-indexeddb": "^6.2.5",
     "jsdom": "^24.1.0",
+    "knip": "^6.14.1",
     "lint-staged": "^15.2.7",
+    "rollup-plugin-visualizer": "^7.0.1",
     "sass": "^1.77.6",
     "simple-git-hooks": "^2.11.1",
     "typescript": "^6.0.3",
