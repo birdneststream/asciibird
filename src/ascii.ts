@@ -278,8 +278,8 @@ export const parseMircAscii = async (
     history: [],
     historyIndex: 0,
     imageOverlay: defaultImageOverlay(),
-    x: blockWidth * 35,
-    y: blockHeight * 2,
+    x: CANVAS_DEFAULT_X,
+    y: CANVAS_DEFAULT_Y,
     selectedLayer: 0,
   };
 

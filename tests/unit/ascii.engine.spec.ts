@@ -915,8 +915,8 @@ describe('createNewAscii', () => {
     });
 
     const payload = getLastNewAsciiMetaPayload(mockStore);
-    expect(payload.x).toBe(240);
-    expect(payload.y).toBe(60);
+    expect(payload.x).toBe(328);
+    expect(payload.y).toBe(105);
   });
 
   it('initializes empty history', () => {
@@ -1195,12 +1195,12 @@ describe('parseMircAscii', () => {
     expect(Array.isArray(decompressed)).toBe(true);
   });
 
-  it('sets correct initial x/y from blockWidth/blockHeight', async () => {
+  it('sets correct initial x/y from CANVAS_DEFAULT_X/Y', async () => {
     await parseMircAscii('\x031,0A', 'pos.txt');
 
     const payload = getLastNewAsciiMetaPayload(mockStore);
-    expect(payload.x).toBe(blockWidth * 35);
-    expect(payload.y).toBe(blockHeight * 2);
+    expect(payload.x).toBe(328);
+    expect(payload.y).toBe(105);
   });
 });
 

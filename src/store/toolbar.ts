@@ -296,8 +296,8 @@ export const useToolbarStore = defineStore('toolbar', {
       }
     },
     resetToolbarPosition() {
-      this.toolbarState.x = 8;
-      this.toolbarState.y = 60;
+      this.toolbarState.x = 16;
+      this.toolbarState.y = 90;
     },
     setPickerPos(pos: { x: number; y: number }) {
       this.pickerPos = pos;

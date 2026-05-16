@@ -21,7 +21,8 @@
  */
 
 import LZString from 'lz-string';
-import { fillNullBlocks, blockWidth, blockHeight, defaultImageOverlay } from '../ascii';
+import { fillNullBlocks, defaultImageOverlay } from '../ascii';
+import { CANVAS_DEFAULT_X, CANVAS_DEFAULT_Y } from '../store/panels';
 import {
   ANSI_TO_MIRC,
   closestMircColor,
@@ -398,8 +399,8 @@ export const parseAnsiAscii = async (
     history: [],
     historyIndex: 0,
     imageOverlay: defaultImageOverlay(),
-    x: blockWidth * 35,
-    y: blockHeight * 2,
+    x: CANVAS_DEFAULT_X,
+    y: CANVAS_DEFAULT_Y,
     selectedLayer: 0,
   };
 
