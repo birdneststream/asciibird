@@ -6,6 +6,71 @@
 
 import type { Block, MircExportResult } from '../types';
 
+// ─── Helpers ────────────────────────────────────────────────────
+
+const OPTIMISE_CHARS = ['\u2580', '\u2584', '\u2588'];
+
+const zeroPad = (num: number, places = 2): string =>
+  String(num).padStart(places, '0');
+
+/**
+ * Determine if the next block's char is a digit that needs zero-padding
+ * to avoid mIRC parsing ambiguity (e.g., `\u000312` is color 12,
+ * but `\u00031,2` followed by char "2" is ambiguous).
+ */
+function needsPadding(block: Block, nextBlock: Block | undefined): boolean {
+  // Check if next block's char is a single digit
+  const nextCharDigit = nextBlock !== undefined
+    && (nextBlock.bg === undefined || nextBlock.fg === undefined)
+    && nextBlock.char !== undefined
+    && Number.parseInt(nextBlock.char) >= 0
+    && Number.parseInt(nextBlock.char) <= 9;
+
+  // Check if current block's char is a single digit
+  const curCharDigit = block.char !== undefined
+    && Number.parseInt(block.char ?? '') >= 0
+    && Number.parseInt(block.char ?? '') <= 9;
+
+  return !!(nextCharDigit || curCharDigit);
+}
+
+/**
+ * Optimise half/full blocks with same fg and bg into plain spaces.
+ * Prevents mIRC clients from rendering redundant color codes.
+ */
+function optimiseBlock(block: Block): Block {
+  if (block.fg === block.bg && OPTIMISE_CHARS.includes(block.char ?? '')) {
+    return { ...block, fg: 0, char: ' ' };
+  }
+  return { ...block };
+}
+
+/**
+ * Generate mIRC color code string based on block's fg/bg state.
+ * Returns the escape sequence or empty string.
+ */
+function formatMircColor(block: Block, isPadded: boolean): string {
+  if (block.fg === undefined && block.bg === undefined) {
+    return '\u0003';
+  }
+
+  if (block.bg === undefined && block.fg !== undefined) {
+    return '\u0003' + (isPadded ? zeroPad(block.fg) : String(block.fg));
+  }
+
+  if (block.bg !== undefined && block.fg !== undefined) {
+    return `\u0003${block.fg},${isPadded ? zeroPad(block.bg) : block.bg}`;
+  }
+
+  if (block.bg !== undefined && block.fg === undefined) {
+    return `\u00030,${isPadded ? zeroPad(block.bg) : block.bg}`;
+  }
+
+  return '';
+}
+
+// ─── Export functions ───────────────────────────────────────────
+
 /**
  * Converts ASCIIBIRD blocks to mIRC colour format.
  *
@@ -18,86 +83,35 @@ export const exportMircBlocks = (
   meta: { title: string },
   dimensions: { height: number; width: number },
 ): MircExportResult => {
-  const currentAscii = meta;
-  const currentAsciiLayersWidthHeight = dimensions;
-
   const output: string[] = [];
-  let curBlock: Block;
-  let pushString = '';
-
   let prevBlock: Block = { bg: -1, fg: -1 };
 
-  const optimiseArray = ['\u2580', '\u2584', '\u2588'];
-
-  const zeroPad = (num: number, places = 2): string =>
-    String(num).padStart(places, '0');
-
-  for (let y = 0; y <= currentAsciiLayersWidthHeight.height - 1; y++) {
-    for (let x = 0; x <= currentAsciiLayersWidthHeight.width - 1; x++) {
-      // Determine if we need an extra 0 to pad a colour
+  for (let y = 0; y < dimensions.height; y++) {
+    for (let x = 0; x < dimensions.width; x++) {
+      const rawBlock = blocks[y][x];
       const nextBlock = blocks[y][x + 1];
-      const isPadded = !!(
-        (nextBlock !== undefined &&
-          (nextBlock.bg === undefined || nextBlock.fg === undefined) &&
-          nextBlock.char !== undefined &&
-          Number.parseInt(nextBlock.char) >= 0 &&
-          Number.parseInt(nextBlock.char) <= 9) ||
-        (blocks[y][x].char !== undefined &&
-          Number.parseInt(blocks[y][x].char ?? '') >= 0 &&
-          Number.parseInt(blocks[y][x].char ?? '') <= 9)
-      );
-
-      // If we have a difference between our previous block
-      // we'll put colour codes and continue as normal
-      curBlock = { ...blocks[y][x] };
-
-      // Optimise out half or full blocks with same bg and fg
-      if (curBlock.fg === curBlock.bg &&
-          optimiseArray.includes(curBlock.char ?? '')) {
-        curBlock.fg = 0;
-        curBlock.char = ' ';
-      }
+      const isPadded = needsPadding(rawBlock, nextBlock);
+      const curBlock = optimiseBlock(rawBlock);
 
       if (curBlock.bg !== prevBlock.bg || curBlock.fg !== prevBlock.fg) {
-        if (curBlock.fg === undefined && curBlock.bg === undefined) {
-          output.push('\u0003');
-        } else {
-          if (curBlock.bg === undefined && curBlock.fg !== undefined) {
-            output.push('\u0003');
-            pushString = `\u0003${isPadded ? zeroPad(curBlock.fg) : curBlock.fg}`;
-          }
-
-          if (curBlock.bg !== undefined && curBlock.fg !== undefined) {
-            pushString =
-              `\u0003${curBlock.fg},${isPadded ? zeroPad(curBlock.bg) : curBlock.bg}`;
-          }
-
-          if (curBlock.bg !== undefined && curBlock.fg === undefined) {
-            pushString =
-              `\u00030,${isPadded ? zeroPad(curBlock.bg) : curBlock.bg}`;
-          }
-
-          output.push(pushString);
-        }
+        output.push(formatMircColor(curBlock, isPadded));
       }
 
       // null .chars will end up as space
       output.push(curBlock.char ?? ' ');
-
       prevBlock = { ...curBlock };
     }
 
     // We can never have a -1 colour code so we'll always
     // write one at the start of each line
     prevBlock = { bg: -1, fg: -1 };
-
     output.push('\n');
   }
 
   // Check if filename already ends with .txt
-  const filename = currentAscii.title.slice(currentAscii.title.length - 3) === 'txt'
-    ? currentAscii.title
-    : `${currentAscii.title}.txt`;
+  const filename = meta.title.endsWith('.txt')
+    ? meta.title
+    : `${meta.title}.txt`;
 
   return { filename, output };
 };
