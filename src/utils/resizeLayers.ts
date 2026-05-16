@@ -1,10 +1,12 @@
 /**
  * Content-Preserving Canvas Resize — resizes all layers to new dimensions.
  *
- * Unlike `fillNullBlocks` (which only adds empty blocks for growing),
- * this utility properly handles both directions:
- * - **Growing**: preserves existing blocks, adds empty blocks at edges
- * - **Shrinking**: truncates rows and columns beyond new dimensions
+ * Blocks are NEVER lost when shrinking. The data array is preserved at its
+ * full size — only the `width`/`height` metadata changes to control which
+ * portion is rendered. When you grow back, the original blocks reappear.
+ *
+ * - **Growing**: preserves all data, pads empty blocks at edges if needed
+ * - **Shrinking**: preserves all data, only reduces visible dimensions
  *
  * The function is **pure**: no store access, no mutation of input.
  * Each block is shallow-cloned (Block properties are primitive values).
@@ -13,7 +15,7 @@
 
 import type { Block, Layer } from '../types';
 
-/** Shallow-clone a block (safe because Block properties are primitives) */
+/** Shallow-clone a block (safe because Block properties are primitive values) */
 function cloneBlock(block: Block | undefined): Block {
   if (!block) return {};
   return { ...block };
@@ -23,9 +25,9 @@ function cloneBlock(block: Block | undefined): Block {
  * Resize all layers to the specified dimensions.
  *
  * @param layers - Current layer array
- * @param newWidth - New width in blocks (columns)
- * @param newHeight - New height in blocks (rows)
- * @returns New layers array with resized data. Original layers are not mutated.
+ * @param newWidth - New visible width in blocks (columns)
+ * @param newHeight - New visible height in blocks (rows)
+ * @returns New layers array with resized dimensions. Original layers are not mutated.
  * @throws {RangeError} If newWidth or newHeight is less than 1
  */
 export function resizeLayers(
@@ -40,13 +42,22 @@ export function resizeLayers(
   }
 
   return layers.map((layer) => {
+    const oldData = layer.data;
+    const oldHeight = oldData.length;
+    const oldWidth = oldData[0]?.length ?? 0;
+
+    // Determine the actual data dimensions needed.
+    // We keep all original data, so the data array is the MAX of old/new.
+    const dataHeight = Math.max(oldHeight, newHeight);
+    const dataWidth = Math.max(oldWidth, newWidth);
+
     const newData: Block[][] = [];
 
-    for (let y = 0; y < newHeight; y++) {
+    for (let y = 0; y < dataHeight; y++) {
       const newRow: Block[] = [];
-      const srcRow = layer.data[y];
+      const srcRow = oldData[y];
 
-      for (let x = 0; x < newWidth; x++) {
+      for (let x = 0; x < dataWidth; x++) {
         if (srcRow && srcRow[x]) {
           newRow.push(cloneBlock(srcRow[x]));
         } else {

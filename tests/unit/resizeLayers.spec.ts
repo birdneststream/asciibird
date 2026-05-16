@@ -100,29 +100,37 @@ describe('resizeLayers', () => {
     expect(result[0].data[2][2]).toEqual({});
   });
 
-  // ─── Shrinking — truncates rows and columns ─────────────────────
+  // ─── Shrinking — preserves ALL data, only changes visible dims ──
 
-  it('shrinks width: truncates columns', () => {
+  it('shrinks width: data preserved beyond visible area', () => {
     const original = [makeLayer([[fg(1), fg(2), fg(3)]])];
     const result = resizeLayers(original, 1, 1);
 
     expect(result[0].width).toBe(1);
     expect(result[0].height).toBe(1);
+    // Visible block preserved
     expect(result[0].data[0][0].fg).toBe(1);
-    expect(result[0].data[0]).toHaveLength(1);
+    // Data beyond visible area ALSO preserved
+    expect(result[0].data[0].length).toBe(3);
+    expect(result[0].data[0][1].fg).toBe(2);
+    expect(result[0].data[0][2].fg).toBe(3);
   });
 
-  it('shrinks height: truncates rows', () => {
+  it('shrinks height: data preserved beyond visible area', () => {
     const original = [makeLayer([[fg(1)], [fg(2)], [fg(3)]])];
     const result = resizeLayers(original, 1, 1);
 
     expect(result[0].width).toBe(1);
     expect(result[0].height).toBe(1);
+    // Visible block preserved
     expect(result[0].data[0][0].fg).toBe(1);
-    expect(result[0].data).toHaveLength(1);
+    // Data beyond visible area preserved
+    expect(result[0].data.length).toBe(3);
+    expect(result[0].data[1][0].fg).toBe(2);
+    expect(result[0].data[2][0].fg).toBe(3);
   });
 
-  it('shrinks both dimensions simultaneously', () => {
+  it('shrinks both dimensions: all original data preserved', () => {
     const original = [makeLayer([
       [fg(1), fg(2), fg(3)],
       [fg(4), fg(5), fg(6)],
@@ -132,14 +140,46 @@ describe('resizeLayers', () => {
 
     expect(result[0].width).toBe(2);
     expect(result[0].height).toBe(2);
-    // Top-left corner preserved
+    // Visible 2x2 area preserved
     expect(result[0].data[0][0].fg).toBe(1);
     expect(result[0].data[0][1].fg).toBe(2);
     expect(result[0].data[1][0].fg).toBe(4);
     expect(result[0].data[1][1].fg).toBe(5);
-    // Truncated data gone
-    expect(result[0].data).toHaveLength(2);
-    expect(result[0].data[0]).toHaveLength(2);
+    // Data beyond visible area preserved
+    expect(result[0].data.length).toBe(3);
+    expect(result[0].data[0].length).toBe(3);
+    expect(result[0].data[0][2].fg).toBe(3);
+    expect(result[0].data[1][2].fg).toBe(6);
+    expect(result[0].data[2][0].fg).toBe(7);
+    expect(result[0].data[2][1].fg).toBe(8);
+    expect(result[0].data[2][2].fg).toBe(9);
+  });
+
+  // ─── Shrink then grow — round-trip preservation ─────────────────
+
+  it('blocks survive shrink-then-grow round trip', () => {
+    const original = [makeLayer([
+      [fg(1), fg(2), fg(3)],
+      [fg(4), fg(5), fg(6)],
+      [fg(7), fg(8), fg(9)],
+    ])];
+
+    // Shrink to 1x1
+    const shrunk = resizeLayers(original, 1, 1);
+    expect(shrunk[0].width).toBe(1);
+    expect(shrunk[0].height).toBe(1);
+
+    // Grow back to 3x3
+    const restored = resizeLayers(shrunk, 3, 3);
+    expect(restored[0].width).toBe(3);
+    expect(restored[0].height).toBe(3);
+
+    // ALL original blocks should be back
+    for (let y = 0; y < 3; y++) {
+      for (let x = 0; x < 3; x++) {
+        expect(restored[0].data[y][x].fg).toBe(y * 3 + x + 1);
+      }
+    }
   });
 
   // ─── Edge cases ─────────────────────────────────────────────────
