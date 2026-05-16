@@ -434,8 +434,11 @@ describe('round-trip export→import', () => {
   });
 
   it('preserves fg colors through round-trip (approximate)', async () => {
-    const { exportAnsi, IRC_TO_ANSI } = await import(
+    const { exportAnsi } = await import(
       '../../src/utils/ansiExport'
+    );
+    const { IRC_TO_ANSI } = await import(
+      '../../src/utils/ansiColors'
     );
     const mircFg = 4; // mIRC red
     const blocks: Block[][] = [[{ fg: mircFg, char: 'X' }]];
@@ -447,8 +450,11 @@ describe('round-trip export→import', () => {
   });
 
   it('preserves bg colors through round-trip (approximate)', async () => {
-    const { exportAnsi, IRC_TO_ANSI } = await import(
+    const { exportAnsi } = await import(
       '../../src/utils/ansiExport'
+    );
+    const { IRC_TO_ANSI } = await import(
+      '../../src/utils/ansiColors'
     );
     const mircBg = 2; // mIRC navy
     const blocks: Block[][] = [[{ bg: mircBg, char: ' ' }]];

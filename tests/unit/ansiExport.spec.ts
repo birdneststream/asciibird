@@ -4,7 +4,8 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { exportAnsi, IRC_TO_ANSI } from '../../src/utils/ansiExport';
+import { exportAnsi } from '../../src/utils/ansiExport';
+import { IRC_TO_ANSI } from '../../src/utils/ansiColors';
 import type { Block } from '../../src/types';
 
 // Mock mergeLayers + downloadFile so tests don't need a real Pinia store

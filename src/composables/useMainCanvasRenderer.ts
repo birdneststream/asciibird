@@ -1,10 +1,6 @@
 import type { Block } from '../types';
 import { getCanvasFont } from '../utils/canvasFont';
-
-/** Upper half block character */
-const UPPER_HALF = '\u2580'; // ▀
-/** Lower half block character */
-const LOWER_HALF = '\u2584'; // ▄
+import { UPPER_HALF, LOWER_HALF } from '../utils/halfBlockChars';
 
 export interface RenderBlockOptions {
   /** Whether to draw the background fill (default: true) */

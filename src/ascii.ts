@@ -100,8 +100,13 @@ export const emptyBlock: Block = {};
  * Semantically equivalent to `JSON.stringify(block) === '{}'`
  * because the codebase uses `delete` (not `= undefined`) to reset blocks.
  */
-export function isEmptyBlock(block: Block): boolean {
-  return Object.keys(block).length === 0;
+export function isEmptyBlock(block: Block | undefined): boolean {
+  return !block || Object.keys(block).length === 0;
+}
+
+/** Check if a block has any meaningful content (inverse of isEmptyBlock). */
+export function hasBlockContent(block: Block | undefined): boolean {
+  return !!block && Object.keys(block).length > 0;
 }
 
 /**

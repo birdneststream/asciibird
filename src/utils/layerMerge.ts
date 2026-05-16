@@ -4,18 +4,11 @@
 // function accepts layers as a parameter — callers inject the store data.
 // `mergeTwoLayers` merges an upper layer over a lower layer.
 
+import { isEmptyBlock } from '../ascii';
 import type { Block, Layer } from '../types';
 
 /** Sentinel empty block — shared to avoid creating new objects */
 const EMPTY: Block = {};
-
-/**
- * Check if a block has no properties set.
- * Same semantics as isEmptyBlock from ascii.ts but local to this module.
- */
-function isEmpty(block: Block): boolean {
-  return Object.keys(block).length === 0;
-}
 
 /**
  * Merge two block grids (upper over lower).
@@ -40,7 +33,7 @@ export function mergeTwoLayers(
       const u = upperRow[x];
       const l = lowerRow[x];
 
-      if (u && !isEmpty(u)) {
+      if (u && !isEmptyBlock(u)) {
         result[y][x] = { ...u };
       } else if (l) {
         result[y][x] = { ...l };

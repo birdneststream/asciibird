@@ -16,7 +16,7 @@
 // and cleanup watchers.
 
 import { ref, computed, watch, type Ref, type ComputedRef } from 'vue';
-import { mircColours99 } from '../ascii';
+import { mircColours99, hasBlockContent } from '../ascii';
 import { useToolbarStore } from '../store/toolbar';
 import { useAsciiBirdStore } from '../store';
 import {
@@ -81,11 +81,6 @@ function drawPasteOutline(
   ctx.setLineDash([4, 4]);
   ctx.strokeRect(gx * bw, gy * bh, pasteW * bw, pasteH * bh);
   ctx.restore();
-}
-
-/** Check if a block has any meaningful content */
-function hasContent(block: Block | undefined): boolean {
-  return !!block && Object.keys(block).length > 0;
 }
 
 /** Dependencies injected from Editor.vue */
@@ -189,7 +184,7 @@ export function usePasteMode(opts: UsePasteModeOptions) {
 
         const srcBlock = srcRow[dx];
         // Skip empty source blocks (they don't overwrite)
-        if (!hasContent(srcBlock)) continue;
+        if (!hasBlockContent(srcBlock)) continue;
 
         // Record old block for undo
         const oldBlock = layerBlocks[destY]?.[destX];
@@ -296,7 +291,7 @@ export function usePasteMode(opts: UsePasteModeOptions) {
         const block = layerBlocks[gy]?.[gx];
         if (!block) continue;
         // Only record diffs for non-empty blocks
-        if (!hasContent(block)) continue;
+        if (!hasBlockContent(block)) continue;
 
         oldDiffs.push({ x: gx, y: gy, b: { ...block } });
         layerBlocks[gy][gx] = {};
@@ -336,7 +331,7 @@ export function usePasteMode(opts: UsePasteModeOptions) {
       for (let dx = 0; dx < row.length; dx++) {
         const destX = gx + dx;
         if (destX < 0 || destX >= canvasW) continue;
-        if (!hasContent(row[dx])) continue;
+        if (!hasBlockContent(row[dx])) continue;
 
         renderPasteBlock(ctx, row[dx], destX * bw, destY * bh, bw, bh);
       }

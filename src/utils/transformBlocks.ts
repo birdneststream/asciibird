@@ -11,15 +11,10 @@
 //   flips.
 
 import type { Block } from '../types';
-
-/** Upper-half block character */
-const UPPER_HALF = '\u2580'; // ▀
-/** Lower-half block character */
-const LOWER_HALF = '\u2584'; // ▄
-/** Left-half block character */
-const LEFT_HALF = '\u258C'; // ▌
-/** Right-half block character */
-const RIGHT_HALF = '\u2590'; // ▐
+import {
+  UPPER_HALF, LOWER_HALF,
+  LEFT_HALF, RIGHT_HALF,
+} from './halfBlockChars';
 
 // ─── Block Utilities ─────────────────────────────────────────────
 

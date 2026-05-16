@@ -8,16 +8,11 @@
 
 import { mergeLayers, downloadFile } from '../ascii';
 import { IRC_TO_ANSI } from './ansiColors';
+import { UPPER_HALF, LOWER_HALF, FULL_BLOCK } from './halfBlockChars';
 import type { Block } from '../types';
-
-// Re-export for backward compatibility with existing imports
-export { IRC_TO_ANSI } from './ansiColors';
 
 // ─── Half-block characters ─────────────────────────────────────
 
-const UPPER_HALF = '\u2580'; // ▀
-const LOWER_HALF = '\u2584'; // ▄
-const FULL_BLOCK = '\u2588'; // █
 const HALF_BLOCK_CHARS = new Set([UPPER_HALF, LOWER_HALF]);
 
 // ─── State for ANSI color deduplication ────────────────────────

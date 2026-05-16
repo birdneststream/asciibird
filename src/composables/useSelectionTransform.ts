@@ -6,6 +6,7 @@
 
 import { type ComputedRef, type Ref } from 'vue';
 import { transformBlocks, type TransformType } from '../utils/transformBlocks';
+import { hasBlockContent } from '../ascii';
 import type { Block, HistoryDiff, BlockDiff } from '../types';
 
 /** Pixel-coordinate selection rectangle from Editor */
@@ -123,11 +124,6 @@ export function copySelectionBlocks(
 }
 
 // ─── Pure helpers (module-level) ───────────────────────────────────
-
-/** Check if a block has meaningful content */
-function hasBlockContent(block: Block | undefined): boolean {
-  return !!block && Object.keys(block).length > 0;
-}
 
 /**
  * Clear all blocks in a grid selection area.
