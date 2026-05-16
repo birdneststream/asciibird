@@ -354,7 +354,7 @@ describe('Pinia Store Actions', () => {
       toolbarStore.toolbarState.y = 888;
       toolbarStore.resetToolbarPosition();
       expect(toolbarStore.toolbarState.x).toBe(8);
-      expect(toolbarStore.toolbarState.y).toBe(56);
+      expect(toolbarStore.toolbarState.y).toBe(60);
     });
 
     it('updateMirror', () => {

@@ -96,13 +96,15 @@ import { ref, computed, watch } from 'vue';
 import { usePanelDraggable } from '../../composables/usePanelDraggable';
 import PanelHeader from './PanelHeader.vue';
 import Tooltip from './Tooltip.vue';
-import { mircColours99 } from '../../ascii';
+import { mircColours99, blockWidth, blockHeight } from '../../ascii';
+import { useAsciiBirdStore } from '../../store';
 import { useToolbarStore } from '../../store/toolbar';
 import { usePanelStore } from '../../store/panels';
 import { SHADE_MAP } from '../../utils/colorShades';
 
 const toolbarStore = useToolbarStore();
 const panelStore = usePanelStore();
+const store = useAsciiBirdStore();
 const panelEl = ref<HTMLElement | null>(null);
 const handleRef = ref<InstanceType<typeof PanelHeader> | null>(null);
 
@@ -112,10 +114,15 @@ const initialPos = computed(() => {
   return { x: panelStore.colourPicker.x, y: panelStore.colourPicker.y };
 });
 
+const snapX = computed(() => blockWidth * store.blockSizeMultiplier);
+const snapY = computed(() => blockHeight * store.blockSizeMultiplier);
+
 const { style: panelStyle, x: dragX, y: dragY } = usePanelDraggable(panelEl, {
   initialValue: initialPos.value,
   handle: computed(() => handleRef.value?.headerEl ?? null),
   onBringToFront: () => panelStore.bringToFront('colourPicker'),
+  snapX,
+  snapY,
 });
 
 // Sync drag position back to store for persistence

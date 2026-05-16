@@ -73,7 +73,7 @@
 import { ref, computed, watch } from 'vue';
 import LZString from 'lz-string';
 import { usePanelDraggable } from '../composables/usePanelDraggable';
-import { toolbarIcons, mergeLayers } from '../ascii';
+import { toolbarIcons, mergeLayers, blockWidth, blockHeight } from '../ascii';
 import { useAsciiBirdStore } from '../store';
 import { useToolbarStore } from '../store/toolbar';
 import { usePanelStore } from '../store/panels';
@@ -94,6 +94,9 @@ const { copyText } = useClipboard();
 const panelEl = ref<HTMLElement | null>(null);
 const handleRef = ref<InstanceType<typeof PanelHeader> | null>(null);
 
+const snapX = computed(() => blockWidth * store.blockSizeMultiplier);
+const snapY = computed(() => blockHeight * store.blockSizeMultiplier);
+
 const { style: panelStyle, x: dragX, y: dragY } = usePanelDraggable(panelEl, {
   initialValue: {
     x: panelStore.debugPanel.x,
@@ -101,6 +104,8 @@ const { style: panelStyle, x: dragX, y: dragY } = usePanelDraggable(panelEl, {
   },
   handle: computed(() => handleRef.value?.headerEl ?? null),
   onBringToFront: () => panelStore.bringToFront('debugPanel'),
+  snapX,
+  snapY,
 });
 
 // Sync drag position back to store for persistence

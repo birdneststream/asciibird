@@ -76,11 +76,13 @@ import {
   blockWidth,
   blockHeight,
 } from '../../ascii';
+import { useAsciiBirdStore } from '../../store';
 import { useToolbarStore } from '../../store/toolbar';
 import { usePanelStore } from '../../store/panels';
 
 const toolbarStore = useToolbarStore();
 const panelStore = usePanelStore();
+const store = useAsciiBirdStore();
 const panelEl = ref<HTMLElement | null>(null);
 const handleRef = ref<InstanceType<typeof PanelHeader> | null>(null);
 
@@ -90,10 +92,15 @@ const initialPos = computed(() => {
   return { x: panelStore.charPicker.x, y: panelStore.charPicker.y };
 });
 
+const snapX = computed(() => blockWidth * store.blockSizeMultiplier);
+const snapY = computed(() => blockHeight * store.blockSizeMultiplier);
+
 const { style: panelStyle, x: dragX, y: dragY } = usePanelDraggable(panelEl, {
   initialValue: initialPos.value,
   handle: computed(() => handleRef.value?.headerEl ?? null),
   onBringToFront: () => panelStore.bringToFront('charPicker'),
+  snapX,
+  snapY,
 });
 
 // Sync drag position back to store for persistence

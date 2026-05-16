@@ -161,12 +161,13 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { usePanelDraggable } from '../composables/usePanelDraggable';
+import { useAsciiBirdStore } from '../store';
 import { useToolbarStore } from '../store/toolbar';
 import { usePanelStore } from '../store/panels';
 import { useToast } from '../composables/useToast';
 import PanelHeader from './parts/PanelHeader.vue';
 import Tooltip from './parts/Tooltip.vue';
-import { toolbarIcons } from '../ascii';
+import { toolbarIcons, blockWidth, blockHeight } from '../ascii';
 import { tooltipName, toolLabel } from '../utils/toolbar';
 import {
   SHAPE_TYPES,
@@ -178,7 +179,11 @@ defineOptions({ name: 'Toolbar' });
 
 const toolbarStore = useToolbarStore();
 const panelStore = usePanelStore();
+const store = useAsciiBirdStore();
 const { show: toastShow } = useToast();
+
+const snapX = computed(() => blockWidth * store.blockSizeMultiplier);
+const snapY = computed(() => blockHeight * store.blockSizeMultiplier);
 
 const panelEl = ref<HTMLElement | null>(null);
 const handleRef = ref<InstanceType<typeof PanelHeader> | null>(null);
@@ -186,6 +191,8 @@ const { style: panelStyle, x: dragX, y: dragY } = usePanelDraggable(panelEl, {
   initialValue: { x: toolbarStore.toolbarState.x, y: toolbarStore.toolbarState.y },
   handle: computed(() => handleRef.value?.headerEl ?? null),
   onBringToFront: () => panelStore.bringToFront('toolbar'),
+  snapX,
+  snapY,
 });
 
 // Sync drag position back to store

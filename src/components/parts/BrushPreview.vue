@@ -162,8 +162,9 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { usePanelDraggable } from '../../composables/usePanelDraggable';
-import { maxBrushSize, mircColours99 } from '../../ascii';
+import { maxBrushSize, mircColours99, blockWidth, blockHeight } from '../../ascii';
 import type { Block, ToolbarState } from '../../types';
+import { useAsciiBirdStore } from '../../store';
 import { useToolbarStore } from '../../store/toolbar';
 import { usePanelStore } from '../../store/panels';
 import {
@@ -183,8 +184,11 @@ const emit = defineEmits<{
 
 const toolbarStore = useToolbarStore();
 const panelStore = usePanelStore();
+const store = useAsciiBirdStore();
 const panelEl = ref<HTMLElement | null>(null);
 const handleRef = ref<InstanceType<typeof PanelHeader> | null>(null);
+const snapX = computed(() => blockWidth * store.blockSizeMultiplier);
+const snapY = computed(() => blockHeight * store.blockSizeMultiplier);
 const { style: panelStyle, x: dragX, y: dragY } = usePanelDraggable(panelEl, {
   initialValue: {
     x: panelStore.brushPreview.x,
@@ -192,6 +196,8 @@ const { style: panelStyle, x: dragX, y: dragY } = usePanelDraggable(panelEl, {
   },
   handle: computed(() => handleRef.value?.headerEl ?? null),
   onBringToFront: () => panelStore.bringToFront('brushPreview'),
+  snapX,
+  snapY,
 });
 
 // Sync drag position back to store for persistence

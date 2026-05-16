@@ -174,8 +174,9 @@
 import { ref, reactive, computed, watch, onUnmounted } from 'vue';
 import LZString from 'lz-string';
 import { usePanelDraggable } from '../composables/usePanelDraggable';
-import { toolbarIcons } from '../ascii';
+import { toolbarIcons, blockWidth, blockHeight } from '../ascii';
 import type { Block } from '../types';
+import { useAsciiBirdStore } from '../store';
 import { useToolbarStore } from '../store/toolbar';
 import { usePanelStore } from '../store/panels';
 import { useToast } from '../composables/useToast';
@@ -185,11 +186,14 @@ import hotkeys from 'hotkeys-js';
 
 const props = defineProps<{ yOffset?: number }>();
 
+const store = useAsciiBirdStore();
 const toolbarStore = useToolbarStore();
 const panelStore = usePanelStore();
 const { show: toastShow } = useToast();
 const panelEl = ref<HTMLElement | null>(null);
 const handleRef = ref<InstanceType<typeof PanelHeader> | null>(null);
+const snapX = computed(() => blockWidth * store.blockSizeMultiplier);
+const snapY = computed(() => blockHeight * store.blockSizeMultiplier);
 const { style: panelStyle, x: dragX, y: dragY } = usePanelDraggable(panelEl, {
   initialValue: {
     x: panelStore.brushLibrary.x,
@@ -197,6 +201,8 @@ const { style: panelStyle, x: dragX, y: dragY } = usePanelDraggable(panelEl, {
   },
   handle: computed(() => handleRef.value?.headerEl ?? null),
   onBringToFront: () => panelStore.bringToFront('brushLibrary'),
+  snapX,
+  snapY,
 });
 
 // Sync drag position back to store for persistence

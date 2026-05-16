@@ -7,39 +7,45 @@
 import { defineStore } from 'pinia';
 import { idbPersistAdapter } from '../utils/idbPersistAdapter';
 import type { PanelState, BrushLibraryState } from '../types';
+import { snapToGrid } from '../utils/geometry';
 
-/** Default canvas X position (left column 220px + 8px padding + 8px gap) */
-const CANVAS_DEFAULT_X = 236;
-/** Default top Y position (below menu bar + tab bar) */
-const CANVAS_DEFAULT_Y = 56;
-/** Default left column X position */
-const LEFT_X = 8;
-/** Default panel top Y position */
-const TOP_Y = 56;
-/** Gap between stacked panels */
-const GAP = 8;
-/** Panel width for left column panels */
-const LEFT_PANEL_W = 220;
-/** Panel width for right column panels */
-const RIGHT_PANEL_W = 280;
+// Direct constants to avoid circular import with ascii.ts
+// (ascii.ts imports CANVAS_DEFAULT_X from this module)
+const BW = 8;
+const BH = 15;
+
+/** Default canvas X position (snapped to block grid) */
+const CANVAS_DEFAULT_X = snapToGrid(236, BW);
+/** Default top Y position (snapped to block grid) */
+const CANVAS_DEFAULT_Y = snapToGrid(56, BH);
+/** Default left column X position (snapped) */
+const LEFT_X = snapToGrid(8, BW);
+/** Default panel top Y position (snapped) */
+const TOP_Y = snapToGrid(56, BH);
+/** Gap between stacked panels (snapped to blockHeight for Y stacking) */
+const GAP = BH;
+/** Panel width for left column panels (snapped to blockWidth) */
+const LEFT_PANEL_W = snapToGrid(220, BW);
+/** Panel width for right column panels (snapped to blockWidth) */
+const RIGHT_PANEL_W = snapToGrid(280, BW);
 
 /** Initial panel positions using screen-relative pixel values */
 function initialPanelStates() {
   const vpWidth = window?.innerWidth ?? 1280;
-  const RIGHT_X = vpWidth - RIGHT_PANEL_W - GAP;
+  const RIGHT_X = snapToGrid(vpWidth - RIGHT_PANEL_W - GAP, BW);
   return {
     debugPanel: {
       x: LEFT_X,
-      y: TOP_Y + 600 + GAP,
-      h: 200,
+      y: snapToGrid(TOP_Y + 600 + GAP, BH),
+      h: snapToGrid(200, BH),
       w: LEFT_PANEL_W,
       visible: false,
       minimized: false,
     } as PanelState,
     brushLibrary: {
       x: RIGHT_X,
-      y: TOP_Y + 300 + GAP,
-      h: 300,
+      y: snapToGrid(TOP_Y + 300 + GAP, BH),
+      h: snapToGrid(300, BH),
       w: RIGHT_PANEL_W,
       visible: true,
       minimized: false,
@@ -48,7 +54,7 @@ function initialPanelStates() {
     brushPreview: {
       x: LEFT_X,
       y: TOP_Y,
-      h: 300,
+      h: snapToGrid(300, BH),
       w: LEFT_PANEL_W,
       visible: true,
       minimized: false,
@@ -56,24 +62,24 @@ function initialPanelStates() {
     layersLibrary: {
       x: RIGHT_X,
       y: TOP_Y,
-      h: 300,
+      h: snapToGrid(300, BH),
       w: RIGHT_PANEL_W,
       visible: true,
       minimized: false,
     } as PanelState,
     colourPicker: {
       x: RIGHT_X,
-      y: TOP_Y + 600 + GAP,
-      h: 200,
-      w: 260,
+      y: snapToGrid(TOP_Y + 600 + GAP, BH),
+      h: snapToGrid(200, BH),
+      w: snapToGrid(260, BW),
       visible: false,
       minimized: false,
     } as PanelState,
     charPicker: {
       x: RIGHT_X,
-      y: TOP_Y + 600 + GAP + 200 + GAP,
-      h: 300,
-      w: 480,
+      y: snapToGrid(TOP_Y + 600 + GAP + 200 + GAP, BH),
+      h: snapToGrid(300, BH),
+      w: snapToGrid(480, BW),
       visible: false,
       minimized: false,
     } as PanelState,

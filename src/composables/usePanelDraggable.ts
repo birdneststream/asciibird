@@ -1,6 +1,8 @@
+import { watch, toValue } from 'vue';
 import { useDraggable, useEventListener } from '@vueuse/core';
 import type { MaybeRefOrGetter } from 'vue';
 import type { UseDraggableOptions, UseDraggableReturn } from '@vueuse/core';
+import { snapToGrid } from '../utils/geometry';
 
 /**
  * Wrapper around @vueuse/core's useDraggable with safety nets to prevent
@@ -35,17 +37,37 @@ function isFormElement(target: EventTarget | null): boolean {
 export interface UsePanelDraggableOptions extends UseDraggableOptions {
   /** Called when the panel receives a pointerdown (for z-index stacking) */
   onBringToFront?: () => void;
+  /** Grid snap size for X axis (px). Omit or 0 to disable snap. */
+  snapX?: MaybeRefOrGetter<number>;
+  /** Grid snap size for Y axis (px). Omit or 0 to disable snap. */
+  snapY?: MaybeRefOrGetter<number>;
 }
 
 export function usePanelDraggable(
   el: MaybeRefOrGetter<HTMLElement | SVGElement | null | undefined>,
   options: UsePanelDraggableOptions = {},
 ): UseDraggableReturn {
-  const { onBringToFront, ...draggableOptions } = options;
+  const { onBringToFront, snapX, snapY, ...draggableOptions } = options;
   const draggable = useDraggable(el, {
     ...draggableOptions,
     buttons: draggableOptions.buttons ?? [0],
   });
+
+  // Snap position to grid during drag when snapX/snapY are provided.
+  // Uses flush: 'sync' so the snapped value is applied before the
+  // browser paints — no visible jitter.
+  if (snapX !== undefined || snapY !== undefined) {
+    watch(
+      [draggable.x, draggable.y],
+      () => {
+        const sx = toValue(snapX) || 1;
+        const sy = toValue(snapY) || 1;
+        draggable.x.value = snapToGrid(draggable.x.value, sx);
+        draggable.y.value = snapToGrid(draggable.y.value, sy);
+      },
+      { flush: 'sync' },
+    );
+  }
 
   /**
    * Force-end a stuck drag by dispatching a synthetic pointerup event.

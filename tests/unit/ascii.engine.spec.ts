@@ -915,8 +915,8 @@ describe('createNewAscii', () => {
     });
 
     const payload = getLastNewAsciiMetaPayload(mockStore);
-    expect(payload.x).toBe(236);
-    expect(payload.y).toBe(56);
+    expect(payload.x).toBe(240);
+    expect(payload.y).toBe(60);
   });
 
   it('initializes empty history', () => {
