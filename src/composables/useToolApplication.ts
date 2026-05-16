@@ -43,6 +43,45 @@ function recordDiff(
   storeDiffBlocks(diffBlocks, sx, sy, oldBlock, newBlock);
 }
 
+/** Compute half-block grid Y coordinate from block Y and half position */
+function computeHalfY(blockY: number, isTopHalf: boolean): number {
+  return blockY * 2 + (isTopHalf ? 0 : 1);
+}
+
+/**
+ * Apply a half-block colour change with mirror support.
+ * Shared by doDrawHalfBlocks and doEraser half-block branches.
+ */
+function applyHalfBlockWithMirror(
+  s: StateDeps,
+  diffBlocks: StateDeps['diffBlocks'],
+  blockX: number,
+  blockY: number,
+  halfY: number,
+  colour: number,
+): void {
+  const grid = new HalfBlockGrid(s.currentAsciiLayerBlocks.value);
+  const row = s.currentAsciiLayerBlocks.value[blockY];
+  if (!row || row[blockX] === undefined) return;
+
+  const ob = { ...row[blockX] };
+  grid.setColour(blockX, halfY, colour);
+  recordDiff(diffBlocks, blockX, blockY, ob, row[blockX]);
+
+  applyMirroredHalfBlock(
+    blockX, halfY,
+    s.currentAsciiWidth.value, s.currentAsciiHeight.value,
+    s.mirrorX.value, s.mirrorY.value,
+    (mx, mHalfY, mBlockY) => {
+      const mRow = s.currentAsciiLayerBlocks.value[mBlockY];
+      if (!mRow || mRow[mx] === undefined) return;
+      const mOb = { ...mRow[mx] };
+      grid.setColour(mx, mHalfY, colour);
+      recordDiff(diffBlocks, mx, mBlockY, mOb, mRow[mx]);
+    },
+  );
+}
+
 function mirrorBlockMutate(
   s: StateDeps,
   diffBlocks: StateDeps['diffBlocks'],
@@ -186,7 +225,7 @@ function doDrawBrushBlocks(
   brushX: number,
   brushY: number,
   brushBlock: Block,
-  target: string | null = null,
+  target: 'bg' | 'fg' | null = null,
   plain = false,
 ): void {
   const toolCtx = r.getToolCtx();
@@ -220,32 +259,16 @@ async function doDrawHalfBlocks(
   const isTop = topHalf ?? s.isTopHalf.value;
   const blockX = Math.floor(brushX / bw);
   const blockY = Math.floor(brushY / bh);
-  const halfY = blockY * 2 + (isTop ? 0 : 1);
 
   if (!s.currentAsciiLayerBlocks.value[blockY]?.[blockX]) return;
 
-  const ob = { ...s.currentAsciiLayerBlocks.value[blockY][blockX] };
   const halfH = bh / 2;
+  const halfY = computeHalfY(blockY, isTop);
   toolCtx.fillStyle = mircColours99[s.currentFg.value];
   toolCtx.fillRect(brushX, isTop ? brushY : brushY + halfH, bw, halfH);
 
   if (s.canTool.value) {
-    const grid = new HalfBlockGrid(s.currentAsciiLayerBlocks.value);
-    grid.setColour(blockX, halfY, s.currentFg.value);
-    recordDiff(diffBlocks, blockX, blockY, ob,
-      s.currentAsciiLayerBlocks.value[blockY][blockX]);
-    applyMirroredHalfBlock(
-      blockX, halfY,
-      s.currentAsciiWidth.value, s.currentAsciiHeight.value,
-      s.mirrorX.value, s.mirrorY.value,
-      (mx, mHalfY, mBlockY) => {
-        const mRow = s.currentAsciiLayerBlocks.value[mBlockY];
-        if (!mRow || mRow[mx] === undefined) return;
-        const mOb = { ...mRow[mx] };
-        grid.setColour(mx, mHalfY, s.currentFg.value);
-        recordDiff(diffBlocks, mx, mBlockY, mOb, mRow[mx]);
-      },
-    );
+    applyHalfBlockWithMirror(s, diffBlocks, blockX, blockY, halfY, s.currentFg.value);
   }
 }
 
@@ -334,26 +357,8 @@ function doEraser(
   const bh = s.blockHeightComp.value;
 
   if (s.toolbarState.value.halfBlockEditing) {
-    const grid = new HalfBlockGrid(s.currentAsciiLayerBlocks.value);
-    const halfY = s.y.value * 2 + (s.isTopHalf.value ? 0 : 1);
-    const row = s.currentAsciiLayerBlocks.value[s.y.value];
-    if (row && row[s.x.value] !== undefined) {
-      const ob = { ...row[s.x.value] };
-      grid.setColour(s.x.value, halfY, 99);
-      recordDiff(diffBlocks, s.x.value, s.y.value, ob, row[s.x.value]);
-    }
-    applyMirroredHalfBlock(
-      s.x.value, halfY,
-      s.currentAsciiWidth.value, s.currentAsciiHeight.value,
-      s.mirrorX.value, s.mirrorY.value,
-      (mx, mHalfY, mBlockY) => {
-        const mRow = s.currentAsciiLayerBlocks.value[mBlockY];
-        if (!mRow || mRow[mx] === undefined) return;
-        const mOb = { ...mRow[mx] };
-        grid.setColour(mx, mHalfY, 99);
-        recordDiff(diffBlocks, mx, mBlockY, mOb, mRow[mx]);
-      },
-    );
+    const halfY = computeHalfY(s.y.value, s.isTopHalf.value);
+    applyHalfBlockWithMirror(s, diffBlocks, s.x.value, s.y.value, halfY, 99);
     return;
   }
 
@@ -392,10 +397,7 @@ function doFill(
   eraser = false,
 ): void {
   if (s.toolbarState.value.halfBlockEditing) {
-    const bh = s.blockHeightComp.value;
-    const halfY = Math.floor(
-      (s.y.value * bh + (s.isTopHalf.value ? 0 : bh / 2)) / (bh / 2),
-    );
+    const halfY = computeHalfY(s.y.value, s.isTopHalf.value);
     const fillColour = eraser ? 99 : s.currentFg.value;
     const changes = iterativeFillHalfBlock(
       s.currentAsciiLayerBlocks.value, halfY, s.x.value, fillColour,
@@ -414,7 +416,9 @@ function doFill(
   if (s.canFg.value) fillColor.fg = s.currentFg.value;
   if (s.canText.value) fillColor.char = s.currentChar.value;
 
-  const current = { ...(s.asciiBlockAtXy.value as Block) };
+  const sourceBlock = s.asciiBlockAtXy.value;
+  if (!sourceBlock) return;
+  const current = { ...sourceBlock };
   if (JSON.stringify(current) === JSON.stringify(fillColor) && !eraser) return;
 
   const changes = iterativeFill(
@@ -454,7 +458,7 @@ export function useToolApplication(
     drawBrush: (plain?: boolean) => doDrawBrush(s, d, r, plain),
     drawBrushBlocks: (
       brushX: number, brushY: number, brushBlock: Block,
-      target?: string | null, plain?: boolean,
+      target?: 'bg' | 'fg' | null, plain?: boolean,
     ) => doDrawBrushBlocks(s, d, r, brushX, brushY, brushBlock, target ?? null, plain),
     drawHalfBlocks: (brushX: number, brushY: number, topHalf?: boolean) =>
       doDrawHalfBlocks(s, d, r, brushX, brushY, topHalf),

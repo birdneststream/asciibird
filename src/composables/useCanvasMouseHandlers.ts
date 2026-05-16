@@ -180,10 +180,6 @@ function doHandleDropper(d: InternalDeps, targetBlock: Block): void {
 }
 
 function doHandleReplaceColor(d: InternalDeps, targetBlock: Block): void {
-  if (d.s.toolbarState.value.halfBlockEditing) {
-    showHalfBlockError(d.toastShow, 'Color replace');
-    return;
-  }
   if (!d.tools.colorReplace.isReplacePicking.value) {
     d.tools.colorReplace.pickSource(targetBlock);
   } else {
@@ -192,34 +188,42 @@ function doHandleReplaceColor(d: InternalDeps, targetBlock: Block): void {
   }
 }
 
-async function doHandleGradient(d: InternalDeps): Promise<void> {
-  if (d.s.toolbarState.value.halfBlockEditing) {
-    showHalfBlockError(d.toastShow, 'Gradient fill');
-    return;
-  }
-  if (!d.tools.gradientTool.isGradientPicking.value) {
-    d.tools.gradientTool.setStartPoint(d.s.x.value, d.s.y.value);
+/**
+ * Shared handler for two-click tools (gradient, shapes).
+ * First click sets start point, second click applies the tool.
+ */
+async function handleTwoClickTool(
+  d: InternalDeps,
+  opts: {
+    isPicking: { value: boolean };
+    setStart: (x: number, y: number) => void;
+    apply: (x: number, y: number, blocks: Block[][]) => void;
+  },
+): Promise<void> {
+  if (!opts.isPicking.value) {
+    opts.setStart(d.s.x.value, d.s.y.value);
   } else {
-    d.tools.gradientTool.applyGradient(d.s.x.value, d.s.y.value, d.s.currentAsciiLayerBlocks.value);
+    opts.apply(d.s.x.value, d.s.y.value, d.s.currentAsciiLayerBlocks.value);
     d.s.canTool.value = false;
     await d.cb.dispatchBlocks(true);
     await d.r.delayRedrawCanvas(true);
   }
 }
 
+async function doHandleGradient(d: InternalDeps): Promise<void> {
+  await handleTwoClickTool(d, {
+    isPicking: d.tools.gradientTool.isGradientPicking,
+    setStart: d.tools.gradientTool.setStartPoint,
+    apply: d.tools.gradientTool.applyGradient,
+  });
+}
+
 async function doHandleShapes(d: InternalDeps): Promise<void> {
-  if (d.s.toolbarState.value.halfBlockEditing) {
-    showHalfBlockError(d.toastShow, 'Shape tools');
-    return;
-  }
-  if (!d.tools.shapeTool.isShapePicking.value) {
-    d.tools.shapeTool.setShapeStart(d.s.x.value, d.s.y.value);
-  } else {
-    d.tools.shapeTool.applyShape(d.s.x.value, d.s.y.value, d.s.currentAsciiLayerBlocks.value);
-    d.s.canTool.value = false;
-    await d.cb.dispatchBlocks(true);
-    await d.r.delayRedrawCanvas(true);
-  }
+  await handleTwoClickTool(d, {
+    isPicking: d.tools.shapeTool.isShapePicking,
+    setStart: d.tools.shapeTool.setShapeStart,
+    apply: d.tools.shapeTool.applyShape,
+  });
 }
 
 function drawReplaceColorPreview(
@@ -333,12 +337,24 @@ async function doMouseDown(d: InternalDeps): Promise<void> {
       doHandleDropper(d, targetBlock);
       break;
     case 'replace-color':
+      if (d.s.toolbarState.value.halfBlockEditing) {
+        showHalfBlockError(d.toastShow, 'Color replace');
+        break;
+      }
       doHandleReplaceColor(d, targetBlock);
       break;
     case 'gradient':
+      if (d.s.toolbarState.value.halfBlockEditing) {
+        showHalfBlockError(d.toastShow, 'Gradient fill');
+        break;
+      }
       await doHandleGradient(d);
       break;
     case 'shapes':
+      if (d.s.toolbarState.value.halfBlockEditing) {
+        showHalfBlockError(d.toastShow, 'Shape tools');
+        break;
+      }
       await doHandleShapes(d);
       break;
   }
@@ -456,7 +472,5 @@ export function useCanvasMouseHandlers(deps: MouseHandlerDeps) {
     canvasMouseDown: () => doMouseDown(d),
     canvasMouseUp: () => doMouseUp(d),
     canvasMouseMove: (e: MouseEvent) => doMouseMove(d, e),
-    interpolateStroke: (applyFn: () => Promise<void>) =>
-      interpolateStroke(d.s, applyFn),
   };
 }

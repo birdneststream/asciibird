@@ -53,7 +53,7 @@ export interface ToolApplicationReturn {
     brushX: number,
     brushY: number,
     brushBlock: Block,
-    target?: string | null,
+    target?: 'bg' | 'fg' | null,
     plain?: boolean,
   ) => void;
   drawHalfBlocks: (
