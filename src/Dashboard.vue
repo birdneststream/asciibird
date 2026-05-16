@@ -291,10 +291,10 @@
       />
 
       <CharPicker
-        v-show="!panelStore.charPicker.minimized"
+        v-show="panelStore.charPicker.visible && !panelStore.charPicker.minimized"
       />
       <ColourPicker
-        v-show="!panelStore.colourPicker.minimized"
+        v-show="panelStore.colourPicker.visible && !panelStore.colourPicker.minimized"
       />
     </template>
     <template v-else>
