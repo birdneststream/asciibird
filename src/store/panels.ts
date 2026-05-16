@@ -26,10 +26,16 @@ const LEFT_PANEL_W = 220;
 /** Panel width for right column panels */
 const RIGHT_PANEL_W = 280;
 
+/** Default right column X position (fixed, clamped to viewport) */
+const RIGHT_PANEL_X = 1080;
+
 /** Initial panel positions using screen-relative pixel values */
 function initialPanelStates() {
   const vpWidth = window?.innerWidth ?? 1280;
-  const RIGHT_X = snapToGrid(vpWidth - RIGHT_PANEL_W, BW);
+  // Clamp right column so it doesn't go off-screen on small viewports
+  const RIGHT_X = snapToGrid(
+    Math.min(RIGHT_PANEL_X, vpWidth - RIGHT_PANEL_W), BW,
+  );
   return {
     debugPanel: {
       x: 256,

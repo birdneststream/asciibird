@@ -52,10 +52,10 @@ export const useToolbarStore = defineStore('toolbar', {
       targetingChar: true,
       mirrorX: false,
       mirrorY: false,
-      x: 8,
-      y: 56,
+      x: 16,
+      y: 90,
       h: 285,
-      w: 200,
+      w: 220,
       draggable: true,
       updateBrush: true,
       gridView: false,
@@ -342,12 +342,12 @@ export const useToolbarStore = defineStore('toolbar', {
         }
         // Migrate stale toolbar y-positions that extend below viewport.
         // The old default was y:364 which overlaps the status bar on
-        // small viewports (< 757px). Clamp to a safe default (56px).
+        // small viewports (< 757px). Clamp to a safe default (90px).
         if (parsed.toolbarState?.y != null) {
           const maxY = (typeof window !== 'undefined'
             ? window.innerHeight : 800) - 100;
           if (parsed.toolbarState.y > maxY) {
-            parsed.toolbarState.y = 56;
+            parsed.toolbarState.y = 90;
           }
         }
         return parsed;
