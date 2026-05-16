@@ -17,7 +17,7 @@
           ASCIIBIRD
         </h1>
         <Menu
-          v-for="(menuItem, index) in menuBar"
+          v-for="(menuItem, index) in filteredMenuBar"
           :key="menuItem.label"
           as="div"
           class="relative"
@@ -297,27 +297,9 @@
       />
     </template>
     <template v-else>
-      <div
-        class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center select-none"
-        @mouseup.right="openContextMenu"
-      >
-        <h1 class="text-headline-xl font-bold text-primary tracking-wide mb-2">
-          ASCIIBIRD
-        </h1>
-        <span class="text-title-lg text-on-surface-variant font-semibold">
-          v3 TESTING
-        </span>
-        <div class="mt-6">
-          <a
-            href="https://classic.birdnest.live/"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-primary hover:text-primary-fixed underline cursor-pointer text-body-lg"
-          >
-            Classic ASCIIBIRD (v2)
-          </a>
-        </div>
-      </div>
+      <SplashScreen
+        @contextmenu="openContextMenu"
+      />
     </template>
 
     <!-- Toast notifications -->
@@ -427,6 +409,7 @@ import ABModal from './components/ABModal.vue';
 import BrushPreview from './components/parts/BrushPreview.vue';
 import KeyboardShortcuts from './components/parts/KeyboardShortcuts.vue';
 import StatusBar from './components/parts/StatusBar.vue';
+import SplashScreen from './components/SplashScreen.vue';
 
 import {
   toolbarIcons,
@@ -595,6 +578,13 @@ onUnmounted(() => {
 const currentTool = computed(() => toolbarIcons[toolbarStore.currentTool] ?? null);
 
 const asciibirdMeta = computed(() => store.asciibirdMeta);
+
+// Filter menu bar when no tabs are open — only File, Import, Help
+const SPLASH_ALLOWED_MENUS = new Set(['File', 'Import', 'Help']);
+const filteredMenuBar = computed(() => {
+  if (asciibirdMeta.value.length > 0) return menuBar.value;
+  return menuBar.value.filter(m => SPLASH_ALLOWED_MENUS.has(m.label));
+});
 const debugPanelState = computed(() => panelStore.debugPanel);
 const currentAscii = computed(() => store.currentAscii);
 const currentTab = computed(() => store.currentTab);

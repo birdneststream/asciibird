@@ -1,5 +1,17 @@
 import { vi } from 'vitest'
 
+// ImageData polyfill for jsdom (used by splashRenderer tests)
+if (typeof globalThis.ImageData === 'undefined') {
+  globalThis.ImageData = class ImageData {
+    constructor(width, height) {
+      this.width = width
+      this.height = height
+      this.data = new Uint8ClampedArray(width * height * 4)
+      this.colorSpace = 'srgb'
+    }
+  }
+}
+
 // Mock HTMLCanvasElement.getContext for canvas-dependent tests
 HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
   fillRect: vi.fn(),
