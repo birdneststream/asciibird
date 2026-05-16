@@ -266,20 +266,26 @@ function drawGrid() {
     return
   }
 
+  const showBg = toolbarStore.isTargettingBg;
+  const showFg = toolbarStore.isTargettingFg;
+  const showChar = toolbarStore.isTargettingChar;
+
   for (let by = 0; by < blocks.length; by++) {
     for (let bx = 0; bx < bw; bx++) {
       if (blocks[by]?.[bx]) {
         const curBlock = blocks[by][bx]
 
-        if (curBlock.bg !== undefined) {
+        if (showBg && curBlock.bg !== undefined) {
           c.fillStyle = mircColours99[curBlock.bg]
           c.fillRect(bx * rw, by * rh, rw, rh)
         }
 
-        c.fillStyle =
-          curBlock.fg !== undefined ? mircColours99[curBlock.fg] : '#FFFFFF'
+        if (showFg) {
+          c.fillStyle =
+            curBlock.fg !== undefined ? mircColours99[curBlock.fg] : '#FFFFFF'
+        }
 
-        if (curBlock.char !== undefined) {
+        if (showChar && curBlock.char !== undefined) {
           c.fillText(curBlock.char, bx * rw, by * rh + rh - 3)
         }
       }

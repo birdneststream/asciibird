@@ -90,8 +90,8 @@ const layer = ref<{ width: number; height: number; title: string }>({
 
 const showEditAsciiModal = computed(() => modalStore.modalState.editAscii);
 const currentAscii = computed(() => store.currentAscii);
-const selectedLayerIndex = computed(() => currentAscii.value.selectedLayer || 0);
-const currentAsciiEditingTitle = computed(() => `Editing ASCII ${currentAscii.value.title}`);
+const selectedLayerIndex = computed(() => currentAscii.value?.selectedLayer || 0);
+const currentAsciiEditingTitle = computed(() => `Editing ASCII ${currentAscii.value?.title ?? ''}`);
 const currentAsciiLayers = computed(() => store.currentAsciiLayers);
 const currentSelectedLayer = computed(
   () => currentAsciiLayers.value[selectedLayerIndex.value],

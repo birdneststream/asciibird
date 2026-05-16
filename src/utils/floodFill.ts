@@ -18,6 +18,49 @@ export interface FillChange {
   new: Block;
 }
 
+// ─── Full-block fill helpers ───────────────────────────────────
+
+/**
+ * Check if a block matches the boundary conditions for flood fill.
+ * Only bg and char are used as boundary conditions — fg is intentionally
+ * excluded to match original fillTool behavior.
+ */
+function matchesBoundary(
+  block: Block, current: Block, canBg: boolean, canText: boolean,
+): boolean {
+  if (canBg && block.bg !== current.bg) return false;
+  if (canText && block.char !== current.char) return false;
+  return true;
+}
+
+/**
+ * Apply fill or eraser to a block, selectively targeting properties.
+ * Mutates the block in place.
+ */
+function applyFillToBlock(
+  block: Block, fillColor: Block,
+  canBg: boolean, canFg: boolean, canText: boolean, eraser: boolean,
+): void {
+  if (!eraser) {
+    if (canBg) block.bg = fillColor.bg;
+    if (canFg) block.fg = fillColor.fg;
+    if (canText) block.char = fillColor.char;
+  } else {
+    if (canBg) delete block.bg;
+    if (canFg) delete block.fg;
+    if (canText) delete block.char;
+  }
+}
+
+/**
+ * Check if a position is within grid bounds.
+ */
+function isInBounds(x: number, y: number, width: number, height: number): boolean {
+  return x >= 0 && x < width && y >= 0 && y < height;
+}
+
+// ─── Full-block iterative fill ─────────────────────────────────
+
 /**
  * Iterative flood fill using DFS with visited set.
  * Replaces recursive approach to avoid stack overflow on large grids.
@@ -47,7 +90,6 @@ export const iterativeFill = (
   const changes: FillChange[] = [];
 
   // If no targeting flags are active, nothing to fill — bail early
-  // to prevent filling the entire grid without boundary checks
   if (!canBg && !canFg && !canText) return changes;
 
   const height = blocks.length;
@@ -56,15 +98,12 @@ export const iterativeFill = (
   if (width === 0) return changes;
 
   // Bounds check starting position
-  if (startY < 0 || startY >= height || startX < 0 || startX >= width) {
-    return changes;
-  }
+  if (!isInBounds(startX, startY, width, height)) return changes;
 
   // Check if starting block matches current
   const startBlock = blocks[startY]?.[startX];
-  if (!startBlock) return changes; // ragged array guard
-  if (canBg && startBlock.bg !== current.bg) return changes;
-  if (canText && startBlock.char !== current.char) return changes;
+  if (!startBlock) return changes;
+  if (!matchesBoundary(startBlock, current, canBg, canText)) return changes;
 
   const visited = new Set<number>();
   const stack: Array<{ x: number; y: number }> = [
@@ -76,41 +115,19 @@ export const iterativeFill = (
     const key = pos.y * width + pos.x;
 
     if (visited.has(key)) continue;
-    if (pos.y < 0 || pos.y >= height || pos.x < 0 || pos.x >= width) {
-      continue;
-    }
+    if (!isInBounds(pos.x, pos.y, width, height)) continue;
 
     const block = blocks[pos.y]?.[pos.x];
-    if (!block) continue; // ragged array — skip missing cells
+    if (!block) continue;
 
-    // Check if this block matches the current color pattern
-    if (canBg && block.bg !== current.bg) continue;
-    if (canText && block.char !== current.char) continue;
+    if (!matchesBoundary(block, current, canBg, canText)) continue;
 
     visited.add(key);
 
-    // Save old state before mutation (shallow clone — Block has only
-    // primitives)
     const oldBlock: Block = { ...block };
+    applyFillToBlock(block, fillColor, canBg, canFg, canText, eraser);
 
-    // Apply fill (selectively target properties)
-    if (!eraser) {
-      if (canBg) block.bg = fillColor.bg;
-      if (canFg) block.fg = fillColor.fg;
-      if (canText) block.char = fillColor.char;
-    } else {
-      if (canBg) delete block.bg;
-      if (canFg) delete block.fg;
-      if (canText) delete block.char;
-    }
-
-    // Record the change
-    changes.push({
-      x: pos.x,
-      y: pos.y,
-      old: oldBlock,
-      new: { ...block },
-    });
+    changes.push({ x: pos.x, y: pos.y, old: oldBlock, new: { ...block } });
 
     // Push neighbors (4-directional)
     stack.push({ x: pos.x - 1, y: pos.y });
@@ -121,6 +138,8 @@ export const iterativeFill = (
 
   return changes;
 };
+
+// ─── Half-block iterative fill ─────────────────────────────────
 
 /**
  * Half-block-aware iterative flood fill.
@@ -158,9 +177,7 @@ export const iterativeFillHalfBlock = (
     const key = `${pos.x},${pos.y}`;
 
     if (visited.has(key)) continue;
-    if (pos.x < 0 || pos.x >= grid.width || pos.y < 0 || pos.y >= grid.height) {
-      continue;
-    }
+    if (!isInBounds(pos.x, pos.y, grid.width, grid.height)) continue;
 
     const currentColour = grid.getColour(pos.x, pos.y);
     if (currentColour !== targetColour) continue;
@@ -170,13 +187,12 @@ export const iterativeFillHalfBlock = (
     const blockY = Math.floor(pos.y / 2);
     const cellKey = `${pos.x},${blockY}`;
 
-    // Only snapshot old block once per cell (before first mutation)
     const sourceBlock = blocks[blockY]?.[pos.x];
-    if (!sourceBlock) continue; // ragged array — skip missing cells
+    if (!sourceBlock) continue;
     if (!cellChanges.has(cellKey)) {
       cellChanges.set(cellKey, {
         old: { ...sourceBlock },
-        new: {} as Block, // will be filled after all mutations
+        new: {},
       });
     }
 
@@ -197,13 +213,8 @@ export const iterativeFillHalfBlock = (
     const cx = Number(xStr);
     const cy = Number(yStr);
     const finalBlock = blocks[cy]?.[cx];
-    if (!finalBlock) continue; // ragged array — skip missing cells
-    changes.push({
-      x: cx,
-      y: cy,
-      old: data.old,
-      new: { ...finalBlock },
-    });
+    if (!finalBlock) continue;
+    changes.push({ x: cx, y: cy, old: data.old, new: { ...finalBlock } });
   }
 
   return changes;

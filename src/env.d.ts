@@ -6,8 +6,6 @@ declare module '*.vue' {
   export default component
 }
 
-declare module 'hack-font' {}
-
 declare module 'hotkeys-js' {
   const hotkeys: {
     (key: string, callback: (e: KeyboardEvent) => void): void

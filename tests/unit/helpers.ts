@@ -573,7 +573,7 @@ export function createMockStore(
       return Object.values(state.modalState).some((v: any) => v)
     },
     get currentAscii() {
-      return state.asciibirdMeta[state.tab] || false
+      return state.asciibirdMeta[state.tab] || undefined
     },
     get currentAsciiLayers() {
       const meta = state.asciibirdMeta[state.tab]

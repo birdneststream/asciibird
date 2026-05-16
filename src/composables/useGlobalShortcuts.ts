@@ -18,6 +18,7 @@ import { useModalStore } from '../store/modal';
  * - 'editor' — tool shortcuts (B, E, F, S, T, G, Q) + KeyboardShortcuts.vue
  * - 'modals' — active when modal/dialog is open (no editor shortcuts)
  */
+// eslint-disable-next-line max-lines-per-function -- shortcut registration: hotkeys loops + lifecycle hooks
 export function useGlobalShortcuts() {
   const store = useAsciiBirdStore();
   const toolbarStore = useToolbarStore();
@@ -77,11 +78,6 @@ export function useGlobalShortcuts() {
       }
     },
     'ctrl+o': () => modalStore.openModal('options'),
-    'ctrl+f': () => {
-      if (store.asciibirdMeta.length) {
-        modalStore.openModal('find-replace');
-      }
-    },
     'alt+g': () => {
       if (store.asciibirdMeta.length) {
         toolbarStore.toggleGridView(!toolbarStore.toolbarState.gridView);

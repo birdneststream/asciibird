@@ -21,6 +21,7 @@ import type { Block, AsciibirdMeta, Layer } from '../types';
  * Usage: Call once in Editor.vue `<script setup>`, pass the returned
  * object to useEditorRendering and useEditorInteraction.
  */
+// eslint-disable-next-line max-lines-per-function -- state factory: declares ~30 refs/computeds as a single cohesive bag
 export function useEditorState() {
   const store = useAsciiBirdStore();
   const panelStore = usePanelStore();
@@ -37,11 +38,17 @@ export function useEditorState() {
     startX: null,
     startY: null,
   });
-  const selecting = ref({
-    startX: null as number | null,
-    startY: null as number | null,
-    endX: null as number | null,
-    endY: null as number | null,
+  const selecting = ref<{
+    startX: number | null;
+    startY: number | null;
+    endX: number | null;
+    endY: number | null;
+    canSelect: boolean;
+  }>({
+    startX: null,
+    startY: null,
+    endX: null,
+    endY: null,
     canSelect: false,
   });
   const isMouseOnCanvas = ref(false);

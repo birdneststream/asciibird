@@ -5,6 +5,8 @@
       type="button"
       :style="{ backgroundColor: mircColours[currentFg] }"
       class="w-12 h-12 rounded border border-outline-variant flex items-center justify-center text-xs font-label-mono transition-transform active:scale-95"
+      :class="{ 'opacity-40 cursor-not-allowed': !canFg }"
+      :disabled="!canFg"
       id="currentColourFg"
       @click="toggleFg"
     >
@@ -30,6 +32,8 @@
         type="button"
         :style="{ backgroundColor: mircColours[currentBg] }"
         class="w-12 h-12 rounded border border-outline-variant flex items-center justify-center text-xs font-label-mono transition-transform active:scale-95"
+        :class="{ 'opacity-40 cursor-not-allowed': !canBg }"
+        :disabled="!canBg"
         id="currentColourBg"
         @click="toggleBg"
       >
@@ -40,8 +44,9 @@
         type="button"
         :style="charButtonStyle"
         class="w-12 h-12 rounded border border-outline-variant flex items-center justify-center text-xs font-label-mono transition-transform active:scale-95"
+        :class="{ 'opacity-40 cursor-not-allowed': !canText || halfBlockEditing }"
+        :disabled="!canText || halfBlockEditing"
         id="currentChar"
-        :disabled="halfBlockEditing"
         @click="toggleChar"
       >
         {{ toolbarState.selectedChar === " " ? "SP" : toolbarState.selectedChar }}
@@ -65,6 +70,9 @@ const toolbarState = computed(() => toolbarStore.toolbarState);
 const currentFg = computed(() => toolbarStore.currentFg);
 const currentBg = computed(() => toolbarStore.currentBg);
 const halfBlockEditing = computed(() => toolbarState.value.halfBlockEditing);
+const canFg = computed(() => toolbarStore.isTargettingFg);
+const canBg = computed(() => toolbarStore.isTargettingBg);
+const canText = computed(() => toolbarStore.isTargettingChar);
 
 /**
  * Check if the colour picker panel is actually showing on screen.
@@ -144,5 +152,5 @@ function swapColours() {
   toolbarStore.changeColourBg(fg);
 }
 
-defineExpose({ swapColours, mircColours, toolbarState, currentFg, currentBg, outline, halfBlockEditing, toggleFg, toggleBg, toggleChar });
+defineExpose({ swapColours, mircColours, toolbarState, currentFg, currentBg, outline, halfBlockEditing, toggleFg, toggleBg, toggleChar, canFg, canBg, canText });
 </script>

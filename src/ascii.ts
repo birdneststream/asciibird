@@ -100,8 +100,13 @@ export const emptyBlock: Block = {};
  * Semantically equivalent to `JSON.stringify(block) === '{}'`
  * because the codebase uses `delete` (not `= undefined`) to reset blocks.
  */
-export function isEmptyBlock(block: Block): boolean {
-  return Object.keys(block).length === 0;
+export function isEmptyBlock(block: Block | undefined): boolean {
+  return !block || Object.keys(block).length === 0;
+}
+
+/** Check if a block has any meaningful content (inverse of isEmptyBlock). */
+export function hasBlockContent(block: Block | undefined): boolean {
+  return !!block && Object.keys(block).length > 0;
 }
 
 /**
@@ -135,8 +140,25 @@ export const create2DArray = (rows: number): Block[][] => {
   return arr;
 };
 
-// Mostly plain text asciis wont have all their blocks
-// so this will fix that
+/** Fill missing blocks in a single row up to the given width.
+ * Plain text imports often have sparse rows — this patches gaps. */
+function fillRow(blocks: Block[][], y: number, width: number): void {
+  if (!blocks[y]) {
+    blocks[y] = [];
+    for (let x = 0; x < width; x++) {
+      blocks[y][x] = { ...emptyBlock };
+    }
+    return;
+  }
+
+  // Existing row but potentially missing columns
+  for (let x = 0; x < width; x++) {
+    if (!blocks[y][x]) {
+      blocks[y][x] = { ...emptyBlock };
+    }
+  }
+}
+
 export const fillNullBlocks = (
   height: number,
   width: number,
@@ -154,20 +176,7 @@ export const fillNullBlocks = (
     const blocks = layers[i].data;
 
     for (let y = 0; y < height; y++) {
-      // New row
-      if (!blocks[y]) {
-        blocks[y] = [];
-        for (let x = 0; x < width; x++) {
-          blocks[y][x] = { ...emptyBlock };
-        }
-      } else {
-        // Existing rows but new cols
-        for (let x = 0; x < width; x++) {
-          if (blocks[y] && !blocks[y][x]) {
-            blocks[y][x] = { ...emptyBlock };
-          }
-        }
-      }
+      fillRow(blocks, y, width);
     }
 
     // Update layer with new blocks
@@ -432,5 +441,3 @@ export const checkForGetRequest = async (): Promise<void> => {
     history.replaceState({}, '', url.toString());
   }
 };
-
-export default createNewAscii;

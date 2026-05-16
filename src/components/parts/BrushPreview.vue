@@ -279,15 +279,15 @@ watch(brushSizeTypeInput, (val, old) => {
 });
 
 watch(canFg, (val, old) => {
-  if (val !== old && updateBrush.value) createBlocks();
+  if (val !== old) createBlocks();
 });
 
 watch(canBg, (val, old) => {
-  if (val !== old && updateBrush.value) createBlocks();
+  if (val !== old) createBlocks();
 });
 
 watch(canText, (val, old) => {
-  if (val !== old && updateBrush.value) createBlocks();
+  if (val !== old) createBlocks();
 });
 
 watch(currentFg, (val, old) => {

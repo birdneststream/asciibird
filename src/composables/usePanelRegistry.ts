@@ -39,6 +39,7 @@ interface PanelDef {
 }
 
 /** Get all panel definitions using lazy store access */
+// eslint-disable-next-line max-lines-per-function -- static panel definition array
 function getPanelDefs(): PanelDef[] {
   const panelStore = usePanelStore();
   const toolbarStore = useToolbarStore();
@@ -121,7 +122,7 @@ function getPanelDefs(): PanelDef[] {
       },
       toggleMinimize: () => {
         const state = panelStore.colourPicker;
-        if (state.minimized) {
+        if (!state.visible || state.minimized) {
           panelStore.restorePanel('colourPicker');
           if (!toolbarStore.toolbarState.isChoosingFg
             && !toolbarStore.toolbarState.isChoosingBg) {
@@ -150,7 +151,7 @@ function getPanelDefs(): PanelDef[] {
       },
       toggleMinimize: () => {
         const state = panelStore.charPicker;
-        if (state.minimized) {
+        if (!state.visible || state.minimized) {
           panelStore.restorePanel('charPicker');
           toolbarStore.changeIsUpdatingChar(true);
         } else {
@@ -164,27 +165,8 @@ function getPanelDefs(): PanelDef[] {
 }
 
 export function usePanelRegistry() {
-  const panelStore = usePanelStore();
-  const toolbarStore = useToolbarStore();
-
   /** Reactive list of all panel info */
   const panels = computed<PanelInfo[]>(() => {
-    // Access reactive store properties to ensure re-computation triggers.
-    // These reads create reactive dependencies on the panel store state.
-    void panelStore.debugPanel.minimized;
-    void panelStore.brushLibrary.minimized;
-    void panelStore.brushPreview.minimized;
-    void panelStore.layersLibrary.minimized;
-    void panelStore.colourPicker.minimized;
-    void panelStore.charPicker.minimized;
-    void panelStore.debugPanel.visible;
-    void panelStore.brushLibrary.visible;
-    void panelStore.brushPreview.visible;
-    void panelStore.layersLibrary.visible;
-    void panelStore.colourPicker.visible;
-    void panelStore.charPicker.visible;
-    void toolbarStore.toolbarState.visible;
-
     return getPanelDefs().map((def) => {
       const state = def.getState();
       const visible = state.visible;

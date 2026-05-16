@@ -9,14 +9,10 @@
 // This matches the existing code pattern at Editor.vue:1609-1625.
 
 import type { Block } from '../types';
+import { UPPER_HALF, LOWER_HALF } from './halfBlockChars';
 
 /** Transparent/empty colour index (mIRC convention) */
 const EMPTY_COLOUR = 99;
-
-/** Upper half block character */
-const UPPER_HALF = '\u2580'; // ▀
-/** Lower half block character */
-const LOWER_HALF = '\u2584'; // ▄
 
 /** Coordinates in the half-block grid (double Y resolution) */
 export interface HalfBlockCoord {

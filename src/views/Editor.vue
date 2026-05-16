@@ -68,36 +68,10 @@
         <!-- Resize handles — visible only with default tool -->
         <template v-if="isDefault">
           <div
-            class="ab-resize-handle ab-resize-handle-tl"
-            @pointerdown.stop="canvasPanel.startResize('tl')($event)"
-          />
-          <div
-            class="ab-resize-handle ab-resize-handle-tm"
-            @pointerdown.stop="canvasPanel.startResize('tm')($event)"
-          />
-          <div
-            class="ab-resize-handle ab-resize-handle-tr"
-            @pointerdown.stop="canvasPanel.startResize('tr')($event)"
-          />
-          <div
-            class="ab-resize-handle ab-resize-handle-ml"
-            @pointerdown.stop="canvasPanel.startResize('ml')($event)"
-          />
-          <div
-            class="ab-resize-handle ab-resize-handle-mr"
-            @pointerdown.stop="canvasPanel.startResize('mr')($event)"
-          />
-          <div
-            class="ab-resize-handle ab-resize-handle-bl"
-            @pointerdown.stop="canvasPanel.startResize('bl')($event)"
-          />
-          <div
-            class="ab-resize-handle ab-resize-handle-bm"
-            @pointerdown.stop="canvasPanel.startResize('bm')($event)"
-          />
-          <div
-            class="ab-resize-handle ab-resize-handle-br"
-            @pointerdown.stop="canvasPanel.startResize('br')($event)"
+            v-for="pos in resizeHandlePositions"
+            :key="pos"
+            :class="`ab-resize-handle ab-resize-handle-${pos}`"
+            @pointerdown.stop="canvasPanel.startResize(pos)($event)"
           />
         </template>
       </div>
@@ -122,7 +96,6 @@ import {
 import { useColorReplace } from '../composables/useColorReplace';
 import { useGradientTool } from '../composables/useGradientTool';
 import { useShapeTool } from '../composables/useShapeTool';
-import { useMatchHighlight } from '../composables/useMatchHighlight';
 import { useEditorState } from '../composables/useEditorState';
 import { useEditorRendering } from '../composables/useEditorRendering';
 import { usePasteMode } from '../composables/usePasteMode';
@@ -149,6 +122,9 @@ import type { Block } from '../types';
 import type { TransformType } from '../utils/transformBlocks';
 
 defineOptions({ name: 'Editor' });
+
+/** Canvas resize handle positions for v-for rendering */
+const resizeHandlePositions = ['tl', 'tm', 'tr', 'ml', 'mr', 'bl', 'bm', 'br'] as const;
 
 // ─── Props & Emits ──────────────────────────────────────────────
 const props = withDefaults(defineProps<{
@@ -186,17 +162,7 @@ const { startExport } = useExportAscii({
   checkLimits: true,
   label: 'mIRC',
 });
-const {
-  replaceColorSource,
-  isReplacePicking,
-  pickSource,
-  applyReplace,
-  resetReplace,
-  contextMenuReplace,
-} = useColorReplace();
-
-// ─── Match Highlight (Find & Replace) ──────────────────────────
-const { drawHighlights: drawMatchHighlights } = useMatchHighlight();
+const { applyReplaceFromBlock } = useColorReplace();
 
 // ─── Shared Editor State ───────────────────────────────────────
 const state = useEditorState();
@@ -237,7 +203,6 @@ const rendering = useEditorRendering(
     canvastoolsRef,
     renderBlock,
     clearMainCanvas,
-    drawHighlights: drawMatchHighlights,
   },
 );
 
@@ -301,6 +266,10 @@ const {
   recordDiff,
 });
 
+// ─── Shared callback references ──────────────────────────────────
+const updateAsciiBlocks = store.updateAsciiBlocks.bind(store);
+const redrawCanvasForce = async () => { await delayRedrawCanvas(true); };
+
 // ─── Paste Mode ──────────────────────────────────────────────────
 const pasteMode = usePasteMode({
   selecting,
@@ -310,8 +279,8 @@ const pasteMode = usePasteMode({
   currentAsciiHeight,
   currentAsciiLayerBlocks,
   selectedLayerIndex,
-  updateAsciiBlocks: store.updateAsciiBlocks.bind(store),
-  redrawCanvas: async () => { await delayRedrawCanvas(true); },
+  updateAsciiBlocks,
+  redrawCanvas: redrawCanvasForce,
   clearToolCanvas,
 });
 
@@ -325,9 +294,9 @@ const selectionTransform = useSelectionTransform({
   currentAsciiHeight,
   currentAsciiLayerBlocks,
   selectedLayerIndex,
-  updateAsciiBlocks: store.updateAsciiBlocks.bind(store),
+  updateAsciiBlocks,
   setSelectBlocks: toolbarStore.setSelectBlocks.bind(toolbarStore),
-  redrawCanvas: async () => { await delayRedrawCanvas(true); },
+  redrawCanvas: redrawCanvasForce,
   clearToolCanvas,
   redrawSelect,
 });
@@ -355,7 +324,7 @@ const actions = useEditorActions({
     selectedblocks: (val) => emit('selectedblocks', val),
   },
   toastShow,
-  contextMenuReplace,
+  applyReplaceFromBlock,
 });
 
 const {
@@ -375,10 +344,7 @@ const mouseHandlers = useCanvasMouseHandlers({
   tools: {
     pasteMode,
     colorReplace: {
-      isReplacePicking,
-      replaceColorSource,
-      pickSource,
-      applyReplace,
+      applyReplaceFromBlock,
     },
     gradientTool: {
       isGradientPicking,
@@ -434,26 +400,16 @@ const imageOverlay = computed(() => store.imageOverlay);
 
 const imageOverlayStyle = computed(() => {
   const overlay = imageOverlay.value;
-  let repeat = 'background-repeat: no-repeat;';
-  let stretched = 'background-size: 100%;';
+  const repeatDir = overlay.repeatx && overlay.repeaty ? 'repeat'
+    : overlay.repeatx ? 'repeat-x'
+    : overlay.repeaty ? 'repeat-y'
+    : 'no-repeat';
+  const repeat = `background-repeat: ${repeatDir};`;
+  const stretched = overlay.stretched
+    ? 'background-size: 100%;'
+    : `background-size: ${overlay.size}%;`;
   const left = `left: ${overlay.left}%;`;
   const topVal = `top: ${overlay.top}%;`;
-
-  if (overlay.repeatx && overlay.repeaty) {
-    repeat = 'background-repeat: repeat;';
-  }
-  if (overlay.repeatx && !overlay.repeaty) {
-    repeat = 'background-repeat: repeat-x;';
-  }
-  if (!overlay.repeatx && overlay.repeaty) {
-    repeat = 'background-repeat: repeat-y;';
-  }
-
-  if (overlay.stretched) {
-    stretched = 'background-size: 100%;';
-  } else {
-    stretched = `background-size: ${overlay.size}%;`;
-  }
 
   return overlay.visible
     ? `background-image: url('${overlay.url}'); ${stretched} ${repeat} ${left} ${topVal} opacity: ${overlay.opacity / 100}; z-index: -1; position: absolute;`
@@ -550,8 +506,7 @@ useEditorWatchers({
   toastShow,
 });
 
-// ─── Editor Hotkeys (extracted composable) ───────────────────────
-// ─── Text Editing (extracted composable) ─────────────────────────
+// ─── Text Editing & Hotkeys (extracted composables) ──────────────
 // canvasKeyDown is provided by useTextEditing composable.
 
 const { canvasKeyDown } = useTextEditing({
@@ -580,10 +535,6 @@ const { cleanup: cleanupHotkeys } = useEditorHotkeys({
   },
   tools: {
     pasteMode,
-    colorReplace: {
-      isReplacePicking,
-      resetReplace,
-    },
     gradientTool: {
       isGradientPicking,
       cancelGradient,
@@ -639,22 +590,9 @@ useEventListener(
   window,
   'asciibird:selection-transform',
   (e: Event) => {
-    const type = (e as CustomEvent).detail as TransformType;
+    const type = (e as CustomEvent<TransformType>).detail;
     if (isSelecting.value && isSelected.value) {
       applySelectionTransform(type);
-    }
-  },
-);
-
-useEventListener(
-  window,
-  'asciibird:scroll-to',
-  (e: Event) => {
-    const detail = (e as CustomEvent).detail;
-    if (detail.x !== undefined && detail.y !== undefined) {
-      x.value = detail.x;
-      y.value = detail.y;
-      delayRedrawCanvas();
     }
   },
 );
@@ -678,6 +616,13 @@ useEventListener(
   },
 );
 
+/** Check if a tool stroke or selection is in progress and should end */
+function shouldEndStroke(): boolean {
+  const tool = currentTool.value.name;
+  return (canTool.value && (tool === 'brush' || tool === 'eraser'))
+    || (tool === 'select' && selecting.value.canSelect);
+}
+
 // Document-level mouseup: ensures brush/eraser strokes and select
 // drags end properly even when the mouse is released outside the
 // canvas element. Left-button-only filter prevents right/middle
@@ -688,31 +633,16 @@ useEventListener(
   'mouseup',
   (e: MouseEvent) => {
     if (e.button !== 0) return;
-    // Only handle if a stroke or selection is actually in progress
-    const tool = currentTool.value.name;
-    if (
-      (canTool.value && (tool === 'brush' || tool === 'eraser'))
-      || (tool === 'select' && selecting.value.canSelect)
-    ) {
-      canvasMouseUp();
-    }
+    if (shouldEndStroke()) canvasMouseUp();
   },
 );
 
 // Document-level touchend: mirrors window mouseup for touch devices.
-// Touch events never fire mouseup, so a separate listener is needed
-// for strokes that extend beyond the canvas on touch screens.
 useEventListener(
   window,
   'touchend',
   () => {
-    const tool = currentTool.value.name;
-    if (
-      (canTool.value && (tool === 'brush' || tool === 'eraser'))
-      || (tool === 'select' && selecting.value.canSelect)
-    ) {
-      canvasMouseUp();
-    }
+    if (shouldEndStroke()) canvasMouseUp();
   },
 );
 
@@ -721,15 +651,6 @@ if (currentAsciiLayerBlocks.value) {
   canvasSize.width = currentAsciiWidth.value * blockWidthComp.value;
   canvasSize.height = currentAsciiHeight.value * blockHeightComp.value;
 }
-
-// ─── Methods delegated to useEditorActions composable ──────────────
-// canvasToPng, openContextMenu, contextMenuReplaceColor,
-// contextMenuCopySelection, contextMenuCutSelection,
-// contextMenuDeleteSelection, openBorderGenerator, cropToContent,
-// exportPlainTextClipboard, exportHtmlFile, warnInvisibleLayer,
-// undo, redo, resetSelectTool, getSelectionBounds,
-// dispatchBlocks, processSelect — all provided by the
-// useEditorActions composable initialized above.
 
 // ─── Expose for test compatibility ─────────────────────────────
 defineExpose({
@@ -794,7 +715,7 @@ defineExpose({
   canvasTransparent,
   emptyBlock: emptyBlockFn,
   isPasteMode: pasteMode.isPasteMode,
-  updateCanvas: props.updateCanvas ?? false,
+  updateCanvas: props.updateCanvas,
   // Methods
   startExport,
   canvasToPng,

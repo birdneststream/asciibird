@@ -6,6 +6,7 @@
 
 import { type ComputedRef, type Ref } from 'vue';
 import { transformBlocks, type TransformType } from '../utils/transformBlocks';
+import { hasBlockContent } from '../ascii';
 import type { Block, HistoryDiff, BlockDiff } from '../types';
 
 /** Pixel-coordinate selection rectangle from Editor */
@@ -19,10 +20,10 @@ export interface SelectionRect {
 
 /** Grid-coordinate selection bounds (dense, relative) */
 export interface GridSelection {
-  x: number;      // left column (grid)
-  y: number;      // top row (grid)
-  width: number;  // columns
-  height: number; // rows
+  x: number;
+  y: number;
+  width: number;
+  height: number;
 }
 
 /** Dependencies injected from Editor.vue */
@@ -35,17 +36,14 @@ export interface SelectionTransformDeps {
   currentAsciiHeight: ComputedRef<number>;
   currentAsciiLayerBlocks: ComputedRef<Block[][]>;
   selectedLayerIndex: ComputedRef<number>;
-  /** Store action to commit undo diff */
   updateAsciiBlocks: (payload: { diff: HistoryDiff; blocks: Block[][] }) => void;
-  /** Toolbar store action to update select blocks (for Ctrl+V paste) */
   setSelectBlocks: (blocks: Block[][]) => void;
-  /** Trigger canvas redraw */
   redrawCanvas: () => Promise<void>;
-  /** Clear tool overlay canvas */
   clearToolCanvas: () => Promise<void>;
-  /** Draw selection rectangle on tool canvas */
   redrawSelect: () => Promise<void>;
 }
+
+// ─── Pure helpers (module-level) ───────────────────────────────────
 
 /**
  * Convert pixel selection rect to grid coordinates.
@@ -53,75 +51,48 @@ export interface SelectionTransformDeps {
  */
 export function selectionToGridRect(
   sel: SelectionRect,
-  bw: number,
-  bh: number,
-  canvasWidth: number,
-  canvasHeight: number,
+  bw: number, bh: number,
+  canvasWidth: number, canvasHeight: number,
 ): GridSelection | null {
   if (
-    sel.startX === null || sel.startY === null ||
-    sel.endX === null || sel.endY === null
-  ) {
-    return null;
-  }
+    sel.startX === null || sel.startY === null
+    || sel.endX === null || sel.endY === null
+  ) return null;
 
-  // Normalize: ensure start < end
   const px = Math.min(sel.startX, sel.endX);
   const py = Math.min(sel.startY, sel.endY);
   const pw = Math.abs(sel.endX - sel.startX);
   const ph = Math.abs(sel.endY - sel.startY);
 
-  // Use floor for start, ceil for end to correctly include blocks
-  // that contain half-block selection boundaries
   const gridX = Math.floor(px / bw);
   const endGridX = Math.ceil((px + pw) / bw);
   const gridY = Math.floor(py / bh);
   const endGridY = Math.ceil((py + ph) / bh);
 
-  const gridW = Math.max(1, endGridX - gridX);
-  const gridH = Math.max(1, endGridY - gridY);
+  const x = Math.max(0, Math.min(gridX, canvasWidth - 1));
+  const y = Math.max(0, Math.min(gridY, canvasHeight - 1));
+  const width = Math.min(Math.max(1, endGridX - gridX), canvasWidth - x);
+  const height = Math.min(Math.max(1, endGridY - gridY), canvasHeight - y);
 
-  // Clamp to canvas bounds
-  const clampedX = Math.max(0, Math.min(gridX, canvasWidth - 1));
-  const clampedY = Math.max(0, Math.min(gridY, canvasHeight - 1));
-  const clampedW = Math.min(gridW, canvasWidth - clampedX);
-  const clampedH = Math.min(gridH, canvasHeight - clampedY);
-
-  if (clampedW <= 0 || clampedH <= 0) return null;
-
-  return {
-    x: clampedX,
-    y: clampedY,
-    width: clampedW,
-    height: clampedH,
-  };
+  return width > 0 && height > 0 ? { x, y, width, height } : null;
 }
 
 /**
  * Extract a dense, selection-relative Block[][] from layer data.
- * Returns blocks at grid positions within the selection rectangle.
  */
 export function extractSelectionBlocks(
-  layerBlocks: Block[][],
-  rect: GridSelection,
+  layerBlocks: Block[][], rect: GridSelection,
 ): Block[][] {
   const result: Block[][] = [];
-
   for (let dy = 0; dy < rect.height; dy++) {
     const row: Block[] = [];
-    const gy = rect.y + dy;
-
     for (let dx = 0; dx < rect.width; dx++) {
-      const gx = rect.x + dx;
-      const block = layerBlocks[gy]?.[gx];
+      const block = layerBlocks[rect.y + dy]?.[rect.x + dx];
       if (block) {
-        // Clean null properties (matches existing processSelect behavior)
         const clean: Block = {};
-        if (block.fg !== undefined && block.fg !== null) clean.fg = block.fg;
-        if (block.bg !== undefined && block.bg !== null) clean.bg = block.bg;
-        if (block.char !== undefined && block.char !== null) {
-          clean.char = block.char;
-        }
+        if (block.fg != null) clean.fg = block.fg;
+        if (block.bg != null) clean.bg = block.bg;
+        if (block.char != null) clean.char = block.char;
         row.push(clean);
       } else {
         row.push({});
@@ -129,349 +100,251 @@ export function extractSelectionBlocks(
     }
     result.push(row);
   }
-
   return result;
 }
 
 /**
- * Copy selection blocks to the toolbar store for later paste.
- * Handles the common pattern: selectionToGridRect → extractSelectionBlocks
- * → toolbarStore.setSelectBlocks. Falls back to raw selectedBlocks when
- * no grid rect can be computed.
+ * Copy selection blocks to toolbar store for later paste.
  * @returns true if blocks were copied, false if nothing to copy
  */
 export function copySelectionBlocks(
   selecting: SelectionRect,
   selectedBlocks: Block[][],
   layerBlocks: Block[][],
-  blockWidth: number,
-  blockHeight: number,
-  canvasWidth: number,
-  canvasHeight: number,
+  blockWidth: number, blockHeight: number,
+  canvasWidth: number, canvasHeight: number,
   setSelectBlocks: (blocks: Block[][]) => void,
 ): boolean {
   if (selectedBlocks.length === 0) return false;
-
   const rect = selectionToGridRect(
     selecting, blockWidth, blockHeight, canvasWidth, canvasHeight,
   );
-
-  if (rect && layerBlocks) {
-    const compact = extractSelectionBlocks(layerBlocks, rect);
-    setSelectBlocks(compact);
-  } else {
-    setSelectBlocks(selectedBlocks);
-  }
-
+  setSelectBlocks(rect && layerBlocks
+    ? extractSelectionBlocks(layerBlocks, rect)
+    : selectedBlocks);
   return true;
 }
 
-/**
- * Selection transform composable.
- *
- * Provides methods to transform (rotate/flip) the selected area of the
- * canvas with undo/redo support. The transformed blocks are written back
- * to the layer data and the selection rectangle is updated for chaining.
- */
-export function useSelectionTransform(deps: SelectionTransformDeps) {
-
-  /**
-   * Apply a transform to the currently selected area.
-   * - Extracts blocks from the selection rectangle
-   * - Applies the transform (rotate/flip)
-   * - Writes transformed blocks back to the layer
-   * - Records undo diff
-   * - Updates selection rectangle to match new dimensions
-   * - Updates selectedBlocks and selectBlocks for Ctrl+V paste
-   */
-  async function applyTransform(type: TransformType): Promise<boolean> {
-    const sel = deps.selecting.value;
-    const bw = deps.blockWidthComp.value;
-    const bh = deps.blockHeightComp.value;
-
-    // Convert pixel selection to grid rect
-    const rect = selectionToGridRect(
-      sel, bw, bh,
-      deps.currentAsciiWidth.value,
-      deps.currentAsciiHeight.value,
-    );
-    if (!rect) return false;
-
-    const layerBlocks = deps.currentAsciiLayerBlocks.value;
-
-    // Extract dense selection-relative blocks
-    const originalBlocks = extractSelectionBlocks(layerBlocks, rect);
-    if (originalBlocks.length === 0) return false;
-
-    // Apply transform
-    const transformedBlocks = transformBlocks(originalBlocks, type);
-
-    // Calculate new dimensions after transform
-    const newHeight = transformedBlocks.length;
-    const newWidth = transformedBlocks[0]?.length || 0;
-
-    // Build undo diff: record old and new blocks for all affected cells
-    const oldDiffs: BlockDiff[] = [];
-    const newDiffs: BlockDiff[] = [];
-
-    // Clear the original selection area first (record old blocks)
-    for (let dy = 0; dy < rect.height; dy++) {
-      for (let dx = 0; dx < rect.width; dx++) {
-        const gy = rect.y + dy;
-        const gx = rect.x + dx;
-        const oldBlock = layerBlocks[gy]?.[gx];
-        if (oldBlock) {
-          oldDiffs.push({
-            x: gx,
-            y: gy,
-            b: { ...oldBlock },
-          });
-        }
-      }
-    }
-
-    // Write transformed blocks back to the layer
-    // The transform is anchored at the top-left corner of the selection.
-    // If rotated and larger, clip to canvas bounds.
-    for (let dy = 0; dy < newHeight; dy++) {
-      const gy = rect.y + dy;
-      if (gy >= deps.currentAsciiHeight.value) break;
-
-      for (let dx = 0; dx < newWidth; dx++) {
-        const gx = rect.x + dx;
-        if (gx >= deps.currentAsciiWidth.value) break;
-
+/** Clear all blocks in a grid selection area. Mutates layerBlocks in place. */
+function clearSelectionArea(
+  layerBlocks: Block[][],
+  rect: GridSelection,
+  canvasW: number,
+  canvasH: number,
+): void {
+  for (let sy = 0; sy < rect.height; sy++) {
+    for (let sx = 0; sx < rect.width; sx++) {
+      const gy = rect.y + sy, gx = rect.x + sx;
+      if (gy < canvasH && gx < canvasW) {
         if (!layerBlocks[gy]) layerBlocks[gy] = [];
-        const newBlock = transformedBlocks[dy][dx];
-
-        // Only write non-empty blocks
-        if (Object.keys(newBlock).length > 0) {
-          layerBlocks[gy][gx] = { ...newBlock };
-        } else {
-          // Clear the cell by replacing with empty block
-          layerBlocks[gy][gx] = {};
-        }
-
-        newDiffs.push({ x: gx, y: gy, b: { ...layerBlocks[gy][gx] } });
+        layerBlocks[gy][gx] = {};
       }
     }
+  }
+}
 
-    // Also clear any cells in the original selection that aren't covered
-    // by the transformed result (e.g., if rotation made it smaller)
-    if (newHeight < rect.height || newWidth < rect.width) {
-      for (let dy = 0; dy < rect.height; dy++) {
-        for (let dx = 0; dx < rect.width; dx++) {
-          const gy = rect.y + dy;
-          const gx = rect.x + dx;
-
-          // Skip cells covered by transformed result
-          if (dy < newHeight && dx < newWidth) continue;
-
-          if (gy < deps.currentAsciiHeight.value &&
-              gx < deps.currentAsciiWidth.value) {
-            layerBlocks[gy][gx] = {};
-            // Record the cleared state for redo correctness
-            newDiffs.push({ x: gx, y: gy, b: {} });
-          }
-        }
+/** Write selection blocks at an offset position (clipped to canvas). */
+function writeBlocksAtOffset(
+  layerBlocks: Block[][],
+  selBlocks: Block[][],
+  rect: GridSelection,
+  dx: number,
+  dy: number,
+  canvasW: number,
+  canvasH: number,
+): void {
+  for (let sy = 0; sy < rect.height; sy++) {
+    const destY = rect.y + sy + dy;
+    if (destY < 0 || destY >= canvasH) continue;
+    for (let sx = 0; sx < rect.width; sx++) {
+      const destX = rect.x + sx + dx;
+      if (destX < 0 || destX >= canvasW) continue;
+      const src = selBlocks[sy]?.[sx];
+      if (hasBlockContent(src)) {
+        if (!layerBlocks[destY]) layerBlocks[destY] = [];
+        layerBlocks[destY][destX] = { ...src! };
       }
     }
+  }
+}
 
-    // Record undo diff
-    if (oldDiffs.length > 0 || newDiffs.length > 0) {
-      const diff: HistoryDiff = {
-        old: oldDiffs,
-        new: newDiffs,
-        l: deps.selectedLayerIndex.value,
-      };
-
-      deps.updateAsciiBlocks({
-        diff,
-        blocks: layerBlocks,
-      });
+/** Snapshot all blocks in a grid region for undo. */
+function snapshotRegion(
+  layerBlocks: Block[][], x: number, y: number, w: number, h: number,
+): BlockDiff[] {
+  const diffs: BlockDiff[] = [];
+  for (let dy = 0; dy < h; dy++) {
+    for (let dx = 0; dx < w; dx++) {
+      const gy = y + dy, gx = x + dx;
+      const block = layerBlocks[gy]?.[gx];
+      if (block) diffs.push({ x: gx, y: gy, b: { ...block } });
     }
+  }
+  return diffs;
+}
 
-    // Update selection rectangle to match transformed dimensions
-    // (anchored at same top-left corner)
-    deps.selecting.value = {
-      startX: rect.x * bw,
-      startY: rect.y * bh,
-      endX: (rect.x + Math.min(newWidth, deps.currentAsciiWidth.value - rect.x)) * bw,
-      endY: (rect.y + Math.min(newHeight, deps.currentAsciiHeight.value - rect.y)) * bh,
-      canSelect: false,
-    };
+/** Update selection rect and selected blocks for paste. */
+function updateSelection(
+  deps: SelectionTransformDeps,
+  x: number, y: number, w: number, h: number,
+  layerBlocks: Block[][],
+): void {
+  deps.selecting.value = {
+    startX: x * deps.blockWidthComp.value,
+    startY: y * deps.blockHeightComp.value,
+    endX: (x + w) * deps.blockWidthComp.value,
+    endY: (y + h) * deps.blockHeightComp.value,
+    canSelect: false,
+  };
+  const newRect = selectionToGridRect(
+    deps.selecting.value, deps.blockWidthComp.value,
+    deps.blockHeightComp.value,
+    deps.currentAsciiWidth.value, deps.currentAsciiHeight.value,
+  );
+  if (newRect) {
+    const blocks = extractSelectionBlocks(layerBlocks, newRect);
+    deps.selectedBlocks.value = blocks;
+    deps.setSelectBlocks(blocks);
+  }
+}
 
-    // Update selected blocks for paste (Ctrl+V)
-    const newRect = selectionToGridRect(
-      deps.selecting.value, bw, bh,
-      deps.currentAsciiWidth.value,
-      deps.currentAsciiHeight.value,
-    );
-    if (newRect) {
-      const newSelectedBlocks = extractSelectionBlocks(layerBlocks, newRect);
-      deps.selectedBlocks.value = newSelectedBlocks;
-      deps.setSelectBlocks(newSelectedBlocks);
+/** Record diff, update blocks, redraw. */
+async function commitDiff(
+  deps: SelectionTransformDeps,
+  oldDiffs: BlockDiff[], newDiffs: BlockDiff[],
+  layerBlocks: Block[][],
+): Promise<void> {
+  if (oldDiffs.length > 0 || newDiffs.length > 0) {
+    deps.updateAsciiBlocks({
+      diff: { old: oldDiffs, new: newDiffs, l: deps.selectedLayerIndex.value },
+      blocks: layerBlocks,
+    });
+  }
+  await deps.clearToolCanvas();
+  await deps.redrawSelect();
+  await deps.redrawCanvas();
+}
+
+/** Apply a rotation or flip transform to the current selection. */
+async function applyTransform(
+  deps: SelectionTransformDeps,
+  type: TransformType,
+): Promise<boolean> {
+  const bw = deps.blockWidthComp.value;
+  const bh = deps.blockHeightComp.value;
+  const rect = selectionToGridRect(
+    deps.selecting.value, bw, bh,
+    deps.currentAsciiWidth.value, deps.currentAsciiHeight.value,
+  );
+  if (!rect) return false;
+
+  const layerBlocks = deps.currentAsciiLayerBlocks.value;
+  const canvasW = deps.currentAsciiWidth.value;
+  const canvasH = deps.currentAsciiHeight.value;
+
+  const originalBlocks = extractSelectionBlocks(layerBlocks, rect);
+  if (originalBlocks.length === 0) return false;
+
+  const transformed = transformBlocks(originalBlocks, type);
+  const newH = transformed.length;
+  const newW = transformed[0]?.length || 0;
+
+  const oldDiffs = snapshotRegion(layerBlocks, rect.x, rect.y, rect.width, rect.height);
+  const newDiffs: BlockDiff[] = [];
+
+  for (let dy = 0; dy < newH; dy++) {
+    const gy = rect.y + dy;
+    if (gy >= canvasH) break;
+    for (let dx = 0; dx < newW; dx++) {
+      const gx = rect.x + dx;
+      if (gx >= canvasW) break;
+      if (!layerBlocks[gy]) layerBlocks[gy] = [];
+      const block = transformed[dy][dx];
+      layerBlocks[gy][gx] = Object.keys(block).length > 0 ? { ...block } : {};
+      newDiffs.push({ x: gx, y: gy, b: { ...layerBlocks[gy][gx] } });
     }
-
-    // Redraw
-    await deps.clearToolCanvas();
-    await deps.redrawSelect();
-    await deps.redrawCanvas();
-
-    return true;
   }
 
-  /**
-   * Nudge the selected area by dx, dy blocks.
-   * Moves selection content, clips at canvas edges, fills
-   * trailing edge with empty blocks. Each nudge is one undo step.
-   */
-  async function applyNudge(dx: number, dy: number): Promise<boolean> {
-    const sel = deps.selecting.value;
-    const bw = deps.blockWidthComp.value;
-    const bh = deps.blockHeightComp.value;
-
-    // Convert pixel selection to grid rect
-    const rect = selectionToGridRect(
-      sel, bw, bh,
-      deps.currentAsciiWidth.value,
-      deps.currentAsciiHeight.value,
-    );
-    if (!rect) return false;
-
-    const layerBlocks = deps.currentAsciiLayerBlocks.value;
-    const canvasW = deps.currentAsciiWidth.value;
-    const canvasH = deps.currentAsciiHeight.value;
-
-    // Extract the selection content
-    const selBlocks = extractSelectionBlocks(layerBlocks, rect);
-
-    // Build undo diff
-    const oldDiffs: BlockDiff[] = [];
-    const newDiffs: BlockDiff[] = [];
-
-    // Record all old blocks in the affected area (selection + new area)
-    const affectedMinX = Math.max(0, Math.min(rect.x, rect.x + dx));
-    const affectedMinY = Math.max(0, Math.min(rect.y, rect.y + dy));
-    const affectedMaxX = Math.min(
-      canvasW - 1,
-      Math.max(rect.x + rect.width - 1, rect.x + rect.width - 1 + dx),
-    );
-    const affectedMaxY = Math.min(
-      canvasH - 1,
-      Math.max(rect.y + rect.height - 1, rect.y + rect.height - 1 + dy),
-    );
-
-    for (let gy = affectedMinY; gy <= affectedMaxY; gy++) {
-      for (let gx = affectedMinX; gx <= affectedMaxX; gx++) {
-        const oldBlock = layerBlocks[gy]?.[gx];
-        if (oldBlock) {
-          oldDiffs.push({ x: gx, y: gy, b: { ...oldBlock } });
-        }
+  for (let dy = 0; dy < rect.height; dy++) {
+    for (let dx = 0; dx < rect.width; dx++) {
+      if (dy < newH && dx < newW) continue;
+      const gy = rect.y + dy, gx = rect.x + dx;
+      if (gy < canvasH && gx < canvasW) {
+        layerBlocks[gy][gx] = {};
+        newDiffs.push({ x: gx, y: gy, b: {} });
       }
     }
-
-    // Step 1: Clear the original selection area
-    for (let sy = 0; sy < rect.height; sy++) {
-      for (let sx = 0; sx < rect.width; sx++) {
-        const gy = rect.y + sy;
-        const gx = rect.x + sx;
-        if (gy < canvasH && gx < canvasW) {
-          if (!layerBlocks[gy]) layerBlocks[gy] = [];
-          layerBlocks[gy][gx] = {};
-        }
-      }
-    }
-
-    // Step 2: Write selection content at the new position (clipped)
-    for (let sy = 0; sy < rect.height; sy++) {
-      const destY = rect.y + sy + dy;
-      if (destY < 0 || destY >= canvasH) continue;
-
-      for (let sx = 0; sx < rect.width; sx++) {
-        const destX = rect.x + sx + dx;
-        if (destX < 0 || destX >= canvasW) continue;
-
-        const srcBlock = selBlocks[sy]?.[sx];
-        if (srcBlock && Object.keys(srcBlock).length > 0) {
-          if (!layerBlocks[destY]) layerBlocks[destY] = [];
-          layerBlocks[destY][destX] = { ...srcBlock };
-        }
-      }
-    }
-
-    // Step 3: Record new blocks in affected area
-    for (let gy = affectedMinY; gy <= affectedMaxY; gy++) {
-      for (let gx = affectedMinX; gx <= affectedMaxX; gx++) {
-        const newBlock = layerBlocks[gy]?.[gx];
-        newDiffs.push({ x: gx, y: gy, b: newBlock ? { ...newBlock } : {} });
-      }
-    }
-
-    // Record undo diff
-    if (oldDiffs.length > 0 || newDiffs.length > 0) {
-      const diff: HistoryDiff = {
-        old: oldDiffs,
-        new: newDiffs,
-        l: deps.selectedLayerIndex.value,
-      };
-
-      deps.updateAsciiBlocks({
-        diff,
-        blocks: layerBlocks,
-      });
-    }
-
-    // Update selection rectangle to new position
-    const newSelX = rect.x + dx;
-    const newSelY = rect.y + dy;
-
-    // Clamp selection to canvas bounds
-    const clampedX = Math.max(0, newSelX);
-    const clampedY = Math.max(0, newSelY);
-    const clampedW = Math.min(
-      rect.width,
-      canvasW - clampedX,
-    );
-    const clampedH = Math.min(
-      rect.height,
-      canvasH - clampedY,
-    );
-
-    if (clampedW > 0 && clampedH > 0) {
-      deps.selecting.value = {
-        startX: clampedX * bw,
-        startY: clampedY * bh,
-        endX: (clampedX + clampedW) * bw,
-        endY: (clampedY + clampedH) * bh,
-        canSelect: false,
-      };
-
-      // Update selected blocks for paste
-      const newRect = selectionToGridRect(
-        deps.selecting.value, bw, bh,
-        canvasW, canvasH,
-      );
-      if (newRect) {
-        const newSelectedBlocks = extractSelectionBlocks(
-          layerBlocks, newRect,
-        );
-        deps.selectedBlocks.value = newSelectedBlocks;
-        deps.setSelectBlocks(newSelectedBlocks);
-      }
-    }
-
-    // Redraw
-    await deps.clearToolCanvas();
-    await deps.redrawSelect();
-    await deps.redrawCanvas();
-
-    return true;
   }
 
+  const clampedW = Math.min(newW, canvasW - rect.x);
+  const clampedH = Math.min(newH, canvasH - rect.y);
+  updateSelection(deps, rect.x, rect.y, clampedW, clampedH, layerBlocks);
+
+  await commitDiff(deps, oldDiffs, newDiffs, layerBlocks);
+  return true;
+}
+
+/** Nudge the current selection by (dx, dy) grid cells. */
+async function applyNudge(
+  deps: SelectionTransformDeps,
+  dx: number, dy: number,
+): Promise<boolean> {
+  const bw = deps.blockWidthComp.value;
+  const bh = deps.blockHeightComp.value;
+  const rect = selectionToGridRect(
+    deps.selecting.value, bw, bh,
+    deps.currentAsciiWidth.value, deps.currentAsciiHeight.value,
+  );
+  if (!rect) return false;
+
+  const layerBlocks = deps.currentAsciiLayerBlocks.value;
+  const canvasW = deps.currentAsciiWidth.value;
+  const canvasH = deps.currentAsciiHeight.value;
+  const selBlocks = extractSelectionBlocks(layerBlocks, rect);
+
+  const minX = Math.max(0, Math.min(rect.x, rect.x + dx));
+  const minY = Math.max(0, Math.min(rect.y, rect.y + dy));
+  const maxX = Math.min(canvasW - 1, Math.max(
+    rect.x + rect.width - 1, rect.x + rect.width - 1 + dx,
+  ));
+  const maxY = Math.min(canvasH - 1, Math.max(
+    rect.y + rect.height - 1, rect.y + rect.height - 1 + dy,
+  ));
+
+  const oldDiffs = snapshotRegion(
+    layerBlocks, minX, minY, maxX - minX + 1, maxY - minY + 1,
+  );
+
+  clearSelectionArea(layerBlocks, rect, canvasW, canvasH);
+  writeBlocksAtOffset(layerBlocks, selBlocks, rect, dx, dy, canvasW, canvasH);
+
+  const newDiffs: BlockDiff[] = [];
+  for (let gy = minY; gy <= maxY; gy++) {
+    for (let gx = minX; gx <= maxX; gx++) {
+      const block = layerBlocks[gy]?.[gx];
+      newDiffs.push({ x: gx, y: gy, b: block ? { ...block } : {} });
+    }
+  }
+
+  const clampedX = Math.max(0, rect.x + dx);
+  const clampedY = Math.max(0, rect.y + dy);
+  const clampedW = Math.min(rect.width, canvasW - clampedX);
+  const clampedH = Math.min(rect.height, canvasH - clampedY);
+
+  if (clampedW > 0 && clampedH > 0) {
+    updateSelection(deps, clampedX, clampedY, clampedW, clampedH, layerBlocks);
+  }
+
+  await commitDiff(deps, oldDiffs, newDiffs, layerBlocks);
+  return true;
+}
+
+// ─── Composable ─────────────────────────────────────────────────
+
+export function useSelectionTransform(deps: SelectionTransformDeps) {
   return {
-    applyTransform,
-    applyNudge,
+    applyTransform: (type: TransformType) => applyTransform(deps, type),
+    applyNudge: (dx: number, dy: number) => applyNudge(deps, dx, dy),
     selectionToGridRect,
     extractSelectionBlocks,
   };

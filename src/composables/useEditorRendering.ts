@@ -8,369 +8,353 @@ import type {
   renderBlock as renderBlockFn,
   clearMainCanvas as clearMainCanvasFn,
 } from './useMainCanvasRenderer';
-import type { MatchHighlightState } from './useMatchHighlight';
+
+/** Mutable canvas context container — set in initContexts */
+interface CanvasContexts {
+  ctx: CanvasRenderingContext2D | null;
+  toolCtx: CanvasRenderingContext2D | null;
+}
+
+/** Extended state including yOffset from Editor props */
+type RenderState = EditorState & {
+  yOffset: ComputedRef<number>;
+};
+
+/** Rendering deps from useEditorRendering */
+interface RenderDeps {
+  canvasRef: Ref<HTMLCanvasElement | null>;
+  canvastoolsRef: Ref<HTMLCanvasElement | null>;
+  renderBlock: typeof renderBlockFn;
+  clearMainCanvas: typeof clearMainCanvasFn;
+}
+
+// ─── Module-level rendering helpers ──────────────────────────────
+
+function checkVisibleFn(state: RenderState, topVal: number): boolean {
+  return checkVisible(topVal, topVal - state.blockHeightComp.value);
+}
+
+function redrawDiffBlocks(
+  contexts: CanvasContexts,
+  state: EditorState,
+  deps: RenderDeps,
+  bw: number,
+  bh: number,
+): void {
+  for (const row of state.diffBlocks.new) {
+    if (!row) continue;
+    diffRow: for (const entry of row) {
+      if (!entry) continue;
+
+      for (
+        let j = state.currentAsciiLayers.value.length - 1;
+        j >= state.diffBlocks.l;
+        j--
+      ) {
+        const layer = state.currentAsciiLayers.value[j];
+        if (layer.data[entry.y][entry.x] && j !== state.diffBlocks.l) {
+          continue diffRow;
+        }
+      }
+
+      deps.renderBlock(
+        contexts.ctx!,
+        { ...entry.b },
+        bw * entry.x,
+        bh * entry.y,
+        bw, bh,
+        mircColours99,
+        {
+          canBg: state.canBg.value,
+          canFg: state.canFg.value,
+          canText: state.canText.value,
+          fallbackChar:
+            state.currentAsciiLayerBlocks.value[entry.y][entry.x].char
+              || ' ',
+        },
+      );
+    }
+  }
+
+  state.diffBlocks.l = state.selectedLayerIndex.value;
+  state.diffBlocks.new = [];
+  state.diffBlocks.old = [];
+  state.canvasHash.value = cyrb53(JSON.stringify(mergeLayers()));
+}
+
+function redrawFullCanvas(
+  contexts: CanvasContexts,
+  state: RenderState,
+  deps: RenderDeps,
+  bw: number,
+  bh: number,
+  merged: Block[][],
+): void {
+  deps.clearMainCanvas(
+    contexts.ctx!,
+    deps.canvasRef.value,
+    state.canvasSize.width,
+    state.canvasSize.height,
+    state.blockSizeMultiplier.value,
+  );
+
+  for (let cy = 0; cy < state.currentAsciiHeight.value + 1; cy++) {
+    const canvasYVal = bh * cy;
+
+    if (
+      state.options.value.renderOffScreen
+      && state.top.value !== false
+      && !checkVisibleFn(state, state.top.value + canvasYVal - state.yOffset.value)
+    ) {
+      continue;
+    }
+
+    for (let cx = 0; cx < state.currentAsciiWidth.value + 1; cx++) {
+      deps.renderBlock(
+        contexts.ctx!,
+        { ...merged[cy][cx] },
+        bw * cx,
+        canvasYVal,
+        bw, bh,
+        mircColours99,
+      );
+    }
+  }
+}
+
+function canUseDiffRendering(state: EditorState): boolean {
+  return !!(
+    state.diffBlocks.new.length
+    && !state.canTool.value
+    && !state.isTextEditing.value
+    && !state.isFill.value
+    && !state.isBrushing.value
+  );
+}
+
+function drawGridFn(
+  toolCtx: CanvasRenderingContext2D,
+  state: EditorState,
+): void {
+  const bw = state.blockWidthComp.value;
+  const bh = state.blockHeightComp.value;
+  const w = state.canvasSize.width;
+  const h = state.canvasSize.height;
+
+  toolCtx.beginPath();
+  for (let gx = 1; gx <= w; gx += bw) {
+    toolCtx.moveTo(gx, 0);
+    toolCtx.lineTo(gx, h);
+  }
+  toolCtx.strokeStyle = 'rgba(40, 40, 40, 1)';
+  toolCtx.lineWidth = 1;
+  toolCtx.setLineDash([1]);
+  toolCtx.stroke();
+
+  toolCtx.beginPath();
+  for (
+    let gy = 1;
+    gy <= h;
+    gy += state.halfBlockEditing.value ? (bh / 2) : bh
+  ) {
+    toolCtx.moveTo(0, gy);
+    toolCtx.lineTo(w, gy);
+  }
+  toolCtx.stroke();
+}
+
+function drawRectangleBlockFn(
+  toolCtx: CanvasRenderingContext2D,
+  state: EditorState,
+  rx: number,
+  ry: number,
+): void {
+  const bw = state.blockWidthComp.value;
+  const bh = state.blockHeightComp.value;
+  const block = state.asciiBlockAtXy.value;
+  const indicatorColour = (block && (block.bg === 0 || block.bg === 8))
+    ? 1 : 0;
+
+  if (state.toolbarState.value.halfBlockEditing) {
+    const halfH = bh / 2;
+    const yOff = state.isTopHalf.value ? 0 : halfH;
+    toolCtx.fillStyle = mircColours99[indicatorColour];
+    toolCtx.fillRect(rx * bw, ry * bh + yOff, bw, halfH);
+    toolCtx.setLineDash([1, 2]);
+    toolCtx.strokeRect(rx * bw, ry * bh + yOff, bw, halfH);
+    return;
+  }
+
+  toolCtx.fillStyle = mircColours99[indicatorColour];
+  toolCtx.fillRect(rx * bw, ry * bh, bw, bh);
+  toolCtx.setLineDash([1, 2]);
+  toolCtx.strokeRect(rx * bw, ry * bh, bw, bh);
+}
+
+function drawIndicatorFn(
+  toolCtx: CanvasRenderingContext2D,
+  state: EditorState,
+): void {
+  const positions = getMirrorPositions(
+    state.x.value, state.y.value,
+    state.currentAsciiWidth.value, state.currentAsciiHeight.value,
+    state.mirrorX.value && state.isTextEditing.value,
+    state.mirrorY.value && state.isTextEditing.value,
+  );
+  for (const pos of positions) {
+    drawRectangleBlockFn(toolCtx, state, pos.x, pos.y);
+  }
+}
+
+function drawTextIndicatorFn(
+  toolCtx: CanvasRenderingContext2D,
+  state: EditorState,
+): void {
+  const tx = state.textEditing.value.startX;
+  const ty = state.textEditing.value.startY;
+  if (tx === null || ty === null) return;
+  const positions = getMirrorPositions(
+    tx, ty,
+    state.currentAsciiWidth.value, state.currentAsciiHeight.value,
+    state.mirrorX.value, state.mirrorY.value,
+  );
+  for (const pos of positions) {
+    drawRectangleBlockFn(toolCtx, state, pos.x, pos.y);
+  }
+}
+
+async function clearToolCanvasFn(
+  contexts: CanvasContexts,
+  deps: RenderDeps,
+  state: EditorState,
+): Promise<void> {
+  if (!contexts.toolCtx) return;
+  contexts.toolCtx.clearRect(
+    0, 0, state.canvasSize.width, state.canvasSize.height,
+  );
+  const tools = deps.canvastoolsRef.value;
+  if (tools) {
+    // eslint-disable-next-line no-self-assign
+    tools.width = tools.width;
+  }
+  if (state.gridView.value) {
+    drawGridFn(contexts.toolCtx, state);
+  }
+}
+
+async function redrawSelectFn(
+  contexts: CanvasContexts,
+  deps: RenderDeps,
+  state: EditorState,
+): Promise<void> {
+  if (
+    !state.currentAsciiLayerBlocks.value.length
+    || !state.isSelected.value
+    || !contexts.toolCtx
+  ) return;
+
+  await clearToolCanvasFn(contexts, deps, state);
+  const sel = state.selecting.value;
+  contexts.toolCtx.fillStyle = mircColours99[0];
+  contexts.toolCtx.fillRect(
+    sel.startX!, sel.startY!,
+    sel.endX! - sel.startX!, sel.endY! - sel.startY!,
+  );
+  contexts.toolCtx.setLineDash([6]);
+  contexts.toolCtx.strokeRect(
+    sel.startX!, sel.startY!,
+    sel.endX! - sel.startX!, sel.endY! - sel.startY!,
+  );
+}
+
+// ─── Composable ─────────────────────────────────────────────────
 
 export function useEditorRendering(
-  state: EditorState & {
-    /** yOffset from Editor props — not part of EditorState */
-    yOffset: ComputedRef<number>;
-  },
-  deps: {
-    canvasRef: Ref<HTMLCanvasElement | null>;
-    canvastoolsRef: Ref<HTMLCanvasElement | null>;
-    renderBlock: typeof renderBlockFn;
-    clearMainCanvas: typeof clearMainCanvasFn;
-    drawHighlights: MatchHighlightState['drawHighlights'];
-  },
+  state: RenderState,
+  deps: RenderDeps,
 ) {
-  // Canvas contexts — set in onMounted, not reactive for performance
-  let ctx: CanvasRenderingContext2D | null = null;
-  let toolCtx: CanvasRenderingContext2D | null = null;
+  const contexts: CanvasContexts = { ctx: null, toolCtx: null };
 
-  /** Initialize canvas 2D contexts. Call from onMounted. */
   function initContexts() {
     const canvas = deps.canvasRef.value;
     if (canvas) {
-      ctx = canvas.getContext('2d', { willReadFrequently: true });
-      if (ctx) ctx.font = getCanvasFont(state.blockSizeMultiplier.value);
+      contexts.ctx = canvas.getContext('2d', { willReadFrequently: true });
+      if (contexts.ctx) {
+        contexts.ctx.font = getCanvasFont(state.blockSizeMultiplier.value);
+      }
     }
     const tools = deps.canvastoolsRef.value;
     if (tools) {
-      toolCtx = tools.getContext('2d', { willReadFrequently: true });
+      contexts.toolCtx = tools.getContext('2d', { willReadFrequently: true });
     }
   }
 
-  /** Dispose canvas contexts. Call from onUnmounted. */
   function disposeContexts() {
-    ctx = null;
-    toolCtx = null;
+    contexts.ctx = null;
+    contexts.toolCtx = null;
   }
 
-  /** Re-init canvas font after zoom change */
   function updateCanvasFont() {
-    if (ctx) {
-      ctx.font = getCanvasFont(state.blockSizeMultiplier.value);
+    if (contexts.ctx) {
+      contexts.ctx.font = getCanvasFont(state.blockSizeMultiplier.value);
     }
   }
 
-  function checkVisibleFn(topVal: number) {
-    return checkVisible(topVal, topVal - state.blockHeightComp.value);
-  }
-
-  /** Merge layers helper (delegates to ascii.ts) */
-  function mergeLayersFn() {
-    return mergeLayers();
-  }
-
-  /**
-   * Full canvas redraw with diff optimization.
-   * If force=false and hash unchanged, skips full repaint.
-   * If diffs exist, paints only changed blocks.
-   */
   async function redrawCanvas(force = false) {
-    if (!ctx) return;
-    const bw = state.blockWidthComp.value;
-    const bh = state.blockHeightComp.value;
-
-    if (state.currentAsciiLayers.value.length) {
-      let cx = 0;
-      let cy = 0;
-      let canvasXVal = 0;
-      let canvasYVal = 0;
-      let curBlock: Block = {};
-
-      if (
-        state.diffBlocks.new.length
-        && !state.canTool.value
-        && !state.isTextEditing.value
-        && !state.isFill.value
-        && !state.isBrushing.value
-      ) {
-        outer: for (const row of state.diffBlocks.new) {
-          if (!row) continue;
-          for (const entry of row) {
-            if (!entry) continue;
-            canvasXVal = bw * entry.x;
-            canvasYVal = bh * entry.y;
-            curBlock = { ...entry.b } as Block;
-
-            for (
-              let j = state.currentAsciiLayers.value.length - 1;
-              j >= state.diffBlocks.l;
-              j--
-            ) {
-              const layer = state.currentAsciiLayers.value[j];
-              if (layer.data[entry.y][entry.x] && j !== state.diffBlocks.l) {
-                continue outer;
-              }
-            }
-
-            deps.renderBlock(
-              ctx,
-              curBlock,
-              canvasXVal,
-              canvasYVal,
-              bw,
-              bh,
-              mircColours99,
-              {
-                canBg: state.canBg.value,
-                canFg: state.canFg.value,
-                canText: state.canText.value,
-                fallbackChar:
-                  state.currentAsciiLayerBlocks.value[entry.y][entry.x].char
-                    || ' ',
-              },
-            );
-          }
-        }
-
-        state.diffBlocks.l = state.selectedLayerIndex.value;
-        state.diffBlocks.new = [];
-        state.diffBlocks.old = [];
-
-        state.canvasHash.value = cyrb53(
-          JSON.stringify(mergeLayersFn()),
-        );
-      } else {
-        const merged = mergeLayersFn();
-        const tempHash = cyrb53(JSON.stringify(merged));
-
-        if (tempHash === state.canvasHash.value && !force) {
-          // Still draw overlays even when skipping full redraw
-          drawMatchHighlightsOnCanvas();
-          return;
-        }
-
-        state.canvasHash.value = tempHash;
-        deps.clearMainCanvas(
-          ctx,
-          deps.canvasRef.value,
-          state.canvasSize.width,
-          state.canvasSize.height,
-          state.blockSizeMultiplier.value,
-        );
-
-        for (cy = 0; cy < state.currentAsciiHeight.value + 1; cy++) {
-          canvasYVal = bh * cy;
-
-          if (
-            state.options.value.renderOffScreen
-            && state.top.value !== false
-            && !checkVisibleFn(
-              state.top.value + canvasYVal - state.yOffset.value,
-            )
-          ) {
-            continue;
-          }
-
-          for (cx = 0; cx < state.currentAsciiWidth.value + 1; cx++) {
-            canvasXVal = bw * cx;
-
-            curBlock = { ...merged[cy][cx] };
-
-            deps.renderBlock(
-              ctx,
-              curBlock,
-              canvasXVal,
-              canvasYVal,
-              bw,
-              bh,
-              mircColours99,
-            );
-          }
-        }
-      }
-    }
-
-    drawMatchHighlightsOnCanvas();
-  }
-
-  /** Draw Find & Replace match highlights on the tool canvas */
-  function drawMatchHighlightsOnCanvas() {
-    if (toolCtx && deps.canvastoolsRef.value) {
-      deps.drawHighlights(
-        toolCtx,
-        0,
-        0,
-        deps.canvastoolsRef.value.width,
-        deps.canvastoolsRef.value.height,
-        state.blockWidthComp.value,
-        state.blockHeightComp.value,
-      );
-    }
-  }
-
-  /**
-   * Clear the tool overlay canvas and redraw grid if enabled.
-   * Also resets the canvas width to clear all content.
-   */
-  async function clearToolCanvas() {
-    if (toolCtx) {
-      toolCtx.clearRect(
-        0,
-        0,
-        state.canvasSize.width,
-        state.canvasSize.height,
-      );
-      const tools = deps.canvastoolsRef.value;
-      if (tools) {
-        // eslint-disable-next-line no-self-assign
-        tools.width = tools.width;
-      }
-      if (state.gridView.value) {
-        await drawGrid();
-      }
-    }
-  }
-
-  /** Draw grid overlay lines on the tool canvas */
-  function drawGrid() {
-    if (!toolCtx) return;
-    const bw = state.blockWidthComp.value;
-    const bh = state.blockHeightComp.value;
-    const w = state.canvasSize.width;
-    const h = state.canvasSize.height;
-
-    toolCtx.beginPath();
-
-    for (let gx = 1; gx <= w; gx += bw) {
-      toolCtx.moveTo(gx, 0);
-      toolCtx.lineTo(gx, h);
-    }
-
-    toolCtx.strokeStyle = 'rgba(40, 40, 40, 1)';
-    toolCtx.lineWidth = 1;
-    toolCtx.setLineDash([1]);
-
-    toolCtx.stroke();
-
-    toolCtx.beginPath();
-    for (
-      let gy = 1;
-      gy <= h;
-      gy += state.halfBlockEditing.value ? (bh / 2) : bh
-    ) {
-      toolCtx.moveTo(0, gy);
-      toolCtx.lineTo(w, gy);
-    }
-
-    toolCtx.stroke();
-  }
-
-  /** Draw a single block indicator rectangle at grid position */
-  function drawRectangleBlock(rx: number, ry: number) {
-    if (!toolCtx) return;
-    const bw = state.blockWidthComp.value;
-    const bh = state.blockHeightComp.value;
-    const block = state.asciiBlockAtXy.value;
-    let indicatorColour = 1;
-
-    if (block && typeof block === 'object') {
-      indicatorColour = block.bg === 0 ? 1 : 0;
-      if (block.bg === 8) {
-        indicatorColour = 1;
-      }
-    }
-
-    // Half-block mode: draw half-height indicator
-    if (state.toolbarState.value.halfBlockEditing) {
-      const halfH = bh / 2;
-      const yOff = state.isTopHalf.value ? 0 : halfH;
-      toolCtx.fillStyle = mircColours99[indicatorColour];
-      toolCtx.fillRect(rx * bw, ry * bh + yOff, bw, halfH);
-      toolCtx.setLineDash([1, 2]);
-      toolCtx.strokeRect(rx * bw, ry * bh + yOff, bw, halfH);
+    if (!contexts.ctx || !state.currentAsciiLayers.value.length) {
       return;
     }
+    const bw = state.blockWidthComp.value;
+    const bh = state.blockHeightComp.value;
 
-    toolCtx.fillStyle = mircColours99[indicatorColour];
-    toolCtx.fillRect(rx * bw, ry * bh, bw, bh);
-    toolCtx.setLineDash([1, 2]);
-    toolCtx.strokeRect(rx * bw, ry * bh, bw, bh);
-  }
-
-  /** Draw cursor indicator at current x/y with mirror positions */
-  function drawIndicator() {
-    const positions = getMirrorPositions(
-      state.x.value,
-      state.y.value,
-      state.currentAsciiWidth.value,
-      state.currentAsciiHeight.value,
-      state.mirrorX.value && state.isTextEditing.value,
-      state.mirrorY.value && state.isTextEditing.value,
-    );
-    for (const pos of positions) {
-      drawRectangleBlock(pos.x, pos.y);
+    if (canUseDiffRendering(state)) {
+      redrawDiffBlocks(contexts, state, deps, bw, bh);
+    } else {
+      const merged = mergeLayers();
+      const tempHash = cyrb53(JSON.stringify(merged));
+      if (tempHash === state.canvasHash.value && !force) {
+        return;
+      }
+      state.canvasHash.value = tempHash;
+      redrawFullCanvas(contexts, state, deps, bw, bh, merged);
     }
   }
 
-  /** Draw text editing cursor indicator at textEditing position */
-  function drawTextIndicator() {
-    const tx = state.textEditing.value.startX;
-    const ty = state.textEditing.value.startY;
-    if (tx === null || ty === null) return;
-
-    const positions = getMirrorPositions(
-      tx,
-      ty,
-      state.currentAsciiWidth.value,
-      state.currentAsciiHeight.value,
-      state.mirrorX.value,
-      state.mirrorY.value,
-    );
-    for (const pos of positions) {
-      drawRectangleBlock(pos.x, pos.y);
-    }
+  async function clearToolCanvas() {
+    return clearToolCanvasFn(contexts, deps, state);
   }
 
-  /** Draw selection rectangle on the tool canvas */
+  function doDrawGrid() {
+    if (contexts.toolCtx) drawGridFn(contexts.toolCtx, state);
+  }
+
+  function doDrawIndicator() {
+    if (contexts.toolCtx) drawIndicatorFn(contexts.toolCtx, state);
+  }
+
+  function doDrawTextIndicator() {
+    if (contexts.toolCtx) drawTextIndicatorFn(contexts.toolCtx, state);
+  }
+
+  function doDrawRectangleBlock(rx: number, ry: number) {
+    if (contexts.toolCtx) drawRectangleBlockFn(contexts.toolCtx, state, rx, ry);
+  }
+
   async function redrawSelect() {
-    if (
-      state.currentAsciiLayerBlocks.value.length
-      && state.isSelected.value
-      && toolCtx
-    ) {
-      await clearToolCanvas();
-      toolCtx.fillStyle = mircColours99[0];
-
-      toolCtx.fillRect(
-        state.selecting.value.startX!,
-        state.selecting.value.startY!,
-        state.selecting.value.endX! - state.selecting.value.startX!,
-        state.selecting.value.endY! - state.selecting.value.startY!,
-      );
-
-      toolCtx.setLineDash([6]);
-      toolCtx.strokeRect(
-        state.selecting.value.startX!,
-        state.selecting.value.startY!,
-        state.selecting.value.endX! - state.selecting.value.startX!,
-        state.selecting.value.endY! - state.selecting.value.startY!,
-      );
-    }
+    return redrawSelectFn(contexts, deps, state);
   }
 
   return {
-    // Context management
-    initContexts,
-    disposeContexts,
-    updateCanvasFont,
-    getCtx: () => ctx,
-    getToolCtx: () => toolCtx,
-
-    // Canvas rendering
-    redrawCanvas,
-    clearToolCanvas,
-    drawGrid,
-    drawIndicator,
-    drawTextIndicator,
-    drawRectangleBlock,
+    initContexts, disposeContexts, updateCanvasFont,
+    getCtx: () => contexts.ctx,
+    getToolCtx: () => contexts.toolCtx,
+    redrawCanvas, clearToolCanvas,
+    drawGrid: doDrawGrid,
+    drawIndicator: doDrawIndicator,
+    drawTextIndicator: doDrawTextIndicator,
+    drawRectangleBlock: doDrawRectangleBlock,
     redrawSelect,
-    checkVisibleFn,
-    mergeLayersFn,
-    drawMatchHighlightsOnCanvas,
+    checkVisibleFn: (topVal: number) => checkVisibleFn(state, topVal),
+    mergeLayersFn: () => mergeLayers(),
   };
 }
-
-export type EditorRendering = ReturnType<typeof useEditorRendering>;

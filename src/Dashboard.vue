@@ -71,7 +71,6 @@
     <PasteAscii v-if="modalState.pasteAscii" />
     <ImageOverlay v-if="asciibirdMeta.length && modalState.overlay" />
     <BorderGenerator v-if="asciibirdMeta.length && modalState.borderGenerator" />
-    <FindReplace v-if="asciibirdMeta.length && modalState.findReplace" />
 
     <KeyboardShortcuts
       :selected-blocks="selectedBlocks"
@@ -423,7 +422,6 @@ import PasteAscii from './components/modals/PasteAscii.vue';
 import About from './components/modals/About.vue';
 import Help from './components/modals/Help.vue';
 import BorderGenerator from './components/modals/BorderGenerator.vue';
-import FindReplace from './components/modals/FindReplace.vue';
 import ABModal from './components/ABModal.vue';
 
 import BrushPreview from './components/parts/BrushPreview.vue';
@@ -531,11 +529,17 @@ const textEditing = ref<{
   startY: number | null;
 } | null>(null);
 const updateCanvas = ref(false);
-const selecting = ref({
-  startX: null as number | null,
-  startY: null as number | null,
-  endX: null as number | null,
-  endY: null as number | null,
+const selecting = ref<{
+  startX: number | null;
+  startY: number | null;
+  endX: number | null;
+  endY: number | null;
+  canSelect: boolean;
+}>({
+  startX: null,
+  startY: null,
+  endX: null,
+  endY: null,
   canSelect: false,
 });
 const isInputtingBrushSize = ref(false);

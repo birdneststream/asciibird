@@ -21,12 +21,12 @@ export function useInlineRename<T extends number>(
     editingKey.value = key;
     editingName.value = currentName;
     nextTick(() => {
-      const input = document.querySelector(
+      const el = document.querySelector(
         '[data-inline-rename-input]',
-      ) as HTMLInputElement | null;
-      if (input) {
-        input.focus();
-        input.select();
+      );
+      if (el instanceof HTMLInputElement) {
+        el.focus();
+        el.select();
       }
     });
   }

@@ -31,15 +31,26 @@ interface ContentBounds {
   maxY: number;
 }
 
+/** Update bounds to include a non-empty block at (x, y) */
+function expandBounds(
+  bounds: ContentBounds,
+  x: number,
+  y: number,
+): void {
+  if (x < bounds.minX) bounds.minX = x;
+  if (y < bounds.minY) bounds.minY = y;
+  if (x > bounds.maxX) bounds.maxX = x;
+  if (y > bounds.maxY) bounds.maxY = y;
+}
+
 /**
  * Find the bounding rectangle of all non-empty content across all
  * layers. Returns null if the canvas is completely empty.
  */
 export function findContentBounds(layers: Layer[]): ContentBounds | null {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -1;
-  let maxY = -1;
+  const bounds: ContentBounds = {
+    minX: Infinity, minY: Infinity, maxX: -1, maxY: -1,
+  };
 
   for (const layer of layers) {
     for (let y = 0; y < layer.data.length; y++) {
@@ -47,20 +58,17 @@ export function findContentBounds(layers: Layer[]): ContentBounds | null {
       if (!row) continue;
       for (let x = 0; x < row.length; x++) {
         if (!isEmptyBlock(row[x])) {
-          if (x < minX) minX = x;
-          if (y < minY) minY = y;
-          if (x > maxX) maxX = x;
-          if (y > maxY) maxY = y;
+          expandBounds(bounds, x, y);
         }
       }
     }
   }
 
-  if (maxX < 0 || maxY < 0) {
+  if (bounds.maxX < 0 || bounds.maxY < 0) {
     return null; // completely empty
   }
 
-  return { minX, minY, maxX, maxY };
+  return bounds;
 }
 
 /**

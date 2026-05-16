@@ -22,7 +22,7 @@ export interface RootState {
  * (store imports ascii, ascii imports store) without using `any`.
  */
 export interface AsciiStoreAccess {
-  readonly currentAscii: AsciibirdMeta | false;
+  readonly currentAscii: AsciibirdMeta | undefined;
   readonly currentAsciiLayers: Layer[];
   readonly currentAsciiLayersWidthHeight: { width: number; height: number };
   newAsciibirdMeta(payload: AsciibirdMetaBuilder): void;

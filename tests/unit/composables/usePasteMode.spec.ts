@@ -27,12 +27,14 @@ vi.mock('../../../src/store', () => ({
   useAsciiBirdStore: () => mockAsciiStore,
 }));
 
-// Mock ascii module for mircColours99
+// Mock ascii module for mircColours99 and hasBlockContent
 vi.mock('../../../src/ascii', () => ({
   mircColours99: [
     'rgb(255,255,255)', 'rgb(0,0,0)', 'rgb(0,0,127)',
     'rgb(0,147,0)', 'rgb(255,0,0)',
   ],
+  hasBlockContent: (block: Record<string, unknown> | undefined) =>
+    !!block && Object.keys(block).length > 0,
 }));
 
 // Import after mocks

@@ -60,12 +60,19 @@ export interface EditorWatcherOptions {
 
 // ─── Composable ─────────────────────────────────────────────────
 
+// eslint-disable-next-line max-lines-per-function -- watcher registration: 12 watch() calls must run in composable scope
 export function useEditorWatchers(opts: EditorWatcherOptions): void {
   const s = opts.state;
   const r = opts.rendering;
   const cp = opts.canvasPanel;
   const cb = opts.callbacks;
   const pr = opts.props;
+
+  /** Recalculate canvas dimensions from current ASCII size and zoom */
+  function recalcCanvasSize() {
+    s.canvasSize.width = s.currentAsciiWidth.value * s.blockWidthComp.value;
+    s.canvasSize.height = s.currentAsciiHeight.value * s.blockHeightComp.value;
+  }
 
   // ─── Canvas Dimension Watchers ────────────────────────────────
 
@@ -81,10 +88,7 @@ export function useEditorWatchers(opts: EditorWatcherOptions): void {
     const meta = s.store.asciibirdMeta[newTab];
     if (!meta) return;
 
-    s.canvasSize.width =
-      s.currentAsciiWidth.value * s.blockWidthComp.value;
-    s.canvasSize.height =
-      s.currentAsciiHeight.value * s.blockHeightComp.value;
+    recalcCanvasSize();
 
     cp.setPosition(meta.x ?? 0, meta.y ?? 0);
     cp.setDimensions(
@@ -94,10 +98,7 @@ export function useEditorWatchers(opts: EditorWatcherOptions): void {
   });
 
   watch(s.blockSizeMultiplier, () => {
-    s.canvasSize.width =
-      s.currentAsciiWidth.value * s.blockWidthComp.value;
-    s.canvasSize.height =
-      s.currentAsciiHeight.value * s.blockHeightComp.value;
+    recalcCanvasSize();
     cp.setDimensions(
       s.currentAsciiWidth.value * s.blockWidthComp.value,
       s.currentAsciiHeight.value * s.blockHeightComp.value,
