@@ -380,6 +380,25 @@ describe('Pinia Store Actions', () => {
       store.updateAsciiTitle('Renamed Art');
       expect(store.asciibirdMeta[0].title).toBe('Renamed Art');
     });
+
+    it('updates document.title to match new title', () => {
+      store.updateAsciiTitle('New Tab Title');
+      expect(document.title).toBe('asciibird - New Tab Title');
+    });
+  });
+
+  describe('updateDocumentTitle', () => {
+    it('sets document.title to current tab title', () => {
+      store.updateDocumentTitle();
+      expect(document.title).toMatch(/^asciibird - /);
+    });
+
+    it('falls back to plain title when no tabs', () => {
+      store.asciibirdMeta = [];
+      store.tab = 0;
+      store.updateDocumentTitle();
+      expect(document.title).toBe('asciibird');
+    });
   });
 
   describe('updateImageOverlay', () => {

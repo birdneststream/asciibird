@@ -112,10 +112,10 @@
             class="bg-surface-container-lowest border border-outline-variant rounded p-2 hover:border-primary transition-colors"
           >
             <div
-              v-if="key <= 9"
+              v-if="key <= 8"
               class="font-label-mono text-label-mono text-outline mb-1"
             >
-              Ctrl+{{ key === 9 ? 0 : key + 1 }}
+              Ctrl+{{ key + 1 }}
             </div>
             <BrushCanvas :blocks="decompressBlock(brush.blocks)" />
 
@@ -237,8 +237,9 @@ const libraryCount = computed(() =>
 );
 
 const hotkeyBrushes = computed(() => {
+  // ctrl+0 is reserved for zoom reset ('all' scope) — only bind ctrl+1..9
   const keys: string[] = [];
-  for (let i = 0; i <= 9; i++) {
+  for (let i = 1; i <= 9; i++) {
     keys.push(`ctrl+${i}`);
   }
   return keys.join(',');
@@ -249,10 +250,7 @@ hotkeys(hotkeyBrushes.value, 'editor', (event) => {
   event.preventDefault();
 
   if (isBrushing.value || isErasing.value) {
-    const brushSelect =
-      Number.parseInt(event.key) !== 0
-        ? Number.parseInt(event.key) - 1
-        : 9;
+    const brushSelect = Number.parseInt(event.key) - 1;
     if (brushLibrary.value[brushSelect]) {
       reuseBlocks(
         decompressBlock(brushLibrary.value[brushSelect].blocks),

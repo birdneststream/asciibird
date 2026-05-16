@@ -493,7 +493,14 @@ const {
 } = useInlineRename<number>(
   (key, newName) => {
     if (store.asciibirdMeta[key]) {
-      store.asciibirdMeta[key].title = newName;
+      // Use store action for current tab so document.title stays in sync.
+      // Non-current tabs don't need updateDocumentTitle() (it only reads
+      // the active tab's title).
+      if (key === store.tab) {
+        store.updateAsciiTitle(newName);
+      } else {
+        store.asciibirdMeta[key].title = newName;
+      }
     }
   },
 );
