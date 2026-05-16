@@ -347,11 +347,8 @@ export function useCanvasMouseHandlers(deps: MouseHandlerDeps) {
 
   // ─── Mouse Move ────────────────────────────────────────────────
 
-  async function canvasMouseMove(e: MouseEvent) {
-    const lastX = s.x.value;
-    const lastY = s.y.value;
-
-    // Update grid coordinates from pixel offset
+  /** Update grid coordinates from mouse pixel offset */
+  function updateGridCoords(e: MouseEvent, lastX: number, lastY: number) {
     if (e.offsetX >= 0) s.x.value = e.offsetX;
     if (e.offsetY >= 0) {
       s.y.value = e.offsetY;
@@ -361,118 +358,150 @@ export function useCanvasMouseHandlers(deps: MouseHandlerDeps) {
     }
     s.x.value = Math.floor(s.x.value / s.blockWidthComp.value);
     s.y.value = Math.floor(s.y.value / s.blockHeightComp.value);
+    return s.x.value !== lastX || s.y.value !== lastY
+      || s.halfBlockEditing.value;
+  }
 
-    // Paste mode: draw preview at cursor
-    if (tools.pasteMode.isPasteMode.value) {
-      const toolCtx = r.getToolCtx();
-      if (toolCtx) {
-        await r.clearToolCanvas();
-        tools.pasteMode.drawPastePreview(
-          toolCtx, s.x.value, s.y.value,
-          s.blockWidthComp.value, s.blockHeightComp.value,
-        );
-      }
-      emit.coords({ x: s.x.value, y: s.y.value });
-      return;
+  /** Handle paste mode mouse move — draw ghost preview */
+  async function movePaste(): Promise<boolean> {
+    if (!tools.pasteMode.isPasteMode.value) return false;
+    const toolCtx = r.getToolCtx();
+    if (toolCtx) {
+      await r.clearToolCanvas();
+      tools.pasteMode.drawPastePreview(
+        toolCtx, s.x.value, s.y.value,
+        s.blockWidthComp.value, s.blockHeightComp.value,
+      );
     }
+    emit.coords({ x: s.x.value, y: s.y.value });
+    return true;
+  }
 
+  /** Handle brush tool mouse move */
+  async function moveBrush(): Promise<void> {
+    await interpolateStroke(tools.toolApp.drawBrush);
+    await r.clearToolCanvas();
+    await tools.toolApp.drawBrush();
+    await r.delayRedrawCanvas();
+    updateLastBrushPos();
+  }
+
+  /** Handle eraser tool mouse move */
+  async function moveEraser(): Promise<void> {
+    await r.clearToolCanvas();
+    await interpolateStroke(tools.toolApp.eraser);
+    await tools.toolApp.drawBrush(true);
+    await r.delayRedrawCanvas();
+    await tools.toolApp.eraser();
+    updateLastBrushPos();
+  }
+
+  /** Handle select tool mouse move */
+  async function moveSelect(): Promise<void> {
+    if (s.selecting.value.canSelect) {
+      s.selecting.value.endX =
+        s.canvasX.value + s.blockWidthComp.value;
+      s.selecting.value.endY = s.halfBlockEditing.value
+        ? s.canvasY.value
+          + (s.isTopHalf.value ? 0 : s.blockHeightComp.value / 2)
+          + s.blockHeightComp.value / 2
+        : s.canvasY.value + s.blockHeightComp.value;
+      await r.redrawSelect();
+    }
+    if (!s.isSelected.value) {
+      await r.redrawSelect();
+    }
+  }
+
+  /** Handle text tool mouse move */
+  async function moveText(): Promise<void> {
+    await r.clearToolCanvas();
+    await r.drawIndicator();
+    if (s.isTextEditingValues.value) {
+      await r.drawTextIndicator();
+    }
+  }
+
+  /** Handle indicator-only tools (dropper, fill, fill-eraser) */
+  async function moveIndicatorTool(): Promise<void> {
+    await r.clearToolCanvas();
+    await r.drawIndicator();
+  }
+
+  /** Handle replace-color tool mouse move */
+  async function moveReplaceColor(
+    toolCtx: CanvasRenderingContext2D | null,
+  ): Promise<void> {
+    await r.clearToolCanvas();
+    await r.drawIndicator();
+    if (tools.colorReplace.isReplacePicking.value
+      && tools.colorReplace.replaceColorSource.value
+      && toolCtx) {
+      drawReplaceColorPreview(toolCtx);
+    }
+  }
+
+  /** Handle gradient tool mouse move */
+  async function moveGradient(
+    toolCtx: CanvasRenderingContext2D | null,
+  ): Promise<void> {
+    await r.clearToolCanvas();
+    await r.drawIndicator();
+    if (tools.gradientTool.isGradientPicking.value
+      && tools.gradientTool.gradientStart.value && toolCtx) {
+      drawGradientPreview(toolCtx);
+    }
+  }
+
+  /** Handle shapes tool mouse move */
+  async function moveShapes(
+    toolCtx: CanvasRenderingContext2D | null,
+  ): Promise<void> {
+    await r.clearToolCanvas();
+    await r.drawIndicator();
+    if (tools.shapeTool.isShapePicking.value
+      && tools.shapeTool.shapeStart.value && toolCtx) {
+      drawShapePreview({
+        ctx: toolCtx,
+        shapeType: toolbarStore.toolbarState.shapeType,
+        startX: tools.shapeTool.shapeStart.value.x,
+        startY: tools.shapeTool.shapeStart.value.y,
+        endX: s.x.value, endY: s.y.value,
+        blockWidth: s.blockWidthComp.value,
+        blockHeight: s.blockHeightComp.value,
+        strokeColor: mircColours99[toolbarStore.currentFg],
+      });
+    }
+  }
+
+  async function canvasMouseMove(e: MouseEvent) {
+    const lastX = s.x.value;
+    const lastY = s.y.value;
+
+    const moved = updateGridCoords(e, lastX, lastY);
+
+    if (await movePaste()) return;
     if (s.isDefault.value) return;
-    if (s.x.value === lastX && s.y.value === lastY
-      && !s.halfBlockEditing.value) {
-      return;
-    }
+    if (!moved) return;
 
     emit.coords({ x: s.x.value, y: s.y.value });
-
     if (!s.asciiBlockAtXy.value) return;
 
     const toolCtx = r.getToolCtx();
 
     switch (s.currentTool.value.name) {
-      case 'brush':
-        await interpolateStroke(tools.toolApp.drawBrush);
-        await r.clearToolCanvas();
-        await tools.toolApp.drawBrush();
-        await r.delayRedrawCanvas();
-        updateLastBrushPos();
-        break;
-
-      case 'eraser':
-        await r.clearToolCanvas();
-        await interpolateStroke(tools.toolApp.eraser);
-        await tools.toolApp.drawBrush(true);
-        await r.delayRedrawCanvas();
-        await tools.toolApp.eraser();
-        updateLastBrushPos();
-        break;
-
-      case 'select':
-        if (s.selecting.value.canSelect) {
-          s.selecting.value.endX =
-            s.canvasX.value + s.blockWidthComp.value;
-          s.selecting.value.endY = s.halfBlockEditing.value
-            ? s.canvasY.value
-              + (s.isTopHalf.value ? 0 : s.blockHeightComp.value / 2)
-              + s.blockHeightComp.value / 2
-            : s.canvasY.value + s.blockHeightComp.value;
-          await r.redrawSelect();
-        }
-        if (!s.isSelected.value) {
-          await r.redrawSelect();
-        }
-        break;
-
-      case 'text':
-        await r.clearToolCanvas();
-        await r.drawIndicator();
-        if (s.isTextEditingValues.value) {
-          await r.drawTextIndicator();
-        }
-        break;
-
+      case 'brush': await moveBrush(); break;
+      case 'eraser': await moveEraser(); break;
+      case 'select': await moveSelect(); break;
+      case 'text': await moveText(); break;
       case 'dropper':
       case 'fill':
       case 'fill-eraser':
-        await r.clearToolCanvas();
-        await r.drawIndicator();
+        await moveIndicatorTool();
         break;
-
-      case 'replace-color':
-        await r.clearToolCanvas();
-        await r.drawIndicator();
-        if (tools.colorReplace.isReplacePicking.value
-          && tools.colorReplace.replaceColorSource.value
-          && toolCtx) {
-          drawReplaceColorPreview(toolCtx);
-        }
-        break;
-
-      case 'gradient':
-        await r.clearToolCanvas();
-        await r.drawIndicator();
-        if (tools.gradientTool.isGradientPicking.value
-          && tools.gradientTool.gradientStart.value && toolCtx) {
-          drawGradientPreview(toolCtx);
-        }
-        break;
-
-      case 'shapes':
-        await r.clearToolCanvas();
-        await r.drawIndicator();
-        if (tools.shapeTool.isShapePicking.value
-          && tools.shapeTool.shapeStart.value && toolCtx) {
-          drawShapePreview({
-            ctx: toolCtx,
-            shapeType: toolbarStore.toolbarState.shapeType,
-            startX: tools.shapeTool.shapeStart.value.x,
-            startY: tools.shapeTool.shapeStart.value.y,
-            endX: s.x.value, endY: s.y.value,
-            blockWidth: s.blockWidthComp.value,
-            blockHeight: s.blockHeightComp.value,
-            strokeColor: mircColours99[toolbarStore.currentFg],
-          });
-        }
-        break;
+      case 'replace-color': await moveReplaceColor(toolCtx); break;
+      case 'gradient': await moveGradient(toolCtx); break;
+      case 'shapes': await moveShapes(toolCtx); break;
     }
   }
 
