@@ -135,10 +135,101 @@ import {
   generateBorder,
   getBorderMinimumSize,
 } from '../../utils/borderGenerator';
-import type { BorderStyle, BorderStyleChars } from '../../utils/borderGenerator';
+import type { BorderStyle, BorderStyleChars, BorderGeneratorResult } from '../../utils/borderGenerator';
 import { fillNullBlocks, emptyBlock } from '../../ascii';
+import type { Block } from '../../types';
 
 defineOptions({ name: 'BorderGenerator' });
+
+// ─── Pure helper functions for border application ──────────────
+
+interface LayerData { data: Block[][]; width: number; height: number }
+
+/**
+ * Copy old layer content into a new larger layer with an offset.
+ */
+function copyWithOffset(
+  layer: LayerData, oldData: Block[][] | undefined,
+  newW: number, newH: number, ox: number, oy: number,
+): void {
+  if (!oldData) return;
+
+  // Clear and copy with offset
+  for (let y = 0; y < newH; y++) {
+    for (let x = 0; x < newW; x++) {
+      layer.data[y][x] = { ...emptyBlock };
+    }
+  }
+  for (let sy = 0; sy < Math.min(oldData.length, newH - oy); sy++) {
+    const row = oldData[sy];
+    const maxSx = Math.min(row?.length ?? 0, newW - ox);
+    for (let sx = 0; sx < maxSx; sx++) {
+      const src = row?.[sx];
+      if (src && (src.fg !== undefined || src.bg !== undefined
+        || src.char !== undefined)) {
+        layer.data[sy + oy][sx + ox] = { ...src };
+      }
+    }
+  }
+}
+
+/**
+ * Apply border in expand mode — creates new layers sized to fit
+ * the border, copies border into selected layer, offsets other layers.
+ */
+function applyExpandMode(
+  result: BorderGeneratorResult,
+  allLayers: LayerData[],
+  selectedIdx: number,
+): LayerData[] {
+  const newW = result.width;
+  const newH = result.height;
+  const newLayers = fillNullBlocks(newH, newW);
+
+  // Copy border result into the selected layer
+  const targetLayer = newLayers[selectedIdx];
+  if (targetLayer) {
+    for (let y = 0; y < newH; y++) {
+      for (let x = 0; x < newW; x++) {
+        const src = result.blocks[y]?.[x];
+        if (src) targetLayer.data[y][x] = { ...src };
+      }
+    }
+  }
+
+  // For other layers, offset their content
+  for (let i = 0; i < newLayers.length; i++) {
+    if (i === selectedIdx) continue;
+    copyWithOffset(newLayers[i], allLayers[i]?.data, newW, newH,
+      result.offsetX, result.offsetY);
+  }
+
+  return newLayers;
+}
+
+/**
+ * Apply border in overlay mode — stamps border blocks over existing
+ * content in the current layer.
+ */
+function applyOverlayMode(
+  resultBlocks: Block[][],
+  layerBlocks: Block[][],
+): void {
+  for (let y = 0; y < resultBlocks.length; y++) {
+    for (let x = 0; x < resultBlocks[y].length; x++) {
+      const src = resultBlocks[y][x];
+      const dst = layerBlocks[y]?.[x];
+      if (dst && (src.fg !== undefined || src.bg !== undefined
+        || src.char !== undefined)) {
+        if (src.char !== undefined) dst.char = src.char;
+        if (src.fg !== undefined) dst.fg = src.fg;
+        if (src.bg !== undefined) dst.bg = src.bg;
+      }
+    }
+  }
+}
+
+// ─── Component setup ───────────────────────────────────────────
 
 const modalStore = useModalStore();
 const store = useAsciiBirdStore();
@@ -224,69 +315,13 @@ function apply() {
   });
 
   if (expandMode.value) {
-    // Expand mode: resize all layers, then stamp border blocks
-    const newW = result.width;
-    const newH = result.height;
-
-    // Resize all layers to new dimensions
-    const layers = fillNullBlocks(newH, newW);
-
-    // Copy border result into the selected layer
-    const targetLayer = layers[selectedLayerIndex.value];
-    if (targetLayer) {
-      for (let y = 0; y < newH; y++) {
-        for (let x = 0; x < newW; x++) {
-          const src = result.blocks[y]?.[x];
-          if (src) {
-            targetLayer.data[y][x] = { ...src };
-          }
-        }
-      }
-    }
-
-    // For other layers, offset their content
-    for (let i = 0; i < layers.length; i++) {
-      if (i === selectedLayerIndex.value) continue;
-      const layer = layers[i];
-      const oldData = currentAsciiLayers.value[i]?.data;
-      if (!oldData) continue;
-
-      // Clear and copy with offset
-      for (let y = 0; y < newH; y++) {
-        for (let x = 0; x < newW; x++) {
-          layer.data[y][x] = { ...emptyBlock };
-        }
-      }
-      const ox = result.offsetX;
-      const oy = result.offsetY;
-      for (let sy = 0; sy < Math.min(oldData.length, newH - oy); sy++) {
-        for (let sx = 0; sx < Math.min(oldData[sy]?.length ?? 0, newW - ox); sx++) {
-          const src = oldData[sy]?.[sx];
-          if (src && (src.fg !== undefined || src.bg !== undefined
-            || src.char !== undefined)) {
-            layer.data[sy + oy][sx + ox] = { ...src };
-          }
-        }
-      }
-    }
-
+    const layers = applyExpandMode(
+      result, currentAsciiLayers.value, selectedLayerIndex.value,
+    );
     store.changeAsciiWidthHeight({ layers: [...layers] });
-    toastShow(`Border added (${newW}×${newH})`);
+    toastShow(`Border added (${result.width}×${result.height})`);
   } else {
-    // Overlay mode: replace blocks in the current layer
-    const newData = result.blocks;
-    for (let y = 0; y < newData.length; y++) {
-      for (let x = 0; x < newData[y].length; x++) {
-        const src = newData[y][x];
-        const dst = layerBlocks[y]?.[x];
-        if (dst && (src.fg !== undefined || src.bg !== undefined
-          || src.char !== undefined)) {
-          if (src.char !== undefined) dst.char = src.char;
-          if (src.fg !== undefined) dst.fg = src.fg;
-          if (src.bg !== undefined) dst.bg = src.bg;
-        }
-      }
-    }
+    applyOverlayMode(result.blocks, layerBlocks);
     store.updateAsciiBlocks({
       blocks: layerBlocks,
       diff: { l: selectedLayerIndex.value, old: [], new: [] },
