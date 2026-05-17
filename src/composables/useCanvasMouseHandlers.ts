@@ -402,7 +402,6 @@ async function doMouseMove(d: InternalDeps, e: MouseEvent): Promise<void> {
       await r.clearToolCanvas();
       await r.drawIndicator();
       break;
-      break;
     case 'gradient':
       await r.clearToolCanvas();
       await r.drawIndicator();
