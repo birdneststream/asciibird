@@ -93,7 +93,6 @@ function doHandleExportPost(
     }).then((result) => {
       if (result.input === undefined) {
         toastShow('Come on bro. Get it together.', { type: 'error' });
-        modalStore.toggleDisableKeyboard(false);
         return;
       }
 
@@ -124,7 +123,7 @@ function doHandleExportPost(
             toastShow(`Error: ${JSON.stringify(error)}`, { type: 'error' });
           });
       }
-
+    }).finally(() => {
       modalStore.toggleDisableKeyboard(false);
     });
   } else {
