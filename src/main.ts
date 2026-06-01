@@ -46,8 +46,6 @@ async function bootstrap() {
             'asciibird-modal',
             JSON.stringify({
               modalState: asciiCache.modalState,
-              isKeyboardDisabled:
-                asciiCache.isKeyboardDisabled ?? false,
             }),
           );
         }

@@ -61,6 +61,6 @@ export const useModalStore = defineStore('modal', {
   persist: {
     key: 'asciibird-modal',
     storage: idbPersistAdapter,
-    pick: ['isKeyboardDisabled'],
+    omit: ['isKeyboardDisabled'],
   },
 });
