@@ -338,19 +338,20 @@
           v-if="dialogState.mode === 'prompt'"
           v-model="dialogState.inputValue"
           class="ab-input mt-3"
+          @keydown.enter="() => dialogOk()"
         >
       </div>
       <template #footer>
         <div class="flex justify-center space-x-4 p-3">
           <button
             class="ab-button"
-            @click="dialogCancel"
+            @click="() => dialogCancel()"
           >
             Cancel
           </button>
           <button
             class="ab-button bg-primary-container"
-            @click="dialogOk"
+            @click="() => dialogOk()"
           >
             OK
           </button>
