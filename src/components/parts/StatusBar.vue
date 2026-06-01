@@ -30,6 +30,50 @@
 
       <span class="text-outline-variant">|</span>
 
+      <!-- UI toggle buttons — menu bar and tab bar -->
+      <div
+        class="flex items-center gap-px"
+        role="toolbar"
+        aria-label="UI toggles"
+      >
+        <button
+          type="button"
+          class="w-6 h-6 rounded-sm flex items-center justify-center transition-colors duration-150"
+          :class="desktopStore.menuBarVisible
+            ? 'bg-surface-container-high text-on-surface hover:bg-surface-variant'
+            : 'text-on-surface-variant/30 hover:text-on-surface-variant hover:bg-surface-container-low'"
+          :aria-label="desktopStore.menuBarVisible ? 'Hide menu bar' : 'Show menu bar'"
+          :aria-pressed="desktopStore.menuBarVisible ? 'true' : 'false'"
+          title="Menu Bar"
+          @click="desktopStore.changeMenuBarVisible(!desktopStore.menuBarVisible)"
+        >
+          <span
+            class="material-icons"
+            style="font-size: 14px"
+            aria-hidden="true"
+          >menu</span>
+        </button>
+        <button
+          type="button"
+          class="w-6 h-6 rounded-sm flex items-center justify-center transition-colors duration-150"
+          :class="desktopStore.tabsVisible
+            ? 'bg-surface-container-high text-on-surface hover:bg-surface-variant'
+            : 'text-on-surface-variant/30 hover:text-on-surface-variant hover:bg-surface-container-low'"
+          :aria-label="desktopStore.tabsVisible ? 'Hide tab bar' : 'Show tab bar'"
+          :aria-pressed="desktopStore.tabsVisible ? 'true' : 'false'"
+          title="Tab Bar"
+          @click="desktopStore.changeTabsVisible(!desktopStore.tabsVisible)"
+        >
+          <span
+            class="material-icons"
+            style="font-size: 14px"
+            aria-hidden="true"
+          >tab</span>
+        </button>
+      </div>
+
+      <span class="text-outline-variant">|</span>
+
       <span class="font-label-mono text-body-sm text-on-surface-variant">
         X: {{ coordsX }} | Y: {{ coordsY }}
       </span>
@@ -160,6 +204,7 @@ import { ref, computed } from 'vue';
 import { toolbarIcons } from '../../ascii';
 import { useAsciiBirdStore } from '../../store';
 import { useToolbarStore } from '../../store/toolbar';
+import { useDesktopStore } from '../../store/desktop';
 import {
   usePanelRegistry,
   type PanelInfo,
@@ -168,6 +213,7 @@ import ContextMenu from './ContextMenu.vue';
 
 const store = useAsciiBirdStore();
 const toolbarStore = useToolbarStore();
+const desktopStore = useDesktopStore();
 const { panels, toggle, resetPosition, hide } = usePanelRegistry();
 
 const taskBarMenu = ref<InstanceType<typeof ContextMenu> | null>(null);
