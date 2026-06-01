@@ -100,14 +100,18 @@ function doHandleExportPost(
       if (result.isOk) {
         const asciiText = exportMirc().output.join('');
         lastPostURL.value = result.input;
-        const requestOptions = {
+        const requestOptions: RequestInit = {
           method: 'POST',
-          headers: { 'Content-Type': 'application/octet-stream' },
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'text/plain' },
           body: asciiText,
         };
         fetch(lastPostURL.value, requestOptions)
           .then((response) => {
-            if (response.status === 200 || response.status === 201) {
+            // no-cors responses are opaque — status is always 0
+            if (response.type === 'opaque') {
+              toastShow('POSTed ascii!', { type: 'success' });
+            } else if (response.ok) {
               toastShow('POSTed ascii!', { type: 'success' });
             } else {
               toastShow(
