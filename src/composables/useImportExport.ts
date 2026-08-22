@@ -12,6 +12,7 @@ import { downloadAnsi } from '../utils/ansiExport';
 import { downloadHtml, exportHtmlFragment } from '../utils/htmlExport';
 import { parseAnsiAscii } from '../utils/ansiImport';
 import { getAsciiTitle } from '../utils/asciiTitle';
+import { backfillImageOverlays } from '../utils/imageOverlayBackfill';
 import { useAsciiBirdStore } from '../store';
 import { useModalStore } from '../store/modal';
 import { useExportAscii } from './useExportAscii';
@@ -40,6 +41,9 @@ function importAsciibirdState(
     const contents = JSON.parse(
       LZString.decompressFromEncodedURIComponent(fileContents),
     );
+    // Heal metas exported before the overlay field existed (import bypasses
+    // the store's persisted-state deserializer).
+    backfillImageOverlays(contents.asciibirdMeta);
     store.changeState({ ...contents });
   } catch {
     toastShow('Failed to import ASCIIBIRD state. File may be corrupted.', {

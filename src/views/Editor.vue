@@ -114,6 +114,7 @@ import {
 } from '../ascii';
 
 import { resizeLayers } from '../utils/resizeLayers';
+import { buildImageOverlayStyle } from '../utils/imageOverlayStyle';
 
 import type { Block } from '../types';
 import type { TransformType } from '../utils/transformBlocks';
@@ -396,23 +397,9 @@ function handleCanvasMouseMove(e: MouseEvent) {
 
 const imageOverlay = computed(() => store.imageOverlay);
 
-const imageOverlayStyle = computed(() => {
-  const overlay = imageOverlay.value;
-  const repeatDir = overlay.repeatx && overlay.repeaty ? 'repeat'
-    : overlay.repeatx ? 'repeat-x'
-    : overlay.repeaty ? 'repeat-y'
-    : 'no-repeat';
-  const repeat = `background-repeat: ${repeatDir};`;
-  const stretched = overlay.stretched
-    ? 'background-size: 100%;'
-    : `background-size: ${overlay.size}%;`;
-  const left = `left: ${overlay.left}%;`;
-  const topVal = `top: ${overlay.top}%;`;
-
-  return overlay.visible
-    ? `background-image: url('${overlay.url}'); ${stretched} ${repeat} ${left} ${topVal} opacity: ${overlay.opacity / 100}; z-index: -1; position: absolute;`
-    : 'position: absolute;';
-});
+const imageOverlayStyle = computed(() =>
+  buildImageOverlayStyle(imageOverlay.value),
+);
 
 const canvasTransparent = computed(() =>
   imageOverlay.value.visible

@@ -5,6 +5,7 @@
 
 import { defineStore } from 'pinia';
 import {
+  defaultImageOverlay,
   mergeLayers,
   mergeTwoLayers,
 } from '../ascii';
@@ -22,6 +23,7 @@ import {
 } from '../utils/layers';
 import { cloneLayers } from '../utils/clone';
 import { idbPersistAdapter } from '../utils/idbPersistAdapter';
+import { backfillImageOverlays } from '../utils/imageOverlayBackfill';
 import { cropToContent as cropToContentUtil } from '../utils/cropContent';
 import type { RootState } from '../types/store';
 import type {
@@ -101,6 +103,9 @@ function deserialize(value: string) {
   for (const key of LEGACY_STORE_KEYS) {
     delete parsed[key];
   }
+  // Backfill imageOverlay on tabs persisted before the field existed so
+  // getters and v-models always see a complete overlay object.
+  backfillImageOverlays(parsed.asciibirdMeta);
   return parsed;
 }
 
@@ -141,7 +146,7 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     selectedLayer: (state) =>
       state.asciibirdMeta[state.tab]?.selectedLayer ?? 0,
     imageOverlay: (state) =>
-      state.asciibirdMeta[state.tab]?.imageOverlay,
+      state.asciibirdMeta[state.tab]?.imageOverlay ?? defaultImageOverlay(),
   },
 
   actions: {
