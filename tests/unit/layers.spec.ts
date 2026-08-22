@@ -11,6 +11,7 @@ import {
 import { shallowMount } from '@vue/test-utils'
 import { createPinia } from 'pinia'
 import Layers from '@/components/parts/Layers.vue'
+import { defaultImageOverlay } from '@/ascii'
 import {
   createMockStore,
   createMockModalStore,
@@ -126,11 +127,11 @@ describe('Layers.vue', () => {
     expect(overlay.opacity).toBe(95)
   })
 
-  it('imageOverlay returns fallback when no meta', () => {
+  it('imageOverlay returns defaults when no meta', () => {
     store = createMockStore({ asciibirdMeta: [] })
     _mockStore = store
     const wrapper = createWrapper()
-    expect(wrapper.vm.imageOverlay).toEqual({ visible: false })
+    expect(wrapper.vm.imageOverlay).toEqual(defaultImageOverlay())
   })
 
   it('imageOverlayUrl returns empty string when no url', () => {

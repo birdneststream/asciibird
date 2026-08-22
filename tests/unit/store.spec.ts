@@ -5,8 +5,9 @@ import { createPinia, setActivePinia } from 'pinia';
 import LZString from 'lz-string';
 import {
   create2DArray,
-  emptyBlock,
   cyrb53,
+  defaultImageOverlay,
+  emptyBlock,
 } from '@/ascii';
 import { useAsciiBirdStore } from '@/store';
 import { useModalStore } from '@/store/modal';
@@ -1459,6 +1460,18 @@ describe('Pinia Store Getters', () => {
     const overlay = store.imageOverlay;
     expect(overlay.opacity).toBe(95);
     expect(overlay.visible).toBe(false);
+  });
+
+  it('imageOverlay returns defaults when meta lacks the field', () => {
+    const meta = createTestMeta();
+    delete (meta as Partial<AsciibirdMeta>).imageOverlay;
+    store.asciibirdMeta = [meta];
+    expect(store.imageOverlay).toEqual(defaultImageOverlay());
+  });
+
+  it('imageOverlay returns defaults when no tabs', () => {
+    store.closeTab(0);
+    expect(store.imageOverlay).toEqual(defaultImageOverlay());
   });
 
   it('tabsVisible returns tabs visibility', () => {

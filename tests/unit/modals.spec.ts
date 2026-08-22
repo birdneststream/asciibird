@@ -15,6 +15,7 @@ import EditAscii from '@/components/modals/EditAscii.vue'
 import Options from '@/components/modals/Options.vue'
 import ImageOverlay from '@/components/modals/ImageOverlay.vue'
 import {
+  defaultImageOverlay,
   maxBrushHistory,
   maxUndoHistory,
   tabLimit,
@@ -358,11 +359,20 @@ describe('ImageOverlay.vue', () => {
     expect(overlay.visible).toBe(false)
   })
 
-  it('computed imageOverlay returns empty object when no meta', () => {
+  it('computed imageOverlay returns defaults when no meta', () => {
     _mockStore = createMockStore({ asciibirdMeta: [] })
     store = _mockStore
     const wrapper = stw(ImageOverlay, mountOpts())
-    expect(wrapper.vm.imageOverlay).toEqual({})
+    expect(wrapper.vm.imageOverlay).toEqual(defaultImageOverlay())
+  })
+
+  it('v-model mutations on imageOverlay reach the store state directly', () => {
+    const wrapper = stw(ImageOverlay, mountOpts())
+    wrapper.vm.imageOverlay.visible = true
+    wrapper.vm.imageOverlay.opacity = 50
+    // No write-back watch: the computed must expose the store's own object
+    expect(store.asciibirdMeta[0].imageOverlay.visible).toBe(true)
+    expect(store.asciibirdMeta[0].imageOverlay.opacity).toBe(50)
   })
 
   it('computed showOverlayModal returns true when store has overlay=true', () => {

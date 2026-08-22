@@ -7,8 +7,9 @@ import { createPinia, setActivePinia } from 'pinia'
 import LZString from 'lz-string'
 import {
   create2DArray,
-  emptyBlock,
   cyrb53,
+  defaultImageOverlay,
+  emptyBlock,
 } from '@/ascii'
 
 // ─── Shared component stubs ──────────────────────────────────────
@@ -607,6 +608,7 @@ export function createMockStore(
     set _selectBlocks(val: string) { state._selectBlocks = val },
     get imageOverlay() {
       return state.asciibirdMeta[state.tab]?.imageOverlay
+        ?? defaultImageOverlay()
     },
     get selectBlocks() {
       return JSON.parse(

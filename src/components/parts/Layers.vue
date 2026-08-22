@@ -299,9 +299,7 @@ const canToggleLayer = computed(
   () => currentAsciiLayers.value.length > 1,
 );
 
-const imageOverlay = computed(
-  () => store.imageOverlay || { visible: false },
-);
+const imageOverlay = computed(() => store.imageOverlay);
 
 const imageOverlayUrl = computed(() => {
   const overlay = imageOverlay.value;

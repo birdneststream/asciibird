@@ -188,7 +188,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch } from 'vue';
+import { computed } from 'vue';
 import ABModal from '../ABModal.vue';
 import { useAsciiBirdStore } from '../../store';
 import { useModalStore } from '../../store/modal';
@@ -197,12 +197,9 @@ const store = useAsciiBirdStore();
 const modalStore = useModalStore();
 
 const showOverlayModal = computed(() => modalStore.modalState.overlay);
-const imageOverlay = computed(() => store.imageOverlay || {});
-
-// Deep watch: auto-save overlay changes back to store
-watch(imageOverlay, () => {
-  store.updateImageOverlay(imageOverlay.value);
-}, { deep: true });
+// Getter always returns a complete overlay (defaults when the tab has none),
+// so v-models mutate the store object directly and persist automatically.
+const imageOverlay = computed(() => store.imageOverlay);
 
 defineExpose({ showOverlayModal, imageOverlay });
 </script>
