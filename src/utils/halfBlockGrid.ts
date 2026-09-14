@@ -7,6 +7,15 @@
 // setColour normalises to ▀ representation (fg=top, bg=bottom) so that all
 // half-block data is consistent regardless of how it was originally created.
 // This matches the existing code pattern at Editor.vue:1609-1625.
+//
+// setColourComplete additionally guarantees the OTHER half holds a real
+// colour (existing colour, or a complement) so blocks are always complete
+// {▀, fg, bg} / collapsed-space representations — canvas and IRC export
+// always agree.
+//
+// clearColour erases a half to true transparency by deleting its property
+// ({▄, fg:D} bottom-only / {▀, fg:C} top-only / {} fully empty) — erased
+// halves export as minimal fg-only mIRC codes.
 
 import type { Block } from '../types';
 import { UPPER_HALF, LOWER_HALF } from './halfBlockChars';
@@ -115,6 +124,95 @@ export class HalfBlockGrid {
   }
 
   /**
+   * Paint a half and ensure the OTHER half holds a real colour.
+   *
+   * The other half keeps its existing colour unless it is empty (99 or
+   * undefined — checked via getColour, so explicit 99 counts as empty),
+   * in which case it takes `complement` (a real palette colour, 0-98).
+   * Produces complete {▀, fg, bg} blocks (or collapsed spaces when both
+   * halves match) so canvas rendering and mIRC export agree — no
+   * fg-only exports.
+   *
+   * A `colour` of 99 (EMPTY_COLOUR) is treated as an erase request and
+   * routed to clearColour.
+   */
+  setColourComplete(x: number, y: number, colour: number, complement: number): void {
+    if (!this.inBounds(x, y)) return;
+
+    // Erase request → transparent clear (99 is not a real colour)
+    if (colour === EMPTY_COLOUR) {
+      this.clearColour(x, y);
+      return;
+    }
+
+    // Complement must be a real colour — guarantee the completeness
+    // invariant even if a caller passes EMPTY_COLOUR by mistake
+    const realComplement = complement !== EMPTY_COLOUR ? complement : 0;
+
+    const blockY = Math.floor(y / 2);
+    const block = this.blocks[blockY]?.[x];
+    if (!block) return; // ragged array guard
+    const isTop = y % 2 === 0;
+
+    // Normalise ▄ → ▀ so fg=top, bg=bottom consistently
+    this.normaliseToUpperHalf(block);
+
+    // Other half keeps its colour unless empty (99 counts as empty)
+    const otherHalf = this.getColour(x, isTop ? y + 1 : y - 1);
+    const otherValue = otherHalf !== EMPTY_COLOUR ? otherHalf : realComplement;
+
+    if (isTop) {
+      block.fg = colour;
+      block.bg = otherValue;
+    } else {
+      block.bg = colour;
+      block.fg = otherValue;
+    }
+    block.char = UPPER_HALF;
+
+    // Check if both halves now have the same colour → collapse
+    this.tryCollapse(block);
+  }
+
+  /**
+   * Erase a half — true transparency.
+   *
+   * Rebuilds the block from the surviving half's semantic colour:
+   *   {▀, fg:C, bg:D} erase top    → {▄, fg:D}  (bottom-only)
+   *   {▀, fg:C, bg:D} erase bottom → {▀, fg:C}  (top-only)
+   *   both halves empty            → {}         (empty block)
+   *
+   * Reading the survivor through getColour uniformly handles collapsed
+   * spaces (colour stored in bg for BOTH halves), the ▄ representation,
+   * and legacy explicit-99 values (treated as empty). Erased halves
+   * export as fg-only codes (the IRC client's default background shows
+   * through) — the minimal correct encoding.
+   */
+  clearColour(x: number, y: number): void {
+    if (!this.inBounds(x, y)) return;
+
+    const blockY = Math.floor(y / 2);
+    const block = this.blocks[blockY]?.[x];
+    if (!block) return; // ragged array guard
+    const isTop = y % 2 === 0;
+
+    // Surviving half's colour; explicit 99 counts as empty
+    const survivor = isTop
+      ? this.getColour(x, y + 1)
+      : this.getColour(x, y - 1);
+    const colour = survivor !== EMPTY_COLOUR ? survivor : undefined;
+
+    this.resetToEmpty(block);
+
+    if (colour === undefined) return; // both halves empty
+
+    // The surviving colour lives in fg either way: fg renders the top
+    // for ▀ and the bottom for ▄.
+    block.fg = colour;
+    block.char = isTop ? LOWER_HALF : UPPER_HALF;
+  }
+
+  /**
    * Get 4-connected neighbors at half-block granularity for flood fill.
    *
    * Even y (top half of cell at row r):
@@ -178,14 +276,23 @@ export class HalfBlockGrid {
   /**
    * If both halves of a block have the same colour, collapse to a space.
    * This matches Editor.vue:1620-1622 behavior.
+   *
+   * When both halves are empty (99), reset to a fully empty block —
+   * colour 99 is not renderable (mircColours99 has indices 0-98) and
+   * not exportable (`\x030,99` is invalid mIRC).
    */
   private tryCollapse(block: Block): void {
     if (
-      block.char === UPPER_HALF &&
-      block.fg != null &&
-      block.bg != null &&
-      block.fg === block.bg
+      block.char === UPPER_HALF
+      && block.fg != null
+      && block.bg != null
+      && block.fg === block.bg
     ) {
+      // Both halves empty → fully empty block
+      if (block.fg === EMPTY_COLOUR) {
+        this.resetToEmpty(block);
+        return;
+      }
       block.char = ' ';
       // Don't set fg — collapsed space blocks only need bg.
       // Setting fg=0 (white) can cause white artifacts during
@@ -193,6 +300,13 @@ export class HalfBlockGrid {
       delete block.fg;
       // bg keeps the colour
     }
+  }
+
+  /** Remove all properties — the canonical empty block ({}). */
+  private resetToEmpty(block: Block): void {
+    delete block.fg;
+    delete block.bg;
+    delete block.char;
   }
 
   /**

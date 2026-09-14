@@ -2425,9 +2425,10 @@ describe('iterativeFillHalfBlock', () => {
 
     expect(changes).toHaveLength(4);
     for (const c of changes) {
-      // Both halves 99 → collapses to space with bg=99
-      expect(c.new.char).toBe(' ');
-      expect(c.new.bg).toBe(99);
+      // Both halves 99 → collapses to fully empty block ({}).
+      // Colour 99 is not renderable/exportable — {space, bg:99}
+      // would export invalid \x030,99 mIRC codes.
+      expect(c.new).toEqual({});
     }
   });
 

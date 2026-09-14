@@ -187,7 +187,7 @@ describe('Half-block integration', () => {
       expect(result.char).toBe('▀');
     });
 
-    it('erasing both halves results in collapsed block', () => {
+    it('erasing both halves results in empty block', () => {
       const blocks: Block[][] = [
         [{ fg: 5, bg: 7, char: '▀' }],
       ];
@@ -195,9 +195,10 @@ describe('Half-block integration', () => {
       eraseHalfBlock(blocks, 0, 0); // erase top
       eraseHalfBlock(blocks, 0, 1); // erase bottom
 
-      // Both halves 99 → tryCollapse (99 === 99) → space block with bg=99
-      expect(blocks[0][0].char).toBe(' ');
-      expect(blocks[0][0].bg).toBe(99);
+      // Both halves 99 → collapse to fully empty block ({}).
+      // Colour 99 is not renderable (mircColours99 has 0-98) and
+      // {space, bg:99} would export invalid \x030,99.
+      expect(blocks[0][0]).toEqual({});
     });
   });
 
