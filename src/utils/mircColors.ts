@@ -123,6 +123,19 @@ export const mircColours99: string[] = [
   '#ffffff',
 ];
 
+/**
+ * Check a colour index resolves to a real palette entry. Guards against
+ * legacy colour 99 (empty sentinel — mircColours99 only has 0-98) so
+ * invalid fillStyle assignments can't paint stale colours.
+ */
+export function hasColour(
+  colour: number | null | undefined,
+  colours: string[],
+): colour is number {
+  return colour !== undefined && colour !== null
+    && colour >= 0 && colour < colours.length;
+}
+
 // Character groups for the char picker — organized by IRC art relevance
 export const charGroups: { label: string; chars: string[] }[] = [
   {

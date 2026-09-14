@@ -1,5 +1,6 @@
 import type { Block } from '../types';
 import { getCanvasFont } from '../utils/canvasFont';
+import { hasColour } from '../utils/mircColors';
 import { UPPER_HALF, LOWER_HALF } from '../utils/halfBlockChars';
 
 export interface RenderBlockOptions {
@@ -32,11 +33,11 @@ function renderHalfBlock(
   const topColour = isUpper ? block.fg : block.bg;
   const bottomColour = isUpper ? block.bg : block.fg;
 
-  if (canBg && topColour !== undefined && topColour !== null) {
+  if (canBg && hasColour(topColour, colours)) {
     ctx.fillStyle = colours[topColour];
     ctx.fillRect(canvasX, canvasY, blockWidth, halfH);
   }
-  if (canBg && bottomColour !== undefined && bottomColour !== null) {
+  if (canBg && hasColour(bottomColour, colours)) {
     ctx.fillStyle = colours[bottomColour];
     ctx.fillRect(canvasX, canvasY + halfH, blockWidth, halfH);
   }
@@ -63,7 +64,7 @@ function renderCharGlyph(
   const charToDraw = canText ? block.char : fallbackChar;
   if (!charToDraw) return;
 
-  if (canFg && block.fg !== undefined && block.fg !== null) {
+  if (canFg && hasColour(block.fg, colours)) {
     ctx.fillStyle = colours[block.fg];
   } else {
     ctx.fillStyle = '#FFFFFF';
@@ -104,7 +105,7 @@ export function renderBlock(
   }
 
   // Standard block rendering
-  if (canBg && block.bg !== undefined && block.bg !== null) {
+  if (canBg && hasColour(block.bg, colours)) {
     ctx.fillStyle = colours[block.bg];
     ctx.fillRect(canvasX, canvasY, blockWidth, blockHeight);
   }

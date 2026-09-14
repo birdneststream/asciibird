@@ -3,6 +3,9 @@
 import { describe, it, expect } from 'vitest';
 import { HalfBlockGrid } from '@/utils/halfBlockGrid';
 import { computeHalfPreviewRects } from '@/composables/useToolApplication';
+import { drawShapeHalfBlock } from '@/utils/halfBlockShapes';
+import { parseMircToLayers } from '@/utils/mircImport';
+import { create2DArray } from '@/ascii';
 import {
   iterativeFillHalfBlock,
   exportMirc,
@@ -107,6 +110,125 @@ describe('Half-block integration', () => {
     });
   });
 
+  describe('IRC round-trips and byte budget', () => {
+    /** UTF-8 byte length of an exported line (IRC limit is 512 incl. overhead) */
+    function lineByteLength(output: string[], lineIdx: number): number {
+      const line = output
+        .join('')
+        .split('\n')[lineIdx] ?? '';
+      return new TextEncoder().encode(line).length;
+    }
+
+    it('brush walls + one-click fill survives export → import → identical halves', () => {
+      // Build the browser-verified scenario: complete-block walls + fill
+      const blocks = Array.from({ length: 6 }, () =>
+        Array.from({ length: 6 }, () => ({} satisfies Block)));
+      const grid = new HalfBlockGrid(blocks);
+      for (let x = 1; x <= 4; x++) {
+        grid.setColourComplete(x, 2, 5, 5);
+        grid.setColourComplete(x, 10, 5, 5);
+      }
+      for (let h = 2; h <= 10; h++) {
+        grid.setColourComplete(1, h, 5, 5);
+        grid.setColourComplete(4, h, 5, 5);
+      }
+      iterativeFillHalfBlock(blocks, 6, 2, 9); // one-click interior fill
+
+      const exported = exportMirc(blocks).output.join('');
+      const parsed = parseMircToLayers(exported, 'rt', create2DArray);
+      const reGrid = new HalfBlockGrid(parsed.layers[0].data);
+
+      // Every half colour identical after the round trip
+      for (let y = 0; y < 12; y++) {
+        for (let x = 0; x < 6; x++) {
+          expect(reGrid.getColour(x, y)).toBe(grid.getColour(x, y));
+        }
+      }
+    });
+
+    it('half-block shape art exports complete ▀ codes and round-trips', () => {
+      const blocks = Array.from({ length: 5 }, () =>
+        Array.from({ length: 10 }, () => ({} satisfies Block)));
+      drawShapeHalfBlock('line', {
+        blocks, startX: 1, startHalfY: 2, endX: 8, endHalfY: 2,
+        colour: 4, complement: 1,
+      });
+      const result = exportMirc(blocks);
+      const text = result.output.join('');
+      // Complete fg,bg code for the line row (no fg-only escapes)
+      expect(text).toContain('\x034,1▀');
+      expect(text).not.toContain('\x03\x03');
+
+      const parsed = parseMircToLayers(text, 'rt', create2DArray);
+      const reGrid = new HalfBlockGrid(parsed.layers[0].data);
+      const origGrid = new HalfBlockGrid(blocks);
+      for (let y = 0; y < 10; y++) {
+        for (let x = 0; x < 10; x++) {
+          expect(reGrid.getColour(x, y)).toBe(origGrid.getColour(x, y));
+        }
+      }
+    });
+
+    it('solid regions export as spaces with bg-only codes (byte-optimal)', () => {
+      // A filled rect where colour === complement collapses to spaces
+      const blocks = Array.from({ length: 3 }, () =>
+        Array.from({ length: 40 }, () => ({} satisfies Block)));
+      drawShapeHalfBlock('rectFilled', {
+        blocks, startX: 0, startHalfY: 0, endX: 39, endHalfY: 5,
+        colour: 7, complement: 7,
+      });
+      const result = exportMirc(blocks);
+      const text = result.output.join('');
+      const solidLine = text.split('\n')[0];
+
+      // No block characters in solid areas — spaces only
+      expect(solidLine).not.toContain('█');
+      expect(solidLine).not.toContain('▀');
+      expect(solidLine).not.toContain('▄');
+      // One bg-only code (4 chars) then bare spaces: 44 bytes total
+      expect(solidLine.length).toBeLessThanOrEqual(4 + 40);
+      expect(solidLine.startsWith('\x030,7')).toBe(true);
+      expect(solidLine.slice(4)).toMatch(/^ +$/);
+    });
+
+    it('erased (transparent) halves export fg-only codes', () => {
+      const blocks: Block[][] = [[{ fg: 5, bg: 7, char: '▀' }]];
+      new HalfBlockGrid(blocks).clearColour(0, 0); // erase top → {▄, fg:7}
+      const text = exportMirc(blocks).output.join('').trimEnd();
+      expect(text).toBe('\x03\x037▄');
+    });
+
+    it('legacy colour-99 blocks export valid codes (never \\x03xx,99)', () => {
+      const blocks: Block[][] = [
+        [
+          { fg: 99, bg: 7, char: '▀' },
+          { char: ' ', bg: 99 },
+        ],
+      ];
+      const text = exportMirc(blocks).output.join('');
+      // fg:99 → transparent → bg-only code; bg:99 → transparent → soft
+      // reset before the trailing space
+      expect(text).toBe('\x030,7▀\x03 \n');
+      expect(text).not.toContain('99');
+    });
+
+    it('exported lines stay within the IRC byte budget', () => {
+      // 40 columns of striped halves (alternating fg/bg) — maximal code
+      // churn per line: every block changes colour state
+      const blocks = [Array.from({ length: 40 }, () => ({} satisfies Block))];
+      const grid = new HalfBlockGrid(blocks);
+      for (let x = 0; x < 40; x++) {
+        grid.setColourComplete(x, (x % 2 === 0) ? 0 : 1, 4, 12);
+      }
+      const result = exportMirc(blocks);
+      // ~400 UTF-8 bytes (5 code + 3 ▀ per striped block) — must stay
+      // under the ~440 usable bytes per IRC line (512 minus overhead)
+      const bytes = lineByteLength(result.output, 0);
+      expect(bytes).toBeGreaterThan(300); // fixture is genuinely striped
+      expect(bytes).toBeLessThan(440);
+    });
+  });
+
   describe('brush preview geometry (computeHalfPreviewRects)', () => {
     it('top-half paint previews painted half above complement', () => {
       const r = computeHalfPreviewRects(24, 45, 8, 7.5, true);
@@ -203,7 +325,7 @@ describe('Half-block integration', () => {
     /** Build a grid with solid walls drawn via the complete-block brush model */
     function walledGrid(): Block[][] {
       const blocks = Array.from({ length: 6 }, () =>
-        Array.from({ length: 6 }, () => ({} as Block)));
+        Array.from({ length: 6 }, () => ({} satisfies Block)));
       const grid = new HalfBlockGrid(blocks);
       // Walls: complete blocks (what the brush now produces)
       for (let x = 1; x <= 4; x++) {

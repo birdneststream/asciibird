@@ -39,6 +39,30 @@ describe('useMainCanvasRenderer', () => {
       expect(ctx.fillStyle).toBe(colours[1]);
     });
 
+    it('skips bg fill when colour index is outside the palette (legacy 99)', () => {
+      const block: Block = { bg: 99, char: ' ' };
+      renderBlock(ctx, block, 10, 20, 8, 14, colours);
+      expect(ctx.fillRect).not.toHaveBeenCalled();
+    });
+
+    it('falls back to white fg when colour index is outside the palette', () => {
+      const block: Block = { fg: 99, char: 'A' };
+      renderBlock(ctx, block, 10, 20, 8, 14, colours);
+      expect(ctx.fillText).toHaveBeenCalledWith('A', 10, 20 + 14 - 3);
+      expect(ctx.fillStyle).toBe('#FFFFFF');
+    });
+
+    it('renders only the valid half of a half-block with a legacy 99 colour', () => {
+      // {fg: 99, bg: 7, ▀} → top (fg=99) skipped, bottom (bg=7) filled.
+      // colours only has 0-2, so use bg: 2 (valid) and fg: 99 (invalid).
+      const block: Block = { fg: 99, bg: 2, char: '▀' };
+      renderBlock(ctx, block, 10, 20, 8, 14, colours);
+      // Exactly one half-block fill (bottom half), never the top
+      expect(ctx.fillRect).toHaveBeenCalledTimes(1);
+      expect(ctx.fillRect).toHaveBeenCalledWith(10, 20 + 7, 8, 7);
+      expect(ctx.fillStyle).toBe(colours[2]);
+    });
+
     it('draws bg with color index 0 (white is valid, not falsy)', () => {
       const block: Block = { bg: 0, fg: undefined as any, char: undefined as any };
       renderBlock(ctx, block, 0, 0, 8, 14, colours);

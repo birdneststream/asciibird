@@ -37,12 +37,23 @@ function needsPadding(block: Block, nextBlock: Block | undefined): boolean {
 /**
  * Optimise half/full blocks with same fg and bg into plain spaces.
  * Prevents mIRC clients from rendering redundant color codes.
+ * Treats legacy colour 99 (empty sentinel) as transparent/undefined so
+ * old persisted data cannot export invalid \x03xx,99 codes.
  */
 function optimiseBlock(block: Block): Block {
-  if (block.fg === block.bg && OPTIMISE_CHARS.includes(block.char ?? '')) {
-    return { ...block, fg: 0, char: ' ' };
+  // 99 is not a valid mIRC colour index (palette is 0-98)
+  const fg = block.fg !== 99 ? block.fg : undefined;
+  const bg = block.bg !== 99 ? block.bg : undefined;
+  const normalised = { ...block, fg, bg };
+
+  if (
+    normalised.fg !== undefined
+    && normalised.fg === normalised.bg
+    && OPTIMISE_CHARS.includes(normalised.char ?? '')
+  ) {
+    return { ...normalised, fg: 0, char: ' ' };
   }
-  return { ...block };
+  return normalised;
 }
 
 /**
@@ -91,8 +102,12 @@ export const exportMircBlocks = (
     for (let x = 0; x < dimensions.width; x++) {
       const rawBlock = blocks[y][x];
       const nextBlock = blocks[y][x + 1];
-      const isPadded = needsPadding(rawBlock, nextBlock);
       const curBlock = optimiseBlock(rawBlock);
+      // Padding decisions use the normalised blocks so legacy 99
+      // colours (treated as transparent) can't swallow digit chars
+      const isPadded = needsPadding(curBlock, nextBlock !== undefined
+        ? optimiseBlock(nextBlock)
+        : undefined);
 
       if (curBlock.bg !== prevBlock.bg || curBlock.fg !== prevBlock.fg) {
         output.push(formatMircColor(curBlock, isPadded));
