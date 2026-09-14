@@ -20,8 +20,9 @@
 import type { Block } from '../types';
 import { UPPER_HALF, LOWER_HALF } from './halfBlockChars';
 
-/** Transparent/empty colour index (mIRC convention) */
-const EMPTY_COLOUR = 99;
+/** Transparent/empty colour index (mIRC convention). Not a renderable or
+ * exportable colour — mircColours99 only has indices 0-98. */
+export const EMPTY_COLOUR = 99;
 
 /** Coordinates in the half-block grid (double Y resolution) */
 export interface HalfBlockCoord {

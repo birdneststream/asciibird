@@ -2,6 +2,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { HalfBlockGrid } from '@/utils/halfBlockGrid';
+import { computeHalfPreviewRects } from '@/composables/useToolApplication';
 import {
   iterativeFillHalfBlock,
   exportMirc,
@@ -59,6 +60,68 @@ function eraseHalfBlock(
 // ─── Integration Tests ──────────────────────────────────────────────
 
 describe('Half-block integration', () => {
+  describe('brush complete-block model (setColourComplete contract)', () => {
+    it('painting top half over empty block produces complete ▀ with complement bg', () => {
+      const blocks = makeGrid(1, 1, 0, 99);
+      const grid = new HalfBlockGrid(blocks);
+      // Brush paint: colour=currentFg(5), complement=currentBg(1)
+      grid.setColourComplete(0, 0, 5, 1);
+      expect(blocks[0][0]).toEqual({ fg: 5, bg: 1, char: '▀' });
+    });
+
+    it('export emits complete fg,bg code for painted half (no fg-only)', () => {
+      const blocks = makeGrid(1, 2, 0, 1);
+      const grid = new HalfBlockGrid(blocks);
+      grid.setColourComplete(0, 0, 5, 1); // top=5, bottom=complement 1
+      const result = exportMirc(blocks);
+      const output = result.output.join('');
+      expect(output).toContain('\x035,1');
+      expect(output).toContain('▀');
+      expect(output).not.toContain('\x03\x035');
+    });
+
+    it('solid paint (colour === complement) collapses to space+bg (byte-optimal)', () => {
+      const blocks = makeGrid(1, 1, 0, 99);
+      const grid = new HalfBlockGrid(blocks);
+      grid.setColourComplete(0, 0, 8, 8);
+      expect(blocks[0][0]).toEqual({ bg: 8, char: ' ' });
+    });
+
+    it('erasing a half exports minimal fg-only code (true transparency)', () => {
+      const blocks: Block[][] = [[{ fg: 5, bg: 7, char: '▀' }]];
+      const grid = new HalfBlockGrid(blocks);
+      grid.clearColour(0, 0); // erase top → {▄, fg:7}
+      expect(blocks[0][0]).toEqual({ fg: 7, char: '▄' });
+      const result = exportMirc(blocks);
+      const output = result.output.join('');
+      expect(output).toContain('▄');
+      expect(output).toContain('\x03\x037');
+      expect(output).not.toContain('99');
+    });
+
+    it('brush paint over existing art preserves the other half', () => {
+      const blocks: Block[][] = [[{ fg: 9, bg: 10, char: '▀' }]];
+      const grid = new HalfBlockGrid(blocks);
+      grid.setColourComplete(0, 1, 5, 1); // repaint bottom; top stays 9
+      expect(blocks[0][0]).toEqual({ fg: 9, bg: 5, char: '▀' });
+    });
+  });
+
+  describe('brush preview geometry (computeHalfPreviewRects)', () => {
+    it('top-half paint previews painted half above complement', () => {
+      const r = computeHalfPreviewRects(24, 45, 8, 7.5, true);
+      expect(r.paintedRect).toEqual({ x: 24, y: 45, w: 8, h: 7.5 });
+      expect(r.complementRect).toEqual({ x: 24, y: 52.5, w: 8, h: 7.5 });
+    });
+
+    it('bottom-half paint previews painted half below complement (no double offset)', () => {
+      // brushY already includes the bh/2 bottom-half offset (52.5)
+      const r = computeHalfPreviewRects(48, 52.5, 8, 7.5, false);
+      expect(r.paintedRect).toEqual({ x: 48, y: 52.5, w: 8, h: 7.5 });
+      expect(r.complementRect).toEqual({ x: 48, y: 45, w: 8, h: 7.5 });
+    });
+  });
+
   describe('brush painting at half-block granularity', () => {
     it('paints top half without affecting bottom half', () => {
       const blocks = makeGrid(1, 1, 0, 1);

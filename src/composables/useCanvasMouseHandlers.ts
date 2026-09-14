@@ -5,7 +5,7 @@
 // dropper, selection, gradient, shapes, replace-color, paste, text.
 
 import { mircColours99 } from '../ascii';
-import { HalfBlockGrid } from '../utils/halfBlockGrid';
+import { HalfBlockGrid, EMPTY_COLOUR } from '../utils/halfBlockGrid';
 import { bresenhamLine } from '../utils/bresenham';
 import { drawShapePreview } from '../utils/shapePreview';
 import { useToolbarStore } from '../store/toolbar';
@@ -165,8 +165,14 @@ function doHandleDropper(d: InternalDeps, targetBlock: Block): void {
     const halfY = s.y.value * 2 + (s.isTopHalf.value ? 0 : 1);
     const grid = new HalfBlockGrid(s.currentAsciiLayerBlocks.value);
     const sampledColour = grid.getColour(s.x.value, halfY);
-    if (s.canFg.value) toolbarStore.changeColourFg(sampledColour);
-    else if (s.canBg.value) toolbarStore.changeColourBg(sampledColour);
+    // EMPTY_COLOUR (99) means transparent — not a real palette index.
+    // Keep the current selection instead of writing an unrenderable
+    // colour into palette state.
+    const colour = sampledColour !== EMPTY_COLOUR
+      ? sampledColour
+      : (s.canFg.value ? s.currentFg.value : s.currentBg.value);
+    if (s.canFg.value) toolbarStore.changeColourFg(colour);
+    else if (s.canBg.value) toolbarStore.changeColourBg(colour);
   } else {
     if (s.canFg.value) toolbarStore.changeColourFg(targetBlock.fg ?? s.currentFg.value);
     if (s.canBg.value) toolbarStore.changeColourBg(targetBlock.bg ?? s.currentBg.value);
