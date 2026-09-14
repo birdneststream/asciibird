@@ -112,6 +112,8 @@ export function useEditorWatchers(opts: EditorWatcherOptions): void {
   watch(s.currentTool, async () => {
     cb.warnInvisibleLayer();
 
+    // Shape tools work in half-block mode at double-Y resolution;
+    // text and gradient stay blocked
     if (s.halfBlockEditing.value) {
       if (s.currentTool.value.name === 'text') {
         opts.toastShow(
@@ -123,13 +125,6 @@ export function useEditorWatchers(opts: EditorWatcherOptions): void {
       if (s.currentTool.value.name === 'gradient') {
         opts.toastShow(
           'Gradient fill is not available in half-block editing mode',
-        );
-        s.toolbarStore.changeTool(0);
-        return;
-      }
-      if (s.currentTool.value.name === 'shapes') {
-        opts.toastShow(
-          'Shape tools are not available in half-block editing mode',
         );
         s.toolbarStore.changeTool(0);
         return;

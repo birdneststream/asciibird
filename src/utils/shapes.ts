@@ -189,8 +189,9 @@ export function drawRectFilled(opts: ShapeDrawOptions): FillChange[] {
 /**
  * Collect boundary points of an ellipse using the midpoint algorithm.
  * Returns a Set of "x,y" strings for the four symmetric quadrants.
+ * Shared with halfBlockShapes.ts for half-resolution ellipses.
  */
-function ellipsePoints(
+export function ellipsePoints(
   cx: number,
   cy: number,
   rx: number,

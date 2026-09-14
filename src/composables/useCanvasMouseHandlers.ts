@@ -8,6 +8,7 @@ import { mircColours99 } from '../ascii';
 import { HalfBlockGrid, EMPTY_COLOUR } from '../utils/halfBlockGrid';
 import { bresenhamLine } from '../utils/bresenham';
 import { drawShapePreview } from '../utils/shapePreview';
+import type { ShapeStart } from './useShapeTool';
 import { useToolbarStore } from '../store/toolbar';
 import { useToast } from './useToast';
 import type { EditorState } from './useEditorState';
@@ -46,9 +47,9 @@ export interface MouseHandlerDeps {
     };
     shapeTool: {
       isShapePicking: { value: boolean };
-      shapeStart: { value: { x: number; y: number } | null };
-      setShapeStart: (x: number, y: number) => void;
-      applyShape: (x: number, y: number, blocks: Block[][]) => void;
+      shapeStart: { value: ShapeStart | null };
+      setShapeStart: (x: number, y: number, halfY?: number) => void;
+      applyShape: (x: number, y: number, blocks: Block[][], halfY?: number) => void;
     };
     toolApp: {
       drawBrush: (isEraser?: boolean) => Promise<void>;
@@ -192,19 +193,22 @@ function doHandleReplaceColor(d: InternalDeps, targetBlock: Block): void {
 /**
  * Shared handler for two-click tools (gradient, shapes).
  * First click sets start point, second click applies the tool.
+ * `halfY` carries the half-block Y for half-block shape mode; gradient
+ * (blocked in half-block mode) ignores it.
  */
 async function handleTwoClickTool(
   d: InternalDeps,
   opts: {
     isPicking: { value: boolean };
-    setStart: (x: number, y: number) => void;
-    apply: (x: number, y: number, blocks: Block[][]) => void;
+    setStart: (x: number, y: number, halfY?: number) => void;
+    apply: (x: number, y: number, blocks: Block[][], halfY?: number) => void;
   },
 ): Promise<void> {
+  const halfY = d.s.y.value * 2 + (d.s.isTopHalf.value ? 0 : 1);
   if (!opts.isPicking.value) {
-    opts.setStart(d.s.x.value, d.s.y.value);
+    opts.setStart(d.s.x.value, d.s.y.value, halfY);
   } else {
-    opts.apply(d.s.x.value, d.s.y.value, d.s.currentAsciiLayerBlocks.value);
+    opts.apply(d.s.x.value, d.s.y.value, d.s.currentAsciiLayerBlocks.value, halfY);
     d.s.canTool.value = false;
     await d.cb.dispatchBlocks(true);
     await d.r.delayRedrawCanvas(true);
@@ -336,10 +340,6 @@ async function doMouseDown(d: InternalDeps): Promise<void> {
       await doHandleGradient(d);
       break;
     case 'shapes':
-      if (d.s.toolbarState.value.halfBlockEditing) {
-        showHalfBlockError(d.toastShow, 'Shape tools');
-        break;
-      }
       await doHandleShapes(d);
       break;
   }
@@ -419,15 +419,22 @@ async function doMouseMove(d: InternalDeps, e: MouseEvent): Promise<void> {
       await r.clearToolCanvas();
       await r.drawIndicator();
       if (tools.shapeTool.isShapePicking.value && tools.shapeTool.shapeStart.value && toolCtx) {
+        const halfMode = s.halfBlockEditing.value;
         drawShapePreview({
           ctx: toolCtx,
           shapeType: d.toolbarStore.toolbarState.shapeType,
           startX: tools.shapeTool.shapeStart.value.x,
-          startY: tools.shapeTool.shapeStart.value.y,
-          endX: s.x.value, endY: s.y.value,
+          startY: halfMode
+            ? tools.shapeTool.shapeStart.value.halfY
+            : tools.shapeTool.shapeStart.value.y,
+          endX: s.x.value,
+          endY: halfMode
+            ? s.y.value * 2 + (s.isTopHalf.value ? 0 : 1)
+            : s.y.value,
           blockWidth: s.blockWidthComp.value,
           blockHeight: s.blockHeightComp.value,
           strokeColor: mircColours99[d.toolbarStore.currentFg],
+          halfBlock: halfMode,
         });
       }
       break;

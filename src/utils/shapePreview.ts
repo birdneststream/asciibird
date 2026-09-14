@@ -2,6 +2,9 @@
 //
 // This is visual-only and does NOT modify any blocks.
 // Called from Editor.vue canvasMouseMove to show shape preview during two-click flow.
+//
+// In half-block mode (`halfBlock: true`) the Y coordinates are half-block
+// rows and map to pixels at blockHeight/2, previewing the double-Y shape.
 
 import type { ShapeType } from './shapes';
 import { bresenhamLine } from './bresenham';
@@ -15,11 +18,11 @@ export interface ShapePreviewOptions {
   shapeType: ShapeType;
   /** Start X in grid coordinates */
   startX: number;
-  /** Start Y in grid coordinates */
+  /** Start Y in grid coordinates (half-block rows when halfBlock) */
   startY: number;
   /** Current mouse X in grid coordinates */
   endX: number;
-  /** Current mouse Y in grid coordinates */
+  /** Current mouse Y in grid coordinates (half-block rows when halfBlock) */
   endY: number;
   /** Block width in pixels */
   blockWidth: number;
@@ -27,16 +30,25 @@ export interface ShapePreviewOptions {
   blockHeight: number;
   /** Stroke color (CSS color string) */
   strokeColor: string;
+  /** Half-block mode: Y coordinates are half-rows at blockHeight/2 */
+  halfBlock?: boolean;
+}
+
+// ─── Geometry Helper ─────────────────────────────────────────────
+
+/** Pixel height of one Y unit — half a block in half-block mode. */
+function unitHeight(halfBlock: boolean | undefined, blockHeight: number): number {
+  return halfBlock ? blockHeight / 2 : blockHeight;
 }
 
 // ─── Line Preview ────────────────────────────────────────────────
 
 function drawLinePreview(opts: ShapePreviewOptions): void {
-  const { ctx, startX, startY, endX, endY, blockWidth: bw, blockHeight: bh } = opts;
+  const { ctx, startX, startY, endX, endY, blockWidth: bw } = opts;
+  const uh = unitHeight(opts.halfBlock, opts.blockHeight);
 
   const points = bresenhamLine(startX, startY, endX, endY);
   const halfW = bw / 2;
-  const halfH = bh / 2;
 
   ctx.fillStyle = opts.strokeColor;
   ctx.globalAlpha = 0.4;
@@ -44,9 +56,9 @@ function drawLinePreview(opts: ShapePreviewOptions): void {
   for (const pt of points) {
     ctx.fillRect(
       pt.x * bw + 1,
-      pt.y * bh + 1,
+      pt.y * uh + 1,
       bw - 2,
-      bh - 2,
+      uh - 2,
     );
   }
 
@@ -54,19 +66,20 @@ function drawLinePreview(opts: ShapePreviewOptions): void {
 
   // Draw start and end dots
   ctx.fillStyle = opts.strokeColor;
-  ctx.fillRect(startX * bw + halfW - 2, startY * bh + halfH - 2, 4, 4);
-  ctx.fillRect(endX * bw + halfW - 2, endY * bh + halfH - 2, 4, 4);
+  ctx.fillRect(startX * bw + halfW - 2, startY * uh + uh / 2 - 2, 4, 4);
+  ctx.fillRect(endX * bw + halfW - 2, endY * uh + uh / 2 - 2, 4, 4);
 }
 
 // ─── Rectangle Preview ───────────────────────────────────────────
 
 function drawRectPreview(opts: ShapePreviewOptions, filled: boolean): void {
-  const { ctx, startX, startY, endX, endY, blockWidth: bw, blockHeight: bh } = opts;
+  const { ctx, startX, startY, endX, endY, blockWidth: bw } = opts;
+  const uh = unitHeight(opts.halfBlock, opts.blockHeight);
 
   const x1 = Math.min(startX, endX) * bw;
-  const y1 = Math.min(startY, endY) * bh;
+  const y1 = Math.min(startY, endY) * uh;
   const x2 = Math.max(startX, endX) * bw + bw;
-  const y2 = Math.max(startY, endY) * bh + bh;
+  const y2 = Math.max(startY, endY) * uh + uh;
   const w = x2 - x1;
   const h = y2 - y1;
 
@@ -87,12 +100,13 @@ function drawRectPreview(opts: ShapePreviewOptions, filled: boolean): void {
 // ─── Ellipse Preview ─────────────────────────────────────────────
 
 function drawEllipsePreview(opts: ShapePreviewOptions, filled: boolean): void {
-  const { ctx, startX, startY, endX, endY, blockWidth: bw, blockHeight: bh } = opts;
+  const { ctx, startX, startY, endX, endY, blockWidth: bw } = opts;
+  const uh = unitHeight(opts.halfBlock, opts.blockHeight);
 
   const x1 = Math.min(startX, endX) * bw;
-  const y1 = Math.min(startY, endY) * bh;
+  const y1 = Math.min(startY, endY) * uh;
   const x2 = Math.max(startX, endX) * bw + bw;
-  const y2 = Math.max(startY, endY) * bh + bh;
+  const y2 = Math.max(startY, endY) * uh + uh;
 
   const cx = (x1 + x2) / 2;
   const cy = (y1 + y2) / 2;
