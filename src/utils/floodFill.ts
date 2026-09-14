@@ -149,9 +149,17 @@ export const iterativeFill = (
  * half-blocks through the 4-connected neighbor graph provided by
  * HalfBlockGrid.getNeighbors().
  *
+ * Paint mode uses setColourComplete with the fill colour as its own
+ * complement: empty other-halves take the fill colour too, so empty
+ * regions fill as solid collapsed spaces (byte-optimal space+bg) and
+ * regions bounded by previously-filled blocks stay contained — one
+ * click completes a section. A fill colour of EMPTY_COLOUR (99) erases
+ * each half to true transparency via clearColour.
+ *
  * Returns FillChange[] at full-block granularity for undo compatibility.
  * Multiple changes for the same block cell are deduplicated — only the
- * first old/new pair for each cell is kept.
+ * first old/new pair for each cell is kept (final block state captured
+ * after traversal).
  */
 export const iterativeFillHalfBlock = (
   blocks: Block[][],
@@ -172,14 +180,29 @@ export const iterativeFillHalfBlock = (
   // Don't fill if target is same as fill colour
   if (targetColour === fillColour) return changes;
 
+  // Snapshot the initial colour plane BEFORE any mutation. The fill
+  // collapses blocks mid-traversal (e.g. an empty block becomes a solid
+  // space after its first half is filled), which changes the colour of
+  // not-yet-visited halves. Boundary decisions must be made against the
+  // original plane or the traversal gets cut off mid-region — the
+  // "fill takes multiple clicks" bug. Colours are 0-99 → Uint8Array.
+  const width = grid.width;
+  const height = grid.height;
+  const plane = new Uint8Array(width * height);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      plane[y * width + x] = grid.getColour(x, y);
+    }
+  }
+
   while (stack.length > 0) {
     const pos = stack.pop()!;
     const key = `${pos.x},${pos.y}`;
 
     if (visited.has(key)) continue;
-    if (!isInBounds(pos.x, pos.y, grid.width, grid.height)) continue;
+    if (!isInBounds(pos.x, pos.y, width, height)) continue;
 
-    const currentColour = grid.getColour(pos.x, pos.y);
+    const currentColour = plane[pos.y * width + pos.x];
     if (currentColour !== targetColour) continue;
     visited.add(key);
 
@@ -196,8 +219,10 @@ export const iterativeFillHalfBlock = (
       });
     }
 
-    // Apply fill — mutate in-place
-    grid.setColour(pos.x, pos.y, fillColour);
+    // Apply fill — mutate in-place. The fill colour doubles as the
+    // complement so empty halves complete into solid collapsed spaces;
+    // EMPTY_COLOUR routes to clearColour (erase to true transparency).
+    grid.setColourComplete(pos.x, pos.y, fillColour, fillColour);
 
     // Push neighbors using HalfBlockGrid connectivity
     for (const n of grid.getNeighbors(pos.x, pos.y)) {

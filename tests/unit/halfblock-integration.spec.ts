@@ -199,6 +199,135 @@ describe('Half-block integration', () => {
     });
   });
 
+  describe('fill completes a section in one click', () => {
+    /** Build a grid with solid walls drawn via the complete-block brush model */
+    function walledGrid(): Block[][] {
+      const blocks = Array.from({ length: 6 }, () =>
+        Array.from({ length: 6 }, () => ({} as Block)));
+      const grid = new HalfBlockGrid(blocks);
+      // Walls: complete blocks (what the brush now produces)
+      for (let x = 1; x <= 4; x++) {
+        grid.setColourComplete(x, 2, 5, 5);  // top wall row 1
+        grid.setColourComplete(x, 10, 5, 5); // bottom wall row 5
+      }
+      for (let halfY = 2; halfY <= 10; halfY++) {
+        grid.setColourComplete(1, halfY, 5, 5); // left wall x=1
+        grid.setColourComplete(4, halfY, 5, 5); // right wall x=4
+      }
+      return blocks;
+    }
+
+    it('fill inside brush-drawn walls stays contained (one click)', () => {
+      const blocks = walledGrid();
+      const changes = iterativeFillHalfBlock(blocks, 6, 2, 9); // (2,3) top half
+
+      // Every changed cell is inside the walls (x 2-3, y 2-4)
+      for (const c of changes) {
+        expect(c.x).toBeGreaterThanOrEqual(2);
+        expect(c.x).toBeLessThanOrEqual(3);
+        expect(c.y).toBeGreaterThanOrEqual(2);
+        expect(c.y).toBeLessThanOrEqual(4);
+      }
+      // Interior fully filled as solid collapsed spaces
+      for (let y = 2; y <= 4; y++) {
+        for (let x = 2; x <= 3; x++) {
+          expect(blocks[y][x]).toEqual({ bg: 9, char: ' ' });
+        }
+      }
+      // Walls untouched (solid collapsed spaces)
+      expect(blocks[1][2]).toEqual({ bg: 5, char: ' ' });
+    });
+
+    it('filling an empty region produces solid collapsed spaces (both halves)', () => {
+      const blocks: Block[][] = [
+        [{}, {}, {}],
+        [{}, {}, {}],
+      ];
+      const changes = iterativeFillHalfBlock(blocks, 0, 0, 7);
+      expect(changes.length).toBeGreaterThan(0);
+      for (const row of blocks) {
+        for (const block of row) {
+          expect(block).toEqual({ bg: 7, char: ' ' });
+        }
+      }
+    });
+
+    it('eraser fill removes two-colour half art cleanly (no fg=99 garbage)', () => {
+      // All tops 5, all bottoms 7 — the half-grid is 4-connected through
+      // halves, so horizontal runs of same-colour halves form regions
+      const blocks: Block[][] = [
+        [
+          { fg: 5, bg: 7, char: '▀' },
+          { fg: 5, bg: 7, char: '▀' },
+        ],
+      ];
+      // Erase the top (5) region then the bottom (7) region
+      iterativeFillHalfBlock(blocks, 0, 0, 99);
+      // After clearing tops: {▄, fg:7} — bottoms survive as bottom-only
+      expect(blocks[0][0]).toEqual({ fg: 7, char: '▄' });
+      expect(blocks[0][1]).toEqual({ fg: 7, char: '▄' });
+      iterativeFillHalfBlock(blocks, 1, 0, 99); // bottoms (7) region
+      for (const block of blocks[0]) {
+        expect(block).toEqual({});
+      }
+    });
+
+    it('imported fg-only ▀ art: transparent bottoms still fill (mIRC semantics)', () => {
+      // Imported art legitimately carries fg-only blocks — the bottom
+      // half is genuinely transparent in IRC and reads as empty
+      const blocks: Block[][] = [
+        [{ fg: 5, char: '▀' }, {}],
+      ];
+      const changes = iterativeFillHalfBlock(blocks, 1, 1, 9); // fill from empty bottom
+      // The fg-only block's transparent bottom joins the region
+      expect(changes.length).toBe(2);
+      expect(blocks[0][0]).toEqual({ fg: 5, bg: 9, char: '▀' }); // top preserved
+      expect(blocks[0][1]).toEqual({ bg: 9, char: ' ' });
+    });
+
+    it('recolouring a solid collapsed region reaches every block (both halves read bg)', () => {
+      // Solid spaces read bg for both halves — a live-colour traversal
+      // would also work here (sibling colour preserved), but this guards
+      // the recolour path end-to-end
+      const blocks: Block[][] = [
+        [{ bg: 5, char: ' ' }, { bg: 5, char: ' ' }],
+        [{ bg: 5, char: ' ' }, { bg: 5, char: ' ' }],
+      ];
+      const changes = iterativeFillHalfBlock(blocks, 0, 0, 9);
+      expect(changes.length).toBeGreaterThanOrEqual(4);
+      for (const row of blocks) {
+        for (const block of row) {
+          expect(block).toEqual({ bg: 9, char: ' ' });
+        }
+      }
+    });
+
+    it('filling a real-colour region consumes empty sibling halves into solid spaces', () => {
+      // fg-only blocks (imported art): the target region is the coloured
+      // TOP halves; the empty bottom halves complete into the fill
+      // colour, collapsing each block to a solid space
+      const blocks: Block[][] = [
+        [{ fg: 5, char: '▀' }, { fg: 5, char: '▀' }],
+      ];
+      const changes = iterativeFillHalfBlock(blocks, 0, 0, 9); // fill tops (5)
+      expect(changes).toHaveLength(2);
+      for (const block of blocks[0]) {
+        expect(block).toEqual({ bg: 9, char: ' ' });
+      }
+    });
+
+    it('fill preserves existing other-half colours (art not overwritten)', () => {
+      const blocks: Block[][] = [
+        [{ fg: 3, bg: 4, char: '▀' }, { fg: 3, bg: 4, char: '▀' }],
+      ];
+      // Fill the top-half (3) region with 9 — bottoms (4) preserved
+      const changes = iterativeFillHalfBlock(blocks, 0, 0, 9);
+      expect(changes).toHaveLength(2);
+      expect(blocks[0][0]).toEqual({ fg: 9, bg: 4, char: '▀' });
+      expect(blocks[0][1]).toEqual({ fg: 9, bg: 4, char: '▀' });
+    });
+  });
+
   describe('export produces correct mIRC with half-block chars', () => {
     it('exports ▀ blocks with correct fg/bg colour codes', () => {
       const blocks: Block[][] = [
