@@ -212,6 +212,10 @@ describe('Colours.vue', () => {
     expect(wrapper.find('#currentColourBg').exists()).toBe(false)
     expect(wrapper.find('#currentChar').exists()).toBe(false)
     expect(wrapper.find('#swapColour').exists()).toBe(false)
+    // Lone FG swatch centres in the panel
+    expect(
+      wrapper.find('#currentColourFg').element.parentElement?.className,
+    ).toContain('justify-center')
   })
 })
 
