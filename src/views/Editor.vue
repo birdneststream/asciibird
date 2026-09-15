@@ -634,12 +634,17 @@ useEventListener(
 
 // Refresh the shape pick preview when Shift/Alt modifiers toggle during
 // an active pick — the preview otherwise only redraws on cursor moves.
-// No preventDefault: Alt+digit tool switching must keep working.
+// preventDefault on the Alt key suppresses the browser menu-bar
+// activation (notably Firefox's menubar focus on Alt release; best-effort
+// elsewhere). Alt+digit tool switching is unaffected — those handlers
+// fire on the digit keydown, a separate event.
 useEventListener(
   window,
   ['keydown', 'keyup'],
   (e: KeyboardEvent) => {
-    if (e.key === 'Shift' || e.key === 'Alt') canvasModifierKeyChange(e);
+    if (e.key !== 'Shift' && e.key !== 'Alt') return;
+    if (e.key === 'Alt') e.preventDefault();
+    canvasModifierKeyChange(e);
   },
 );
 

@@ -696,4 +696,36 @@ describe('Editor.vue', () => {
       expect(wrapper.vm.canTool).toBe(true)
     })
   })
+
+  describe('alt key menu-bar suppression', () => {
+    const dispatch = (type: 'keydown' | 'keyup', key: string) => {
+      const ev = new KeyboardEvent(type, { key, cancelable: true })
+      window.dispatchEvent(ev)
+      return ev
+    }
+
+    it('prevents the browser default on Alt keydown and keyup', async () => {
+      mountEditor()
+      await nextTick()
+      expect(dispatch('keydown', 'Alt').defaultPrevented).toBe(true)
+      expect(dispatch('keyup', 'Alt').defaultPrevented).toBe(true)
+    })
+
+    it('does not prevent Shift or other keys (F5 refresh still works)', async () => {
+      mountEditor()
+      await nextTick()
+      expect(dispatch('keydown', 'Shift').defaultPrevented).toBe(false)
+      expect(dispatch('keyup', 'Shift').defaultPrevented).toBe(false)
+      expect(dispatch('keydown', 'F5').defaultPrevented).toBe(false)
+      expect(dispatch('keydown', 'a').defaultPrevented).toBe(false)
+    })
+
+    it('non-cancelable Alt events pass through without errors', async () => {
+      mountEditor()
+      await nextTick()
+      const ev = new KeyboardEvent('keydown', { key: 'Alt' })
+      window.dispatchEvent(ev)
+      expect(ev.defaultPrevented).toBe(false) // cancelable defaults to false
+    })
+  })
 })
