@@ -1398,6 +1398,15 @@ describe('Pinia Store Getters', () => {
     expect(dims).toEqual({ width: 3, height: 3 });
   });
 
+  it('currentAsciiLayersWidthHeight returns 0x0 for corrupt layers (no blank screen)', () => {
+    // Simulates a malformed persisted tab — decompresses to no layers.
+    store.asciibirdMeta[0].layers = LZString.compressToUTF16('[]');
+    expect(store.currentAsciiLayersWidthHeight).toEqual({
+      width: 0,
+      height: 0,
+    });
+  });
+
   it('selectedLayer returns selected layer index', () => {
     expect(store.selectedLayer).toBe(0);
   });

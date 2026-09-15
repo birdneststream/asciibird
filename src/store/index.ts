@@ -138,9 +138,11 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       const meta = state.asciibirdMeta[state.tab];
       if (!meta) return { width: 0, height: 0 };
       const layers = decompressLayers(meta.layers);
+      // Guard against corrupt/empty layer data (e.g. malformed persisted
+      // tab) — without this the render path crashes and blank-screens.
       return {
-        width: layers[0].width,
-        height: layers[0].height,
+        width: layers[0]?.width ?? 0,
+        height: layers[0]?.height ?? 0,
       };
     },
     selectedLayer: (state) =>
