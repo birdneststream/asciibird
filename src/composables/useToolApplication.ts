@@ -48,52 +48,13 @@ function computeHalfY(blockY: number, isTopHalf: boolean): number {
   return blockY * 2 + (isTopHalf ? 0 : 1);
 }
 
-/** A canvas rectangle in pixel space */
-export interface PreviewRect {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
-
-/** Result of half-block brush preview geometry */
-export interface HalfPreviewRects {
-  paintedRect: PreviewRect;
-  complementRect: PreviewRect;
-}
-
-/**
- * Compute preview rectangles for the half-block brush.
- *
- * `brushY` already carries the bottom-half offset (applyBrushCell adds
- * bh/2 for bottom halves), so the painted half draws directly at it and
- * the complement half sits at ±halfH.
- */
-export function computeHalfPreviewRects(
-  brushX: number,
-  brushY: number,
-  blockWidth: number,
-  halfH: number,
-  isTop: boolean,
-): HalfPreviewRects {
-  return {
-    paintedRect: { x: brushX, y: brushY, w: blockWidth, h: halfH },
-    complementRect: {
-      x: brushX,
-      y: isTop ? brushY + halfH : brushY - halfH,
-      w: blockWidth,
-      h: halfH,
-    },
-  };
-}
-
 /**
  * Apply a half-block colour change with mirror support.
  * Shared by doDrawHalfBlocks and doEraser half-block branches.
  *
  * colour 99 (EMPTY_COLOUR) erases the half to true transparency via
- * clearColour; real colours paint complete blocks via setColourComplete
- * (the other half keeps its colour unless empty, else takes complement).
+ * clearColour; real colours paint single-colour via setColourPreserve
+ * (the other half keeps its colour, empty stays empty — no complement).
  */
 function applyHalfBlockWithMirror(
   s: StateDeps,
@@ -102,18 +63,15 @@ function applyHalfBlockWithMirror(
   blockY: number,
   halfY: number,
   colour: number,
-  complement: number,
 ): void {
   const grid = new HalfBlockGrid(s.currentAsciiLayerBlocks.value);
   const row = s.currentAsciiLayerBlocks.value[blockY];
   if (!row || row[blockX] === undefined) return;
 
+  // setColourPreserve routes EMPTY_COLOUR (99) to clearColour and real
+  // colours to the single-colour paint (sibling preserved, never filled)
   const applyAt = (x: number, y: number): void => {
-    if (colour === EMPTY_COLOUR) {
-      grid.clearColour(x, y);
-    } else {
-      grid.setColourComplete(x, y, colour, complement);
-    }
+    grid.setColourPreserve(x, y, colour);
   };
 
   const ob = { ...row[blockX] };
@@ -317,29 +275,17 @@ async function doDrawHalfBlocks(
   const halfH = bh / 2;
   const halfY = computeHalfY(blockY, isTop);
 
-  // Preview the complement half (reduced alpha) — matches what the
-  // paint will do: the other half keeps its colour, or takes currentBg
-  // when empty, so the artist sees the complete block result.
-  const { paintedRect, complementRect } = computeHalfPreviewRects(
-    brushX, brushY, bw, halfH, isTop,
-  );
-  const grid = new HalfBlockGrid(s.currentAsciiLayerBlocks.value);
-  const otherHalf = grid.getColour(blockX, isTop ? halfY + 1 : halfY - 1);
-  const otherColour = otherHalf !== EMPTY_COLOUR
-    ? otherHalf
-    : (s.currentBg.value !== EMPTY_COLOUR ? s.currentBg.value : 0);
-  toolCtx.fillStyle = mircColours99[otherColour];
-  toolCtx.globalAlpha = 0.35;
-  toolCtx.fillRect(complementRect.x, complementRect.y, complementRect.w, complementRect.h);
-  toolCtx.globalAlpha = 1;
-
+  // Preview the painted half only — single-colour model: the sibling
+  // half is never touched, so nothing previews there. `brushY` already
+  // carries the bottom-half offset (applyBrushCell adds bh/2 for
+  // bottom halves), so the painted half draws directly at it.
   toolCtx.fillStyle = mircColours99[s.currentFg.value];
-  toolCtx.fillRect(paintedRect.x, paintedRect.y, paintedRect.w, paintedRect.h);
+  toolCtx.fillRect(brushX, brushY, bw, halfH);
 
   if (s.canTool.value) {
     applyHalfBlockWithMirror(
       s, diffBlocks, blockX, blockY, halfY,
-      s.currentFg.value, s.currentBg.value,
+      s.currentFg.value,
     );
   }
 }
@@ -430,11 +376,11 @@ function doEraser(
 
   if (s.toolbarState.value.halfBlockEditing) {
     const halfY = computeHalfY(s.y.value, s.isTopHalf.value);
-    // EMPTY_COLOUR → clearColour: erase the half to true transparency.
-    // The complement is ignored by the erase path.
+    // EMPTY_COLOUR → clearColour inside setColourPreserve: erase the
+    // half to true transparency
     applyHalfBlockWithMirror(
       s, diffBlocks, s.x.value, s.y.value, halfY,
-      EMPTY_COLOUR, 0,
+      EMPTY_COLOUR,
     );
     return;
   }

@@ -2,7 +2,6 @@
 
 import { describe, it, expect } from 'vitest';
 import { HalfBlockGrid } from '@/utils/halfBlockGrid';
-import { computeHalfPreviewRects } from '@/composables/useToolApplication';
 import { drawShapeHalfBlock } from '@/utils/halfBlockShapes';
 import { parseMircToLayers } from '@/utils/mircImport';
 import { create2DArray } from '@/ascii';
@@ -37,7 +36,7 @@ function makeGrid(
   );
 }
 
-/** Paint a half-block and return the resulting block */
+/** Paint a half-block using the brush paint primitive (setColourPreserve) */
 function paintHalfBlock(
   blocks: Block[][],
   x: number,
@@ -45,29 +44,29 @@ function paintHalfBlock(
   colour: number,
 ): Block {
   const grid = new HalfBlockGrid(blocks);
-  grid.setColour(x, halfY, colour);
+  grid.setColourPreserve(x, halfY, colour);
   return blocks[Math.floor(halfY / 2)][x];
 }
 
-/** Erase a half-block (set to colour 99) */
+/** Erase a half-block using the eraser primitive (EMPTY_COLOUR → clearColour) */
 function eraseHalfBlock(
   blocks: Block[][],
   x: number,
   halfY: number,
 ): Block {
   const grid = new HalfBlockGrid(blocks);
-  grid.setColour(x, halfY, 99);
+  grid.setColourPreserve(x, halfY, 99);
   return blocks[Math.floor(halfY / 2)][x];
 }
 
 // ─── Integration Tests ──────────────────────────────────────────────
 
 describe('Half-block integration', () => {
-  describe('brush complete-block model (setColourComplete contract)', () => {
+  describe('setColourComplete paint model (fill tool contract)', () => {
     it('painting top half over empty block produces complete ▀ with complement bg', () => {
       const blocks = makeGrid(1, 1, 0, 99);
       const grid = new HalfBlockGrid(blocks);
-      // Brush paint: colour=currentFg(5), complement=currentBg(1)
+      // Fill-model paint: colour=5, complement=1
       grid.setColourComplete(0, 0, 5, 1);
       expect(blocks[0][0]).toEqual({ fg: 5, bg: 1, char: '▀' });
     });
@@ -254,22 +253,29 @@ describe('Half-block integration', () => {
     });
   });
 
-  describe('brush preview geometry (computeHalfPreviewRects)', () => {
-    it('top-half paint previews painted half above complement', () => {
-      const r = computeHalfPreviewRects(24, 45, 8, 7.5, true);
-      expect(r.paintedRect).toEqual({ x: 24, y: 45, w: 8, h: 7.5 });
-      expect(r.complementRect).toEqual({ x: 24, y: 52.5, w: 8, h: 7.5 });
-    });
-
-    it('bottom-half paint previews painted half below complement (no double offset)', () => {
-      // brushY already includes the bh/2 bottom-half offset (52.5)
-      const r = computeHalfPreviewRects(48, 52.5, 8, 7.5, false);
-      expect(r.paintedRect).toEqual({ x: 48, y: 52.5, w: 8, h: 7.5 });
-      expect(r.complementRect).toEqual({ x: 48, y: 45, w: 8, h: 7.5 });
-    });
-  });
-
   describe('brush painting at half-block granularity', () => {
+    it('paints top half over an empty block without filling the sibling', () => {
+      // Single-colour brush model: only the touched half changes —
+      // the empty bottom sibling stays empty (no bg complement)
+      const blocks: Block[][] = [[{}]];
+      const result = paintHalfBlock(blocks, 0, 0, 5);
+
+      expect(result).toEqual({ fg: 5, char: '▀' });
+      expect('bg' in result).toBe(false);
+      expect(new HalfBlockGrid(blocks).getColour(0, 1)).toBe(99);
+    });
+
+    it('paints bottom half over an empty block without filling the sibling', () => {
+      const blocks: Block[][] = [[{}]];
+      const result = paintHalfBlock(blocks, 0, 1, 5);
+
+      // Bottom-only: ▄ representation with fg holding the colour —
+      // exports fg-only so the empty top stays transparent
+      expect(result).toEqual({ fg: 5, char: '▄' });
+      expect('bg' in result).toBe(false);
+      expect(new HalfBlockGrid(blocks).getColour(0, 0)).toBe(99);
+    });
+
     it('paints top half without affecting bottom half', () => {
       const blocks = makeGrid(1, 1, 0, 1);
       const result = paintHalfBlock(blocks, 0, 0, 5);
@@ -280,11 +286,13 @@ describe('Half-block integration', () => {
     });
 
     it('paints bottom half without affecting top half', () => {
-      const blocks = makeGrid(1, 1, 3, 1);
+      // Solid colour 3 via bg (stale fg on space blocks is ignored by
+      // getColour per the collapse convention — both halves read as bg)
+      const blocks = makeGrid(1, 1, 0, 3);
       const result = paintHalfBlock(blocks, 0, 1, 7);
 
       expect(result.bg).toBe(7);
-      expect(result.fg).toBe(3);
+      expect(result.fg).toBe(3); // top sibling colour preserved
       expect(result.char).toBe('▀');
     });
 
@@ -347,12 +355,12 @@ describe('Half-block integration', () => {
   });
 
   describe('fill completes a section in one click', () => {
-    /** Build a grid with solid walls drawn via the complete-block brush model */
+    /** Build a grid with solid walls (both halves painted via fill-model paint) */
     function walledGrid(): Block[][] {
       const blocks = Array.from({ length: 6 }, () =>
         Array.from({ length: 6 }, () => ({} satisfies Block)));
       const grid = new HalfBlockGrid(blocks);
-      // Walls: complete blocks (what the brush now produces)
+      // Walls: solid blocks (both halves painted, collapsed spaces)
       for (let x = 1; x <= 4; x++) {
         grid.setColourComplete(x, 2, 5, 5);  // top wall row 1
         grid.setColourComplete(x, 10, 5, 5); // bottom wall row 5
@@ -509,10 +517,11 @@ describe('Half-block integration', () => {
         [{ fg: 5, bg: 7, char: '▀' }],
       ];
 
+      // clearColour rebuilds as bottom-only ▄ with fg holding the colour
       const result = eraseHalfBlock(blocks, 0, 0);
-      expect(result.fg).toBe(99);
-      expect(result.bg).toBe(7);
-      expect(result.char).toBe('▀');
+      expect(result.fg).toBe(7);
+      expect(result.bg).toBeUndefined();
+      expect(result.char).toBe('▄');
     });
 
     it('erases bottom half only, preserving top half', () => {
@@ -522,7 +531,7 @@ describe('Half-block integration', () => {
 
       const result = eraseHalfBlock(blocks, 0, 1);
       expect(result.fg).toBe(5);
-      expect(result.bg).toBe(99);
+      expect(result.bg).toBeUndefined();
       expect(result.char).toBe('▀');
     });
 
