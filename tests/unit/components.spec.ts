@@ -547,18 +547,34 @@ describe('Help.vue', () => {
     expect(wrapper.vm.showHelpModal).toBe(false)
   })
 
-  it('switches between the Tools and Shortcuts tabs', async () => {
+  it('switches between the Tools, Work Area and Shortcuts tabs', async () => {
     const wrapper = tw(Help, mountOpts())
     // Tools tab active by default
     expect(wrapper.find('[data-testid="help-tools"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="help-area"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="help-shortcuts"]').exists()).toBe(false)
 
-    // Click the Shortcuts tab — panels swap
+    // Tools tab shows activation chips and the shape type row
+    const chips = wrapper.findAll('[data-testid="help-tools"] .ab-kbd')
+    expect(chips.map(c => c.text())).toContain('B')
+    const shapeRow = wrapper.findAll('[data-testid="help-tools"] .material-icons')
+    expect(shapeRow.some(i => i.text() === 'show_chart')).toBe(true)
+
+    // Click Work Area — panels sections render
+    const areaBtn = wrapper.findAll('button')
+      .find(b => b.text().includes('Work Area'))
+    expect(areaBtn).toBeDefined()
+    await areaBtn!.trigger('click')
+    expect(wrapper.find('[data-testid="help-area"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="help-tools"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="help-area"]').text()).toContain('Colours panel')
+
+    // Click Shortcuts — shortcut rows render with kbd chips
     const shortcutsBtn = wrapper.findAll('button')
       .find(b => b.text().includes('Shortcuts'))
     expect(shortcutsBtn).toBeDefined()
     await shortcutsBtn!.trigger('click')
-    expect(wrapper.find('[data-testid="help-tools"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="help-area"]').exists()).toBe(false)
     expect(wrapper.find('[data-testid="help-shortcuts"]').exists()).toBe(true)
     // Shortcut rows render with kbd chips
     expect(wrapper.findAll('.ab-kbd').length).toBeGreaterThan(10)

@@ -1,24 +1,40 @@
 /**
- * Help modal content — structured tools + keyboard shortcuts reference.
+ * Help modal content — structured tools, work-area and keyboard
+ * shortcut reference.
  *
  * Single source of truth for the in-app Help modal (Help.vue). Tools
  * (names, labels, icons) derive directly from the toolbarIcons registry
- * (src/utils/uiConstants.ts + toolLabel in src/utils/toolbar.ts) so the
- * help can never drift from the toolbar, and shortcut labels derive
- * from the SHORTCUTS registry (src/utils/shortcuts.ts) wherever an
- * entry exists. Shortcuts registered inline in useGlobalShortcuts.ts /
- * useEditorHotkeys.ts / KeyboardShortcuts.vue (tool keys, editor-mode
- * keys, Alt+1…8 tool switching, shape modifiers) are asserted against
- * a known-key list in helpContent.spec.ts so new inline registrations
- * cannot silently disappear from the help.
+ * (src/utils/uiConstants.ts + toolLabel in src/utils/toolbar.ts), shape
+ * sub-entries from the shapes registry (SHAPE_TYPES/SHAPE_LABELS/
+ * SHAPE_ICONS), tool activation chips from TOOL_SHORTCUT_KEYS (shared
+ * with useGlobalShortcuts.ts) and shortcut labels from the SHORTCUTS
+ * registry (src/utils/shortcuts.ts) wherever an entry exists — so the
+ * help can never drift from the app. Shortcuts registered inline in
+ * useGlobalShortcuts.ts / useEditorHotkeys.ts / KeyboardShortcuts.vue
+ * (tool keys, editor-mode keys, Alt+1…8 tool switching, shape
+ * modifiers) are asserted against a known-key list in
+ * helpContent.spec.ts so new inline registrations cannot silently
+ * disappear from the help.
  */
 
 import { toolbarIcons } from './uiConstants';
 import { toolLabel } from './toolbar';
 import type { ToolbarIcon } from '../types';
 import { SHORTCUTS } from './shortcuts';
+import { SHAPE_TYPES, SHAPE_LABELS, SHAPE_ICONS } from './shapes';
+import { TOOL_SHORTCUT_KEYS } from './toolShortcutKeys';
 
 // ─── Types ───────────────────────────────────────────────────────
+
+/** A shape type sub-entry (shapes tool only) */
+export interface HelpShapeType {
+  /** Shape type id — mirrors the SHAPE_TYPES registry */
+  name: string;
+  /** Human-readable label — derived from SHAPE_LABELS */
+  label: string;
+  /** Material icon name — matches the toolbar shape row */
+  icon: string;
+}
 
 /** A tool entry in the Tools tab */
 export interface HelpTool {
@@ -30,6 +46,10 @@ export interface HelpTool {
   icon: string;
   /** What the tool does, including mode notes */
   description: string;
+  /** Activation shortcut chip, derived from TOOL_SHORTCUT_KEYS */
+  shortcut?: string;
+  /** Shape type sub-entries — shapes tool only */
+  shapeTypes?: HelpShapeType[];
 }
 
 /** A single shortcut row */
@@ -43,6 +63,22 @@ export interface HelpShortcut {
 /** A titled group of shortcuts */
 export interface HelpShortcutGroup {
   title: string;
+  shortcuts: HelpShortcut[];
+}
+
+/** A panel/work-area section in the Work Area tab */
+export interface HelpPanelSection {
+  /** Stable section id */
+  id: string;
+  /** Section title */
+  title: string;
+  /** Material icon name */
+  icon: string;
+  /** One-line purpose of the area */
+  purpose: string;
+  /** What the area contains / does */
+  items: string[];
+  /** Keyboard shortcuts attributed to this area */
   shortcuts: HelpShortcut[];
 }
 
@@ -102,6 +138,13 @@ const TOOL_DESCRIPTIONS: Record<string, string> = {
     + 'shapes paint the FG colour at half resolution.',
 };
 
+/** Shape type sub-entries derived from the shapes registry — zero drift */
+const HELP_SHAPE_TYPES: HelpShapeType[] = SHAPE_TYPES.map(name => ({
+  name,
+  label: SHAPE_LABELS[name],
+  icon: SHAPE_ICONS[name],
+}));
+
 /** Tool entries derived from the toolbar registry — zero drift */
 export const HELP_TOOLS: HelpTool[] = toolbarIcons.map(
   (icon: ToolbarIcon): HelpTool => ({
@@ -109,6 +152,8 @@ export const HELP_TOOLS: HelpTool[] = toolbarIcons.map(
     label: toolLabel(icon),
     icon: icon.icon,
     description: TOOL_DESCRIPTIONS[icon.name] ?? '',
+    shortcut: TOOL_SHORTCUT_KEYS[icon.name],
+    ...(icon.name === 'shapes' ? { shapeTypes: HELP_SHAPE_TYPES } : {}),
   }),
 );
 
@@ -234,6 +279,191 @@ export const HELP_SHORTCUT_GROUPS: HelpShortcutGroup[] = [
       { keys: SHORTCUTS.exportClipboard.label, action: 'Copy mIRC art to clipboard' },
       { keys: SHORTCUTS.exportFile.label, action: 'Save mIRC art to text file' },
       { keys: SHORTCUTS.exportPng.label, action: 'Save canvas as PNG' },
+    ],
+  },
+];
+
+// ─── Work area (panels) ──────────────────────────────────────────
+
+export const HELP_PANELS: HelpPanelSection[] = [
+  {
+    id: 'menu-bar',
+    title: 'Menu bar',
+    icon: 'menu',
+    purpose: 'Top application menu with file, import/export and view actions.',
+    items: [
+      'File — New ASCII, Close ASCII.',
+      'Import — Paste from Clipboard, mIRC File, ANSI File.',
+      'Export — mIRC (clipboard/file), PNG, ANSI, HTML, plain text, HTTP POST.',
+      'Edit — Edit ASCII properties, Undo/Redo, Save Brush/Selection to Library, '
+      + 'Add Border…, Crop to Content.',
+      'View — show/hide every panel, grid, zoom in/out/reset, Reset Layout.',
+      'Tools — Options, Image Overlay.',
+      'Help — About (Shift+F1), this Help (F1).',
+    ],
+    shortcuts: [
+      { keys: SHORTCUTS.toggleMenuBar.label, action: 'Hide/show the menu bar' },
+      { keys: 'Ctrl+= / Ctrl+- / Ctrl+0', action: 'Zoom in / out / reset' },
+    ],
+  },
+  {
+    id: 'tab-bar',
+    title: 'Tab bar',
+    icon: 'tab',
+    purpose: 'One tab per open ASCII document — edit several at once.',
+    items: [
+      'Click a tab to switch documents; the canvas, layers and history switch with it.',
+      'Everything is saved to IndexedDB as you work and restored on reload.',
+      'Ctrl+Shift+0 … 9 jumps straight to a tab by index.',
+    ],
+    shortcuts: [
+      { keys: 'Ctrl+M', action: 'New ASCII' },
+      { keys: 'Ctrl+Shift+0 … 9', action: 'Switch to tab by index' },
+      { keys: 'Ctrl+Shift+O', action: 'Import mIRC file as a new tab' },
+      { keys: 'Ctrl+Shift+V', action: 'Paste clipboard as a new tab' },
+      { keys: SHORTCUTS.closeAscii.label, action: 'Close the current ASCII' },
+      { keys: SHORTCUTS.toggleTabs.label, action: 'Hide/show the tab bar' },
+    ],
+  },
+  {
+    id: 'toolbar',
+    title: 'Toolbar panel',
+    icon: 'construction',
+    purpose: 'Tool selection plus shape types and canvas utility toggles.',
+    items: [
+      '11 tools (see the Tools tab) — click or press the tool\u2019s shortcut key.',
+      'Shape row — 5 shape type icons; clicking one activates the shapes tool '
+      + 'with that shape.',
+      'Mir X / Mir Y — mirror brush strokes across the canvas axes.',
+      'Auto — update the brush automatically when FG/BG/char changes.',
+      'Grid — toggle block grid lines over the canvas.',
+      'Halfblocks — toggle half-block editing mode (FG-only, half resolution).',
+      'Drag the panel by its title bar; it remembers its position.',
+    ],
+    shortcuts: [
+      { keys: 'Alt+1 … 8', action: 'Switch to the toolbar tool at that position' },
+      { keys: 'Shift+S', action: 'Cycle the shape type' },
+      { keys: SHORTCUTS.mirrorX.label + ' / ' + SHORTCUTS.mirrorY.label, action: 'Toggle Mirror X / Y' },
+      { keys: 'Alt+G', action: 'Toggle grid mode' },
+      { keys: SHORTCUTS.toggleToolbar.label, action: 'Hide/show the toolbar' },
+    ],
+  },
+  {
+    id: 'colours',
+    title: 'Colours panel',
+    icon: 'palette',
+    purpose: 'Pick the FG/BG colours, character and what tools target.',
+    items: [
+      '99-colour mIRC palette (classic + extended) — left click sets FG.',
+      'FG and BG swatches open the colour pickers; the swap button exchanges them.',
+      'Char opens the character picker for the paint character.',
+      'FG / BG / Text checkboxes control what the brush, eraser and fill tools change.',
+      'In half-block mode the panel simplifies to FG only.',
+    ],
+    shortcuts: [
+      { keys: SHORTCUTS.toggleFgPicker.label, action: 'Open/close the FG picker (then 0–9 picks)' },
+      { keys: SHORTCUTS.toggleBgPicker.label, action: 'Open/close the BG picker (then 0–9 picks)' },
+      { keys: SHORTCUTS.toggleCharPicker.label, action: 'Open/close the char picker' },
+      { keys: SHORTCUTS.swapColours.label, action: 'Swap FG and BG' },
+    ],
+  },
+  {
+    id: 'brush-preview',
+    title: 'Brush preview panel',
+    icon: 'brush',
+    purpose: 'Live preview of the current brush and its transform controls.',
+    items: [
+      'Shows exactly what the brush tool will paint, including mirror effects.',
+      'Flip/rotate the brush and change its size.',
+      'In half-block mode the targeting checkbox row is hidden (FG only).',
+    ],
+    shortcuts: [
+      { keys: 'E / Q', action: 'Flip the brush horizontally / vertically' },
+      { keys: SHORTCUTS.brushSizeUp.label + ' / ' + SHORTCUTS.brushSizeDown.label, action: 'Increase / decrease brush size' },
+      { keys: SHORTCUTS.toggleBrushPreview.label, action: 'Hide/show the brush preview' },
+    ],
+  },
+  {
+    id: 'brush-library',
+    title: 'Brush library panel',
+    icon: 'auto_awesome_motion',
+    purpose: 'Nine brush slots plus the history of brushes you have used.',
+    items: [
+      'Click a slot to load its brush into the brush tool.',
+      'Ctrl+B (or Edit menu) saves the current selection/brush to the library.',
+      'Right click a brush preview to export it — PNG, txt or clipboard.',
+      'Recent brushes are collected automatically in the history row.',
+    ],
+    shortcuts: [
+      { keys: 'Ctrl+1 … 9', action: 'Load a brush library slot' },
+      { keys: SHORTCUTS.saveBrushLibrary.label, action: 'Save the selection to the library' },
+      { keys: SHORTCUTS.toggleBrushLibrary.label, action: 'Hide/show the brush library' },
+    ],
+  },
+  {
+    id: 'layers',
+    title: 'Layers panel',
+    icon: 'layers',
+    purpose: 'Stack multiple layers of blocks per ASCII document.',
+    items: [
+      'Click a layer to select it for editing; visible layers composite top-down.',
+      'Add, duplicate, merge down, and reorder layers with the panel buttons.',
+      'Right click a layer for actions and a quick preview.',
+    ],
+    shortcuts: [
+      { keys: SHORTCUTS.toggleLayerVisibility.label, action: 'Show/hide the selected layer' },
+      { keys: SHORTCUTS.addLayer.label, action: 'Add a layer' },
+      { keys: SHORTCUTS.moveLayerUp.label + ' / ' + SHORTCUTS.moveLayerDown.label, action: 'Move the layer up / down' },
+      { keys: SHORTCUTS.mergeLayerDown.label, action: 'Merge the layer down' },
+      { keys: SHORTCUTS.duplicateLayer.label, action: 'Duplicate the layer' },
+      { keys: SHORTCUTS.toggleLayers.label, action: 'Hide/show the layers panel' },
+    ],
+  },
+  {
+    id: 'canvas',
+    title: 'Canvas area',
+    icon: 'grid_on',
+    purpose: 'The ASCII document itself — draw, select and navigate the art.',
+    items: [
+      'Every cell is a block: foreground colour, background colour, character.',
+      'Zoom with Ctrl+= / Ctrl+- / Ctrl+0; the canvas pans by dragging when '
+      + 'no tool is active.',
+      'Right click the canvas for the editor context menu — copy, paste mode, '
+      + 'exports and more.',
+      'The status bar below shows the cursor X/Y, undo/redo steps and the '
+      + 'active tool.',
+    ],
+    shortcuts: [
+      { keys: 'Ctrl+Z / Ctrl+Y', action: 'Undo / redo' },
+      { keys: 'Ctrl+= / Ctrl+- / Ctrl+0', action: 'Zoom in / out / reset' },
+      { keys: 'Escape', action: 'Cancel the active tool / pick' },
+    ],
+  },
+  {
+    id: 'context-menus',
+    title: 'Context menus',
+    icon: 'content_paste',
+    purpose: 'Right click shortcuts for the object under the cursor.',
+    items: [
+      'Canvas — selection actions, paste mode, exports and ASCII operations.',
+      'Brush previews (preview panel and library) — export the brush as '
+      + 'PNG, txt or clipboard.',
+      'Layers — layer actions and preview.',
+      'Dashboard (outside the canvas) — quick common actions.',
+    ],
+    shortcuts: [],
+  },
+  {
+    id: 'debug-panel',
+    title: 'Debug panel',
+    icon: 'bug_report',
+    purpose: 'Development diagnostics — normally hidden.',
+    items: [
+      'Shows internal editor state (cursor, tool, canvas metrics) for '
+      + 'troubleshooting.',
+    ],
+    shortcuts: [
+      { keys: SHORTCUTS.toggleDebug.label, action: 'Hide/show the debug panel' },
     ],
   },
 ];

@@ -33,7 +33,8 @@
             leave-to="opacity-0 scale-95"
           >
             <DialogPanel
-              class="w-full max-w-lg transform overflow-visible rounded-lg shadow-panel border transition-all bg-surface-container-high border-outline-variant text-on-surface"
+              class="w-full transform overflow-visible rounded-lg shadow-panel border transition-all bg-surface-container-high border-outline-variant text-on-surface"
+              :class="wide ? 'max-w-3xl' : 'max-w-lg'"
             >
               <div
                 v-if="title"
@@ -68,6 +69,8 @@ import {
 defineProps<{
   open?: boolean;
   title?: string;
+  /** Use the wider 3xl panel instead of the default lg */
+  wide?: boolean;
 }>();
 
 const emit = defineEmits<{

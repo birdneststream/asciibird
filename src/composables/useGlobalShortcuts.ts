@@ -7,6 +7,7 @@ import { useModalStore } from '../store/modal';
 import { useDesktopStore } from '../store/desktop';
 import { usePanelStore } from '../store/panels';
 import { SHORTCUTS } from '../utils/shortcuts';
+import { TOOL_SHORTCUT_KEYS } from '../utils/toolShortcutKeys';
 
 /**
  * Global keyboard shortcuts composable.
@@ -18,7 +19,7 @@ import { SHORTCUTS } from '../utils/shortcuts';
  *
  * Scope hierarchy:
  * - 'all' — menu shortcuts (Ctrl+Z, Ctrl+Y, Ctrl+Shift+Z, Cmd+Z, etc.)
- * - 'editor' — tool shortcuts (B, E, F, S, T, G, Q) + KeyboardShortcuts.vue
+ * - 'editor' — tool shortcuts (B, E, F, S, T, G, Q, R, L) + KeyboardShortcuts.vue
  * - 'modals' — active when modal/dialog is open (no editor shortcuts)
  */
 // eslint-disable-next-line max-lines-per-function -- shortcut registration: hotkeys loops + lifecycle hooks
@@ -381,37 +382,43 @@ export function useGlobalShortcuts() {
   // ─── Tool shortcuts (scope 'editor') ───────────────────────────
   // Single-key tool switching — only when no char picker active.
   // E and Q are context-sensitive: when brush/eraser is active they
-  // trigger rotate/flip instead of tool switching.
-  const toolShortcuts: Record<string, () => void> = {
-    'b': () => toolbarStore.changeTool(4),  // brush
-    'e': () => {
-      // When brush or eraser tool is active, E rotates the brush
-      const toolName = toolbarIcons[toolbarStore.currentTool]?.name;
-      if (toolName === 'brush' || toolName === 'eraser') {
-        toolbarStore.transformBrush({ type: 'flip-h' });
-      } else {
-        toolbarStore.changeTool(6); // eraser
-      }
-    },
-    'q': () => {
-      // When brush or eraser tool is active, Q flips the brush
-      const toolName = toolbarIcons[toolbarStore.currentTool]?.name;
-      if (toolName === 'brush' || toolName === 'eraser') {
-        toolbarStore.transformBrush({ type: 'flip-v' });
-      }
-    },
-    'f': () => toolbarStore.changeTool(3),  // fill
-    's': () => toolbarStore.changeTool(1),  // select
-    't': () => toolbarStore.changeTool(2),  // text
-    'g': () => {
-      if (store.asciibirdMeta.length) {
-        toolbarStore.toggleGridView(!toolbarStore.toolbarState.gridView);
-      }
-    },
-    'r': () => toolbarStore.changeTool(8), // replace-color
-    'l': () => toolbarStore.changeTool(
-      toolbarIcons.findIndex(i => i.name === 'shapes'),
-    ),
+  // trigger flip instead of tool switching. Built from the shared
+  // TOOL_SHORTCUT_KEYS map (also used by the in-app help) so the keys
+  // cannot drift between the runtime registration and the help.
+  const toolShortcuts: Record<string, () => void> = {};
+
+  for (const [toolName, key] of Object.entries(TOOL_SHORTCUT_KEYS)) {
+    const toolIndex = toolbarIcons.findIndex(i => i.name === toolName);
+    if (toolIndex === -1) continue;
+    toolShortcuts[key.toLowerCase()] = () => toolbarStore.changeTool(toolIndex);
+  }
+
+  // E: flip the brush horizontally when brush/eraser is active,
+  // otherwise switch to the eraser tool.
+  toolShortcuts['e'] = () => {
+    const toolName = toolbarIcons[toolbarStore.currentTool]?.name;
+    if (toolName === 'brush' || toolName === 'eraser') {
+      toolbarStore.transformBrush({ type: 'flip-h' });
+    } else {
+      toolbarStore.changeTool(
+        toolbarIcons.findIndex(i => i.name === 'eraser'),
+      );
+    }
+  };
+
+  // Q: flip the brush vertically — only when brush/eraser is active.
+  toolShortcuts['q'] = () => {
+    const toolName = toolbarIcons[toolbarStore.currentTool]?.name;
+    if (toolName === 'brush' || toolName === 'eraser') {
+      toolbarStore.transformBrush({ type: 'flip-v' });
+    }
+  };
+
+  // G: toggle the grid view.
+  toolShortcuts['g'] = () => {
+    if (store.asciibirdMeta.length) {
+      toolbarStore.toggleGridView(!toolbarStore.toolbarState.gridView);
+    }
   };
 
   for (const [key, handler] of Object.entries(toolShortcuts)) {
