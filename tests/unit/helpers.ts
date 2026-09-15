@@ -149,6 +149,25 @@ export interface MockStoreConfig {
 }
 
 /**
+ * Create a mock desktop store (menu bar / tabs visibility).
+ */
+export function createMockDesktopStore(
+  overrides: Record<string, any> = {},
+) {
+  const state = {
+    menuBarVisible: true,
+    tabsVisible: true,
+    ...overrides,
+  }
+
+  return {
+    ...state,
+    changeMenuBarVisible(v: boolean) { state.menuBarVisible = v },
+    changeTabsVisible(v: boolean) { state.tabsVisible = v },
+  }
+}
+
+/**
  * Create a mock toolbar store for component tests.
  * Separated from the main store since toolbar state was extracted.
  */

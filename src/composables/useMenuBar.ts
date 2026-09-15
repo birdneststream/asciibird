@@ -56,6 +56,9 @@ export function useMenuBar(actions: MenuBarActions) {
   const tabsVisible = computed(() => desktopStore.tabsVisible);
   const toolbarState = computed(() => toolbarStore.toolbarState);
   const debugPanelState = computed(() => panelStore.debugPanel);
+  const brushLibraryState = computed(() => panelStore.brushLibrary);
+  const layersLibraryState = computed(() => panelStore.layersLibrary);
+  const brushPreviewState = computed(() => panelStore.brushPreview);
 
   // ── Menu bar definition ────────────────────────────────────────
   // eslint-disable-next-line max-lines-per-function -- menu items: static data array
@@ -203,10 +206,66 @@ export function useMenuBar(actions: MenuBarActions) {
         {
           text: menuBarVisible.value ? 'Hide Menu Bar' : 'Show Menu Bar',
           click: () => desktopStore.changeMenuBarVisible(!menuBarVisible.value),
+          disabled: !asciibirdMeta.value.length,
+          shortcut: SHORTCUTS.toggleMenuBar.label,
         },
         {
           text: tabsVisible.value ? 'Hide Tabs' : 'Show Tabs',
           click: () => desktopStore.changeTabsVisible(!tabsVisible.value),
+          disabled: !asciibirdMeta.value.length,
+          shortcut: SHORTCUTS.toggleTabs.label,
+        },
+        {
+          text: debugPanelState.value.visible
+            ? 'Hide Debug' : 'Show Debug',
+          click: () => panelStore.toggleDebugPanel(
+            !debugPanelState.value.visible,
+          ),
+          disabled: !asciibirdMeta.value.length,
+          shortcut: SHORTCUTS.toggleDebug.label,
+        },
+        {
+          text: brushLibraryState.value.visible
+            ? 'Hide Brush Library' : 'Show Brush Library',
+          click: () => panelStore.toggleBrushLibrary(
+            !brushLibraryState.value.visible,
+          ),
+          disabled: !asciibirdMeta.value.length,
+          shortcut: SHORTCUTS.toggleBrushLibrary.label,
+        },
+        {
+          text: layersLibraryState.value.visible
+            ? 'Hide Layers' : 'Show Layers',
+          click: () => panelStore.changeLayersLibraryState({
+            ...layersLibraryState.value,
+            visible: !layersLibraryState.value.visible,
+          }),
+          disabled: !asciibirdMeta.value.length,
+          shortcut: SHORTCUTS.toggleLayers.label,
+        },
+        {
+          text: toolbarState.value.visible
+            ? 'Hide Toolbar' : 'Show Toolbar',
+          click: () => {
+            const ts = toolbarState.value;
+            toolbarStore.changeToolBarState({
+              x: ts.x, y: ts.y, h: ts.h, w: ts.w,
+              minimized: ts.minimized,
+              visible: !ts.visible,
+            });
+          },
+          disabled: !asciibirdMeta.value.length,
+          shortcut: SHORTCUTS.toggleToolbar.label,
+        },
+        {
+          text: brushPreviewState.value.visible
+            ? 'Hide Brush Preview' : 'Show Brush Preview',
+          click: () => panelStore.changeBrushPreviewState({
+            ...brushPreviewState.value,
+            visible: !brushPreviewState.value.visible,
+          }),
+          disabled: !asciibirdMeta.value.length,
+          shortcut: SHORTCUTS.toggleBrushPreview.label,
         },
         {
           text: toolbarState.value.gridView
@@ -216,13 +275,6 @@ export function useMenuBar(actions: MenuBarActions) {
           ),
           disabled: !asciibirdMeta.value.length,
           shortcut: 'Alt+G',
-        },
-        {
-          text: debugPanelState.value.visible
-            ? 'Hide Debug' : 'Show Debug',
-          click: () => panelStore.toggleDebugPanel(
-            !debugPanelState.value.visible,
-          ),
         },
         {
           text: 'Zoom In',

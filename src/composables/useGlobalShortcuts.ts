@@ -4,6 +4,8 @@ import { toolbarIcons } from '../ascii';
 import { useAsciiBirdStore } from '../store';
 import { useToolbarStore } from '../store/toolbar';
 import { useModalStore } from '../store/modal';
+import { useDesktopStore } from '../store/desktop';
+import { usePanelStore } from '../store/panels';
 import { SHORTCUTS } from '../utils/shortcuts';
 
 /**
@@ -24,6 +26,8 @@ export function useGlobalShortcuts() {
   const store = useAsciiBirdStore();
   const toolbarStore = useToolbarStore();
   const modalStore = useModalStore();
+  const desktopStore = useDesktopStore();
+  const panelStore = usePanelStore();
 
   // Suppress hotkeys when typing in inputs/textareas (e.g. inline rename).
   // hotkeys.filter is assignable at runtime but typed as method-only.
@@ -112,6 +116,49 @@ export function useGlobalShortcuts() {
     [SHORTCUTS.closeAscii.keys]: () => {
       if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
       window.dispatchEvent(new CustomEvent('asciibird:close-tab'));
+    },
+
+    // Panel visibility toggles (legacy View menu). Toolbar/preview/
+    // layers actions take full panel state objects — spread and invert
+    // visible so position/size fields are preserved.
+    [SHORTCUTS.toggleTabs.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      desktopStore.changeTabsVisible(!desktopStore.tabsVisible);
+    },
+    [SHORTCUTS.toggleMenuBar.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      desktopStore.changeMenuBarVisible(!desktopStore.menuBarVisible);
+    },
+    [SHORTCUTS.toggleDebug.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      panelStore.toggleDebugPanel(!panelStore.debugPanel.visible);
+    },
+    [SHORTCUTS.toggleBrushLibrary.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      panelStore.toggleBrushLibrary(!panelStore.brushLibrary.visible);
+    },
+    [SHORTCUTS.toggleLayers.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      panelStore.changeLayersLibraryState({
+        ...panelStore.layersLibrary,
+        visible: !panelStore.layersLibrary.visible,
+      });
+    },
+    [SHORTCUTS.toggleToolbar.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      const ts = toolbarStore.toolbarState;
+      toolbarStore.changeToolBarState({
+        x: ts.x, y: ts.y, h: ts.h, w: ts.w,
+        minimized: ts.minimized,
+        visible: !ts.visible,
+      });
+    },
+    [SHORTCUTS.toggleBrushPreview.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      panelStore.changeBrushPreviewState({
+        ...panelStore.brushPreview,
+        visible: !panelStore.brushPreview.visible,
+      });
     },
 
     // Copy selected blocks to clipboard — handled by Dashboard

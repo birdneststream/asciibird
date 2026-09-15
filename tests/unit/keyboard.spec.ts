@@ -16,6 +16,8 @@ import {
   createMockStore,
   createMockModalStore,
   createMockToolbarStore,
+  createMockDesktopStore,
+  createMockPanelStore,
   createToolbarState,
   globalStubs,
   type TestWrapper,
@@ -24,6 +26,8 @@ import {
 let _mockStore: any = null
 let _mockModalStore: any = null
 let _mockToolbarStore: any = null
+let _mockDesktopStore: any = null
+let _mockPanelStore: any = null
 
 // Capture hotkeys handlers via the module mock
 // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
@@ -60,6 +64,12 @@ vi.mock('@/store/modal', () => ({
 vi.mock('@/store/toolbar', () => ({
   useToolbarStore: () => _mockToolbarStore,
 }))
+vi.mock('@/store/desktop', () => ({
+  useDesktopStore: () => _mockDesktopStore,
+}))
+vi.mock('@/store/panels', () => ({
+  usePanelStore: () => _mockPanelStore,
+}))
 
 
 let store: any
@@ -95,6 +105,8 @@ beforeEach(() => {
   _mockStore = store
   _mockModalStore = createMockModalStore()
   _mockToolbarStore = createMockToolbarStore()
+  _mockDesktopStore = createMockDesktopStore()
+  _mockPanelStore = createMockPanelStore()
 })
 
 afterEach(() => {
@@ -729,5 +741,94 @@ describe('useGlobalShortcuts', () => {
     await initShortcuts()
     getHandler('all:ctrl+shift+0')!(createEvent(), {})
     expect(spy).not.toHaveBeenCalled()
+  })
+
+  // ─── Panel visibility shortcuts (legacy restore) ───────────────
+
+  it('registers all panel visibility shortcuts in scope all', async () => {
+    await initShortcuts()
+    for (const combo of [
+      'ctrl+alt+t', 'ctrl+alt+m', 'ctrl+alt+d', 'ctrl+alt+b',
+      'ctrl+alt+l', 'ctrl+alt+n', 'ctrl+alt+e',
+    ]) {
+      expect(getHandler(`all:${combo}`)).toBeDefined()
+    }
+  })
+
+  it('ctrl+alt+t toggles tabs visibility', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(_mockDesktopStore, 'changeTabsVisible')
+    getHandler('all:ctrl+alt+t')!(createEvent(), {})
+    expect(spy).toHaveBeenCalledWith(false) // default visible: true
+  })
+
+  it('ctrl+alt+m toggles menu bar visibility', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(_mockDesktopStore, 'changeMenuBarVisible')
+    getHandler('all:ctrl+alt+m')!(createEvent(), {})
+    expect(spy).toHaveBeenCalledWith(false)
+  })
+
+  it('ctrl+alt+d toggles debug panel', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(_mockPanelStore, 'toggleDebugPanel')
+    getHandler('all:ctrl+alt+d')!(createEvent(), {})
+    expect(spy).toHaveBeenCalledWith(true) // mock default visible: false
+  })
+
+  it('ctrl+alt+b toggles brush library', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(_mockPanelStore, 'toggleBrushLibrary')
+    getHandler('all:ctrl+alt+b')!(createEvent(), {})
+    expect(spy).toHaveBeenCalledWith(false) // mock default visible: true
+  })
+
+  it('ctrl+alt+l toggles layers with full panel state preserved', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(_mockPanelStore, 'changeLayersLibraryState')
+    getHandler('all:ctrl+alt+l')!(createEvent(), {})
+    expect(spy).toHaveBeenCalledTimes(1)
+    const arg = spy.mock.calls[0][0] as Record<string, number | boolean>
+    expect(arg.visible).toBe(false) // inverted from true
+    // Position fields preserved — not a bare boolean
+    expect(arg.x).toBe(300)
+    expect(arg.w).toBe(350)
+  })
+
+  it('ctrl+alt+e toggles brush preview with full panel state preserved', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(_mockPanelStore, 'changeBrushPreviewState')
+    getHandler('all:ctrl+alt+e')!(createEvent(), {})
+    const arg = spy.mock.calls[0][0] as Record<string, number | boolean>
+    expect(arg.visible).toBe(false)
+    expect(arg.x).toBe(50)
+  })
+
+  it('ctrl+alt+n toggles toolbar with full panel state preserved', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(_mockToolbarStore, 'changeToolBarState')
+    getHandler('all:ctrl+alt+n')!(createEvent(), {})
+    const arg = spy.mock.calls[0][0] as Record<string, number | boolean>
+    expect(arg.visible).toBe(false) // toolbarState default visible: true
+    expect(typeof arg.x).toBe('number')
+    expect(typeof arg.h).toBe('number')
+  })
+
+  it('panel visibility shortcuts no-op with zero tabs or modal open', async () => {
+    store = createMockStore({ asciibirdMeta: [] })
+    _mockStore = store
+    await initShortcuts()
+    const deskSpy = vi.spyOn(_mockDesktopStore, 'changeTabsVisible')
+    getHandler('all:ctrl+alt+t')!(createEvent(), {})
+    expect(deskSpy).not.toHaveBeenCalled()
+
+    gsHandlers.clear()
+    _mockModalStore = createMockModalStore({ modalState: { options: true } })
+    store = createMockStore()
+    _mockStore = store
+    await initShortcuts()
+    const panelSpy = vi.spyOn(_mockPanelStore, 'toggleDebugPanel')
+    getHandler('all:ctrl+alt+d')!(createEvent(), {})
+    expect(panelSpy).not.toHaveBeenCalled()
   })
 })
