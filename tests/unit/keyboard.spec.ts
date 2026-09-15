@@ -839,4 +839,121 @@ describe('useGlobalShortcuts', () => {
     getHandler('all:ctrl+alt+t')!(createEvent(), {})
     expect(deskSpy).not.toHaveBeenCalled()
   })
+
+  // ─── Brush, mirror & colour shortcuts (legacy restore) ─────────
+
+  it('registers brush/mirror/colour shortcuts in scope all', async () => {
+    await initShortcuts()
+    for (const combo of [
+      'alt+x', 'alt+y', 'alt+u', 'ctrl+]', 'ctrl+[',
+      'alt+r', 'alt+f', 'alt+b', 'alt+c', 'ctrl+b',
+    ]) {
+      expect(getHandler(`all:${combo}`)).toBeDefined()
+    }
+  })
+
+  it('alt+x inverts only mirrorX axis', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(_mockToolbarStore, 'updateMirror')
+    getHandler('all:alt+x')!(createEvent(), {})
+    expect(spy).toHaveBeenCalledWith({ x: true, y: false })
+  })
+
+  it('alt+y inverts only mirrorY axis', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(_mockToolbarStore, 'updateMirror')
+    getHandler('all:alt+y')!(createEvent(), {})
+    expect(spy).toHaveBeenCalledWith({ x: false, y: true })
+  })
+
+  it('alt+y keeps mirrorX true when already enabled', async () => {
+    _mockToolbarStore = createMockToolbarStore({
+      toolbarState: { mirrorX: true, mirrorY: true },
+    })
+    gsHandlers.clear()
+    await initShortcuts()
+    const spy = vi.spyOn(_mockToolbarStore, 'updateMirror')
+    getHandler('all:alt+y')!(createEvent(), {})
+    expect(spy).toHaveBeenCalledWith({ x: true, y: false })
+  })
+
+  it('alt+u toggles updateBrush', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(_mockToolbarStore, 'toggleUpdateBrush')
+    getHandler('all:alt+u')!(createEvent(), {})
+    expect(spy).toHaveBeenCalledWith(false) // default: true
+  })
+
+  it('ctrl+] increases brush size when brush tool active', async () => {
+    _mockToolbarStore = createMockToolbarStore({
+      toolbarState: { currentTool: 4 }, // brush
+    })
+    gsHandlers.clear()
+    await initShortcuts()
+    const spy = vi.spyOn(_mockToolbarStore, 'updateBrushSize')
+    getHandler('all:ctrl+]')!(createEvent(), {})
+    expect(spy).toHaveBeenCalledTimes(1)
+    const arg = spy.mock.calls[0][0] as Record<string, unknown>
+    expect(arg.brushSizeHeight).toBe(2)
+    expect(arg.brushSizeWidth).toBe(2)
+    expect(arg.brushSizeType).toBeDefined()
+  })
+
+  it('ctrl+[ decreases brush size clamped at 1', async () => {
+    _mockToolbarStore = createMockToolbarStore({
+      toolbarState: { currentTool: 4 }, // brush
+    })
+    gsHandlers.clear()
+    await initShortcuts()
+    const spy = vi.spyOn(_mockToolbarStore, 'updateBrushSize')
+    getHandler('all:ctrl+[')!(createEvent(), {})
+    const arg = spy.mock.calls[0][0] as Record<string, unknown>
+    expect(arg.brushSizeHeight).toBe(1) // max(1, 1-1)
+    expect(arg.brushSizeWidth).toBe(1)
+  })
+
+  it('brush size shortcuts no-op when tool is not brush/eraser', async () => {
+    // Default tool 0 = 'default'
+    _mockToolbarStore = createMockToolbarStore({
+      toolbarState: { currentTool: 0 },
+    })
+    gsHandlers.clear()
+    await initShortcuts()
+    const spy = vi.spyOn(_mockToolbarStore, 'updateBrushSize')
+    getHandler('all:ctrl+]')!(createEvent(), {})
+    getHandler('all:ctrl+[')!(createEvent(), {})
+    expect(spy).not.toHaveBeenCalled()
+  })
+
+  it('alt+r swaps FG and BG without aliasing', async () => {
+    await initShortcuts()
+    const fgSpy = vi.spyOn(_mockToolbarStore, 'changeColourFg')
+    const bgSpy = vi.spyOn(_mockToolbarStore, 'changeColourBg')
+    getHandler('all:alt+r')!(createEvent(), {})
+    // Default fg=0, bg=1 → fg becomes 1, bg becomes 0
+    expect(fgSpy).toHaveBeenCalledWith(1)
+    expect(bgSpy).toHaveBeenCalledWith(0)
+  })
+
+  it('alt+f/b/c toggle pickers', async () => {
+    await initShortcuts()
+    const fgSpy = vi.spyOn(_mockToolbarStore, 'changeIsUpdatingFg')
+    const bgSpy = vi.spyOn(_mockToolbarStore, 'changeIsUpdatingBg')
+    const charSpy = vi.spyOn(_mockToolbarStore, 'changeIsUpdatingChar')
+    getHandler('all:alt+f')!(createEvent(), {})
+    getHandler('all:alt+b')!(createEvent(), {})
+    getHandler('all:alt+c')!(createEvent(), {})
+    expect(fgSpy).toHaveBeenCalledWith(true) // default isChoosingFg: false
+    expect(bgSpy).toHaveBeenCalledWith(true)
+    expect(charSpy).toHaveBeenCalledWith(true)
+  })
+
+  it('ctrl+b dispatches save-brush-library event', async () => {
+    await initShortcuts()
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+    getHandler('all:ctrl+b')!(createEvent(), {})
+    const types = dispatchSpy.mock.calls.map(c => (c[0] as CustomEvent).type)
+    expect(types).toContain('asciibird:save-brush-library')
+    dispatchSpy.mockRestore()
+  })
 })

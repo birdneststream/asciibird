@@ -1,6 +1,6 @@
 import { watch, onUnmounted } from 'vue';
 import hotkeys from 'hotkeys-js';
-import { toolbarIcons } from '../ascii';
+import { toolbarIcons, maxBrushSize } from '../ascii';
 import { useAsciiBirdStore } from '../store';
 import { useToolbarStore } from '../store/toolbar';
 import { useModalStore } from '../store/modal';
@@ -161,6 +161,85 @@ export function useGlobalShortcuts() {
         ...panelStore.brushPreview,
         visible: !panelStore.brushPreview.visible,
       });
+    },
+
+    // Mirror toggles — read both axes, invert only the targeted one
+    [SHORTCUTS.mirrorX.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      const ts = toolbarStore.toolbarState;
+      toolbarStore.updateMirror({ x: !ts.mirrorX, y: ts.mirrorY });
+    },
+    [SHORTCUTS.mirrorY.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      const ts = toolbarStore.toolbarState;
+      toolbarStore.updateMirror({ x: ts.mirrorX, y: !ts.mirrorY });
+    },
+
+    // Toggle "update brush when colours/char change"
+    [SHORTCUTS.toggleUpdateBrush.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      toolbarStore.toggleUpdateBrush(
+        !toolbarStore.toolbarState.updateBrush,
+      );
+    },
+
+    // Brush size — only when brush or eraser tool is active,
+    // clamped to 1..maxBrushSize on both dimensions
+    [SHORTCUTS.brushSizeUp.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      const toolName = toolbarIcons[toolbarStore.currentTool]?.name;
+      if (toolName !== 'brush' && toolName !== 'eraser') return;
+      toolbarStore.updateBrushSize({
+        brushSizeHeight: Math.min(
+          maxBrushSize, toolbarStore.brushSizeHeight + 1),
+        brushSizeWidth: Math.min(
+          maxBrushSize, toolbarStore.brushSizeWidth + 1),
+        brushSizeType: toolbarStore.brushSizeType,
+      });
+    },
+    [SHORTCUTS.brushSizeDown.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      const toolName = toolbarIcons[toolbarStore.currentTool]?.name;
+      if (toolName !== 'brush' && toolName !== 'eraser') return;
+      toolbarStore.updateBrushSize({
+        brushSizeHeight: Math.max(1, toolbarStore.brushSizeHeight - 1),
+        brushSizeWidth: Math.max(1, toolbarStore.brushSizeWidth - 1),
+        brushSizeType: toolbarStore.brushSizeType,
+      });
+    },
+
+    // Swap FG and BG — read both before writing (no aliasing)
+    [SHORTCUTS.swapColours.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      const fg = toolbarStore.currentFg;
+      const bg = toolbarStore.currentBg;
+      toolbarStore.changeColourFg(bg);
+      toolbarStore.changeColourBg(fg);
+    },
+
+    // FG/BG/char picker toggles
+    [SHORTCUTS.toggleFgPicker.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      toolbarStore.changeIsUpdatingFg(
+        !toolbarStore.toolbarState.isChoosingFg);
+    },
+    [SHORTCUTS.toggleBgPicker.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      toolbarStore.changeIsUpdatingBg(
+        !toolbarStore.toolbarState.isChoosingBg);
+    },
+    [SHORTCUTS.toggleCharPicker.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      toolbarStore.changeIsUpdatingChar(
+        !toolbarStore.toolbarState.isChoosingChar);
+    },
+
+    // Save current brush or selection to brush library (legacy
+    // semantics) — handled by Dashboard which owns the live selection
+    [SHORTCUTS.saveBrushLibrary.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      window.dispatchEvent(
+        new CustomEvent('asciibird:save-brush-library'));
     },
 
     // Copy selected blocks to clipboard — handled by Dashboard

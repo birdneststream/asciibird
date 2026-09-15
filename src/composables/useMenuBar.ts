@@ -189,6 +189,18 @@ export function useMenuBar(actions: MenuBarActions) {
           shortcut: 'Ctrl+Y',
         },
         {
+          text: 'Save Brush/Selection to Library',
+          click: () => {
+            if (asciibirdMeta.value.length) {
+              window.dispatchEvent(
+                new CustomEvent('asciibird:save-brush-library'),
+              );
+            }
+          },
+          disabled: !asciibirdMeta.value.length,
+          shortcut: SHORTCUTS.saveBrushLibrary.label,
+        },
+        {
           text: 'Add Border...',
           click: () => modalStore.openModal('border-generator'),
           disabled: !asciibirdMeta.value.length,
