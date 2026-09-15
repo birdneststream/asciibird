@@ -3,9 +3,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
 import { useGradientTool } from '../../../src/composables/useGradientTool';
 import { useToolbarStore } from '../../../src/store/toolbar';
+import { toolbarIcons } from '../../../src/utils/uiConstants';
 import type { Block } from '../../../src/types';
 import { emptyBlock } from '../../../src/ascii';
 import { ref } from 'vue';
+
+/** Activate a gradient tool by name (direction is locked per tool) */
+function activateGradientTool(name: string): void {
+  const idx = toolbarIcons.findIndex(t => t.name === name);
+  useToolbarStore().changeTool(idx);
+}
 
 function makeGrid(w: number, h: number): Block[][] {
   const grid: Block[][] = [];
@@ -62,6 +69,7 @@ describe('useGradientTool', () => {
     const toolbarStore = useToolbarStore();
     toolbarStore.changeColourFg(0); // white
     toolbarStore.changeColourBg(1); // black
+    activateGradientTool('gradient-horizontal');
 
     const { setStartPoint, applyGradient, isGradientPicking } = useGradientTool({
       currentAsciiLayerBlocks: blocks,
@@ -80,6 +88,52 @@ describe('useGradientTool', () => {
     // Should have recorded diffs
     expect(recordDiff).toHaveBeenCalled();
     // Should reset picking state
+    expect(isGradientPicking.value).toBe(false);
+  });
+
+  it('applyGradient locks the direction from the active gradient tool', () => {
+    const blocks = ref(makeGrid(3, 3));
+    const recordDiff = vi.fn();
+    const toolbarStore = useToolbarStore();
+    toolbarStore.changeColourFg(0); // white
+    toolbarStore.changeColourBg(1); // black
+    activateGradientTool('gradient-vertical');
+
+    const { setStartPoint, applyGradient } = useGradientTool({
+      currentAsciiLayerBlocks: blocks,
+      currentAsciiWidth: ref(3),
+      currentAsciiHeight: ref(3),
+      recordDiff,
+    });
+
+    // Drag is horizontal-ish, but the vertical tool must fill vertically
+    setStartPoint(0, 0);
+    const changes = applyGradient(2, 2, blocks.value);
+    const at = (x: number, y: number) =>
+      changes.find(c => c.x === x && c.y === y)!.new.bg;
+
+    // Every row is a constant colour, rows differ (vertical gradient)
+    expect(at(0, 0)).toBe(at(1, 0));
+    expect(at(0, 0)).not.toBe(at(0, 2));
+  });
+
+  it('applyGradient with a non-gradient tool returns empty', () => {
+    const blocks = ref(makeGrid(5, 5));
+    const recordDiff = vi.fn();
+    useToolbarStore().changeTool(0); // default tool
+
+    const { setStartPoint, applyGradient, isGradientPicking } = useGradientTool({
+      currentAsciiLayerBlocks: blocks,
+      currentAsciiWidth: ref(5),
+      currentAsciiHeight: ref(5),
+      recordDiff,
+    });
+
+    setStartPoint(0, 0);
+    const changes = applyGradient(4, 4, blocks.value);
+    expect(changes).toHaveLength(0);
+    expect(recordDiff).not.toHaveBeenCalled();
+    // Pick state still resets
     expect(isGradientPicking.value).toBe(false);
   });
 

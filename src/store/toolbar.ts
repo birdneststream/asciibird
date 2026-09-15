@@ -12,6 +12,8 @@ import { transformBlocks } from '../utils/transformBlocks';
 import type { TransformType } from '../utils/transformBlocks';
 import { validateBrushShapeKey } from '../utils/brushShapes';
 import { nextShapeType, validateShapeType } from '../utils/shapes';
+import { toolbarIcons } from '../utils/uiConstants';
+import { migrateToolIndex, TOOL_LAYOUT_VERSION } from '../utils/toolIndexMigration';
 import { useAsciiBirdStore } from './index';
 import type {
   Block,
@@ -47,6 +49,7 @@ export const useToolbarStore = defineStore('toolbar', {
       selectedChar: ' ',
       isUpdating: false,
       currentTool: 0,
+      toolLayoutVersion: TOOL_LAYOUT_VERSION,
       targetingFg: true,
       targetingBg: true,
       targetingChar: true,
@@ -339,6 +342,17 @@ export const useToolbarStore = defineStore('toolbar', {
         if (parsed.toolbarState?.shapeType != null) {
           parsed.toolbarState.shapeType =
             validateShapeType(parsed.toolbarState.shapeType);
+        }
+        // One-time migration of the persisted tool index when the
+        // toolbarIcons layout changed (guarded by toolLayoutVersion)
+        if (parsed.toolbarState?.currentTool != null) {
+          const fromVersion = parsed.toolbarState.toolLayoutVersion ?? 0;
+          parsed.toolbarState.currentTool = migrateToolIndex(
+            parsed.toolbarState.currentTool,
+            fromVersion,
+            toolbarIcons.length,
+          );
+          parsed.toolbarState.toolLayoutVersion = TOOL_LAYOUT_VERSION;
         }
         // Migrate stale toolbar y-positions that extend below viewport.
         // The old default was y:364 which overlaps the status bar on

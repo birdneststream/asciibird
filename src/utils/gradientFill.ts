@@ -4,6 +4,12 @@
 // Color matching uses Euclidean distance in RGB space against
 // the 99-color mIRC palette. This is perceptually approximate
 // but sufficient for IRC art.
+//
+// Direction is always explicit (vertical / horizontal / diagonal) —
+// the gradient tools lock their axis and pass it in. Interpolation
+// is drag-aware: the start colour anchors at the pick start point
+// and the end colour at the release point, so drags in any
+// direction place the colours where the user dragged them.
 
 import type { Block } from '../types';
 import type { FillChange } from '../ascii';
@@ -40,25 +46,6 @@ export function lerpRgb(a: RgbColor, b: RgbColor, t: number): RgbColor {
 /** Direction of gradient interpolation */
 export type GradientDirection = 'horizontal' | 'vertical' | 'diagonal';
 
-/**
- * Auto-detect gradient direction from start/end point geometry.
- * Returns 'horizontal' if mostly horizontal, 'vertical' if mostly
- * vertical, 'diagonal' if roughly equal.
- */
-export function detectGradientDirection(
-  startX: number,
-  startY: number,
-  endX: number,
-  endY: number,
-): GradientDirection {
-  const dx = Math.abs(endX - startX);
-  const dy = Math.abs(endY - startY);
-
-  if (dx > dy * 2) return 'horizontal';
-  if (dy > dx * 2) return 'vertical';
-  return 'diagonal';
-}
-
 // ─── Gradient Fill ──────────────────────────────────────────────
 
 /** Options for the gradient fill operation */
@@ -77,17 +64,18 @@ export interface GradientFillOptions {
   startColorIdx: number;
   /** End color palette index */
   endColorIdx: number;
-  /** Gradient direction (auto-detected if not specified) */
-  direction?: GradientDirection;
+  /** Gradient direction — explicit, locked by the active gradient tool */
+  direction: GradientDirection;
 }
 
 /**
  * Fill a rectangular region with a gradient between two mIRC palette colors.
  *
  * The gradient runs from startColorIdx at (startX, startY) to
- * endColorIdx at (endX, endY). Each block in the bounding rectangle
- * receives a background color interpolated from the 99-color palette.
- * Only the `bg` property is modified — `fg` and `char` are preserved.
+ * endColorIdx at (endX, endY) along `direction`. Each block in the
+ * bounding rectangle receives a background color interpolated from
+ * the 99-color palette. Only the `bg` property is modified — `fg`
+ * and `char` are preserved.
  *
  * Returns FillChange[] for undo integration.
  */
@@ -100,6 +88,7 @@ export function gradientFill(opts: GradientFillOptions): FillChange[] {
     endY,
     startColorIdx,
     endColorIdx,
+    direction,
   } = opts;
 
   const changes: FillChange[] = [];
@@ -116,19 +105,33 @@ export function gradientFill(opts: GradientFillOptions): FillChange[] {
     return changes;
   }
 
-  const direction = opts.direction
-    ?? detectGradientDirection(startX, startY, endX, endY);
-
   // Get RGB values for start and end colors (from shared palette)
   const startTuple = MIRC_RGB[startColorIdx] ?? MIRC_RGB[0];
   const endTuple = MIRC_RGB[endColorIdx] ?? MIRC_RGB[0];
   const startRgb: RgbColor = { r: startTuple[0], g: startTuple[1], b: startTuple[2] };
   const endRgb: RgbColor = { r: endTuple[0], g: endTuple[1], b: endTuple[2] };
 
-  // Compute interpolation ranges based on direction
-  const rangeW = x2 - x1;
-  const rangeH = y2 - y1;
-  const rangeD = Math.sqrt(rangeW * rangeW + rangeH * rangeH);
+  // Palette-index memo keyed by the exact interpolation factor —
+  // identical t values recur per row/column, so vertical/horizontal
+  // gradients cost O(width + height) closest-color lookups instead
+  // of O(cells). Lossless: equal inputs always map to equal outputs.
+  const paletteByT = new Map<number, number>();
+  function paletteAt(t: number): number {
+    let idx = paletteByT.get(t);
+    if (idx === undefined) {
+      const c = lerpRgb(startRgb, endRgb, t);
+      idx = closestMircColor([c.r, c.g, c.b]);
+      paletteByT.set(t, idx);
+    }
+    return idx;
+  }
+
+  // Drag-aware interpolation ranges: measured from the true start
+  // point so reverse drags anchor the start colour at the pick
+  // point (positive drags match the old normalized-corner math)
+  const dxTotal = endX - startX;
+  const dyTotal = endY - startY;
+  const rangeD = Math.sqrt(dxTotal * dxTotal + dyTotal * dyTotal);
 
   for (let cy = y1; cy <= y2; cy++) {
     const row = blocks[cy];
@@ -142,15 +145,15 @@ export function gradientFill(opts: GradientFillOptions): FillChange[] {
       let t: number;
       switch (direction) {
         case 'horizontal':
-          t = rangeW > 0 ? (cx - x1) / rangeW : 0;
+          t = dxTotal !== 0 ? (cx - startX) / dxTotal : 0;
           break;
         case 'vertical':
-          t = rangeH > 0 ? (cy - y1) / rangeH : 0;
+          t = dyTotal !== 0 ? (cy - startY) / dyTotal : 0;
           break;
         case 'diagonal':
         default: {
-          const dx = cx - x1;
-          const dy = cy - y1;
+          const dx = cx - startX;
+          const dy = cy - startY;
           const dist = Math.sqrt(dx * dx + dy * dy);
           t = rangeD > 0 ? dist / rangeD : 0;
           break;
@@ -159,17 +162,11 @@ export function gradientFill(opts: GradientFillOptions): FillChange[] {
 
       t = Math.max(0, Math.min(1, t));
 
-      // Interpolate and find closest palette color
-      const interpolated = lerpRgb(startRgb, endRgb, t);
-      const paletteIdx = closestMircColor(
-        [interpolated.r, interpolated.g, interpolated.b],
-      );
-
       // Record old state
       const oldBlock: Block = { ...block };
 
       // Apply — only modify bg
-      block.bg = paletteIdx;
+      block.bg = paletteAt(t);
 
       changes.push({
         x: cx,

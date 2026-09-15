@@ -202,6 +202,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { toolbarIcons } from '../../ascii';
+import { toolLabel } from '../../utils/toolbar';
 import { useAsciiBirdStore } from '../../store';
 import { useToolbarStore } from '../../store/toolbar';
 import { useDesktopStore } from '../../store/desktop';
@@ -254,7 +255,7 @@ const redoCount = computed(() => {
 
 const toolName = computed(() => {
   const tool = toolbarIcons[toolbarStore.currentTool];
-  return tool ? tool.name.charAt(0).toUpperCase() + tool.name.slice(1) : null;
+  return tool ? toolLabel(tool) : null;
 });
 
 const projectTitle = computed(() => {

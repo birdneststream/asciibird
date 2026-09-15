@@ -387,7 +387,9 @@ async function doMouseDown(d: InternalDeps, e?: MouseEvent | TouchEvent): Promis
       }
       doHandleReplaceColor(d, targetBlock);
       break;
-    case 'gradient':
+    case 'gradient-vertical':
+    case 'gradient-horizontal':
+    case 'gradient-corner':
       if (d.s.toolbarState.value.halfBlockEditing) {
         showHalfBlockError(d.toastShow, 'Gradient fill');
         break;
@@ -516,7 +518,9 @@ async function doMouseMove(d: InternalDeps, e: MouseEvent): Promise<void> {
       await r.clearToolCanvas();
       await r.drawIndicator();
       break;
-    case 'gradient':
+    case 'gradient-vertical':
+    case 'gradient-horizontal':
+    case 'gradient-corner':
       await r.clearToolCanvas();
       await r.drawIndicator();
       if (tools.gradientTool.isGradientPicking.value && tools.gradientTool.gradientStart.value && toolCtx) {

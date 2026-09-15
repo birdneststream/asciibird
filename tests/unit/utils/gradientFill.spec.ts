@@ -2,7 +2,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   lerpRgb,
-  detectGradientDirection,
   gradientFill,
 } from '../../../src/utils/gradientFill';
 import { parseColor, closestMircColor } from '../../../src/utils/ansiColors';
@@ -122,28 +121,6 @@ describe('gradientFill', () => {
     });
   });
 
-  describe('detectGradientDirection', () => {
-    it('detects horizontal direction', () => {
-      expect(detectGradientDirection(0, 0, 10, 1)).toBe('horizontal');
-    });
-
-    it('detects vertical direction', () => {
-      expect(detectGradientDirection(0, 0, 1, 10)).toBe('vertical');
-    });
-
-    it('detects diagonal direction', () => {
-      expect(detectGradientDirection(0, 0, 10, 10)).toBe('diagonal');
-    });
-
-    it('horizontal when dy is 0', () => {
-      expect(detectGradientDirection(0, 5, 10, 5)).toBe('horizontal');
-    });
-
-    it('vertical when dx is 0', () => {
-      expect(detectGradientDirection(5, 0, 5, 10)).toBe('vertical');
-    });
-  });
-
   describe('gradientFill', () => {
     it('fills horizontal gradient across a row', () => {
       const grid = makeGrid(5, 1);
@@ -153,6 +130,7 @@ describe('gradientFill', () => {
         endX: 4, endY: 0,
         startColorIdx: 0, // white
         endColorIdx: 1,   // black
+        direction: 'horizontal',
       });
 
       expect(changes).toHaveLength(5);
@@ -202,6 +180,7 @@ describe('gradientFill', () => {
         endX: 2, endY: 0,
         startColorIdx: 0,
         endColorIdx: 1,
+        direction: 'horizontal',
       });
 
       // fg and char should be preserved
@@ -221,6 +200,7 @@ describe('gradientFill', () => {
         endX: 2, endY: 0,
         startColorIdx: 0,
         endColorIdx: 1,
+        direction: 'horizontal',
       });
 
       // Change for block (1,0) should have old.bg = 5
@@ -237,6 +217,7 @@ describe('gradientFill', () => {
         endX: 1, endY: 1,
         startColorIdx: 0,
         endColorIdx: 4,
+        direction: 'horizontal',
       });
 
       // Single cell
@@ -253,6 +234,7 @@ describe('gradientFill', () => {
         endX: 1, endY: 0,
         startColorIdx: 0,
         endColorIdx: 1,
+        direction: 'horizontal',
       });
 
       expect(changes).toHaveLength(2);
@@ -270,6 +252,7 @@ describe('gradientFill', () => {
         endX: 15, endY: 15,
         startColorIdx: 0,
         endColorIdx: 1,
+        direction: 'horizontal',
       });
 
       expect(changes).toHaveLength(0);
@@ -283,6 +266,7 @@ describe('gradientFill', () => {
         endX: 9, endY: 0,
         startColorIdx: 0, // white
         endColorIdx: 1,   // black
+        direction: 'horizontal',
       });
 
       // Check that there are at least 2 different colors in the gradient
@@ -298,6 +282,7 @@ describe('gradientFill', () => {
         endX: 19, endY: 0,
         startColorIdx: 0, // white
         endColorIdx: 1,   // black
+        direction: 'horizontal',
       });
 
       const uniqueColors = new Set(changes.map(c => c.new.bg));
@@ -317,24 +302,64 @@ describe('gradientFill', () => {
         endX: 19, endY: 0,
         startColorIdx: 4,  // red
         endColorIdx: 12,   // blue
+        direction: 'horizontal',
       });
 
       const uniqueColors = new Set(changes.map(c => c.new.bg));
       expect(uniqueColors.size).toBeGreaterThanOrEqual(3);
     });
 
-    it('uses auto-detected direction when not specified', () => {
-      const grid = makeGrid(10, 2);
-      // Horizontal-ish gradient
+    it('anchors the start colour at the pick point on a reverse horizontal drag', () => {
+      const grid = makeGrid(5, 1);
       const changes = gradientFill({
         blocks: grid,
-        startX: 0, startY: 0,
-        endX: 9, endY: 1,
-        startColorIdx: 0,
-        endColorIdx: 1,
+        startX: 4, startY: 0,
+        endX: 0, endY: 0,
+        startColorIdx: 0, // white
+        endColorIdx: 1,   // black
+        direction: 'horizontal',
       });
 
-      expect(changes.length).toBeGreaterThan(0);
+      expect(changes).toHaveLength(5);
+      // changes are pushed in bbox order (x 0→4); the START colour
+      // (white, index 0) must sit at the pick point x=4
+      const at = (x: number) => changes.find(c => c.x === x)!.new.bg;
+      expect(at(4)).toBe(0);
+      expect(at(0)).toBe(1);
+    });
+
+    it('anchors the start colour at the pick point on a reverse vertical drag', () => {
+      const grid = makeGrid(1, 5);
+      const changes = gradientFill({
+        blocks: grid,
+        startX: 0, startY: 4,
+        endX: 0, endY: 0,
+        startColorIdx: 0, // white
+        endColorIdx: 1,   // black
+        direction: 'vertical',
+      });
+
+      const at = (y: number) => changes.find(c => c.y === y)!.new.bg;
+      expect(at(4)).toBe(0);
+      expect(at(0)).toBe(1);
+    });
+
+    it('radiates a diagonal gradient from the pick corner', () => {
+      const grid = makeGrid(3, 3);
+      const changes = gradientFill({
+        blocks: grid,
+        startX: 2, startY: 2, // bottom-right pick
+        endX: 0, endY: 0,
+        startColorIdx: 0, // white
+        endColorIdx: 1,   // black
+        direction: 'diagonal',
+      });
+
+      const at = (x: number, y: number) =>
+        changes.find(c => c.x === x && c.y === y)!.new.bg;
+      // Start colour at the pick corner, end colour at the far corner
+      expect(at(2, 2)).toBe(0);
+      expect(at(0, 0)).toBe(1);
     });
 
     it('handles reversed start/end coordinates', () => {
@@ -345,6 +370,7 @@ describe('gradientFill', () => {
         endX: 0, endY: 0,
         startColorIdx: 0,
         endColorIdx: 1,
+        direction: 'horizontal',
       });
 
       expect(changes).toHaveLength(5);

@@ -6,6 +6,7 @@
 
 import { watch } from 'vue';
 import type { EditorState } from './useEditorState';
+import { isGradientTool } from '../utils/uiConstants';
 import type { Ref } from 'vue';
 
 // ─── Types ──────────────────────────────────────────────────────
@@ -113,7 +114,7 @@ export function useEditorWatchers(opts: EditorWatcherOptions): void {
     cb.warnInvisibleLayer();
 
     // Shape tools work in half-block mode at double-Y resolution;
-    // text and gradient stay blocked
+    // text and the gradient tools stay blocked
     if (s.halfBlockEditing.value) {
       if (s.currentTool.value.name === 'text') {
         opts.toastShow(
@@ -122,7 +123,7 @@ export function useEditorWatchers(opts: EditorWatcherOptions): void {
         s.toolbarStore.changeTool(0);
         return;
       }
-      if (s.currentTool.value.name === 'gradient') {
+      if (isGradientTool(s.currentTool.value.name)) {
         opts.toastShow(
           'Gradient fill is not available in half-block editing mode',
         );
@@ -194,6 +195,15 @@ export function useEditorWatchers(opts: EditorWatcherOptions): void {
       if (s.currentTool.value.name === 'select') {
         s.toolbarStore.changeTool(0);
         await cb.resetSelectTool();
+      }
+
+      // Gradient tools are blocked in half-block mode (colour fills
+      // at half resolution are covered by the half-block fill tool)
+      if (isGradientTool(s.currentTool.value.name)) {
+        opts.toastShow(
+          'Gradient fill is not available in half-block editing mode',
+        );
+        s.toolbarStore.changeTool(0);
       }
 
       if (!s.canFg.value) {

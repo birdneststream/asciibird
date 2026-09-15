@@ -4,13 +4,22 @@
 //   Click 1: set start point + start color (current FG)
 //   Click 2: set end point + end color (current BG) → apply gradient
 //
+// The fill direction is locked by the active gradient tool
+// (vertical / horizontal / corner) — never auto-detected from the
+// drag geometry. Interpolation anchors the start colour at the pick
+// point, so reverse drags place colours where the user dragged them.
+//
 // Follows the useColorReplace pattern with cleanup watchers
 // for tool switching, tab switching, and Escape key.
 
 import { ref, computed, watch, type Ref } from 'vue';
 import { useToolbarStore } from '../store/toolbar';
 import { useAsciiBirdStore } from '../store';
-import { gradientFill } from '../utils/gradientFill';
+import { gradientFill, type GradientDirection } from '../utils/gradientFill';
+import {
+  gradientDirectionFor,
+  toolbarIcons,
+} from '../utils/uiConstants';
 import type { FillChange } from '../ascii';
 import type { Block } from '../types';
 
@@ -50,8 +59,18 @@ export function useGradientTool(opts: UseGradientToolOptions) {
   }
 
   /**
+   * Resolve the fill direction locked by the active gradient tool.
+   * Returns null when no gradient tool is active (defensive guard —
+   * applyGradient is only reachable from gradient tool events).
+   */
+  function activeGradientDirection(): GradientDirection | null {
+    return gradientDirectionFor(toolbarIcons[toolbarStore.currentTool]?.name);
+  }
+
+  /**
    * Apply gradient from start point to end point.
-   * Uses current BG as the end color.
+   * Uses the pick-start FG and current BG as the end colour, filling
+   * along the direction locked by the active gradient tool.
    * Returns the FillChange array for any post-processing.
    */
   function applyGradient(
@@ -60,6 +79,12 @@ export function useGradientTool(opts: UseGradientToolOptions) {
     blocks: Block[][],
   ): FillChange[] {
     if (!gradientStart.value) return [];
+    const direction = activeGradientDirection();
+    if (!direction) {
+      // No gradient tool active — defensive guard; reset any stale pick
+      cancelGradient();
+      return [];
+    }
 
     const startX = gradientStart.value.x;
     const startY = gradientStart.value.y;
@@ -74,6 +99,7 @@ export function useGradientTool(opts: UseGradientToolOptions) {
       endY,
       startColorIdx,
       endColorIdx,
+      direction,
     });
 
     // Record diffs for undo
