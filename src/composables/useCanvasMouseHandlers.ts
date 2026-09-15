@@ -450,7 +450,11 @@ async function refreshShapesPreview(
     endY: constrained.endY,
     blockWidth: s.blockWidthComp.value,
     blockHeight: s.blockHeightComp.value,
-    strokeColor: mircColours99[d.toolbarStore.currentFg],
+    blockSizeMultiplier: s.blockSizeMultiplier.value,
+    colours: mircColours99,
+    fg: d.toolbarStore.currentFg,
+    bg: d.toolbarStore.currentBg,
+    char: d.toolbarStore.currentChar,
     halfBlock: halfMode,
   });
 }
