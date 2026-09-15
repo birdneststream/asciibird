@@ -29,19 +29,19 @@ const baseOpts = (
   endX: 4,
   endHalfY: 6,
   colour: 5,
-  complement: 1,
   ...extra,
 });
 
 describe('halfBlockShapes', () => {
   describe('line', () => {
-    it('draws a horizontal line along half rows with complete blocks', () => {
+    it('draws a horizontal line along half rows, siblings untouched', () => {
       const blocks = makeGrid(6, 4);
       const changes = drawHalfBlockLine(baseOpts(blocks, { startHalfY: 2, endHalfY: 2, endX: 3 }));
-      // blocks (1..3, 1) top halves painted: fg=5, sibling=1
-      expect(blocks[1][1]).toEqual({ fg: 5, bg: 1, char: '▀' });
-      expect(blocks[1][2]).toEqual({ fg: 5, bg: 1, char: '▀' });
-      expect(blocks[1][3]).toEqual({ fg: 5, bg: 1, char: '▀' });
+      // blocks (1..3, 1) top halves painted fg=5; empty siblings stay
+      // empty — single-half representation, no complement fill
+      expect(blocks[1][1]).toEqual({ fg: 5, char: '▀' });
+      expect(blocks[1][2]).toEqual({ fg: 5, char: '▀' });
+      expect(blocks[1][3]).toEqual({ fg: 5, char: '▀' });
       expect(changes.length).toBe(3);
     });
 
@@ -52,9 +52,9 @@ describe('halfBlockShapes', () => {
       for (let h = 1; h <= 5; h++) {
         expect(grid.getColour(2, h)).toBe(5);
       }
-      // Bottom halves collapse with the complement when both painted:
-      // block (2,0) has bottom painted, top = complement 1 → {▀, fg:1, bg:5}
-      expect(blocks[0][2]).toEqual({ fg: 1, bg: 5, char: '▀' });
+      // block (2,0) has only the bottom half painted; the empty top
+      // half stays empty — ▄ representation, no complement
+      expect(blocks[0][2]).toEqual({ fg: 5, char: '▄' });
     });
 
     it('returns no changes for a fully out-of-bounds line', () => {
@@ -73,8 +73,8 @@ describe('halfBlockShapes', () => {
         baseOpts(blocks, { startX: -2, startHalfY: 0, endX: 1, endHalfY: 0 }),
       );
       expect(changes).toHaveLength(2); // blocks (0,0) and (1,0)
-      expect(blocks[0][0]).toEqual({ fg: 5, bg: 1, char: '▀' });
-      expect(blocks[0][1]).toEqual({ fg: 5, bg: 1, char: '▀' });
+      expect(blocks[0][0]).toEqual({ fg: 5, char: '▀' });
+      expect(blocks[0][1]).toEqual({ fg: 5, char: '▀' });
       expect(blocks[0][2]).toEqual({ char: ' ' }); // past the end
     });
 
@@ -83,6 +83,19 @@ describe('halfBlockShapes', () => {
       drawHalfBlockLine(baseOpts(blocks, { startHalfY: 2, endHalfY: 2, endX: 2 }));
       const changes = drawHalfBlockLine(baseOpts(blocks, { startHalfY: 2, endHalfY: 2, endX: 2 }));
       expect(changes).toHaveLength(0);
+    });
+
+    it('preserves collapsed-space siblings when painting through solids', () => {
+      // A solid region stored as collapsed spaces {bg:7, char:' '}
+      const blocks = makeGrid(6, 2);
+      blocks[1][1] = { bg: 7, char: ' ' };
+      blocks[1][2] = { bg: 7, char: ' ' };
+      drawHalfBlockLine(baseOpts(blocks, { startHalfY: 2, endHalfY: 3, endX: 2, startX: 1 }));
+
+      // Top half of (1,1) painted 5 — bottom sibling keeps its colour 7
+      expect(blocks[1][1]).toEqual({ fg: 5, bg: 7, char: '▀' });
+      // Bottom half of (2,1) painted 5 — top sibling keeps its colour 7
+      expect(blocks[1][2]).toEqual({ fg: 7, bg: 5, char: '▀' });
     });
   });
 
@@ -119,16 +132,16 @@ describe('halfBlockShapes', () => {
           expect(grid.getColour(x, h)).toBe(5);
         }
       }
-      // Both halves of each block painted: top 5 then bottom 5 with
-      // sibling already 5 → collapses to solid space
+      // Both halves of each block painted 5 (the second paint reads the
+      // sibling as 5 via getColour) → collapses to solid space
       expect(blocks[1][2]).toEqual({ bg: 5, char: ' ' });
       expect(grid.getColour(0, 2)).toBe(99); // outside untouched
     });
 
-    it('collapses to solid spaces when colour equals complement', () => {
+    it('collapses to solid spaces when both halves are painted the same colour', () => {
       const blocks = makeGrid(8, 6);
       drawHalfBlockRectFilled(baseOpts(blocks, {
-        startX: 1, startHalfY: 2, endX: 3, endHalfY: 7, complement: 5,
+        startX: 1, startHalfY: 2, endX: 3, endHalfY: 7,
       }));
       // Every fully-painted block becomes a collapsed space (bg=5)
       expect(blocks[1][2]).toEqual({ bg: 5, char: ' ' });
@@ -161,7 +174,8 @@ describe('halfBlockShapes', () => {
         baseOpts(blocks, { startX: 2, startHalfY: 3, endX: 2, endHalfY: 3 }),
       );
       expect(changes).toHaveLength(1);
-      expect(blocks[1][2]).toEqual({ fg: 1, bg: 5, char: '▀' });
+      // Bottom half painted; empty top sibling stays empty (▄ rep)
+      expect(blocks[1][2]).toEqual({ fg: 5, char: '▄' });
     });
 
     it('draws a flat vertical line when rx is zero', () => {
@@ -193,8 +207,8 @@ describe('halfBlockShapes', () => {
       drawHalfBlockEllipseFilled(baseOpts(blocks, {
         startX: 2, startHalfY: 3, endX: 2, endHalfY: 3,
       }));
-      // bottom half painted, top = complement
-      expect(blocks[1][2]).toEqual({ fg: 1, bg: 5, char: '▀' });
+      // bottom half painted, empty top sibling stays empty (▄ rep)
+      expect(blocks[1][2]).toEqual({ fg: 5, char: '▄' });
     });
   });
 
@@ -230,7 +244,7 @@ describe('halfBlockShapes', () => {
         ],
       ];
       const changes = drawHalfBlockRectFilled(baseOpts(blocks, {
-        startX: 0, startHalfY: 0, endX: 1, endHalfY: 1, colour: 5, complement: 5,
+        startX: 0, startHalfY: 0, endX: 1, endHalfY: 1, colour: 5,
       }));
       // Both halves of both blocks painted 5 → collapse
       expect(blocks[0][0]).toEqual({ bg: 5, char: ' ' });

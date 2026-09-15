@@ -9,8 +9,9 @@
 //
 // In half-block editing mode the start/end Y coordinates are tracked at
 // half-block resolution (double-Y) and dispatched to drawShapeHalfBlock
-// (complete-block colour model). Full-block mode keeps the original
-// drawShape path. Shapes never apply mirroring in either mode.
+// (single-colour paint model — only the FG colour is considered, sibling
+// halves are preserved). Full-block mode keeps the original drawShape
+// path. Shapes never apply mirroring in either mode.
 //
 // `modifiers` applies the Shift (equal grid units) / Alt (first click is
 // the center) constraints from shapeConstraints before drawing.
@@ -87,8 +88,6 @@ export function useShapeTool(opts: UseShapeToolOptions) {
 
     // Constrain in the active mode's coordinate space: cells in
     // full-block mode, half-rows (double-Y) in half-block mode
-    // Constrain in the active mode's coordinate space: cells in
-    // full-block mode, half-rows (double-Y) in half-block mode
     const constrained = constrainShapeCoords(
       shapeType,
       halfBlockMode
@@ -104,8 +103,9 @@ export function useShapeTool(opts: UseShapeToolOptions) {
         startHalfY: constrained.startY,
         endX: constrained.endX,
         endHalfY: constrained.endY,
+        // Half-block mode is single-colour: only FG is considered —
+        // BG never participates (user-visible model, not a filter)
         colour: fg,
-        complement: bg,
       })
       : drawShape(shapeType, {
         blocks,

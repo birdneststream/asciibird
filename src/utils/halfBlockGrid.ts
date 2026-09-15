@@ -13,6 +13,10 @@
 // {▀, fg, bg} / collapsed-space representations — canvas and IRC export
 // always agree.
 //
+// setColourPreserve paints one half and leaves the sibling exactly as it
+// was (preserved when coloured, empty when empty) — the single-colour
+// paint model used by half-block tools (brush, shapes).
+//
 // clearColour erases a half to true transparency by deleting its property
 // ({▄, fg:D} bottom-only / {▀, fg:C} top-only / {} fully empty) — erased
 // halves export as minimal fg-only mIRC codes.
@@ -99,7 +103,7 @@ export class HalfBlockGrid {
    * the other half's colour correctly.
    *
    * If both halves of the same block end up with the same colour,
-   * collapse to a space block: char=' ', fg=0, bg=colour.
+   * collapse to a space block: char=' ', fg deleted, bg=colour.
    */
   setColour(x: number, y: number, colour: number): void {
     if (!this.inBounds(x, y)) return;
@@ -138,25 +142,13 @@ export class HalfBlockGrid {
    * routed to clearColour.
    */
   setColourComplete(x: number, y: number, colour: number, complement: number): void {
-    if (!this.inBounds(x, y)) return;
-
-    // Erase request → transparent clear (99 is not a real colour)
-    if (colour === EMPTY_COLOUR) {
-      this.clearColour(x, y);
-      return;
-    }
+    const target = this.preparePaint(x, y, colour);
+    if (!target) return;
+    const { block, isTop } = target;
 
     // Complement must be a real colour — guarantee the completeness
     // invariant even if a caller passes EMPTY_COLOUR by mistake
     const realComplement = complement !== EMPTY_COLOUR ? complement : 0;
-
-    const blockY = Math.floor(y / 2);
-    const block = this.blocks[blockY]?.[x];
-    if (!block) return; // ragged array guard
-    const isTop = y % 2 === 0;
-
-    // Normalise ▄ → ▀ so fg=top, bg=bottom consistently
-    this.normaliseToUpperHalf(block);
 
     // Other half keeps its colour unless empty (99 counts as empty)
     const otherHalf = this.getColour(x, isTop ? y + 1 : y - 1);
@@ -173,6 +165,54 @@ export class HalfBlockGrid {
 
     // Check if both halves now have the same colour → collapse
     this.tryCollapse(block);
+  }
+
+  /**
+   * Paint a half while preserving the sibling half's colour exactly.
+   *
+   * The sibling keeps its existing colour — read through getColour so
+   * collapsed spaces, the ▄ representation, and legacy 99 values are
+   * all handled — and stays EMPTY when it was empty. No complement
+   * fill: this is the single-colour paint primitive for half-block
+   * shape tools, where only the halves an artist actually touches
+   * change.
+   *
+   * Single-half results use the minimal exportable representations
+   * (top-only → {▀, fg:C}, bottom-only → {▄, fg:C}, matching the
+   * clearColour convention) — both export as fg-only mIRC codes so
+   * the empty half stays transparent on IRC.
+   *
+   * A `colour` of 99 (EMPTY_COLOUR) is treated as an erase request
+   * and routed to clearColour.
+   */
+  setColourPreserve(x: number, y: number, colour: number): void {
+    const target = this.preparePaint(x, y, colour);
+    if (!target) return;
+    const { block, isTop } = target;
+
+    // Sibling colour — getColour understands every representation
+    const sibling = this.getColour(x, isTop ? y + 1 : y - 1);
+
+    if (isTop) {
+      block.fg = colour;
+      if (sibling !== EMPTY_COLOUR) block.bg = sibling;
+      else delete block.bg;
+      block.char = UPPER_HALF;
+      // Collapse when both halves hold the same colour
+      this.tryCollapse(block);
+    } else if (sibling !== EMPTY_COLOUR) {
+      block.bg = colour;
+      block.fg = sibling;
+      block.char = UPPER_HALF;
+      this.tryCollapse(block);
+    } else {
+      // Bottom-only paint: ▄ representation with fg holding the
+      // colour (the clearColour convention) — exports as a fg-only
+      // code so the empty top half stays transparent on IRC
+      delete block.bg;
+      block.fg = colour;
+      block.char = LOWER_HALF;
+    }
   }
 
   /**
@@ -327,6 +367,34 @@ export class HalfBlockGrid {
       x: Math.floor(pixelX / blockWidth),
       y: Math.floor(pixelY / (blockHeight / 2)),
     };
+  }
+
+  /**
+   * Shared paint scaffolding for the setColour* family: bounds and
+   * erase-request guards, block lookup, and ▄ → ▀ normalisation.
+   * Returns null when the paint should not proceed (out of bounds,
+   * erase request — already routed to clearColour — or ragged cell).
+   */
+  private preparePaint(
+    x: number,
+    y: number,
+    colour: number,
+  ): { block: Block; isTop: boolean } | null {
+    if (!this.inBounds(x, y)) return null;
+
+    // Erase request → transparent clear (99 is not a real colour)
+    if (colour === EMPTY_COLOUR) {
+      this.clearColour(x, y);
+      return null;
+    }
+
+    const block = this.blocks[Math.floor(y / 2)]?.[x];
+    if (!block) return null; // ragged array guard
+
+    // Normalise ▄ → ▀ so fg=top, bg=bottom consistently
+    this.normaliseToUpperHalf(block);
+
+    return { block, isTop: y % 2 === 0 };
   }
 
   /**

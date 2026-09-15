@@ -318,6 +318,104 @@ describe('HalfBlockGrid', () => {
     });
   });
 
+  describe('setColourPreserve', () => {
+    it('leaves empty other half empty (top paint) — no complement fill', () => {
+      const blocks = makeGrid(2, 2);
+      const grid = new HalfBlockGrid(blocks);
+      grid.setColourPreserve(0, 0, 5);
+      expect(blocks[0][0]).toEqual({ fg: 5, char: '\u2580' });
+      expect('bg' in blocks[0][0]).toBe(false);
+    });
+
+    it('leaves empty other half empty (bottom paint) — no complement fill', () => {
+      const blocks = makeGrid(2, 2);
+      const grid = new HalfBlockGrid(blocks);
+      grid.setColourPreserve(0, 1, 5);
+      // Bottom-only: ▄ representation with fg holding the colour —
+      // exports as fg-only, empty top stays transparent
+      expect(blocks[0][0]).toEqual({ fg: 5, char: '\u2584' });
+      expect('bg' in blocks[0][0]).toBe(false);
+    });
+
+    it('preserves existing other-half colour', () => {
+      const blocks = makeGridWith(2, 2, 0, 0, {
+        fg: 9, bg: 10, char: '\u2580',
+      });
+      const grid = new HalfBlockGrid(blocks);
+      grid.setColourPreserve(0, 0, 5); // repaint top; bottom stays 10
+      expect(blocks[0][0]).toEqual({ fg: 5, bg: 10, char: '\u2580' });
+    });
+
+    it('keeps collapsed-space sibling colour when painting the top half', () => {
+      // Solid region stored as {bg:7, char:' '} — getColour reads BOTH
+      // halves as 7, so the sibling must survive the paint
+      const blocks = makeGridWith(2, 2, 0, 0, {
+        bg: 7, char: ' ',
+      });
+      const grid = new HalfBlockGrid(blocks);
+      grid.setColourPreserve(0, 0, 5); // top=5; bottom sibling keeps 7
+      expect(blocks[0][0]).toEqual({ fg: 5, bg: 7, char: '\u2580' });
+    });
+
+    it('keeps collapsed-space sibling colour when painting the bottom half', () => {
+      const blocks = makeGridWith(2, 2, 0, 0, {
+        bg: 7, char: ' ',
+      });
+      const grid = new HalfBlockGrid(blocks);
+      grid.setColourPreserve(0, 1, 5); // bottom=5; top sibling keeps 7
+      expect(blocks[0][0]).toEqual({ fg: 7, bg: 5, char: '\u2580' });
+    });
+
+    it('collapses to space when both halves end up the same colour', () => {
+      const blocks = makeGridWith(2, 2, 0, 0, {
+        fg: 5, bg: 10, char: '\u2580',
+      });
+      const grid = new HalfBlockGrid(blocks);
+      grid.setColourPreserve(0, 1, 5); // bottom = 5 = top → collapse
+      expect(blocks[0][0]).toEqual({ bg: 5, char: ' ' });
+    });
+
+    it('normalises ▄ block before painting', () => {
+      // ▄: fg=bottom=5, bg=top=3
+      const blocks = makeGridWith(1, 1, 0, 0, {
+        fg: 5, bg: 3, char: '\u2584',
+      });
+      const grid = new HalfBlockGrid(blocks);
+      grid.setColourPreserve(0, 0, 10); // paint top=10; bottom stays 5
+      expect(blocks[0][0]).toEqual({ fg: 10, bg: 5, char: '\u2580' });
+    });
+
+    it('routes colour 99 (erase request) to clear semantics', () => {
+      const blocks = makeGridWith(1, 1, 0, 0, {
+        fg: 5, bg: 7, char: '\u2580',
+      });
+      const grid = new HalfBlockGrid(blocks);
+      grid.setColourPreserve(0, 0, 99); // erase top
+      expect(blocks[0][0]).toEqual({ fg: 7, char: '\u2584' });
+    });
+
+    it('treats explicit 99 in other half as empty (stays empty)', () => {
+      // Legacy persisted data can carry fg=99 — must not be preserved
+      const blocks = makeGridWith(2, 2, 0, 0, {
+        fg: 99, char: '\u2580',
+      });
+      const grid = new HalfBlockGrid(blocks);
+      grid.setColourPreserve(0, 1, 5); // paint bottom; top is 99 → stays empty
+      expect(blocks[0][0]).toEqual({ fg: 5, char: '\u2584' });
+      expect('bg' in blocks[0][0]).toBe(false);
+    });
+
+    it('ignores out-of-bounds and ragged cells', () => {
+      const blocks = makeGrid(2, 2);
+      const grid = new HalfBlockGrid(blocks);
+      expect(() => grid.setColourPreserve(-1, 0, 5)).not.toThrow();
+      expect(() => grid.setColourPreserve(0, 4, 5)).not.toThrow();
+      const ragged: Block[][] = [[{ char: ' ' }], []];
+      const raggedGrid = new HalfBlockGrid(ragged);
+      expect(() => raggedGrid.setColourPreserve(0, 2, 5)).not.toThrow();
+    });
+  });
+
   describe('clearColour', () => {
     it('erasing top half of complete block → bottom-only ▄', () => {
       const blocks = makeGridWith(1, 1, 0, 0, {

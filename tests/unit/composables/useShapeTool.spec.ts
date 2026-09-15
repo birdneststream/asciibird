@@ -83,8 +83,9 @@ describe('useShapeTool', () => {
     const changes = tool.applyShape(3, 1, blocks, 2);
 
     expect(changes.length).toBeGreaterThan(0);
-    // Half-block shapes paint colours, not chars — complete blocks
-    expect(blocks[0][0]).toEqual({ fg: 4, bg: 1, char: '▀' });
+    // Half-block shapes paint colours, not chars — single-colour model:
+    // painted half set, empty sibling stays empty (no bg complement)
+    expect(blocks[0][0]).toEqual({ fg: 4, char: '▀' });
     expect(recordDiff).toHaveBeenCalled();
     expect(tool.isShapePicking.value).toBe(false);
   });
@@ -102,9 +103,9 @@ describe('useShapeTool', () => {
     toolbarStore.toggleHalfBlockEditing(true);
     const changes = tool.applyShape(2, 1, blocks, 2);
 
-    // Half-block dispatch: complete ▀ blocks, not full-block chars
+    // Half-block dispatch: single-colour ▀ halves, not full-block chars
     expect(changes.length).toBeGreaterThan(0);
-    expect(blocks[0][0]).toEqual({ fg: 4, bg: 1, char: '▀' });
+    expect(blocks[0][0]).toEqual({ fg: 4, char: '▀' });
   });
 
   it('toggling half-block mode cancels an in-progress pick', async () => {
@@ -299,9 +300,9 @@ describe('useShapeTool modifier constraints', () => {
     expect(grid.getColour(1, 4)).toBe(4); // left/top corner of box
     expect(grid.getColour(7, 6)).toBe(4); // right/bottom corner
     expect(grid.getColour(1, 3)).toBe(EMPTY_COLOUR); // above box
-    // halfY 7 is the sibling half of painted halfY 6 — completed with the
-    // complement, not empty. Row 4 (halfY 8+) is untouched.
-    expect(grid.getColour(7, 7)).toBe(1);
+    // halfY 7 is the sibling half of painted halfY 6 — it stays empty
+    // (single-colour model, no complement fill). Row 4+ untouched.
+    expect(grid.getColour(7, 7)).toBe(EMPTY_COLOUR);
     expect(grid.getColour(7, 8)).toBe(EMPTY_COLOUR);
   });
 });

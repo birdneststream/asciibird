@@ -2,15 +2,16 @@
 // double-Y-resolution half-block grid.
 //
 // All functions mutate the passed blocks array in-place through
-// HalfBlockGrid.setColourComplete (complete-block colour model) and return
+// HalfBlockGrid.setColourPreserve (single-colour paint model) and return
 // FillChange[] at full-block granularity for undo integration, matching
 // the shapes.ts pattern. Y coordinates are half-block rows (double
 // resolution): even = top half, odd = bottom half.
 //
-// Shapes paint colours, not characters — the stroke colour fills the
-// visited halves and empty sibling halves complete into the complement
-// (or collapse to solid spaces when they match). Like full-block shapes,
-// half-block shapes do not apply mirroring.
+// Shapes paint colours, not characters — the stroke colour fills only
+// the visited halves. Sibling halves keep their existing colour or stay
+// transparent; blocks collapse to solid spaces when both halves end up
+// the same colour. Like full-block shapes, half-block shapes do not
+// apply mirroring.
 
 import type { Block } from '../types';
 import type { FillChange } from '../ascii';
@@ -34,8 +35,6 @@ export interface HalfBlockShapeOptions {
   endHalfY: number;
   /** Stroke colour (mIRC palette index 0-98) */
   colour: number;
-  /** Complement for empty sibling halves (mIRC palette index 0-98) */
-  complement: number;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────
@@ -54,7 +53,7 @@ class ShapeChangeTracker {
   }
 
   /** Paint a half-block if it is within bounds. */
-  paint(x: number, halfY: number, colour: number, complement: number): void {
+  paint(x: number, halfY: number, colour: number): void {
     // grid.width derives from the first row — on ragged grids valid cells
     // in longer rows are conservatively rejected (layers are normalised)
     if (x < 0 || x >= this.grid.width || halfY < 0 || halfY >= this.grid.height) {
@@ -69,7 +68,7 @@ class ShapeChangeTracker {
       this.cellOld.set(key, { x, y: blockY, old: { ...row[x] } });
     }
 
-    this.grid.setColourComplete(x, halfY, colour, complement);
+    this.grid.setColourPreserve(x, halfY, colour);
   }
 
   /** Build the FillChange list, skipping no-op changes. */
@@ -100,12 +99,12 @@ class ShapeChangeTracker {
 
 /** Draw a line between two half-grid points using Bresenham's algorithm. */
 export function drawHalfBlockLine(opts: HalfBlockShapeOptions): FillChange[] {
-  const { blocks, startX, startHalfY, endX, endHalfY, colour, complement } = opts;
+  const { blocks, startX, startHalfY, endX, endHalfY, colour } = opts;
   const tracker = new ShapeChangeTracker(blocks);
 
   const points = bresenhamLine(startX, startHalfY, endX, endHalfY);
   for (const pt of points) {
-    tracker.paint(pt.x, pt.y, colour, complement);
+    tracker.paint(pt.x, pt.y, colour);
   }
 
   return tracker.build();
@@ -117,7 +116,7 @@ export function drawHalfBlockLine(opts: HalfBlockShapeOptions): FillChange[] {
 export function drawHalfBlockRectOutline(
   opts: HalfBlockShapeOptions,
 ): FillChange[] {
-  const { blocks, startX, startHalfY, endX, endHalfY, colour, complement } = opts;
+  const { blocks, startX, startHalfY, endX, endHalfY, colour } = opts;
   const tracker = new ShapeChangeTracker(blocks);
 
   const x1 = Math.min(startX, endX);
@@ -127,17 +126,17 @@ export function drawHalfBlockRectOutline(
 
   // Top and bottom edges
   for (let x = x1; x <= x2; x++) {
-    tracker.paint(x, h1, colour, complement);
+    tracker.paint(x, h1, colour);
     if (h2 !== h1) {
-      tracker.paint(x, h2, colour, complement);
+      tracker.paint(x, h2, colour);
     }
   }
 
   // Left and right edges (excluding corners already drawn)
   for (let h = h1 + 1; h < h2; h++) {
-    tracker.paint(x1, h, colour, complement);
+    tracker.paint(x1, h, colour);
     if (x2 !== x1) {
-      tracker.paint(x2, h, colour, complement);
+      tracker.paint(x2, h, colour);
     }
   }
 
@@ -148,7 +147,7 @@ export function drawHalfBlockRectOutline(
 export function drawHalfBlockRectFilled(
   opts: HalfBlockShapeOptions,
 ): FillChange[] {
-  const { blocks, startX, startHalfY, endX, endHalfY, colour, complement } = opts;
+  const { blocks, startX, startHalfY, endX, endHalfY, colour } = opts;
   const tracker = new ShapeChangeTracker(blocks);
 
   const x1 = Math.min(startX, endX);
@@ -158,7 +157,7 @@ export function drawHalfBlockRectFilled(
 
   for (let h = h1; h <= h2; h++) {
     for (let x = x1; x <= x2; x++) {
-      tracker.paint(x, h, colour, complement);
+      tracker.paint(x, h, colour);
     }
   }
 
@@ -171,7 +170,7 @@ export function drawHalfBlockRectFilled(
 export function drawHalfBlockEllipseOutline(
   opts: HalfBlockShapeOptions,
 ): FillChange[] {
-  const { blocks, startX, startHalfY, endX, endHalfY, colour, complement } = opts;
+  const { blocks, startX, startHalfY, endX, endHalfY, colour } = opts;
   const tracker = new ShapeChangeTracker(blocks);
 
   const x1 = Math.min(startX, endX);
@@ -187,7 +186,7 @@ export function drawHalfBlockEllipseOutline(
   const pts = ellipsePoints(cx, cy, rx, ry);
   for (const key of pts) {
     const [px, py] = key.split(',').map(Number);
-    tracker.paint(px, py, colour, complement);
+    tracker.paint(px, py, colour);
   }
 
   return tracker.build();
@@ -197,7 +196,7 @@ export function drawHalfBlockEllipseOutline(
 export function drawHalfBlockEllipseFilled(
   opts: HalfBlockShapeOptions,
 ): FillChange[] {
-  const { blocks, startX, startHalfY, endX, endHalfY, colour, complement } = opts;
+  const { blocks, startX, startHalfY, endX, endHalfY, colour } = opts;
   const tracker = new ShapeChangeTracker(blocks);
 
   const x1 = Math.min(startX, endX);
@@ -212,7 +211,7 @@ export function drawHalfBlockEllipseFilled(
 
   // Degenerate: single point
   if (rx === 0 && ry === 0) {
-    tracker.paint(cx, cy, colour, complement);
+    tracker.paint(cx, cy, colour);
     return tracker.build();
   }
 
@@ -225,7 +224,7 @@ export function drawHalfBlockEllipseFilled(
       const dx = px - cx;
       const dy = py - cy;
       if ((dx * dx) / rxSq + (dy * dy) / rySq <= 1.0) {
-        tracker.paint(px, py, colour, complement);
+        tracker.paint(px, py, colour);
       }
     }
   }

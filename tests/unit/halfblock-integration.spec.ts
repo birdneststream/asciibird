@@ -146,18 +146,43 @@ describe('Half-block integration', () => {
       }
     });
 
-    it('half-block shape art exports complete ▀ codes and round-trips', () => {
+    it('half-block shape art exports minimal fg-only codes and round-trips', () => {
       const blocks = Array.from({ length: 5 }, () =>
         Array.from({ length: 10 }, () => ({} satisfies Block)));
       drawShapeHalfBlock('line', {
         blocks, startX: 1, startHalfY: 2, endX: 8, endHalfY: 2,
-        colour: 4, complement: 1,
+        colour: 4,
       });
       const result = exportMirc(blocks);
       const text = result.output.join('');
-      // Complete fg,bg code for the line row (no fg-only escapes)
-      expect(text).toContain('\x034,1▀');
-      expect(text).not.toContain('\x03\x03');
+      // Single-colour model: top-half paints export fg-only codes —
+      // the empty sibling half is NOT completed with a bg complement
+      expect(text).toContain('\x03\x034▀');
+      expect(text).not.toContain('\x034,1');
+
+      const parsed = parseMircToLayers(text, 'rt', create2DArray);
+      const reGrid = new HalfBlockGrid(parsed.layers[0].data);
+      const origGrid = new HalfBlockGrid(blocks);
+      for (let y = 0; y < 10; y++) {
+        for (let x = 0; x < 10; x++) {
+          expect(reGrid.getColour(x, y)).toBe(origGrid.getColour(x, y));
+        }
+      }
+    });
+
+    it('bottom-half shape strokes export fg-only ▄ codes and round-trip', () => {
+      const blocks = Array.from({ length: 5 }, () =>
+        Array.from({ length: 10 }, () => ({} satisfies Block)));
+      drawShapeHalfBlock('line', {
+        blocks, startX: 1, startHalfY: 3, endX: 8, endHalfY: 3,
+        colour: 4,
+      });
+      const result = exportMirc(blocks);
+      const text = result.output.join('');
+      // Bottom-only halves use the ▄ representation with fg holding
+      // the colour — fg-only codes, never a solid fg=0 sibling code
+      expect(text).toContain('\x03\x034▄');
+      expect(text).not.toContain('\x030,4');
 
       const parsed = parseMircToLayers(text, 'rt', create2DArray);
       const reGrid = new HalfBlockGrid(parsed.layers[0].data);
@@ -170,12 +195,12 @@ describe('Half-block integration', () => {
     });
 
     it('solid regions export as spaces with bg-only codes (byte-optimal)', () => {
-      // A filled rect where colour === complement collapses to spaces
+      // A filled rect paints both halves → collapse to spaces
       const blocks = Array.from({ length: 3 }, () =>
         Array.from({ length: 40 }, () => ({} satisfies Block)));
       drawShapeHalfBlock('rectFilled', {
         blocks, startX: 0, startHalfY: 0, endX: 39, endHalfY: 5,
-        colour: 7, complement: 7,
+        colour: 7,
       });
       const result = exportMirc(blocks);
       const text = result.output.join('');
