@@ -415,7 +415,6 @@ import SplashScreen from './components/SplashScreen.vue';
 import {
   toolbarIcons,
   checkForGetRequest,
-  filterNullBlocks,
 } from './ascii';
 
 import { useAsciiBirdStore } from './store';
@@ -430,6 +429,7 @@ import { useInlineRename } from './composables/useInlineRename';
 import { useIrcLineWarning } from './composables/useIrcLineWarning';
 import { useImportExport } from './composables/useImportExport';
 import { useMenuBar } from './composables/useMenuBar';
+import { useSaveBrushLibrary } from './composables/useSaveBrushLibrary';
 import { useEasterEgg } from './composables/useEasterEgg';
 import {
   copySelectionBlocks,
@@ -553,37 +553,14 @@ const exportFileHandler = () => handleExport('file');
 // Handler for Ctrl+R close ASCII shortcut (from useGlobalShortcuts)
 const closeTabHandler = () => closeTab(store.currentTab);
 
-// Handler for Ctrl+B save-to-brush-library shortcut (legacy semantics
-// from useGlobalShortcuts): brush tool saves the current brush; select
-// tool saves the live selection and clears it afterwards.
-const saveBrushLibraryHandler = () => {
-  const toolName = toolbarIcons[toolbarStore.currentTool]?.name;
-
-  if (toolName === 'brush') {
-    toolbarStore.pushBrushLibrary(
-      filterNullBlocks(toolbarStore.brushBlocks),
-    );
-    toastShow('Saved brush to Library!', { type: 'success' });
-    return;
-  }
-
-  const hasSelection = selectedBlocks.value.length > 0
-    && selecting.value.startX !== null
-    && selecting.value.startY !== null
-    && selecting.value.endX !== null
-    && selecting.value.endY !== null;
-
-  if (toolName === 'select' && hasSelection) {
-    toolbarStore.pushBrushLibrary(
-      filterNullBlocks(selectedBlocks.value),
-    );
-    // Reset and clear the selection, like the legacy Edit menu action
-    resetSelect.value = !resetSelect.value;
-    selectedBlocks.value = [];
-    toolbarStore.setSelectBlocks([]);
-    toastShow('Saved brush to Library!', { type: 'success' });
-  }
-};
+// Handler for Ctrl+B save-to-brush-library shortcut (legacy semantics)
+const { saveBrushLibrary: saveBrushLibraryAction } = useSaveBrushLibrary({
+  selectedBlocks,
+  selecting,
+  resetSelect,
+  toastShow,
+});
+const saveBrushLibraryHandler = () => saveBrushLibraryAction();
 // Handler for Ctrl+C copy blocks shortcut (from useGlobalShortcuts)
 const copyBlocksHandler = () => {
   if (selectedBlocks.value.length === 0) return;

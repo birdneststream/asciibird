@@ -925,6 +925,54 @@ describe('useGlobalShortcuts', () => {
     expect(spy).not.toHaveBeenCalled()
   })
 
+  it('ctrl+] also works for eraser tool', async () => {
+    _mockToolbarStore = createMockToolbarStore({
+      toolbarState: { currentTool: 6 }, // eraser
+    })
+    gsHandlers.clear()
+    await initShortcuts()
+    const spy = vi.spyOn(_mockToolbarStore, 'updateBrushSize')
+    getHandler('all:ctrl+]')!(createEvent(), {})
+    expect(spy).toHaveBeenCalledTimes(1)
+  })
+
+  it('ctrl+] clamps at maxBrushSize (50)', async () => {
+    _mockToolbarStore = createMockToolbarStore({
+      toolbarState: {
+        currentTool: 4,
+        brushSizeWidth: 50,
+        brushSizeHeight: 50,
+        brushSizeType: 'circle',
+      },
+    })
+    gsHandlers.clear()
+    await initShortcuts()
+    const spy = vi.spyOn(_mockToolbarStore, 'updateBrushSize')
+    getHandler('all:ctrl+]')!(createEvent(), {})
+    const arg = spy.mock.calls[0][0] as Record<string, unknown>
+    expect(arg.brushSizeHeight).toBe(50)
+    expect(arg.brushSizeWidth).toBe(50)
+    expect(arg.brushSizeType).toBe('circle')
+  })
+
+  it('brush/mirror/colour shortcuts no-op with zero tabs or modal open', async () => {
+    store = createMockStore({ asciibirdMeta: [] })
+    _mockStore = store
+    await initShortcuts()
+    const mirrorSpy = vi.spyOn(_mockToolbarStore, 'updateMirror')
+    getHandler('all:alt+x')!(createEvent(), {})
+    expect(mirrorSpy).not.toHaveBeenCalled()
+
+    gsHandlers.clear()
+    _mockModalStore = createMockModalStore({ modalState: { help: true } })
+    store = createMockStore()
+    _mockStore = store
+    await initShortcuts()
+    const swapSpy = vi.spyOn(_mockToolbarStore, 'changeColourFg')
+    getHandler('all:alt+r')!(createEvent(), {})
+    expect(swapSpy).not.toHaveBeenCalled()
+  })
+
   it('alt+r swaps FG and BG without aliasing', async () => {
     await initShortcuts()
     const fgSpy = vi.spyOn(_mockToolbarStore, 'changeColourFg')
