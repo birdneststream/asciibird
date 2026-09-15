@@ -385,6 +385,7 @@ const {
   canvasMouseDown,
   canvasMouseUp,
   canvasMouseMove,
+  canvasModifierKeyChange,
 } = mouseHandlers;
 
 // ─── Canvas Mouse Move Guard ────────────────────────────────────
@@ -628,6 +629,17 @@ useEventListener(
   'touchend',
   () => {
     if (shouldEndStroke()) canvasMouseUp();
+  },
+);
+
+// Refresh the shape pick preview when Shift/Alt modifiers toggle during
+// an active pick — the preview otherwise only redraws on cursor moves.
+// No preventDefault: Alt+digit tool switching must keep working.
+useEventListener(
+  window,
+  ['keydown', 'keyup'],
+  (e: KeyboardEvent) => {
+    if (e.key === 'Shift' || e.key === 'Alt') canvasModifierKeyChange(e);
   },
 );
 

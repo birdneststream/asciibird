@@ -8,6 +8,11 @@ import { mircColours99 } from '../ascii';
 import { HalfBlockGrid, EMPTY_COLOUR } from '../utils/halfBlockGrid';
 import { bresenhamLine } from '../utils/bresenham';
 import { drawShapePreview } from '../utils/shapePreview';
+import {
+  constrainShapeCoords,
+  modifiersFromEvent,
+  type ShapeModifiers,
+} from '../utils/shapeConstraints';
 import type { ShapeStart } from './useShapeTool';
 import { useToolbarStore } from '../store/toolbar';
 import { useToast } from './useToast';
@@ -49,7 +54,13 @@ export interface MouseHandlerDeps {
       isShapePicking: { value: boolean };
       shapeStart: { value: ShapeStart | null };
       setShapeStart: (x: number, y: number, halfY?: number) => void;
-      applyShape: (x: number, y: number, blocks: Block[][], halfY?: number) => void;
+      applyShape: (
+        x: number,
+        y: number,
+        blocks: Block[][],
+        halfY?: number,
+        modifiers?: Readonly<ShapeModifiers>,
+      ) => void;
     };
     toolApp: {
       drawBrush: (isEraser?: boolean) => Promise<void>;
@@ -223,11 +234,17 @@ async function doHandleGradient(d: InternalDeps): Promise<void> {
   });
 }
 
-async function doHandleShapes(d: InternalDeps): Promise<void> {
+async function doHandleShapes(
+  d: InternalDeps,
+  modifiers: Readonly<ShapeModifiers>,
+): Promise<void> {
   await handleTwoClickTool(d, {
     isPicking: d.tools.shapeTool.isShapePicking,
     setStart: d.tools.shapeTool.setShapeStart,
-    apply: d.tools.shapeTool.applyShape,
+    // Modifiers (Shift/Alt) constrain the committed shape; the plain
+    // gradient-style apply signature stays intact for the shared handler
+    apply: (x, y, blocks, halfY) =>
+      d.tools.shapeTool.applyShape(x, y, blocks, halfY, modifiers),
   });
 }
 
@@ -283,7 +300,7 @@ async function doMouseUp(d: InternalDeps): Promise<void> {
   }
 }
 
-async function doMouseDown(d: InternalDeps): Promise<void> {
+async function doMouseDown(d: InternalDeps, e?: MouseEvent | TouchEvent): Promise<void> {
   const { s, tools, r, cb } = d;
   if (tools.pasteMode.isPasteMode.value) {
     tools.pasteMode.confirmPaste(s.x.value, s.y.value);
@@ -340,9 +357,61 @@ async function doMouseDown(d: InternalDeps): Promise<void> {
       await doHandleGradient(d);
       break;
     case 'shapes':
-      await doHandleShapes(d);
+      await doHandleShapes(d, modifiersFromEvent(e));
       break;
   }
+}
+
+/**
+ * Clear the tool canvas, redraw the cursor indicator, and draw the shape
+ * pick preview with modifier constraints applied. Runs its own guards —
+ * the modifier-key refresh path bypasses the mousemove early-returns
+ * (moved / asciiBlockAtXy) so every entry point re-checks them.
+ */
+async function refreshShapesPreview(
+  d: InternalDeps,
+  modifiers: Readonly<ShapeModifiers>,
+): Promise<void> {
+  const { s, tools, r } = d;
+  await r.clearToolCanvas();
+  await r.drawIndicator();
+  if (!tools.shapeTool.isShapePicking.value) return;
+
+  const start = tools.shapeTool.shapeStart.value;
+  if (!start || !s.asciiBlockAtXy.value) return;
+  const toolCtx = r.getToolCtx();
+  if (!toolCtx) return;
+
+  const halfMode = s.halfBlockEditing.value;
+  const shapeType = d.toolbarStore.toolbarState.shapeType;
+  const endY = halfMode
+    ? s.y.value * 2 + (s.isTopHalf.value ? 0 : 1)
+    : s.y.value;
+
+  // Constrain in the active mode's coordinate space (cells / half-rows)
+  const constrained = constrainShapeCoords(
+    shapeType,
+    {
+      startX: start.x,
+      startY: halfMode ? start.halfY : start.y,
+      endX: s.x.value,
+      endY,
+    },
+    modifiers,
+  );
+
+  drawShapePreview({
+    ctx: toolCtx,
+    shapeType,
+    startX: constrained.startX,
+    startY: constrained.startY,
+    endX: constrained.endX,
+    endY: constrained.endY,
+    blockWidth: s.blockWidthComp.value,
+    blockHeight: s.blockHeightComp.value,
+    strokeColor: mircColours99[d.toolbarStore.currentFg],
+    halfBlock: halfMode,
+  });
 }
 
 // eslint-disable-next-line complexity -- tool switch dispatch inherently has many branches
@@ -416,27 +485,7 @@ async function doMouseMove(d: InternalDeps, e: MouseEvent): Promise<void> {
       }
       break;
     case 'shapes':
-      await r.clearToolCanvas();
-      await r.drawIndicator();
-      if (tools.shapeTool.isShapePicking.value && tools.shapeTool.shapeStart.value && toolCtx) {
-        const halfMode = s.halfBlockEditing.value;
-        drawShapePreview({
-          ctx: toolCtx,
-          shapeType: d.toolbarStore.toolbarState.shapeType,
-          startX: tools.shapeTool.shapeStart.value.x,
-          startY: halfMode
-            ? tools.shapeTool.shapeStart.value.halfY
-            : tools.shapeTool.shapeStart.value.y,
-          endX: s.x.value,
-          endY: halfMode
-            ? s.y.value * 2 + (s.isTopHalf.value ? 0 : 1)
-            : s.y.value,
-          blockWidth: s.blockWidthComp.value,
-          blockHeight: s.blockHeightComp.value,
-          strokeColor: mircColours99[d.toolbarStore.currentFg],
-          halfBlock: halfMode,
-        });
-      }
+      await refreshShapesPreview(d, modifiersFromEvent(e));
       break;
   }
 }
@@ -454,9 +503,24 @@ export function useCanvasMouseHandlers(deps: MouseHandlerDeps) {
     toastShow: useToast().show,
   };
 
+  /**
+   * Redraw the shape preview after a Shift/Alt keydown or keyup — the
+   * preview otherwise only refreshes when the cursor moves between cells.
+   * Key-repeat events are ignored (state has not changed). Fire-and-forget
+   * like the template mouse handlers: preview redraws never block input.
+   */
+  function canvasModifierKeyChange(e: KeyboardEvent): void {
+    const { s } = d;
+    if (e.repeat) return;
+    if (s.currentTool.value?.name !== 'shapes') return;
+    if (!d.tools.shapeTool.isShapePicking.value) return;
+    void refreshShapesPreview(d, modifiersFromEvent(e));
+  }
+
   return {
-    canvasMouseDown: () => doMouseDown(d),
+    canvasMouseDown: (e?: MouseEvent | TouchEvent) => doMouseDown(d, e),
     canvasMouseUp: () => doMouseUp(d),
     canvasMouseMove: (e: MouseEvent) => doMouseMove(d, e),
+    canvasModifierKeyChange,
   };
 }

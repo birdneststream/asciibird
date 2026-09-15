@@ -199,4 +199,12 @@ describe('modifiersFromEvent', () => {
     expect(modifiersFromEvent(new MouseEvent('mousedown', { shiftKey: true, altKey: true })))
       .toEqual({ shift: true, alt: true });
   });
+
+  it('reads shift/alt state from keyboard events (modifier refresh path)', () => {
+    expect(modifiersFromEvent(new KeyboardEvent('keydown'))).toEqual(NO_MODIFIERS);
+    expect(modifiersFromEvent(new KeyboardEvent('keydown', { shiftKey: true })))
+      .toEqual({ shift: true, alt: false });
+    expect(modifiersFromEvent(new KeyboardEvent('keyup', { altKey: true })))
+      .toEqual({ shift: false, alt: true });
+  });
 });

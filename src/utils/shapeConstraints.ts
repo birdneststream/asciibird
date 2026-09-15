@@ -43,12 +43,14 @@ export interface ShapeCoords {
 }
 
 /**
- * Extract shape drawing modifiers from a mouse event.
- * Touch events (and absent events) carry no modifier state and fall back
- * to NO_MODIFIERS.
+ * Extract shape drawing modifiers from a mouse or keyboard event (the
+ * keyboard path serves the Shift/Alt preview refresh). Touch events and
+ * absent events carry no modifier state and fall back to NO_MODIFIERS.
  */
-export function modifiersFromEvent(e?: MouseEvent | TouchEvent): ShapeModifiers {
-  if (!(e instanceof MouseEvent)) return NO_MODIFIERS;
+export function modifiersFromEvent(
+  e?: MouseEvent | TouchEvent | KeyboardEvent,
+): ShapeModifiers {
+  if (!e || !('shiftKey' in e)) return NO_MODIFIERS;
   return { shift: e.shiftKey, alt: e.altKey };
 }
 
@@ -65,7 +67,7 @@ export function modifiersFromEvent(e?: MouseEvent | TouchEvent): ShapeModifiers 
 export function constrainShapeCoords(
   shapeType: ShapeType,
   coords: ShapeCoords,
-  modifiers: ShapeModifiers = NO_MODIFIERS,
+  modifiers: Readonly<ShapeModifiers> = NO_MODIFIERS,
 ): ShapeCoords {
   // The line tool ignores modifiers per spec; plain drags are unconstrained
   if (shapeType === 'line' || (!modifiers.shift && !modifiers.alt)) {
