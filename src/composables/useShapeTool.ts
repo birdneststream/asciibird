@@ -11,12 +11,16 @@
 // half-block resolution (double-Y) and dispatched to drawShapeHalfBlock
 // (complete-block colour model). Full-block mode keeps the original
 // drawShape path. Shapes never apply mirroring in either mode.
+//
+// `modifiers` applies the Shift (equal grid units) / Alt (first click is
+// the center) constraints from shapeConstraints before drawing.
 
 import { ref, computed, watch, type Ref } from 'vue';
 import { useToolbarStore } from '../store/toolbar';
 import { useAsciiBirdStore } from '../store';
 import { drawShape } from '../utils/shapes';
 import { drawShapeHalfBlock } from '../utils/halfBlockShapes';
+import { constrainShapeCoords, NO_MODIFIERS, type ShapeModifiers } from '../utils/shapeConstraints';
 import type { FillChange } from '../ascii';
 import type { Block } from '../types';
 
@@ -60,13 +64,15 @@ export function useShapeTool(opts: UseShapeToolOptions) {
   /**
    * Apply shape from start point to end point.
    * Reads shapeType from toolbarStore and dispatches to the half-block
-   * or full-block drawing implementation.
+   * or full-block drawing implementation. `modifiers` applies the
+   * Shift / Alt constraints in the active mode's coordinate space.
    */
   function applyShape(
     endX: number,
     endY: number,
     blocks: Block[][],
     endHalfY = endY * 2,
+    modifiers: Readonly<ShapeModifiers> = NO_MODIFIERS,
   ): FillChange[] {
     if (!shapeStart.value) return [];
 
@@ -77,23 +83,36 @@ export function useShapeTool(opts: UseShapeToolOptions) {
     const fg = toolbarStore.currentFg;
     const bg = toolbarStore.currentBg;
     const char = toolbarStore.currentChar;
+    const halfBlockMode = toolbarStore.toolbarState.halfBlockEditing;
 
-    const changes = toolbarStore.toolbarState.halfBlockEditing
+    // Constrain in the active mode's coordinate space: cells in
+    // full-block mode, half-rows (double-Y) in half-block mode
+    // Constrain in the active mode's coordinate space: cells in
+    // full-block mode, half-rows (double-Y) in half-block mode
+    const constrained = constrainShapeCoords(
+      shapeType,
+      halfBlockMode
+        ? { startX, startY: startHalfY, endX, endY: endHalfY }
+        : { startX, startY, endX, endY },
+      modifiers,
+    );
+
+    const changes = halfBlockMode
       ? drawShapeHalfBlock(shapeType, {
         blocks,
-        startX,
-        startHalfY,
-        endX,
-        endHalfY,
+        startX: constrained.startX,
+        startHalfY: constrained.startY,
+        endX: constrained.endX,
+        endHalfY: constrained.endY,
         colour: fg,
         complement: bg,
       })
       : drawShape(shapeType, {
         blocks,
-        startX,
-        startY,
-        endX,
-        endY,
+        startX: constrained.startX,
+        startY: constrained.startY,
+        endX: constrained.endX,
+        endY: constrained.endY,
         fg,
         bg,
         char: char || undefined,
