@@ -622,6 +622,63 @@ describe('Pinia Store Actions', () => {
       expect(store.asciibirdMeta[0].selectedLayer).toBe(0);
     });
 
+    it('upLayer on top layer is a no-op (no selection/history change)', () => {
+      store.addLayer();
+      store.changeLayer(0);
+      const historyLength = store.asciibirdMeta[0].history.length;
+
+      store.upLayer(0); // target -1 — out of range
+
+      const layers = JSON.parse(
+        LZString.decompressFromUTF16(store.asciibirdMeta[0].layers),
+      );
+      expect(store.asciibirdMeta[0].selectedLayer).toBe(0);
+      expect(layers).toHaveLength(2);
+      expect(layers[0].label).toBe('Test Layer');
+      expect(layers[1].label).toBe('Layer 1');
+      expect(store.asciibirdMeta[0].history).toHaveLength(historyLength);
+    });
+
+    it('downLayer on bottom layer is a no-op (no selection/history change)', () => {
+      store.addLayer();
+      store.changeLayer(1);
+      const historyLength = store.asciibirdMeta[0].history.length;
+
+      store.downLayer(1); // target 2 — out of range
+
+      const layers = JSON.parse(
+        LZString.decompressFromUTF16(store.asciibirdMeta[0].layers),
+      );
+      expect(store.asciibirdMeta[0].selectedLayer).toBe(1);
+      expect(layers).toHaveLength(2);
+      expect(layers[0].label).toBe('Test Layer');
+      expect(layers[1].label).toBe('Layer 1');
+      expect(store.asciibirdMeta[0].history).toHaveLength(historyLength);
+    });
+
+    it('moveLayer with invalid payload index is a no-op', () => {
+      store.addLayer();
+      const historyLength = store.asciibirdMeta[0].history.length;
+
+      store.upLayer(99); // payload out of range
+      store.downLayer(-1); // payload negative
+
+      expect(store.asciibirdMeta[0].selectedLayer).toBe(1); // unchanged by addLayer
+      expect(store.asciibirdMeta[0].history).toHaveLength(historyLength);
+    });
+
+    it('moveLayer is a no-op for both directions on a single-layer document', () => {
+      store.upLayer(0);
+      store.downLayer(0);
+
+      const layers = JSON.parse(
+        LZString.decompressFromUTF16(store.asciibirdMeta[0].layers),
+      );
+      expect(store.asciibirdMeta[0].selectedLayer).toBe(0);
+      expect(layers).toHaveLength(1);
+      expect(store.asciibirdMeta[0].history).toHaveLength(0);
+    });
+
     it('updateLayerName changes layer label', () => {
       store.updateLayerName({ key: 0, label: 'My Layer' });
       const layers = JSON.parse(

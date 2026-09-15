@@ -585,17 +585,27 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       );
     },
     moveLayer(payload: number, direction: 1 | -1) {
+      const layers = decompressLayers(
+        this.asciibirdMeta[this.tab].layers,
+      );
       const target = payload + direction;
+      // Boundary guard: when no swap is possible, return before
+      // withLayerMutation — otherwise a no-op diff enters undo history
+      // and afterCommit sets selectedLayer to an out-of-range index.
+      if (!layers[payload] || target < 0 || target >= layers.length) {
+        return;
+      }
+
       this.withLayerMutation(
-        (layers) => {
-          if (!layers[target]) return;
-          const swap = layers[target];
-          layers[target] = layers[payload];
-          layers[payload] = swap;
+        (mutLayers) => {
+          const swap = mutLayers[target];
+          mutLayers[target] = mutLayers[payload];
+          mutLayers[payload] = swap;
         },
         () => {
           this.asciibirdMeta[this.tab].selectedLayer = target;
         },
+        layers,
       );
     },
     downLayer(payload: number) {
