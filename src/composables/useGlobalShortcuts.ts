@@ -102,6 +102,12 @@ export function useGlobalShortcuts() {
       window.dispatchEvent(new CustomEvent('asciibird:export-png'));
     },
 
+    // Close current ASCII (with confirm dialog) — handled by Dashboard
+    [SHORTCUTS.closeAscii.keys]: () => {
+      if (!store.asciibirdMeta.length || modalStore.isModalOpen) return;
+      window.dispatchEvent(new CustomEvent('asciibird:close-tab'));
+    },
+
     // Copy selected blocks to clipboard — handled by Dashboard
     'ctrl+c': () => {
       if (store.asciibirdMeta.length && !modalStore.isModalOpen) {
@@ -196,6 +202,18 @@ export function useGlobalShortcuts() {
       }
     },
   };
+
+  // Tab switching — Ctrl+Shift+0..9 switches directly to tab index
+  // 0..9 (legacy parity: 0-based mapping matching the legacy
+  // "Change ASCII" menu hotkeys). Only fires when the tab exists.
+  for (let i = 0; i <= 9; i++) {
+    menuShortcuts[`ctrl+shift+${i}`] = () => {
+      if (modalStore.isModalOpen) return;
+      if (store.asciibirdMeta[i]) {
+        store.changeTab(i);
+      }
+    };
+  }
 
   // Register all menu shortcuts in scope 'all'
   for (const [key, handler] of Object.entries(menuShortcuts)) {

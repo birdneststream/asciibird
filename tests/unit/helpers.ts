@@ -707,6 +707,11 @@ export function createMockStore(
       state.asciibirdMeta.push(meta)
       state.tab = state.asciibirdMeta.length - 1
     },
+    changeTab(payload: number) {
+      if (state.asciibirdMeta[payload]) {
+        state.tab = payload
+      }
+    },
     setBrushBlocks(blocks: any) {
       state._brushBlocks = LZString.compressToUTF16(
         JSON.stringify(blocks),

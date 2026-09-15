@@ -68,6 +68,20 @@ export function useMenuBar(actions: MenuBarActions) {
           click: () => modalStore.openModal('new-ascii'),
           shortcut: 'Ctrl+M',
         },
+        {
+          text: 'Close ASCII',
+          click: () => {
+            // Guard mirrors disabled state — Headless UI `disabled` may
+            // not suppress the inner button @click in all cases.
+            if (asciibirdMeta.value.length) {
+              window.dispatchEvent(
+                new CustomEvent('asciibird:close-tab'),
+              );
+            }
+          },
+          disabled: !asciibirdMeta.value.length,
+          shortcut: SHORTCUTS.closeAscii.label,
+        },
       ],
     },
     {

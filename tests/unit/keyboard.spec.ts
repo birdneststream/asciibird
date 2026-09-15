@@ -653,4 +653,68 @@ describe('useGlobalShortcuts', () => {
       expect(getHandler(`all:${S[id].keys}`)).toBeDefined()
     }
   })
+
+  // ─── Tab shortcuts (legacy restore) ────────────────────────────
+
+  it('registers ctrl+r and ctrl+shift+0..9 tab shortcuts in scope all', async () => {
+    await initShortcuts()
+    expect(getHandler('all:ctrl+r')).toBeDefined()
+    for (let i = 0; i <= 9; i++) {
+      expect(getHandler(`all:ctrl+shift+${i}`)).toBeDefined()
+    }
+  })
+
+  it('ctrl+r dispatches close-tab event', async () => {
+    await initShortcuts()
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+    getHandler('all:ctrl+r')!(createEvent(), {})
+    const types = dispatchSpy.mock.calls.map(c => (c[0] as CustomEvent).type)
+    expect(types).toContain('asciibird:close-tab')
+    dispatchSpy.mockRestore()
+  })
+
+  it('ctrl+r no-ops with zero tabs or while modal open', async () => {
+    store = createMockStore({ asciibirdMeta: [] })
+    _mockStore = store
+    await initShortcuts()
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+    getHandler('all:ctrl+r')!(createEvent(), {})
+    let types = dispatchSpy.mock.calls.map(c => (c[0] as CustomEvent).type)
+    expect(types).not.toContain('asciibird:close-tab')
+
+    _mockModalStore = createMockModalStore({ modalState: { options: true } })
+    store = createMockStore()
+    _mockStore = store
+    await initShortcuts()
+    getHandler('all:ctrl+r')!(createEvent(), {})
+    types = dispatchSpy.mock.calls.map(c => (c[0] as CustomEvent).type)
+    expect(types).not.toContain('asciibird:close-tab')
+    dispatchSpy.mockRestore()
+  })
+
+  it('ctrl+shift+N switches to tab N (0-based, legacy parity)', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(store, 'changeTab')
+    getHandler('all:ctrl+shift+0')!(createEvent(), {})
+    getHandler('all:ctrl+shift+3')!(createEvent(), {})
+    getHandler('all:ctrl+shift+9')!(createEvent(), {})
+    // Mock store has 1 tab (index 0) — only ctrl+shift+0 fires changeTab
+    expect(spy).toHaveBeenCalledTimes(1)
+    expect(spy).toHaveBeenCalledWith(0)
+  })
+
+  it('ctrl+shift+N no-ops when tab does not exist or modal open', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(store, 'changeTab')
+    getHandler('all:ctrl+shift+5')!(createEvent(), {})
+    expect(spy).not.toHaveBeenCalled()
+
+    // Re-init with a modal open (clear stale handlers first —
+    // getHandler returns the first captured handler per combo)
+    gsHandlers.clear()
+    _mockModalStore = createMockModalStore({ modalState: { help: true } })
+    await initShortcuts()
+    getHandler('all:ctrl+shift+0')!(createEvent(), {})
+    expect(spy).not.toHaveBeenCalled()
+  })
 })

@@ -549,6 +549,8 @@ const importFileHandler = () => {
 // Handlers for Ctrl+Shift+C / Ctrl+Shift+F export shortcuts (from useGlobalShortcuts)
 const exportClipboardHandler = () => handleExport('clipboard');
 const exportFileHandler = () => handleExport('file');
+// Handler for Ctrl+R close ASCII shortcut (from useGlobalShortcuts)
+const closeTabHandler = () => closeTab(store.currentTab);
 // Handler for Ctrl+C copy blocks shortcut (from useGlobalShortcuts)
 const copyBlocksHandler = () => {
   if (selectedBlocks.value.length === 0) return;
@@ -580,6 +582,7 @@ window.addEventListener('asciibird:import-file', importFileHandler);
 window.addEventListener('asciibird:copy-blocks', copyBlocksHandler);
 window.addEventListener('asciibird:export-clipboard', exportClipboardHandler);
 window.addEventListener('asciibird:export-file', exportFileHandler);
+window.addEventListener('asciibird:close-tab', closeTabHandler);
 
 onUnmounted(() => {
   window.removeEventListener('scroll', scrollHandler);
@@ -587,6 +590,7 @@ onUnmounted(() => {
   window.removeEventListener('asciibird:copy-blocks', copyBlocksHandler);
   window.removeEventListener('asciibird:export-clipboard', exportClipboardHandler);
   window.removeEventListener('asciibird:export-file', exportFileHandler);
+  window.removeEventListener('asciibird:close-tab', closeTabHandler);
 });
 
 // Computed
