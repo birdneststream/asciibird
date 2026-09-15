@@ -546,6 +546,9 @@ const scrollHandler = () => {
 const importFileHandler = () => {
   startImport('mirc');
 };
+// Handlers for Ctrl+Shift+C / Ctrl+Shift+F export shortcuts (from useGlobalShortcuts)
+const exportClipboardHandler = () => handleExport('clipboard');
+const exportFileHandler = () => handleExport('file');
 // Handler for Ctrl+C copy blocks shortcut (from useGlobalShortcuts)
 const copyBlocksHandler = () => {
   if (selectedBlocks.value.length === 0) return;
@@ -575,11 +578,15 @@ checkForGetRequest();
 window.addEventListener('scroll', scrollHandler);
 window.addEventListener('asciibird:import-file', importFileHandler);
 window.addEventListener('asciibird:copy-blocks', copyBlocksHandler);
+window.addEventListener('asciibird:export-clipboard', exportClipboardHandler);
+window.addEventListener('asciibird:export-file', exportFileHandler);
 
 onUnmounted(() => {
   window.removeEventListener('scroll', scrollHandler);
   window.removeEventListener('asciibird:import-file', importFileHandler);
   window.removeEventListener('asciibird:copy-blocks', copyBlocksHandler);
+  window.removeEventListener('asciibird:export-clipboard', exportClipboardHandler);
+  window.removeEventListener('asciibird:export-file', exportFileHandler);
 });
 
 // Computed

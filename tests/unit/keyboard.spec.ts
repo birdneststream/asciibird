@@ -559,4 +559,71 @@ describe('useGlobalShortcuts', () => {
     handler(event, {})
     expect(event.preventDefault).toHaveBeenCalled()
   })
+
+  // ─── Export shortcuts (legacy restore) ─────────────────────────
+
+  it('registers export shortcuts in scope all', async () => {
+    await initShortcuts()
+    expect(getHandler('all:ctrl+shift+c')).toBeDefined()
+    expect(getHandler('all:ctrl+shift+f')).toBeDefined()
+    expect(getHandler('all:ctrl+shift+g')).toBeDefined()
+  })
+
+  it('ctrl+shift+c dispatches export-clipboard event', async () => {
+    await initShortcuts()
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+    getHandler('all:ctrl+shift+c')!(createEvent(), {})
+    const types = dispatchSpy.mock.calls.map(c => (c[0] as CustomEvent).type)
+    expect(types).toContain('asciibird:export-clipboard')
+    dispatchSpy.mockRestore()
+  })
+
+  it('ctrl+shift+f dispatches export-file event', async () => {
+    await initShortcuts()
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+    getHandler('all:ctrl+shift+f')!(createEvent(), {})
+    const types = dispatchSpy.mock.calls.map(c => (c[0] as CustomEvent).type)
+    expect(types).toContain('asciibird:export-file')
+    dispatchSpy.mockRestore()
+  })
+
+  it('ctrl+shift+g dispatches export-png event', async () => {
+    await initShortcuts()
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+    getHandler('all:ctrl+shift+g')!(createEvent(), {})
+    const types = dispatchSpy.mock.calls.map(c => (c[0] as CustomEvent).type)
+    expect(types).toContain('asciibird:export-png')
+    dispatchSpy.mockRestore()
+  })
+
+  it('export shortcuts no-op with zero tabs open', async () => {
+    store = createMockStore({ asciibirdMeta: [] })
+    _mockStore = store
+    await initShortcuts()
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+    for (const key of ['all:ctrl+shift+c', 'all:ctrl+shift+f', 'all:ctrl+shift+g']) {
+      getHandler(key)!(createEvent(), {})
+    }
+    const types = dispatchSpy.mock.calls.map(c => (c[0] as CustomEvent).type)
+    expect(types).not.toContain('asciibird:export-clipboard')
+    expect(types).not.toContain('asciibird:export-file')
+    expect(types).not.toContain('asciibird:export-png')
+    dispatchSpy.mockRestore()
+  })
+
+  it('export shortcuts no-op while a modal is open', async () => {
+    _mockModalStore = createMockModalStore({
+      modalState: { newAscii: true },
+    })
+    await initShortcuts()
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+    for (const key of ['all:ctrl+shift+c', 'all:ctrl+shift+f', 'all:ctrl+shift+g']) {
+      getHandler(key)!(createEvent(), {})
+    }
+    const types = dispatchSpy.mock.calls.map(c => (c[0] as CustomEvent).type)
+    expect(types).not.toContain('asciibird:export-clipboard')
+    expect(types).not.toContain('asciibird:export-file')
+    expect(types).not.toContain('asciibird:export-png')
+    dispatchSpy.mockRestore()
+  })
 })

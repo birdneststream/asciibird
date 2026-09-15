@@ -4,6 +4,7 @@ import { toolbarIcons } from '../ascii';
 import { useAsciiBirdStore } from '../store';
 import { useToolbarStore } from '../store/toolbar';
 import { useModalStore } from '../store/modal';
+import { SHORTCUTS } from '../utils/shortcuts';
 
 /**
  * Global keyboard shortcuts composable.
@@ -85,6 +86,21 @@ export function useGlobalShortcuts() {
     },
     'f1': () => modalStore.openModal('help'),
     'shift+f1': () => modalStore.openModal('about'),
+
+    // Export shortcuts (restored from legacy) — handled by Dashboard
+    // (mIRC clipboard/file) and Editor (PNG) via custom events.
+    [SHORTCUTS.exportClipboard.keys]: () => {
+      if (!store.asciibirdMeta.length || modalStore.isModalOpen) return;
+      window.dispatchEvent(new CustomEvent('asciibird:export-clipboard'));
+    },
+    [SHORTCUTS.exportFile.keys]: () => {
+      if (!store.asciibirdMeta.length || modalStore.isModalOpen) return;
+      window.dispatchEvent(new CustomEvent('asciibird:export-file'));
+    },
+    [SHORTCUTS.exportPng.keys]: () => {
+      if (!store.asciibirdMeta.length || modalStore.isModalOpen) return;
+      window.dispatchEvent(new CustomEvent('asciibird:export-png'));
+    },
 
     // Copy selected blocks to clipboard — handled by Dashboard
     'ctrl+c': () => {

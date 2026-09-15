@@ -5,6 +5,7 @@ import { useModalStore } from '../store/modal';
 import { useDesktopStore } from '../store/desktop';
 import { usePanelStore } from '../store/panels';
 import { useToolbarStore } from '../store/toolbar';
+import { SHORTCUTS } from '../utils/shortcuts';
 import type { AppMenuBar } from '../types';
 
 export interface MenuBarActions {
@@ -95,11 +96,25 @@ export function useMenuBar(actions: MenuBarActions) {
           text: 'mIRC to Clipboard',
           click: () => actions.handleExport('clipboard'),
           disabled: !asciibirdMeta.value.length,
+          shortcut: SHORTCUTS.exportClipboard.label,
         },
         {
           text: 'mIRC File',
           click: () => actions.handleExport('file'),
           disabled: !asciibirdMeta.value.length,
+          shortcut: SHORTCUTS.exportFile.label,
+        },
+        {
+          text: 'PNG Image',
+          click: () => {
+            if (asciibirdMeta.value.length) {
+              window.dispatchEvent(
+                new CustomEvent('asciibird:export-png'),
+              );
+            }
+          },
+          disabled: !asciibirdMeta.value.length,
+          shortcut: SHORTCUTS.exportPng.label,
         },
         {
           text: 'ANSI File',

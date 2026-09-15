@@ -602,6 +602,15 @@ useEventListener(
   },
 );
 
+// Ctrl+Shift+G — export canvas as PNG (from useGlobalShortcuts)
+useEventListener(
+  window,
+  'asciibird:export-png',
+  () => {
+    canvasToPng();
+  },
+);
+
 /** Check if a tool stroke or selection is in progress and should end */
 function shouldEndStroke(): boolean {
   const tool = currentTool.value.name;
