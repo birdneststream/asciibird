@@ -3,8 +3,9 @@
  * ASCIIBIRD app (branch master-before-llm-times).
  *
  * Single source of truth shared between hotkey registration
- * (useGlobalShortcuts.ts) and menu label rendering (useMenuBar.ts,
- * Layers.vue) so registered combos and displayed labels can never drift.
+ * (useGlobalShortcuts.ts) and menu label rendering (useMenuBar.ts;
+ * Layers.vue consumes it from Task 5) so registered combos and
+ * displayed labels can never drift.
  *
  * Tab-switching shortcuts (Ctrl+Shift+0..9) are generated in a loop by
  * useGlobalShortcuts and have no menu label, so they are not listed here.

@@ -626,4 +626,31 @@ describe('useGlobalShortcuts', () => {
     expect(types).not.toContain('asciibird:export-png')
     dispatchSpy.mockRestore()
   })
+
+  // ─── Shortcut registry integrity ───────────────────────────────
+
+  it('SHORTCUTS registry has unique, non-empty keys and labels', async () => {
+    const { SHORTCUTS: S } = await import('@/utils/shortcuts')
+    const entries = Object.values(S)
+    expect(entries.length).toBeGreaterThan(0)
+    const keySet = new Set<string>()
+    const labelSet = new Set<string>()
+    for (const def of entries) {
+      expect(def.keys.length).toBeGreaterThan(0)
+      expect(def.label.length).toBeGreaterThan(0)
+      keySet.add(def.keys)
+      labelSet.add(def.label)
+    }
+    // No duplicate combos or labels (would silently shadow in hotkeys-js)
+    expect(keySet.size).toBe(entries.length)
+    expect(labelSet.size).toBe(entries.length)
+  })
+
+  it('registered hotkey combos match the registry for wired shortcuts', async () => {
+    const { SHORTCUTS: S } = await import('@/utils/shortcuts')
+    await initShortcuts()
+    for (const id of ['exportClipboard', 'exportFile', 'exportPng'] as const) {
+      expect(getHandler(`all:${S[id].keys}`)).toBeDefined()
+    }
+  })
 })

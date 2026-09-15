@@ -107,6 +107,8 @@ export function useMenuBar(actions: MenuBarActions) {
         {
           text: 'PNG Image',
           click: () => {
+            // Guard mirrors disabled state — Headless UI `disabled` may
+            // not suppress the inner button @click in all cases.
             if (asciibirdMeta.value.length) {
               window.dispatchEvent(
                 new CustomEvent('asciibird:export-png'),
