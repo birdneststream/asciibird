@@ -276,6 +276,14 @@ button {
     color: #c1c6d7;
 }
 
+.ab-kbd {
+    @apply px-1.5 py-0.5 rounded-sm text-label-mono font-label-mono whitespace-nowrap;
+    background: #0e0e0e;
+    border: 1px solid #414755;
+    border-bottom-width: 2px;
+    color: #c1c6d7;
+}
+
 .ab-rounded-button {
     @apply rounded h-7;
     color: #e5e2e1;
