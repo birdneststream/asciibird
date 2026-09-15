@@ -208,3 +208,55 @@ describe('modifiersFromEvent', () => {
       .toEqual({ shift: false, alt: true });
   });
 });
+
+// ─── modifiersFromEvent: held alternate-key merge ────────────────
+
+describe('modifiersFromEvent held merge', () => {
+  it('returns held state when the event is absent', () => {
+    expect(modifiersFromEvent(undefined, { alt: true }))
+      .toEqual({ shift: false, alt: true });
+    expect(modifiersFromEvent(undefined, { shift: true }))
+      .toEqual({ shift: true, alt: false });
+    expect(modifiersFromEvent(undefined, { shift: true, alt: true }))
+      .toEqual({ shift: true, alt: true });
+  });
+
+  it('returns held state for touch-like events without modifier keys', () => {
+    const touch = new Event('touchstart') as TouchEvent;
+    expect(modifiersFromEvent(touch, { alt: true }))
+      .toEqual({ shift: false, alt: true });
+  });
+
+  it('ORs event modifiers with held state', () => {
+    // Physical Shift + held Z (shift alternate) → shift true either way
+    expect(modifiersFromEvent(
+      new MouseEvent('mousedown', { shiftKey: true }), { shift: true },
+    )).toEqual({ shift: true, alt: false });
+    // Physical Alt + held A (alt alternate)
+    expect(modifiersFromEvent(
+      new MouseEvent('mousedown', { altKey: true }), { alt: true },
+    )).toEqual({ shift: false, alt: true });
+    // Physical Shift with held A → both constraints active
+    expect(modifiersFromEvent(
+      new MouseEvent('mousedown', { shiftKey: true }), { alt: true },
+    )).toEqual({ shift: true, alt: true });
+  });
+
+  it('held state alone activates without physical modifiers', () => {
+    expect(modifiersFromEvent(new MouseEvent('mousedown'), { shift: true, alt: true }))
+      .toEqual({ shift: true, alt: true });
+  });
+
+  it('held false does not affect event-derived state', () => {
+    expect(modifiersFromEvent(
+      new MouseEvent('mousedown', { shiftKey: true, altKey: true }),
+      { shift: false, alt: false },
+    )).toEqual({ shift: true, alt: true });
+  });
+
+  it('empty held state matches the legacy single-argument behavior', () => {
+    expect(modifiersFromEvent(new MouseEvent('mousedown', { altKey: true }), {}))
+      .toEqual({ shift: false, alt: true });
+    expect(modifiersFromEvent(undefined, {})).toEqual(NO_MODIFIERS);
+  });
+});

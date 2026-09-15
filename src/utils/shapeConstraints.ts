@@ -9,6 +9,12 @@
 //           expands symmetrically around it, with the cursor on the boundary.
 //   Shift+Alt combine: the 1:1-constrained delta expands from the center.
 //
+// Hold-to-apply alternates exist for users whose window manager captures
+// Alt-drag: A is equivalent to Alt (center) and Z to Shift (1:1). The
+// composable layer (useCanvasMouseHandlers) tracks held A/Z state and
+// merges it via modifiersFromEvent — geometrically identical to the
+// physical modifiers.
+//
 // The line tool ignores modifiers (passthrough) per spec. Coordinates are
 // unit-agnostic integers: full-block mode passes cells, half-block mode
 // passes half-rows (double-Y) — "equal grid units" is in the active grid's
@@ -45,13 +51,21 @@ export interface ShapeCoords {
 /**
  * Extract shape drawing modifiers from a mouse or keyboard event (the
  * keyboard path serves the Shift/Alt preview refresh). Touch events and
- * absent events carry no modifier state and fall back to NO_MODIFIERS.
+ * absent events carry no modifier state and fall back to `held` alone.
+ *
+ * `held` carries the hold-to-apply alternate-key state (A → alt, Z →
+ * shift) tracked by useCanvasMouseHandlers; it ORs with the physical
+ * modifier keys so both input styles behave identically.
  */
 export function modifiersFromEvent(
   e?: MouseEvent | TouchEvent | KeyboardEvent,
+  held: Readonly<Partial<ShapeModifiers>> = {},
 ): ShapeModifiers {
-  if (!e || !('shiftKey' in e)) return NO_MODIFIERS;
-  return { shift: e.shiftKey, alt: e.altKey };
+  const fromEvent = e && 'shiftKey' in e ? e : null;
+  return {
+    shift: (fromEvent?.shiftKey ?? false) || held.shift === true,
+    alt: (fromEvent?.altKey ?? false) || held.alt === true,
+  };
 }
 
 // ─── Constraint ──────────────────────────────────────────────────

@@ -4,6 +4,7 @@
 // Handles all tool-specific mouse interactions: brush, eraser, fill,
 // dropper, selection, gradient, shapes, replace-color, paste, text.
 
+import { reactive, watch } from 'vue';
 import { mircColours99 } from '../ascii';
 import { HalfBlockGrid, EMPTY_COLOUR } from '../utils/halfBlockGrid';
 import { bresenhamLine } from '../utils/bresenham';
@@ -96,9 +97,39 @@ interface InternalDeps {
   emit: MouseEmit;
   toolbarStore: ReturnType<typeof useToolbarStore>;
   toastShow: (msg: string, opts?: Record<string, unknown>) => void;
+  /** Held alternate shape-modifier keys (A → center, Z → 1:1) */
+  shapeAltKeys: { alt: boolean; shift: boolean };
 }
 
 // ─── Module-level helpers ───────────────────────────────────────
+
+/**
+ * Update held alternate-key state (A → center/alt, Z → 1:1/shift) from a
+ * keydown/keyup event. Pure state mutation of `held` — returns true when
+ * the event was an alternate-key update.
+ *
+ * Guards: key repeats (state unchanged), non-shapes-tool contexts (the
+ * keys must not interfere with typing or other tools), and INPUT/
+ * TEXTAREA targets (typing "a" into the brush-size field must not
+ * latch the center constraint).
+ */
+export function updateShapeAltKeys(
+  held: { alt: boolean; shift: boolean },
+  e: KeyboardEvent,
+  shapesToolActive: boolean,
+): boolean {
+  if (e.repeat) return false;
+  if (!shapesToolActive) return false;
+  const target = e.target as HTMLElement | null;
+  if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+    return false;
+  }
+  const key = e.key.toLowerCase();
+  if (key === 'a') held.alt = e.type === 'keydown';
+  else if (key === 'z') held.shift = e.type === 'keydown';
+  else return false;
+  return true;
+}
 
 function showHalfBlockError(
   toastShow: InternalDeps['toastShow'], toolName: string,
@@ -357,7 +388,8 @@ async function doMouseDown(d: InternalDeps, e?: MouseEvent | TouchEvent): Promis
       await doHandleGradient(d);
       break;
     case 'shapes':
-      await doHandleShapes(d, modifiersFromEvent(e));
+      // Merge physical Shift/Alt with held A/Z alternates
+      await doHandleShapes(d, modifiersFromEvent(e, d.shapeAltKeys));
       break;
   }
 }
@@ -485,7 +517,7 @@ async function doMouseMove(d: InternalDeps, e: MouseEvent): Promise<void> {
       }
       break;
     case 'shapes':
-      await refreshShapesPreview(d, modifiersFromEvent(e));
+      await refreshShapesPreview(d, modifiersFromEvent(e, d.shapeAltKeys));
       break;
   }
 }
@@ -493,6 +525,9 @@ async function doMouseMove(d: InternalDeps, e: MouseEvent): Promise<void> {
 // ─── Composable ─────────────────────────────────────────────────
 
 export function useCanvasMouseHandlers(deps: MouseHandlerDeps) {
+  /** Held alternate-key state (A → alt/center, Z → shift/1:1) */
+  const shapeAltKeys = reactive({ alt: false, shift: false });
+
   const d: InternalDeps = {
     s: deps.state,
     tools: deps.tools,
@@ -501,20 +536,46 @@ export function useCanvasMouseHandlers(deps: MouseHandlerDeps) {
     emit: deps.emit,
     toolbarStore: useToolbarStore(),
     toastShow: useToast().show,
+    shapeAltKeys,
   };
 
+  /** Reset held alternate keys (pick end, tool switch, window blur) */
+  function resetShapeAltKeys(): void {
+    shapeAltKeys.alt = false;
+    shapeAltKeys.shift = false;
+  }
+
+  // Held alternate keys never outlive their context: reset when the
+  // pick ends (applied or Escape-cancelled) or the tool switches away
+  watch(
+    () => d.tools.shapeTool.isShapePicking.value,
+    (picking) => {
+      if (!picking) resetShapeAltKeys();
+    },
+  );
+  watch(
+    () => d.s.currentTool.value?.name,
+    () => resetShapeAltKeys(),
+  );
+
   /**
-   * Redraw the shape preview after a Shift/Alt keydown or keyup — the
-   * preview otherwise only refreshes when the cursor moves between cells.
-   * Key-repeat events are ignored (state has not changed). Fire-and-forget
-   * like the template mouse handlers: preview redraws never block input.
+   * Redraw the shape preview after a Shift/Alt (or A/Z alternate) keydown
+   * or keyup — the preview otherwise only refreshes when the cursor moves
+   * between cells. Key-repeat events are ignored (state has not changed).
+   * Fire-and-forget like the template mouse handlers: preview redraws
+   * never block input.
    */
   function canvasModifierKeyChange(e: KeyboardEvent): void {
     const { s } = d;
     if (e.repeat) return;
-    if (s.currentTool.value?.name !== 'shapes') return;
+    const shapesActive = s.currentTool.value?.name === 'shapes';
+    // Track alternate keys whenever the shapes tool is active — keyup is
+    // processed even after the pick ends so a released key never stays
+    // latched (matches Alt/Shift, which are read from the mouse event)
+    updateShapeAltKeys(shapeAltKeys, e, shapesActive);
+    if (!shapesActive) return;
     if (!d.tools.shapeTool.isShapePicking.value) return;
-    void refreshShapesPreview(d, modifiersFromEvent(e));
+    void refreshShapesPreview(d, modifiersFromEvent(e, shapeAltKeys));
   }
 
   return {
@@ -522,5 +583,6 @@ export function useCanvasMouseHandlers(deps: MouseHandlerDeps) {
     canvasMouseUp: () => doMouseUp(d),
     canvasMouseMove: (e: MouseEvent) => doMouseMove(d, e),
     canvasModifierKeyChange,
+    resetShapeAltKeys,
   };
 }

@@ -386,6 +386,7 @@ const {
   canvasMouseUp,
   canvasMouseMove,
   canvasModifierKeyChange,
+  resetShapeAltKeys,
 } = mouseHandlers;
 
 // ─── Canvas Mouse Move Guard ────────────────────────────────────
@@ -647,15 +648,23 @@ useEventListener(
 // activation (notably Firefox's menubar focus on Alt release; best-effort
 // elsewhere). Alt+digit tool switching is unaffected — those handlers
 // fire on the digit keydown, a separate event.
+// A/Z are hold-to-apply alternates (A = from center, Z = 1:1) for users
+// whose window manager captures Alt — never preventDefault-ed, so text
+// input in fields is unaffected.
 useEventListener(
   window,
   ['keydown', 'keyup'],
   (e: KeyboardEvent) => {
-    if (e.key !== 'Shift' && e.key !== 'Alt') return;
+    const key = e.key.toLowerCase();
+    if (key !== 'shift' && key !== 'alt' && key !== 'a' && key !== 'z') return;
     if (e.key === 'Alt') e.preventDefault();
     canvasModifierKeyChange(e);
   },
 );
+
+// A window blur (e.g. window-manager focus steal) swallows keyups —
+// reset held A/Z so the alternate constraints can never stay latched.
+useEventListener(window, 'blur', () => resetShapeAltKeys());
 
 // ─── Init (equivalent to created()) ────────────────────────────
 if (currentAsciiLayerBlocks.value) {
