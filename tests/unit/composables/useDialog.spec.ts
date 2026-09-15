@@ -1,12 +1,37 @@
 // Tests for useDialog composable
 import { describe, it, expect, beforeEach } from 'vitest';
+import { createPinia, setActivePinia } from 'pinia';
 import { useDialog } from '../../../src/composables/useDialog';
+import { useModalStore } from '../../../src/store/modal';
 
 describe('useDialog', () => {
   let dialog: ReturnType<typeof useDialog>;
+  let modalStore: ReturnType<typeof useModalStore>;
 
   beforeEach(() => {
+    setActivePinia(createPinia());
+    modalStore = useModalStore();
     dialog = useDialog();
+  });
+
+  describe('keyboard suppression', () => {
+    it('disables keyboard shortcuts while a dialog is visible', async () => {
+      const promise = dialog.confirm({ title: 'Close?' });
+      expect(modalStore.isKeyboardDisabled).toBe(true);
+
+      dialog.ok();
+      await promise;
+      expect(modalStore.isKeyboardDisabled).toBe(false);
+    });
+
+    it('re-enables keyboard shortcuts when dialog is cancelled', async () => {
+      const promise = dialog.prompt({ title: 'Input' });
+      expect(modalStore.isKeyboardDisabled).toBe(true);
+
+      dialog.cancel();
+      await promise;
+      expect(modalStore.isKeyboardDisabled).toBe(false);
+    });
   });
 
   describe('prompt + ok', () => {

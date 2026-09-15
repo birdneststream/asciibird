@@ -682,12 +682,25 @@ describe('useGlobalShortcuts', () => {
     let types = dispatchSpy.mock.calls.map(c => (c[0] as CustomEvent).type)
     expect(types).not.toContain('asciibird:close-tab')
 
+    // Re-init with a modal open (clear stale handlers first —
+    // getHandler returns the first captured handler per combo)
+    gsHandlers.clear()
     _mockModalStore = createMockModalStore({ modalState: { options: true } })
     store = createMockStore()
     _mockStore = store
     await initShortcuts()
     getHandler('all:ctrl+r')!(createEvent(), {})
     types = dispatchSpy.mock.calls.map(c => (c[0] as CustomEvent).type)
+    expect(types).not.toContain('asciibird:close-tab')
+    dispatchSpy.mockRestore()
+  })
+
+  it('ctrl+r no-ops while keyboard disabled (dialog open)', async () => {
+    _mockModalStore = createMockModalStore({ isKeyboardDisabled: true })
+    await initShortcuts()
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+    getHandler('all:ctrl+r')!(createEvent(), {})
+    const types = dispatchSpy.mock.calls.map(c => (c[0] as CustomEvent).type)
     expect(types).not.toContain('asciibird:close-tab')
     dispatchSpy.mockRestore()
   })

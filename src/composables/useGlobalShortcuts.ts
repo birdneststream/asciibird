@@ -35,6 +35,12 @@ export function useGlobalShortcuts() {
       return true;
     };
 
+  // Canvas/document shortcuts are suppressed while any modal is open or
+  // keyboard is disabled (dialogs set isKeyboardDisabled via useDialog —
+  // e.g. Ctrl+R must not re-trigger while a confirm dialog is visible).
+  const shortcutsBlocked = () =>
+    modalStore.isModalOpen || modalStore.isKeyboardDisabled;
+
   // ─── Menu shortcuts (scope 'all' — always active) ──────────────
   const menuShortcuts: Record<string, () => void> = {
     'ctrl+m': () => modalStore.openModal('new-ascii'),
@@ -49,32 +55,32 @@ export function useGlobalShortcuts() {
       }
     },
     'ctrl+z': () => {
-      if (store.asciibirdMeta.length) {
+      if (store.asciibirdMeta.length && !shortcutsBlocked()) {
         store.undoBlocks();
       }
     },
     'ctrl+y': () => {
-      if (store.asciibirdMeta.length) {
+      if (store.asciibirdMeta.length && !shortcutsBlocked()) {
         store.redoBlocks();
       }
     },
     'ctrl+shift+z': () => {
-      if (store.asciibirdMeta.length) {
+      if (store.asciibirdMeta.length && !shortcutsBlocked()) {
         store.redoBlocks();
       }
     },
     'cmd+z': () => {
-      if (store.asciibirdMeta.length) {
+      if (store.asciibirdMeta.length && !shortcutsBlocked()) {
         store.undoBlocks();
       }
     },
     'cmd+shift+z': () => {
-      if (store.asciibirdMeta.length) {
+      if (store.asciibirdMeta.length && !shortcutsBlocked()) {
         store.redoBlocks();
       }
     },
     'cmd+y': () => {
-      if (store.asciibirdMeta.length) {
+      if (store.asciibirdMeta.length && !shortcutsBlocked()) {
         store.redoBlocks();
       }
     },
@@ -90,34 +96,34 @@ export function useGlobalShortcuts() {
     // Export shortcuts (restored from legacy) — handled by Dashboard
     // (mIRC clipboard/file) and Editor (PNG) via custom events.
     [SHORTCUTS.exportClipboard.keys]: () => {
-      if (!store.asciibirdMeta.length || modalStore.isModalOpen) return;
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
       window.dispatchEvent(new CustomEvent('asciibird:export-clipboard'));
     },
     [SHORTCUTS.exportFile.keys]: () => {
-      if (!store.asciibirdMeta.length || modalStore.isModalOpen) return;
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
       window.dispatchEvent(new CustomEvent('asciibird:export-file'));
     },
     [SHORTCUTS.exportPng.keys]: () => {
-      if (!store.asciibirdMeta.length || modalStore.isModalOpen) return;
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
       window.dispatchEvent(new CustomEvent('asciibird:export-png'));
     },
 
     // Close current ASCII (with confirm dialog) — handled by Dashboard
     [SHORTCUTS.closeAscii.keys]: () => {
-      if (!store.asciibirdMeta.length || modalStore.isModalOpen) return;
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
       window.dispatchEvent(new CustomEvent('asciibird:close-tab'));
     },
 
     // Copy selected blocks to clipboard — handled by Dashboard
     'ctrl+c': () => {
-      if (store.asciibirdMeta.length && !modalStore.isModalOpen) {
+      if (store.asciibirdMeta.length && !shortcutsBlocked()) {
         window.dispatchEvent(new CustomEvent('asciibird:copy-blocks'));
       }
     },
 
     // Paste copied blocks — enter paste mode with ghost preview
     'ctrl+v': () => {
-      if (!store.asciibirdMeta.length || modalStore.isModalOpen) return;
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
       const copied = toolbarStore.selectBlocks;
       if (copied.length > 0) {
         window.dispatchEvent(new CustomEvent('asciibird:paste-blocks'));
@@ -126,13 +132,13 @@ export function useGlobalShortcuts() {
 
     // Cut selection (copy + erase)
     'ctrl+x': () => {
-      if (!store.asciibirdMeta.length || modalStore.isModalOpen) return;
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
       window.dispatchEvent(new CustomEvent('asciibird:cut-blocks'));
     },
 
     // Load copied blocks as brush (legacy Ctrl+V behavior)
     'ctrl+shift+b': () => {
-      if (!store.asciibirdMeta.length || modalStore.isModalOpen) return;
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
       const copied = toolbarStore.selectBlocks;
       if (copied.length > 0) {
         toolbarStore.setBrushBlocks(copied);
@@ -156,28 +162,28 @@ export function useGlobalShortcuts() {
 
     // Selection transforms (only when select tool active + selection exists)
     'ctrl+shift+.': () => {
-      if (!modalStore.isModalOpen) {
+      if (!shortcutsBlocked()) {
         window.dispatchEvent(
           new CustomEvent('asciibird:selection-transform', { detail: 'rotate-cw' }),
         );
       }
     },
     'ctrl+shift+,'  : () => {
-      if (!modalStore.isModalOpen) {
+      if (!shortcutsBlocked()) {
         window.dispatchEvent(
           new CustomEvent('asciibird:selection-transform', { detail: 'rotate-ccw' }),
         );
       }
     },
     'ctrl+shift+h': () => {
-      if (!modalStore.isModalOpen) {
+      if (!shortcutsBlocked()) {
         window.dispatchEvent(
           new CustomEvent('asciibird:selection-transform', { detail: 'flip-h' }),
         );
       }
     },
     'ctrl+shift+x': () => {
-      if (!modalStore.isModalOpen) {
+      if (!shortcutsBlocked()) {
         window.dispatchEvent(
           new CustomEvent('asciibird:selection-transform', { detail: 'flip-v' }),
         );
@@ -186,18 +192,18 @@ export function useGlobalShortcuts() {
 
     // Layer operations
     'ctrl+shift+m': () => {
-      if (!store.asciibirdMeta.length || modalStore.isModalOpen) return;
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
       store.mergeLayerDown();
     },
     'ctrl+shift+d': () => {
-      if (!store.asciibirdMeta.length || modalStore.isModalOpen) return;
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
       store.duplicateLayer();
     },
 
     // Shape type cycling (when shapes tool is active)
     'shift+s': () => {
       const toolName = toolbarIcons[toolbarStore.currentTool]?.name;
-      if (toolName === 'shapes' && !modalStore.isModalOpen) {
+      if (toolName === 'shapes' && !shortcutsBlocked()) {
         toolbarStore.cycleShapeType();
       }
     },
@@ -208,7 +214,7 @@ export function useGlobalShortcuts() {
   // "Change ASCII" menu hotkeys). Only fires when the tab exists.
   for (let i = 0; i <= 9; i++) {
     menuShortcuts[`ctrl+shift+${i}`] = () => {
-      if (modalStore.isModalOpen) return;
+      if (shortcutsBlocked()) return;
       if (store.asciibirdMeta[i]) {
         store.changeTab(i);
       }

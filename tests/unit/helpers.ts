@@ -708,9 +708,9 @@ export function createMockStore(
       state.tab = state.asciibirdMeta.length - 1
     },
     changeTab(payload: number) {
-      if (state.asciibirdMeta[payload]) {
-        state.tab = payload
-      }
+      // Faithful to the real store — no bounds guard, so tests can
+      // catch handlers calling it with invalid indices
+      state.tab = payload
     },
     setBrushBlocks(blocks: any) {
       state._brushBlocks = LZString.compressToUTF16(

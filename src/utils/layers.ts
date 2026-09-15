@@ -20,7 +20,9 @@ export function decompressLayers(compressed: string): Layer[] {
   try {
     const raw = LZString.decompressFromUTF16(compressed);
     if (!raw) return [];
-    return JSON.parse(raw);
+    const parsed: unknown = JSON.parse(raw);
+    // Guard against corrupt persisted data that isn't a layer array
+    return Array.isArray(parsed) ? parsed as Layer[] : [];
   } catch (e) {
     console.warn('[asciibird] Failed to decompress layers:', e);
     return [];

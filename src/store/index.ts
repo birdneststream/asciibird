@@ -450,6 +450,8 @@ export const useAsciiBirdStore = defineStore('asciibird', {
     // ── Layers ──────────────────────────────────────────────────
 
     addLayer() {
+      // Guard: corrupt/empty layer data would crash on layers[0]
+      if (!this.currentAsciiLayers.length) return;
       this.withLayerMutation(
         (layers) => {
           layers.push(createEmptyLayer(
@@ -465,6 +467,8 @@ export const useAsciiBirdStore = defineStore('asciibird', {
       );
     },
     mergeAllLayers() {
+      // Guard: corrupt/empty layer data would crash on layers[0]
+      if (!this.currentAsciiLayers.length) return;
       this.withLayerMutation(
         (layers) => {
           const width = layers[0].width;

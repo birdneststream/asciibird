@@ -1,5 +1,6 @@
 // Dialog composable — replaces $dialog.confirm/prompt from vue-tailwind
 import { ref } from 'vue';
+import { useModalStore } from '../store/modal';
 
 export interface DialogOptions {
   title?: string;
@@ -35,8 +36,14 @@ const state = ref<DialogState>({
 });
 
 export function useDialog() {
+  // Suppress global shortcuts while any dialog is visible so destructive
+  // confirms can't be re-triggered (e.g. Ctrl+R while "Close ASCII?" is
+  // open) and canvas shortcuts don't fire underneath the dialog.
+  const modalStore = useModalStore();
+
   const confirm = (opts: DialogOptions): Promise<DialogResult> => {
     return new Promise((resolve) => {
+      modalStore.toggleDisableKeyboard(true);
       state.value = {
         visible: true,
         mode: 'confirm',
@@ -51,6 +58,7 @@ export function useDialog() {
 
   const prompt = (opts: DialogOptions): Promise<DialogResult> => {
     return new Promise((resolve) => {
+      modalStore.toggleDisableKeyboard(true);
       state.value = {
         visible: true,
         mode: 'prompt',
@@ -67,6 +75,7 @@ export function useDialog() {
     const resolve = state.value.resolve;
     state.value.visible = false;
     state.value.resolve = null;
+    modalStore.toggleDisableKeyboard(false);
     if (resolve) {
       resolve({ isOk: true, input: input ?? state.value.inputValue });
     }
@@ -76,6 +85,7 @@ export function useDialog() {
     const resolve = state.value.resolve;
     state.value.visible = false;
     state.value.resolve = null;
+    modalStore.toggleDisableKeyboard(false);
     if (resolve) {
       resolve({ isOk: false, input: '' });
     }
