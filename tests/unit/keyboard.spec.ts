@@ -831,4 +831,12 @@ describe('useGlobalShortcuts', () => {
     getHandler('all:ctrl+alt+d')!(createEvent(), {})
     expect(panelSpy).not.toHaveBeenCalled()
   })
+
+  it('panel visibility shortcuts no-op while keyboard disabled (dialog open)', async () => {
+    _mockModalStore = createMockModalStore({ isKeyboardDisabled: true })
+    await initShortcuts()
+    const deskSpy = vi.spyOn(_mockDesktopStore, 'changeTabsVisible')
+    getHandler('all:ctrl+alt+t')!(createEvent(), {})
+    expect(deskSpy).not.toHaveBeenCalled()
+  })
 })

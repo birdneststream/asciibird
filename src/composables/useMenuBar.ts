@@ -248,6 +248,8 @@ export function useMenuBar(actions: MenuBarActions) {
             ? 'Hide Toolbar' : 'Show Toolbar',
           click: () => {
             const ts = toolbarState.value;
+            // changeToolBarState assigns x/y/w/h/visible; minimized is
+            // passed through for PanelState type completeness (preserved).
             toolbarStore.changeToolBarState({
               x: ts.x, y: ts.y, h: ts.h, w: ts.w,
               minimized: ts.minimized,

@@ -27,7 +27,7 @@ export const SHORTCUTS = {
   // File / tabs
   closeAscii: { keys: 'ctrl+r', label: 'Ctrl+R' },
 
-  // Panel visibility (View → Windows)
+  // Panel visibility (View menu)
   toggleTabs: { keys: 'ctrl+alt+t', label: 'Ctrl+Alt+T' },
   toggleMenuBar: { keys: 'ctrl+alt+m', label: 'Ctrl+Alt+M' },
   toggleDebug: { keys: 'ctrl+alt+d', label: 'Ctrl+Alt+D' },

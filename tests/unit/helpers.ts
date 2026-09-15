@@ -150,6 +150,8 @@ export interface MockStoreConfig {
 
 /**
  * Create a mock desktop store (menu bar / tabs visibility).
+ * Exposes getters over internal state so post-action assertions
+ * read live values (matches fidelity of other panel mocks).
  */
 export function createMockDesktopStore(
   overrides: Record<string, any> = {},
@@ -161,7 +163,8 @@ export function createMockDesktopStore(
   }
 
   return {
-    ...state,
+    get menuBarVisible() { return state.menuBarVisible },
+    get tabsVisible() { return state.tabsVisible },
     changeMenuBarVisible(v: boolean) { state.menuBarVisible = v },
     changeTabsVisible(v: boolean) { state.tabsVisible = v },
   }

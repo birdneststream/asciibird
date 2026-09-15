@@ -147,6 +147,8 @@ export function useGlobalShortcuts() {
     [SHORTCUTS.toggleToolbar.keys]: () => {
       if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
       const ts = toolbarStore.toolbarState;
+      // changeToolBarState assigns x/y/w/h/visible; minimized is
+      // passed through for PanelState type completeness (preserved).
       toolbarStore.changeToolBarState({
         x: ts.x, y: ts.y, h: ts.h, w: ts.w,
         minimized: ts.minimized,
