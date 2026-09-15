@@ -12,12 +12,14 @@ import { updateShapeAltKeys } from '../../../src/composables/useCanvasMouseHandl
 function keyEvent(
   type: 'keydown' | 'keyup',
   key: string,
-  opts: { repeat?: boolean; target?: HTMLElement } = {},
+  opts: { repeat?: boolean; target?: HTMLElement; ctrlKey?: boolean; metaKey?: boolean } = {},
 ): KeyboardEvent {
   return {
     type,
     key,
     repeat: opts.repeat ?? false,
+    ctrlKey: opts.ctrlKey ?? false,
+    metaKey: opts.metaKey ?? false,
     target: opts.target ?? document.body,
   } as unknown as KeyboardEvent;
 }
@@ -68,6 +70,20 @@ describe('updateShapeAltKeys', () => {
     expect(held.alt).toBe(false);
   });
 
+  it('ignores Ctrl/Cmd combos — Ctrl+Z undo and Ctrl+A must not latch', () => {
+    const held = { alt: false, shift: false };
+    expect(updateShapeAltKeys(
+      held, keyEvent('keydown', 'z', { ctrlKey: true }), true,
+    )).toBe(false);
+    expect(updateShapeAltKeys(
+      held, keyEvent('keydown', 'a', { ctrlKey: true }), true,
+    )).toBe(false);
+    expect(updateShapeAltKeys(
+      held, keyEvent('keydown', 'a', { metaKey: true }), true,
+    )).toBe(false);
+    expect(held).toEqual({ alt: false, shift: false });
+  });
+
   it('ignores events targeting INPUT fields (typing must not latch)', () => {
     const held = { alt: false, shift: false };
     expect(updateShapeAltKeys(
@@ -83,6 +99,19 @@ describe('updateShapeAltKeys', () => {
       held, keyEvent('keydown', 'z', { target: textarea }), true,
     )).toBe(false);
     expect(held.shift).toBe(false);
+  });
+
+  it('ignores events targeting contenteditable elements', () => {
+    const held = { alt: false, shift: false };
+    const editable = document.createElement('div');
+    editable.setAttribute('contenteditable', 'true');
+    // jsdom does not reflect the attribute onto isContentEditable —
+    // stub the property so the guard logic itself is exercised
+    Object.defineProperty(editable, 'isContentEditable', { value: true });
+    expect(updateShapeAltKeys(
+      held, keyEvent('keydown', 'a', { target: editable }), true,
+    )).toBe(false);
+    expect(held.alt).toBe(false);
   });
 
   it('ignores unrelated keys', () => {

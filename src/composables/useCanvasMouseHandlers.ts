@@ -109,9 +109,10 @@ interface InternalDeps {
  * the event was an alternate-key update.
  *
  * Guards: key repeats (state unchanged), non-shapes-tool contexts (the
- * keys must not interfere with typing or other tools), and INPUT/
- * TEXTAREA targets (typing "a" into the brush-size field must not
- * latch the center constraint).
+ * keys must not interfere with typing or other tools), Ctrl/Cmd combos
+ * (Ctrl+Z undo and Ctrl+A must not latch constraint flags), and editable
+ * targets — INPUT/TEXTAREA or contenteditable (typing "a" into the
+ * brush-size field must not latch the center constraint).
  */
 export function updateShapeAltKeys(
   held: { alt: boolean; shift: boolean },
@@ -119,9 +120,15 @@ export function updateShapeAltKeys(
   shapesToolActive: boolean,
 ): boolean {
   if (e.repeat) return false;
+  if (e.ctrlKey || e.metaKey) return false;
   if (!shapesToolActive) return false;
   const target = e.target as HTMLElement | null;
-  if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA')) {
+  if (
+    target
+    && (target.tagName === 'INPUT'
+      || target.tagName === 'TEXTAREA'
+      || target.isContentEditable)
+  ) {
     return false;
   }
   const key = e.key.toLowerCase();
@@ -539,20 +546,18 @@ export function useCanvasMouseHandlers(deps: MouseHandlerDeps) {
     shapeAltKeys,
   };
 
-  /** Reset held alternate keys (pick end, tool switch, window blur) */
+  /** Reset held alternate keys (tool switch, window blur) */
   function resetShapeAltKeys(): void {
     shapeAltKeys.alt = false;
     shapeAltKeys.shift = false;
   }
 
-  // Held alternate keys never outlive their context: reset when the
-  // pick ends (applied or Escape-cancelled) or the tool switches away
-  watch(
-    () => d.tools.shapeTool.isShapePicking.value,
-    (picking) => {
-      if (!picking) resetShapeAltKeys();
-    },
-  );
+  // Held alternate keys reset when the tool switches away. They are
+  // deliberately NOT reset when a pick ends: a key held across
+  // consecutive shapes must keep constraining (parity with physical
+  // Alt/Shift, which are read fresh from each mouse event). Latch
+  // safety comes from keyup (processed without the picking guard),
+  // the tool-switch watcher, and the window-blur reset in Editor.vue.
   watch(
     () => d.s.currentTool.value?.name,
     () => resetShapeAltKeys(),
