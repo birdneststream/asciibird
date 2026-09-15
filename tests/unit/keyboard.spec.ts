@@ -1049,9 +1049,11 @@ describe('useGlobalShortcuts', () => {
 
   it('layer shortcuts act on the current selectedLayer (dynamic read)', async () => {
     store = createMockStore()
-    store.asciibirdMeta[0].selectedLayer = 2
     _mockStore = store
     await initShortcuts()
+    // Mutate AFTER registration — proves handlers read selectedLayer at
+    // call time, not a value captured when the shortcut was registered
+    store.asciibirdMeta[0].selectedLayer = 2
     const toggleSpy = vi.spyOn(store, 'toggleLayer')
     const upSpy = vi.spyOn(store, 'upLayer')
     const downSpy = vi.spyOn(store, 'downLayer')
@@ -1085,5 +1087,61 @@ describe('useGlobalShortcuts', () => {
     getHandler('all:ctrl+shift+up')!(createEvent(), {})
     expect(toggleSpy).not.toHaveBeenCalled()
     expect(downSpy).not.toHaveBeenCalled()
+  })
+
+  // ─── Adjacency regression tests (legacy restore) ───────────────
+  // New combos sit adjacent to existing ones (ctrl+c vs ctrl+shift+c,
+  // ctrl+b vs ctrl+shift+b, ctrl+shift+d/m unchanged) — hotkeys-js
+  // matches exact modifier sets, these lock that in.
+
+  it('ctrl+c still copies; ctrl+shift+c does not fire copy-blocks', async () => {
+    await initShortcuts()
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+    getHandler('all:ctrl+c')!(createEvent(), {})
+    let types = dispatchSpy.mock.calls.map(c => (c[0] as CustomEvent).type)
+    expect(types).toContain('asciibird:copy-blocks')
+
+    dispatchSpy.mockClear()
+    getHandler('all:ctrl+shift+c')!(createEvent(), {})
+    types = dispatchSpy.mock.calls.map(c => (c[0] as CustomEvent).type)
+    expect(types).not.toContain('asciibird:copy-blocks')
+    expect(types).toContain('asciibird:export-clipboard')
+    dispatchSpy.mockRestore()
+  })
+
+  it('ctrl+shift+b still loads brush; ctrl+b does not fire setBrushBlocks', async () => {
+    await initShortcuts()
+    const brushSpy = vi.spyOn(_mockToolbarStore, 'setBrushBlocks')
+    const dispatchSpy = vi.spyOn(window, 'dispatchEvent')
+
+    getHandler('all:ctrl+b')!(createEvent(), {})
+    expect(brushSpy).not.toHaveBeenCalled()
+    const types = dispatchSpy.mock.calls.map(c => (c[0] as CustomEvent).type)
+    expect(types).toContain('asciibird:save-brush-library')
+
+    dispatchSpy.mockClear()
+    getHandler('all:ctrl+shift+b')!(createEvent(), {})
+    expect(brushSpy).not.toHaveBeenCalled() // no copied blocks in mock
+    dispatchSpy.mockRestore()
+  })
+
+  it('ctrl+shift+m/d still call mergeLayerDown/duplicateLayer', async () => {
+    await initShortcuts()
+    const mergeSpy = vi.spyOn(store, 'mergeLayerDown')
+    const dupSpy = vi.spyOn(store, 'duplicateLayer')
+    getHandler('all:ctrl+shift+m')!(createEvent(), {})
+    getHandler('all:ctrl+shift+d')!(createEvent(), {})
+    expect(mergeSpy).toHaveBeenCalledTimes(1)
+    expect(dupSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('undo/redo handlers unchanged and not blocked by registry additions', async () => {
+    await initShortcuts()
+    const undoSpy = vi.spyOn(store, 'undoBlocks')
+    const redoSpy = vi.spyOn(store, 'redoBlocks')
+    getHandler('all:ctrl+z')!(createEvent(), {})
+    getHandler('all:ctrl+y')!(createEvent(), {})
+    expect(undoSpy).toHaveBeenCalledTimes(1)
+    expect(redoSpy).toHaveBeenCalledTimes(1)
   })
 })

@@ -849,6 +849,8 @@ export function createMockStore(
         JSON.stringify(layers),
       )
     },
+    mergeLayerDown() {},
+    duplicateLayer() {},
     downLayer(idx: number) {
       const meta = state.asciibirdMeta[state.tab]
       if (!meta) return
