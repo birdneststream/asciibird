@@ -32,7 +32,7 @@
         data-testid="help-tools"
       >
         <div
-          v-for="tool in helpTools"
+          v-for="tool in HELP_TOOLS"
           :key="tool.name"
           class="flex items-start gap-2 bg-surface-container-lowest border border-outline-variant/50 rounded p-2"
         >
@@ -58,7 +58,7 @@
         data-testid="help-shortcuts"
       >
         <div
-          v-for="group in shortcutGroups"
+          v-for="group in HELP_SHORTCUT_GROUPS"
           :key="group.title"
         >
           <span class="font-label-mono text-label-mono text-primary block mb-1">
@@ -69,7 +69,7 @@
             :key="group.title + i"
             class="flex items-baseline justify-between gap-3 py-0.5 border-b border-outline-variant/20 last:border-0"
           >
-            <span class="text-on-surface-variant text-body-sm text-right flex-shrink-0">
+            <span class="text-on-surface-variant text-body-sm min-w-0">
               {{ shortcut.action }}
             </span>
             <kbd class="ab-kbd flex-shrink-0">{{ shortcut.keys }}</kbd>
@@ -114,8 +114,5 @@ const tabs = [
 
 const activeTab = ref<'tools' | 'shortcuts'>('tools');
 
-const helpTools = computed(() => HELP_TOOLS);
-const shortcutGroups = computed(() => HELP_SHORTCUT_GROUPS);
-
-defineExpose({ showHelpModal, activeTab, helpTools, shortcutGroups });
+defineExpose({ showHelpModal, activeTab, helpTools: HELP_TOOLS, shortcutGroups: HELP_SHORTCUT_GROUPS });
 </script>

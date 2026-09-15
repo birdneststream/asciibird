@@ -2,27 +2,31 @@
  * Help modal content — structured tools + keyboard shortcuts reference.
  *
  * Single source of truth for the in-app Help modal (Help.vue). Tools
- * mirror the toolbarIcons registry (src/utils/uiConstants.ts) and
- * shortcut labels derive from the SHORTCUTS registry
- * (src/utils/shortcuts.ts) wherever an entry exists, so the help
- * content cannot drift from the registered combos. Shortcuts that are
- * registered inline in useGlobalShortcuts.ts / useEditorHotkeys.ts
- * (tool keys, editor-mode keys, shape modifiers) are documented here
- * next to their registration sites — helpContent.spec.ts guards the
- * registry-covered subset both directions.
+ * (names, labels, icons) derive directly from the toolbarIcons registry
+ * (src/utils/uiConstants.ts + toolLabel in src/utils/toolbar.ts) so the
+ * help can never drift from the toolbar, and shortcut labels derive
+ * from the SHORTCUTS registry (src/utils/shortcuts.ts) wherever an
+ * entry exists. Shortcuts registered inline in useGlobalShortcuts.ts /
+ * useEditorHotkeys.ts / KeyboardShortcuts.vue (tool keys, editor-mode
+ * keys, Alt+1…8 tool switching, shape modifiers) are asserted against
+ * a known-key list in helpContent.spec.ts so new inline registrations
+ * cannot silently disappear from the help.
  */
 
+import { toolbarIcons } from './uiConstants';
+import { toolLabel } from './toolbar';
+import type { ToolbarIcon } from '../types';
 import { SHORTCUTS } from './shortcuts';
 
 // ─── Types ───────────────────────────────────────────────────────
 
 /** A tool entry in the Tools tab */
 export interface HelpTool {
-  /** Tool name — must match a toolbarIcons entry (drift-guarded) */
+  /** Tool name — mirrors the toolbarIcons registry */
   name: string;
-  /** Human-readable label */
+  /** Human-readable label — derived from toolLabel() */
   label: string;
-  /** Material icon name shown in the help entry */
+  /** Material icon name — matches the toolbar button */
   icon: string;
   /** What the tool does, including mode notes */
   description: string;
@@ -44,110 +48,69 @@ export interface HelpShortcutGroup {
 
 // ─── Tools ───────────────────────────────────────────────────────
 
-export const HELP_TOOLS: HelpTool[] = [
-  {
-    name: 'default',
-    label: 'Default',
-    icon: 'edit_off',
-    description:
-      'No tool active — the canvas cannot be edited, but panels can be '
-      + 'dragged and resized freely. Escape returns here from any tool.',
-  },
-  {
-    name: 'select',
-    label: 'Select',
-    icon: 'photo_size_select_small',
-    description:
-      'Drag a rectangle to select blocks. Then copy (Ctrl+C), cut '
-      + '(Ctrl+X), delete, nudge (Shift+arrows), rotate/flip '
-      + '(Ctrl+Shift+. , Ctrl+Shift+, H X), save to brush library '
-      + '(Ctrl+B), or load as a brush (Ctrl+Shift+B).',
-  },
-  {
-    name: 'text',
-    label: 'Text',
-    icon: 'text_rotation_none',
-    description:
-      'Click a position and type. Text wraps at the end of the line; '
-      + 'Enter starts a new line, Backspace/Delete edit. Works with '
-      + 'Mirror X/Y. Not available in half-block mode.',
-  },
-  {
-    name: 'fill',
-    label: 'Fill',
-    icon: 'format_color_fill',
-    description:
-      'Flood fill a connected region with the current brush colour, '
-      + 'respecting the FG/BG/Text filters. In half-block mode it fills '
-      + 'at half resolution with the FG colour.',
-  },
-  {
-    name: 'brush',
-    label: 'Brush',
-    icon: 'brush',
-    description:
-      'The main drawing tool — paints with the current brush (size, '
-      + 'shape and library brushes). E flips the brush horizontally and '
-      + 'Q vertically. Works with Mirror X/Y. In half-block mode it '
-      + 'paints single halves with the FG colour only.',
-  },
-  {
-    name: 'dropper',
-    label: 'Picker',
-    icon: 'colorize',
-    description:
-      'Pick up the FG, BG and character of any block, respecting the '
-      + 'targeting filters. In half-block mode it picks the half\u2019s '
-      + 'colour into FG.',
-  },
-  {
-    name: 'eraser',
-    label: 'Eraser',
-    icon: 'remove_circle_outline',
-    description:
-      'Removes block properties with the brush footprint, respecting '
-      + 'the FG/BG/Text filters — with only Char selected it strips '
-      + 'characters but keeps colours. In half-block mode it erases '
-      + 'single halves to transparency.',
-  },
-  {
-    name: 'fill-eraser',
-    label: 'Erase Fill',
-    icon: 'auto_fix_off',
-    description:
-      'Flood-fill removal of block properties, respecting the FG/BG/Text '
-      + 'filters — handy for transparent-background art.',
-  },
-  {
-    name: 'replace-color',
-    label: 'ReColour',
-    icon: 'format_paint',
-    description:
-      'Replaces a colour picked from a block across the whole canvas or '
-      + 'the active selection. Not available in half-block mode.',
-  },
-  {
-    name: 'gradient',
-    label: 'Gradient',
-    icon: 'gradient',
-    description:
-      'Two-click gradient fill: click a start block, then an end block '
-      + '— colours interpolate from FG to BG between them. Not available '
-      + 'in half-block mode.',
-  },
-  {
-    name: 'shapes',
-    label: 'Shapes',
-    icon: 'pentool',
-    description:
-      'Two-click shapes: line, rectangle outline/filled and ellipse '
-      + 'outline/filled — press Shift+S to cycle the shape type. While '
-      + 'picking the end point, hold Shift or Z to constrain 1:1 and '
-      + 'hold Alt or A to draw from the centre anchor (combinable; A/Z '
-      + 'exist for window managers that capture Alt). In half-block mode '
-      + 'shapes paint the FG colour at half resolution.',
-  },
-];
+/** Per-tool help copy, keyed by toolbarIcons name */
+const TOOL_DESCRIPTIONS: Record<string, string> = {
+  default:
+    'No tool active — the canvas cannot be edited, but panels can be '
+    + 'dragged and resized freely. Escape returns here from any tool.',
+  select:
+    'Drag a rectangle to select blocks. Then copy (Ctrl+C), cut '
+    + '(Ctrl+X) or delete (Delete) them; nudge with Shift+arrows; '
+    + 'rotate (Ctrl+Shift+. / Ctrl+Shift+,); flip (Ctrl+Shift+H / '
+    + 'Ctrl+Shift+X); save to the brush library (Ctrl+B) or load as a '
+    + 'brush (Ctrl+Shift+B). Selections snap to halves in half-block '
+    + 'mode.',
+  text:
+    'Click a position and type. Text wraps at the end of the line; '
+    + 'Enter starts a new line, Backspace/Delete edit. Works with '
+    + 'Mirror X/Y. Not available in half-block mode.',
+  fill:
+    'Flood fill a connected region with the current FG colour, '
+    + 'respecting the FG/BG/Text filters. In half-block mode it fills '
+    + 'at half resolution.',
+  brush:
+    'The main drawing tool — paints with the current brush (size, '
+    + 'shape and library brushes). E flips the brush horizontally and '
+    + 'Q vertically. Works with Mirror X/Y. In half-block mode it '
+    + 'paints single halves with the FG colour only.',
+  dropper:
+    'Pick up the FG, BG and character of any block, respecting the '
+    + 'targeting filters. In half-block mode it picks the half\u2019s '
+    + 'colour into FG.',
+  eraser:
+    'Removes block properties with the brush footprint, respecting '
+    + 'the FG/BG/Text filters — with only Char selected it strips '
+    + 'characters but keeps colours. In half-block mode it erases '
+    + 'single halves to transparency.',
+  'fill-eraser':
+    'Flood-fill removal of block properties, respecting the FG/BG/Text '
+    + 'filters — handy for transparent-background art. In half-block '
+    + 'mode it erases fills at half resolution.',
+  'replace-color':
+    'Replaces a colour picked from a block across the whole canvas or '
+    + 'the active selection. Not available in half-block mode.',
+  gradient:
+    'Two-click gradient fill: click a start block, then an end block '
+    + '— colours interpolate from FG to BG between them. Not available '
+    + 'in half-block mode.',
+  shapes:
+    'Two-click shapes: line, rectangle outline/filled and ellipse '
+    + 'outline/filled — press Shift+S to cycle the shape type. While '
+    + 'picking the end point, hold Shift or Z to constrain 1:1 and '
+    + 'hold Alt or A to draw from the centre anchor (combinable; A/Z '
+    + 'exist for window managers that capture Alt). In half-block mode '
+    + 'shapes paint the FG colour at half resolution.',
+};
+
+/** Tool entries derived from the toolbar registry — zero drift */
+export const HELP_TOOLS: HelpTool[] = toolbarIcons.map(
+  (icon: ToolbarIcon): HelpTool => ({
+    name: icon.name,
+    label: toolLabel(icon),
+    icon: icon.icon,
+    description: TOOL_DESCRIPTIONS[icon.name] ?? '',
+  }),
+);
 
 // ─── Shortcuts ───────────────────────────────────────────────────
 
@@ -179,6 +142,7 @@ export const HELP_SHORTCUT_GROUPS: HelpShortcutGroup[] = [
       { keys: 'R', action: 'ReColour tool' },
       { keys: 'L', action: 'Shapes tool' },
       { keys: 'Shift+S', action: 'Cycle the shape type (when shapes tool is active)' },
+      { keys: 'Alt+1 … 8', action: 'Switch to the toolbar tool at that position' },
     ],
   },
   {

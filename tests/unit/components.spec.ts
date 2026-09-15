@@ -546,6 +546,23 @@ describe('Help.vue', () => {
     const wrapper = stw(Help, mountOpts())
     expect(wrapper.vm.showHelpModal).toBe(false)
   })
+
+  it('switches between the Tools and Shortcuts tabs', async () => {
+    const wrapper = tw(Help, mountOpts())
+    // Tools tab active by default
+    expect(wrapper.find('[data-testid="help-tools"]').exists()).toBe(true)
+    expect(wrapper.find('[data-testid="help-shortcuts"]').exists()).toBe(false)
+
+    // Click the Shortcuts tab — panels swap
+    const shortcutsBtn = wrapper.findAll('button')
+      .find(b => b.text().includes('Shortcuts'))
+    expect(shortcutsBtn).toBeDefined()
+    await shortcutsBtn!.trigger('click')
+    expect(wrapper.find('[data-testid="help-tools"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="help-shortcuts"]').exists()).toBe(true)
+    // Shortcut rows render with kbd chips
+    expect(wrapper.findAll('.ab-kbd').length).toBeGreaterThan(10)
+  })
 })
 
 // ─── ContextMenu.vue ─────────────────────────

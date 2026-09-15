@@ -1,33 +1,31 @@
 // helpContent drift-guard tests
 //
-// The help content must stay in sync with the registries it mirrors:
-//  - every toolbarIcons tool has a HELP_TOOLS entry and vice versa
-//  - help tool icons match the toolbar icons
+// The help content must stay in sync with the sources it mirrors:
+//  - tool names/labels/icons derive from the toolbarIcons registry +
+//    toolLabel() — asserted equal here
 //  - every SHORTCUTS registry entry appears in HELP_SHORTCUT_GROUPS
+//  - the known set of inline-registered shortcuts (useGlobalShortcuts /
+//    useEditorHotkeys / KeyboardShortcuts.vue) is asserted to appear,
+//    so a new inline registration added here keeps the help honest
 import { describe, it, expect } from 'vitest';
 import { HELP_TOOLS, HELP_SHORTCUT_GROUPS } from '@/utils/helpContent';
 import { toolbarIcons } from '@/utils/uiConstants';
+import { toolLabel } from '@/utils/toolbar';
 import { SHORTCUTS } from '@/utils/shortcuts';
 
 describe('helpContent tools', () => {
-  it('documents every toolbarIcons tool exactly (no extras, no gaps)', () => {
-    const toolNames = HELP_TOOLS.map(t => t.name);
-    const registryNames = toolbarIcons.map(t => t.name);
-    expect([...toolNames].sort()).toEqual([...registryNames].sort());
-  });
-
-  it('uses the same icons as the toolbar registry', () => {
+  it('mirrors toolbarIcons exactly — names, labels and icons', () => {
+    expect(HELP_TOOLS.map(t => t.name)).toEqual(toolbarIcons.map(t => t.name));
     for (const tool of HELP_TOOLS) {
-      const registry = toolbarIcons.find(t => t.name === tool.name);
-      expect(registry, `tool ${tool.name} exists in toolbarIcons`).toBeDefined();
-      expect(tool.icon).toBe(registry!.icon);
+      const registry = toolbarIcons.find(t => t.name === tool.name)!;
+      expect(tool.label).toBe(toolLabel(registry));
+      expect(tool.icon).toBe(registry.icon);
     }
   });
 
-  it('has a label and a non-empty description for every tool', () => {
+  it('has a non-empty description for every tool', () => {
     for (const tool of HELP_TOOLS) {
-      expect(tool.label.length).toBeGreaterThan(0);
-      expect(tool.description.length).toBeGreaterThan(20);
+      expect(tool.description.length, `description for ${tool.name}`).toBeGreaterThan(20);
     }
   });
 });
@@ -44,6 +42,23 @@ describe('helpContent shortcuts', () => {
         allKeys.includes(def.label),
         `registry entry ${id} (${def.label}) appears in the help`,
       ).toBe(true);
+    }
+  });
+
+  it('documents the inline-registered editor shortcuts', () => {
+    // Keys registered outside the SHORTCUTS registry — when a new one
+    // is added (useGlobalShortcuts.ts, useEditorHotkeys.ts,
+    // KeyboardShortcuts.vue), extend this list AND the help.
+    const inlineKeys = [
+      'F1', 'Shift+F1', 'Escape',
+      'Ctrl+Z', 'Ctrl+Y',
+      'B', 'S', 'T', 'F', 'E', 'Q', 'G', 'R', 'L',
+      'Shift+S', 'Alt+1 … 8',
+      'Ctrl+1 … 9',
+      'Shift+Arrows', 'Ctrl+Shift+B',
+    ];
+    for (const key of inlineKeys) {
+      expect(allKeys, `inline key ${key} documented`).toContain(key);
     }
   });
 
