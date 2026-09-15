@@ -242,6 +242,27 @@ export function useGlobalShortcuts() {
         new CustomEvent('asciibird:save-brush-library'));
     },
 
+    // Layer shortcuts. Legacy Ctrl+Shift+T (toggle) and Ctrl+Shift+W
+    // (move up) are browser-reserved — remapped to Alt+V and
+    // Ctrl+Shift+↑. Note the legacy-inverted store naming: upLayer
+    // moves the layer DOWN the stack, downLayer moves it UP.
+    [SHORTCUTS.toggleLayerVisibility.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      store.toggleLayer(store.selectedLayer);
+    },
+    [SHORTCUTS.addLayer.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      store.addLayer();
+    },
+    [SHORTCUTS.moveLayerDown.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      store.upLayer(store.selectedLayer);
+    },
+    [SHORTCUTS.moveLayerUp.keys]: () => {
+      if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
+      store.downLayer(store.selectedLayer);
+    },
+
     // Copy selected blocks to clipboard — handled by Dashboard
     'ctrl+c': () => {
       if (store.asciibirdMeta.length && !shortcutsBlocked()) {

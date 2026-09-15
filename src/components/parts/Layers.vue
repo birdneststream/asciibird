@@ -73,6 +73,7 @@
           class="ab-context-menu-item"
         >
           Add New Layer
+          <span class="ab-shortcut">{{ SHORTCUTS.addLayer.label }}</span>
         </li>
         <li
           v-if="canToggleLayer"
@@ -87,6 +88,7 @@
           class="ab-context-menu-item"
         >
           Move Selected Layer Up
+          <span class="ab-shortcut">{{ SHORTCUTS.moveLayerUp.label }}</span>
         </li>
         <li
           v-if="canToggleLayer"
@@ -94,6 +96,7 @@
           class="ab-context-menu-item"
         >
           Move Selected Layer Down
+          <span class="ab-shortcut">{{ SHORTCUTS.moveLayerDown.label }}</span>
         </li>
         <li
           v-if="canToggleLayer"
@@ -101,6 +104,7 @@
           class="ab-context-menu-item"
         >
           Show/Hide Layer
+          <span class="ab-shortcut">{{ SHORTCUTS.toggleLayerVisibility.label }}</span>
         </li>
         <li
           @click="startEdit(selectedLayer, currentLayer.label)"
@@ -242,6 +246,7 @@ import { useAsciiBirdStore } from '../../store';
 import { useModalStore } from '../../store/modal';
 import { useToast } from '../../composables/useToast';
 import { useInlineRename } from '../../composables/useInlineRename';
+import { SHORTCUTS } from '../../utils/shortcuts';
 import ContextMenu from './ContextMenu.vue';
 
 const store = useAsciiBirdStore();

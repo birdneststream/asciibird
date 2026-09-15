@@ -186,7 +186,8 @@ The toolbar contains the major functions required to create mIRC art.
   * Ctrl + X to cut blocks (this will also remove the blocks)
   * Delete - Just remove the blocks only
   * Ctrl + B - Immediately save the selection to brush library
-  * Ctrl + V (if copied blocks from selection mode) will paste, and automatically change to brush tool.
+  * Ctrl + V (if copied blocks from selection mode) will enter paste mode with a ghost preview.
+  * Ctrl + Shift + B (if copied blocks from selection mode) will load them as a brush and change to brush tool.
 
 ## 12. Text Mode
 
@@ -212,7 +213,7 @@ The toolbar contains the major functions required to create mIRC art.
 * You can also edit the brush library preview with this tool.
 * Will consider fg, bg and char check boxes when drawing.
 * Also can be used in Mirror X or Mirror Y modes.
-* Ctrl + V (if copied blocks from selection mode) will paste.
+* Ctrl + V (if copied blocks from selection mode) will enter paste mode.
 
 ## 15. Block Picker Tool
 
@@ -395,12 +396,12 @@ Asciibird will keep track of your brush changes and also allows you to save your
 
 # Keyboard Shortcuts
 
-Most of these keyboard shortcuts can also be found in the toolbar menu. ASCIIBIRD also supports the command key on MacOS based systems, which you can use instead of ctrl.
+Most of these keyboard shortcuts can also be found in the toolbar menu.
 
 ## ASCII Editing
 
 * Ctrl + Z - Undo
-* Ctrl + Y - Redo
+* Ctrl + Y - Redo (also Ctrl + Shift + Z)
 
 * F1 - Toggle Help
 * Shift + F1 - About ASCIIBIRD and shout outs
@@ -409,7 +410,7 @@ Most of these keyboard shortcuts can also be found in the toolbar menu. ASCIIBIR
 
 * Alt 1 to 8 - Will toggle the corresponding toolbar icon
 
-* Ctrl 1 to 0 - Change ASCII tab if possible
+* Ctrl + Shift + 1 to 0 - Change ASCII tab if possible
 
 * Alt + c - Opens character Panel (You can then press on the keyboard your desired character or select from the list)
 * Alt + f - Opens foreground panel (can then press 0 to 9 for the colour)
@@ -427,6 +428,10 @@ Most of these keyboard shortcuts can also be found in the toolbar menu. ASCIIBIR
 * Ctrl + m - New ASCII (can't use ctrl + n)
 * Ctrl + o - Toggle Asciibird Options
 
+* Ctrl + = - Zoom in
+* Ctrl + - - Zoom out
+* Ctrl + 0 - Reset zoom
+
 ### Importing
 
 * Ctrl + Shift + o - Open mIRC TXT File as new Ascii
@@ -437,7 +442,6 @@ Most of these keyboard shortcuts can also be found in the toolbar menu. ASCIIBIR
 * Ctrl + Shift + C - Copy to clipboard
 * Ctrl + Shift + F - Save to TXT file
 * Ctrl + Shift + G - Save to PNG file
-* Ctrl + Shift + H - Save to HTTP Post
 
 ## Showing / Hiding menus, tabs and panels
 
@@ -453,9 +457,27 @@ Most of these keyboard shortcuts can also be found in the toolbar menu. ASCIIBIR
 
 * Ctrl + c - Copy blocks to clipboard
 * Ctrl + x - Cut blocks to clipboard
-* Ctrl + v - Paste blocks as brush
+* Ctrl + v - Paste blocks (paste mode with ghost preview)
+* Ctrl + Shift + B - Load copied blocks as brush
 * Ctrl + b - Save Selection to Library
 * Delete - Delete selected blocks
+* Shift + Arrow keys - Nudge selection
+* Ctrl + Shift + . - Rotate selection clockwise
+* Ctrl + Shift + , - Rotate selection counter-clockwise
+* Ctrl + Shift + H - Flip selection horizontally
+* Ctrl + Shift + X - Flip selection vertically
+
+## Tool Shortcuts
+
+* B - Brush tool
+* E - Eraser tool (or flip brush horizontally when brush/eraser active)
+* Q - Flip brush vertically (when brush/eraser active)
+* F - Fill tool
+* S - Select tool
+* T - Text tool
+* G - Toggle grid
+* R - ReColour tool
+* L - Shapes tool (Shift + S cycles shape type)
 
 ## Eraser Mode
 
@@ -465,7 +487,6 @@ Most of these keyboard shortcuts can also be found in the toolbar menu. ASCIIBIR
 ## Brush Mode
 
 * Four arrow keys control text cursor
-* Ctrl 1 to 0 - change hotkeyable brush
 * Space - apply brush
 * Ctrl + ] - Increase both brush sizes by 1
 * Ctrl + [ - Decrease both brush sizes by 1
@@ -481,13 +502,12 @@ Most of these keyboard shortcuts can also be found in the toolbar menu. ASCIIBIR
 
 ## Layers Related
 
-* Ctrl + Shift + t - Show / Hide Layer
-* Ctrl + Shift + r - Rename Layer 
-* Ctrl + Shift + a - Add Layer 
-* Ctrl + Shift + d - Delete Layer 
-* Ctrl + Shift + s - Move Layer Down 
-* Ctrl + Shift + w - Move Layer Up 
-* Ctrl + Shift + m - Merge All Layers 
+* Alt + v - Show / Hide Layer (Ctrl + Shift + t is reserved by browsers)
+* Ctrl + Shift + a - Add Layer
+* Ctrl + Shift + s - Move Layer Down
+* Ctrl + Shift + Up - Move Layer Up (Ctrl + Shift + w is reserved by browsers)
+* Ctrl + Shift + m - Merge Layer Down
+* Ctrl + Shift + d - Duplicate Layer
 
 # Half Block editing Mode
 

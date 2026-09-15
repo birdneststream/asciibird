@@ -1004,4 +1004,64 @@ describe('useGlobalShortcuts', () => {
     expect(types).toContain('asciibird:save-brush-library')
     dispatchSpy.mockRestore()
   })
+
+  // ─── Layer shortcuts (legacy restore, browser-reserved remaps) ─
+
+  it('registers layer shortcuts in scope all', async () => {
+    await initShortcuts()
+    expect(getHandler('all:alt+v')).toBeDefined()
+    expect(getHandler('all:ctrl+shift+a')).toBeDefined()
+    expect(getHandler('all:ctrl+shift+s')).toBeDefined()
+    expect(getHandler('all:ctrl+shift+up')).toBeDefined()
+  })
+
+  it('alt+v toggles the selected layer visibility', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(store, 'toggleLayer')
+    getHandler('all:alt+v')!(createEvent(), {})
+    expect(spy).toHaveBeenCalledWith(0) // selectedLayer default
+  })
+
+  it('ctrl+shift+a adds a layer', async () => {
+    await initShortcuts()
+    const spy = vi.spyOn(store, 'addLayer')
+    getHandler('all:ctrl+shift+a')!(createEvent(), {})
+    expect(spy).toHaveBeenCalledTimes(1)
+  })
+
+  it('ctrl+shift+s moves layer down via upLayer (legacy naming)', async () => {
+    await initShortcuts()
+    const upSpy = vi.spyOn(store, 'upLayer')
+    const downSpy = vi.spyOn(store, 'downLayer')
+    getHandler('all:ctrl+shift+s')!(createEvent(), {})
+    expect(upSpy).toHaveBeenCalledWith(0)
+    expect(downSpy).not.toHaveBeenCalled()
+  })
+
+  it('ctrl+shift+up moves layer up via downLayer (legacy naming)', async () => {
+    await initShortcuts()
+    const upSpy = vi.spyOn(store, 'upLayer')
+    const downSpy = vi.spyOn(store, 'downLayer')
+    getHandler('all:ctrl+shift+up')!(createEvent(), {})
+    expect(downSpy).toHaveBeenCalledWith(0)
+    expect(upSpy).not.toHaveBeenCalled()
+  })
+
+  it('layer shortcuts no-op with zero tabs or modal open', async () => {
+    store = createMockStore({ asciibirdMeta: [] })
+    _mockStore = store
+    await initShortcuts()
+    const addSpy = vi.spyOn(store, 'addLayer')
+    getHandler('all:ctrl+shift+a')!(createEvent(), {})
+    expect(addSpy).not.toHaveBeenCalled()
+
+    gsHandlers.clear()
+    _mockModalStore = createMockModalStore({ modalState: { help: true } })
+    store = createMockStore()
+    _mockStore = store
+    await initShortcuts()
+    const toggleSpy = vi.spyOn(store, 'toggleLayer')
+    getHandler('all:alt+v')!(createEvent(), {})
+    expect(toggleSpy).not.toHaveBeenCalled()
+  })
 })
