@@ -125,7 +125,7 @@
           class="ab-context-menu-item"
         >
           Merge Layer Down
-          <span class="ab-shortcut">Ctrl+Shift+M</span>
+          <span class="ab-shortcut">{{ SHORTCUTS.mergeLayerDown.label }}</span>
         </li>
         <li
           v-if="canToggleLayer"
@@ -133,7 +133,7 @@
           class="ab-context-menu-item"
         >
           Duplicate Layer
-          <span class="ab-shortcut">Ctrl+Shift+D</span>
+          <span class="ab-shortcut">{{ SHORTCUTS.duplicateLayer.label }}</span>
         </li>
       </ul>
     </context-menu>

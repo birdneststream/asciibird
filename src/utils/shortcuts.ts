@@ -57,4 +57,6 @@ export const SHORTCUTS = {
   addLayer: { keys: 'ctrl+shift+a', label: 'Ctrl+Shift+A' },
   moveLayerDown: { keys: 'ctrl+shift+s', label: 'Ctrl+Shift+S' },
   moveLayerUp: { keys: 'ctrl+shift+up', label: 'Ctrl+Shift+↑' },
+  mergeLayerDown: { keys: 'ctrl+shift+m', label: 'Ctrl+Shift+M' },
+  duplicateLayer: { keys: 'ctrl+shift+d', label: 'Ctrl+Shift+D' },
 } as const satisfies Record<string, ShortcutDef>;

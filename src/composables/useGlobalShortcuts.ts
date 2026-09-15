@@ -340,11 +340,11 @@ export function useGlobalShortcuts() {
     },
 
     // Layer operations
-    'ctrl+shift+m': () => {
+    [SHORTCUTS.mergeLayerDown.keys]: () => {
       if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
       store.mergeLayerDown();
     },
-    'ctrl+shift+d': () => {
+    [SHORTCUTS.duplicateLayer.keys]: () => {
       if (!store.asciibirdMeta.length || shortcutsBlocked()) return;
       store.duplicateLayer();
     },

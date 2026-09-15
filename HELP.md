@@ -371,7 +371,7 @@ Asciibird will keep track of your brush changes and also allows you to save your
 
 ### 6. Change Brush Position
 
-* As the first ten brushes are hotkeyable, you can change their position with these buttons.
+* As the first nine brushes are hotkeyable (Ctrl + 1 to 9), you can change their position with these buttons.
 
 # Importing mIRC art to ASCIIBIRD
 
@@ -410,7 +410,7 @@ Most of these keyboard shortcuts can also be found in the toolbar menu.
 
 * Alt 1 to 8 - Will toggle the corresponding toolbar icon
 
-* Ctrl + Shift + 1 to 0 - Change ASCII tab if possible
+* Ctrl + Shift + 0 to 9 - Change ASCII tab if possible (0-based, matching tab order)
 
 * Alt + c - Opens character Panel (You can then press on the keyboard your desired character or select from the list)
 * Alt + f - Opens foreground panel (can then press 0 to 9 for the colour)
@@ -487,6 +487,7 @@ Most of these keyboard shortcuts can also be found in the toolbar menu.
 ## Brush Mode
 
 * Four arrow keys control text cursor
+* Ctrl + 1 to 9 - change hotkeyable brush (when brush or eraser is active)
 * Space - apply brush
 * Ctrl + ] - Increase both brush sizes by 1
 * Ctrl + [ - Decrease both brush sizes by 1
