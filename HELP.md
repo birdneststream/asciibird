@@ -27,6 +27,7 @@
   - [15. Block Picker Tool](#15-block-picker-tool)
   - [16. Eraser Tool](#16-eraser-tool)
   - [17. Eraser Fill Tool](#17-eraser-fill-tool)
+  - [18. Shapes Tool](#18-shapes-tool)
 - [Brush Preview](#brush-preview)
   - [1. Brush Width](#1-brush-width)
   - [2. Brush Height](#2-brush-height)
@@ -170,9 +171,12 @@ The toolbar contains the major functions required to create mIRC art.
 
 ## 9. Half Block Editing Mode
 
-* Experimental half block mode, at the moment works best with a 1x1 brush size.
-* Eraser and fill tool are coming soon for this mode.
-* This will also reflect half block sizes if the grid mode is enabled.
+* Edit the canvas at half-block resolution (▀/▄) — each block has a top and bottom half.
+* Single-colour model: only the FG colour applies. The BG swatch, character selector and the FG/BG/Text checkboxes are hidden in this mode.
+* Brush, eraser, fill, erase fill, dropper and the shape tools work at half resolution; selections snap to halves.
+* Painting only touches the halves you draw — untouched halves keep their colour or stay transparent.
+* Enabling grid mode reflects the half-block sizes.
+* Text, gradient and colour-replace tools are not available in this mode.
 
 ## 10. Default Mode
 
@@ -232,6 +236,19 @@ The toolbar contains the major functions required to create mIRC art.
 * Works similar to the fill tool, but will remove blocks only.
 * Also considers the FG, BG and Char check boxes.
 * Good if you want to make a transparent background ASCII.
+* In half block mode, erases fills at half resolution.
+
+## 18. Shapes Tool
+
+* Two-click shapes: click a start point, then an end point.
+* Shape types: line, rectangle outline, rectangle filled, ellipse outline, ellipse filled.
+* Shift + S cycles the shape type while the tool is active.
+* While picking the end point:
+  * Hold Shift or Z to constrain the shape to equal width/height (1:1).
+  * Hold Alt or A to draw the shape from the centre (the first click is the centre).
+  * The constraints combine — hold both for a centred square.
+  * A and Z are hold-to-apply alternates for window managers that capture Alt.
+* In half block mode shapes paint the FG colour at half resolution; the BG colour is never applied.
 
 # Brush Preview
 
@@ -478,6 +495,7 @@ Most of these keyboard shortcuts can also be found in the toolbar menu.
 * G - Toggle grid
 * R - ReColour tool
 * L - Shapes tool (Shift + S cycles shape type)
+* While picking a shape end point: hold Shift or Z for 1:1, hold Alt or A to draw from the centre (combinable)
 
 ## Eraser Mode
 
@@ -512,7 +530,7 @@ Most of these keyboard shortcuts can also be found in the toolbar menu.
 
 # Half Block editing Mode
 
-This is still experimental and at the moment the brush tool will work with half block mode only.
+Edit the canvas at half-block resolution. The mode uses a single-colour (FG) model — see [Half Block Editing Mode](#9-half-block-editing-mode) in the toolbar section for details. The in-app help (F1) always documents the current behaviour.
 
 # Context Menus (right click menus)
 
