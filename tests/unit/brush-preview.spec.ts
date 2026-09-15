@@ -85,6 +85,27 @@ describe('BrushPreview.vue', () => {
     })
   })
 
+  describe('half-block mode UI', () => {
+    it('shows the targeting checkbox row in full-block mode', () => {
+      const wrapper = mountBrushPreview()
+      expect(wrapper.find('input[name="targetingFg"]').exists()).toBe(true)
+      expect(wrapper.find('input[name="targetingBg"]').exists()).toBe(true)
+      expect(wrapper.find('input[name="targetingChar"]').exists()).toBe(true)
+    })
+
+    it('hides the targeting checkbox row in half-block mode', () => {
+      // Single-colour model: targeting filters are meaningless — the
+      // whole row is hidden rather than disabled
+      _mockToolbarStore = createMockToolbarStore({
+        toolbarState: { halfBlockEditing: true },
+      })
+      const wrapper = mountBrushPreview()
+      expect(wrapper.find('input[name="targetingFg"]').exists()).toBe(false)
+      expect(wrapper.find('input[name="targetingBg"]').exists()).toBe(false)
+      expect(wrapper.find('input[name="targetingChar"]').exists()).toBe(false)
+    })
+  })
+
   describe('computed properties', () => {
     it('brushOptions returns 18 brush type labels', () => {
       const wrapper = mountBrushPreview()

@@ -192,6 +192,27 @@ describe('Colours.vue', () => {
     expect(_mockToolbarStore.toolbarState.isChoosingFg).toBe(true)
     expect(_mockPanelStore.colourPicker.minimized).toBe(false)
   })
+
+  it('shows FG, BG, char and swap controls in full-block mode', () => {
+    const wrapper = tw(Colours, mountOpts())
+    expect(wrapper.find('#currentColourFg').exists()).toBe(true)
+    expect(wrapper.find('#currentColourBg').exists()).toBe(true)
+    expect(wrapper.find('#currentChar').exists()).toBe(true)
+    expect(wrapper.find('#swapColour').exists()).toBe(true)
+  })
+
+  it('hides BG, char and swap controls in half-block mode', () => {
+    // Half-block mode is single-colour (FG only) — the other controls
+    // are meaningless there and are hidden rather than disabled
+    _mockToolbarStore = createMockToolbarStore({
+      toolbarState: { halfBlockEditing: true },
+    })
+    const wrapper = tw(Colours, mountOpts())
+    expect(wrapper.find('#currentColourFg').exists()).toBe(true)
+    expect(wrapper.find('#currentColourBg').exists()).toBe(false)
+    expect(wrapper.find('#currentChar').exists()).toBe(false)
+    expect(wrapper.find('#swapColour').exists()).toBe(false)
+  })
 })
 
 // ─── CharPicker.vue ──────────────────────────

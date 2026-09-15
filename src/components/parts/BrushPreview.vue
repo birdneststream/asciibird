@@ -46,8 +46,13 @@
           <Colours class="w-full" />
         </div>
 
-        <!-- Targeting checkboxes -->
-        <div class="flex justify-between px-1">
+        <!-- Targeting checkboxes — meaningless in half-block mode
+             (single-colour model: FG always applies) so the whole
+             row is hidden rather than disabled -->
+        <div
+          v-if="!halfBlockEditing"
+          class="flex justify-between px-1"
+        >
           <Tooltip content="Ignore Foreground when Editing">
             <label class="flex items-center gap-1 cursor-pointer ab-checkbox-hover">
               <input
@@ -61,41 +66,31 @@
             </label>
           </Tooltip>
 
-          <Tooltip
-            :content="halfBlockEditing
-              ? 'Disabled in half-block editing mode'
-              : 'Ignore Background when Editing'"
-          >
+          <Tooltip content="Ignore Background when Editing">
             <label
               class="flex items-center gap-1 cursor-pointer ab-checkbox-hover"
-              :class="{ 'opacity-40': halfBlockEditing }"
             >
               <input
                 v-model="toolbarStore.toolbarState.targetingBg"
                 type="checkbox"
                 class="ab-checkbox"
                 name="targetingBg"
-                :disabled="halfBlockEditing || (!canFg && !canText)"
+                :disabled="!canFg && !canText"
               >
               <span class="ab-checkbox-label">BG</span>
             </label>
           </Tooltip>
 
-          <Tooltip
-            :content="halfBlockEditing
-              ? 'Disabled in half-block editing mode'
-              : 'Ignore Characters when Editing'"
-          >
+          <Tooltip content="Ignore Characters when Editing">
             <label
               class="flex items-center gap-1 cursor-pointer ab-checkbox-hover"
-              :class="{ 'opacity-40': halfBlockEditing }"
             >
               <input
                 v-model="toolbarStore.toolbarState.targetingChar"
                 type="checkbox"
                 class="ab-checkbox"
                 name="targetingChar"
-                :disabled="halfBlockEditing || (!canFg && !canBg)"
+                :disabled="!canFg && !canBg"
               >
               <span class="ab-checkbox-label">Text</span>
             </label>

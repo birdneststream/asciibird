@@ -1,6 +1,9 @@
 <template>
-  <div class="relative flex items-center justify-between w-full">
-    <!-- FG swatch -->
+  <div
+    class="relative flex items-center w-full"
+    :class="halfBlockEditing ? 'justify-center' : 'justify-between'"
+  >
+    <!-- FG swatch (always shown — the single colour in half-block mode) -->
     <button
       type="button"
       :style="{ backgroundColor: mircColours[currentFg] }"
@@ -13,45 +16,49 @@
       FG
     </button>
 
-    <!-- Swap button -->
-    <button
-      type="button"
-      class="w-8 h-8 rounded bg-surface-container-highest border border-outline-variant flex items-center justify-center hover:bg-surface-variant transition-colors z-10"
-      id="swapColour"
-      @click="swapColours()"
-    >
-      <span
-        class="material-icons text-sm"
-        aria-hidden="true"
-      >swap_horiz</span>
-    </button>
-
-    <!-- BG swatch + Char -->
-    <div class="flex items-center gap-2">
+    <!-- BG / swap / char are meaningless in half-block mode (single
+         colour model) — hidden rather than disabled -->
+    <template v-if="!halfBlockEditing">
+      <!-- Swap button -->
       <button
         type="button"
-        :style="{ backgroundColor: mircColours[currentBg] }"
-        class="w-12 h-12 rounded border border-outline-variant flex items-center justify-center text-xs font-label-mono transition-transform active:scale-95"
-        :class="{ 'opacity-40 cursor-not-allowed': !canBg }"
-        :disabled="!canBg"
-        id="currentColourBg"
-        @click="toggleBg"
+        class="w-8 h-8 rounded bg-surface-container-highest border border-outline-variant flex items-center justify-center hover:bg-surface-variant transition-colors z-10"
+        id="swapColour"
+        @click="swapColours()"
       >
-        BG
+        <span
+          class="material-icons text-sm"
+          aria-hidden="true"
+        >swap_horiz</span>
       </button>
 
-      <button
-        type="button"
-        :style="charButtonStyle"
-        class="w-12 h-12 rounded border border-outline-variant flex items-center justify-center text-xs font-label-mono transition-transform active:scale-95"
-        :class="{ 'opacity-40 cursor-not-allowed': !canText || halfBlockEditing }"
-        :disabled="!canText || halfBlockEditing"
-        id="currentChar"
-        @click="toggleChar"
-      >
-        {{ toolbarState.selectedChar === " " ? "SP" : toolbarState.selectedChar }}
-      </button>
-    </div>
+      <!-- BG swatch + Char -->
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          :style="{ backgroundColor: mircColours[currentBg] }"
+          class="w-12 h-12 rounded border border-outline-variant flex items-center justify-center text-xs font-label-mono transition-transform active:scale-95"
+          :class="{ 'opacity-40 cursor-not-allowed': !canBg }"
+          :disabled="!canBg"
+          id="currentColourBg"
+          @click="toggleBg"
+        >
+          BG
+        </button>
+
+        <button
+          type="button"
+          :style="charButtonStyle"
+          class="w-12 h-12 rounded border border-outline-variant flex items-center justify-center text-xs font-label-mono transition-transform active:scale-95"
+          :class="{ 'opacity-40 cursor-not-allowed': !canText }"
+          :disabled="!canText"
+          id="currentChar"
+          @click="toggleChar"
+        >
+          {{ toolbarState.selectedChar === " " ? "SP" : toolbarState.selectedChar }}
+        </button>
+      </div>
+    </template>
   </div>
 </template>
 
