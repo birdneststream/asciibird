@@ -6,7 +6,10 @@
 
 import { watch } from 'vue';
 import type { EditorState } from './useEditorState';
-import { isGradientTool } from '../utils/uiConstants';
+import {
+  halfBlockToolLabel,
+  isToolUnavailableInHalfBlock,
+} from '../utils/uiConstants';
 import type { Ref } from 'vue';
 
 // ─── Types ──────────────────────────────────────────────────────
@@ -114,22 +117,18 @@ export function useEditorWatchers(opts: EditorWatcherOptions): void {
     cb.warnInvisibleLayer();
 
     // Shape tools work in half-block mode at double-Y resolution;
-    // text and the gradient tools stay blocked
-    if (s.halfBlockEditing.value) {
-      if (s.currentTool.value.name === 'text') {
-        opts.toastShow(
-          'Text mode is not available in half-block editing mode',
-        );
-        s.toolbarStore.changeTool(0);
-        return;
-      }
-      if (isGradientTool(s.currentTool.value.name)) {
-        opts.toastShow(
-          'Gradient fill is not available in half-block editing mode',
-        );
-        s.toolbarStore.changeTool(0);
-        return;
-      }
+    // text, replace-color and the gradient tools stay blocked (their
+    // toolbar buttons disable — this catches keyboard shortcuts)
+    if (
+      s.halfBlockEditing.value
+      && isToolUnavailableInHalfBlock(s.currentTool.value.name)
+    ) {
+      opts.toastShow(
+        halfBlockToolLabel(s.currentTool.value.name)
+          + ' is not available in half-block editing mode',
+      );
+      s.toolbarStore.changeTool(0);
+      return;
     }
 
     switch (s.currentTool.value.name) {
@@ -187,21 +186,21 @@ export function useEditorWatchers(opts: EditorWatcherOptions): void {
       });
 
       if (s.currentTool.value.name === 'text') {
-        s.toolbarStore.changeTool(0);
         s.textEditing.value.startX = null;
         s.textEditing.value.startY = null;
       }
 
       if (s.currentTool.value.name === 'select') {
-        s.toolbarStore.changeTool(0);
         await cb.resetSelectTool();
       }
 
-      // Gradient tools are blocked in half-block mode (colour fills
-      // at half resolution are covered by the half-block fill tool)
-      if (isGradientTool(s.currentTool.value.name)) {
+      // Switch away from tools that cannot work at half resolution
+      // (select works — only its in-progress state resets above).
+      // Their toolbar buttons also disable visually in half-block mode.
+      if (isToolUnavailableInHalfBlock(s.currentTool.value.name)) {
         opts.toastShow(
-          'Gradient fill is not available in half-block editing mode',
+          halfBlockToolLabel(s.currentTool.value.name)
+            + ' is not available in half-block editing mode',
         );
         s.toolbarStore.changeTool(0);
       }

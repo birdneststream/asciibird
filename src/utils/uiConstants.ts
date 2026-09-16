@@ -48,7 +48,37 @@ export function gradientDirectionFor(
     : null;
 }
 
-/** Is `name` one of the gradient tools? */
-export function isGradientTool(name: string | undefined): boolean {
+/** Is `name` one of the gradient tools? (internal — see gradientDirectionFor) */
+function isGradientTool(name: string | undefined): boolean {
   return gradientDirectionFor(name) !== null;
+}
+
+// ─── Half-block availability ─────────────────────────────────────
+
+/**
+ * Tools that cannot be used while half-block editing mode is active.
+ * Their toolbar buttons disable visually; activating them by shortcut
+ * shows a toast and reverts to the default tool. Shapes, select, brush,
+ * eraser, fill, dropper and the fill eraser all work at half
+ * resolution and stay available.
+ */
+export const HALF_BLOCK_UNAVAILABLE_TOOLS: ReadonlySet<string> = new Set([
+  'text',
+  'replace-color',
+  ...Object.keys(GRADIENT_TOOL_DIRECTIONS),
+]);
+
+/** Is `name` usable while half-block editing mode is active? */
+export function isToolUnavailableInHalfBlock(
+  name: string | undefined,
+): boolean {
+  return name != null && HALF_BLOCK_UNAVAILABLE_TOOLS.has(name);
+}
+
+/** Human-friendly label for unavailable-tool toasts */
+export function halfBlockToolLabel(name: string): string {
+  if (name === 'text') return 'Text mode';
+  if (isGradientTool(name)) return 'Gradient fill';
+  if (name === 'replace-color') return 'Color replace';
+  return name;
 }
