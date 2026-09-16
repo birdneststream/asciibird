@@ -118,7 +118,15 @@ export function useEditorHotkeys(deps: HotkeyDeps) {
   const r = deps.rendering;
   const a = deps.actions;
 
-  hotkeys('*', 'editor', async function (event) {
+  hotkeys('*', 'editor', (event) => {
+    // KeyHandler must return synchronously (hotkeys-js only honours a
+    // synchronous `return false`); delegate the async work — the body
+    // runs synchronously up to its first await either way.
+    void handleEditorKey(event);
+  });
+
+  /** Async body of the '*' editor-scope hotkey handler. */
+  async function handleEditorKey(event: KeyboardEvent) {
     // Skip modifier combos (Ctrl+Z, Ctrl+Y, Ctrl+C, etc.) — let
     // global shortcuts in scope 'all' handle them instead.
     if (event.ctrlKey || event.metaKey || event.altKey) return;
@@ -172,7 +180,7 @@ export function useEditorHotkeys(deps: HotkeyDeps) {
         await a.dispatchBlocks(true);
       }
     }
-  });
+  }
 
   /** Cleanup function — call in onUnmounted */
   function cleanup() {

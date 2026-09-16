@@ -21,8 +21,6 @@ export default [
       sourceType: 'module',
       globals: {
         ...globals.browser,
-        // hotkeys-js loaded via CDN as global
-        hotkeys: 'readonly',
       },
     },
     rules: {

@@ -31,14 +31,12 @@ export function useGlobalShortcuts() {
   const panelStore = usePanelStore();
 
   // Suppress hotkeys when typing in inputs/textareas (e.g. inline rename).
-  // hotkeys.filter is assignable at runtime but typed as method-only.
-  (hotkeys as unknown as { filter: (event: KeyboardEvent) => boolean }).filter =
-    function (event) {
-      const target = event.target as HTMLElement;
-      const tagName = target.tagName;
-      if (tagName === 'INPUT' || tagName === 'TEXTAREA') return false;
-      return true;
-    };
+  hotkeys.filter = function (event) {
+    const target = event.target as HTMLElement;
+    const tagName = target.tagName;
+    if (tagName === 'INPUT' || tagName === 'TEXTAREA') return false;
+    return true;
+  };
 
   // Canvas/document shortcuts are suppressed while any modal is open or
   // keyboard is disabled (dialogs set isKeyboardDisabled via useDialog —

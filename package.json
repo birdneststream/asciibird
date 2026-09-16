@@ -22,7 +22,7 @@
     "@tailwindcss/forms": "^0.5.7",
     "@vueuse/core": "^14",
     "autoprefixer": "^10.4.19",
-    "hotkeys-js": "^3.13.7",
+    "hotkeys-js": "^4.0.8",
     "idb-keyval": "^6.2.2",
     "lz-string": "^1.4.4",
     "material-icons": "^1.13.14",
