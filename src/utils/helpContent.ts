@@ -125,10 +125,22 @@ const TOOL_DESCRIPTIONS: Record<string, string> = {
   'replace-color':
     'Replaces a colour picked from a block across the whole canvas or '
     + 'the active selection. Not available in half-block mode.',
-  gradient:
-    'Two-click gradient fill: click a start block, then an end block '
-    + '— colours interpolate from FG to BG between them. Not available '
-    + 'in half-block mode.',
+  'gradient-vertical':
+    'Two-click vertical gradient fill: click a start block, then an end '
+    + 'block — colours interpolate from FG (at the pick point) to BG '
+    + '(at the release point) down the column span. Not available in '
+    + 'half-block mode.',
+  'gradient-horizontal':
+    'Two-click horizontal gradient fill: click a start block, then an '
+    + 'end block — colours interpolate from FG (at the pick point) to '
+    + 'BG (at the release point) across the row span. Reverse drags '
+    + 'anchor the start colour where you clicked. Not available in '
+    + 'half-block mode.',
+  'gradient-corner':
+    'Two-click corner gradient fill: click a start block, then an end '
+    + 'block — colours radiate from FG (at the pick corner) to BG (at '
+    + 'the release corner) diagonally across the rectangle. Not '
+    + 'available in half-block mode.',
   shapes:
     'Two-click shapes: line, rectangle outline/filled and ellipse '
     + 'outline/filled — press Shift+S to cycle the shape type. While '
@@ -331,7 +343,9 @@ export const HELP_PANELS: HelpPanelSection[] = [
     icon: 'construction',
     purpose: 'Tool selection plus shape types and canvas utility toggles.',
     items: [
-      '11 tools (see the Tools tab) — click or press the tool\u2019s shortcut key.',
+      '13 tools (see the Tools tab) — click or press the tool\u2019s shortcut key.',
+      'Gradient row — vertical, horizontal and corner gradient fills; '
+      + 'each tool locks its direction (never auto-detected).',
       'Shape row — 5 shape type icons; clicking one activates the shapes tool '
       + 'with that shape.',
       'Mir X / Mir Y — mirror brush strokes across the canvas axes.',

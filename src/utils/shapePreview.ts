@@ -1,13 +1,25 @@
-// Shape Preview Rendering — draws a dashed preview of shapes on the tools canvas.
+// Shape Preview Rendering — block-accurate ghost preview of shapes.
 //
-// This is visual-only and does NOT modify any blocks.
-// Called from Editor.vue canvasMouseMove to show shape preview during two-click flow.
+// Visual-only and does NOT modify any blocks. Renders the exact blocks
+// the shape tool will commit by enumerating cells through the shared
+// shapeCells() geometry (the same source of truth as the draw path),
+// so the preview can never drift from the committed result. Blocks are
+// drawn semi-transparent (globalAlpha, paste-ghost style) over the
+// tools canvas; region shapes additionally get a faint dashed bounding
+// box.
 //
-// In half-block mode (`halfBlock: true`) the Y coordinates are half-block
-// rows and map to pixels at blockHeight/2, previewing the double-Y shape.
+// In half-block mode (`halfBlock: true`) Y coordinates are half-block
+// rows: each visited half-row is painted with the stroke (FG) colour
+// at blockHeight/2, matching the single-colour half-block paint model.
 
-import type { ShapeType } from './shapes';
-import { bresenhamLine } from './bresenham';
+import type { Block } from '../types';
+import { shapeCells, type ShapeType } from './shapes';
+import { renderBlock } from './blockRenderer';
+import { getCanvasFont } from './canvasFont';
+import { hasColour } from './mircColors';
+
+/** Ghost opacity for preview blocks (matches the paste-mode ghost) */
+export const SHAPE_PREVIEW_ALPHA = 0.55;
 
 // ─── Preview Options ─────────────────────────────────────────────
 
@@ -28,8 +40,16 @@ export interface ShapePreviewOptions {
   blockWidth: number;
   /** Block height in pixels */
   blockHeight: number;
-  /** Stroke color (CSS color string) */
-  strokeColor: string;
+  /** Zoom level — scales the canvas font like the main canvas */
+  blockSizeMultiplier: number;
+  /** mIRC colour palette (CSS strings) */
+  colours: string[];
+  /** Stroke foreground colour index */
+  fg: number;
+  /** Stroke background colour index */
+  bg: number;
+  /** Paint character ('█' is used when empty, matching drawShape) */
+  char: string;
   /** Half-block mode: Y coordinates are half-rows at blockHeight/2 */
   halfBlock?: boolean;
 }
@@ -41,117 +61,82 @@ function unitHeight(halfBlock: boolean | undefined, blockHeight: number): number
   return halfBlock ? blockHeight / 2 : blockHeight;
 }
 
-// ─── Line Preview ────────────────────────────────────────────────
-
-function drawLinePreview(opts: ShapePreviewOptions): void {
-  const { ctx, startX, startY, endX, endY, blockWidth: bw } = opts;
-  const uh = unitHeight(opts.halfBlock, opts.blockHeight);
-
-  const points = bresenhamLine(startX, startY, endX, endY);
-  const halfW = bw / 2;
-
-  ctx.fillStyle = opts.strokeColor;
-  ctx.globalAlpha = 0.4;
-
-  for (const pt of points) {
-    ctx.fillRect(
-      pt.x * bw + 1,
-      pt.y * uh + 1,
-      bw - 2,
-      uh - 2,
-    );
-  }
-
-  ctx.globalAlpha = 1.0;
-
-  // Draw start and end dots
-  ctx.fillStyle = opts.strokeColor;
-  ctx.fillRect(startX * bw + halfW - 2, startY * uh + uh / 2 - 2, 4, 4);
-  ctx.fillRect(endX * bw + halfW - 2, endY * uh + uh / 2 - 2, 4, 4);
-}
-
-// ─── Rectangle Preview ───────────────────────────────────────────
-
-function drawRectPreview(opts: ShapePreviewOptions, filled: boolean): void {
-  const { ctx, startX, startY, endX, endY, blockWidth: bw } = opts;
-  const uh = unitHeight(opts.halfBlock, opts.blockHeight);
+/** Draw a faint dashed bounding box around the shape region. */
+function drawRegionOutline(opts: ShapePreviewOptions, uh: number): void {
+  const { ctx, shapeType, startX, startY, endX, endY, blockWidth: bw } = opts;
+  if (shapeType === 'line') return; // blocks alone show a line clearly
 
   const x1 = Math.min(startX, endX) * bw;
   const y1 = Math.min(startY, endY) * uh;
-  const x2 = Math.max(startX, endX) * bw + bw;
-  const y2 = Math.max(startY, endY) * uh + uh;
-  const w = x2 - x1;
-  const h = y2 - y1;
+  const x2 = (Math.max(startX, endX) + 1) * bw;
+  const y2 = (Math.max(startY, endY) + 1) * uh;
 
-  if (filled) {
-    ctx.fillStyle = opts.strokeColor;
-    ctx.globalAlpha = 0.25;
-    ctx.fillRect(x1, y1, w, h);
-    ctx.globalAlpha = 1.0;
-  }
-
-  ctx.strokeStyle = opts.strokeColor;
-  ctx.lineWidth = 2;
+  ctx.save();
+  ctx.strokeStyle = '#fff';
+  ctx.lineWidth = 1;
   ctx.setLineDash([4, 4]);
-  ctx.strokeRect(x1, y1, w, h);
-  ctx.setLineDash([]);
+  ctx.strokeRect(x1, y1, x2 - x1, y2 - y1);
+  ctx.restore();
 }
 
-// ─── Ellipse Preview ─────────────────────────────────────────────
-
-function drawEllipsePreview(opts: ShapePreviewOptions, filled: boolean): void {
-  const { ctx, startX, startY, endX, endY, blockWidth: bw } = opts;
-  const uh = unitHeight(opts.halfBlock, opts.blockHeight);
-
-  const x1 = Math.min(startX, endX) * bw;
-  const y1 = Math.min(startY, endY) * uh;
-  const x2 = Math.max(startX, endX) * bw + bw;
-  const y2 = Math.max(startY, endY) * uh + uh;
-
-  const cx = (x1 + x2) / 2;
-  const cy = (y1 + y2) / 2;
-  const rx = (x2 - x1) / 2;
-  const ry = (y2 - y1) / 2;
-
-  ctx.beginPath();
-  ctx.ellipse(cx, cy, Math.max(rx, 1), Math.max(ry, 1), 0, 0, Math.PI * 2);
-
-  if (filled) {
-    ctx.fillStyle = opts.strokeColor;
-    ctx.globalAlpha = 0.25;
-    ctx.fill();
-    ctx.globalAlpha = 1.0;
-  }
-
-  ctx.strokeStyle = opts.strokeColor;
-  ctx.lineWidth = 2;
-  ctx.setLineDash([4, 4]);
-  ctx.stroke();
-  ctx.setLineDash([]);
-}
-
-// ─── Dispatch ────────────────────────────────────────────────────
+// ─── Preview ─────────────────────────────────────────────────────
 
 /**
- * Draw a shape preview on the tools canvas.
+ * Draw a block-accurate ghost preview of the shape on the tools canvas.
  * Visual-only — does NOT modify blocks.
  */
 export function drawShapePreview(opts: ShapePreviewOptions): void {
-  switch (opts.shapeType) {
-    case 'line':
-      drawLinePreview(opts);
-      break;
-    case 'rectOutline':
-      drawRectPreview(opts, false);
-      break;
-    case 'rectFilled':
-      drawRectPreview(opts, true);
-      break;
-    case 'ellipseOutline':
-      drawEllipsePreview(opts, false);
-      break;
-    case 'ellipseFilled':
-      drawEllipsePreview(opts, true);
-      break;
+  const {
+    ctx,
+    shapeType,
+    startX,
+    startY,
+    endX,
+    endY,
+    blockWidth: bw,
+    blockHeight: bh,
+    blockSizeMultiplier,
+    colours,
+    fg,
+    bg,
+    char,
+    halfBlock,
+  } = opts;
+
+  const uh = unitHeight(halfBlock, bh);
+  const cells = shapeCells(shapeType, startX, startY, endX, endY);
+  if (!cells.length) return;
+
+  ctx.save();
+  ctx.globalAlpha = SHAPE_PREVIEW_ALPHA;
+  // clearToolCanvas resets the canvas (and font) — re-apply it so the
+  // ghost glyphs match the main canvas rendering
+  ctx.font = getCanvasFont(blockSizeMultiplier);
+
+  if (halfBlock) {
+    // Single-colour paint model: each visited half-row gets the FG colour
+    if (hasColour(fg, colours)) {
+      ctx.fillStyle = colours[fg];
+      for (const cell of cells) {
+        ctx.fillRect(cell.x * bw, cell.y * uh, bw, uh);
+      }
+    }
+  } else {
+    // The exact block drawShape will commit — same fg/bg/char defaults
+    const previewBlock: Block = { fg, bg, char: char || '\u2588' };
+    for (const cell of cells) {
+      renderBlock(
+        ctx,
+        previewBlock,
+        cell.x * bw,
+        cell.y * uh,
+        bw, bh,
+        colours,
+      );
+    }
   }
+
+  ctx.restore();
+
+  drawRegionOutline(opts, uh);
 }

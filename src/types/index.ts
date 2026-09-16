@@ -147,6 +147,8 @@ export interface ToolbarState {
   selectedChar: string;
   isUpdating: boolean;
   currentTool: number;
+  /** Tool registry layout version — drives one-time persisted-index migration */
+  toolLayoutVersion: number;
   targetingFg: boolean;
   targetingBg: boolean;
   targetingChar: boolean;

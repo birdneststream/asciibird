@@ -7,6 +7,11 @@
 // the shapes.ts pattern. Y coordinates are half-block rows (double
 // resolution): even = top half, odd = bottom half.
 //
+// Geometry comes from the shared shapeCells() enumerators in shapes.ts
+// (Y = half-rows here) — the same single source of truth the full-block
+// draw path and the ghost preview consume, so preview and commit can
+// never drift.
+//
 // Shapes paint colours, not characters — the stroke colour fills only
 // the visited halves. Sibling halves keep their existing colour or stay
 // transparent; blocks collapse to solid spaces when both halves end up
@@ -16,8 +21,7 @@
 import type { Block } from '../types';
 import type { FillChange } from '../ascii';
 import type { ShapeType } from './shapes';
-import { ellipsePoints } from './shapes';
-import { bresenhamLine } from './bresenham';
+import { shapeCells } from './shapes';
 import { HalfBlockGrid } from './halfBlockGrid';
 
 // ─── Options ─────────────────────────────────────────────────────
@@ -95,18 +99,35 @@ class ShapeChangeTracker {
   }
 }
 
+// ─── Shape Drawing ───────────────────────────────────────────────
+//
+// All half-block draw functions enumerate cells through the shared
+// shapeCells() geometry (Y = half-rows) and paint via the tracker —
+// identical traversal order to the full-block draw path, so undo
+// diffs and previews stay in lockstep.
+
+/** Paint the enumerated cells with the single stroke colour. */
+function paintCells(
+  tracker: ShapeChangeTracker,
+  shapeType: ShapeType,
+  startX: number, startHalfY: number,
+  endX: number, endHalfY: number,
+  colour: number,
+): void {
+  for (const cell of shapeCells(
+    shapeType, startX, startHalfY, endX, endHalfY,
+  )) {
+    tracker.paint(cell.x, cell.y, colour);
+  }
+}
+
 // ─── Line Drawing ────────────────────────────────────────────────
 
 /** Draw a line between two half-grid points using Bresenham's algorithm. */
 export function drawHalfBlockLine(opts: HalfBlockShapeOptions): FillChange[] {
   const { blocks, startX, startHalfY, endX, endHalfY, colour } = opts;
   const tracker = new ShapeChangeTracker(blocks);
-
-  const points = bresenhamLine(startX, startHalfY, endX, endHalfY);
-  for (const pt of points) {
-    tracker.paint(pt.x, pt.y, colour);
-  }
-
+  paintCells(tracker, 'line', startX, startHalfY, endX, endHalfY, colour);
   return tracker.build();
 }
 
@@ -118,28 +139,7 @@ export function drawHalfBlockRectOutline(
 ): FillChange[] {
   const { blocks, startX, startHalfY, endX, endHalfY, colour } = opts;
   const tracker = new ShapeChangeTracker(blocks);
-
-  const x1 = Math.min(startX, endX);
-  const x2 = Math.max(startX, endX);
-  const h1 = Math.min(startHalfY, endHalfY);
-  const h2 = Math.max(startHalfY, endHalfY);
-
-  // Top and bottom edges
-  for (let x = x1; x <= x2; x++) {
-    tracker.paint(x, h1, colour);
-    if (h2 !== h1) {
-      tracker.paint(x, h2, colour);
-    }
-  }
-
-  // Left and right edges (excluding corners already drawn)
-  for (let h = h1 + 1; h < h2; h++) {
-    tracker.paint(x1, h, colour);
-    if (x2 !== x1) {
-      tracker.paint(x2, h, colour);
-    }
-  }
-
+  paintCells(tracker, 'rectOutline', startX, startHalfY, endX, endHalfY, colour);
   return tracker.build();
 }
 
@@ -149,18 +149,7 @@ export function drawHalfBlockRectFilled(
 ): FillChange[] {
   const { blocks, startX, startHalfY, endX, endHalfY, colour } = opts;
   const tracker = new ShapeChangeTracker(blocks);
-
-  const x1 = Math.min(startX, endX);
-  const x2 = Math.max(startX, endX);
-  const h1 = Math.min(startHalfY, endHalfY);
-  const h2 = Math.max(startHalfY, endHalfY);
-
-  for (let h = h1; h <= h2; h++) {
-    for (let x = x1; x <= x2; x++) {
-      tracker.paint(x, h, colour);
-    }
-  }
-
+  paintCells(tracker, 'rectFilled', startX, startHalfY, endX, endHalfY, colour);
   return tracker.build();
 }
 
@@ -172,23 +161,7 @@ export function drawHalfBlockEllipseOutline(
 ): FillChange[] {
   const { blocks, startX, startHalfY, endX, endHalfY, colour } = opts;
   const tracker = new ShapeChangeTracker(blocks);
-
-  const x1 = Math.min(startX, endX);
-  const x2 = Math.max(startX, endX);
-  const h1 = Math.min(startHalfY, endHalfY);
-  const h2 = Math.max(startHalfY, endHalfY);
-
-  const cx = Math.floor((x1 + x2) / 2);
-  const cy = Math.floor((h1 + h2) / 2);
-  const rx = Math.floor((x2 - x1) / 2);
-  const ry = Math.floor((h2 - h1) / 2);
-
-  const pts = ellipsePoints(cx, cy, rx, ry);
-  for (const key of pts) {
-    const [px, py] = key.split(',').map(Number);
-    tracker.paint(px, py, colour);
-  }
-
+  paintCells(tracker, 'ellipseOutline', startX, startHalfY, endX, endHalfY, colour);
   return tracker.build();
 }
 
@@ -198,37 +171,7 @@ export function drawHalfBlockEllipseFilled(
 ): FillChange[] {
   const { blocks, startX, startHalfY, endX, endHalfY, colour } = opts;
   const tracker = new ShapeChangeTracker(blocks);
-
-  const x1 = Math.min(startX, endX);
-  const x2 = Math.max(startX, endX);
-  const h1 = Math.min(startHalfY, endHalfY);
-  const h2 = Math.max(startHalfY, endHalfY);
-
-  const cx = Math.floor((x1 + x2) / 2);
-  const cy = Math.floor((h1 + h2) / 2);
-  const rx = Math.floor((x2 - x1) / 2);
-  const ry = Math.floor((h2 - h1) / 2);
-
-  // Degenerate: single point
-  if (rx === 0 && ry === 0) {
-    tracker.paint(cx, cy, colour);
-    return tracker.build();
-  }
-
-  // Iterate the bounding box and test the ellipse equation
-  const rxSq = Math.max(rx * rx, 1);
-  const rySq = Math.max(ry * ry, 1);
-
-  for (let py = h1; py <= h2; py++) {
-    for (let px = x1; px <= x2; px++) {
-      const dx = px - cx;
-      const dy = py - cy;
-      if ((dx * dx) / rxSq + (dy * dy) / rySq <= 1.0) {
-        tracker.paint(px, py, colour);
-      }
-    }
-  }
-
+  paintCells(tracker, 'ellipseFilled', startX, startHalfY, endX, endHalfY, colour);
   return tracker.build();
 }
 

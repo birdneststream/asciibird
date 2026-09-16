@@ -23,8 +23,12 @@ export function tooltipName(value: ToolbarIcon): string {
       return 'Fill Eraser Blocks';
     case 'replace-color':
       return 'Replace Color';
-    case 'gradient':
-      return 'Gradient Fill';
+    case 'gradient-vertical':
+      return 'Vertical Gradient Fill';
+    case 'gradient-horizontal':
+      return 'Horizontal Gradient Fill';
+    case 'gradient-corner':
+      return 'Corner Gradient Fill';
     case 'shapes':
       return 'Shape Drawing';
     default:
@@ -55,8 +59,12 @@ export function toolLabel(value: ToolbarIcon): string {
       return 'Erase Fill';
     case 'replace-color':
       return 'ReColor';
-    case 'gradient':
-      return 'Gradient';
+    case 'gradient-vertical':
+      return 'Grad V';
+    case 'gradient-horizontal':
+      return 'Grad H';
+    case 'gradient-corner':
+      return 'Grad C';
     case 'shapes':
       return 'Shapes';
     default:

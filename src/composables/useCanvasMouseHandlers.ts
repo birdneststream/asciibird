@@ -9,6 +9,11 @@ import { mircColours99 } from '../ascii';
 import { HalfBlockGrid, EMPTY_COLOUR } from '../utils/halfBlockGrid';
 import { bresenhamLine } from '../utils/bresenham';
 import { drawShapePreview } from '../utils/shapePreview';
+import { drawGradientPreview as drawGradientGhost } from '../utils/gradientPreview';
+import {
+  gradientDirectionFor,
+  toolbarIcons,
+} from '../utils/uiConstants';
 import {
   constrainShapeCoords,
   modifiersFromEvent,
@@ -48,6 +53,8 @@ export interface MouseHandlerDeps {
     gradientTool: {
       isGradientPicking: { value: boolean };
       gradientStart: { value: { x: number; y: number } | null };
+      /** FG colour captured when the pick started (ghost start colour) */
+      gradientStartColor: { value: number };
       setStartPoint: (x: number, y: number) => void;
       applyGradient: (x: number, y: number, blocks: Block[][]) => void;
     };
@@ -286,27 +293,38 @@ async function doHandleShapes(
   });
 }
 
+/**
+ * Draw the block-accurate gradient ghost on the tools canvas: the
+ * committed look (interpolated bg + existing chars) from the pick
+ * point to the cursor, along the active gradient tool's locked
+ * direction. Uses the pick-start colour (not the live FG) so the
+ * preview matches what applyGradient will commit.
+ */
 function drawGradientPreview(
   toolCtx: CanvasRenderingContext2D, d: InternalDeps,
 ): void {
   const start = d.tools.gradientTool.gradientStart.value;
   if (!start) return;
-  const bw = d.s.blockWidthComp.value;
-  const bh = d.s.blockHeightComp.value;
-  const sx = start.x * bw;
-  const sy = start.y * bh;
-  toolCtx.strokeStyle = mircColours99[d.toolbarStore.currentFg];
-  toolCtx.lineWidth = 2;
-  toolCtx.setLineDash([4, 4]);
-  toolCtx.strokeRect(
-    Math.min(sx, d.s.canvasX.value), Math.min(sy, d.s.canvasY.value),
-    Math.abs(d.s.canvasX.value - sx) + bw,
-    Math.abs(d.s.canvasY.value - sy) + bh,
+  const direction = gradientDirectionFor(
+    toolbarIcons[d.toolbarStore.currentTool]?.name,
   );
-  toolCtx.fillStyle = mircColours99[d.toolbarStore.currentFg];
-  toolCtx.fillRect(sx, sy, bw, bh);
-  toolCtx.fillStyle = mircColours99[d.toolbarStore.currentBg];
-  toolCtx.fillRect(d.s.canvasX.value, d.s.canvasY.value, bw, bh);
+  if (!direction) return;
+
+  drawGradientGhost({
+    ctx: toolCtx,
+    startX: start.x,
+    startY: start.y,
+    endX: d.s.x.value,
+    endY: d.s.y.value,
+    blockWidth: d.s.blockWidthComp.value,
+    blockHeight: d.s.blockHeightComp.value,
+    blockSizeMultiplier: d.s.blockSizeMultiplier.value,
+    colours: mircColours99,
+    direction,
+    startColorIdx: d.tools.gradientTool.gradientStartColor.value,
+    endColorIdx: d.toolbarStore.currentBg,
+    layerBlocks: d.s.currentAsciiLayerBlocks.value,
+  });
 }
 
 async function doMouseUp(d: InternalDeps): Promise<void> {
@@ -387,7 +405,9 @@ async function doMouseDown(d: InternalDeps, e?: MouseEvent | TouchEvent): Promis
       }
       doHandleReplaceColor(d, targetBlock);
       break;
-    case 'gradient':
+    case 'gradient-vertical':
+    case 'gradient-horizontal':
+    case 'gradient-corner':
       if (d.s.toolbarState.value.halfBlockEditing) {
         showHalfBlockError(d.toastShow, 'Gradient fill');
         break;
@@ -448,7 +468,11 @@ async function refreshShapesPreview(
     endY: constrained.endY,
     blockWidth: s.blockWidthComp.value,
     blockHeight: s.blockHeightComp.value,
-    strokeColor: mircColours99[d.toolbarStore.currentFg],
+    blockSizeMultiplier: s.blockSizeMultiplier.value,
+    colours: mircColours99,
+    fg: d.toolbarStore.currentFg,
+    bg: d.toolbarStore.currentBg,
+    char: d.toolbarStore.currentChar,
     halfBlock: halfMode,
   });
 }
@@ -516,7 +540,9 @@ async function doMouseMove(d: InternalDeps, e: MouseEvent): Promise<void> {
       await r.clearToolCanvas();
       await r.drawIndicator();
       break;
-    case 'gradient':
+    case 'gradient-vertical':
+    case 'gradient-horizontal':
+    case 'gradient-corner':
       await r.clearToolCanvas();
       await r.drawIndicator();
       if (tools.gradientTool.isGradientPicking.value && tools.gradientTool.gradientStart.value && toolCtx) {

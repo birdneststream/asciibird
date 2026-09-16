@@ -107,7 +107,9 @@
               v-for="item in section.items"
               :key="item"
               class="min-w-0"
-            >{{ item }}</li>
+            >
+              {{ item }}
+            </li>
           </ul>
           <div
             v-if="section.shortcuts.length"
