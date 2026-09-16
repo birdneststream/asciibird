@@ -34,7 +34,7 @@
 
     <div
       v-show="!panelStore.colourPicker.minimized"
-      class="p-sm"
+      class="p-2"
     >
       <!-- Legacy IRC 16 colors -->
       <div class="grid grid-cols-10 gap-1">

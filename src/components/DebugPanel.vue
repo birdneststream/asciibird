@@ -14,7 +14,7 @@
         @minimize="panelStore.minimizePanel('debugPanel')"
       />
 
-      <div class="p-sm flex flex-col gap-1 overflow-y-auto custom-scrollbar">
+      <div class="p-2 flex flex-col gap-1 overflow-y-auto custom-scrollbar">
         <div class="font-label-mono text-label-mono space-y-1">
           <div class="flex justify-between">
             <span class="text-on-surface-variant">Tool:</span>

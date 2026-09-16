@@ -46,7 +46,7 @@
                 <slot />
               </div>
               <div
-                class="p-sm rounded-b-lg bg-surface-container-highest"
+                class="p-2 rounded-b-lg bg-surface-container-highest"
               >
                 <slot name="footer" />
               </div>

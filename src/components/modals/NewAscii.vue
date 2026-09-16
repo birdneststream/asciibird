@@ -5,7 +5,7 @@
     title="Create new ASCII"
   >
     <div>
-      <div class="grid grid-cols-[120px_1fr] gap-sm items-center mb-4">
+      <div class="grid grid-cols-[120px_1fr] gap-2 items-center mb-4">
         <label class="text-on-surface-variant font-label-mono">
           Title
         </label>
@@ -18,11 +18,11 @@
         >
       </div>
 
-      <div class="grid grid-cols-[120px_1fr] gap-sm items-center mb-4">
+      <div class="grid grid-cols-[120px_1fr] gap-2 items-center mb-4">
         <label class="text-on-surface-variant font-label-mono">
           Width and Height
         </label>
-        <div class="flex gap-sm">
+        <div class="flex gap-2">
           <input
             type="number"
             name="width"

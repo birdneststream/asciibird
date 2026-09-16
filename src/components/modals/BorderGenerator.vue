@@ -6,7 +6,7 @@
   >
     <div class="space-y-3">
       <!-- Border style selection -->
-      <div class="grid grid-cols-[120px_1fr] gap-sm items-center">
+      <div class="grid grid-cols-[120px_1fr] gap-2 items-center">
         <label class="text-on-surface-variant font-label-mono">
           Style
         </label>
@@ -27,7 +27,7 @@
       <!-- Custom character input (visible only when style=custom) -->
       <div
         v-if="borderStyle === 'custom'"
-        class="grid grid-cols-[120px_1fr] gap-sm items-center"
+        class="grid grid-cols-[120px_1fr] gap-2 items-center"
       >
         <label class="text-on-surface-variant font-label-mono">
           Char
@@ -41,7 +41,7 @@
       </div>
 
       <!-- Padding -->
-      <div class="grid grid-cols-[120px_1fr] gap-sm items-center">
+      <div class="grid grid-cols-[120px_1fr] gap-2 items-center">
         <label class="text-on-surface-variant font-label-mono">
           Padding
         </label>
@@ -61,7 +61,7 @@
       </div>
 
       <!-- Expand toggle -->
-      <div class="grid grid-cols-[120px_1fr] gap-sm items-center">
+      <div class="grid grid-cols-[120px_1fr] gap-2 items-center">
         <label class="text-on-surface-variant font-label-mono">
           Mode
         </label>

@@ -14,7 +14,7 @@
         @minimize="panelStore.minimizePanel('layersLibrary')"
       />
 
-      <div class="p-sm flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
+      <div class="p-2 flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
         <Layers />
       </div>
     </div>

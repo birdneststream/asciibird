@@ -14,7 +14,7 @@
         @minimize="panelStore.minimizePanel('brushPreview')"
       />
 
-      <div class="p-sm flex flex-col gap-xs overflow-y-auto custom-scrollbar">
+      <div class="p-2 flex flex-col gap-1 overflow-y-auto custom-scrollbar">
         <!-- Recent colors strip -->
         <div
           v-if="recentColors.length > 0"
@@ -98,7 +98,7 @@
         </div>
 
         <div
-          class="flex w-full gap-xs"
+          class="flex w-full gap-1"
           :class="{ 'opacity-40': halfBlockEditing }"
         >
           <input

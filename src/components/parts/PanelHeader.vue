@@ -1,7 +1,7 @@
 <template>
   <div
     ref="headerEl"
-    class="drag-handle bg-surface-container-high flex items-center justify-between p-sm border-b border-outline-variant select-none"
+    class="drag-handle bg-surface-container-high flex items-center justify-between p-2 border-b border-outline-variant select-none"
     @mouseup.middle.prevent="$emit('minimize')"
   >
     <div class="flex items-center gap-2">

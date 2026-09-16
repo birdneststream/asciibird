@@ -10,7 +10,7 @@
         @mouseleave="onMenuBarMouseLeave"
       >
         <h1
-          class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight px-md select-none"
+          class="font-headline-md text-headline-md font-bold text-on-surface tracking-tight px-4 select-none"
           :class="{ 'ab-easter-egg-active': easterEgg.isActive.value }"
           @click="easterEgg.trigger()"
         >
@@ -199,13 +199,13 @@
     <template v-if="asciibirdMeta.length">
       <div
         v-if="tabsVisible"
-        class="relative z-tabbar border-b header-bar border-outline-variant h-9 flex items-stretch px-xs gap-px overflow-x-auto custom-scrollbar"
+        class="relative z-tabbar border-b header-bar border-outline-variant h-9 flex items-stretch px-1 gap-px overflow-x-auto custom-scrollbar"
         style="top: 0px"
       >
         <div
           v-for="(value, key) in asciibirdMeta"
           :key="key"
-          class="h-9 flex items-center gap-xs px-sm cursor-pointer transition-colors duration-150 min-w-[120px] max-w-[200px] group select-none"
+          class="h-9 flex items-center gap-1 px-2 cursor-pointer transition-colors duration-150 min-w-[120px] max-w-[200px] group select-none"
           :class="tabClass(key)"
           @click="changeTab(key)"
           @mouseup.middle.prevent="closeTab(key)"

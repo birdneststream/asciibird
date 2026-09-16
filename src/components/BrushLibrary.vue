@@ -14,7 +14,7 @@
         @minimize="panelStore.minimizePanel('brushLibrary')"
       />
 
-      <div class="p-sm flex flex-col gap-xs overflow-y-auto custom-scrollbar">
+      <div class="p-2 flex flex-col gap-1 overflow-y-auto custom-scrollbar">
         <!-- Tabs -->
         <div class="flex gap-1 mb-2">
           <button

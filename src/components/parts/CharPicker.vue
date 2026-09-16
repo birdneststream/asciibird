@@ -34,15 +34,15 @@
 
     <div
       v-show="!panelStore.charPicker.minimized"
-      class="p-sm flex flex-col gap-xs"
+      class="p-2 flex flex-col gap-1"
     >
       <div class="overflow-y-auto max-h-[420px] custom-scrollbar">
         <section
           v-for="(group, gi) in charGroups"
           :key="group.label"
-          :class="gi > 0 ? 'mt-sm' : ''"
+          :class="gi > 0 ? 'mt-2' : ''"
         >
-          <div class="text-body-sm font-bold text-on-surface-variant/70 uppercase tracking-wider pb-xs mb-xs border-b border-outline-variant/30">
+          <div class="text-body-sm font-bold text-on-surface-variant/70 uppercase tracking-wider pb-1 mb-1 border-b border-outline-variant/30">
             {{ group.label }}
             <span class="font-normal text-on-surface-variant/40 ml-1">({{ group.chars.length }})</span>
           </div>

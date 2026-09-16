@@ -99,12 +99,11 @@
   --text-canvas-ascii--letter-spacing: 0em;
   --text-canvas-ascii--font-weight: 400;
 
-  /* Named spacing */
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 16px;
-  --spacing-lg: 24px;
-  --spacing-gutter: 12px;
+  /* Named spacing — only non-colliding tokens live here.
+     Do NOT add any --spacing-* token whose name matches a --container-*
+     key (xs, sm, md, lg, xl, 2xl…, prose, screen): the spacing namespace
+     feeds max-w/min-w/w/h lookups in v4 and would shadow the container
+     scale (e.g. --spacing-lg would turn max-w-lg into 24px). */
   --spacing-panel-width: 280px;
 
   /* Panel shadows */

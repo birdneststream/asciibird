@@ -5,7 +5,7 @@
     title="ASCIIBIRD Nance Trace Mode"
   >
     <div>
-      <div class="grid grid-cols-[140px_1fr] gap-sm items-center mb-4">
+      <div class="grid grid-cols-[140px_1fr] gap-2 items-center mb-4">
         <label class="text-on-surface-variant font-label-mono">
           URL
         </label>
@@ -22,7 +22,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-[140px_1fr] gap-sm items-center mb-4">
+      <div class="grid grid-cols-[140px_1fr] gap-2 items-center mb-4">
         <label class="text-on-surface-variant font-label-mono">
           Visibility
         </label>
@@ -37,7 +37,7 @@
         </label>
       </div>
 
-      <div class="grid grid-cols-[140px_1fr] gap-sm items-center mb-4">
+      <div class="grid grid-cols-[140px_1fr] gap-2 items-center mb-4">
         <label class="text-on-surface-variant font-label-mono">
           Overlay Opacity
         </label>
@@ -50,7 +50,7 @@
         >
       </div>
 
-      <div class="grid grid-cols-[140px_1fr] gap-sm items-center mb-4">
+      <div class="grid grid-cols-[140px_1fr] gap-2 items-center mb-4">
         <label class="text-on-surface-variant font-label-mono">
           ASCII Opacity
         </label>
@@ -63,7 +63,7 @@
         >
       </div>
 
-      <div class="grid grid-cols-[140px_1fr] gap-sm items-center mb-4">
+      <div class="grid grid-cols-[140px_1fr] gap-2 items-center mb-4">
         <label class="text-on-surface-variant font-label-mono">
           Image Scale
         </label>
@@ -76,7 +76,7 @@
         >
       </div>
 
-      <div class="grid grid-cols-[140px_1fr] gap-sm items-center mb-4">
+      <div class="grid grid-cols-[140px_1fr] gap-2 items-center mb-4">
         <label class="text-on-surface-variant font-label-mono">
           Left
         </label>
@@ -89,7 +89,7 @@
         >
       </div>
 
-      <div class="grid grid-cols-[140px_1fr] gap-sm items-center mb-4">
+      <div class="grid grid-cols-[140px_1fr] gap-2 items-center mb-4">
         <label class="text-on-surface-variant font-label-mono">
           Top
         </label>
@@ -102,11 +102,11 @@
         >
       </div>
 
-      <div class="grid grid-cols-[140px_1fr] gap-sm items-center mb-4">
+      <div class="grid grid-cols-[140px_1fr] gap-2 items-center mb-4">
         <label class="text-on-surface-variant font-label-mono">
           Fit To
         </label>
-        <div class="flex gap-sm">
+        <div class="flex gap-2">
           <label class="flex items-center gap-2 cursor-pointer">
             <input
               type="radio"
@@ -130,11 +130,11 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-[140px_1fr] gap-sm items-center mb-4">
+      <div class="grid grid-cols-[140px_1fr] gap-2 items-center mb-4">
         <label class="text-on-surface-variant font-label-mono">
           Repeat
         </label>
-        <div class="flex gap-sm">
+        <div class="flex gap-2">
           <label class="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"

@@ -5,7 +5,7 @@
     title="ASCIIBIRD Options"
   >
     <div>
-      <div class="grid grid-cols-[120px_1fr] gap-sm items-center mb-4">
+      <div class="grid grid-cols-[120px_1fr] gap-2 items-center mb-4">
         <label class="text-on-surface-variant font-label-mono">
           FPS
         </label>
@@ -37,7 +37,7 @@
         </p>
       </div>
 
-      <div class="grid grid-cols-[120px_1fr] gap-sm items-center mb-4">
+      <div class="grid grid-cols-[120px_1fr] gap-2 items-center mb-4">
         <label class="text-on-surface-variant font-label-mono">
           Brush Limit
         </label>
@@ -51,7 +51,7 @@
         >
       </div>
 
-      <div class="grid grid-cols-[120px_1fr] gap-sm items-center mb-4">
+      <div class="grid grid-cols-[120px_1fr] gap-2 items-center mb-4">
         <label class="text-on-surface-variant font-label-mono">
           Undo Limit
         </label>
