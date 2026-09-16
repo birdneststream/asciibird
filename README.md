@@ -11,24 +11,16 @@ Support ASCIIBIRD and birdnest streaming by [jumping on our patreon](https://www
 To view in detailed help and documentation please see [Help and Documentation](HELP.md)
 
 - [ASCIIBIRD - The Worlds Best IRC ASCII Art Editor](#asciibird---the-worlds-best-irc-ascii-art-editor)
-- [Big Shout outs to Patrons](#big-shout-outs-to-patrons)
 - [Feature Overview](#feature-overview)
 - [What Chatters are saying about ASCIIBIRD](#what-chatters-are-saying-about-asciibird)
 - [ASCII art created with ASCIIBIRD](#ascii-art-created-with-asciibird)
 - [References](#references)
 - [ASCII Resources](#ascii-resources)
-  - [Hello to friends on the IRC](#hello-to-friends-on-the-irc)
 - [Project setup](#project-setup)
   - [Compiles and hot-reloads for development](#compiles-and-hot-reloads-for-development)
   - [Compiles and minifies for production](#compiles-and-minifies-for-production)
   - [Runs the unit tests](#runs-the-unit-tests)
   - [Lints and fixes files](#lints-and-fixes-files)
-
-# Big Shout outs to Patrons
-
-> shrew, octopus, j-hex, nes, mouse, dingo, eraser, pancakes
-
-> special thanks to slime aka botmaster slime for the wonderful bot integration with asciibird
 
 # Feature Overview
 
@@ -189,10 +181,6 @@ Already there have been hundreds of new mIRC ascii arts created with asciibird! 
 * https://github.com/ircart/resources - More resources on ASCII and configuring terminals/clients to display ASCII art correctly
 * http://wepump.in/ascii/ - Classic IRC ASCII art
 * https://irc.watch/ascii/ - IRC ASCIIs you can load into ASCIIBIRD
-
-## Hello to friends on the IRC
-
-> darkmage (confirmed snitch), l0de, bex, blarf, sludg, shart, chode, corn, ralph, jrra, kuntz, moony, sniff, scd, aztec, astro, anji, b-rex, bengt, butth0le, canada420, clamkin, deakin, dumbguy, ElBurro, interdome, syn, darkness, vae, gowce, moneytree, Retarded, spoon, sylar, zen, bj0rn, stovepipe, morthrane, chrono, acidvegas, again, hgc, durendal, knio, mavericks, pyrex, sh, irie, seirdy, sq, stratum, WeEatnKid, dieforirc, tater, buttvomit, luldangs, MichealK, AnalMan, poccri, vap0r, kakama, fregyXin, kayos, stovepipe, higgs, Audasity, PsyMaster, perplexa, alyosha, Darn, efsenable, EchoShun, dumbguy, HorseCrusherKristian, phobos, COMPUTERS, dave, nance, sthors
 
 # Project setup
 ```
