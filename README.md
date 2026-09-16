@@ -159,12 +159,12 @@ To view in detailed help and documentation please see [Help and Documentation](H
 
 Already there have been hundreds of new mIRC ascii arts created with asciibird! Here are just a few from our pal *chzz*.
 
-![fraidnobully.png](https://asciibird.birdnest.live/docs/fraidnobully.png)
-![hoodie.png](https://asciibird.birdnest.live/docs/hoodie.png)
-![mediation.png](https://asciibird.birdnest.live/docs/mediation.png)
-![bullyfreechat.png](https://asciibird.birdnest.live/docs/bullyfreechat.png)
-![midiweekend.png](https://asciibird.birdnest.live/docs/midiweekend.png)
-![chzz-dimension-noose.png](https://asciibird.birdnest.live/docs/chzz-dimension-noose.png)
+![fraidnobully.png](https://classic.birdnest.live/docs/fraidnobully.png)
+![hoodie.png](https://classic.birdnest.live/docs/hoodie.png)
+![mediation.png](https://classic.birdnest.live/docs/mediation.png)
+![bullyfreechat.png](https://classic.birdnest.live/docs/bullyfreechat.png)
+![midiweekend.png](https://classic.birdnest.live/docs/midiweekend.png)
+![chzz-dimension-noose.png](https://classic.birdnest.live/docs/chzz-dimension-noose.png)
 
 # References
 
