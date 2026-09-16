@@ -48,3 +48,6 @@ design/
 
 # Screenshots
 *.png
+
+# Vitest cache
+.vitest/
