@@ -11,10 +11,6 @@ To view in detailed help and documentation please see [Help and Documentation](H
 - [ASCIIBIRD - The Worlds Best IRC ASCII Art Editor](#asciibird---the-worlds-best-irc-ascii-art-editor)
 - [Big Shout outs to Patrons](#big-shout-outs-to-patrons)
 - [Feature Overview](#feature-overview)
-- [Roadmap and Known Bugs](#roadmap-and-known-bugs)
-  - [To Be Developed](#to-be-developed)
-  - [Known Bugs](#known-bugs)
-  - [Mobile / Touch Screen support](#mobile--touch-screen-support)
 - [What Chatters are saying about ASCIIBIRD](#what-chatters-are-saying-about-asciibird)
 - [ASCII art created with ASCIIBIRD](#ascii-art-created-with-asciibird)
 - [References](#references)
@@ -100,35 +96,6 @@ To view in detailed help and documentation please see [Help and Documentation](H
 * In-app help and shortcuts reference (F1)
 * Single key tool shortcuts (B brush, S select, T text, F fill, E eraser, R recolour, L shapes) and Alt + 1-8
 * 1800+ unit tests, because even ascii editors deserve them
-
-# Roadmap and Known Bugs
-
-In no particular order, future development goals and bug fixes.
-
-## To Be Developed
-
-* History of colour changes
-* Easier to cycle through brush history
-* Half block editing mode, make own half block brush
-* SVG export
-* Export options for colour codes. C,00 or C0,00
-* SHADING mode, draw shading chars with brush (pressure.js maybe)
-* Resize canvas undo
-* Review encodings check on file import - UTF8 vs Latin something
-* Dark / light modes, different themes
-* Expand the brush manager, brush categories, download brushes, import/export brushes
-* ASCIIBIRD API ?! - Web api to extend features of asciibird
-
-## Known Bugs
-
-* Bug with hotkey brush switching, if make a new ascii hotkeys are broke - something to do with the hotkey function
-* Editing ascii does not update title
-* Context menus inside the panels can be way off sometimes
-* The context menu for the background doesn't work when scrolled down
-
-## Mobile / Touch Screen support
-
-Partial. The touch canvas events are wired up but not fully reviewed or tested. For example while you can brush once, you cannot move the brush around.
 
 # What Chatters are saying about ASCIIBIRD
 
