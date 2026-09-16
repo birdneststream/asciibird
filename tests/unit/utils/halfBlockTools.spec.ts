@@ -18,8 +18,7 @@ describe('HALF_BLOCK_UNAVAILABLE_TOOLS', () => {
     ]);
   });
 
-  it('covers every registered tool that is unavailable', () => {
-    // Every unavailable name must exist in the registry (no typos)
+  it('contains only names that exist in the tool registry (no typos)', () => {
     for (const name of HALF_BLOCK_UNAVAILABLE_TOOLS) {
       expect(toolbarIcons.some(t => t.name === name)).toBe(true);
     }

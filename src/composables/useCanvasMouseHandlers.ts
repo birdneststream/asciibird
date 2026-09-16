@@ -404,7 +404,10 @@ async function doMouseDown(d: InternalDeps, e?: MouseEvent | TouchEvent): Promis
       break;
     case 'replace-color':
       if (d.s.toolbarState.value.halfBlockEditing) {
-        showHalfBlockError(d.toastShow, halfBlockToolLabel('replace-color'));
+        showHalfBlockError(
+          d.toastShow,
+          halfBlockToolLabel(d.s.currentTool.value.name),
+        );
         break;
       }
       doHandleReplaceColor(d, targetBlock);
@@ -413,7 +416,10 @@ async function doMouseDown(d: InternalDeps, e?: MouseEvent | TouchEvent): Promis
     case 'gradient-horizontal':
     case 'gradient-corner':
       if (d.s.toolbarState.value.halfBlockEditing) {
-        showHalfBlockError(d.toastShow, halfBlockToolLabel('gradient-vertical'));
+        showHalfBlockError(
+          d.toastShow,
+          halfBlockToolLabel(d.s.currentTool.value.name),
+        );
         break;
       }
       await doHandleGradient(d);

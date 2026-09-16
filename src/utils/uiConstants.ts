@@ -48,8 +48,8 @@ export function gradientDirectionFor(
     : null;
 }
 
-/** Is `name` one of the gradient tools? */
-export function isGradientTool(name: string | undefined): boolean {
+/** Is `name` one of the gradient tools? (internal — see gradientDirectionFor) */
+function isGradientTool(name: string | undefined): boolean {
   return gradientDirectionFor(name) !== null;
 }
 
