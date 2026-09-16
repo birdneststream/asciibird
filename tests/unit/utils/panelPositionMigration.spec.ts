@@ -34,8 +34,9 @@ describe('migratePanelStates', () => {
     expect(parsed.layoutVersion).toBe(PANEL_LAYOUT_VERSION);
   });
 
-  it('non-numeric y is left untouched', () => {
+  it('non-numeric y is left untouched but the version is still stamped', () => {
     const parsed = migratePanelStates({ brushPreview: { y: 'nope' } });
     expect((parsed.brushPreview as { y: unknown }).y).toBe('nope');
+    expect(parsed.layoutVersion).toBe(PANEL_LAYOUT_VERSION);
   });
 });

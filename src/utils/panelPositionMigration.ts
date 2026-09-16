@@ -28,6 +28,9 @@ export function migratePanelStates(
   const version = typeof parsed.layoutVersion === 'number'
     ? parsed.layoutVersion
     : 0;
+  // The literal 2 below is this block's TARGET version, deliberately
+  // not PANEL_LAYOUT_VERSION — a future v3 bump must not re-run the
+  // v2 shift. Chain new migrations as additional keyed blocks.
   if (version < 2) {
     const brush = parsed.brushPreview as { y?: unknown } | undefined;
     if (brush && typeof brush.y === 'number') {
