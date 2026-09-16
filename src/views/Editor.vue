@@ -625,7 +625,6 @@ function shouldEndStroke(): boolean {
 // drags end properly even when the mouse is released outside the
 // canvas element. Left-button-only filter prevents right/middle
 // clicks from interfering.
-// See: Gitea issues #83, #84.
 useEventListener(
   window,
   'mouseup',

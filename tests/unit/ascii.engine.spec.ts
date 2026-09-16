@@ -1972,7 +1972,7 @@ describe('iterativeFill', () => {
     }
   });
 
-  // ─── Ragged array safety (Gitea #56) ────────────────────────────
+  // ─── Ragged array safety ───────────────────────────────────
 
   it('does not crash on ragged array — shorter row than first row', () => {
     // Row 0 has 3 columns, row 1 has only 1 — ragged
@@ -2486,7 +2486,7 @@ describe('iterativeFillHalfBlock', () => {
     }
   });
 
-  // ─── Ragged array safety (Gitea #56) ────────────────────────────
+  // ─── Ragged array safety ───────────────────────────────────
 
   it('does not crash on ragged array — shorter row', () => {
     // Row 0 has 2 cols, row 1 has 1 col — ragged

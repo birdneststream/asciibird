@@ -14,7 +14,7 @@ import type { Block } from '@/types';
 /**
  * Integration tests for the half-block coordinate system.
  *
- * Covers end-to-end scenarios from Gitea #54:
+ * Covers end-to-end scenarios:
  *  - Brush painting at half-block granularity
  *  - Fill tool fills connected half-blocks without gaps
  *  - Export produces correct ▀ characters with proper colour codes
@@ -612,7 +612,7 @@ describe('Half-block integration', () => {
     });
   });
 
-  // ─── Ragged array safety (Gitea #56) ────────────────────────────
+  // ─── Ragged array safety ───────────────────────────────────
 
   describe('ragged array safety', () => {
     it('getColour returns EMPTY_COLOUR for missing cell in shorter row', () => {

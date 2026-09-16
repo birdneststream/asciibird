@@ -150,7 +150,6 @@ export function useEditorWatchers(opts: EditorWatcherOptions): void {
   // pending changes. For brush/eraser, preserve canTool so the stroke
   // can resume if the mouse re-enters while the button is held.
   // Other tools (fill, dropper, text, etc.) deactivate on leave.
-  // See: Gitea issues #83, #84.
   watch(s.isMouseOnCanvas, async (val, old) => {
     if (val !== old) {
       if (!s.isSelecting.value) {
