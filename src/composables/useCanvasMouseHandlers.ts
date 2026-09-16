@@ -12,6 +12,7 @@ import { drawShapePreview } from '../utils/shapePreview';
 import { drawGradientPreview as drawGradientGhost } from '../utils/gradientPreview';
 import {
   gradientDirectionFor,
+  halfBlockToolLabel,
   toolbarIcons,
 } from '../utils/uiConstants';
 import {
@@ -148,7 +149,10 @@ export function updateShapeAltKeys(
 function showHalfBlockError(
   toastShow: InternalDeps['toastShow'], toolName: string,
 ): void {
-  toastShow(`${toolName} is not available in half-block mode`, { type: 'error' });
+  toastShow(
+    `${toolName} is not available in half-block editing mode`,
+    { type: 'error' },
+  );
 }
 
 function updateLastBrushPos(s: EditorState): void {
@@ -400,7 +404,7 @@ async function doMouseDown(d: InternalDeps, e?: MouseEvent | TouchEvent): Promis
       break;
     case 'replace-color':
       if (d.s.toolbarState.value.halfBlockEditing) {
-        showHalfBlockError(d.toastShow, 'Color replace');
+        showHalfBlockError(d.toastShow, halfBlockToolLabel('replace-color'));
         break;
       }
       doHandleReplaceColor(d, targetBlock);
@@ -409,7 +413,7 @@ async function doMouseDown(d: InternalDeps, e?: MouseEvent | TouchEvent): Promis
     case 'gradient-horizontal':
     case 'gradient-corner':
       if (d.s.toolbarState.value.halfBlockEditing) {
-        showHalfBlockError(d.toastShow, 'Gradient fill');
+        showHalfBlockError(d.toastShow, halfBlockToolLabel('gradient-vertical'));
         break;
       }
       await doHandleGradient(d);

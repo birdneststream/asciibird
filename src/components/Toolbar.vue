@@ -20,15 +20,18 @@
           <Tooltip
             v-for="(value, keyToolbar) in toolbarIcons"
             :key="keyToolbar + 50"
-            :content="tooltipName(value)"
+            :content="tooltipName(value) + (isToolDisabled(value.name)
+              ? ' (unavailable in half-block mode)'
+              : '')"
           >
             <button
               v-if="value.name !== 'shapes'"
               type="button"
-              class="w-full h-8 rounded-sm flex items-center justify-center gap-1 transition-all duration-150"
+              class="w-full h-8 rounded-sm flex items-center justify-center gap-1 transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
               :class="currentTool.name === value.name
                 ? 'bg-primary-container/20 text-primary border border-primary/50'
-                : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant border border-transparent'"
+                : 'bg-surface-variant/30 text-on-surface-variant enabled:hover:bg-surface-variant border border-transparent'"
+              :disabled="isToolDisabled(value.name)"
               @click="toolbarStore.changeTool(keyToolbar)"
             >
               <span
@@ -169,6 +172,7 @@ import PanelHeader from './parts/PanelHeader.vue';
 import Tooltip from './parts/Tooltip.vue';
 import { toolbarIcons, blockWidth, blockHeight } from '../ascii';
 import { tooltipName, toolLabel } from '../utils/toolbar';
+import { isToolUnavailableInHalfBlock } from '../utils/uiConstants';
 import {
   SHAPE_TYPES,
   SHAPE_LABELS,
@@ -207,6 +211,12 @@ watch([dragX, dragY], ([newX, newY]) => {
 });
 
 const currentTool = computed(() => toolbarIcons[toolbarStore.currentTool]);
+
+/** A tool button renders disabled while half-block mode blocks it */
+function isToolDisabled(name: string): boolean {
+  return toolbarStore.toolbarState.halfBlockEditing
+    && isToolUnavailableInHalfBlock(name);
+}
 
 const isShapesTool = computed(() => currentTool.value?.name === 'shapes');
 const currentShapeType = computed(
