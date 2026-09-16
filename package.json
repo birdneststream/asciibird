@@ -33,15 +33,16 @@
     "vue": "^3.5"
   },
   "devDependencies": {
-    "@eslint/js": "^9.4.0",
+    "@eslint/js": "^10.0.1",
     "@types/node": "^22.20.3",
     "@vitejs/plugin-vue": "^6",
     "@vitest/coverage-v8": "^4",
     "@vue/compiler-dom": "^3",
     "@vue/test-utils": "^2",
-    "eslint": "^9.4.0",
-    "eslint-plugin-vue": "^9.26.0",
+    "eslint": "^10.10.0",
+    "eslint-plugin-vue": "^10.11.0",
     "fake-indexeddb": "^6.2.5",
+    "globals": "^17.12.0",
     "jsdom": "^30.0.1",
     "knip": "^6.14.1",
     "lint-staged": "^17.5.1",
@@ -51,7 +52,8 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.2",
     "vite": "^8",
-    "vitest": "^4"
+    "vitest": "^4",
+    "vue-eslint-parser": "^10.3.0"
   },
   "browserslist": [
     "> 1%",

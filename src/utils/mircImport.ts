@@ -56,7 +56,7 @@ export const parseMircToLayers = (
   for (const line of asciiLines) {
     const len = line.length - 1;
     let char: string;
-    let block: Block = {};
+    const block: Block = {};
     let pos = -1;
     let actualPos = 0;
 
@@ -104,7 +104,6 @@ export const parseMircToLayers = (
       }
     }
 
-    block = {};
     y++;
   }
 

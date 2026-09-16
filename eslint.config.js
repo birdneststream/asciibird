@@ -1,6 +1,7 @@
 import js from '@eslint/js'
 import pluginVue from 'eslint-plugin-vue'
 import tseslint from 'typescript-eslint'
+import globals from 'globals'
 
 export default [
   js.configs.recommended,
@@ -19,23 +20,7 @@ export default [
       ecmaVersion: 2020,
       sourceType: 'module',
       globals: {
-        window: 'readonly',
-        document: 'readonly',
-        localStorage: 'readonly',
-        location: 'readonly',
-        URL: 'readonly',
-        URLSearchParams: 'readonly',
-        Blob: 'readonly',
-        FileReader: 'readonly',
-        setTimeout: 'readonly',
-        setInterval: 'readonly',
-        clearTimeout: 'readonly',
-        clearInterval: 'readonly',
-        console: 'readonly',
-        fetch: 'readonly',
-        navigator: 'readonly',
-        HTMLCanvasElement: 'readonly',
-        Image: 'readonly',
+        ...globals.browser,
         // hotkeys-js loaded via CDN as global
         hotkeys: 'readonly',
       },
