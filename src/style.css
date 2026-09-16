@@ -139,10 +139,20 @@
 }
 
 /* ── JetBrains Mono (for all UI elements) ─────────────────────── */
+/* Local woff2 files (SIL OFL): regular/bold curated, medium is the
+   latin-500 build — same typeface file @fontsource used to serve. */
 @font-face {
     font-family: "JetBrains Mono";
     src: url("./assets/jetbrains-mono-regular.woff2") format("woff2");
     font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "JetBrains Mono";
+    src: url("./assets/jetbrains-mono-medium.woff2") format("woff2");
+    font-weight: 500;
     font-style: normal;
     font-display: swap;
 }

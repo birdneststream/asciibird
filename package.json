@@ -16,8 +16,6 @@
     "stats": "vite build && echo 'Open dist/stats.html for bundle analysis'"
   },
   "dependencies": {
-    "@fontsource/inter": "^5.2.8",
-    "@fontsource/jetbrains-mono": "^5.2.8",
     "@headlessui/vue": "^1.7",
     "@tailwindcss/forms": "^0.5.11",
     "@vue/devtools-api": "^8.1.5",
