@@ -8,6 +8,10 @@ import { defineStore } from 'pinia';
 import { idbPersistAdapter } from '../utils/idbPersistAdapter';
 import type { PanelState, BrushLibraryState } from '../types';
 import { snapToGrid } from '../utils/geometry';
+import {
+  migratePanelStates,
+  PANEL_LAYOUT_VERSION,
+} from '../utils/panelPositionMigration';
 
 // Direct constants to avoid circular import with ascii.ts
 // (ascii.ts imports CANVAS_DEFAULT_X from this module)
@@ -56,7 +60,9 @@ function initialPanelStates() {
     } as BrushLibraryState,
     brushPreview: {
       x: LEFT_X,
-      y: 495,
+      // Flush under the toolbar panel (bottom y≈519 since the gradient
+      // tool split grew it by one button row — see panelPositionMigration)
+      y: 519,
       h: 260,
       w: LEFT_PANEL_W,
       visible: true,
@@ -102,6 +108,8 @@ export type PanelStates = ReturnType<typeof initialPanelStates>;
 export type PanelKey = keyof PanelStates;
 
 interface PanelStoreState extends PanelStates {
+  /** Persisted panel layout version — gates one-time position migration */
+  layoutVersion: number;
   /** Ephemeral z-index counter — NOT persisted */
   zCounter: number;
   /** Ephemeral z-index map per panel — NOT persisted */
@@ -118,7 +126,12 @@ export const usePanelStore = defineStore('panel', {
         (defaults[key] as PanelState).minimized = false;
       }
     }
-    return { ...defaults, zCounter: 100, zIndices: {} };
+    return {
+      ...defaults,
+      layoutVersion: PANEL_LAYOUT_VERSION,
+      zCounter: 100,
+      zIndices: {},
+    };
   },
 
   getters: {
@@ -228,5 +241,9 @@ export const usePanelStore = defineStore('panel', {
     storage: idbPersistAdapter,
     // Ephemeral z-index state is meaningless across sessions
     omit: ['zCounter', 'zIndices'],
+    serializer: {
+      serialize: (value: Record<string, unknown>) => JSON.stringify(value),
+      deserialize: (value: string) => migratePanelStates(JSON.parse(value)),
+    },
   },
 });
