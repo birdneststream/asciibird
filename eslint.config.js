@@ -54,10 +54,6 @@ export default [
     languageOptions: {
       globals: {
         process: 'readonly',
-        __dirname: 'readonly',
-        __filename: 'readonly',
-        module: 'readonly',
-        require: 'readonly',
       },
     },
   },
