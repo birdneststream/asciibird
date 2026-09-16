@@ -5,9 +5,8 @@
 // canvas-reset + font behaviour that depends on the canvas element.
 
 import { getCanvasFont } from '../utils/canvasFont';
-import { renderBlock, type RenderBlockOptions } from '../utils/blockRenderer';
+import { renderBlock } from '../utils/blockRenderer';
 
-export type { RenderBlockOptions };
 export { renderBlock };
 
 /**

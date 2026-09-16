@@ -23,14 +23,6 @@ import type {
   ToolApplicationReturn,
 } from './useToolApplication.types';
 
-// Re-export types for consumers
-export type {
-  ToolAppStateDeps,
-  ToolRenderingDeps,
-  ToolApplicationOptions,
-  ToolApplicationReturn,
-} from './useToolApplication.types';
-
 // ─── Module-level helpers ───────────────────────────────────────
 
 type StateDeps = ToolApplicationOptions['state'];
