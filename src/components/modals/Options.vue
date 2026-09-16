@@ -76,7 +76,7 @@
         </p>
         <button
           type="button"
-          class="px-3 py-2 rounded text-sm font-label-mono cursor-pointer transition-colors bg-error-container text-on-error-container hover:brightness-110"
+          class="px-3 py-2 rounded-sm text-sm font-label-mono cursor-pointer transition-colors bg-error-container text-on-error-container hover:brightness-110"
           @click="clearCache()"
         >
           Clear and Reset ASCIIBIRD

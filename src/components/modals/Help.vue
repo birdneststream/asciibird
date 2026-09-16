@@ -12,7 +12,7 @@
           v-for="tab in tabs"
           :key="tab.id"
           type="button"
-          class="flex-1 py-1.5 font-label-mono text-label-mono rounded-sm transition-colors flex items-center justify-center gap-1"
+          class="flex-1 py-1.5 font-label-mono text-label-mono rounded-xs transition-colors flex items-center justify-center gap-1"
           :class="activeTab === tab.id
             ? 'bg-primary-container/20 text-primary border border-primary/50'
             : 'text-on-surface-variant hover:bg-surface-variant border border-transparent'"
@@ -35,10 +35,10 @@
         <div
           v-for="tool in HELP_TOOLS"
           :key="tool.name"
-          class="flex items-start gap-2 bg-surface-container-lowest border border-outline-variant/50 rounded p-2"
+          class="flex items-start gap-2 bg-surface-container-lowest border border-outline-variant/50 rounded-sm p-2"
         >
           <span
-            class="material-icons text-lg text-on-surface-variant flex-shrink-0"
+            class="material-icons text-lg text-on-surface-variant shrink-0"
             aria-hidden="true"
           >{{ tool.icon }}</span>
           <div class="min-w-0 flex-1">
@@ -63,7 +63,7 @@
               <span
                 v-for="shapeType in tool.shapeTypes"
                 :key="shapeType.name"
-                class="flex items-center gap-1 px-1.5 py-0.5 rounded-sm bg-surface-variant/30 border border-outline-variant/30"
+                class="flex items-center gap-1 px-1.5 py-0.5 rounded-xs bg-surface-variant/30 border border-outline-variant/30"
                 :title="shapeType.label"
               >
                 <span
@@ -88,7 +88,7 @@
         <div
           v-for="section in HELP_PANELS"
           :key="section.id"
-          class="bg-surface-container-lowest border border-outline-variant/50 rounded p-2"
+          class="bg-surface-container-lowest border border-outline-variant/50 rounded-sm p-2"
         >
           <div class="flex items-center gap-2 mb-1">
             <span
@@ -123,7 +123,7 @@
               <span class="text-on-surface-variant text-body-sm min-w-0">
                 {{ shortcut.action }}
               </span>
-              <kbd class="ab-kbd flex-shrink-0">{{ shortcut.keys }}</kbd>
+              <kbd class="ab-kbd shrink-0">{{ shortcut.keys }}</kbd>
             </div>
           </div>
         </div>
@@ -150,7 +150,7 @@
             <span class="text-on-surface-variant text-body-sm min-w-0">
               {{ shortcut.action }}
             </span>
-            <kbd class="ab-kbd flex-shrink-0">{{ shortcut.keys }}</kbd>
+            <kbd class="ab-kbd shrink-0">{{ shortcut.keys }}</kbd>
           </div>
         </div>
       </div>

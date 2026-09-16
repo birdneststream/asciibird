@@ -1,8 +1,132 @@
 /* tailwind css */
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@plugin "@tailwindcss/forms";
+
+/* Obsidian Creative System — theme tokens (ported from tailwind.config.js) */
+@theme {
+  /* Surface */
+  --color-surface: #131313;
+  --color-surface-bright: #393939;
+  --color-surface-container-lowest: #0e0e0e;
+  --color-surface-container-low: #1c1b1b;
+  --color-surface-container: #201f1f;
+  --color-surface-container-high: #2a2a2a;
+  --color-surface-container-highest: #353534;
+
+  /* Surface content */
+  --color-on-surface: #e5e2e1;
+  --color-on-surface-variant: #c1c6d7;
+  --color-surface-variant: #353534;
+  --color-surface-tint: #adc6ff;
+  --color-on-background: #e5e2e1;
+
+  /* Primary (Electric Blue) */
+  --color-primary: #adc6ff;
+  --color-on-primary: #002e69;
+  --color-primary-container: #4b8eff;
+  --color-on-primary-container: #00285c;
+  --color-primary-fixed: #d8e2ff;
+  --color-primary-fixed-dim: #adc6ff;
+  --color-on-primary-fixed: #001a41;
+  --color-on-primary-fixed-variant: #004493;
+  --color-inverse-primary: #005bc1;
+
+  /* Secondary (Cyber Lime) */
+  --color-secondary: #ffffff;
+  --color-on-secondary: #283500;
+  --color-secondary-container: #c3f400;
+  --color-on-secondary-container: #556d00;
+  --color-secondary-fixed: #c3f400;
+  --color-secondary-fixed-dim: #abd600;
+  --color-on-secondary-fixed: #161e00;
+  --color-on-secondary-fixed-variant: #3c4d00;
+
+  /* Tertiary */
+  --color-tertiary: #c8c6c5;
+  --color-on-tertiary: #303030;
+  --color-tertiary-container: #929090;
+  --color-on-tertiary-container: #2a2a2a;
+  --color-tertiary-fixed: #e5e2e1;
+  --color-tertiary-fixed-dim: #c8c6c5;
+  --color-on-tertiary-fixed: #1b1b1c;
+  --color-on-tertiary-fixed-variant: #474746;
+
+  /* Inverse */
+  --color-inverse-surface: #e5e2e1;
+  --color-inverse-on-surface: #313030;
+
+  /* Outline */
+  --color-outline: #8b90a0;
+  --color-outline-variant: #414755;
+
+  /* Error */
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+
+  /* Background */
+  --color-background: #131313;
+
+  /* Fonts */
+  --font-sans: 'JetBrains Mono', monospace;
+  --font-ui: 'JetBrains Mono', monospace;
+  --font-mono: 'JetBrains Mono', monospace;
+  --font-canvas: 'Hack', monospace;
+  --font-label-mono: 'JetBrains Mono', monospace;
+
+  /* Typography scale */
+  --text-headline-lg: 24px;
+  --text-headline-lg--line-height: 32px;
+  --text-headline-lg--letter-spacing: -0.02em;
+  --text-headline-lg--font-weight: 600;
+  --text-headline-md: 18px;
+  --text-headline-md--line-height: 24px;
+  --text-headline-md--font-weight: 600;
+  --text-body-md: 14px;
+  --text-body-md--line-height: 20px;
+  --text-body-md--font-weight: 400;
+  --text-body-sm: 12px;
+  --text-body-sm--line-height: 16px;
+  --text-body-sm--font-weight: 400;
+  --text-label-mono: 12px;
+  --text-label-mono--line-height: 16px;
+  --text-label-mono--font-weight: 500;
+  --text-canvas-ascii: 14px;
+  --text-canvas-ascii--line-height: 14px;
+  --text-canvas-ascii--letter-spacing: 0em;
+  --text-canvas-ascii--font-weight: 400;
+
+  /* Named spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-gutter: 12px;
+  --spacing-panel-width: 280px;
+
+  /* Panel shadows */
+  --shadow-panel: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+  --shadow-panel-lg: 0px 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-panel-sm: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+/* Custom z-index utilities (v4 has no z-index theme namespace) */
+@utility z-tabbar { z-index: 90; }
+@utility z-picker { z-index: 5000; }
+@utility z-menu { z-index: 9000; }
+@utility z-toast { z-index: 9500; }
+@utility z-modal { z-index: 10000; }
+
+/* v4 preflight removed the pointer cursor on buttons — restore v3 behaviour */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
 
 /* Obsidian Creative System — ASCIIBIRD Dark Theme */
 
@@ -203,13 +327,13 @@ button {
 /* ── AB utility classes (Obsidian dark theme) ──────────────────────── */
 
 .ab-card {
-    @apply border rounded p-1;
+    @apply border rounded-sm p-1;
     background: #201f1f;
     border-color: #414755;
 }
 
 .ab-button {
-    @apply border rounded px-3 py-2 transition-colors duration-150
+    @apply border rounded-sm px-3 py-2 transition-colors duration-150
            disabled:opacity-50 disabled:cursor-not-allowed;
     color: #e5e2e1;
     background: #2a2a2a;
@@ -221,20 +345,18 @@ button {
 }
 
 .ab-button:focus {
-    @apply outline-none ring-2;
-    --tw-ring-color: #adc6ff;
+    @apply outline-hidden ring-2 ring-primary;
 }
 
 .ab-toolbar-button {
-    @apply rounded w-9 h-9 mt-1 ml-1 transition-colors duration-150;
+    @apply rounded-sm w-9 h-9 mt-1 ml-1 transition-colors duration-150;
 }
 
 .ab-input {
-    @apply block w-full px-3 py-2 rounded focus:outline-none;
+    @apply block w-full px-3 py-2 rounded-sm focus:outline-hidden;
     color: #e5e2e1;
     background: #0e0e0e;
     border: 1px solid #414755;
-    --tw-placeholder-opacity: 1;
 }
 
 .ab-input::placeholder {
@@ -247,7 +369,7 @@ button {
 }
 
 .ab-checkbox {
-    @apply h-4 w-4 rounded-sm;
+    @apply h-4 w-4 rounded-xs;
     background: #0e0e0e;
     border-color: #414755;
     color: #adc6ff;
@@ -277,7 +399,7 @@ button {
 }
 
 .ab-kbd {
-    @apply px-1.5 py-0.5 rounded-sm text-label-mono font-label-mono whitespace-nowrap;
+    @apply px-1.5 py-0.5 rounded-xs text-label-mono font-label-mono whitespace-nowrap;
     background: #0e0e0e;
     border: 1px solid #414755;
     border-bottom-width: 2px;
@@ -285,7 +407,7 @@ button {
 }
 
 .ab-rounded-button {
-    @apply rounded h-7;
+    @apply rounded-sm h-7;
     color: #e5e2e1;
 }
 
@@ -315,7 +437,7 @@ button {
 }
 
 .ab-range {
-    @apply w-full h-2 rounded appearance-none cursor-pointer;
+    @apply w-full h-2 rounded-sm appearance-none cursor-pointer;
     background: #201f1f;
     accent-color: #adc6ff;
 }

@@ -3,7 +3,7 @@
     <div class="flex gap-1 mb-2">
       <button
         type="button"
-        class="flex-1 py-1.5 font-label-mono text-label-mono rounded-sm transition-all duration-200 flex items-center justify-center gap-1 text-on-surface-variant hover:bg-surface-variant border border-transparent"
+        class="flex-1 py-1.5 font-label-mono text-label-mono rounded-xs transition-all duration-200 flex items-center justify-center gap-1 text-on-surface-variant hover:bg-surface-variant border border-transparent"
         @click="addLayer()"
       >
         <span
@@ -15,7 +15,7 @@
 
       <button
         type="button"
-        class="flex-1 py-1.5 font-label-mono text-label-mono rounded-sm transition-all duration-200 flex items-center justify-center gap-1 text-on-surface-variant hover:bg-surface-variant border border-transparent"
+        class="flex-1 py-1.5 font-label-mono text-label-mono rounded-xs transition-all duration-200 flex items-center justify-center gap-1 text-on-surface-variant hover:bg-surface-variant border border-transparent"
         :disabled="selectedLayer <= 0"
         :class="selectedLayer <= 0 ? 'opacity-40 cursor-not-allowed' : ''"
         title="Merge selected layer into layer below"
@@ -30,7 +30,7 @@
 
       <button
         type="button"
-        class="flex-1 py-1.5 font-label-mono text-label-mono rounded-sm transition-all duration-200 flex items-center justify-center gap-1 text-on-surface-variant hover:bg-surface-variant border border-transparent"
+        class="flex-1 py-1.5 font-label-mono text-label-mono rounded-xs transition-all duration-200 flex items-center justify-center gap-1 text-on-surface-variant hover:bg-surface-variant border border-transparent"
         title="Duplicate selected layer"
         @click="duplicateLayer()"
       >
@@ -47,7 +47,7 @@
     <div class="w-full">
       <button
         type="button"
-        class="w-full py-1.5 font-label-mono text-label-mono rounded-sm transition-all duration-200 flex items-center justify-center gap-1 border"
+        class="w-full py-1.5 font-label-mono text-label-mono rounded-xs transition-all duration-200 flex items-center justify-center gap-1 border"
         :class="imageOverlay.visible
           ? 'bg-primary-container/20 text-primary border-primary/50'
           : 'text-on-surface-variant hover:bg-surface-variant border-transparent'"
@@ -149,14 +149,14 @@
         @mouseup.right.stop="openContextMenu"
       >
         <div
-          class="flex items-center gap-1 p-1 rounded transition-colors duration-150 cursor-pointer"
+          class="flex items-center gap-1 p-1 rounded-sm transition-colors duration-150 cursor-pointer"
           :class="layerItemClass(key)"
           @click="changeLayer(key)"
         >
           <!-- Visibility toggle -->
           <button
             type="button"
-            class="w-7 h-7 rounded flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors"
+            class="w-7 h-7 rounded-sm flex items-center justify-center text-on-surface-variant hover:text-primary transition-colors"
             @click.stop="toggleLayer(key)"
             :disabled="!canToggleLayer"
             :title="layer.visible ? 'Hide layer' : 'Show layer'"
@@ -174,7 +174,7 @@
             v-if="isEditing(key)"
             data-inline-rename-input
             v-model="editingName"
-            class="flex-1 font-label-mono text-label-mono bg-surface-container-lowest border border-primary rounded px-1 py-0 outline-none min-w-0"
+            class="flex-1 font-label-mono text-label-mono bg-surface-container-lowest border border-primary rounded-sm px-1 py-0 outline-hidden min-w-0"
             @keydown.enter.stop="commitEdit"
             @keydown.escape.stop="cancelEdit"
             @blur="commitEdit"
@@ -196,7 +196,7 @@
           >
             <button
               type="button"
-              class="w-6 h-6 rounded flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors"
+              class="w-6 h-6 rounded-sm flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors"
               @click.stop="downLayer(key)"
               :disabled="!canToggleLayer"
               title="Move up"
@@ -209,7 +209,7 @@
             </button>
             <button
               type="button"
-              class="w-6 h-6 rounded flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors"
+              class="w-6 h-6 rounded-sm flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-variant transition-colors"
               @click.stop="upLayer(key)"
               :disabled="!canToggleLayer"
               title="Move down"
@@ -222,7 +222,7 @@
             </button>
             <button
               type="button"
-              class="w-6 h-6 rounded flex items-center justify-center text-on-surface-variant hover:text-error transition-colors"
+              class="w-6 h-6 rounded-sm flex items-center justify-center text-on-surface-variant hover:text-error transition-colors"
               @click.stop="removeLayer(key)"
               :disabled="!canToggleLayer"
               title="Delete layer"

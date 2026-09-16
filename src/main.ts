@@ -14,7 +14,7 @@ import '@fontsource/inter/600.css';
 import '@fontsource/jetbrains-mono/400.css';
 import '@fontsource/jetbrains-mono/500.css';
 import 'material-icons/iconfont/material-icons.css';
-import './style.scss';
+import './style.css';
 
 // ── Bootstrap ─────────────────────────────────────────────────────────
 // 1. Sync: Legacy Vuex → Pinia localStorage migration

@@ -7,7 +7,7 @@
     <button
       type="button"
       :style="{ backgroundColor: mircColours[currentFg] }"
-      class="w-12 h-12 rounded border border-outline-variant flex items-center justify-center text-xs font-label-mono transition-transform active:scale-95"
+      class="w-12 h-12 rounded-sm border border-outline-variant flex items-center justify-center text-xs font-label-mono transition-transform active:scale-95"
       :class="{ 'opacity-40 cursor-not-allowed': !canFg }"
       :disabled="!canFg"
       id="currentColourFg"
@@ -22,7 +22,7 @@
       <!-- Swap button -->
       <button
         type="button"
-        class="w-8 h-8 rounded bg-surface-container-highest border border-outline-variant flex items-center justify-center hover:bg-surface-variant transition-colors z-10"
+        class="w-8 h-8 rounded-sm bg-surface-container-highest border border-outline-variant flex items-center justify-center hover:bg-surface-variant transition-colors z-10"
         id="swapColour"
         @click="swapColours()"
       >
@@ -37,7 +37,7 @@
         <button
           type="button"
           :style="{ backgroundColor: mircColours[currentBg] }"
-          class="w-12 h-12 rounded border border-outline-variant flex items-center justify-center text-xs font-label-mono transition-transform active:scale-95"
+          class="w-12 h-12 rounded-sm border border-outline-variant flex items-center justify-center text-xs font-label-mono transition-transform active:scale-95"
           :class="{ 'opacity-40 cursor-not-allowed': !canBg }"
           :disabled="!canBg"
           id="currentColourBg"
@@ -49,7 +49,7 @@
         <button
           type="button"
           :style="charButtonStyle"
-          class="w-12 h-12 rounded border border-outline-variant flex items-center justify-center text-xs font-label-mono transition-transform active:scale-95"
+          class="w-12 h-12 rounded-sm border border-outline-variant flex items-center justify-center text-xs font-label-mono transition-transform active:scale-95"
           :class="{ 'opacity-40 cursor-not-allowed': !canText }"
           :disabled="!canText"
           id="currentChar"

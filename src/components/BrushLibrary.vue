@@ -19,7 +19,7 @@
         <div class="flex gap-1 mb-2">
           <button
             type="button"
-            class="flex-1 py-1.5 font-label-mono text-label-mono rounded-sm transition-all duration-200 flex items-center justify-center gap-1"
+            class="flex-1 py-1.5 font-label-mono text-label-mono rounded-xs transition-all duration-200 flex items-center justify-center gap-1"
             :class="panel.tab === 0
               ? 'bg-primary-container/20 text-primary border border-primary/50'
               : 'text-on-surface-variant hover:bg-surface-variant border border-transparent'"
@@ -34,7 +34,7 @@
 
           <button
             type="button"
-            class="flex-1 py-1.5 font-label-mono text-label-mono rounded-sm transition-all duration-200 flex items-center justify-center gap-1"
+            class="flex-1 py-1.5 font-label-mono text-label-mono rounded-xs transition-all duration-200 flex items-center justify-center gap-1"
             :class="panel.tab === 1
               ? 'bg-primary-container/20 text-primary border border-primary/50'
               : 'text-on-surface-variant hover:bg-surface-variant border border-transparent'"
@@ -56,14 +56,14 @@
           <div
             v-for="(brush, key) in brushHistory"
             :key="key"
-            class="bg-surface-container-lowest border border-outline-variant rounded p-2 hover:border-primary transition-colors"
+            class="bg-surface-container-lowest border border-outline-variant rounded-sm p-2 hover:border-primary transition-colors"
           >
             <BrushCanvas :blocks="decompressBlock(brush.blocks)" />
 
             <div class="flex gap-1 mt-2">
               <button
                 type="button"
-                class="w-8 h-8 rounded-sm flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
+                class="w-8 h-8 rounded-xs flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
                 @click="saveToLibrary(decompressBlock(brush.blocks))"
               >
                 <span
@@ -73,7 +73,7 @@
               </button>
               <button
                 type="button"
-                class="w-8 h-8 rounded-sm flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
+                class="w-8 h-8 rounded-xs flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
                 @click="reuseBlocks(decompressBlock(brush.blocks))"
               >
                 <span
@@ -83,7 +83,7 @@
               </button>
               <button
                 type="button"
-                class="w-8 h-8 rounded-sm flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
+                class="w-8 h-8 rounded-xs flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
                 @click="removeFromHistory(decompressBlock(brush.blocks))"
               >
                 <span
@@ -109,7 +109,7 @@
           <div
             v-for="(brush, key) in brushLibrary"
             :key="key"
-            class="bg-surface-container-lowest border border-outline-variant rounded p-2 hover:border-primary transition-colors"
+            class="bg-surface-container-lowest border border-outline-variant rounded-sm p-2 hover:border-primary transition-colors"
           >
             <div
               v-if="key <= 8"
@@ -122,7 +122,7 @@
             <div class="flex gap-1 mt-2">
               <button
                 type="button"
-                class="w-8 h-8 rounded-sm flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
+                class="w-8 h-8 rounded-xs flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
                 @click="removeFromLibrary(decompressBlock(brush.blocks))"
               >
                 <span
@@ -132,7 +132,7 @@
               </button>
               <button
                 type="button"
-                class="w-8 h-8 rounded-sm flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
+                class="w-8 h-8 rounded-xs flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
                 @click="reuseBlocks(decompressBlock(brush.blocks))"
               >
                 <span
@@ -143,7 +143,7 @@
               <button
                 v-if="key !== 0"
                 type="button"
-                class="w-8 h-8 rounded-sm flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
+                class="w-8 h-8 rounded-xs flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
                 @click="upBrush(key)"
               >
                 <span
@@ -154,7 +154,7 @@
               <button
                 v-if="key !== brushLibrary.length - 1"
                 type="button"
-                class="w-8 h-8 rounded-sm flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
+                class="w-8 h-8 rounded-xs flex items-center justify-center bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant transition-colors border border-transparent"
                 @click="downBrush(key)"
               >
                 <span

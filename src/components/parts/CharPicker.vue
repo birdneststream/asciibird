@@ -16,7 +16,7 @@
         <Tooltip content="Disable auto hide after selection">
           <button
             type="button"
-            class="w-5 h-5 rounded flex items-center justify-center transition-colors"
+            class="w-5 h-5 rounded-sm flex items-center justify-center transition-colors"
             :class="toolbarStore.toolbarState.persistCharPanel
               ? 'text-primary bg-primary-container/20'
               : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-variant'"

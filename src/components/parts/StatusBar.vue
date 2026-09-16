@@ -1,6 +1,6 @@
 <template>
-  <!-- z-[9100]: must sit above all floating panels (z-index capped at 8999) -->
-  <footer class="fixed bottom-0 left-0 right-0 z-[9100] h-7 bg-surface-container border-t border-outline-variant px-md flex items-center justify-between select-none">
+  <!-- z-9100: must sit above all floating panels (z-index capped at 8999) -->
+  <footer class="fixed bottom-0 left-0 right-0 z-9100 h-7 bg-surface-container border-t border-outline-variant px-md flex items-center justify-between select-none">
     <div class="flex items-center gap-sm">
       <!-- Panel task bar — shows all panels including hidden (dimmed) -->
       <div
@@ -12,7 +12,7 @@
           v-for="panel in panels"
           :key="panel.id"
           type="button"
-          class="w-6 h-6 rounded-sm flex items-center justify-center transition-colors duration-150"
+          class="w-6 h-6 rounded-xs flex items-center justify-center transition-colors duration-150"
           :class="taskBarBtnClass(panel)"
           :aria-label="taskBarLabel(panel)"
           :aria-pressed="panel.isShowing ? 'true' : 'false'"
@@ -38,7 +38,7 @@
       >
         <button
           type="button"
-          class="w-6 h-6 rounded-sm flex items-center justify-center transition-colors duration-150"
+          class="w-6 h-6 rounded-xs flex items-center justify-center transition-colors duration-150"
           :class="desktopStore.menuBarVisible
             ? 'bg-surface-container-high text-on-surface hover:bg-surface-variant'
             : 'text-on-surface-variant/30 hover:text-on-surface-variant hover:bg-surface-container-low'"
@@ -55,7 +55,7 @@
         </button>
         <button
           type="button"
-          class="w-6 h-6 rounded-sm flex items-center justify-center transition-colors duration-150"
+          class="w-6 h-6 rounded-xs flex items-center justify-center transition-colors duration-150"
           :class="desktopStore.tabsVisible
             ? 'bg-surface-container-high text-on-surface hover:bg-surface-variant'
             : 'text-on-surface-variant/30 hover:text-on-surface-variant hover:bg-surface-container-low'"

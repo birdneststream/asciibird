@@ -212,7 +212,7 @@
           @contextmenu.prevent="openTabContextMenu($event, key)"
         >
           <span
-            class="material-icons text-sm flex-shrink-0"
+            class="material-icons text-sm shrink-0"
             :class="key === currentTab ? 'text-primary' : 'text-outline group-hover:text-on-surface-variant'"
             aria-hidden="true"
           >
@@ -222,7 +222,7 @@
             v-if="isTabEditing(key)"
             data-inline-rename-input
             v-model="tabEditingName"
-            class="font-label-mono text-label-mono bg-surface-container-lowest border border-primary rounded px-1 py-0 outline-none flex-1 min-w-0"
+            class="font-label-mono text-label-mono bg-surface-container-lowest border border-primary rounded-sm px-1 py-0 outline-hidden flex-1 min-w-0"
             @keydown.enter.stop="commitTabEdit"
             @keydown.escape.stop="cancelTabEdit"
             @blur="commitTabEdit"
@@ -237,7 +237,7 @@
             {{ value.title }}
           </span>
           <button
-            class="material-icons text-sm inline-flex items-center justify-center transition-opacity flex-shrink-0"
+            class="material-icons text-sm inline-flex items-center justify-center transition-opacity shrink-0"
             :class="[
               key === currentTab
                 ? 'text-on-surface-variant hover:text-on-surface'
@@ -309,7 +309,7 @@
           v-for="msg in toasts"
           :key="msg.id"
           :class="[
-            'px-4 py-2 rounded shadow-lg text-sm',
+            'px-4 py-2 rounded-sm shadow-lg text-sm',
             msg.type === 'error'
               ? 'bg-error text-on-error'
               : msg.type === 'success'

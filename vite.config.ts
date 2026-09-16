@@ -2,9 +2,11 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import { visualizer } from 'rollup-plugin-visualizer'
 import path from 'path'
+import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   plugins: [
+    tailwindcss(),
     vue(),
     visualizer({
       filename: 'dist/stats.html',
@@ -26,13 +28,6 @@ export default defineConfig({
     include: [
       'hotkeys-js',
     ],
-  },
-  css: {
-    preprocessorOptions: {
-      scss: {
-        api: 'modern-compiler',
-      },
-    },
   },
   build: {
     rollupOptions: {

@@ -4,7 +4,7 @@
     @close="modalStore.closeModal('about')"
     title=""
   >
-    <div class="rounded text-center flex flex-col items-center gap-2">
+    <div class="rounded-sm text-center flex flex-col items-center gap-2">
       <BrushCanvas
         :blocks="aboutAscii"
         class="w-32"

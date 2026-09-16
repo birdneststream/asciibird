@@ -240,7 +240,7 @@ const { show: toastShow } = useToast();
 
 const showModal = computed(() => modalStore.modalState.borderGenerator);
 
-const styleOptions = [
+const styleOptions: { value: BorderStyle; label: string }[] = [
   { value: 'single', label: 'Single ┌─┐' },
   { value: 'double', label: 'Double ╔═╗' },
   { value: 'rounded', label: 'Rounded ╭─╮' },

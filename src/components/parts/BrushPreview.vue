@@ -26,7 +26,7 @@
             v-for="(colorIdx, i) in recentColorsDisplay"
             :key="i"
             type="button"
-            class="w-4 h-4 flex-shrink-0 border border-outline-variant/30 hover:ring-1 hover:ring-primary transition-all"
+            class="w-4 h-4 shrink-0 border border-outline-variant/30 hover:ring-1 hover:ring-primary transition-all"
             :style="{ backgroundColor: mircColours[colorIdx] }"
             :title="`Color ${colorIdx}`"
             :aria-label="`Recent color ${colorIdx}`"
@@ -37,7 +37,7 @@
           <div
             v-for="i in (12 - recentColors.length)"
             :key="'empty-' + i"
-            class="w-4 h-4 flex-shrink-0 border border-dashed border-outline-variant/20"
+            class="w-4 h-4 shrink-0 border border-dashed border-outline-variant/20"
           />
         </div>
 

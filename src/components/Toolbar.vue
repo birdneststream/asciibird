@@ -27,7 +27,7 @@
             <button
               v-if="value.name !== 'shapes'"
               type="button"
-              class="w-full h-8 rounded-sm flex items-center justify-center gap-1 transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+              class="w-full h-8 rounded-xs flex items-center justify-center gap-1 transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
               :class="currentTool.name === value.name
                 ? 'bg-primary-container/20 text-primary border border-primary/50'
                 : 'bg-surface-variant/30 text-on-surface-variant enabled:hover:bg-surface-variant border border-transparent'"
@@ -52,7 +52,7 @@
           >
             <button
               type="button"
-              class="w-full h-7 rounded-sm flex items-center justify-center transition-colors duration-150"
+              class="w-full h-7 rounded-xs flex items-center justify-center transition-colors duration-150"
               :class="isShapesTool && currentShapeType === st
                 ? 'bg-primary-container/20 text-primary border border-primary/50'
                 : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant border border-transparent'"
@@ -72,7 +72,7 @@
           <Tooltip content="Mirror X axis when Editing">
             <button
               type="button"
-              class="w-full h-8 rounded-sm flex items-center justify-center gap-1 transition-colors duration-150"
+              class="w-full h-8 rounded-xs flex items-center justify-center gap-1 transition-colors duration-150"
               :class="toolbarStore.toolbarState.mirrorX
                 ? 'bg-primary-container/20 text-primary border border-primary/50'
                 : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant border border-transparent'"
@@ -89,7 +89,7 @@
           <Tooltip content="Mirror Y axis when Editing">
             <button
               type="button"
-              class="w-full h-8 rounded-sm flex items-center justify-center gap-1 transition-colors duration-150"
+              class="w-full h-8 rounded-xs flex items-center justify-center gap-1 transition-colors duration-150"
               :class="toolbarStore.toolbarState.mirrorY
                 ? 'bg-primary-container/20 text-primary border border-primary/50'
                 : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant border border-transparent'"
@@ -106,7 +106,7 @@
           <Tooltip content="Update Brush Automatically when Colours or Char Changes">
             <button
               type="button"
-              class="w-full h-8 rounded-sm flex items-center justify-center gap-1 transition-colors duration-150"
+              class="w-full h-8 rounded-xs flex items-center justify-center gap-1 transition-colors duration-150"
               :class="toolbarStore.toolbarState.updateBrush
                 ? 'bg-primary-container/20 text-primary border border-primary/50'
                 : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant border border-transparent'"
@@ -123,7 +123,7 @@
           <Tooltip content="Toggle Grid View">
             <button
               type="button"
-              class="w-full h-8 rounded-sm flex items-center justify-center gap-1 transition-colors duration-150"
+              class="w-full h-8 rounded-xs flex items-center justify-center gap-1 transition-colors duration-150"
               :class="toolbarStore.toolbarState.gridView
                 ? 'bg-primary-container/20 text-primary border border-primary/50'
                 : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant border border-transparent'"
@@ -142,7 +142,7 @@
           <Tooltip content="Toggle Half Block Editing Mode">
             <button
               type="button"
-              class="w-full h-8 rounded-sm flex items-center justify-center gap-1 transition-colors duration-150"
+              class="w-full h-8 rounded-xs flex items-center justify-center gap-1 transition-colors duration-150"
               :class="toolbarStore.toolbarState.halfBlockEditing
                 ? 'bg-primary-container/20 text-primary border border-primary/50'
                 : 'bg-surface-variant/30 text-on-surface-variant hover:bg-surface-variant border border-transparent'"

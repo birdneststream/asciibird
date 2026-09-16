@@ -25,7 +25,7 @@ function mountTooltip(props = {}, slotContent = '<button>Hover me</button>') {
 
 function cleanupBody() {
   // Remove any teleported tooltips from body
-  document.querySelectorAll('[class*="z-\\[9999\\]"]')
+  document.querySelectorAll('[class*="z-9999"]')
     .forEach((el) => el.remove());
   if (wrapper) {
     wrapper.unmount();
@@ -34,7 +34,7 @@ function cleanupBody() {
 }
 
 function getTooltip() {
-  return document.querySelector('[class*="z-\\[9999\\]"]');
+  return document.querySelector('[class*="z-9999"]');
 }
 
 describe('Tooltip', () => {
