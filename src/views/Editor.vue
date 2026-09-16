@@ -240,6 +240,7 @@ const {
 // ─── Gradient Tool ────────────────────────────────────────────────
 const {
   gradientStart,
+  gradientStartColor,
   isGradientPicking,
   setStartPoint,
   applyGradient,
@@ -346,6 +347,7 @@ const mouseHandlers = useCanvasMouseHandlers({
     gradientTool: {
       isGradientPicking,
       gradientStart,
+      gradientStartColor,
       setStartPoint,
       applyGradient,
     },
