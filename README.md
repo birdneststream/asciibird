@@ -2,6 +2,8 @@
 
 ASCIIBIRD is an IRC ascii art editor to create or edit mIRC art, it is most times worked on during live stream. It's 100% client side, built with Vue 3, TypeScript and Vite, and runs entirely in your browser — no server, no accounts.
 
+Desktop only for now — there is no touch or mobile support yet, it's on the list for later.
+
 A most latest production build to use is available at https://asciibird.birdnest.live/ - create cool and fun IRC ascii arts for your ircd MOTD or to share with your chat friends and have a good time!
 
 Support ASCIIBIRD and birdnest streaming by [jumping on our patreon](https://www.patreon.com/birdnestlive)!
